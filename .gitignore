@@ -1,0 +1,46 @@
+# .gitignore（通用模板，按本项目技术栈增删后使用）
+#
+# 说明：本文件遵循“技术栈中立”原则（与 ai/global-rules.md 的通用层判断标准一致）。
+#   - 通用忽略项：与技术栈无关，建议保留；
+#   - 按技术栈启用：仅作示例，请删除本项目用不到的、补上本项目用到的。
+
+# ===== 通用忽略项 =====
+
+# 操作系统
+.DS_Store
+Thumbs.db
+
+# 编辑器 / IDE
+.vscode/
+.idea/
+.vs/
+.history/
+*.swp
+
+# 环境变量 / 密钥
+.env
+.env.local
+
+# 日志
+*.log
+
+# 构建产物
+dist/
+build/
+out/
+
+# ===== 按技术栈启用（按需增删）=====
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+
+# Node
+node_modules/
+
+# 数据库本地文件（如 SQLite）
+*.db
+*.sqlite
+*.sqlite3
