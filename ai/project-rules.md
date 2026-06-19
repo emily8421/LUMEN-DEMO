@@ -17,7 +17,7 @@
 当前阶段：Phase1（MVP Demo）
 
 > 阶段划分的唯一来源是 `docs/03-prd.md` §3 路线图；本节是"当前阶段指针"。
-> 升阶段时只改本节指针 + 在设计文档原位补充新阶段细节（见 §6），不重写需求。
+> 升阶段时只改本节指针 + 在设计文档原位补充新阶段细节（见 global-rules §8），不重写需求。
 
 允许（Phase1 内）：
 - 后端 Python + FastAPI；存储 PostgreSQL + pgvector；AI 走 OpenAI 兼容 API（LLM + Embedding）；前端 React

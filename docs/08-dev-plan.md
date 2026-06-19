@@ -1,7 +1,7 @@
 # 08 开发计划
 
 > 按阶段拆 Sprint。本文件当前承载 **Phase1（MVP）**；
-> 升阶段时在**原位追加**新 Sprint（project-rules §6，不删旧 Sprint）。
+> 升阶段时在**原位追加**新 Sprint（global-rules §8，不删旧 Sprint）。
 > Sprint 格式见 `ai/global-rules.md` §3。
 
 ## Sprint-1：空间与权限底座

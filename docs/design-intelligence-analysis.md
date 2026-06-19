@@ -1,7 +1,7 @@
 # 详细设计：情报分析子系统（design-intelligence-analysis）
 
 > v18 愿景新增的「情报分析（i2 精神）」支柱。整体为 `[愿景]`，多含高难度 AI，**待 05 技术验证后才决定是否纳入某 Phase**。
-> 本文为**骨架**（project-rules §6）：各功能标"待验证 / 待细化"，不提前写死实现。
+> 本文为**骨架**（global-rules §8）：各功能标"待验证 / 待细化"，不提前写死实现。
 > 总体定位见 04（情报分析子系统行）；数据见 06（lumen_doc_participants / hypotheses / evidence / signal_subscriptions / doc_links）；接口见 07。
 
 ## 1. 职责

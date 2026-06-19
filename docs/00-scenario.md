@@ -2,7 +2,7 @@
 
 > 本文是工程基准想定，从产品愿景叙事 `docs/vision/product-vision.md` 抽取。
 > 完整功能清单见 docs/01；阶段路线图见 docs/03 §3；愿景叙事本身不直接驱动开发。
-> 本项目文档按「完整骨架 + 阶段增量」演进（见 ai/project-rules.md §6）。
+> 本项目文档按「完整骨架 + 阶段增量」演进（见 ai/global-rules.md §8）。
 
 ## 1. 背景
 

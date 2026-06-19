@@ -3,7 +3,7 @@
 **文档类型**：产品愿景叙事档（Vision Narrative，非 00-scenario 工程想定）
 **版本**：v18.0
 **日期**：2026-06-18
-**定位说明**：本文是 LUMEN 的产品愿景叙事，用于传达完整产品形态与体验目标，**不直接驱动开发**。工程想定以 docs/00-scenario.md 为准；完整需求见 docs/01-02；阶段路线图见 docs/03-prd.md §3（阶段标签的唯一来源）；文档演进规则见 ai/project-rules.md §6。本文中的功能点多属 Phase2 / 远期愿景，不代表 Phase1 范围。
+**定位说明**：本文是 LUMEN 的产品愿景叙事，用于传达完整产品形态与体验目标，**不直接驱动开发**。工程想定以 docs/00-scenario.md 为准；完整需求见 docs/01-02；阶段路线图见 docs/03-prd.md §3（阶段标签的唯一来源）；文档演进规则见 ai/global-rules.md §8。本文中的功能点多属 Phase2 / 远期愿景，不代表 Phase1 范围。
 **说明**：本文以故事形式呈现 LUMEN 在不同空间配置中的使用方式。Nova 是一家面向中小企业做 AI Agent 落地的初创公司；BrightLite 是他们的试点客户，主营智能照明解决方案。Nova 为 BrightLite 部署了 LUMEN，并划分为两个隔离的项目空间：`nova-internal`（Nova 内部，BrightLite 不可见）和 `brightlite-team`（BrightLite 团队协作空间）。Alice 是 Nova 的法人，作为系统部署方持有两个空间的管理员权限，可在两个空间之间推送文档；Lily 和 Mark 是 BrightLite 的普通成员，只能访问 `brightlite-team`，`nova-internal` 对他们不可见。本文人物、公司、产品名称均为虚构，不指向任何真实个人、组织或事件，仅用于场景演示。
 
 ---
