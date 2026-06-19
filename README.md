@@ -52,7 +52,7 @@ LUMEN_demo_T2.1/
 
 - **上行（改方法论）**：在[模板仓库](https://github.com/emily8421/ai-project-template)走「分支 → PR → 评审 → 合并」（见其 `CONTRIBUTING.md`），**不在本项目直接改 `ai/global-rules.md`**。
 - **下行（同步到本项目）**：`bash scripts/sync-template.sh --commit`（先 `--dry-run`）。当前已同步至模板 v1.4。
-- git 工作流与账号说明见 `docs/git-guide.md`。
+- git 工作流与账号说明见 `git-guide.md`。
 
 ---
 

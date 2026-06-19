@@ -24,7 +24,7 @@ TEMPLATE_REMOTE="${TEMPLATE_REMOTE:-https://github.com/emily8421/ai-project-temp
 SYNC_FILES=(
   "ai/global-rules.md"
   "CONTRIBUTING.md"
-  "docs/git-guide.md"
+  "git-guide.md"
   "scripts/new-project.sh"
   "scripts/sync-template.sh"
 )

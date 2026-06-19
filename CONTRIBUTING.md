@@ -10,7 +10,7 @@
 
 需要回流 / 同步到所有派生项目的，才算模板改动。判断标准（与 `ai/global-rules.md` 通用层一致）：换到完全不同的项目上是否还成立——成立就属于模板，不成立就属于派生项目的 `ai/project-rules.md`。
 
-典型模板改动：`ai/global-rules.md` 原则、`docs/` 骨架编号 / 结构、`INIT-PROMPT.md`、`ai/project-rules.md` 的**模板骨架**、`scripts/`、本治理流程、`docs/git-guide.md`。
+典型模板改动：`ai/global-rules.md` 原则、`docs/` 骨架编号 / 结构、`INIT-PROMPT.md`、`ai/project-rules.md` 的**模板骨架**、`scripts/`、本治理流程、`git-guide.md`。
 
 ## 2. 禁止
 
@@ -74,3 +74,4 @@
 > 区别于 README 的 global-rules 版本记录，这里记治理 / 基建类变更。
 
 - 2026-06-19：建立模板治理基建——`CONTRIBUTING.md`、`docs/git-guide.md`、`scripts/new-project.sh`、`scripts/sync-template.sh`、`.github/` PR / issue 模板；README 快速开始补「初始化 git」步、同步节扩为双向；`main` 开启分支保护。
+- 2026-06-19：docs 结构修正——新增 `docs/vision/product-vision.md` 桩（v1.4 §5/§0 引用的愿景输入位，此前只有约定无脚手架）；`docs/git-guide.md` → 根目录 `git-guide.md`（与 CONTRIBUTING/INIT-PROMPT 同级，不再与 00-09 项目开发文档平级）。
