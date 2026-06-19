@@ -29,7 +29,9 @@ git add -A && git commit -m "init: <项目名>"
 git push -u origin main
 ```
 
-**自动**（推荐）：`bash scripts/new-project.sh <项目名>` 一步完成「复制模板 + git init + 建库 + 首提交 + 推送」。详见脚本头部。
+**自动**：`bash scripts/new-project.sh <项目名>` 一步完成「取模板 + git init + 建库 + 首提交 + 推送」。默认从 GitHub `main` 派生（事实来源）；加 `--local` 改走本地模板（需自行确保最新）。详见脚本头部。
+
+> 手动与脚本**等价、派生时任选**——脚本只是把上面的手动步骤自动化。要一条命令就用脚本，要细控或脚本不在手边就手动 clone（两者都从 GitHub `main` 取，正确性一致）。
 
 ## 3. 日常提交规范
 
