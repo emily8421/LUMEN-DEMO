@@ -23,6 +23,7 @@ TEMPLATE_REMOTE="${TEMPLATE_REMOTE:-https://github.com/emily8421/ai-project-temp
 # 同步清单（与 README「方法论同步」单一来源；项目专属的 project-rules 不在此列）
 SYNC_FILES=(
   "ai/global-rules.md"
+  "INIT-PROMPT.md"
   "CONTRIBUTING.md"
   "git-guide.md"
   "scripts/new-project.sh"
