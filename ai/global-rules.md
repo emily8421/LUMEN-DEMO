@@ -3,8 +3,8 @@
 > 本文件对所有基于本模板创建的项目逐字复用，不针对具体项目修改。
 > 如需调整通用原则，先改本模板仓库的本文件，再覆盖同步到各项目（见README）。
 >
-> **模板版本：v1.4（2026-06-19）**。下游项目比对这一行即可判断本文件是否过期；
-> 修改通用规则时同步递增版本号，并在 README「方法论同步」记录变更点。
+> **全局规则版本：v1.5（2026-06-22）**。本文件仅记录跨项目通用规则自身版本；
+> 整个模板版本以根目录 `VERSION` 为准，并在 README「版本记录」登记。
 
 ## 1. AI编程总体原则
 
@@ -82,7 +82,7 @@ ProjectName/
 ├─ docs/        # 项目事实：需求、设计、计划
 ├─ ai/          # AI行为规范（本目录）
 ├─ tasks/       # AI任务单（按需启用）
-├─ frontend/ backend/ tests/ scripts/ docker/   # 按项目技术栈创建，不必全有
+├─ frontend/ backend/ tests/ scripts/ docker/   # 按项目技术栈与演示形态创建，不必全有
 ├─ AGENTS.md / CLAUDE.md / .cursor/rules/project-rules.mdc
 ├─ README.md
 └─ .gitignore
@@ -92,6 +92,8 @@ ProjectName/
 `06-db-design`、`07-api-spec` 按项目形态决定（无持久化 / 无对外接口的项目可省略，
 并在 `ai/project-rules.md` §3 声明）。额外的项目专属文档用语义化命名直接追加在 `docs/` 下，
 不占用、不挪动 `00-09` 编号。
+
+`frontend/` 是否启用取决于 `ai/project-rules.md` §3 的「演示形态」决策：消息通道内交互、CLI 或不需演示通常不启用；独立 Web 页面或移动端通常启用，并在 `docs/04-architecture.md`、`docs/05-tech-spec.md` 体现前端设计。根 `README.md` 是项目件，用于说明具体项目，不纳入下行同步清单，各项目自行维护。
 
 两类常见的语义命名约定：
 - **产品愿景/叙事类源文档**：放 `docs/vision/product-vision.md`，头部带“产品愿景叙事·不直接驱动
@@ -138,3 +140,11 @@ Scenario → 用户需求 → SRS → PRD → 架构设计 → 技术方案 → 
 - 不得删除既有阶段内容、只保留当前阶段
 - 不得把 `[P2]` / `[愿景]` 要素的详细设计提前写死
 - 需求层（00-02）跨阶段稳定；阶段调整只动 03 §3 与 `project-rules.md` §1 指针
+
+## 9. 模板优化反馈
+
+`ai/global-rules.md` 是模板复用件，派生项目不得直接修改后长期保留；通用规则调整必须回到 `ai-project-template` 模板仓库走 PR，避免版本漂移、无法审计。
+
+每次任务收尾时，AI 应顺带审视本次工作是否暴露出可通用于多个项目的模板优化点（如规则不清、决策前置不足、文档骨架缺口、脚本流程别扭）。任何需要修改项目模板的工作，都必须先形成 `TEMPLATE-UPGRADE-*.md` 提案（去项目化：动机 / 拟改 / 版本 / 影响），可附 `TEMPLATE-UPGRADE-*-patch.md` 记录具体 old→new 修改建议；成熟后回流到模板仓库 `_proposals/` 收件箱，由模板仓库 PR 落地。模板改动合并并下行同步后，已处理提案必须移动到 `_archive/proposals/` 归档或在派生项目历史中留痕。
+
+在模板仓库内，模板维护者 AI 处理 `_proposals/` 时必须先读取全部 `TEMPLATE-UPGRADE-*.md` 与可选 `*-patch.md`，输出去重 / 冲突 / 依赖分析和合并或分阶段优化计划，再辅助修改 `ai/global-rules.md`、`INIT-PROMPT.md`、脚本和治理文档；所有实际改动仍需人工审查并通过 PR 合并。
