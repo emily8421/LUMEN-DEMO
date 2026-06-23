@@ -42,7 +42,6 @@ LUMEN_demo_T2.1/
 ├─ tasks/       # 任务单（按需启用）
 ├─ scripts/     # 模板脚本（new-project.sh / sync-template.sh / check-template.sh / collect-env.ps1）
 ├─ backend/ frontend/ docker/ tests/   # 待编码（按 08-dev-plan Sprint 推进）
-├─ _archive/ _examples/                # 模板自带参考材料（可删）
 └─ AGENTS.md / CLAUDE.md / .cursor/    # 各 AI 工具入口，指向 ai/index.md
 ```
 
