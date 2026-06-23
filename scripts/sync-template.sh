@@ -73,10 +73,43 @@ fi
 echo "==> 模板版本: $VERSION"
 echo "==> 同步文件:"
 
+remote_file_matches_local() {
+  local file="$1"
+  local remote_hash
+  local local_hash
+
+  remote_hash="$(git rev-parse "$REF:$file")"
+  local_hash="$(git hash-object --path="$file" "$file" 2>/dev/null || true)"
+  [[ -n "$local_hash" && "$remote_hash" == "$local_hash" ]]
+}
+
+show_local_to_template_stat() {
+  local file="$1"
+  local tmp_dir
+  local local_file
+  local remote_file
+
+  tmp_dir="$(mktemp -d)"
+  local_file="$tmp_dir/local/$file"
+  remote_file="$tmp_dir/template/$file"
+  mkdir -p "$(dirname "$local_file")"
+  mkdir -p "$(dirname "$remote_file")"
+  git show "$REF:$file" > "$remote_file"
+
+  if [[ -f "$file" ]]; then
+    cp "$file" "$local_file"
+    git diff --no-index --stat -- "$local_file" "$remote_file" || true
+  else
+    git diff --no-index --stat -- /dev/null "$remote_file" | sed "s#${tmp_dir//\/\\}/##g" || true
+  fi
+
+  rm -rf "$tmp_dir"
+}
+
 if [[ "$MODE" == "--dry-run" ]]; then
   for f in "${SYNC_FILES[@]}"; do
     if git cat-file -e "$REF:$f" 2>/dev/null; then
-      if git diff --quiet "$REF" -- "$f" 2>/dev/null; then
+      if remote_file_matches_local "$f"; then
         echo "    = $f（无差异）"
       else
         echo "    Δ $f"
@@ -88,9 +121,12 @@ if [[ "$MODE" == "--dry-run" ]]; then
 
   echo
   echo "ℹ️  dry-run：仅预览，未修改工作区、未 stage。差异统计："
+  echo "   方向：本地当前文件 -> 模板 $VERSION（即执行 --commit 后的变化）"
   for f in "${SYNC_FILES[@]}"; do
     if git cat-file -e "$REF:$f" 2>/dev/null; then
-      git diff --stat "$REF" -- "$f" || true
+      if ! remote_file_matches_local "$f"; then
+        show_local_to_template_stat "$f"
+      fi
     fi
   done
   echo "   确认后执行: bash scripts/sync-template.sh --commit"
