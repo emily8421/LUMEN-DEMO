@@ -1,4 +1,4 @@
-# 详细设计：空间与权限子系统（design-permissions）
+# 详细设计：空间与权限子系统（permissions）
 
 > 对应 REQ-001 / 002 / 003。总体定位见 04；数据见 06（lumen_spaces / members / documents.permission）。
 > 按「完整骨架 + 阶段增量」：`[P1]` 写细，`[P2]` 骨架。
@@ -30,5 +30,5 @@
 
 ## 5. 与其他子系统交互
 
-- **被** design-rag-retrieval、文档 / 搜索 service 调用做过滤
+- **被** docs/design/rag-retrieval、文档 / 搜索 service 调用做过滤
 - **被** 07 各接口在入口校验（鉴权 + 空间 + 文档权限）

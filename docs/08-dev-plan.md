@@ -10,7 +10,7 @@
 多空间隔离 + 权限分级 + 查询时过滤（REQ-001 / 002 / 003）
 
 ### 输入文档
-00/01/02、06（lumen_spaces / members / documents）、design-permissions.md
+00/01/02、06（lumen_spaces / members / documents）、docs/design/permissions.md
 
 ### 修改范围
 - backend：api/auth、api/spaces、service/space、service/permission
@@ -49,7 +49,7 @@
 Word / PDF 解析 + OCR + 切块入库（REQ-009 / 010），为检索问答供数
 
 ### 输入文档
-design-ingestion.md、06（chunks / imports）、07（import）
+docs/design/ingestion.md、06（chunks / imports）、07（import）
 
 ### 修改范围
 - backend：service/import（解析 / OCR / 切块 / Embedding）
@@ -68,7 +68,7 @@ design-ingestion.md、06（chunks / imports）、07（import）
 全文搜索 + RAG 问答带来源（REQ-007 / 008）
 
 ### 输入文档
-design-rag-retrieval.md、06（chunks 索引）、07（search / query）
+docs/design/rag-retrieval.md、06（chunks 索引）、07（search / query）
 
 ### 修改范围
 - backend：service/search、service/rag
