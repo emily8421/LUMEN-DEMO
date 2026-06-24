@@ -1,5 +1,9 @@
 # 常用Prompt模板
 
+> Sync notice: This file is maintained by `ai-project-template` and may be overwritten when a derived project syncs template methodology.
+> Do not edit it directly in derived projects; propose reusable changes in `_proposals/` and upstream them to the template repository.
+
+
 本文件收集项目生命周期中常用的可复制 Prompt。使用时先判断当前所处阶段，再复制对应章节中的 `text` 代码块给 AI；代码块外的说明用于帮助人判断“何时使用、输入什么、产出什么、下一步做什么”。
 
 ## 使用方式总览
@@ -7,7 +11,7 @@
 1. **先判断入口**：如果项目起点是产品愿景，用 §0；如果 00-02 已写好，用 §1。
 2. **再按任务阶段选择**：开发用 §2，审查用 §3 / §10，局部文档变更用 §4，修 Bug 用 §5。
 3. **收尾时使用辅助 Prompt**：提交前可用 §6，代码与文档不一致用 §7，阶段升级用 §8，Sprint 完成用 §9。
-4. **模板同步与维护**：新建派生项目用 §14，派生项目同步模板方法论用 §12；模板仓库处理 `_proposals/` 时用 §11。
+4. **模板同步与维护**：新建派生项目用 §14，派生项目同步模板方法论用 §12；同步后整理项目专属内容用 §15；模板仓库处理 `_proposals/` 时用 §11。
 
 | 当前场景 | 使用章节 | 主要目的 |
 |---|---|---|
@@ -26,6 +30,7 @@
 | 生成 03-09 后人工验收 | §10 | 在编码前拦住文档空洞、越界和自相矛盾 |
 | 模板仓库汇总派生项目提案 | §11 | 读取 `_proposals/` 并形成模板优化计划 |
 | 派生项目同步模板方法论 | §12 | 按 SOP 执行 `sync-template.sh` 下行同步并创建 PR |
+| 同步后整理派生项目 | §15 | 审计 docs 分区、README、project-rules 与运行环境约束，先出迁移计划再执行 |
 
 > 原则：Prompt 不是需求本身。AI 只能基于 `docs/`、`ai/project-rules.md` 与人工确认的信息工作；如果输入不足，先补输入，不要让 AI 猜。
 
@@ -41,7 +46,7 @@
 
 **使用前准备**：准备愿景文档；建议先用 §13 生成 `docs/env/local-env.md`，并确认 `ai/project-rules.md` 的项目名称、Phase 边界、技术栈、运行环境与项目形态能被初步填写或由 AI 提出待确认项。
 
-**预期产出**：`docs/00-09`、必要的 `design-*` 子系统设计、阶段建议、验证计划、项目化 README。
+**预期产出**：`docs/00-09`、必要的 `docs/design/*` 子系统设计、阶段建议、验证计划、项目化 README。
 
 **使用后下一步**：人工确认 `docs/03-prd.md` §3 阶段路线图；确认后进入 §2 执行 Sprint-1。
 
@@ -53,7 +58,7 @@
 
 【心智模型，务必遵守】
 - 两层分离：需求层(00-03)完整描述系统、跨阶段稳定、不按阶段裁剪；
-  执行层(project-rules §1 + 04-09 + design-* + 09-verification)描述"现在建什么"。
+  执行层(project-rules §1 + 04-09 + docs/design/* + 09-verification)描述"现在建什么"。
 - 积累式(global-rules §8)：设计文档「完整骨架 + 阶段标签 + 状态」，只增不删、不建分阶段文档。
 - 阶段是 AI 提议、非决定：在 03 §3 提议路线图(MVP优先)并标"待人工确认"；所有阶段标签取自该提议。
 
@@ -72,13 +77,13 @@
    - 据此给 project-rules §1（当前=MVP）允许/禁止草稿
 
 3) 总体设计（完整框架）
-   - 04-architecture：完整架构图 + 子系统表（每行：职责/阶段/状态/指向 design-*）
+   - 04-architecture：完整架构图 + 子系统表（每行：职责/阶段/状态/指向 docs/design/*）
    - 05-tech-spec：技术栈 + 关键决策（版本可标"待确认"）
 
 4) 详细设计（完整骨架 + 当前阶段细节）
    - 06-db-design：愿景全部表 + 阶段标签/状态；当前阶段表写全字段/索引，其余骨架
    - 07-api-spec：全部接口 + 阶段标签/状态；当前阶段写请求/响应示例，其余骨架
-   - design-<子系统>.md：每个非平凡子系统一份（框架 + 当前阶段细节）
+   - docs/design/<子系统>.md：每个非平凡子系统一份（框架 + 当前阶段细节）
    - 08-dev-plan：当前阶段拆 Sprint
    - 09-verification：测试策略 + REQ→用例追溯矩阵（当前阶段）
 
@@ -95,13 +100,14 @@
 【硬约束】
 1. 完整不裁剪：01/02 装下整个愿景，每条可回锚点为证；不得因阶段而删功能
 2. 阶段是提议非决定：03 §3 路线图标"待确认"，阶段标签据此打
-3. 框架一次完整：04-09 + design-* 铺全部要素（含 P2/愿景骨架），不只写当前阶段
-4. 只增不删、原位增量（global-rules §8）
-5. 当前阶段 REQ 可验证；远期粗粒度，不硬凑
-6. 高风险 AI 项（跨文档推理/矛盾检测/证据地图等）标"愿景·待技术验证"，不进当前阶段
-7. 演示形态：据 ai/project-rules.md §3「演示形态」推导 `frontend/` 是否启用、docs/04-05 是否体现前端；解析愿景文档，若含「页面 / 界面 / 点击 / 手机 / 打开」等界面交互词且 §3 标为无前端或不需演示，必须警告并提示人工复核
-8. 技术方案必须受 `ai/project-rules.md` §2.5 与 `docs/env/local-env.md` 约束；Demo / MVP 优先本机可运行，若本机资源不足，必须明确所需公司服务器资源与触发条件
-9. 每份文档生成前用 1-2 句说结构；全部生成后用第 10 节 checklist 自查，单列"需人工确认项"
+3. 框架一次完整：04-09 + docs/design/* 铺全部要素（含 P2/愿景骨架），不只写当前阶段
+4. 新增文档必须遵守 `docs/README.md`：根目录只放 00-09 和 README；调研、决策、会议、详细设计等必须进入对应子目录
+5. 只增不删、原位增量（global-rules §8）
+6. 当前阶段 REQ 可验证；远期粗粒度，不硬凑
+7. 高风险 AI 项（跨文档推理/矛盾检测/证据地图等）标"愿景·待技术验证"，不进当前阶段
+8. 演示形态：据 ai/project-rules.md §3「演示形态」推导 `frontend/` 是否启用、docs/04-05 是否体现前端；解析愿景文档，若含「页面 / 界面 / 点击 / 手机 / 打开」等界面交互词且 §3 标为无前端或不需演示，必须警告并提示人工复核
+9. 技术方案必须受 `ai/project-rules.md` §2.5 与 `docs/env/local-env.md` 约束；Demo / MVP 优先本机可运行，若本机资源不足，必须明确所需公司服务器资源与触发条件
+10. 每份文档生成前用 1-2 句说结构；全部生成后用第 10 节 checklist 自查，单列"需人工确认项"
 
 【人工确认后】
 确认/调整 03 §3 路线图 → 若调整，按第 4 节（单文档修订）把阶段标签同步到各文档（需求不变，只动标签）→ 用第 2 节执行 Sprint-1，进入编码。
@@ -434,7 +440,7 @@ docs/07-api-spec.md 需要修订：（说明变化原因，例如PRD新增了XX�
 
 **不适用场景**：普通派生项目日常开发；派生项目只负责起草提案，不使用本节直接改模板。若模板仓库内需要直接修改模板但尚无提案，也应先新增 `TEMPLATE-UPGRADE-*.md`。
 
-**使用前准备**：确认当前在模板仓库，已阅读 `ai/index.md`、`CONTRIBUTING.md`、`README.md` 与 `_proposals/README.md`。
+**使用前准备**：确认当前在模板仓库，已阅读 `ai/index.md`、`CONTRIBUTING.md`、`MAINTAINERS.md`、`CHANGELOG.md` 与 `_proposals/README.md`。
 
 **预期产出**：提案清单、去重 / 冲突 / 依赖分析、合并或分阶段计划、拟修改文件清单、版本影响、验证方式和已处理提案归档计划。
 
@@ -448,7 +454,9 @@ docs/07-api-spec.md 需要修订：（说明变化原因，例如PRD新增了XX�
 读取前先确认：
 - ai/index.md 列出的全部规则文件
 - CONTRIBUTING.md（模板变更治理流程）
-- README.md（方法论同步与版本记录）
+- MAINTAINERS.md（模板维护、发布 checklist、同步清单维护）
+- CHANGELOG.md（完整版本记录）
+- README.md（普通使用者入口，避免塞入维护细节）
 - _proposals/README.md（提案收件箱规则）
 
 分析要求：
@@ -478,7 +486,7 @@ docs/07-api-spec.md 需要修订：（说明变化原因，例如PRD新增了XX�
 
 **用途**：在派生项目中，让 AI 按标准流程执行 `ai-project-template` 方法论下行同步。
 
-**目的**：避免人工记忆命令，确保同步前检查工作区、先 dry-run、确认不覆盖项目专属内容，再 commit / PR。
+**目的**：避免人工记忆命令，确保先按派生项目版本选择正确入口，再 dry-run、确认不覆盖项目专属内容，最后 commit / PR。
 
 **适用场景**：模板仓库已有新版方法论，派生项目需要同步 `ai/global-rules.md`、Prompt、治理文档、脚本和 AI 入口文件。
 
@@ -486,7 +494,7 @@ docs/07-api-spec.md 需要修订：（说明变化原因，例如PRD新增了XX�
 
 **使用前准备**：确认当前在派生项目根目录，已保存业务改动；目标模板版本必须从模板仓库根目录 `VERSION` 读取，不在 Prompt 中固定写死。
 
-**预期产出**：同步分支、同步提交、自检结果、派生项目已处理提案归档计划和 PR 链接。
+**预期产出**：同步分支、同步提交、派生同步边界检查结果、派生项目已处理提案归档计划和 PR 链接。
 
 **使用后下一步**：评审并合并派生项目同步 PR；若 `ai/project-rules.md` 需要人工迁移新骨架项，或 `_proposals/` 中仍有未处理提案，单独开任务处理。
 
@@ -502,21 +510,34 @@ docs/07-api-spec.md 需要修订：（说明变化原因，例如PRD新增了XX�
 执行要求：
 1. 先阅读 ai/index.md 及其列出的全部规则文件。
 2. 检查 git status；若有未提交改动，立即停止并说明，不要覆盖。
-3. 先拉取模板 main 并读取目标版本：
+3. 判断当前派生项目同步路径：
+   - 如果缺少 `scripts/sync-template.ps1`，或缺少 `template-sync.json`，或 `VERSION` 低于 `v1.6.8`，或不确定当前同步脚本是否为新版，则按“旧派生项目首次同步”路径执行。
+   - 如果已有新版 `scripts/sync-template.ps1` 与 `template-sync.json`，则按“v1.6.8+ 后续同步”路径执行。
+   - 不要运行 `scripts/check-template.sh` 或 `scripts/check-template.ps1` 作为派生项目同步验收；它们是模板仓库完整性自检。
+4. 先拉取模板 main 并读取目标版本：
    - 运行：git fetch --no-tags --depth=1 https://github.com/emily8421/ai-project-template.git main
    - 运行：git show FETCH_HEAD:VERSION
    - 记录输出的目标版本，例如 vX.Y.Z。
-4. 新建或切换到同步分支：chore/sync-template-vX.Y.Z（X.Y.Z 取上一步读取到的目标模板版本）。
-5. 先 bootstrap 最新同步脚本，不要无条件信任派生项目本地旧脚本：
+5. 新建或切换到同步分支：chore/sync-template-vX.Y.Z（X.Y.Z 取上一步读取到的目标模板版本）。
+6. 如果是旧派生项目首次同步：
+   - 先 bootstrap 最新同步脚本；旧项目使用 Bash 入口，不要无条件信任派生项目本地旧脚本：
    - 运行：git checkout FETCH_HEAD -- scripts/sync-template.sh
    - 运行：git add scripts/sync-template.sh
    - 若 `git diff --cached --quiet` 显示无 staged 差异，说明本地脚本已是最新版，跳过本次提交并继续下一步。
    - 若有 staged 差异，运行：git commit -m "chore: bootstrap latest sync script"
-6. 运行 bash scripts/sync-template.sh --dry-run，只预览差异；若脚本提示本地 sync-template 不是最新版，停止并按提示先更新脚本。
-7. 检查 dry-run 输出，确认只涉及模板方法论同步文件，不覆盖 README.md、ai/project-rules.md、docs/ 或业务代码。
-8. 如果 dry-run 合理，运行 bash scripts/sync-template.sh --commit。
-9. 运行 bash scripts/check-template.sh。
-10. 检查 git status --short --branch。
+   - 运行：& "C:\Program Files\Git\bin\bash.exe" scripts/sync-template.sh --dry-run
+   - 如果 Git for Windows 安装位置不同，用本机实际 `bash.exe` 路径替换示例路径。
+7. 如果是 v1.6.8+ 后续同步：
+   - 运行：powershell -ExecutionPolicy Bypass -File scripts/sync-template.ps1 --dry-run
+8. 检查 dry-run 输出，确认只涉及模板方法论同步文件；不应出现 README.md、ai/project-rules.md、docs/00-09、frontend/、backend/、tests/、docker/ 或业务代码。
+9. 如果 dry-run 合理，执行同步：
+   - 旧派生项目首次同步：运行 & "C:\Program Files\Git\bin\bash.exe" scripts/sync-template.sh --commit
+   - v1.6.8+ 后续同步：运行 powershell -ExecutionPolicy Bypass -File scripts/sync-template.ps1 --commit
+10. 只做派生同步边界检查：
+   - 运行：git status --short --branch
+   - 运行：git show --name-only --stat HEAD
+   - 如已同步到包含 `scripts/check-derived-sync.ps1` 的版本，运行：powershell -ExecutionPolicy Bypass -File scripts/check-derived-sync.ps1
+   - 确认最新同步提交没有误覆盖 README.md、ai/project-rules.md、docs/00-09 或业务代码。
 11. 如本次同步引入新的项目专属骨架项，不要直接覆盖 ai/project-rules.md；列出需要人工迁移的字段，例如 `§2.5 运行环境与资源约束`。
 12. 如项目已同步到含 `scripts/collect-env.ps1` 的模板版本，但尚无 `docs/env/local-env.md`，提示运行：powershell -ExecutionPolicy Bypass -File scripts/collect-env.ps1，并补齐人工确认项。
 13. 检查本项目 `_proposals/`：
@@ -526,7 +547,7 @@ docs/07-api-spec.md 需要修订：（说明变化原因，例如PRD新增了XX�
 14. 如有归档改动，运行 git status 并确认只移动提案记录，不改业务文件。
 15. 推送当前分支：git push -u origin chore/sync-template-vX.Y.Z。
 16. 创建 PR：gh pr create --fill。
-17. 最后汇总：同步到的模板版本、同步提交、是否需要人工迁移 project-rules、是否需要运行 collect-env、提案归档情况、验证结果和 PR 链接。
+17. 最后汇总：同步到的模板版本、同步提交、采用的同步路径、同步边界检查结果、是否需要人工迁移 project-rules、是否需要运行 collect-env、提案归档情况和 PR 链接。
 
 遇到以下情况必须停止并说明原因：
 - 工作区不干净。
@@ -534,6 +555,7 @@ docs/07-api-spec.md 需要修订：（说明变化原因，例如PRD新增了XX�
 - dry-run 后出现 staged 改动。
 - dry-run 显示会覆盖项目专属文件。
 - sync-template 提示本地脚本不是最新版，且无法完成 bootstrap。
+- 派生同步边界检查显示最新同步提交包含 README.md、ai/project-rules.md、docs/00-09 或业务代码。
 - 无法判断 `_proposals/` 中某个提案是否已被模板采纳。
 - 脚本失败。
 - GitHub 认证或权限失败。
@@ -628,4 +650,148 @@ GitHub 账号：emily8421（如需其他账号请说明）
 - GitHub 账号、权限或 gh 认证不可用，且用户要求创建远端仓库。
 - 无法访问模板仓库 GitHub main，且用户未明确允许 --local。
 - collect-env.ps1 执行失败或 docs/env/local-env.md 未生成。
+```
+
+## 15. 同步后项目整理（派生项目）
+
+**用途**：派生项目完成模板方法论同步后，审计并整理项目专属内容，使其符合最新模板建议。
+
+**目的**：弥补 `sync-template` 只同步方法论、不自动修改项目事实文档的空白；先输出迁移计划，经人工确认后再移动 / 修改项目文档。
+
+**适用场景**：派生项目同步到新模板版本后，尤其是模板新增 docs 分区规则、README 标准版块、运行环境约束等项目专属迁移要求时。
+
+**不适用场景**：还未完成模板方法论同步；或用户要求直接开发新功能。
+
+**使用前准备**：确认当前在派生项目根目录，工作区状态已知；已完成 `scripts/sync-template.*` 同步并提交或准备单独提交同步后整理改动。
+
+**预期产出**：先输出审计结果与迁移计划；人工确认后，执行 docs 分区整理、README 补齐、`ai/project-rules.md` 补齐和运行环境约束补齐。
+
+**使用后下一步**：人工确认迁移计划后，用本节第二段 Prompt 执行迁移；完成后运行项目自检 / 文档检查并单独提交。
+
+### 第一段：同步后整理审计与迁移计划
+
+```text
+请在当前派生项目中，按照最新 ai-project-template 方法论，对项目专属内容做一次“同步后整理审计与迁移计划”。
+
+重要前提：
+- 我已经完成模板方法论同步，当前项目中应已有最新版 `docs/README.md`、`ai/global-rules.md`、`INIT-PROMPT.md`、`SOP.md` 等方法论文件。
+- `sync-template` 只同步方法论文件，不会自动改项目事实文档。
+- 本次任务不是开发新功能，不允许扩展需求，不允许改业务代码。
+- 根 `README.md`、`ai/project-rules.md`、`docs/00-09`、业务代码都是项目专属内容，整理前必须先审计再给迁移计划。
+
+请按以下步骤执行：
+
+1. 读取规则
+   - 先读取 `ai/index.md` 列出的全部规则文件。
+   - 再读取 `docs/README.md`，理解最新 docs 分区规则。
+   - 再读取 `ai/project-rules.md`、根 `README.md`、`docs/00-09`、`docs/vision/product-vision.md`（如存在）。
+
+2. 审计当前 docs 结构
+   - 列出 `docs/` 根目录下所有文件和子目录。
+   - 判断哪些文件允许留在 `docs/` 根目录：`README.md`、`00-scenario.md` ~ `09-verification.md`。
+   - 找出不应留在 `docs/` 根目录的文件，例如调研文档、会议纪要、临时分析、子系统详细设计、ADR、环境记录、历史归档。
+   - 按 `docs/README.md` 给出建议迁移路径：
+     - 愿景 / 叙事 → `docs/vision/`
+     - 子系统 / 模块详细设计 → `docs/design/`
+     - 架构决策记录 → `docs/decisions/`
+     - 技术调研 / 实验 → `docs/research/`
+     - 环境 / 资源约束 → `docs/env/`
+     - 会议 / 访谈 / 评审记录 → `docs/meetings/`
+     - 废弃但需留痕 → `docs/archive/`
+
+3. 审计运行环境与资源约束
+   - 检查是否存在 `docs/env/local-env.md`。
+   - 若不存在，检查是否存在 `scripts/collect-env.ps1`；若存在，建议先运行：
+     `powershell -ExecutionPolicy Bypass -File scripts/collect-env.ps1`
+   - 若 `scripts/collect-env.ps1` 不存在，说明需要先完成模板方法论同步。
+   - 检查 `docs/env/local-env.md` 是否已补齐人工确认项，至少包括：
+     - Demo 阶段必须在本机运行的部分
+     - 允许降级 / Mock / 远程运行的部分
+     - 禁止在本机运行的重资源部分
+     - 是否允许联网
+     - 是否允许安装依赖
+     - 是否允许使用公司服务器
+     - 若需服务器，资源申请口径
+   - 检查 `ai/project-rules.md` 是否存在并补齐 §2.5「运行环境与资源约束」。若没有 §2.5，请建议新增；未知项保持“待确认”，不得虚构。
+   - 检查 `docs/04-architecture.md` 是否包含“部署 / 运行拓扑约束”，并明确本机单机 / 公司服务器 / 远程服务边界。
+   - 检查 `docs/05-tech-spec.md` 是否包含“运行环境与资源评估”，并说明本机 Demo 可行性、资源瓶颈、降级 / Mock 策略、服务器资源预案。
+   - 检查 `docs/09-verification.md` 是否包含“本机资源验证”，并说明如何验证 Demo 在本机资源范围内可运行。
+
+4. 审计根 README
+   - 检查根 `README.md` 是否是项目说明，而不是模板说明。
+   - 若缺少版块，请给出补齐建议，推荐包含：项目简介、当前阶段、当前能力、快速开始、文档入口、运行环境、开发计划、验证方式、模板关系。
+   - 必须明确：
+     - 根 `README.md` 是项目专属文档，不参与模板下行同步。
+     - 模板方法论文件由 `template-sync.json` 定义，执行 `scripts/sync-template.*` 时可能被覆盖。
+     - 项目专属内容写入 `ai/project-rules.md`、`docs/` 和根 `README.md`。
+
+5. 审计 `ai/project-rules.md`
+   - 检查初始化必填检查是否包含：`docs/README.md` 分区规则、不得把新增项目文档直接放到 `docs/` 根目录。
+   - 检查 §2.5 是否引用 `docs/env/local-env.md`，并保留待人工确认项。
+   - 检查 §3 是否明确 `docs/06`、`docs/07`、`frontend/`、`backend/`、`tests/`、`scripts/`、`docker/` 的保留 / 省略 / 删除决策。
+   - 不要把模板方法论长文复制进 project-rules；只补项目专属约束和裁剪决策。
+
+6. 输出迁移计划
+   先不要修改文件，只输出计划，格式如下：
+
+   A. 当前结构审计
+   - 合规项
+   - 需要迁移的文件
+   - 不确定项
+
+   B. 建议迁移表
+   | 当前路径 | 建议路径 | 类型 | 理由 | 是否需要人工确认 |
+   |---|---|---|---|---|
+
+   C. 运行环境约束补齐建议
+   - 缺失文件 / 章节
+   - 建议先运行的脚本
+   - 可自动补骨架的内容
+   - 必须人工确认的内容
+
+   D. README 补齐建议
+   - 缺失版块
+   - 建议新增内容摘要
+
+   E. project-rules 补齐建议
+   - 缺失项
+   - 建议新增位置
+
+   F. 风险与注意事项
+   - 哪些文件移动可能影响链接
+   - 哪些引用需要同步更新
+   - 哪些内容不建议移动
+
+   G. 待人工确认问题
+   - 列出所有无法自动判断的问题
+
+7. 等我确认后再执行迁移
+   - 未经确认，不要移动 / 重命名 / 删除文件。
+   - 经确认后，按最小变更执行：创建必要子目录、移动文件、更新内部链接、补根 README、补 `ai/project-rules.md`、补环境约束章节骨架。
+   - 完成后输出变更清单、迁移前后路径对照、需要人工复核的链接和建议验证命令。
+```
+
+### 第二段：确认后执行迁移
+
+```text
+我确认执行上述同步后整理迁移计划。
+
+请按已确认的迁移表执行，但必须遵守：
+- 不改业务代码。
+- 不扩展需求。
+- 不删除任何项目事实文档；如确需移除，只能移动到 `docs/archive/`。
+- 移动文件后，更新被影响的相对链接。
+- 根 `README.md` 只补项目说明版块，不改成模板 README。
+- `ai/project-rules.md` 只补项目专属约束，不复制模板方法论长文。
+- 若 `docs/env/local-env.md` 缺失且用户允许，先运行 `powershell -ExecutionPolicy Bypass -File scripts/collect-env.ps1`；否则只给出待执行命令。
+- 环境约束未知项必须保留“待确认”，不得虚构本机资源或服务器资源。
+- 每一步保持最小变更。
+
+完成后请输出：
+1. 实际变更清单
+2. 文件迁移对照表
+3. 已更新的链接
+4. 环境约束补齐情况
+5. 未能自动确认的链接 / 风险
+6. 建议验证命令
 ```

@@ -1,5 +1,9 @@
 # Git 使用说明
 
+> Sync notice: This file is maintained by `ai-project-template` and may be overwritten when a derived project syncs template methodology.
+> Do not edit it directly in derived projects; propose reusable changes in `_proposals/` and upstream them to the template repository.
+
+
 本项目（及所有派生自 `ai-project-template` 的项目）的 git 工作流。模板变更治理见 `CONTRIBUTING.md`。
 
 ## 1. 账号体系
@@ -122,9 +126,24 @@ git branch -d <已合并分支名>
 
 本节是派生项目同步模板方法论的**操作 SOP 权威文档**；`INIT-PROMPT.md` §12 只是把本节整理成可复制给 AI 执行的 Prompt，`CONTRIBUTING.md` 只记录治理要求。
 
-派生项目同步模板方法论更新时，优先使用 `scripts/sync-template.sh`，不要手动逐文件复制。该流程是**模板 → 派生项目**的下行获取，不会把派生项目内容提交回模板。
+派生项目同步模板方法论更新时，优先使用同步脚本，不要手动逐文件复制。该流程是**模板 → 派生项目**的下行获取，不会把派生项目内容提交回模板。
 
-### 5.1 标准操作流程
+### 5.1 路径判定
+
+先在派生项目根目录判断当前项目属于哪种情况：
+
+| 情况 | 使用流程 |
+|---|---|
+| 缺少 `scripts/sync-template.ps1` | 旧派生项目首次同步，走 §5.2 |
+| 缺少 `template-sync.json` | 旧派生项目首次同步，走 §5.2 |
+| `VERSION` 低于 `v1.6.8` 或不确定同步脚本是否为新版 | 旧派生项目首次同步，走 §5.2 |
+| 已有新版 `scripts/sync-template.ps1` 与 `template-sync.json` | v1.6.8+ 后续同步，走 §5.3 |
+
+无论哪种路径，`scripts/check-template.sh` / `scripts/check-template.ps1` 都是**模板仓库完整性自检**，不应作为派生项目同步成功判断。派生项目同步后只检查同步边界与最近提交。
+
+### 5.2 旧派生项目首次同步到 v1.6.8+
+
+适用于：项目里没有 `scripts/sync-template.ps1`、没有 `template-sync.json`、`VERSION` 低于 `v1.6.8`，或不确定当前同步脚本是否为新版。
 
 在派生项目根目录执行：
 
@@ -132,20 +151,55 @@ git branch -d <已合并分支名>
 git status
 git switch -c chore/sync-template-vX.Y.Z
 git fetch --no-tags --depth=1 https://github.com/emily8421/ai-project-template.git main
+git show FETCH_HEAD:VERSION
 git checkout FETCH_HEAD -- scripts/sync-template.sh
 git add scripts/sync-template.sh
 git commit -m "chore: bootstrap latest sync script"
-bash scripts/sync-template.sh --dry-run
+& "C:\Program Files\Git\bin\bash.exe" scripts/sync-template.sh --dry-run
 ```
 
-若 `git commit` 提示无变更，说明本地 `scripts/sync-template.sh` 已是最新版，可直接继续 `--dry-run`。
+若 `git commit` 提示无变更，说明本地 `scripts/sync-template.sh` 已是最新版，可直接继续 `--dry-run`。若 Git for Windows 安装位置不同，用本机实际 `bash.exe` 路径替换示例路径。
 
-确认 `--dry-run` 输出只涉及 README「方法论同步」清单中的模板方法论文件，且不会覆盖项目专属内容后，再执行：
+确认 `--dry-run` 输出只涉及 `template-sync.json` 中的模板方法论文件；尤其不应出现：
+
+- `README.md`
+- `ai/project-rules.md`
+- `docs/00-scenario.md` ~ `docs/09-verification.md`
+- `frontend/`、`backend/`、`tests/`、`docker/` 等业务代码或项目专属目录
+
+确认后执行：
 
 ```powershell
-bash scripts/sync-template.sh --commit
-bash scripts/check-template.sh
+& "C:\Program Files\Git\bin\bash.exe" scripts/sync-template.sh --commit
 git status --short --branch
+git show --name-only --stat HEAD
+```
+
+检查最新同步提交没有误覆盖 `README.md`、`ai/project-rules.md`、`docs/00-09` 或业务代码。同步到包含 `scripts/check-derived-sync.ps1` 的版本后，也可以运行：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/check-derived-sync.ps1
+```
+
+### 5.3 v1.6.8+ 后续同步
+
+适用于：派生项目已经有新版 `scripts/sync-template.ps1` 与 `template-sync.json`。
+
+在派生项目根目录执行：
+
+```powershell
+git status
+git switch -c chore/sync-template-vX.Y.Z
+powershell -ExecutionPolicy Bypass -File scripts/sync-template.ps1 --dry-run
+```
+
+确认 `--dry-run` 输出只涉及模板方法论同步文件，且不会覆盖项目专属内容后，再执行：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/sync-template.ps1 --commit
+powershell -ExecutionPolicy Bypass -File scripts/check-derived-sync.ps1
+git status --short --branch
+git show --name-only --stat HEAD
 ```
 
 如果项目要求走 PR，继续执行：
@@ -155,23 +209,25 @@ git push -u origin chore/sync-template-vX.Y.Z
 gh pr create --fill
 ```
 
-### 5.2 两条核心命令
+### 5.4 两类检查命令
 
 ```
-bash scripts/sync-template.sh --dry-run    # 先看差异
-bash scripts/sync-template.sh --commit     # 覆盖并提交 sync template vX.Y.Z
+powershell -ExecutionPolicy Bypass -File scripts/check-derived-sync.ps1  # 派生项目同步边界检查
+powershell -ExecutionPolicy Bypass -File scripts/check-template.ps1       # 仅模板仓库完整性自检
 ```
 
-### 5.3 注意事项
+### 5.5 注意事项
 
 - 执行前工作区应干净；若 `git status` 显示未提交改动，先提交 / 暂存 / 放弃这些改动，不要混入同步提交。
 - 同步前先 bootstrap 模板远端最新版 `scripts/sync-template.sh`；不要无条件信任派生项目本地旧脚本。
 - 新版 `sync-template.sh` 会在 fetch 后对比远端自身版本；若本地脚本不是最新版，会停止并提示先更新脚本。
 - `--dry-run` 只预览差异，不修改工作区、不 stage。
 - `--commit` 会覆盖同步清单中的文件并自动提交；提交信息通常由脚本生成。
-- `README.md` 是项目件，`ai/project-rules.md` 是项目专属规则，默认不应被同步覆盖。
-- 同步文件清单见 README「方法论同步」，具体以 `scripts/sync-template.sh` 中的 `SYNC_FILES` 为准。
-- 同步后若自检失败，先修复同步造成的不自洽，再 push / PR。
+- 根 `README.md` 是项目件，`ai/project-rules.md` 是项目专属规则，均不在 `template-sync.json` 中，不参与模板下行同步。
+- 被 `template-sync.json` 列入的 Markdown 方法论文档会在同步时被覆盖；派生项目不要直接修改这些文件，如需改进请在 `_proposals/` 起草提案并回流模板。
+- 同步文件清单以 `template-sync.json` 为准；`scripts/sync-template.sh` 会优先读取模板远端清单。
+- 同步后若 `check-derived-sync` 失败，先修复同步边界问题，再 push / PR。
+- 同步后整理项目内容时，另开分支执行 `INIT-PROMPT.md` §15 第一段，先只审计并输出迁移计划，不要混入同步提交。
 - 老派生项目若执行 `--dry-run` 后出现 staged 改动，说明本地 `scripts/sync-template.sh` 过旧；先恢复工作区，手动用模板最新版覆盖该脚本，再重新执行 `--dry-run`。
 
 ## 6. 常见踩坑
