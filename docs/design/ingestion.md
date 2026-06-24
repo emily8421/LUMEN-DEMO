@@ -1,4 +1,4 @@
-# 详细设计：内容导入子系统（design-ingestion）
+# 详细设计：内容导入子系统（ingestion）
 
 > 对应 REQ-009（Word / PDF）/ REQ-010（OCR）。总体定位见 04；数据见 06（lumen_imports / lumen_chunks）。
 > 按「完整骨架 + 阶段增量」：`[P1]` 写细，`[愿景]` 骨架。
@@ -12,7 +12,7 @@
 1. 接收文件（.docx / .pdf / 图片），记 `lumen_imports(status=processing)`
 2. **文本提取**：.docx → python-docx；.pdf → pdfplumber；图片 → PaddleOCR（中文）
 3. **清洗**：去乱码 / 分页符，保留段落结构
-4. **切块**：同 design-rag-retrieval 的切块策略（~512 token、重叠 64）
+4. **切块**：同 docs/design/rag-retrieval 的切块策略（~512 token、重叠 64）
 5. **Embedding**：批量调 OpenAI 兼容接口
 6. **入库**：写 `lumen_chunks`（text / embedding / ts_vector）+ 关联 `document`
 7. 更新 `lumen_imports(status=done, parsed_doc_id)`
@@ -31,6 +31,6 @@
 
 ## 5. 与其他子系统交互
 
-- **为** design-rag-retrieval 供 `lumen_chunks`
+- **为** docs/design/rag-retrieval 供 `lumen_chunks`
 - **被** 07 `/api/import` 调用
 - **写** 06 lumen_imports / lumen_chunks

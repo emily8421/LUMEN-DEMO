@@ -1,4 +1,4 @@
-# 详细设计：检索问答子系统（design-rag-retrieval）
+# 详细设计：检索问答子系统（rag-retrieval）
 
 > 子系统内部逻辑详细设计。总体定位见 04；数据见 06（lumen_chunks）；接口见 07（/api/search、/api/query）。
 > 按「完整骨架 + 阶段增量」：`[P1]` 写细，`[P2]` / `[愿景]` 骨架。
@@ -18,7 +18,7 @@
 3. 返回命中文档的标题 / 片段 / 定位
 
 **RAG 问答（/api/query）**
-1. 权限收敛（同上，与 design-permissions 共用过滤）
+1. 权限收敛（同上，与 docs/design/permissions 共用过滤）
 2. **向量检索**：问题 → Embedding → `lumen_chunks.embedding` 近邻 topK
 3. **全文检索**：问题关键词 → `ts_vector` 命中
 4. 合并去重 → 取 topN 候选块
@@ -27,7 +27,7 @@
 
 ## 3. 关键决策（[P1]）
 
-- **切块**：按段落 / 固定长度（参数待 05 定，初值 ~512 token、重叠 ~64），与 design-ingestion 共用
+- **切块**：按段落 / 固定长度（参数待 05 定，初值 ~512 token、重叠 ~64），与 docs/design/ingestion 共用
 - **Embedding**：OpenAI 兼容，维度 N 待 05 定，写入 `lumen_chunks.embedding`
 - **检索**：向量 + 全文双路召回再合并（P1 即做基础版，不调权重）
 - **来源标注**：LLM 输出引用候选块序号 → 映射回 `doc_id` + `snippet`
@@ -46,6 +46,6 @@
 
 ## 6. 与其他子系统交互
 
-- **依赖** design-permissions：权限过滤
-- **依赖** design-ingestion：`lumen_chunks` 由导入流水线生成
+- **依赖** docs/design/permissions：权限过滤
+- **依赖** docs/design/ingestion：`lumen_chunks` 由导入流水线生成
 - **被** 07 `/api/search`、`/api/query` 调用

@@ -128,5 +128,5 @@ users ──< space_members >── spaces
 spaces ──< documents ──< document_versions
 spaces ──< documents ──< chunks
 spaces ──< imports ──> documents（解析产物）
-documents.permission / owner_id 与 space_members 共同决定可见性（见 design-permissions）
+documents.permission / owner_id 与 space_members 共同决定可见性（见 docs/design/permissions）
 ```
