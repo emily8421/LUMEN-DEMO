@@ -1,10 +1,13 @@
 # Global Rules（跨项目通用规则）
 
+> Sync notice: This file is maintained by `ai-project-template` and may be overwritten when a derived project syncs template methodology.
+> Do not edit it directly in derived projects; propose reusable changes in `_proposals/` and upstream them to the template repository.
+
 > 本文件对所有基于本模板创建的项目逐字复用，不针对具体项目修改。
 > 如需调整通用原则，先改本模板仓库的本文件，再覆盖同步到各项目（见README）。
 >
 > **全局规则版本：v1.5（2026-06-22）**。本文件仅记录跨项目通用规则自身版本；
-> 整个模板版本以根目录 `VERSION` 为准，并在 README「版本记录」登记。
+> 整个模板版本以根目录 `VERSION` 为准，并在 `CHANGELOG.md` 登记。
 
 ## 1. AI编程总体原则
 
@@ -90,8 +93,9 @@ ProjectName/
 
 `docs/` 核心文档固定编号 `00-09`，编号本身不因项目而变；其中 `00-05`、`08`、`09` 对所有项目必备，
 `06-db-design`、`07-api-spec` 按项目形态决定（无持久化 / 无对外接口的项目可省略，
-并在 `ai/project-rules.md` §3 声明）。额外的项目专属文档用语义化命名直接追加在 `docs/` 下，
-不占用、不挪动 `00-09` 编号。
+并在 `ai/project-rules.md` §3 声明）。`docs/` 根目录只放 `README.md` 与 `00-09` 核心文档；
+额外项目文档必须按 `docs/README.md` 放入 `vision/`、`design/`、`decisions/`、`research/`、`env/`、`meetings/`、`archive/` 等子目录，
+不占用、不挪动 `00-09` 编号，禁止把新增文档直接堆到 `docs/` 根目录。
 
 `frontend/` 是否启用取决于 `ai/project-rules.md` §3 的「演示形态」决策：消息通道内交互、CLI 或不需演示通常不启用；独立 Web 页面或移动端通常启用，并在 `docs/04-architecture.md`、`docs/05-tech-spec.md` 体现前端设计。根 `README.md` 是项目件，用于说明具体项目，不纳入下行同步清单，各项目自行维护。
 
@@ -99,8 +103,10 @@ ProjectName/
 - **产品愿景/叙事类源文档**：放 `docs/vision/product-vision.md`，头部带“产品愿景叙事·不直接驱动
   开发”定位声明；它是工程文档的**输入**，与 00-09 物理分离。从愿景起步的项目用 `INIT-PROMPT.md` §0
   一次性生成完整文档体系。
-- **子系统详细设计**：非平凡子系统用 `docs/design-<子系统>.md`，一个子系统一份，不编号；
+- **子系统详细设计**：非平凡子系统用 `docs/design/<子系统>.md`，一个子系统一份，不编号；
   与 04（总体）/ 06-07（数据·接口）互补，承载子系统内部逻辑。
+
+AI 判断需要新增项目文档时，必须先阅读 `docs/README.md` 的分区规则；若无法判断放入哪个子目录，先提出建议路径并等待人工确认，不得自行创建到 `docs/` 根目录。
 
 ## 6. 最佳实践流程总览
 

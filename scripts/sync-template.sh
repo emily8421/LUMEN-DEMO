@@ -20,22 +20,55 @@ fi
 
 TEMPLATE_REMOTE="${TEMPLATE_REMOTE:-https://github.com/emily8421/ai-project-template.git}"
 
-# 同步清单（与 README「方法论同步」单一来源；项目专属的 project-rules 不在此列）
-SYNC_FILES=(
+# 兜底同步清单；优先读取模板远端 template-sync.json。
+DEFAULT_SYNC_FILES=(
   "VERSION"
+  "CHANGELOG.md"
+  "MAINTAINERS.md"
+  "template-sync.json"
   "ai/index.md"
   "ai/global-rules.md"
   "AGENTS.md"
   "CLAUDE.md"
   ".cursor/rules/project-rules.mdc"
+  "SOP.md"
   "INIT-PROMPT.md"
   "CONTRIBUTING.md"
   "git-guide.md"
+  "docs/README.md"
   "scripts/new-project.sh"
   "scripts/sync-template.sh"
+  "scripts/sync-template.ps1"
   "scripts/check-template.sh"
+  "scripts/check-template.ps1"
+  "scripts/check-derived-sync.sh"
+  "scripts/check-derived-sync.ps1"
   "scripts/collect-env.ps1"
 )
+
+SYNC_FILES=()
+
+parse_sync_files_json() {
+  sed -n '/"files"[[:space:]]*:[[:space:]]*\[/,/\]/ s/^[[:space:]]*"\([^"]\+\)"[[:space:]]*,\{0,1\}[[:space:]]*$/\1/p'
+}
+
+load_sync_files() {
+  local ref="$1"
+  SYNC_FILES=()
+
+  if git cat-file -e "$ref:template-sync.json" 2>/dev/null; then
+    while IFS= read -r file; do
+      [[ -n "$file" ]] && SYNC_FILES+=("$file")
+    done < <(git show "$ref:template-sync.json" | parse_sync_files_json)
+  else
+    SYNC_FILES=("${DEFAULT_SYNC_FILES[@]}")
+  fi
+
+  if [[ "${#SYNC_FILES[@]}" -eq 0 ]]; then
+    echo "✗ 无法解析模板同步清单 template-sync.json" >&2
+    exit 1
+  fi
+}
 
 git rev-parse --is-inside-work-tree >/dev/null
 
@@ -61,6 +94,8 @@ if git cat-file -e "$REF:scripts/sync-template.sh" 2>/dev/null; then
     exit 1
   fi
 fi
+
+load_sync_files "$REF"
 
 # 解析模板版本号（用于提交信息）
 VERSION="$(git show "$REF:VERSION" 2>/dev/null | tr -d '[:space:]' || true)"

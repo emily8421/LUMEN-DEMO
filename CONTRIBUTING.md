@@ -1,5 +1,9 @@
 # CONTRIBUTING —— 模板变更治理流程
 
+> Sync notice: This file is maintained by `ai-project-template` and may be overwritten when a derived project syncs template methodology.
+> Do not edit it directly in derived projects; propose reusable changes in `_proposals/` and upstream them to the template repository.
+
+
 本仓库 `ai-project-template` 是**活模板**：它的方法论（`ai/global-rules.md`、文档骨架、脚本等）会持续演进，并被各派生项目复用。为保证「一处改、处处可同步」且不污染派生项目的专属内容，所有模板改动都走统一的**提案 → 分支 → PR → 评审 → 合并 → 归档**流程。
 
 ## 0. 一句话原则

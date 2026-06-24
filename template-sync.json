@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "description": "ai-project-template 下行同步方法论文件清单；项目专属内容不在此列。",
+  "files": [
+    "VERSION",
+    "CHANGELOG.md",
+    "MAINTAINERS.md",
+    "template-sync.json",
+    "ai/index.md",
+    "ai/global-rules.md",
+    "AGENTS.md",
+    "CLAUDE.md",
+    ".cursor/rules/project-rules.mdc",
+    "SOP.md",
+    "INIT-PROMPT.md",
+    "CONTRIBUTING.md",
+    "git-guide.md",
+    "docs/README.md",
+    "scripts/new-project.sh",
+    "scripts/sync-template.sh",
+    "scripts/sync-template.ps1",
+    "scripts/check-template.sh",
+    "scripts/check-template.ps1",
+    "scripts/check-derived-sync.sh",
+    "scripts/check-derived-sync.ps1",
+    "scripts/collect-env.ps1"
+  ]
+}
