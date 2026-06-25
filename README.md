@@ -2,7 +2,7 @@
 
 > 面向中小企业的团队知识库 demo：把分散在聊天 / 邮件 / 旧文件 / 笔记里的团队知识，沉淀到一个**支持空间隔离与三级文档权限**、可被 **AI 检索与问答（带来源引用）**、支持**多格式导入（Word / PDF / OCR）**的知识库。
 >
-> 本项目派生自 [`ai-project-template`](https://github.com/emily8421/ai-project-template)（v1.6.9），采用其「文档驱动开发」方法论——**先文档、后代码**。
+> 本项目派生自 [`ai-project-template`](https://github.com/emily8421/ai-project-template)（v1.7.0），采用其「文档驱动开发」方法论——**先文档、后代码**。
 
 ## 当前状态
 
@@ -63,10 +63,10 @@ LUMEN_demo_T2.1/
 
 ## 模板关系与同步
 
-本项目派生自 `ai-project-template` v1.6.9，方法论文件随模板演进：
+本项目派生自 `ai-project-template` v1.7.0，方法论文件随模板演进：
 
 - **上行（改方法论）**：在[模板仓库](https://github.com/emily8421/ai-project-template)走「分支 → PR → 评审 → 合并」（见其 `CONTRIBUTING.md`），**不在本项目直接改 `ai/global-rules.md`**。
-- **下行（同步到本项目）**：`bash scripts/sync-template.sh --commit`（先 `--dry-run`）。当前已同步至模板 v1.6.9。
+- **下行（同步到本项目）**：`bash scripts/sync-template.sh --commit`（先 `--dry-run`）。当前已同步至模板 v1.7.0。
 - git 工作流与账号说明见 `git-guide.md`。
 
 ---
