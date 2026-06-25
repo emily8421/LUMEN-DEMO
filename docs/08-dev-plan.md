@@ -1,6 +1,6 @@
 # 08 开发计划
 
-> 按阶段拆 Sprint。本文件当前承载 **Phase1（MVP）**；
+> 按阶段拆 Sprint。本文件当前承载 **Phase1（功能范围 `[P1]` · 交付物形态 Demo）**；
 > 升阶段时在**原位追加**新 Sprint（global-rules §8，不删旧 Sprint）。
 > Sprint 格式见 `ai/global-rules.md` §3。
 
