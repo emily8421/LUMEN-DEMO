@@ -6,6 +6,13 @@
 
 模板版本采用三段式 `vMAJOR.MINOR.PATCH`，以根目录 `VERSION` 为单一审计入口。任何会影响下游同步判断的模板合并都应递增版本；`ai/global-rules.md` 顶部仅记录全局规则自身版本。
 
+## v1.7.0（2026-06-24）
+
+- `ai/global-rules.md` §8 新增阶段双维度：功能范围（P1/P2/愿景）与交付物形态（Demo/MVP/产品）必须同时声明。
+- `INIT-PROMPT.md` §0 / §1 / §10 增加 vision→docs 与 00-02→03-09 的硬约束：REQ 全覆盖、无悬空 REQ、产品红线、不编造事实、声称据实。
+- `docs/03-prd.md`、`docs/08-dev-plan.md`、`docs/09-verification.md` 更新模板桩与最小示例，要求 Phase、Sprint 与验证矩阵体现交付物形态。
+- 增强 `scripts/check-template.sh` 自检断言，防止 Demo/MVP/产品语义和 REQ 追溯约束回退。
+
 ## v1.6.9（2026-06-24）
 
 - 修正派生项目同步模板方法论的标准流程：明确区分 v1.6.8 之前旧派生项目首次同步路径与 v1.6.8+ 后续同步路径。
