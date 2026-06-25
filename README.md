@@ -6,7 +6,7 @@
 
 ## 当前状态
 
-- **阶段**：Phase1（MVP）——**设计完成、尚未编码**。`backend/ frontend/ docker/ tests/` 目前为空，待按 `docs/08-dev-plan.md` 的 Sprint 推进。
+- **阶段**：Phase1（功能范围 `[P1]` · 交付物形态 **Demo**）——**设计完成、尚未编码**。`backend/ frontend/ docker/ tests/` 目前为空，待按 `docs/08-dev-plan.md` 的 Sprint 推进。
 - **基准**：需求 / 架构 / 数据 / 接口 / 验证均已落在 `docs/`，是开发的唯一事实来源；阶段归属以 `docs/03-prd.md` §3 路线图为准。
 
 ## 文档导航（先读这些）
