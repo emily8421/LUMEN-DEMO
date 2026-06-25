@@ -3,8 +3,7 @@
 > 测试策略与 REQ → 用例追溯。按阶段增量：本期覆盖 `[P1]` 全部 REQ；升阶段在原位追加（global-rules §8）。
 > 与 `08-dev-plan`（"何时做"）正交：本文回答"怎么算对"。
 >
-> 定位：本项目「验证」支柱。当前为语义命名文档（project-rules §5 允许）；
-> 方法论成熟后可升格为编号档 `09-verification`（届时改 global-rules §5、递增版本号）。
+> 定位：本项目「验证」支柱，对应 global-rules §5 编号档 `09-verification`（由语义命名 `verification-plan.md` 升格而来）。
 
 ## 1. 测试策略
 
