@@ -13,14 +13,14 @@
 2. **文本提取**：.docx → python-docx；.pdf → pdfplumber；图片 → PaddleOCR（中文）
 3. **清洗**：去乱码 / 分页符，保留段落结构
 4. **切块**：同 docs/design/rag-retrieval 的切块策略（~512 token、重叠 64）
-5. **Embedding**：批量调 OpenAI 兼容接口
+5. **Embedding**：批量调用本机 `bge-small-zh` adapter（512 维）
 6. **入库**：写 `lumen_chunks`（text / embedding / ts_vector）+ 关联 `document`
 7. 更新 `lumen_imports(status=done, parsed_doc_id)`
 
 ## 3. 关键决策
 
 - **OCR 引擎**：建议 PaddleOCR（中文友好），待 05 确认
-- **切块 / Embedding 参数与检索侧共用**：避免 train/serve 偏差（块大小、Embedding 维度必须一致）
+- **切块 / Embedding 参数与检索侧共用**：避免 train/serve 偏差（块大小、Embedding 维度必须一致）；Phase1 使用本机 `bge-small-zh`，写入 `vector(512)`
 - **失败处理**：单文件解析失败记 `status=failed` + 原因，不阻塞其他文件
 
 ## 4. 阶段增量

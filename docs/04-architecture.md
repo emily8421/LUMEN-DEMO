@@ -35,9 +35,9 @@
      │  documents / versions / chunks(+embedding) /    │
      │  spaces / members / imports   [P1]              │
      └────────────────────┬────────────────────────────┘
-                          │ OpenAI 兼容 API
+                         │ LLM：OpenAI 兼容 API
                   ┌───────▼────────┐
-                  │ LLM + Embedding │  外部 / 中转 / 自部署 [P1]
+                  │ LLM + Embedding │  LLM 外部 / 中转；Embedding 本机 [P1]
                   └────────────────┘
 
   [P2] 新增：标签与视图 service、协作 service、跨空间推送 service
@@ -63,7 +63,7 @@
 > 与 05 互补：这里讲"为什么"，05 讲"具体版本"。
 
 - **PostgreSQL + pgvector**：关系数据与向量检索一体，Phase1 少引一个独立向量库（Milvus/Qdrant），降低部署与一致性成本。
-- **OpenAI 兼容接口**：不绑单一闭源 SDK，可接国内中转 / 自部署，换模型只改配置。
+- **AI 调用边界**：LLM 不绑单一闭源 SDK，走 OpenAI 兼容接口；Embedding Phase1 本机运行 `bge-small-zh`（512 维），通过 adapter 保留迁移到内网 Embedding 服务的空间。
 - **导入流水线收敛异构格式**：Word / PDF / 图片统一走"提取纯文本 → 切块 → Embedding"，检索侧只面对一种数据形态。
 - **权限下沉到 SQL / 检索层**：空间隔离 + 文档权限在数据查询时过滤，不依赖应用层记忆，防漏过滤。
 - **子系统拆分**：RAG / 导入 / 权限各自非平凡且可独立演进，单独成 docs/design/；文档 CRUD 简单，不单列。
@@ -72,6 +72,8 @@
 
 > 受 `ai/project-rules.md` §2.5 与 `docs/env/local-env.md` 约束。Demo 本机优先；资源不足再上公司服务器。
 
-- 本机单机（Demo 默认）：React 前端 + FastAPI（api/service/model 三层）+ PostgreSQL/pgvector，Docker Compose 起库；LLM / Embedding 走外部 OpenAI 兼容 API。
-- 远程 / 公司服务器边界：待确认（是否允许、何时触发）。
-- 重资源项归属：待确认——本机 RTX 3050 6GB 可跑 Embedding / 小模型；大模型推理默认走远程 API（不强制本机）。
+- 本机单机（Demo 默认）：React 前端 + FastAPI（api/service/model 三层）+ PostgreSQL/pgvector，Docker Compose 起库；Embedding 本机运行 `bge-small-zh`，LLM 走公司内网中转 / 外部 OpenAI 兼容 API 或明确 Mock。
+- 数据边界：默认使用已标注的虚构 Demo 数据；允许按需导入部分真实团队文档，真实文档必须显式标注来源 / 敏感级别，并优先避免发送到外部模型。
+- 资源边界：Demo 峰值内存 < 8GB、显存 < 4GB、磁盘 < 20GB；允许本机安装项目所需依赖与镜像。
+- 远程 / 公司服务器边界：Phase1 Demo 暂不使用公司服务器；若本机 Embedding 在导入规模、响应时间或检索质量上不够用，再申请内网 Embedding / reranker 服务。
+- 重资源项归属：禁止本机运行大参数 LLM / 大型 Embedding / reranker；`bge-small-zh` 本机 Embedding 属 Phase1 可接受范围。

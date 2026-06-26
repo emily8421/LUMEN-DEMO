@@ -87,7 +87,7 @@
 | document_id | bigint FK→documents | |
 | ordinal | int | 块序号 |
 | text | text | 块原文 |
-| embedding | vector(N) | pgvector 向量，维度 N 待 05 定 |
+| embedding | vector(512) | pgvector 向量，对应本机 `bge-small-zh` Embedding |
 | ts_vector | tsvector | 全文检索向量 |
 - 索引：向量近邻（ivfflat / hnsw，参数待 05）+ `ts_vector` GIN
 

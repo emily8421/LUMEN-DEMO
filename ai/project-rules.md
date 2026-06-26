@@ -24,7 +24,7 @@
 > 升阶段时只改本节指针 + 在设计文档原位补充新阶段细节（见 global-rules §8），不重写需求。
 
 允许（Phase1 内）：
-- 后端 Python + FastAPI；存储 PostgreSQL + pgvector；AI 走 OpenAI 兼容 API（LLM + Embedding）；前端 React
+- 后端 Python + FastAPI；存储 PostgreSQL + pgvector；LLM 走 OpenAI 兼容 API；Embedding 本机运行 `bge-small-zh`（512 维）；前端 React
 - 双空间隔离 + 文档权限三级（私有 / 团队共享 / 外部只读）
 - Markdown 文档 CRUD + 全文搜索 + RAG 问答（带来源引用）+ 行内编辑 / 版本历史
 - 多格式导入：Word / PDF 文字提取、图片 / 白板照片 OCR
@@ -48,7 +48,7 @@
 |---|---|---|
 | 后端 | Python + FastAPI | 异步、RAG/LLM 生态成熟 |
 | 数据库 | PostgreSQL + pgvector | 关系存储与向量检索一体化；Phase1 不引入独立向量库 |
-| AI | OpenAI 兼容 API（LLM + Embedding） | 可接国内中转 / 自部署；具体型号与 Embedding 维度留 05-tech-spec |
+| AI | LLM 走 OpenAI 兼容 API；Embedding 本机 `bge-small-zh` | LLM 可接国内中转 / 自部署；Embedding 维度 512，详见 05-tech-spec |
 | 前端 | React | 视图层；状态管理 / 路由等细节留 05-tech-spec |
 | 文件解析 / OCR | Word / PDF 文字提取 + OCR（建议 PaddleOCR，中文友好） | 具体 OCR 引擎待 05-tech-spec 确认 |
 
@@ -62,13 +62,15 @@
 > 本节约束技术方案与本机 Demo 可行性；事实来源 `docs/env/local-env.md`（由 `scripts/collect-env.ps1` 采集）。未确认项保持「待确认」，不得虚构。
 
 - 本机环境：Windows 11 / i7-12650H（10C16T）/ 31.7GB 内存 / RTX 3050 6GB（详见 `docs/env/local-env.md`）
-- Demo 必须本机运行的部分：待确认
-- 允许降级 / Mock / 远程运行的部分：待确认
-- 禁止在本机运行的重资源部分：待确认
-- 是否允许联网（调用外部 OpenAI 兼容 LLM / Embedding API）：待确认
-- 是否允许安装新依赖 / Docker 镜像：待确认
-- 是否允许使用公司服务器：待确认
-- 若需服务器，资源申请口径：待确认
+- Demo 必须本机运行的部分：FastAPI 后端、PostgreSQL+pgvector、React 前端、Word / PDF 文字解析、Embedding（`bge-small-zh`，512 维）
+- 允许降级 / Mock / 远程运行的部分：LLM 可走公司内网中转或明确 Mock；OCR 可降级为已提取文本（具体边界待 05-tech-spec / 09-verification 细化）
+- 禁止在本机运行的重资源部分：大参数本地 LLM、大型 Embedding / reranker；`bge-small-zh` 本机 Embedding 属 Phase1 例外
+- 是否允许联网（调用外部 OpenAI 兼容 LLM / Embedding API）：允许 LLM 经公司内网中转调用 OpenAI 兼容接口；Embedding 本机运行，不依赖外部 Embedding API
+- 是否允许安装新依赖 / Docker 镜像：允许本机 `pip install` / `npm install` / `docker pull` 项目所需依赖与镜像；新增依赖须写入依赖文件并说明用途，不得借机替换既定技术栈
+- 是否允许使用公司服务器：Phase1 Demo 暂不使用；当前公司暂无可用 Embedding 资源，后续本机不够用时再申请内网 Embedding / reranker 服务
+- 若需服务器，资源申请口径：优先申请内网 Embedding / reranker 服务，提供 OpenAI-compatible `/v1/embeddings`；具体 CPU / 内存 / GPU / 磁盘按目标模型与数据规模另行评估
+- Demo 数据范围：默认使用已标注的虚构 Demo 数据；允许按需导入部分真实团队文档。真实文档必须显式标注来源 / 敏感级别，并优先避免发送到外部模型
+- Demo 资源软上限：峰值内存 < 8GB、显存 < 4GB、磁盘 < 20GB；超限先优化批处理、增量索引与 chunk 策略，再触发服务器预案
 
 > 技术方案（`docs/05`）与架构（`docs/04`）必须受本节与 `docs/env/local-env.md` 约束；本机资源不足时须明确所需公司服务器资源与触发条件。
 

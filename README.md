@@ -27,7 +27,7 @@
 |---|---|
 | 后端 | Python + FastAPI |
 | 存储 | PostgreSQL + pgvector（关系 + 向量一体） |
-| AI | OpenAI 兼容 API（LLM + Embedding） |
+| AI | LLM：OpenAI 兼容 API；Embedding：本机 `bge-small-zh`（512 维） |
 | 前端 | React |
 | 解析 / OCR | Word / PDF 文字提取 + OCR（建议 PaddleOCR） |
 
@@ -38,15 +38,17 @@
 > 本机环境与资源约束见 `docs/env/local-env.md`（由 `scripts/collect-env.ps1` 采集）；约束决策见 `ai/project-rules.md` §2.5。
 
 - 本机：Windows 11 / i7-12650H（10C16T）/ 31.7GB 内存 / RTX 3050 6GB；Docker 可用。
-- Demo 默认本机运行（Docker Compose 起 PostgreSQL+pgvector + FastAPI + React）；LLM / Embedding 走外部 OpenAI 兼容 API。
-- 具体边界（联网 / 装依赖 / 公司服务器 / 降级 Mock）：见 `docs/env/local-env.md` 人工确认项（部分待确认）。
+- Demo 默认本机运行（Docker Compose 起 PostgreSQL+pgvector + FastAPI + React）；Embedding 本机运行 `bge-small-zh`（512 维），LLM 走公司内网中转 / 外部 OpenAI 兼容 API 或明确 Mock。
+- 数据默认使用已标注的虚构 Demo 数据；可按需导入部分真实团队文档，但需标注来源 / 敏感级别并优先避免发送到外部模型。
+- 允许本机安装项目所需依赖与镜像；Demo 资源软上限为峰值内存 < 8GB、显存 < 4GB、磁盘 < 20GB。
+- 具体边界（联网 / 装依赖 / 公司服务器 / 降级 Mock）：见 `docs/env/local-env.md` 人工确认项。
 
 ## 验证方式
 
 > 验证计划与 REQ→用例追溯见 `docs/09-verification.md`；本机资源验证见其 §4。
 
 - 单元 / 集成 / 验收测试覆盖 REQ-001..011（Phase1）；数据夹具：`nova-internal` / `brightlite-team` 双空间 + 三级权限。
-- 本机资源验证：Docker Compose 起库后确认 Demo 在本机资源范围内可运行（口径待确认）。
+- 本机资源验证：Docker Compose 起库后确认 Demo 在内存 / 显存 / 磁盘软上限内运行。
 
 ## 项目结构
 
