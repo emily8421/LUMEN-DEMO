@@ -28,7 +28,7 @@
 ## 3. 关键决策（[P1]）
 
 - **切块**：按段落 / 固定长度（参数待 05 定，初值 ~512 token、重叠 ~64），与 docs/design/ingestion 共用
-- **Embedding**：OpenAI 兼容，维度 N 待 05 定，写入 `lumen_chunks.embedding`
+- **Embedding**：本机 `bge-small-zh`，512 维，写入 `lumen_chunks.embedding`（`vector(512)`）；后续可通过 adapter 迁移到内网 Embedding 服务
 - **检索**：向量 + 全文双路召回再合并（P1 即做基础版，不调权重）
 - **来源标注**：LLM 输出引用候选块序号 → 映射回 `doc_id` + `snippet`
 

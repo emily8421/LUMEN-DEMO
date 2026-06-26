@@ -3,11 +3,11 @@
 > 本文件是**跨会话交接单**。新窗口先读本文件 + `ai/index.md` 列出的全部规则文件，再继续。
 > 属临时交接文档，事项办完后可删除（不是永久编号文档，不放 `docs/`）。
 >
-> **第一步建议**：读本文件 → 与用户确认下面「待拍板」4 项 → 把确定值落进「拍板后要改的文件」 → 开分支提 PR。
+> **第一步建议**：读本文件 → 复核本分支已落的 §2.5 决策 → 开 PR。
 
 ---
 
-## 0. 当前位置（截至 2026-06-25）
+## 0. 当前位置（截至 2026-06-26）
 
 模板方法论已下行同步并整理完毕，三步**均已合入 main**：
 
@@ -19,7 +19,7 @@
 
 main 干净、`VERSION=v1.7.0`、无 open PR。
 
-**唯一剩余事项**：确认并落值 `ai/project-rules.md §2.5 运行环境与资源约束`（Phase1 = Demo；Sprint-1/2 不依赖，Sprint-3 前需回填）。规则要求"未确认项保持待确认，不得虚构"。
+**当前状态**：`ai/project-rules.md §2.5 运行环境与资源约束` 已按用户确认落值。Phase1 = Demo；Sprint-1/2 不依赖，Sprint-3 前需以这些约束为准。
 
 ---
 
@@ -30,8 +30,12 @@ main 干净、`VERSION=v1.7.0`、无 open PR。
 | 联网 | **允许**。形态：本机 → 公司内网中转站 `192.168.15.190:7777`（LeMeshSub2Api 网关）→ 统一出口外网 `47.107.134.2` → OpenAI/智谱/minimax。**本机无需直连外网** |
 | LLM API | 公司中转站，**OpenAI 兼容**。建议 **GLM-4.7**（配额 8000 次/周；避开 14:00–18:00 高峰 3x 消耗），重任务/高峰备选 **minimax-m2.7**（无周月限额） |
 | 本机业务栈 | 后端 FastAPI + DB PostgreSQL/pgvector + 前端 React + Word/PDF 文字解析，**均本机 Docker 运行** |
-| 禁止本机跑 | 大参数本地 LLM / Embedding / reranker（RTX 3050 仅 4–6GB 显存、31.7GB 内存吃不下） |
-| 公司服务器 | **暂不需要**（Demo 本机可跑；留作"跑本地大模型 / 上 MVP"预案）—— 见「待拍板 #4」最终确认 |
+| Embedding | **本机运行 `bge-small-zh`，512 维，对应 pgvector `vector(512)`**。当前公司暂无 Embedding 资源；后续不够用时申请公司内网 Embedding / reranker 服务，提供 OpenAI-compatible `/v1/embeddings` |
+| 禁止本机跑 | 大参数本地 LLM / 大型 Embedding / reranker（`bge-small-zh` 本机 Embedding 属 Phase1 例外） |
+| 公司服务器 | **暂不需要**（Demo 本机可跑；后续本机 Embedding / reranker 不够用时再申请内网服务） |
+| 数据范围 | 默认使用已标注的虚构 Demo 数据；允许按需导入部分真实团队文档，真实文档必须显式标注来源 / 敏感级别，并优先避免发送到外部模型 |
+| 依赖 / 镜像 | 允许本机 `pip install` / `npm install` / `docker pull` 项目所需依赖与镜像；新增依赖须写入依赖文件并说明用途，不得替换既定技术栈 |
+| 资源软上限 | Demo 峰值内存 < 8GB、显存 < 4GB、磁盘 < 20GB；超限先优化批处理、增量索引与 chunk 策略，再触发服务器预案 |
 
 ---
 
@@ -44,7 +48,9 @@ RAG 需要**两类模型**：LLM（生成答案）+ **Embedding**（文档切块
 - 用户已知的可用模型表（gpt-5.4/5.5、GLM-5.1/5-Turbo/4.7/4.5-Air、minimax-m2.7）**无任何 embedding 模型**
 - **倾向结论：中转站不提供 Embedding**（LeMeshSub2Api 这类 Sub2Api 网关只代理对话订阅，订阅本身不含 embedding 接口）
 
-### 实测确认（三选一，需用户的 API Key）
+### 实测确认（已跳过）
+
+用户已确认不先实测中转站，Phase1 直接采用本机 Embedding：`bge-small-zh`（512 维）。下列命令仅保留为后续排查参考：
 
 ```bash
 # A. 列模型，看有无 embed* / embedding*
@@ -67,12 +73,12 @@ curl -sS -H "Authorization: Bearer 你的KEY" -H "Content-Type: application/json
 
 ---
 
-## 3. 待你拍板的开放项
+## 3. 已拍板的开放项
 
-1. **Embedding 落地**：实测中转站？还是直接定本机？若本机，`bge-small-zh`（512 维）还是 `bge-m3`（1024 维，中英多语）？
-2. **数据范围**：Demo 仅用虚构数据（README / `docs/00` 已声明的虚构场景），还是会导入**真实团队/客户文档**？（后者影响"文档经中转站发给外部模型"的隐私评估，可能要求中转站不出外部或脱敏）
-3. **装依赖 / 拉镜像**：本机可自由 `pip/npm install` + `docker pull`（PG+pgvector 镜像等）？还是需公司内网镜像源 / 审批？（注：Docker 29.5.2 已装且可用）
-4. **资源软上限**（建议值，待确认）：Demo 峰值内存 < 8GB、显存 < 4GB（不跑本地模型则 ≈ 0）、磁盘 < 20GB（镜像 + 数据 + 导入文件）。
+1. **Embedding 落地**：不先实测中转站，Phase1 直接采用本机 `bge-small-zh`（512 维）。
+2. **数据范围**：默认使用已标注的虚构 Demo 数据；允许按需导入部分真实团队文档，真实文档必须显式标注来源 / 敏感级别，并优先避免发送到外部模型。
+3. **装依赖 / 拉镜像**：允许本机 `pip install` / `npm install` / `docker pull` 项目所需依赖与镜像；新增依赖须写入依赖文件并说明用途，不得替换既定技术栈。
+4. **资源软上限**：Demo 峰值内存 < 8GB、显存 < 4GB、磁盘 < 20GB；超限先优化批处理、增量索引与 chunk 策略，再触发服务器预案。
 
 ---
 
@@ -80,9 +86,9 @@ curl -sS -H "Authorization: Bearer 你的KEY" -H "Content-Type: application/json
 
 | 文件 | 改什么 |
 |---|---|
-| `ai/project-rules.md` §2.5 | 7 个"待确认"换成实际值（联网/装依赖/降级Mock/禁本机/公司服务器/资源口径） |
-| `docs/env/local-env.md` | "人工确认项" + "资源软上限" + "服务器资源预案" 三段补齐 |
-| `docs/05-tech-spec.md` | Embedding 模型 + **维度**（决定 pgvector `vector(N)`）、本机 Demo 可行性、降级/Mock 策略、服务器资源预案 |
+| `ai/project-rules.md` §2.5 | 已落联网、Embedding、依赖 / 镜像、公司服务器预案、数据范围、资源软上限 |
+| `docs/env/local-env.md` | "人工确认项" + "资源软上限" + "服务器资源预案" 三段已补齐 |
+| `docs/05-tech-spec.md` | Embedding 模型 + **维度**（已定 `bge-small-zh` / `vector(512)`）、本机 Demo 可行性、降级/Mock 策略、服务器资源预案 |
 | `docs/09-verification.md` §4 | 本机资源验证口径（峰值内存/显存/磁盘、超限触发服务器预案的条件） |
 
 > 04（架构运行拓扑）、05、09 的运行环境假设须与 `project-rules §2.5` 和 `docs/env/local-env.md` **一致**（global-rules §10 checklist C）。

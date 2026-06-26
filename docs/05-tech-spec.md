@@ -11,8 +11,8 @@
 |---|---|---|
 | 后端 | Python + FastAPI | Python 3.12 / FastAPI 0.11x 待确认 |
 | 数据库 | PostgreSQL + pgvector | PG 16 / pgvector 0.7 待确认 |
-| 向量索引 | pgvector ivfflat 或 hnsw | 参数与 Embedding 维度联动，待确认 |
-| AI | OpenAI 兼容（LLM + Embedding） | 具体型号 / Embedding 维度待确认 |
+| 向量索引 | pgvector ivfflat 或 hnsw | Embedding 维度 512；索引参数待确认 |
+| AI | LLM：OpenAI 兼容接口；Embedding：本机 `bge-small-zh` | Embedding 512 维；LLM 具体型号待确认 |
 | 前端 | React | 18 + 状态管理 / 路由待确认 |
 | 文档解析 | python-docx / pdfplumber | 版本待确认 |
 | OCR | PaddleOCR（建议，中文友好） | 待确认 |
@@ -21,11 +21,11 @@
 ## 2. 关键技术决策
 
 - **向量检索用 pgvector**，Phase1 不引 Milvus / Qdrant（见 project-rules §2）。
-- **AI 调用统一走 OpenAI 兼容封装层**，不绑厂商 SDK；换模型只改配置。
+- **AI 调用分层封装**：LLM 统一走 OpenAI 兼容封装层；Embedding 通过本机 adapter 调 `bge-small-zh`，后续可替换为公司内网 OpenAI-compatible `/v1/embeddings` 服务。
 - **导入流水线**：异构文件 → 纯文本 → 切块 → Embedding → 入 `lumen_chunks`（详见 docs/design/ingestion）。
 - **RAG**：向量检索 + 全文检索双路召回，答案带来源（详见 docs/design/rag-retrieval）；P1 不做重排调优。
 - **鉴权**：会话 / Token（具体方式待本文细化）；权限在空间 + 文档两级校验，查询 / 检索 / 问答三层统一过滤（详见 docs/design/permissions）。
-- **切块与 Embedding 参数**：导入侧与检索侧共用同一套（避免 train/serve 偏差）；具体 token 长度 / 重叠待钉。
+- **切块与 Embedding 参数**：导入侧与检索侧共用同一套（避免 train/serve 偏差）；Embedding 模型为 `bge-small-zh`，维度 512，对应 pgvector `vector(512)`；具体 token 长度 / 重叠待钉。
 
 ## 3. Phase 技术约束
 
@@ -41,7 +41,10 @@
 
 > 受 `ai/project-rules.md` §2.5 与 `docs/env/local-env.md` 约束。给出本机 Demo 可行性、瓶颈、降级 / Mock 与服务器预案。
 
-- 本机 Demo 可行性：PostgreSQL+pgvector、FastAPI、React 均可本机 Docker 运行；Embedding 可本机（RTX 3050）或远程 API。
-- 资源瓶颈：待确认（大文档批量导入的内存占用、向量索引构建开销）。
-- 降级 / Mock 策略：待确认（LLM 可降级为 Mock 回答或远程 API；OCR 可降级为已提取文本）。
-- 服务器资源预案：待确认（见 `docs/env/local-env.md`「服务器资源预案」段）。
+- 本机 Demo 可行性：PostgreSQL+pgvector、FastAPI、React 均可本机 Docker 运行；Embedding 采用本机 `bge-small-zh`（512 维），不依赖公司 Embedding 资源。
+- 数据范围：默认使用已标注的虚构 Demo 数据；允许按需导入部分真实团队文档。真实文档必须显式标注来源 / 敏感级别，并优先避免发送到外部模型。
+- 依赖 / 镜像：允许本机安装项目所需 Python / npm 依赖并拉取 Docker 镜像；新增依赖必须进入依赖文件并说明用途，不得替换既定技术栈。
+- 资源软上限：Demo 峰值内存 < 8GB、显存 < 4GB、磁盘 < 20GB；依据见 `docs/env/local-env.md` 自动采集值与人工确认项。
+- 资源瓶颈：大文档批量导入的内存占用、向量索引构建开销；超限先优化批处理、增量索引与 chunk 策略。
+- 降级 / Mock 策略：LLM 可降级为明确 Mock 回答或远程 API；OCR 可降级为已提取文本；真实文档场景下需优先避免把敏感片段发送到外部模型。
+- 服务器资源预案：本机 Embedding 不够用时，申请公司内网 Embedding / reranker 服务，后端通过 adapter 调用 OpenAI-compatible `/v1/embeddings`，并按新维度重建向量与索引（见 `docs/env/local-env.md`「服务器资源预案」段）。
