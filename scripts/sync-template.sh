@@ -25,17 +25,64 @@ DEFAULT_SYNC_FILES=(
   "VERSION"
   "CHANGELOG.md"
   "MAINTAINERS.md"
+  "template-docs/beginner-guide.md"
+  "template-docs/env-setup.md"
+  "template-docs/ai-cli-setup.md"
+  "template-docs/smoke-test.md"
+  "template-docs/smoke-test-report-template.md"
+  "template-docs/template-methodology.md"
+  "template-docs/session-handoff.example.md"
   "template-sync.json"
   "ai/index.md"
   "ai/global-rules.md"
+  "ai/document-lifecycle-rules.md"
+  "ai/session-rules.md"
+  "ai/doc-standards/README.md"
+  "ai/commands/README.md"
+  "ai/commands/sync-methodology.md"
+  "ai/commands/post-sync-cleanup.md"
+  "ai/commands/docs-system-audit.md"
+  "ai/commands/template-proposal-summary.md"
+  "ai/commands/generate-docs.md"
+  "ai/commands/review-inputs.md"
+  "ai/commands/project-review.md"
+  "ai/commands/edit-single-doc.md"
+  "ai/commands/sync-docs-from-code.md"
+  "ai/commands/phase-upgrade.md"
+  "ai/commands/docs-checklist.md"
+  "ai/commands/run-dev-task.md"
+  "ai/commands/fix-bug.md"
+  "ai/commands/sprint-summary.md"
+  "ai/commands/collect-env.md"
+  "ai/commands/new-project.md"
+  "ai/commands/commit-message.md"
   "AGENTS.md"
   "CLAUDE.md"
   ".cursor/rules/project-rules.mdc"
   "SOP.md"
   "INIT-PROMPT.md"
+  "ai/prompts/dev/02-run-task.md"
+  "ai/prompts/dev/05-fix-bug.md"
+  "ai/prompts/dev/09-sprint-summary.md"
+  "ai/prompts/docs/00-generate-or-complete-docs.md"
+  "ai/prompts/docs/01-review-inputs.md"
+  "ai/prompts/docs/04-edit-single-doc.md"
+  "ai/prompts/docs/07-sync-docs-from-code.md"
+  "ai/prompts/git/06-commit-message.md"
+  "ai/prompts/maintainers/11-template-proposal-summary.md"
+  "ai/prompts/maintainers/12-sync-template.md"
+  "ai/prompts/maintainers/15-post-sync-cleanup.md"
+  "ai/prompts/planning/08-phase-upgrade.md"
+  "ai/prompts/README.md"
+  "ai/prompts/review/03-project-review.md"
+  "ai/prompts/review/10-docs-checklist.md"
+  "ai/prompts/review/16-docs-system-audit.md"
+  "ai/prompts/setup/13-collect-env.md"
+  "ai/prompts/setup/14-new-project.md"
   "CONTRIBUTING.md"
   "git-guide.md"
   "docs/README.md"
+  "docs/inputs/README.md"
   "scripts/new-project.sh"
   "scripts/sync-template.sh"
   "scripts/sync-template.ps1"
@@ -44,6 +91,24 @@ DEFAULT_SYNC_FILES=(
   "scripts/check-derived-sync.sh"
   "scripts/check-derived-sync.ps1"
   "scripts/collect-env.ps1"
+  "scripts/check-prereqs.ps1"
+  "scripts/bootstrap-dev-env.ps1"
+)
+
+# doc-standards 规范镜像：把模板 docs/00-09 撰写规范镜像到派生项目 ai/doc-standards/。
+# 与 SYNC_FILES 不同，这是 src(docs/0X) != dest(ai/doc-standards/0X) 的专用镜像步骤；
+# 产物是只读 AI 文档标准，不是项目事实，绝不覆盖派生项目自己的 docs/0X。
+DOC_STANDARD_DOCS=(
+  "docs/00-scenario.md"
+  "docs/01-user-requirements.md"
+  "docs/02-srs.md"
+  "docs/03-prd.md"
+  "docs/04-architecture.md"
+  "docs/05-tech-spec.md"
+  "docs/06-db-design.md"
+  "docs/07-api-spec.md"
+  "docs/08-dev-plan.md"
+  "docs/09-verification.md"
 )
 
 SYNC_FILES=()
@@ -75,7 +140,8 @@ git rev-parse --is-inside-work-tree >/dev/null
 echo "==> 抓取模板: $TEMPLATE_REMOTE (main)"
 if ! git fetch --no-tags --depth=1 "$TEMPLATE_REMOTE" main; then
   echo "✗ 抓取失败。模板仓库是私有的——确保活跃 gh 账号有访问权限：" >&2
-  echo "    gh auth switch -u emily8421" >&2
+  echo "    gh auth status" >&2
+  echo "    gh auth switch -u <有模板仓库访问权限的账号>" >&2
   exit 1
 fi
 REF="FETCH_HEAD"
@@ -164,6 +230,27 @@ if [[ "$MODE" == "--dry-run" ]]; then
       fi
     fi
   done
+
+  echo
+  echo "==> doc-standards 规范镜像（docs/00-09 → ai/doc-standards/，只读规范，不覆盖项目事实）:"
+  for src in "${DOC_STANDARD_DOCS[@]}"; do
+    dest="ai/doc-standards/$(basename "$src")"
+    if git cat-file -e "$REF:$src" 2>/dev/null; then
+      if [[ -f "$dest" ]]; then
+        remote_hash="$(git rev-parse "$REF:$src")"
+        local_hash="$(git hash-object --path="$dest" "$dest" 2>/dev/null || true)"
+        if [[ -n "$local_hash" && "$remote_hash" == "$local_hash" ]]; then
+          echo "    = $dest（无差异）"
+        else
+          echo "    Δ $dest（规范镜像）"
+        fi
+      else
+        echo "    Δ $dest（新增规范镜像）"
+      fi
+    else
+      echo "    · $dest（模板无 $src，跳过）"
+    fi
+  done
   echo "   确认后执行: bash scripts/sync-template.sh --commit"
 else
   UPDATED_FILES=()
@@ -175,6 +262,20 @@ else
       echo "    ✓ $f"
     else
       echo "    · $f （模板无此文件，跳过）"
+    fi
+  done
+
+  echo "==> doc-standards 规范镜像（docs/00-09 → ai/doc-standards/，只读规范，不覆盖项目事实）:"
+  for src in "${DOC_STANDARD_DOCS[@]}"; do
+    dest="ai/doc-standards/$(basename "$src")"
+    if git cat-file -e "$REF:$src" 2>/dev/null; then
+      mkdir -p ai/doc-standards
+      git show "$REF:$src" > "$dest"
+      git add "$dest"
+      UPDATED_FILES+=("$dest")
+      echo "    ✓ $dest（规范镜像）"
+    else
+      echo "    · $dest（模板无 $src，跳过）"
     fi
   done
 
