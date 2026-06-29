@@ -37,6 +37,10 @@ extract_sync_files() {
 
 is_sync_file() {
   local changed_file="$1"
+  case "$changed_file" in
+    ai/doc-standards/*) return 0 ;; # 模板 00-09 撰写规范镜像，由 sync-template 专用镜像步骤产生
+    docs/_scaffold/*) return 0 ;;   # v1.18.x 旧规范镜像路径，迁移期兼容
+  esac
   local sync_file
   for sync_file in "${SYNC_FILES[@]}"; do
     if [[ "$changed_file" == "$sync_file" ]]; then
@@ -121,7 +125,7 @@ done
 echo
 if [[ "$FAILURES" -eq 0 ]]; then
   echo "✅ 派生项目同步边界检查通过。"
-  echo "   下一步：若需要整理项目内容，另开分支执行 INIT-PROMPT.md §15 第一段，只审计并输出迁移计划。"
+  echo "   下一步：若需要整理项目内容，另开分支执行 ai/prompts/maintainers/15-post-sync-cleanup.md，先审计并输出迁移计划。"
 else
   echo "❌ 派生项目同步边界检查失败：$FAILURES 项。" >&2
   echo "   请不要把 scripts/check-template.sh/.ps1 作为派生项目验收；它是模板仓库完整性自检。" >&2

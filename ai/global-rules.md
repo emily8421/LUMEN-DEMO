@@ -6,7 +6,7 @@
 > 本文件对所有基于本模板创建的项目逐字复用，不针对具体项目修改。
 > 如需调整通用原则，先改本模板仓库的本文件，再覆盖同步到各项目（见README）。
 >
-> **全局规则版本：v1.7（2026-06-24）**。本文件仅记录跨项目通用规则自身版本；
+> **全局规则版本：v1.8（2026-06-26）**。本文件仅记录跨项目通用规则自身版本；
 > 整个模板版本以根目录 `VERSION` 为准，并在 `CHANGELOG.md` 登记。
 
 ## 1. AI编程总体原则
@@ -14,6 +14,7 @@
 1. **文档驱动开发**：开发顺序固定为
    `Scenario → 用户需求 → SRS → PRD → 架构 → 技术方案 → 数据库设计 → API设计 → 开发计划 → 代码`。
    其中"数据库设计 / API设计"仅当本项目涉及持久化 / 对外接口时才经此环节；无则按 `ai/project-rules.md` §3 跳过 `docs/06`、`docs/07`。
+   文档生成、追溯链、变更传播和多入口裁剪细则见 `ai/document-lifecycle-rules.md`。
    禁止直接从想法生成代码。
 2. **小步快跑**：一个功能 = 一个任务 = 一次提交。禁止一次实现整个系统。
 3. **先设计后实现**：任何模块开发前必须先有设计说明，再允许生成代码。
@@ -94,15 +95,16 @@ ProjectName/
 `docs/` 核心文档固定编号 `00-09`，编号本身不因项目而变；其中 `00-05`、`08`、`09` 对所有项目必备，
 `06-db-design`、`07-api-spec` 按项目形态决定（无持久化 / 无对外接口的项目可省略，
 并在 `ai/project-rules.md` §3 声明）。`docs/` 根目录只放 `README.md` 与 `00-09` 核心文档；
-额外项目文档必须按 `docs/README.md` 放入 `vision/`、`design/`、`decisions/`、`research/`、`env/`、`meetings/`、`archive/` 等子目录，
+额外项目文档必须按 `docs/README.md` 放入 `vision/`、`inputs/`、`design/`、`decisions/`、`research/`、`env/`、`meetings/`、`archive/` 等子目录，
 不占用、不挪动 `00-09` 编号，禁止把新增文档直接堆到 `docs/` 根目录。
 
 `frontend/` 是否启用取决于 `ai/project-rules.md` §3 的「演示形态」决策：消息通道内交互、CLI 或不需演示通常不启用；独立 Web 页面或移动端通常启用，并在 `docs/04-architecture.md`、`docs/05-tech-spec.md` 体现前端设计。根 `README.md` 是项目件，用于说明具体项目，不纳入下行同步清单，各项目自行维护。
 
 两类常见的语义命名约定：
 - **产品愿景/叙事类源文档**：放 `docs/vision/product-vision.md`，头部带“产品愿景叙事·不直接驱动
-  开发”定位声明；它是工程文档的**输入**，与 00-09 物理分离。从愿景起步的项目用 `INIT-PROMPT.md` §0
-  一次性生成完整文档体系。
+  开发”定位声明；它是工程文档的**输入**，与 00-09 物理分离。生成或补齐文档体系时先用
+  `ai/prompts/docs/01-review-inputs.md` 评审输入，再用 `ai/prompts/docs/00-generate-or-complete-docs.md`，
+  并按 `ai/document-lifecycle-rules.md` 判断入口模式与文档剖面。
 - **子系统详细设计**：非平凡子系统用 `docs/design/<子系统>.md`，一个子系统一份，不编号；
   与 04（总体）/ 06-07（数据·接口）互补，承载子系统内部逻辑。
 
@@ -117,14 +119,20 @@ Scenario → 用户需求 → SRS → PRD → 架构设计 → 技术方案 → 
 
 避免：`想法 → AI → 代码`。
 
-## 7. 多AI工具协作
+## 7. 多AI工具协作与快捷入口
 
 不同AI编程工具（Cursor / Claude Code / Codex 等）的入口文件
 （`.cursor/rules/project-rules.mdc` / `CLAUDE.md` / `AGENTS.md`）均只指向本目录的
 `index.md`；其中 `.cursor/rules/project-rules.mdc` 额外带 frontmatter（`alwaysApply: true`）
 以便 Cursor 自动加载，其余入口由工具原生自动读取。切换工具会丢失"对话历史"，但不会丢失"项目规则"。
-切换时：先在 `docs/08-dev-plan.md` 当前Sprint条目下记录进度，新工具开新会话后先
-执行 `INIT-PROMPT.md` 中的初始化Prompt，再说明当前进度，继续开发。
+
+会话中断、切换工具或开启新 CLI 窗口时，按 `ai/session-rules.md` 读取 / 更新本地续接文件
+（优先 `.ai/session-handoff.md`，兼容 `NEXT-STEPS.md`），并结合 `git status --short --branch`
+恢复上下文。任何多步骤任务、执行计划、文件修改或阻塞项，都应及时写入续接文件，避免计划只留在聊天上下文。
+
+当用户提出“更新方法论”“文档体系审核”“同步后整理项目”“执行 Sprint”等常见操作意图时，
+AI 应优先查 `ai/commands/README.md` 与对应 `ai/commands/*.md`，再读取命令路由指向的权威
+Prompt / SOP / 脚本说明执行；不要要求用户手工打开 prompt 文件、复制再粘贴。
 
 ## 8. 文档演进规则（积累式）
 
@@ -164,4 +172,4 @@ Scenario → 用户需求 → SRS → PRD → 架构设计 → 技术方案 → 
 
 每次任务收尾时，AI 应顺带审视本次工作是否暴露出可通用于多个项目的模板优化点（如规则不清、决策前置不足、文档骨架缺口、脚本流程别扭）。任何需要修改项目模板的工作，都必须先形成 `TEMPLATE-UPGRADE-*.md` 提案（去项目化：动机 / 拟改 / 版本 / 影响），可附 `TEMPLATE-UPGRADE-*-patch.md` 记录具体 old→new 修改建议；成熟后回流到模板仓库 `_proposals/` 收件箱，由模板仓库 PR 落地。模板改动合并并下行同步后，已处理提案必须移动到 `_archive/proposals/` 归档或在派生项目历史中留痕。
 
-在模板仓库内，模板维护者 AI 处理 `_proposals/` 时必须先读取全部 `TEMPLATE-UPGRADE-*.md` 与可选 `*-patch.md`，输出去重 / 冲突 / 依赖分析和合并或分阶段优化计划，再辅助修改 `ai/global-rules.md`、`INIT-PROMPT.md`、脚本和治理文档；所有实际改动仍需人工审查并通过 PR 合并。
+在模板仓库内，模板维护者 AI 处理 `_proposals/` 时必须先读取全部 `TEMPLATE-UPGRADE-*.md` 与可选 `*-patch.md`，输出去重 / 冲突 / 依赖分析和合并或分阶段优化计划，再辅助修改 `ai/global-rules.md`、`INIT-PROMPT.md`、`ai/prompts/`、脚本和治理文档；所有实际改动仍需人工审查并通过 PR 合并。
