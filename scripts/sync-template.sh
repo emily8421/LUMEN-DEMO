@@ -32,6 +32,7 @@ DEFAULT_SYNC_FILES=(
   "template-docs/smoke-test-report-template.md"
   "template-docs/template-methodology.md"
   "template-docs/session-handoff.example.md"
+  "template-docs/derived-sync-report-template.md"
   "template-sync.json"
   "ai/index.md"
   "ai/global-rules.md"

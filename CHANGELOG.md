@@ -6,6 +6,14 @@
 
 模板版本采用三段式 `vMAJOR.MINOR.PATCH`，以根目录 `VERSION` 为单一审计入口。任何会影响下游同步判断的模板合并都应递增版本；`ai/global-rules.md` 顶部仅记录全局规则自身版本。
 
+## v1.21.0（2026-06-29）
+
+- 新增 `template-docs/derived-sync-report-template.md`，用于派生项目真实同步模板方法论后记录同步前后版本、执行命令、边界检查结果、问题和可回流优化点。
+- `/run sync-methodology` 与 `ai/prompts/maintainers/12-sync-template.md` 在 `check-derived-sync` 后增加同步运行记录步骤，并提示将可通用问题转写为去项目化 `_proposals/TEMPLATE-UPGRADE-*.md`。
+- `/run post-sync-cleanup` 与 `ai/prompts/maintainers/15-post-sync-cleanup.md` 支持读取最近同步运行记录，提炼待确认项和模板优化回流建议。
+- `README.md`、`SOP.md`、`MAINTAINERS.md`、`CONTRIBUTING.md`、`template-sync.json`、`scripts/sync-template.sh` 与 `scripts/check-template.sh` 同步纳入运行记录模板和防入口滞后断言。
+- 归档已落地提案：`TEMPLATE-UPGRADE-derived-sync-observation.md`。
+
 ## v1.20.0（2026-06-29）
 
 - 将模板 `docs/00-09` 撰写规范镜像主路径从 `docs/_scaffold/00-09` 迁移为 `ai/doc-standards/00-09`，明确其定位为 AI 文档标准 / 审计基线，而非项目事实或初始化脚手架。

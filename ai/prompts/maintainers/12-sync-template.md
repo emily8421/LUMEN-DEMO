@@ -17,9 +17,9 @@
 
 **续接要求**：同步流程开始后，按 `ai/session-rules.md` 记录当前同步路径、目标版本、已执行命令、待确认项和下一步。
 
-**预期产出**：同步分支、同步提交、派生同步边界检查结果、派生项目已处理提案归档计划和 PR 链接。
+**预期产出**：同步分支、同步提交、派生同步边界检查结果、派生同步运行记录、派生项目已处理提案归档计划和 PR 链接。
 
-**使用后下一步**：评审并合并派生项目同步 PR；若 `ai/project-rules.md` 需要人工迁移新骨架项，或 `_proposals/` 中仍有未处理提案，单独开任务处理。
+**使用后下一步**：评审并合并派生项目同步 PR；用 `template-docs/derived-sync-report-template.md` 生成同步运行记录；若 `ai/project-rules.md` 需要人工迁移新骨架项、`_proposals/` 中仍有未处理提案，或运行记录中出现可通用模板优化点，单独开任务处理。
 
 > 事实来源：下行同步标准流程以 `git-guide.md` 与 `CONTRIBUTING.md` 为准；本节只是把该流程整理成可复制给 AI 执行的 Prompt。
 
@@ -68,9 +68,17 @@
    - 未处理、延后处理或不确定状态的提案继续保留在 `_proposals/`，不要误归档。
    - 如执行归档，补充或更新 `_archive/proposals/README.md`，说明归档规则与对应模板版本 / PR。
 14. 如有归档改动，运行 git status 并确认只移动提案记录，不改业务文件。
-15. 推送当前分支：git push -u origin chore/sync-template-vX.Y.Z。
-16. 创建 PR：gh pr create --fill。
-17. 最后汇总：同步到的模板版本、同步提交、采用的同步路径、同步边界检查结果、是否需要人工迁移 project-rules、是否需要运行 collect-env、提案归档情况和 PR 链接。
+15. 生成派生同步运行记录：
+   - 读取 `template-docs/derived-sync-report-template.md`。
+   - 推荐保存到 `docs/archive/template-sync/YYYY-MM-DD-sync-template-vX.Y.Z.md`；如果用户暂不想提交长期记录，先写入 `.ai/session-handoff.md`。
+   - 记录同步前版本、目标版本、同步分支、dry-run / commit / check-derived-sync 命令、同步结果、是否新增 / 刷新 `ai/doc-standards/00-09`、是否残留旧 `docs/_scaffold/`、遇到的问题和后续动作。
+16. 从运行记录归纳可优化点：
+   - 区分项目专属问题、环境问题和模板方法论问题。
+   - 对可通用于多个项目的问题，生成去项目化 `_proposals/TEMPLATE-UPGRADE-*.md`；不得包含客户、账号、路径敏感信息或项目专属业务细节。
+   - 若没有可回流问题，记录“本次无模板回流提案”。
+17. 推送当前分支：git push -u origin chore/sync-template-vX.Y.Z。
+18. 创建 PR：gh pr create --fill。
+19. 最后汇总：同步到的模板版本、同步提交、采用的同步路径、同步边界检查结果、同步运行记录路径、是否需要人工迁移 project-rules、是否需要运行 collect-env、提案归档情况、是否生成回流提案和 PR 链接。
 
 遇到以下情况必须停止并说明原因：
 - 工作区不干净。
@@ -80,6 +88,7 @@
 - sync-template 提示本地脚本不是最新版，且无法完成 bootstrap。
 - 派生同步边界检查显示最新同步提交包含 README.md、ai/project-rules.md、docs/00-09 或业务代码。
 - 无法判断 `_proposals/` 中某个提案是否已被模板采纳。
+- 运行记录中包含敏感信息且无法去项目化。
 - 脚本失败。
 - GitHub 认证或权限失败。
 ```
