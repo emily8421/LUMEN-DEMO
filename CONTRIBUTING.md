@@ -39,6 +39,7 @@
 
 - **上行·改进**：派生项目发现可通用优化 → 在本项目 `_proposals/` 起草 `TEMPLATE-UPGRADE-*.md` → 回到模板仓库提交到 `_proposals/` 收件箱 → 模板 PR 合并 → 提案归档 → 模板演进。
 - **下行·对齐**：派生项目执行 `scripts/sync-template.sh` → 拉取模板最新方法论覆盖本地同步清单 → 按项目提交记录审计版本。
+- **观察·回流**：真实派生同步后可用 `template-docs/derived-sync-report-template.md` 留运行记录；运行记录可包含派生项目事实，但回流到模板仓库的 `_proposals/TEMPLATE-UPGRADE-*.md` 必须去项目化。
 
 只有上行没有下行，模板改了但派生项目拿不到；只有下行没有上行，模板不会吸收派生项目经验。两者缺一不可。
 
