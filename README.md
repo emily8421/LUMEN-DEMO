@@ -2,7 +2,7 @@
 
 > 面向中小企业的团队知识库 demo：把分散在聊天 / 邮件 / 旧文件 / 笔记里的团队知识，沉淀到一个**支持空间隔离与三级文档权限**、可被 **AI 检索与问答（带来源引用）**、支持**多格式导入（Word / PDF / OCR）**的知识库。
 >
-> 本项目派生自 [`ai-project-template`](https://github.com/emily8421/ai-project-template)（v1.7.0），采用其「文档驱动开发」方法论——**先文档、后代码**。
+> 本项目派生自 [`ai-project-template`](https://github.com/emily8421/ai-project-template)，采用其「文档驱动开发」方法论——**先文档、后代码**；当前已下行同步至模板 **v1.21.0**。
 
 ## 当前状态
 
@@ -57,7 +57,7 @@ LUMEN_demo_T2.1/
 ├─ docs/        # 项目事实：需求、设计、计划、验证（00-09 + design-* + vision/）
 ├─ ai/          # AI 行为规范（global-rules / project-rules / index）
 ├─ tasks/       # 任务单（按需启用）
-├─ scripts/     # 模板脚本（new-project.sh / sync-template.sh / check-template.sh / collect-env.ps1）
+├─ scripts/     # 模板脚本（sync-template.* / check-derived-sync.* / check-template.* / collect-env.ps1 / new-project.sh 等，含 PowerShell 入口）
 ├─ backend/ frontend/ docker/ tests/   # 待编码（按 08-dev-plan Sprint 推进）
 ├─ _proposals/                        # 模板优化提案起草区（回流模板仓库前临时存放）
 └─ AGENTS.md / CLAUDE.md / .cursor/    # 各 AI 工具入口，指向 ai/index.md
@@ -65,10 +65,10 @@ LUMEN_demo_T2.1/
 
 ## 模板关系与同步
 
-本项目派生自 `ai-project-template` v1.7.0，方法论文件随模板演进：
+本项目派生自 `ai-project-template`，方法论文件随模板演进（当前已同步至 **v1.21.0**）：
 
 - **上行（改方法论）**：在[模板仓库](https://github.com/emily8421/ai-project-template)走「分支 → PR → 评审 → 合并」（见其 `CONTRIBUTING.md`），**不在本项目直接改 `ai/global-rules.md`**。
-- **下行（同步到本项目）**：`bash scripts/sync-template.sh --commit`（先 `--dry-run`）。当前已同步至模板 v1.7.0。
+- **下行（同步到本项目）**：v1.6.8+ 走 PowerShell 入口 `powershell -ExecutionPolicy Bypass -File scripts/sync-template.ps1 --commit`（先 `--dry-run`），同步清单见 `template-sync.json`；同步后用 `powershell -ExecutionPolicy Bypass -File scripts/check-derived-sync.ps1` 做派生边界验收。当前已同步至模板 **v1.21.0**。
 - git 工作流与账号说明见 `git-guide.md`。
 
 ---
