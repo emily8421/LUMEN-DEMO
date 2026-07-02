@@ -13,7 +13,7 @@
 
 | 方法 | 路径 | 用途 | 阶段 | 状态 | 追溯 |
 |---|---|---|---|---|---|
-| POST | /api/auth/login | 登录 | [P1] | P1-已设计 | REQ-011 基础 |
+| POST | /api/auth/login | 登录 | [P1] | P1-已设计 | REQ-001 基础 |
 | GET | /api/spaces | 列出我的空间 | [P1] | P1-已设计 | REQ-001/002 |
 | POST | /api/spaces/switch | 切换当前空间 | [P1] | P1-已设计 | REQ-002 |
 | GET | /api/documents | 文档列表 | [P1] | P1-已设计 | REQ-004 |
