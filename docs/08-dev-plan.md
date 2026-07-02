@@ -103,6 +103,26 @@ docs/design/rag-retrieval.md、06（chunks 索引）、07（search / query）
 - 不做跨空间术语同步
 - 不做术语冲突自动改写文档
 
+## Sprint-6：桌面端集成与验收
+
+### 目标
+Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不新增功能，是 Phase1 桌面端横切验收与集成。
+
+### 输入文档
+09-verification.md（REQ-011 验证矩阵 + 各 REQ 桌面端口径）、各前置 Sprint 交付
+
+### 修改范围
+- frontend：桌面端布局 / 交互适配、各功能页面集成
+- 集成验证：Chrome / Edge 全 P1 功能走查
+
+### 验收标准
+- Chrome / Edge 桌面端完成 REQ-001..REQ-011 全部功能（见 09 §2 矩阵）
+- 桌面端主流分辨率下交互可用、无阻塞缺陷
+
+### 禁止事项
+- 不做移动端 / 响应式移动适配（Phase1 禁止，见 project-rules §1）
+- 不新增 P1 范围外功能
+
 ---
 
 <!-- 升阶段时在此原位追加 Phase2 Sprint，不删除上方内容 -->
