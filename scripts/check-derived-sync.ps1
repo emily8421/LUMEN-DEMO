@@ -5,7 +5,9 @@ Usage:
   powershell -ExecutionPolicy Bypass -File scripts/check-derived-sync.ps1
   powershell -ExecutionPolicy Bypass -File scripts/check-derived-sync.ps1 HEAD
 
-It prefers Git Bash so Windows does not accidentally invoke WSL bash.
+It prefers Git Bash so Windows behavior stays aligned with check-derived-sync.sh.
+If Git Bash cannot be started from PowerShell, it falls back to a native
+PowerShell boundary check.
 #>
 param(
   [Parameter(ValueFromRemainingArguments = $true)]
@@ -56,6 +58,14 @@ function Test-TemplateBash {
       -RedirectStandardOutput $stdoutFile `
       -RedirectStandardError $stderrFile
 
+    if ($null -eq $proc) {
+      return [pscustomobject]@{
+        Ready    = $false
+        ExitCode = -1
+        StdErr   = 'Start-Process returned null (bash failed to start from PowerShell)'
+      }
+    }
+
     $stderr = if (Test-Path $stderrFile) { (Get-Content $stderrFile -Raw).Trim() } else { "" }
     return [pscustomobject]@{
       Ready    = ($proc.ExitCode -eq 0)
@@ -68,6 +78,158 @@ function Test-TemplateBash {
   }
 }
 
+function Pass {
+  param([string]$Message)
+  Write-Host "OK  $Message"
+}
+
+function Fail {
+  param([string]$Message)
+  Write-Error "FAIL $Message" -ErrorAction Continue
+  $script:Failures++
+}
+
+function Require-File {
+  param([string]$Path)
+
+  if (Test-Path -LiteralPath $Path -PathType Leaf) {
+    Pass "file exists: $Path"
+  } else {
+    Fail "missing file: $Path"
+  }
+}
+
+function Get-GitText {
+  param([Parameter(ValueFromRemainingArguments = $true)][string[]]$GitArgs)
+
+  $output = & git @GitArgs
+  if ($LASTEXITCODE -ne 0) {
+    throw "git $($GitArgs -join ' ') failed with exit code $LASTEXITCODE"
+  }
+  return @($output)
+}
+
+function Test-SyncFile {
+  param(
+    [string]$ChangedFile,
+    [string[]]$SyncFiles
+  )
+
+  if ($ChangedFile -like "ai/doc-standards/*") { return $true }
+  if ($ChangedFile -like "docs/_scaffold/*") { return $true }
+  return ($SyncFiles -contains $ChangedFile)
+}
+
+function Test-ProtectedProjectFile {
+  param([string]$ChangedFile)
+
+  return (
+    $ChangedFile -eq "README.md" -or
+    $ChangedFile -eq "ai/project-rules.md" -or
+    $ChangedFile -like "docs/0[0-9]-*" -or
+    $ChangedFile -like "frontend/*" -or
+    $ChangedFile -like "backend/*" -or
+    $ChangedFile -like "tests/*" -or
+    $ChangedFile -like "docker/*"
+  )
+}
+
+function Get-SyncFiles {
+  if (-not (Test-Path -LiteralPath "template-sync.json" -PathType Leaf)) {
+    return @()
+  }
+
+  $json = Get-Content -Raw -Encoding UTF8 template-sync.json | ConvertFrom-Json
+  return @($json.files | Where-Object { $_ })
+}
+
+function Invoke-NativeDerivedSyncCheck {
+  param([string[]]$Args)
+
+  $script:Failures = 0
+  $commit = if ($Args -and $Args.Count -gt 0) { $Args[0] } else { "HEAD" }
+
+  Write-Host "==> PowerShell fallback derived sync boundary check"
+  Write-Host "Git Bash could not be started from PowerShell on this machine."
+  Write-Host "Using native PowerShell fallback. Fix Git Bash/MSYS separately if you need Bash entrypoints."
+  Write-Host ""
+
+  $root = (Get-GitText rev-parse --show-toplevel | Select-Object -First 1).Trim()
+  Set-Location $root
+
+  Write-Host "==> Derived sync boundary check"
+  Write-Host "==> Current status"
+  & git status --short --branch | ForEach-Object { Write-Host $_ }
+  Write-Host ""
+
+  $trackedChanges = @(& git status --porcelain | Where-Object { $_ -notlike '?? *' })
+  if ($trackedChanges.Count -gt 0) {
+    Fail "tracked changes uncommitted; review before checking sync boundary (untracked project content does not block)"
+  } else {
+    Pass "working tree clean (untracked project content does not block)"
+  }
+
+  Require-File "template-sync.json"
+
+  & git rev-parse --verify "$commit^{commit}" *> $null
+  if ($LASTEXITCODE -ne 0) {
+    Fail "cannot resolve commit: $commit"
+  }
+
+  $syncFiles = @(Get-SyncFiles)
+  if ($syncFiles.Count -eq 0) {
+    Fail "cannot parse sync file list from template-sync.json"
+  } else {
+    Pass "loaded sync file list: $($syncFiles.Count) files"
+  }
+
+  Write-Host ""
+  Write-Host "==> Latest sync commit"
+  & git show --name-only --stat --oneline --no-renames $commit | ForEach-Object { Write-Host $_ }
+  Write-Host ""
+
+  $changedFiles = @(Get-GitText diff-tree --no-commit-id --name-only -r $commit | Where-Object { $_ })
+  if ($changedFiles.Count -eq 0) {
+    Fail "commit $commit contains no file changes"
+  }
+
+  $subject = ""
+  try {
+    $subject = (Get-GitText log -1 --format=%s $commit | Select-Object -First 1).Trim()
+  } catch {
+    $subject = ""
+  }
+
+  if ($subject -match '^sync\s+template\s+v[0-9]+\.[0-9]+\.[0-9]+\s+from\s+ai-project-template$') {
+    Pass "commit message is a template sync commit"
+  } else {
+    Fail "commit message does not look like a template sync commit: $subject"
+  }
+
+  foreach ($changedFile in $changedFiles) {
+    if (Test-SyncFile -ChangedFile $changedFile -SyncFiles $syncFiles) {
+      Pass "sync-list change: $changedFile"
+    } else {
+      Fail "outside sync-list change: $changedFile"
+    }
+
+    if (Test-ProtectedProjectFile -ChangedFile $changedFile) {
+      Fail "project-specific file appears in sync commit: $changedFile"
+    }
+  }
+
+  Write-Host ""
+  if ($script:Failures -eq 0) {
+    Write-Host "OK derived sync boundary check passed."
+    Write-Host "   Next: if project cleanup is needed, use ai/prompts/maintainers/15-post-sync-cleanup.md on a separate branch."
+    return 0
+  }
+
+  Write-Error "FAIL derived sync boundary check failed: $script:Failures issue(s)." -ErrorAction Continue
+  Write-Error "   See FAIL items above; derived sync validation uses check-derived-sync, not check-template (template self-check)." -ErrorAction Continue
+  return 1
+}
+
 $root = Resolve-Path (Join-Path $PSScriptRoot "..")
 $bash = Find-TemplateBash
 $probe = Test-TemplateBash -BashPath $bash
@@ -75,11 +237,19 @@ $probe = Test-TemplateBash -BashPath $bash
 Push-Location $root
 try {
   if (-not $probe.Ready) {
-    $details = if ($probe.StdErr) { $probe.StdErr } else { "ExitCode=$($probe.ExitCode)" }
-    throw "Git Bash was found but could not be started from PowerShell. $details`nRun the Bash entry directly in Git Bash after fixing the local Git Bash/MSYS environment."
+    Write-Warning "Git Bash could not be started from PowerShell."
+    if ($probe.StdErr) {
+      Write-Warning ("Bash stderr: " + $probe.StdErr)
+    } elseif ($probe.ExitCode -ne 0) {
+      Write-Warning ("Bash probe exit code: " + $probe.ExitCode)
+    }
+
+    $fallbackExit = Invoke-NativeDerivedSyncCheck -Args $CheckArgs
+    exit $fallbackExit
   }
 
-  & $bash "scripts/check-derived-sync.sh" @CheckArgs
+  $bashArgs = @("scripts/check-derived-sync.sh") + $CheckArgs
+  & $bash $bashArgs
   exit $LASTEXITCODE
 }
 finally {

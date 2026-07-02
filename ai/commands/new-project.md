@@ -17,7 +17,7 @@
 ## 必读文件
 
 - `ai/index.md`
-- `git-guide.md` §2
+- `git-guide.md` §6（场景 D：新建派生项目）
 - `ai/prompts/setup/14-new-project.md`
 - `scripts/new-project.sh`
 - `template-docs/beginner-guide.md`

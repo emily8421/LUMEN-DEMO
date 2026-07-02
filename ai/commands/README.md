@@ -24,6 +24,8 @@
 执行当前 Sprint
 ```
 
+> **场景优先**：当用户说出的是**具体场景意图**（如「帮我新建项目」「帮我准备输入」「帮我规划阶段」「帮我打磨文档」）而非某个具体 command 时，AI 应先走 `/run scenario`（见 `ai/commands/scenario.md`），由 `template-docs/scenario-guides.md` 先产出「做什么 + 为什么」引导计划，确认后再路由到具体 command 执行。新手首次打开 AI CLI 也走此路径。
+
 AI 识别到命令意图后，应：
 
 1. 读取 `ai/index.md` 及其列出的规则文件。
@@ -48,6 +50,7 @@ AI 识别到命令意图后，应：
 
 | 命令 | 常见说法 | 路由到 |
 |---|---|---|
+| `scenario` | 我想<场景> / 帮我<做某事> / 新手引导 | `template-docs/scenario-guides.md`（元命令：先产出引导计划，再路由到具体 command） |
 | `sync-methodology` | 更新方法论 / 同步模板方法论 | `git-guide.md` §5、`ai/prompts/maintainers/12-sync-template.md` |
 | `post-sync-cleanup` | 同步后整理项目 | `ai/prompts/maintainers/15-post-sync-cleanup.md` |
 | `docs-system-audit` | 文档体系审核 / PLM 链路审计 | `ai/prompts/review/16-docs-system-audit.md` |

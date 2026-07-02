@@ -8,7 +8,7 @@
 ## 1. 适用范围
 
 - 当前只覆盖 Windows 路径。
-- 目标是验证“环境准备 -> 新建本地项目 -> 采集环境 -> 准备输入 -> 进入文档生成入口”这条链路是否成立。
+- 目标是验证“先检查环境 -> 缺失项有下一步 -> 新建本地项目 -> 采集环境 -> 准备输入 -> 进入文档生成入口”这条链路是否成立。
 - 这是一份烟测，不是完整项目验收，也不是模板仓库完整性自检。
 
 ## 2. 烟测前提
@@ -17,14 +17,15 @@
 - 当前目录是 `ai-project-template` 模板仓库根目录。
 - 若要测试远端建仓，请另行准备 `gh auth login`；本烟测默认只走本地路径，不依赖远端仓库。
 - 因为本烟测只走 `--local --no-remote`，`gh` 不是硬阻塞项；若 `gh` 缺失或安装失败，只要其余本地命令可运行，仍可继续烟测。
+- 本烟测不要求安装或登录 `Claude CLI` / `Codex CLI`；真正开始 AI 协作开发前，再按 `template-docs/ai-cli-setup.md` 至少准备一种。
 
 ## 3. 烟测目标
 
 完成后，应至少确认：
 
-1. 新手能看懂环境准备入口。
+1. 新手能先运行环境检查，而不是直接从建项目开始。
 2. `scripts/check-prereqs.ps1` 能执行并给出结果。
-3. `scripts/bootstrap-dev-env.ps1` 的调用方式清楚可见。
+3. 新手能从检查输出看出缺什么、哪些可跳过、下一步是否需要 `scripts/bootstrap-dev-env.ps1`。
 4. `scripts/new-project.sh --local --no-remote` 能创建一个本地烟测项目。
 5. 新项目内的 `scripts/collect-env.ps1` 能生成 `docs/env/local-env.md`。
 6. 新项目 README 能把用户带到文档生成入口，而不是停在半路。
@@ -43,7 +44,8 @@ powershell -ExecutionPolicy Bypass -File scripts/check-prereqs.ps1
 
 - 命令能正常执行。
 - 输出中能看到 Required / Recommended / Optional 三类结果。
-- 至少能看出下一步该运行什么。
+- 输出中能看到 `Summary` 和 `Suggested next steps`。
+- 至少能看出下一步是安装缺失项、跳过 `gh` 继续本地烟测，还是进入项目后采集环境。
 
 若缺基础工具，可按需运行：
 
@@ -74,6 +76,7 @@ bash scripts/new-project.sh smoke-demo --local --no-remote
 - 成功生成首个本地 Git 提交；若机器未配置 Git 身份，脚本也不应在这一步直接失败。
 - 新项目里包含 `README.md`、`ai/`、`docs/`、`scripts/`。
 - 新项目 `README.md` 中能看到环境准备、环境采集、输入材料和文档生成入口。
+- 新项目 `README.md` 不应再指向已迁移的旧根目录文档名，例如 `ENV-SETUP.md`。
 
 ### 步骤 3：进入新项目并采集环境
 
@@ -102,7 +105,8 @@ powershell -ExecutionPolicy Bypass -File scripts/collect-env.ps1
 
 - README 里明确提示先准备输入材料。
 - README 里明确提示填写 `ai/project-rules.md`。
-- README 里明确提示使用 `ai/prompts/docs/01-review-inputs.md` 与 `ai/prompts/docs/00-generate-or-complete-docs.md`。
+- README 里明确提示优先通过“评审输入材料”或 `/run review-inputs` 进入输入评审。
+- README 里明确提示评审通过后再“生成文档体系”或 `/run generate-docs`。
 
 ### 步骤 5：最小清理
 

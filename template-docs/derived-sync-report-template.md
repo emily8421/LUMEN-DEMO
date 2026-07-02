@@ -26,6 +26,7 @@ docs/archive/template-sync/YYYY-MM-DD-sync-template-vX.Y.Z.md
 - dry-run：
 - commit：
 - check-derived-sync：
+- 是否触发 PowerShell fallback（sync / check）：
 - post-sync-cleanup：
 
 ## 同步结果
@@ -38,7 +39,7 @@ docs/archive/template-sync/YYYY-MM-DD-sync-template-vX.Y.Z.md
 
 ## 遇到的问题
 
-- Git / gh / Git Bash / PowerShell / 网络问题：
+- Git / gh / Git Bash / PowerShell / 网络问题（如触发 fallback，请记录脚本输出的 fallback 标识与结果）：
 - 同步脚本问题：
 - Prompt / 快捷命令理解问题：
 - 文档说明不清：

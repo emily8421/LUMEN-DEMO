@@ -67,10 +67,10 @@ echo "==> 当前状态"
 git status --short --branch
 echo
 
-if [[ -n "$(git status --porcelain)" ]]; then
-  fail "工作区不干净；请先确认未提交改动，避免把同步校验与项目改动混在一起"
+if [[ -n "$(git status --porcelain | grep -v '^??')" ]]; then
+  fail "工作区有已跟踪改动未提交；请先确认，避免把同步校验与项目改动混在一起（未跟踪项目内容不阻塞）"
 else
-  pass "工作区干净"
+  pass "工作区干净（未跟踪项目内容不阻塞）"
 fi
 
 require_file "template-sync.json"
@@ -128,6 +128,6 @@ if [[ "$FAILURES" -eq 0 ]]; then
   echo "   下一步：若需要整理项目内容，另开分支执行 ai/prompts/maintainers/15-post-sync-cleanup.md，先审计并输出迁移计划。"
 else
   echo "❌ 派生项目同步边界检查失败：$FAILURES 项。" >&2
-  echo "   请不要把 scripts/check-template.sh/.ps1 作为派生项目验收；它是模板仓库完整性自检。" >&2
+  echo "   见上方 ✗ 标注的失败项；另：派生同步验收用 check-derived-sync，不要用 check-template（模板自检）。" >&2
   exit 1
 fi
