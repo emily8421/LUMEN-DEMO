@@ -15,6 +15,7 @@
 | lumen_document_versions | 版本历史 | [P1] | P1-已设计 | REQ-006 |
 | lumen_chunks | 切块 + Embedding 向量 + 全文向量 | [P1] | P1-已设计 | REQ-007/008 |
 | lumen_imports | 导入任务 | [P1] | P1-已设计 | REQ-009/010 |
+| lumen_terms | 空间级术语表 | [P1] | P1-已设计 | REQ-036 |
 | lumen_tags | 标签 | [P2] | 骨架 | REQ-012 |
 | lumen_tag_links | 标签-文档关联 | [P2] | 骨架 | REQ-012 |
 | lumen_push_copies | 跨空间推送只读副本 | [P2] | 骨架 | REQ-015 |
@@ -102,6 +103,20 @@
 | parsed_doc_id | bigint FK→documents | 解析生成/关联的文档 |
 | created_at | timestamptz | |
 
+### lumen_terms
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| id | bigint PK | |
+| space_id | bigint FK→spaces, nullable | 为空表示全局术语；非空表示空间级术语 |
+| term | varchar | 标准名称 |
+| definition | text | 术语定义 |
+| aliases | jsonb | 客户习惯用语 / 非标准称呼 / 偏差说明 |
+| owner_id | bigint FK→users | 负责人 |
+| status | varchar | confirmed / pending |
+| source_document_id | bigint FK→documents, nullable | 术语来源文档 |
+| created_at / updated_at | timestamptz | |
+- 约束：`UNIQUE(space_id, term)`；同名术语查询时空间级优先于全局术语
+
 ### [P2] / [愿景] 表（骨架·待该阶段细化）
 - `lumen_tags` / `lumen_tag_links`：标签模型与聚合规则待 P2 细化（REQ-012）
 - `lumen_push_copies`：跨空间只读副本与权限同步待 P2 细化（REQ-015）
@@ -120,6 +135,7 @@
 - `lumen_chunks`：向量近邻索引 + `ts_vector` GIN（全文）——检索双路召回的基础
 - `lumen_documents`：`(space_id, permission)` 复合——隔离 + 权限过滤
 - `lumen_document_versions`：`UNIQUE(document_id, version_no)`
+- `lumen_terms`：`UNIQUE(space_id, term)` + `term` 前缀 / trigram 索引（具体索引待 05 钉）——支撑文档术语识别
 
 ## 4. 表间关系
 
@@ -128,5 +144,6 @@ users ──< space_members >── spaces
 spaces ──< documents ──< document_versions
 spaces ──< documents ──< chunks
 spaces ──< imports ──> documents（解析产物）
+spaces ──< terms（空间术语优先于全局术语）
 documents.permission / owner_id 与 space_members 共同决定可见性（见 docs/design/permissions）
 ```

@@ -83,6 +83,26 @@ docs/design/rag-retrieval.md、06（chunks 索引）、07（search / query）
 - 不做重排 / 混合检索的高级调优（P2+）
 - 不做因果推理（愿景）
 
+## Sprint-5：术语管理与问答口径对齐
+
+### 目标
+空间级术语表维护 + 文档术语识别 + RAG 问答优先使用术语定义（REQ-036）
+
+### 输入文档
+01/02/03、docs/design/term-management.md、06（terms）、07（terms 接口）
+
+### 修改范围
+- backend：api/terms、service/term、service/rag 术语上下文注入
+- frontend：术语管理页 / 文档术语悬浮提示（最小演示）
+
+### 验收标准
+- brightlite-team 新建「触发延迟」术语后，文档中该词可识别
+- 问答优先使用 brightlite-team 空间术语定义，不被同名全局术语覆盖
+
+### 禁止事项
+- 不做跨空间术语同步
+- 不做术语冲突自动改写文档
+
 ---
 
 <!-- 升阶段时在此原位追加 Phase2 Sprint，不删除上方内容 -->
