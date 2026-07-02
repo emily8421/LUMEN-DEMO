@@ -17,7 +17,7 @@
 
 **使用后下一步**：进入新项目，若机器尚未准备好基础开发环境，先看 `template-docs/env-setup.md` 并运行 `scripts/check-prereqs.ps1`；然后准备 `docs/vision/` 或 `docs/inputs/` 上游输入，补 `docs/env/local-env.md` 人工确认项，再用 `ai/prompts/docs/01-review-inputs.md` 评审输入材料并用 `ai/prompts/docs/00-generate-or-complete-docs.md` 生成 / 补齐 docs 文档体系。
 
-> 事实来源：新建项目操作 SOP 以 `git-guide.md` §2 为准；本节只是把该流程整理成可复制给 AI 执行的 Prompt。
+> 事实来源：新建项目操作 SOP 以 `git-guide.md` §6（场景 D）为准；本节只是把该流程整理成可复制给 AI 执行的 Prompt。
 
 ```text
 请按标准 SOP 帮我从 ai-project-template 新建一个派生项目。

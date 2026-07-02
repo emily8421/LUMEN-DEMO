@@ -70,6 +70,19 @@ require_absent_file() {
   fi
 }
 
+require_absent_contains() {
+  local file="$1"
+  local pattern="$2"
+  local message="$3"
+  if [[ ! -f "$file" ]]; then
+    fail "$message（文件缺失: $file）"
+  elif grep -Eq -- "$pattern" "$file"; then
+    fail "$message（仍含应收敛内容）"
+  else
+    pass "$message"
+  fi
+}
+
 extract_index_rules() {
   grep -E '^- ai/.+\.md$' ai/index.md | sed 's/^- //'
 }
@@ -117,7 +130,7 @@ require_changelog_semver_desc() {
   while IFS= read -r version; do
     IFS=. read -r major minor patch <<<"${version#v}"
     key="$(printf '%06d%06d%06d' "$major" "$minor" "$patch")"
-    if [[ -n "$previous_key" && "$key" -gt "$previous_key" ]]; then
+    if [[ -n "$previous_key" && "$key" > "$previous_key" ]]; then
       fail "CHANGELOG 三段式版本未按降序排列: $version"
       ok=0
       break
@@ -574,21 +587,25 @@ require_contains "CONTRIBUTING.md" 'vMAJOR\.MINOR\.PATCH' "CONTRIBUTING 含三�
 require_contains "README.md" 'SOP\.md' "README 包含 SOP 索引入口"
 require_contains "README.md" 'ai/commands/README\.md' "README 包含 AI 快捷命令入口"
 require_contains "README.md" 'ai/session-rules\.md' "README 包含会话续接规则入口"
-require_contains "README.md" 'ENV-SETUP\.md' "README 包含环境准备入口"
-require_contains "README.md" 'SMOKE-TEST\.md' "README 包含新手烟测入口"
-require_contains "README.md" 'SMOKE-TEST-REPORT-TEMPLATE\.md' "README 包含烟测记录模板入口"
-require_contains "README.md" '5 分钟最小路径' "README 包含 5 分钟最小路径"
-require_contains "README.md" 'docs/vision/product-vision\.md' "README 最小路径从产品愿景起步"
-require_contains "README.md" 'docs/env/local-env\.md' "README 最小路径先采集本机环境"
-require_contains "README.md" '本机 Demo 可行性' "README 最小路径要求确认本机 Demo 可行性"
+require_contains "README.md" 'scenario-guides' "README 快速开始指向 scenario-guides"
+require_contains "README.md" 'SOP\.md' "README 快速开始指向 SOP"
+require_contains "README.md" 'beginner-guide' "README 快速开始指向 beginner-guide"
+require_contains "README.md" 'git-guide\.md' "README 指向 git-guide"
+require_contains "README.md" 'scripts/check-prereqs\.ps1' "README 提示环境检查"
+require_contains "README.md" 'scripts/bootstrap-dev-env\.ps1' "README 提示基础安装脚本"
+require_contains "README.md" 'template-docs/ai-cli-setup\.md' "README 包含 AI CLI 安装入口"
+require_contains "README.md" 'ai/session-rules\.md' "README 包含会话续接规则入口"
 require_contains "README.md" 'MAINTAINERS\.md' "README 指向 MAINTAINERS"
 require_contains "README.md" 'CHANGELOG\.md' "README 指向 CHANGELOG"
 require_contains "README.md" 'docs/README\.md' "README 指向 docs 分区规则"
-require_contains "README.md" 'check-template\.ps1' "README 说明 PowerShell 自检入口"
-require_contains "README.md" 'v1\.16\.2' "README 最近版本摘要包含 v1.16.2"
-require_contains "README.md" '阶段路线图、交付物形态' "README 最小路径提醒确认交付物形态"
-require_contains "README.md" 'template-docs/ai-cli-setup\.md' "README 包含 AI CLI 安装入口"
+# README 瘦身后，详细命令断言移到 SOP「常用命令」；环境/烟测入口由 beginner-guide 断言覆盖；5 分钟路径要点并入 scenario-guides/docs-README。
+require_contains "SOP.md" 'bash scripts/new-project\.sh my-demo --visibility private' "SOP 常用命令含正式建项路径"
+require_contains "SOP.md" 'smoke-demo --local --no-remote' "SOP 常用命令含本地烟测路径"
+require_contains "SOP.md" 'check-template\.ps1' "SOP 常用命令含 PowerShell 自检入口"
 require_contains "template-docs/beginner-guide.md" 'template-docs/env-setup\.md' "BEGINNER-GUIDE 指向环境准备手册"
+require_contains "template-docs/beginner-guide.md" 'scripts/bootstrap-dev-env\.ps1' "BEGINNER-GUIDE 前置新手环境准备路径"
+require_contains "template-docs/beginner-guide.md" 'scripts/check-prereqs\.ps1' "BEGINNER-GUIDE 前置环境检查脚本"
+require_contains "template-docs/beginner-guide.md" 'newbie AI CLI onboarding path' "BEGINNER-GUIDE 包含 AI CLI 新手引导路径"
 require_contains "template-docs/beginner-guide.md" 'template-docs/smoke-test\.md' "BEGINNER-GUIDE 指向新手烟测"
 require_contains "template-docs/beginner-guide.md" 'template-docs/smoke-test-report-template\.md' "BEGINNER-GUIDE 指向烟测记录模板"
 require_contains "template-docs/beginner-guide.md" 'lemesh_ai_model' "BEGINNER-GUIDE 指向公司中转站手册"
@@ -596,14 +613,17 @@ require_contains "template-docs/beginner-guide.md" '官方文档安装并登录 
 require_contains "template-docs/beginner-guide.md" 'template-docs/ai-cli-setup\.md' "BEGINNER-GUIDE 指向 AI CLI 安装文档"
 require_contains "template-docs/env-setup.md" 'bootstrap-dev-env\.ps1' "ENV-SETUP 指向一键安装脚本"
 require_contains "template-docs/env-setup.md" 'check-prereqs\.ps1' "ENV-SETUP 指向前置检测脚本"
+require_contains "template-docs/env-setup.md" 'OK: all required items are present' "ENV-SETUP 包含新手决策表"
 require_contains "template-docs/env-setup.md" 'Claude CLI' "ENV-SETUP 包含 Claude CLI 说明"
 require_contains "template-docs/env-setup.md" 'Codex CLI' "ENV-SETUP 包含 Codex CLI 说明"
 require_contains "template-docs/env-setup.md" 'lemesh_ai_model' "ENV-SETUP 指向公司中转站手册"
 require_contains "template-docs/env-setup.md" '不应被理解为 `Claude CLI` 或 `Codex CLI` 本身的官方安装指南' "ENV-SETUP 区分中转站手册与 CLI 安装指南"
 require_contains "template-docs/ai-cli-setup.md" 'claude --version' "AI-CLI-SETUP 包含 Claude CLI 启动验证"
 require_contains "template-docs/ai-cli-setup.md" 'codex --version' "AI-CLI-SETUP 包含 Codex CLI 启动验证"
+require_contains "template-docs/ai-cli-setup.md" 'newbie AI CLI onboarding path' "AI-CLI-SETUP 包含首次运行模板提示词"
 require_contains "template-docs/ai-cli-setup.md" 'lemesh_ai_model' "AI-CLI-SETUP 指向公司中转站手册"
 require_contains "template-docs/smoke-test.md" 'scripts/check-prereqs\.ps1' "SMOKE-TEST 包含环境检查脚本"
+require_contains "template-docs/smoke-test.md" 'Suggested next steps' "SMOKE-TEST 保持环境检查优先"
 require_contains "template-docs/smoke-test.md" 'scripts/new-project\.sh smoke-demo --local --no-remote' "SMOKE-TEST 包含本地烟测项目创建"
 require_contains "template-docs/smoke-test.md" 'scripts/collect-env\.ps1' "SMOKE-TEST 包含环境采集"
 require_contains "template-docs/smoke-test.md" 'template-docs/smoke-test-report-template\.md' "SMOKE-TEST 指向烟测记录模板"
@@ -652,9 +672,7 @@ require_contains "ai/prompts/review/16-docs-system-audit.md" 'ai/document-lifecy
 require_contains "ai/prompts/review/16-docs-system-audit.md" 'ai/doc-standards' "16 系统审计提示词优先对照 doc-standards 规范基线"
 require_contains "ai/prompts/review/16-docs-system-audit.md" 'docs/_scaffold' "16 系统审计提示词兼容旧 _scaffold 规范基线"
 require_contains "ai/prompts/maintainers/15-post-sync-cleanup.md" '16-docs-system-audit\.md' "同步后整理 Prompt 指向 16 系统审计（doc-standards 闭环）"
-require_contains "INIT-PROMPT.md" 'Prompt Library' "INIT-PROMPT 是 Prompt Library 索引"
-require_contains "INIT-PROMPT.md" 'ai/prompts/docs/01-review-inputs\.md' "INIT-PROMPT 指向输入评审 Prompt"
-require_contains "INIT-PROMPT.md" 'ai/prompts/docs/00-generate-or-complete-docs\.md' "INIT-PROMPT 指向文档生成 Prompt"
+# INIT-PROMPT v1.22.2 起简化为指针：Prompt 明细索引由 SOP 场景索引 + ai/prompts/README 承担，不再要求 INIT-PROMPT 含 Prompt 明细。
 require_contains "ai/prompts/docs/00-generate-or-complete-docs.md" 'docs/design/\*' "生成 Prompt 使用 docs/design 详细设计路径"
 require_contains "ai/prompts/docs/00-generate-or-complete-docs.md" '模板骨架' "生成 Prompt 要求保留文档模板骨架"
 require_contains "ai/prompts/docs/00-generate-or-complete-docs.md" 'Product Vision 处置' "生成 Prompt 说明 Product Vision 处置"
@@ -692,8 +710,13 @@ require_contains "scripts/sync-template.sh" '"ai/prompts/review/16-docs-system-a
 require_contains "scripts/sync-template.sh" '"ai/prompts/docs/00-generate-or-complete-docs\.md"' "sync-template 兜底清单含文档生成 Prompt"
 require_contains "scripts/sync-template.sh" '"docs/inputs/README\.md"' "sync-template 兜底清单含 docs inputs README"
 require_contains "scripts/sync-template.ps1" 'sync-template\.sh' "sync-template PowerShell 入口调用 Bash 脚本"
+require_contains "scripts/sync-template.ps1" 'Invoke-NativeTemplateSync' "sync-template PowerShell 入口含原生 fallback"
+require_contains "scripts/sync-template.ps1" 'PowerShell fallback template sync' "sync-template fallback 输出明确标识"
+require_contains "scripts/sync-template.ps1" 'doc-standards mirror' "sync-template fallback 同步 doc-standards 镜像"
 require_contains "scripts/check-template.ps1" 'check-template\.sh' "check-template PowerShell 入口调用 Bash 脚本"
 require_contains "scripts/check-derived-sync.ps1" 'check-derived-sync\.sh' "check-derived-sync PowerShell 入口调用 Bash 脚本"
+require_contains "scripts/check-derived-sync.ps1" 'Invoke-NativeDerivedSyncCheck' "check-derived-sync PowerShell 入口含原生 fallback"
+require_contains "scripts/check-derived-sync.ps1" 'PowerShell fallback derived sync boundary check' "check-derived-sync fallback 输出明确标识"
 require_contains "scripts/check-derived-sync.sh" '同步清单外变更' "check-derived-sync 检查同步清单外变更"
 require_contains "scripts/check-derived-sync.sh" 'README\.md\|ai/project-rules\.md\|docs/0\[0-9\]-\*' "check-derived-sync 保护项目专属文件"
 require_contains "scripts/check-derived-sync.sh" 'git show --name-only --stat' "check-derived-sync 输出最近同步提交文件"
@@ -731,9 +754,39 @@ require_contains "ai/prompts/maintainers/12-sync-template.md" 'derived-sync-repo
 require_contains "ai/prompts/maintainers/12-sync-template.md" '同步运行记录' "同步 Prompt 要求生成同步运行记录"
 require_contains "ai/prompts/maintainers/15-post-sync-cleanup.md" '同步运行记录' "同步后整理 Prompt 读取同步运行记录"
 require_contains "SOP.md" '派生同步运行记录' "SOP 包含派生同步运行记录场景"
-require_contains "README.md" 'derived-sync-report-template' "README 提示派生同步运行记录模板"
+require_contains "SOP.md" 'derived-sync-report-template' "SOP 常用命令提示派生同步运行记录模板"
 require_contains "MAINTAINERS.md" 'derived-sync-report-template' "MAINTAINERS 要求真实同步沉淀运行记录"
+require_contains "SOP.md" 'PowerShell fallback' "SOP 常用命令说明 PowerShell fallback"
+require_contains "git-guide.md" 'PowerShell fallback' "git-guide 说明同步 fallback"
+require_contains "template-docs/env-setup.md" 'PowerShell fallback' "环境准备文档说明 fallback 边界"
+require_contains "template-docs/derived-sync-report-template.md" 'PowerShell fallback' "同步运行记录模板记录 fallback"
 require_contains "CONTRIBUTING.md" 'derived-sync-report-template' "CONTRIBUTING 说明同步运行记录与去项目化回流"
+
+# 场景引导编排层（scenario-guides）：让「说一个场景 → 给引导计划」成为标准交互。
+require_file "template-docs/scenario-guides.md"
+require_contains "template-docs/scenario-guides.md" '场景路由入口' "scenario-guides 含场景路由入口"
+require_contains "template-docs/scenario-guides.md" '引导计划输出契约' "scenario-guides 含引导计划契约"
+require_contains "template-docs/scenario-guides.md" 'A0 冷启动' "scenario-guides 含冷启动场景"
+require_contains "template-docs/scenario-guides.md" 'mermaid' "scenario-guides 含图表格式默认"
+require_contains "template-docs/scenario-guides.md" '当前 `gh` 登录账户' "scenario-guides 账户约定用当前 gh 登录账户（去账户化）"
+# 去账户化：scenario-guides 账户约定用「当前 gh 登录账户」（见上条正向断言）。
+# 模板仓库地址 emily8421/ai-project-template 是模板自己的家，不属于用户账户默认化，允许出现。
+require_file "ai/commands/scenario.md"
+require_contains "ai/commands/scenario.md" 'template-docs/scenario-guides\.md' "scenario 命令路由到 scenario-guides"
+require_contains "ai/commands/scenario.md" '/run scenario' "scenario 命令含 /run scenario"
+require_contains "ai/commands/README.md" '/run scenario' "commands README 含 scenario 元命令"
+require_contains "template-sync.json" '"template-docs/scenario-guides\.md"' "template-sync 同步 scenario-guides"
+require_contains "template-sync.json" '"ai/commands/scenario\.md"' "template-sync 同步 scenario 命令"
+require_contains "ai/document-lifecycle-rules.md" '设计文档图表规范' "document-lifecycle 含图表规范"
+require_contains "ai/document-lifecycle-rules.md" 'mermaid' "document-lifecycle 图表规范默认 mermaid"
+require_contains "ai/project-rules.md" '图表格式偏好' "project-rules 含图表格式偏好填项"
+# 防漂移：README/beginner-guide/ai-cli-setup 三处新手话术已收敛到 scenario-guides，不再逐字重复。
+require_contains "README.md" 'template-docs/scenario-guides\.md' "README 推荐路径指向 scenario-guides"
+require_contains "template-docs/beginner-guide.md" 'template-docs/scenario-guides\.md' "BEGINNER-GUIDE 路径 A 指向 scenario-guides"
+require_contains "template-docs/ai-cli-setup.md" 'template-docs/scenario-guides\.md' "AI-CLI-SETUP 指向 scenario-guides"
+require_absent_contains "README.md" '按新手 AI CLI 引导路径带我完成' "README 不再保留全量新手话术（已收敛）"
+require_absent_contains "template-docs/beginner-guide.md" '按新手 AI CLI 引导路径带我完成' "BEGINNER-GUIDE 不再保留全量新手话术"
+require_absent_contains "template-docs/ai-cli-setup.md" '按新手 AI CLI 引导路径带我完成' "AI-CLI-SETUP 不再保留全量新手话术"
 
 # 防文档滞后：根目录人读操作文档必须引用 doc-standards / 16 号审计闭环。
 # 避免「脚本层（sync-template / check-template）已自洽、人读文档却滞后」再现
@@ -744,9 +797,9 @@ require_contains "SOP.md" '16-docs-system-audit' "SOP 场景索引含 16 号审�
 require_contains "MAINTAINERS.md" 'require_doc_standards_mirror' "MAINTAINERS 自检说明含 doc-standards 镜像自检（防文档滞后）"
 require_contains "MAINTAINERS.md" '防文档滞后断言' "MAINTAINERS 沉淀关键机制防滞后断言规则"
 require_contains "MAINTAINERS.md" '不放具体维护者账号' "MAINTAINERS 说明个人账号信息不进入同步文档"
-require_contains "README.md" '### 派生项目使用者' "README 常用命令区分派生项目使用者"
-require_contains "README.md" '### 模板维护者' "README 常用命令区分模板维护者"
-require_contains "README.md" 'Windows 脚本入口选择' "README 包含 Windows 脚本入口矩阵"
+require_contains "SOP.md" '### 派生项目使用者' "SOP 常用命令区分派生项目使用者"
+require_contains "SOP.md" '### 模板维护者' "SOP 常用命令区分模板维护者"
+require_contains "SOP.md" 'Windows 脚本入口选择' "SOP 包含 Windows 脚本入口矩阵"
 require_contains "scripts/new-project.sh" 'ai/project-rules\.md.*首次必填 checklist' "new-project 生成 project-rules 首次必填 checklist"
 require_contains "SOP.md" '新建派生项目' "SOP 索引包含新建派生项目场景"
 require_contains "SOP.md" '第一次准备开发环境' "SOP 索引包含环境准备场景"
@@ -802,8 +855,9 @@ require_contains "scripts/new-project.sh" 'cat > "\$TARGET/README.md"' "new-proj
 require_contains "scripts/new-project.sh" '--no-remote' "new-project 支持本地-only 烟测"
 require_contains "scripts/new-project.sh" '未获取到 GitHub 账号' "new-project 在远端模式下缺少账号时给出明确提示"
 require_contains "scripts/new-project.sh" 'collect-env\.ps1' "new-project README 提醒采集本机环境"
-require_contains "scripts/new-project.sh" 'ENV-SETUP\.md' "new-project README 指向环境准备手册"
+require_contains "scripts/new-project.sh" 'template-docs/env-setup\.md' "new-project README 指向环境准备手册"
 require_contains "scripts/new-project.sh" 'check-prereqs\.ps1' "new-project README 指向前置检测脚本"
+require_contains "scripts/new-project.sh" 'newbie AI CLI onboarding path' "new-project README 包含 AI CLI 新手引导路径"
 require_contains "scripts/new-project.sh" 'docs/vision/product-vision\.md' "new-project README 从产品愿景起步"
 require_contains "scripts/new-project.sh" 'docs/inputs/' "new-project README 指向原始输入包目录"
 require_contains "scripts/new-project.sh" '多入口生成 / 补齐' "new-project README 使用多入口生成补齐 Prompt"

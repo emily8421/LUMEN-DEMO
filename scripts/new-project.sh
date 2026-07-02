@@ -101,18 +101,26 @@ cat > "$TARGET/README.md" <<EOF
 - 阶段目标：（说明当前阶段要演示、上线或生产化到什么程度）
 - 非目标：（说明当前阶段明确不做什么）
 
-## 当前能力
+## 它能做什么
 
-- （列出当前 Phase 已确认要实现的核心能力）
+- （列出当前 Phase 已确认要实现的核心能力——本项目自己的能力，不照搬模板通用能力）
 
 ## 快速开始
 
-1. 若机器尚未准备好基础环境，先阅读 \`ENV-SETUP.md\`，运行 \`powershell -ExecutionPolicy Bypass -File scripts/check-prereqs.ps1\`，按需执行 \`scripts/bootstrap-dev-env.ps1\`。
-2. 运行 \`powershell -ExecutionPolicy Bypass -File scripts/collect-env.ps1\` 生成 \`docs/env/local-env.md\`，补齐本机可运行边界、允许降级 / Mock 项与服务器预案。
+1. 若尚未确认机器环境，先看 \`template-docs/env-setup.md\`，运行 \`powershell -ExecutionPolicy Bypass -File scripts/check-prereqs.ps1\`；缺必备工具时再执行 \`scripts/bootstrap-dev-env.ps1\` 或手工安装。
+2. 运行 \`powershell -ExecutionPolicy Bypass -File scripts/collect-env.ps1\` 生成 \`docs/env/local-env.md\`，补齐本机必须跑通的功能、允许降级 / Mock 项与服务器预案。
 3. 准备可审计上游输入：可先把产品愿景写入 \`docs/vision/product-vision.md\`，或把尚未归类的小工具 brief、PRD / SRS、任务单、现有系统说明放入 \`docs/inputs/\`。
 4. 初填 \`ai/project-rules.md\` 的项目名称、Phase1 目标、技术栈倾向、运行环境约束与项目形态裁剪；不确定项标“待确认”。
-5. 复制 \`ai/prompts/docs/01-review-inputs.md\` 给 AI 评审输入材料；评审通过后复制 \`ai/prompts/docs/00-generate-or-complete-docs.md\` 多入口生成 / 补齐 \`docs/00-09\`、必要的 \`docs/design/\` 详细设计、项目 README 与 Sprint1。
-6. 人工确认 \`docs/03-prd.md\` §3 阶段路线图、交付物形态和 \`docs/05-tech-spec.md\` 的本机 Demo 可行性；确认后进入 Sprint 开发。
+5. 在 AI CLI 中说“评审输入材料”（或 \`/run review-inputs\`），让 AI 读取 \`ai/commands/\` 路由并评审输入材料；评审通过后说“生成文档体系”（或 \`/run generate-docs\`），多入口生成 / 补齐 \`docs/00-09\`、必要的 \`docs/design/\` 详细设计、项目 README 与 Sprint1；底层 Prompt 见 \`ai/prompts/docs/00-generate-or-complete-docs.md\`。
+6. 人工确认 \`docs/03-prd.md\` §3 阶段路线图、交付物形态和 \`docs/05-tech-spec.md\` 的本机 Demo 可行性；确认后再说“执行当前 Sprint”（或 \`/run run-dev-task\`）。
+
+> 纯本地烟测可以暂时不安装 AI CLI；真正开始 AI 协作开发前，至少准备并登录一种 AI CLI，安装顺序见 \`template-docs/ai-cli-setup.md\`。
+
+### 推荐：打开 AI CLI 后让 AI 带你继续
+
+> Keyword for template checks: newbie AI CLI onboarding path.
+
+如果已经安装并登录 \`Claude CLI\` 或 \`Codex CLI\`，在本项目根目录打开 AI CLI，不用记具体步骤——直接说一个具体场景（如「帮我准备输入材料」「帮我生成文档体系」），或 \`/run scenario\`。AI 会读取 \`template-docs/scenario-guides.md\`，先给你「做什么 + 为什么」的引导计划，确认后再执行。
 
 ### \`ai/project-rules.md\` 首次必填 checklist
 

@@ -53,6 +53,10 @@ function Test-TemplateBash {
       -RedirectStandardOutput $stdoutFile `
       -RedirectStandardError $stderrFile
 
+    if ($null -eq $proc) {
+      return [pscustomobject]@{ Ready = $false; ExitCode = -1; StdOut = ''; StdErr = 'Start-Process returned null (bash failed to start from PowerShell)' }
+    }
+
     $stdout = ""
     if (Test-Path $stdoutFile) {
       $stdoutRaw = Get-Content $stdoutFile -Raw
@@ -151,6 +155,7 @@ function Invoke-NativeTemplateCheck {
   foreach ($path in @(
       "README.md",
       "template-docs/beginner-guide.md",
+      "template-docs/scenario-guides.md",
       "template-docs/env-setup.md",
       "template-docs/ai-cli-setup.md",
       "template-docs/smoke-test.md",
@@ -166,6 +171,7 @@ function Invoke-NativeTemplateCheck {
       "ai/global-rules.md",
       "ai/document-lifecycle-rules.md",
       "ai/project-rules.md",
+      "ai/commands/scenario.md",
       "docs/README.md",
       "docs/env/README.md",
       "docs/inputs/README.md",
@@ -202,19 +208,37 @@ function Invoke-NativeTemplateCheck {
   Require-Contains "CHANGELOG.md" ([regex]::Escape($version)) "CHANGELOG includes current VERSION"
   Require-Contains "README.md" "template-docs/env-setup\.md" "README includes environment setup entry"
   Require-Contains "README.md" "template-docs/smoke-test\.md" "README includes smoke test entry"
-  Require-Contains "README.md" "bash scripts/new-project\.sh my-demo --local --no-remote" "README includes quick-start path"
+  Require-Contains "README.md" "newbie AI CLI onboarding path" "README includes AI CLI onboarding path"
+  Require-Contains "README.md" "scripts/check-prereqs\.ps1" "README starts with prerequisite check"
+  Require-Contains "README.md" "bash scripts/new-project\.sh my-demo --visibility private" "README includes default project creation path"
+  Require-Contains "README.md" "smoke-demo --local --no-remote" "README keeps local smoke-test path in maintainer section"
+  Require-Contains "template-docs/beginner-guide.md" "scripts/bootstrap-dev-env\.ps1" "BEGINNER-GUIDE includes beginner environment decision path"
+  Require-Contains "template-docs/beginner-guide.md" "scripts/check-prereqs\.ps1" "BEGINNER-GUIDE starts with prerequisite check"
+  Require-Contains "template-docs/beginner-guide.md" "newbie AI CLI onboarding path" "BEGINNER-GUIDE includes AI CLI onboarding path"
   Require-Contains "template-docs/beginner-guide.md" "template-docs/smoke-test\.md" "BEGINNER-GUIDE includes smoke test entry"
+  Require-Contains "template-docs/ai-cli-setup.md" "newbie AI CLI onboarding path" "AI-CLI-SETUP includes first-run template prompt"
+  Require-Contains "template-docs/env-setup.md" "OK: all required items are present" "ENV-SETUP includes beginner decision table"
   Require-Contains "template-docs/env-setup.md" "bootstrap-dev-env\.ps1" "ENV-SETUP includes bootstrap script"
   Require-Contains "template-docs/env-setup.md" "check-prereqs\.ps1" "ENV-SETUP includes prerequisite check script"
+  Require-Contains "template-docs/smoke-test.md" "Suggested next steps" "SMOKE-TEST keeps environment check first"
   Require-Contains "template-docs/smoke-test.md" "scripts/check-prereqs\.ps1" "SMOKE-TEST includes prerequisite check step"
   Require-Contains "template-docs/smoke-test.md" "scripts/new-project\.sh smoke-demo --local --no-remote" "SMOKE-TEST includes local smoke project creation"
   Require-Contains "template-docs/smoke-test.md" "scripts/collect-env\.ps1" "SMOKE-TEST includes environment collection step"
   Require-Contains "docs/env/README.md" "template-docs/env-setup\.md" "docs/env README includes environment setup entry"
-  Require-Contains "scripts/new-project.sh" "ENV-SETUP\.md" "new-project README template includes environment setup entry"
+  Require-Contains "scripts/new-project.sh" "template-docs/env-setup\.md" "new-project README template includes environment setup entry"
   Require-Contains "scripts/new-project.sh" "check-prereqs\.ps1" "new-project README template includes prerequisite check step"
+  Require-Contains "scripts/new-project.sh" "newbie AI CLI onboarding path" "new-project README template includes AI CLI onboarding path"
   Require-Contains "scripts/check-prereqs.ps1" "Git Bash" "check-prereqs checks Git Bash"
+  Require-Contains "scripts/sync-template.ps1" "Invoke-NativeTemplateSync" "sync-template PowerShell fallback exists"
+  Require-Contains "scripts/check-derived-sync.ps1" "Invoke-NativeDerivedSyncCheck" "check-derived-sync PowerShell fallback exists"
+  Require-Contains "README.md" "PowerShell fallback" "README documents PowerShell fallback"
+  Require-Contains "template-docs/derived-sync-report-template.md" "PowerShell fallback" "sync report records PowerShell fallback"
   Require-Contains "scripts/bootstrap-dev-env.ps1" "Git\.Git" "bootstrap script installs Git for Windows"
   Require-Contains "scripts/bootstrap-dev-env.ps1" "GitHub\.cli" "bootstrap script installs GitHub CLI"
+  Require-Contains "ai/commands/scenario.md" "scenario-guides\.md" "scenario command routes to scenario-guides"
+  Require-Contains "README.md" "scenario-guides" "README points to scenario-guides"
+  Require-Contains "ai/document-lifecycle-rules.md" "mermaid" "document-lifecycle defaults diagrams to mermaid"
+  Require-Contains "ai/project-rules.md" "mermaid" "project-rules includes diagram format preference"
 
   $syncFiles = Get-SyncFiles
   if ($syncFiles.Count -gt 0) {

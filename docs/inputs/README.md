@@ -3,6 +3,8 @@
 > Sync notice: This file is maintained by `ai-project-template` and may be overwritten when a derived project syncs template methodology.
 > Do not edit it directly in derived projects; propose reusable changes in `_proposals/` and upstream them to the template repository.
 
+> **人工输入区**：本目录放你提供的、尚未归类的原始输入（小工具 brief、客户 PRD/SRS、外部需求包、任务说明、现有系统说明）。它是工程文档的**原料**，不直接驱动开发；AI 处理前必须先做输入材料评审与入口判定（`ai/prompts/docs/01-review-inputs.md`）。输入 / 输出总体区分见 `docs/README.md` §1。
+
 本目录用于暂存尚未归类、尚未转成 `docs/00-09` 的原始输入材料，例如小工具 brief、客户 PRD / SRS、外部需求包、任务说明、现有系统说明或混合型资料。
 
 使用规则：

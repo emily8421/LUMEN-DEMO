@@ -1,25 +1,59 @@
-# docs/ 文档分区规则
+# docs/ 项目文档体系与分区规则
 
 > Sync notice: This file is maintained by `ai-project-template` and may be overwritten when a derived project syncs template methodology.
 > Do not edit it directly in derived projects; propose reusable changes in `_proposals/` and upstream them to the template repository.
 
+本目录保存项目事实、需求、设计、计划与验证材料。本文档说明三件事：**(1) 文档体系怎么构成**（输入 / 输出 + 00-09 主链）、**(2) 分区规则**（放哪）、**(3) 裁剪**（保留哪些）。文档生成、追溯链、横切事实、变更传播规则见 `ai/document-lifecycle-rules.md`。
 
-本目录保存项目事实、需求、设计、计划与验证材料。AI 新增文档前必须先判断文档类型，放入对应子目录；不得把临时文档、调研记录或详细设计直接堆到 `docs/` 根目录。
+## 1. 输入与输出：两类文档
 
-文档内容生成、上游输入、追溯链、横切事实一致性与下游影响规则见 `ai/document-lifecycle-rules.md`。
+`docs/` 里的文档分两类——你提供的人工输入，和 AI 生成的项目事实。
 
-## 根目录只放核心文档
+| 类型 | 目录 | 谁放 / 怎么来 |
+|---|---|---|
+| **人工输入**（原料） | `docs/vision/`、`docs/inputs/` | 你提供：愿景叙事、客户 PRD/SRS、brief、现有系统说明、外部接入包 |
+| **AI 输出**（项目事实，约束代码） | `docs/`（根 `00-09`）、`docs/design/` | AI 根据输入评审后生成：需求 / 设计 / 计划 / 验证 |
+| 辅助留痕 | `docs/decisions/`、`docs/research/`、`docs/env/`、`docs/meetings/`、`docs/archive/` | 决策记录 / 调研 / 环境 / 会议 / 归档 |
+
+一句话：**人写输入 → AI 生成 `00-09` 与 `design/` → `00-09` 约束代码**。人工输入不直接驱动开发，必须先经评审（`ai/prompts/docs/01-review-inputs.md`）再进入 `00-09`。
+
+## 2. 核心文档 00-09 各自干什么
+
+| 文档 | 阶段 | 一句话作用 | 何时省略 |
+|---|---|---|---|
+| `00-scenario.md` | 需求 | 工程想定、背景、典型场景、输入指针 | 必备 |
+| `01-user-requirements.md` | 需求 | 用户需求全集，每条带来源锚点 + 阶段标签 | 必备 |
+| `02-srs.md` | 需求 | 系统需求规格 + REQ 编号 | 必备 |
+| `03-prd.md` | 需求 / 产品 | 功能范围、优先级、阶段路线图（阶段标签唯一来源） | 必备 |
+| `04-architecture.md` | 总体设计 | 系统模块、边界、运行拓扑、子系统划分 | 必备 |
+| `05-tech-spec.md` | 总体设计 | 技术选型、版本、资源评估、降级 / Mock | 必备 |
+| `06-db-design.md` | 详细设计 | 表、字段、索引、约束，每张表追溯 REQ | 无持久化可省 |
+| `07-api-spec.md` | 详细设计 | 接口契约、请求响应、权限、错误码 | 无对外接口可省 |
+| `08-dev-plan.md` | 实现计划 | Sprint / task 拆分、验收标准、禁止事项 | 必备 |
+| `09-verification.md` | 测试验证 | REQ → 用例追溯、资源验证、验收策略 | 必备 |
+
+每个文档的完整生成关系（上游输入 / 输出职责 / 禁止项 / 下游影响）见 `ai/document-lifecycle-rules.md` §5 生成矩阵。
+
+## 3. 规范约束（写 docs/ 时必须遵守）
+
+- **编号固定**：`00-09` 编号不因项目而变；根目录只放 `README.md` 与 `00-09`，不堆其它文档（见 §4）。
+- **追溯链**：`U-ID → REQ-ID → Phase → 设计 → Sprint → 测试 → 代码`，不留悬空 ID（权威见 `ai/document-lifecycle-rules.md` §6）。
+- **阶段双维度标签**：功能范围 `[P1]/[P2]/[愿景]` × 交付物形态 `Demo/MVP/产品`；状态 `骨架 → P{N}-已设计 → P{N}-已实现`（权威见 `ai/global-rules.md` §8）。
+- **只增不删**：设计类文档（03-09、design）按积累式演进，不删既有阶段内容（权威见 `ai/global-rules.md` §8.2-3）。
+- **撰写规范**：`00-09` 每份文档的撰写规范见 `ai/doc-standards/00-09`（只读镜像、审计基线、不手改；由 `sync-template` 刷新）。
+
+## 4. 根目录只放核心文档
 
 `docs/` 根目录只放：
 
-- `README.md`：本文档分区规则。
+- `README.md`：本文档。
 - `00-scenario.md` ~ `09-verification.md`：核心工程文档；其中 `06` / `07` 可按项目形态省略。
 
-> 模板 `00-09` 撰写规范镜像已放在 `ai/doc-standards/00-09`，不属于 `docs/` 项目事实区；由 `sync-template` 刷新、只读、不可手改。
+> 模板 `00-09` 撰写规范镜像在 `ai/doc-standards/00-09`，不属于 `docs/` 项目事实区。
 
-除上述文件外，AI 不得在 `docs/` 根目录新增文档。确需新增时，必须先说明原因、建议路径和影响范围，等待人工确认。
+除上述外，AI 不得在 `docs/` 根目录新增文档。确需新增时，必须先说明原因、建议路径和影响范围，等待人工确认。
 
-## 标准子目录
+## 5. 标准子目录
 
 | 子目录 | 放什么 | 命名建议 |
 |---|---|---|
@@ -33,7 +67,7 @@
 | `docs/archive/` | 已废弃但需留痕的项目文档 | 保留原名或加日期前缀 |
 | `ai/doc-standards/` | 模板 `docs/00-09` 撰写规范镜像，随模板版本刷新；**只读、非项目事实、不直接驱动开发**；改动须走 `_proposals/` 回流模板 | 由 `sync-template` 自动生成，勿手改；旧项目可能残留 `docs/_scaffold/` |
 
-## 子系统详细设计
+## 6. 子系统详细设计
 
 非平凡子系统详细设计统一放入 `docs/design/`，不要放成 `docs/design-<子系统>.md`。
 
@@ -52,7 +86,7 @@ docs/design-auth.md
 docs/workflow-engine-design.md
 ```
 
-## AI 新增文档规则
+## 7. AI 新增文档规则
 
 AI 判断需要新增文档时，必须按以下顺序处理：
 
@@ -64,7 +98,7 @@ AI 判断需要新增文档时，必须按以下顺序处理：
 
 外部接入文档（策略、调研、决策、会议、接口或客户输入材料）必须先写明与本仓库 docs 的映射、定位声明和影响范围。尚未归类的原始输入先放 `docs/inputs/`；评审后，策略 / 决策类放 `docs/decisions/`，调研 / 实验类放 `docs/research/`，会议或访谈放 `docs/meetings/`，不要误放入 `docs/vision/`。
 
-## 裁剪决策表
+## 8. 裁剪决策表
 
 初始化时先按下表填写 `ai/project-rules.md` §3，再决定要保留哪些文档和代码目录：
 
@@ -78,3 +112,13 @@ AI 判断需要新增文档时，必须按以下顺序处理：
 | 消息通道内交互 / 不需演示 | `docs/04-05` 不强制写前端 | 通常删除 `frontend/` | 若后续变更演示形态，再补前端设计 |
 | 暂无自动化测试 | `docs/09-verification.md` 仍保留 | 可暂删 `tests/` | 09 至少记录人工验证和本机资源验证 |
 | 需要容器 / 外部服务 | `docs/04-05` 写明运行拓扑 | 保留 `docker/` | Demo 优先本机；资源不足再写服务器预案 |
+
+## 9. 轻量项目路径
+
+若项目是小脚本、一次性实验或纯工具库，仍保留基本边界与验证口径即可：
+
+1. 写最小 `docs/vision/product-vision.md`。
+2. 运行 `scripts/collect-env.ps1`，确认本机可运行边界。
+3. 按上面的裁剪表决定是否省略 `docs/06`、`docs/07` 和代码目录。
+4. 保留最小版 `docs/03-prd.md`、`04-architecture.md`、`05-tech-spec.md`、`08-dev-plan.md`、`09-verification.md`。
+5. 每次只实现一个小任务；验证结果记录到 `docs/09-verification.md` 或当前 Sprint。
