@@ -33,7 +33,7 @@
      ┌─────────────────────────────────────────────────┐
      │  model 层 + PostgreSQL + pgvector               │
      │  documents / versions / chunks(+embedding) /    │
-     │  spaces / members / imports   [P1]              │
+     │  spaces / members / imports / terms   [P1]      │
      └────────────────────┬────────────────────────────┘
                          │ LLM：OpenAI 兼容 API
                   ┌───────▼────────┐
@@ -52,6 +52,7 @@
 | 文档管理 | CRUD、行内编辑、版本历史 | [P1] | P1-已设计 | （逻辑简单，见 06/07） |
 | 内容导入 | Word/PDF 解析、OCR、切块入库 | [P1] | P1-已设计 | docs/design/ingestion.md |
 | 检索问答 | 全文搜索、RAG（向量+全文+引用） | [P1] | P1-已设计 | docs/design/rag-retrieval.md |
+| 术语管理 | 空间级术语表、文档术语识别、问答口径对齐 | [P1] | P1-已设计 | docs/design/term-management.md |
 | 标签与视图 | 标签 / 时间轴 / 关联图导航 | [P2] | 骨架 | 待 P2 建 docs/design/ |
 | 协作与推送 | 多人编辑、跨空间只读推送 | [P2] | 骨架 | 待 P2 |
 | 存量接入 | Vault 挂载、录音转写、飞书同步 | [愿景] | 骨架 | 待技术验证 |

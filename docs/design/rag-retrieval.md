@@ -22,14 +22,16 @@
 2. **向量检索**：问题 → Embedding → `lumen_chunks.embedding` 近邻 topK
 3. **全文检索**：问题关键词 → `ts_vector` 命中
 4. 合并去重 → 取 topN 候选块
-5. 构造 Prompt：候选块 + 问题 → LLM，要求"仅依据给定内容回答、标注来源；无依据则告知未找到"
-6. 返回 `answer` + `sources[]`
+5. 术语上下文：按当前空间加载 `lumen_terms`，命中问题或候选块中的术语时注入定义（空间术语优先，详见 docs/design/term-management）
+6. 构造 Prompt：候选块 + 术语上下文 + 问题 → LLM，要求"仅依据给定内容回答、标注来源；无依据则告知未找到"
+7. 返回 `answer` + `sources[]`
 
 ## 3. 关键决策（[P1]）
 
 - **切块**：按段落 / 固定长度（参数待 05 定，初值 ~512 token、重叠 ~64），与 docs/design/ingestion 共用
 - **Embedding**：本机 `bge-small-zh`，512 维，写入 `lumen_chunks.embedding`（`vector(512)`）；后续可通过 adapter 迁移到内网 Embedding 服务
 - **检索**：向量 + 全文双路召回再合并（P1 即做基础版，不调权重）
+- **术语口径**：RAG 回答优先采用当前空间术语定义；术语来源作为回答来源之一，但不得替代文档证据编造答案
 - **来源标注**：LLM 输出引用候选块序号 → 映射回 `doc_id` + `snippet`
 
 ## 4. 失败 / 边界
@@ -48,4 +50,5 @@
 
 - **依赖** docs/design/permissions：权限过滤
 - **依赖** docs/design/ingestion：`lumen_chunks` 由导入流水线生成
+- **依赖** docs/design/term-management：问答术语上下文注入
 - **被** 07 `/api/search`、`/api/query` 调用

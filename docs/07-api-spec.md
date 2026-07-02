@@ -24,6 +24,8 @@
 | GET | /api/search?q= | 全文搜索 | [P1] | P1-已设计 | REQ-007 |
 | POST | /api/query | RAG 问答 | [P1] | P1-已设计 | REQ-008 |
 | POST | /api/import | 导入文件 | [P1] | P1-已设计 | REQ-009/010 |
+| GET/POST | /api/terms | 术语列表 / 创建术语 | [P1] | P1-已设计 | REQ-036 |
+| GET/PUT/DELETE | /api/terms/{id} | 术语详情 / 更新 / 删除 | [P1] | P1-已设计 | REQ-036 |
 | GET | /api/tags | 标签视图 | [P2] | 骨架 | REQ-012 |
 | POST | /api/spaces/push | 跨空间推送 | [P2] | 骨架 | REQ-015 |
 | GET | /api/briefs/{token} | 对外只读简报 | [愿景] | 骨架 | REQ-022 |
@@ -53,6 +55,14 @@
 
 ### GET /api/search?q=关键词
 - 响应：`{ "items": [ { "doc_id":"..", "title":"..", "snippet":".." } ], "total": N, "page": 1 }`
+
+### GET /api/terms
+- 请求参数：`space_id`、可选 `q`、`status`
+- 响应：`{ "items": [ { "id":"..", "term":"触发延迟", "definition":"从触发条件满足到指令发出", "aliases":["开关延迟"], "status":"confirmed" } ], "total": N, "page": 1 }`
+
+### POST /api/terms
+- 请求：`{ "space_id":"brightlite-team", "term":"触发延迟", "definition":"从触发条件满足到指令发出", "aliases":["开关延迟"], "status":"confirmed" }`
+- 响应：`{ "code":0, "data": { "id":"..", "term":"触发延迟" } }`
 
 ### POST /api/documents/{id}/versions/{v}/restore
 - 响应：`{ "code":0, "data": { "current_version": v } }`
