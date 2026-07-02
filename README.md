@@ -2,7 +2,25 @@
 
 > 面向中小企业的团队知识库 demo：把分散在聊天 / 邮件 / 旧文件 / 笔记里的团队知识，沉淀到一个**支持空间隔离与三级文档权限**、可被 **AI 检索与问答（带来源引用）**、支持**多格式导入（Word / PDF / OCR）**的知识库。
 >
-> 本项目派生自 [`ai-project-template`](https://github.com/emily8421/ai-project-template)，采用其「文档驱动开发」方法论——**先文档、后代码**；当前已下行同步至模板 **v1.21.0**。
+> 本项目派生自 [`ai-project-template`](https://github.com/emily8421/ai-project-template)，采用其「文档驱动开发」方法论——**先文档、后代码**；当前已下行同步至模板 **v1.23.6**。
+
+## 它能做什么
+
+- **文档驱动开发**：需求 / 架构 / 数据 / 接口 / 验证先落 `docs/`，再写代码；AI 只能实现 `docs/` 已定义的功能。
+- **双维度分阶段交付**：每个阶段同时声明「功能范围 `[P1]/[P2]/[愿景]`」与「交付物形态 Demo/MVP/产品」，不把 Demo 声称为 MVP（见 `docs/03-prd.md §3`）。
+- **空间隔离 + 三级文档权限**：私有 / 团队共享 / 外部只读，多空间既协作又隔离。
+- **RAG 问答带来源引用**：文档切块 + 向量检索 + LLM 生成，答案附带出处；库外问答回复「未找到」、不编造（产品红线）。
+- **多格式导入**：Word / PDF 文字提取 + 图片 / 白板照片 OCR 入库。
+- **文档 CRUD + 版本历史 + 全文搜索**：行内编辑留版本，全文 + 语义检索定位历史约束。
+
+## 快速开始
+
+> 当前**设计完成、尚未编码**（`backend/ frontend/ docker/ tests/` 为空）。下面是理解项目与准备开发的最短路径。
+
+1. **读懂项目**：`docs/00-scenario.md`（背景 / 用户 / 场景）→ `docs/03-prd.md §3`（阶段路线图）→ 本 README「文档导航」。
+2. **确认运行环境**：见 `docs/env/local-env.md`（本机 Win11 / i7 / 31.7GB / RTX 3050）与 `ai/project-rules.md §2.5` 资源约束。
+3. **AI 协作入口**：任选 AI CLI（Claude Code / Cursor / Codex），入口文件均指向 `ai/index.md`；说一个场景意图即可（如「更新方法论」「修单个文档」），路由见 `ai/commands/README.md`。
+4. **进入开发**：按 `docs/08-dev-plan.md` 的 Sprint 推进；编码前先读 `ai/index.md` 列出的全部规则。
 
 ## 当前状态
 
@@ -66,10 +84,10 @@ LUMEN_demo_T2.1/
 
 ## 模板关系与同步
 
-本项目派生自 `ai-project-template`，方法论文件随模板演进（当前已同步至 **v1.21.0**）：
+本项目派生自 `ai-project-template`，方法论文件随模板演进（当前已同步至 **v1.23.6**）：
 
 - **上行（改方法论）**：在[模板仓库](https://github.com/emily8421/ai-project-template)走「分支 → PR → 评审 → 合并」（见其 `CONTRIBUTING.md`），**不在本项目直接改 `ai/global-rules.md`**。
-- **下行（同步到本项目）**：v1.6.8+ 走 PowerShell 入口 `powershell -ExecutionPolicy Bypass -File scripts/sync-template.ps1 --commit`（先 `--dry-run`），同步清单见 `template-sync.json`；同步后用 `powershell -ExecutionPolicy Bypass -File scripts/check-derived-sync.ps1` 做派生边界验收。当前已同步至模板 **v1.21.0**。
+- **下行（同步到本项目）**：v1.6.8+ 走 PowerShell 入口 `powershell -ExecutionPolicy Bypass -File scripts/sync-template.ps1 --commit`（先 `--dry-run`），同步清单见 `template-sync.json`；同步后用 `powershell -ExecutionPolicy Bypass -File scripts/check-derived-sync.ps1` 做派生边界验收。当前已同步至模板 **v1.23.6**。
 - git 工作流与账号说明见 `git-guide.md`。
 
 ---
