@@ -9,23 +9,23 @@
 |---|---|
 | 输入来源 | `docs/03-prd.md`、`docs/04-architecture.md`、`docs/env/local-env.md`、`ai/project-rules.md` |
 | 覆盖架构组件 | FastAPI 后端、React 前端、PostgreSQL + pgvector、Embedding / LLM 适配、导入解析 |
-| 当前状态 | 已确认（版本号与部分实现细节仍按文内“待确认”处理） |
+| 当前状态 | 已确认（Phase1 技术基线已钉死；实现期变更需先修订本文） |
 | 最后更新 | 2026-07-03 |
 
 ## 1. 技术栈与版本
 
-> 标注「待确认」的版本号待开发前钉死；不影响 P1 架构形态。
+> Phase1 固定以下运行基线；本机已采集到 Python 3.14.3 / Node.js 22.17.1 / Docker 29.5.2，可用于辅助工具，但项目后端运行时以 Python 3.12 为准。
 
-| 层 | 选型 | 版本（待确认） |
+| 层 | 选型 | Phase1 基线 |
 |---|---|---|
-| 后端 | Python + FastAPI | Python 3.12 / FastAPI 0.11x 待确认 |
-| 数据库 | PostgreSQL + pgvector | PG 16 / pgvector 0.7 待确认 |
-| 向量索引 | pgvector ivfflat 或 hnsw | Embedding 维度 512；索引参数待确认 |
-| AI | LLM：OpenAI 兼容接口；Embedding：本机 `bge-small-zh` | Embedding 512 维；LLM 具体型号待确认 |
-| 前端 | React | 18 + 状态管理 / 路由待确认 |
-| 文档解析 | python-docx / pdfplumber | 版本待确认 |
-| OCR | PaddleOCR（建议，中文友好） | 待确认 |
-| 部署 | Docker Compose（本地起库与依赖） | 待确认 |
+| 后端 | Python + FastAPI | Python 3.12.x；FastAPI 0.115.x；Uvicorn 0.34.x；Pydantic 2.10.x |
+| 数据库 | PostgreSQL + pgvector | PostgreSQL 16.x；pgvector 0.7.x；SQLAlchemy 2.0.x；Alembic 1.14.x；psycopg 3.2.x |
+| 向量索引 | pgvector hnsw | Embedding 维度 512；HNSW `m=16`、`ef_construction=64`、查询 `ef_search=40`；Demo 数据 < 1k chunks 可先用精确扫描 |
+| AI | LLM：OpenAI 兼容接口；Embedding：本机 `BAAI/bge-small-zh-v1.5` | Embedding 512 维；`sentence-transformers` 3.0.x；LLM Demo 默认走公司内网 OpenAI 兼容中转，未配置时显式 Mock |
+| 前端 | React | React 18.2.x；Vite 5.4.x；TypeScript 5.5.x；Node.js 22.17.1；npm 11.11.0 |
+| 文档解析 | python-docx / pdfplumber | python-docx 1.1.x；pdfplumber 0.11.x |
+| OCR | PaddleOCR（可降级） | PaddleOCR 2.8.x；Phase1 允许关闭 OCR 并降级为已提取文本 |
+| 部署 | Docker Compose（本地起库与依赖） | Docker 29.5.2；Docker Compose v5.1.4；本地 PostgreSQL + pgvector 由 compose 编排 |
 
 ```mermaid
 flowchart TB
@@ -45,8 +45,9 @@ flowchart TB
 - **导入流水线**：异构文件 → 纯文本 → 切块 → Embedding → 入 `lumen_chunks`（详见 docs/design/ingestion）。
 - **RAG**：向量检索 + 全文检索双路召回，答案带来源（详见 docs/design/rag-retrieval）；P1 不做重排调优。
 - **术语口径注入**：RAG 构造 Prompt 前按当前空间查 `lumen_terms`，空间术语优先于全局术语；文档阅读 / 编辑侧用术语表做轻量匹配提示（详见 docs/design/term-management）。
-- **鉴权**：会话 / Token（具体方式待本文细化）；权限在空间 + 文档两级校验，查询 / 检索 / 问答三层统一过滤（详见 docs/design/permissions）。
-- **切块与 Embedding 参数**：导入侧与检索侧共用同一套（避免 train/serve 偏差）；Embedding 模型为 `bge-small-zh`，维度 512，对应 pgvector `vector(512)`；具体 token 长度 / 重叠待钉。
+- **鉴权**：Phase1 使用 Demo Bearer Token；`POST /api/auth/login` 返回 HMAC-SHA256 签名 token，前端通过 `Authorization: Bearer <token>` 传递。Token 载荷包含 `user_id`、`current_space_id`、`exp`，有效期 8 小时；`POST /api/spaces/switch` 校验成员关系后返回带新 `current_space_id` 的 token。权限在空间 + 文档两级校验，查询 / 检索 / 问答三层统一过滤（详见 docs/design/permissions）。
+- **错误码**：HTTP 状态码 + `{ code, msg, data }` 双层表达；`code=0` 表示成功，业务错误使用 4 位数字码（详见 `docs/07-api-spec.md` §1）。
+- **切块与 Embedding 参数**：导入侧与检索侧共用同一套（避免 train/serve 偏差）；按标题 / 段落优先切分，目标块长 512 tokens、重叠 64 tokens，单块最小 80 字符；Embedding 模型为 `BAAI/bge-small-zh-v1.5`，维度 512，对应 pgvector `vector(512)`，写入前做向量归一化；批量 Embedding 默认 batch size 32。
 
 ## 3. Phase 技术约束
 
@@ -56,7 +57,10 @@ flowchart TB
 
 ## 4. 编码约定
 
-见 `ai/project-rules.md` §5（待 04-08 审核后回填，不虚构）。
+- 后端使用 Python `snake_case`；目录按 `api / service / model` 分层，对外接口只进 api 层。
+- 前端使用 JS/TS `camelCase`，React 组件使用 `PascalCase`。
+- AI 调用统一走 OpenAI 兼容 adapter；不得在业务层直接绑定单一闭源 SDK。
+- 新增依赖必须写入依赖文件，并说明用途；Sprint 内不得引入本节基线之外的依赖。
 
 ## 5. 运行环境与资源评估
 
@@ -72,4 +76,4 @@ flowchart TB
 
 ## 6. 待人工确认项
 
-- 技术栈具体版本、鉴权方式、错误码体系、切块参数与 OCR 引擎版本需在开发前钉死；当前不影响 Phase1 Demo 架构边界。
+- 无开发前阻塞项；若实现期需要升级本节基线之外的版本或依赖，必须先修订本文并说明原因。
