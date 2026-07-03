@@ -27,6 +27,17 @@
 | OCR | PaddleOCR（建议，中文友好） | 待确认 |
 | 部署 | Docker Compose（本地起库与依赖） | 待确认 |
 
+```mermaid
+flowchart TB
+  frontend[React 前端] --> api[FastAPI API 层]
+  api --> service[service 层<br/>权限 / 文档 / 导入 / 检索 / 术语]
+  service --> model[model 层]
+  model --> postgres[(PostgreSQL + pgvector)]
+  service --> parser[python-docx / pdfplumber / PaddleOCR]
+  service --> embedding[bge-small-zh<br/>本机 Embedding 512 维]
+  service --> llm[OpenAI 兼容 LLM<br/>公司内网中转 / Mock]
+```
+
 ## 2. 关键技术决策
 
 - **向量检索用 pgvector**，Phase1 不引 Milvus / Qdrant（见 project-rules §2）。
@@ -58,3 +69,7 @@
 - 资源瓶颈：大文档批量导入的内存占用、向量索引构建开销；超限先优化批处理、增量索引与 chunk 策略。
 - 降级 / Mock 策略：LLM 可降级为明确 Mock 回答或远程 API；OCR 可降级为已提取文本；真实文档场景下需优先避免把敏感片段发送到外部模型。
 - 服务器资源预案：本机 Embedding 不够用时，申请公司内网 Embedding / reranker 服务，后端通过 adapter 调用 OpenAI-compatible `/v1/embeddings`，并按新维度重建向量与索引（见 `docs/env/local-env.md`「服务器资源预案」段）。
+
+## 6. 待人工确认项
+
+- 技术栈具体版本、鉴权方式、错误码体系、切块参数与 OCR 引擎版本需在开发前钉死；当前不影响 Phase1 Demo 架构边界。

@@ -19,6 +19,19 @@
 | 假设检验 / 证据地图 | 用户提假设，自动搜集支持 / 反对证据并分栏 | **高风险**：证据检索相关性、正反判定 | REQ-033 |
 | 信号追踪 | 用户标记关注主题，新内容录入时自动匹配推送 | 主题匹配（向量 / 关键词）、增量索引 | REQ-034 |
 
+```mermaid
+flowchart LR
+  docs[文档 / chunks / doc_links] --> graph[关联图]
+  docs --> timeline[时间轴]
+  graph --> path[路径推理]
+  timeline --> causality[因果展开]
+  docs --> evidence[证据地图]
+  docs --> signals[信号追踪]
+  path -.高风险验证.-> decision[是否纳入未来 Phase]
+  causality -.高风险验证.-> decision
+  evidence -.高风险验证.-> decision
+```
+
 ## 3. 与其他子系统的关系
 
 - **依赖** docs/design/rag-retrieval：证据搜集 / 路径检索复用检索能力

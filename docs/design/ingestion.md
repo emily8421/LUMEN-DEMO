@@ -17,6 +17,17 @@
 6. **入库**：写 `lumen_chunks`（text / embedding / ts_vector）+ 关联 `document`
 7. 更新 `lumen_imports(status=done, parsed_doc_id)`
 
+```mermaid
+flowchart LR
+  upload[上传 .docx / .pdf / 图片] --> imports[lumen_imports: processing]
+  imports --> extract[文本提取 / OCR]
+  extract --> clean[清洗]
+  clean --> chunk[切块]
+  chunk --> embedding[bge-small-zh Embedding]
+  embedding --> chunks[lumen_chunks + ts_vector + vector]
+  chunks --> done[lumen_imports: done / failed]
+```
+
 ## 3. 关键决策
 
 - **OCR 引擎**：建议 PaddleOCR（中文友好），待 05 确认

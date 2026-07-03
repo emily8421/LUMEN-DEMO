@@ -77,6 +77,44 @@
 ### POST /api/documents/{id}/versions/{v}/restore
 - 响应：`{ "code":0, "data": { "current_version": v } }`
 
+```mermaid
+sequenceDiagram
+  participant UI as React 前端
+  participant API as FastAPI API
+  participant Auth as 权限校验
+  participant Service as 业务 service
+  participant DB as PostgreSQL + pgvector
+  UI->>API: REST 请求（携带当前 space_id / session）
+  API->>Auth: 鉴权 + 空间 / 文档权限校验
+  Auth-->>API: 允许 / 拒绝
+  API->>Service: 调用对应业务逻辑
+  Service->>DB: 读写文档 / 版本 / chunks / terms
+  DB-->>Service: 数据结果
+  Service-->>API: 业务响应
+  API-->>UI: { code, msg, data }
+```
+
 ### [P2] / [愿景] 接口（骨架·待该阶段细化）
 - `/api/tags`、`/api/spaces/push`：请求 / 响应待 P2 细化
 - `/api/briefs/{token}`：简报隔离与有效期待愿景验证（REQ-022）
+
+## 4. REQ → 接口追溯矩阵
+
+| REQ | 接口 | 说明 |
+|---|---|---|
+| REQ-001 | `POST /api/auth/login`、`GET /api/spaces` | 登录后只列出所属空间 |
+| REQ-002 | `POST /api/spaces/switch` | 切换当前空间上下文 |
+| REQ-003 | `GET /api/documents`、`POST /api/query`、`GET /api/search` | 文档列表、检索、问答均执行权限过滤 |
+| REQ-004 / 005 | `GET/POST /api/documents`、`GET/PUT/DELETE /api/documents/{id}` | 文档 CRUD 与行内编辑保存 |
+| REQ-006 | `GET /api/documents/{id}/versions`、`POST /api/documents/{id}/versions/{v}/restore` | 版本查看与恢复 |
+| REQ-007 | `GET /api/search?q=` | 全文搜索 |
+| REQ-008 | `POST /api/query` | RAG 问答与来源引用 |
+| REQ-009 / 010 | `POST /api/import` | Word / PDF / 图片导入与解析任务 |
+| REQ-011 | 全部 P1 接口 | 桌面端通过浏览器覆盖全部 P1 功能 |
+| REQ-036 | `GET/POST /api/terms`、`GET/PUT/DELETE /api/terms/{id}` | 术语列表、创建、更新、删除 |
+| REQ-012..017 / 024..027 | P2 接口骨架 | 升 Phase2 时细化契约 |
+| REQ-018..023 / 028..035 | 愿景接口骨架 | 技术验证通过后细化契约 |
+
+## 5. 待人工确认项
+
+- 鉴权方式与错误码体系仍按 `docs/05-tech-spec.md` 的“待确认”版本约束，在开发前钉死。

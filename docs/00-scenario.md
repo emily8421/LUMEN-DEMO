@@ -51,6 +51,10 @@ LUMEN 是面向中小企业（典型：帮客户做 AI Agent 落地的初创公�
 - 完整需求链：01-user-requirements → 02-srs → 03-prd（§3 阶段路线图）
 - 当前阶段：Phase1（功能范围 `[P1]` · 交付物形态 **Demo**），见 ai/project-rules.md §1
 
+## 5. 待人工确认项
+
+- 无新增确认项；人物、公司与产品名均为虚构，仅用于 Demo 场景演示。
+
 ---
 
 *人物（Alice / Lily / Mark / Kira）、公司（Nova / Helios / BrightLite）、产品（LUMEN）均为虚构，仅用于场景演示。*

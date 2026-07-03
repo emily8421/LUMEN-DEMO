@@ -149,11 +149,36 @@
 
 ## 4. 表间关系
 
-```text
-users ──< space_members >── spaces
-spaces ──< documents ──< document_versions
-spaces ──< documents ──< chunks
-spaces ──< imports ──> documents（解析产物）
-spaces ──< terms（空间术语优先于全局术语）
-documents.permission / owner_id 与 space_members 共同决定可见性（见 docs/design/permissions）
+```mermaid
+erDiagram
+  lumen_users ||--o{ lumen_space_members : joins
+  lumen_spaces ||--o{ lumen_space_members : has_members
+  lumen_spaces ||--o{ lumen_documents : owns
+  lumen_documents ||--o{ lumen_document_versions : versions
+  lumen_documents ||--o{ lumen_chunks : chunks
+  lumen_spaces ||--o{ lumen_imports : imports
+  lumen_imports }o--|| lumen_documents : parsed_document
+  lumen_spaces ||--o{ lumen_terms : terms
+  lumen_users ||--o{ lumen_documents : owns_private_docs
 ```
+
+`lumen_documents.permission` / `owner_id` 与 `lumen_space_members` 共同决定可见性（见 `docs/design/permissions.md`）；`lumen_terms` 中空间术语优先于全局术语。
+
+## 5. REQ → 表追溯矩阵
+
+| REQ | 相关表 | 说明 |
+|---|---|---|
+| REQ-001 / 002 | `lumen_users`、`lumen_spaces`、`lumen_space_members` | 账号、空间与成员关系支撑隔离和切换 |
+| REQ-003 | `lumen_documents`、`lumen_space_members` | 文档权限、作者与空间成员共同决定可见性 |
+| REQ-004 / 005 | `lumen_documents` | 文档 CRUD 与行内编辑持久化 |
+| REQ-006 | `lumen_document_versions` | 保存历史版本并支持恢复 |
+| REQ-007 / 008 | `lumen_documents`、`lumen_chunks` | 全文 / 向量检索与 RAG 来源引用 |
+| REQ-009 / 010 | `lumen_imports`、`lumen_documents`、`lumen_chunks` | 导入任务、解析产物与切块索引 |
+| REQ-011 | 全部 P1 表 | 桌面端通过 API 覆盖全部 P1 功能 |
+| REQ-036 | `lumen_terms`、`lumen_documents`、`lumen_chunks` | 空间术语维护、识别与问答口径对齐 |
+| REQ-012..017 / 024..027 | P2 表骨架 | 升 Phase2 时细化字段与索引 |
+| REQ-018..023 / 028..035 | 愿景表骨架 | 技术验证通过后细化字段与索引 |
+
+## 6. 待人工确认项
+
+- 无新增确认项；P2 / 愿景表仅保留骨架，不进入 Phase1 迁移实现。
