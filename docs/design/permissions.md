@@ -17,6 +17,18 @@
 2. **全文搜索**：`ts_vector` 检索 + 同上过滤
 3. **RAG**：候选块生成时只取可见文档的 `lumen_chunks`
 
+```mermaid
+flowchart LR
+  request[用户请求] --> space[当前 space_id]
+  space --> membership{是否空间成员}
+  membership -- 否 --> deny[拒绝访问]
+  membership -- 是 --> permission{文档权限}
+  permission -- team / external --> allow[允许进入列表 / 搜索 / RAG]
+  permission -- private --> owner{是否 owner}
+  owner -- 是 --> allow
+  owner -- 否 --> deny
+```
+
 ## 3. 关键决策
 
 - **过滤下沉**：权限条件进 SQL / 检索 where 子句，不在应用层事后裁剪

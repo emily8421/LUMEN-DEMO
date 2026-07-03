@@ -26,6 +26,19 @@
 6. 构造 Prompt：候选块 + 术语上下文 + 问题 → LLM，要求"仅依据给定内容回答、标注来源；无依据则告知未找到"
 7. 返回 `answer` + `sources[]`
 
+```mermaid
+flowchart TB
+  question[问题 / 关键词] --> permission[空间 + 权限过滤]
+  permission --> vector[向量召回]
+  permission --> keyword[全文召回]
+  vector --> merge[合并去重 topN]
+  keyword --> merge
+  merge --> terms[注入空间术语上下文]
+  terms --> prompt[构造受约束 Prompt]
+  prompt --> llm[LLM]
+  llm --> answer[答案 + sources]
+```
+
 ## 3. 关键决策（[P1]）
 
 - **切块**：按段落 / 固定长度（参数待 05 定，初值 ~512 token、重叠 ~64），与 docs/design/ingestion 共用

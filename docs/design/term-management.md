@@ -24,6 +24,16 @@
 2. 命中问题或候选块中的术语时，将术语定义注入 Prompt 的上下文约束。
 3. 回答中优先采用空间术语定义，并在来源中包含术语表引用；无相关文档时仍按 REQ-008 回复未找到，不因术语存在编造答案。
 
+```mermaid
+flowchart TB
+  edit[术语创建 / 更新] --> terms[(lumen_terms)]
+  terms --> recognize[文档阅读 / 编辑轻量匹配]
+  recognize --> tooltip[悬浮提示]
+  terms --> query[/api/query 加载候选术语]
+  query --> inject[术语定义注入 Prompt]
+  inject --> answer[RAG 回答优先采用空间定义]
+```
+
 ## 3. 关键决策（[P1]）
 
 - **空间优先**：空间术语优先级高于同名全局术语，避免客户项目语境被通用定义覆盖。

@@ -15,42 +15,24 @@
 
 ## 1. 整体架构图
 
-```text
-                         ┌──────────────┐
-                         │  React 前端   │  桌面浏览器 [P1]
-                         └──────┬───────┘
-                                │ REST / JSON
-                         ┌──────▼───────┐
-                         │  FastAPI      │  api 层（鉴权 + 权限校验）[P1]
-                         │  (api 层)     │
-                         └──────┬───────┘
-                                │
-            ┌───────────────────┼─────────────────────┐
-            ▼                   ▼                     ▼
-     ┌────────────┐      ┌────────────┐        ┌────────────┐
-     │ 文档管理    │      │ 检索问答    │        │ 内容导入    │
-     │ service    │      │ service    │        │ service    │
-     │ [P1]       │◄────►│ [P1]       │◄───────│ [P1]       │
-     └─────┬──────┘      └─────┬──────┘        └─────┬──────┘
-           │                   │                     │
-           │        ┌──────────┴──────────┐          │ 解析/OCR
-           │        │ 空间与权限 service   │          ▼
-           ├───────►│ [P1]（查询时过滤）   │◄─────┐  (python-docx/pdfplumber/PaddleOCR)
-           │        └──────────┬──────────┘      │
-           │                   │                 │
-           ▼                   ▼                 ▼
-     ┌─────────────────────────────────────────────────┐
-     │  model 层 + PostgreSQL + pgvector               │
-     │  documents / versions / chunks(+embedding) /    │
-     │  spaces / members / imports / terms   [P1]      │
-     └────────────────────┬────────────────────────────┘
-                         │ LLM：OpenAI 兼容 API
-                  ┌───────▼────────┐
-                  │ LLM + Embedding │  LLM 外部 / 中转；Embedding 本机 [P1]
-                  └────────────────┘
-
-  [P2] 新增：标签与视图 service、协作 service、跨空间推送 service
-  [愿景] 新增：Vault 挂载 service、录音转写 service、情报交付 service
+```mermaid
+flowchart TB
+  browser[React 前端<br/>桌面浏览器 P1] -->|REST / JSON| api[FastAPI API<br/>鉴权 + 权限校验]
+  api --> docs[文档管理 service P1]
+  api --> retrieval[检索问答 service P1]
+  api --> ingestion[内容导入 service P1]
+  api --> permissions[空间与权限 service P1]
+  api --> terms[术语管理 service P1]
+  docs <--> retrieval
+  ingestion -->|解析 / OCR / 切块| retrieval
+  docs --> db[(model 层<br/>PostgreSQL + pgvector)]
+  retrieval --> db
+  ingestion --> db
+  permissions --> db
+  terms --> db
+  retrieval --> ai[LLM + Embedding<br/>LLM 外部 / 中转；Embedding 本机]
+  p2[标签与视图 / 协作 / 跨空间推送 P2] -.升阶段追加.-> api
+  vision[Vault / 录音转写 / 情报交付 愿景] -.技术验证后追加.-> api
 ```
 
 ## 2. 子系统 / 模块划分（完整框架）
@@ -87,3 +69,20 @@
 - 资源边界：Demo 峰值内存 < 8GB、显存 < 4GB、磁盘 < 20GB；允许本机安装项目所需依赖与镜像。
 - 远程 / 公司服务器边界：Phase1 Demo 暂不使用公司服务器；若本机 Embedding 在导入规模、响应时间或检索质量上不够用，再申请内网 Embedding / reranker 服务。
 - 重资源项归属：禁止本机运行大参数 LLM / 大型 Embedding / reranker；`bge-small-zh` 本机 Embedding 属 Phase1 可接受范围。
+
+## 5. REQ / 功能 → 模块追溯矩阵
+
+| REQ | 功能范围 | 主要模块 / 子系统 | 下游设计 |
+|---|---|---|---|
+| REQ-001 / 002 / 003 | 空间隔离、空间切换、权限过滤 | 空间与权限、文档管理、检索问答 | `docs/design/permissions.md`、`docs/06-db-design.md`、`docs/07-api-spec.md` |
+| REQ-004 / 005 / 006 | 文档 CRUD、行内编辑、版本历史 | 文档管理 | `docs/06-db-design.md`、`docs/07-api-spec.md` |
+| REQ-007 / 008 | 全文搜索、RAG 问答 | 检索问答 | `docs/design/rag-retrieval.md`、`docs/06-db-design.md`、`docs/07-api-spec.md` |
+| REQ-009 / 010 | Word / PDF / OCR 导入 | 内容导入、检索问答 | `docs/design/ingestion.md`、`docs/06-db-design.md`、`docs/07-api-spec.md` |
+| REQ-011 | 桌面浏览器访问 | React 前端、FastAPI API、各 P1 子系统 | `docs/08-dev-plan.md` Sprint-6、`docs/09-verification.md` |
+| REQ-036 | 术语管理 | 术语管理、检索问答、文档管理 | `docs/design/term-management.md`、`docs/06-db-design.md`、`docs/07-api-spec.md` |
+| REQ-012..017 / 024..027 | P2 优化扩展 | 标签与视图、协作与推送、文档管理扩展 | 升 Phase2 时细化 |
+| REQ-018..023 / 028..035 | 愿景功能 | 存量接入、情报分析、情报交付 | 技术验证通过后细化 |
+
+## 6. 待人工确认项
+
+- 无新增确认项；P2 / 愿景模块在升阶段或技术验证通过后再拆详细设计。
