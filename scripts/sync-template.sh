@@ -94,6 +94,14 @@ DEFAULT_SYNC_FILES=(
   "scripts/collect-env.ps1"
   "scripts/check-prereqs.ps1"
   "scripts/bootstrap-dev-env.ps1"
+  "scripts/sync-all-derived.sh"
+  "scripts/e2e-sync-check.sh"
+  "template-docs/e2e-regression-checklist.md"
+  "template-docs/e2e-report-template.md"
+  "ai/commands/submit-proposal.md"
+  "ai/commands/submit-feedback.md"
+  "ai/prompts/maintainers/17-submit-proposal.md"
+  "ai/prompts/maintainers/18-submit-feedback.md"
 )
 
 # doc-standards 规范镜像：把模板 docs/00-09 撰写规范镜像到派生项目 ai/doc-standards/。
