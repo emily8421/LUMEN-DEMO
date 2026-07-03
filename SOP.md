@@ -48,8 +48,10 @@
 | A13 | 同步后项目整理 | `/run post-sync-cleanup` | `docs/README.md`、`ai/project-rules.md`、`docs/env/local-env.md` | `ai/prompts/maintainers/15-post-sync-cleanup.md` | 同步方法论后，先出迁移计划，确认后再执行 |
 | A13/C6 | 派生同步运行记录 | 无 | `template-docs/derived-sync-report-template.md` | `ai/prompts/maintainers/12-sync-template.md` | 真实同步后记录命令、结果、问题和可回流优化点；项目事实留在派生项目，回流提案必须去项目化 |
 | A14 | Phase 升级评估 | `/run phase-upgrade` | `docs/03-prd.md`、`ai/project-rules.md` §1 | `ai/prompts/planning/08-phase-upgrade.md` | 评估当前完成度，再草拟下一 Phase 边界 |
+| A15 | 回流提案/反馈到模板 | `/run submit-proposal` / `/run submit-feedback` | `scenario-guides.md` A15 | `ai/prompts/maintainers/17-submit-proposal.md` / `18-submit-feedback.md` | 派生→模板开 issue（免 fork）；先去项目化+标来源 |
 | C1 | 模板优化提案汇总 | `/run template-proposal-summary` | `CONTRIBUTING.md` §4、`_proposals/README.md` | `ai/prompts/maintainers/11-template-proposal-summary.md` | 先提案，后改模板；完成后归档到 `_archive/proposals/` |
 | C4/C7 | 直接修改模板 | `/run template-proposal-summary` | `CONTRIBUTING.md` §3 / §7 | `ai/prompts/maintainers/11-template-proposal-summary.md` | 必须判断版本影响并更新 `VERSION` / README 版本记录 |
+| C8 | 批量同步所有派生项目 | `bash scripts/sync-all-derived.sh` | `scenario-guides.md` C8 | 无 | 发版后一条指令更新父目录下所有派生（先 `--dry-run` 预览） |
 | M1 | 新窗口续接任务 | 无 | `ai/session-rules.md` | 无 | 先读 `.ai/session-handoff.md`，兼容 `NEXT-STEPS.md`，再结合 Git 状态恢复 |
 
 ### 文档入口（要看什么 → 看哪；非操作场景）

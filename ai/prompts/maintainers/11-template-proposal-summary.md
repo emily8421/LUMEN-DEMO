@@ -24,7 +24,7 @@
 > 事实来源：模板变更治理规则以 `CONTRIBUTING.md` 为准；本节只是把该流程整理成可复制给 AI 执行的 Prompt。
 
 ```text
-请读取 _proposals/ 下所有 TEMPLATE-UPGRADE-*.md（提案）与可选 *-patch.md（具体改动建议），并输出一份模板优化计划。
+请读取 _proposals/ 下所有 TEMPLATE-UPGRADE-*.md（提案）与可选 *-patch.md（具体改动建议），**并读取模板仓库带 `proposal` / `feedback` 标签的 issue**（`gh issue list --label proposal` 与 `--label feedback`——派生项目经 `submit-proposal` / `submit-feedback` 开的回流 issue），把 issue 内容与本地提案一并纳入分析，输出一份模板优化计划。issue 处理完后应关闭；转为实施的，落地后关闭对应 issue。
 
 读取前先确认：
 - ai/index.md 列出的全部规则文件

@@ -68,6 +68,8 @@ AI 识别到命令意图后，应：
 | `collect-env` | 采集本机环境 | `ai/prompts/setup/13-collect-env.md`、`scripts/collect-env.ps1` |
 | `new-project` | 新建派生项目 | `ai/prompts/setup/14-new-project.md`、`scripts/new-project.sh` |
 | `commit-message` | 生成提交信息 | `ai/prompts/git/06-commit-message.md` |
+| `submit-proposal` | 提交提案给维护者 / 回流模板 | `ai/prompts/maintainers/17-submit-proposal.md`（跨仓库开 issue） |
+| `submit-feedback` | 收集使用问题反馈给模板 | `ai/prompts/maintainers/18-submit-feedback.md`（半自动汇集 + 开 issue） |
 
 ## 维护规则
 
