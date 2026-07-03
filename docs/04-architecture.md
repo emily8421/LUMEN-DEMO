@@ -70,7 +70,68 @@ flowchart TB
 - 远程 / 公司服务器边界：Phase1 Demo 暂不使用公司服务器；若本机 Embedding 在导入规模、响应时间或检索质量上不够用，再申请内网 Embedding / reranker 服务。
 - 重资源项归属：禁止本机运行大参数 LLM / 大型 Embedding / reranker；`bge-small-zh` 本机 Embedding 属 Phase1 可接受范围。
 
-## 5. REQ / 功能 → 模块追溯矩阵
+## 5. 关键流程与权限过滤
+
+> 本节固定 Sprint-1 权限底座的架构边界：空间、文档权限、搜索和 RAG 必须共用同一套权限过滤原则，禁止仅在前端隐藏或仅靠业务层记忆当前空间。
+
+### 5.1 登录与空间切换
+
+```mermaid
+sequenceDiagram
+  participant Browser as React 前端
+  participant API as FastAPI API
+  participant Auth as 权限 service
+  participant DB as PostgreSQL
+
+  Browser->>API: POST /api/auth/login
+  API->>Auth: 校验 Demo 用户
+  Auth->>DB: 读取用户可访问 spaces
+  DB-->>Auth: user_id + 默认 current_space_id
+  Auth-->>API: 签发 Bearer token(user_id,current_space_id,exp)
+  API-->>Browser: token + 当前空间
+  Browser->>API: POST /api/spaces/switch(space_id)
+  API->>Auth: 校验用户是否为空间成员
+  Auth->>DB: 查询 space_members
+  DB-->>Auth: 成员关系有效
+  Auth-->>API: 签发新 token(current_space_id=目标空间)
+  API-->>Browser: 新 token
+```
+
+### 5.2 文档访问、搜索与 RAG 统一过滤
+
+```mermaid
+flowchart TB
+  req[API 请求<br/>Bearer token] --> ctx[解析 user_id + current_space_id]
+  ctx --> membership{是否为空间成员?}
+  membership -- 否 --> deny[403 / 空结果]
+  membership -- 是 --> op{操作类型}
+
+  op --> doc[文档 CRUD / 行内编辑 / 版本]
+  op --> search[全文搜索]
+  op --> rag[RAG 问答]
+
+  doc --> docFilter[SQL 过滤<br/>space_id = current_space_id<br/>且权限允许]
+  search --> searchFilter[全文 / chunk 查询过滤<br/>space_id + visibility + owner]
+  rag --> retrieve[检索候选 chunk]
+  retrieve --> ragFilter[构造 Prompt 前再次过滤<br/>仅当前空间可见 chunk]
+  ragFilter --> term[注入当前空间术语<br/>空间术语优先于全局术语]
+  term --> answer[答案带来源]
+
+  docFilter --> result[返回可见结果]
+  searchFilter --> result
+  answer --> result
+```
+
+### 5.3 权限实现原则
+
+- **空间优先**：所有查询先限定 `current_space_id`，再判断文档级权限。
+- **私有文档**：仅作者可见；不得进入同空间其他成员搜索结果、RAG 候选 chunk 或问答来源。
+- **团队共享**：同空间成员可见；跨空间默认不可见。
+- **外部只读**：Phase1 仅表达只读权限类型，不实现跨空间推送；跨空间推送属于 P2。
+- **双层过滤**：SQL / 检索层必须过滤；RAG 构造 Prompt 前必须再次过滤候选 chunk。
+- **前端不可作为权限边界**：前端隐藏入口只改善体验，不作为安全判断依据。
+
+## 6. REQ / 功能 → 模块追溯矩阵
 
 | REQ | 功能范围 | 主要模块 / 子系统 | 下游设计 |
 |---|---|---|---|
@@ -83,6 +144,6 @@ flowchart TB
 | REQ-012..017 / 024..027 | P2 优化扩展 | 标签与视图、协作与推送、文档管理扩展 | 升 Phase2 时细化 |
 | REQ-018..023 / 028..035 | 愿景功能 | 存量接入、情报分析、情报交付 | 技术验证通过后细化 |
 
-## 6. 待人工确认项
+## 7. 待人工确认项
 
 - 无新增确认项；P2 / 愿景模块在升阶段或技术验证通过后再拆详细设计。
