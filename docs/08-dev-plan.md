@@ -4,6 +4,16 @@
 > 升阶段时在**原位追加**新 Sprint（global-rules §8，不删旧 Sprint）。
 > Sprint 格式见 `ai/global-rules.md` §3。
 
+## 0. 文档元信息
+
+| 项 | 内容 |
+|---|---|
+| 当前 Phase | Phase1 |
+| 交付物形态 | Demo |
+| 输入基线 | `docs/03-prd.md` §3、`docs/04-architecture.md`、`docs/05-tech-spec.md`、`docs/09-verification.md` |
+| 当前状态 | 已确认（Phase1 Sprint 计划；执行状态以任务 / PR / 续接记录为准） |
+| 最后更新 | 2026-07-03 |
+
 ## Sprint-1：空间与权限底座
 
 ### 目标

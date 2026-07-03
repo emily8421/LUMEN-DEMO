@@ -4,6 +4,15 @@
 > 各子系统内部详细逻辑见 `docs/design/`；数据见 06；接口见 07。
 > 子系统 / 模块均带阶段标签与状态。
 
+## 0. 文档元信息
+
+| 项 | 内容 |
+|---|---|
+| 输入来源 | `docs/02-srs.md`、`docs/03-prd.md`、`docs/env/local-env.md`、`ai/project-rules.md` |
+| 覆盖功能 / REQ | Phase1：REQ-001..REQ-011、REQ-036；P2 / 愿景保留架构骨架 |
+| 当前状态 | 已确认（Phase1 Demo 架构基线） |
+| 最后更新 | 2026-07-03 |
+
 ## 1. 整体架构图
 
 ```text

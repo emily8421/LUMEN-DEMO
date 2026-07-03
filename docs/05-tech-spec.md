@@ -3,6 +3,15 @@
 > 技术栈版本与关键决策。"为什么"见 04，本文讲"具体版本与约束"。
 > Phase 技术约束与 `ai/project-rules.md` §1 / §2 一致。
 
+## 0. 文档元信息
+
+| 项 | 内容 |
+|---|---|
+| 输入来源 | `docs/03-prd.md`、`docs/04-architecture.md`、`docs/env/local-env.md`、`ai/project-rules.md` |
+| 覆盖架构组件 | FastAPI 后端、React 前端、PostgreSQL + pgvector、Embedding / LLM 适配、导入解析 |
+| 当前状态 | 已确认（版本号与部分实现细节仍按文内“待确认”处理） |
+| 最后更新 | 2026-07-03 |
+
 ## 1. 技术栈与版本
 
 > 标注「待确认」的版本号待开发前钉死；不影响 P1 架构形态。
