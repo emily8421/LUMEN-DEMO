@@ -15,9 +15,10 @@
 
 ## 1. 统一约定
 
-- **鉴权**：会话 / Token（具体方式待 05 细化）；权限在空间 + 文档两级校验。
-- **响应**：`{ code, msg, data }`；列表分页 `{ items, total, page }`。
-- **错误码体系**：待 05 细化（如 `0`=成功、`4xx`=客户端、`5xx`=服务端）。
+- **鉴权**：Phase1 使用 Demo Bearer Token；`POST /api/auth/login` 返回 HMAC-SHA256 签名 token，前端通过 `Authorization: Bearer <token>` 传递；token 载荷包含 `user_id`、`current_space_id`、`exp`，默认有效期 8 小时。`POST /api/spaces/switch` 校验成员关系后返回带新 `current_space_id` 的 token。
+- **权限**：空间 + 文档两级校验；列表 / 搜索 / RAG 均按 `current_space_id` 与文档 `permission` 过滤。
+- **响应**：统一 `{ code, msg, data }`；成功 `code=0`；列表分页 `{ items, total, page }`。
+- **错误码体系**：HTTP 状态码表达协议层结果，`code` 表达业务结果：`0` 成功，`4001` 未登录 / token 无效，`4003` 无权限，`4004` 资源不存在，`4090` 业务冲突，`4220` 参数校验失败，`5000` 服务端错误，`5030` 外部 AI / OCR 服务不可用。
 
 ## 2. 接口清单（完整）
 
@@ -117,4 +118,4 @@ sequenceDiagram
 
 ## 5. 待人工确认项
 
-- 鉴权方式与错误码体系仍按 `docs/05-tech-spec.md` 的“待确认”版本约束，在开发前钉死。
+- 无开发前阻塞项；若实现期调整鉴权、错误码或 token 载荷，必须同步修订 `docs/05-tech-spec.md` 与本文。
