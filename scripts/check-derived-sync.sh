@@ -123,6 +123,22 @@ for changed_file in "${CHANGED_FILES[@]}"; do
 done
 
 echo
+echo "==> 根 README 模板版本号一致性（非阻断）"
+if [[ -f "VERSION" && -f "README.md" ]]; then
+  cur_ver="$(tr -d '[:space:]' < VERSION)"
+  readme_ver="$(grep -E '当前|已同步' README.md | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | tail -1 || true)"
+  if [[ -z "$readme_ver" ]]; then
+    echo "ℹ️  README 未声明当前模板版本号，跳过（README 不强制写版本号）"
+  elif [[ "$readme_ver" != "$cur_ver" ]]; then
+    echo "⚠️  README 模板版本声明 $readme_ver 与 VERSION $cur_ver 不一致，请人工核对（非阻断，不计入失败）"
+  else
+    echo "✓ README 模板版本声明 $readme_ver 与 VERSION 一致"
+  fi
+else
+  echo "ℹ️  缺少 VERSION 或 README.md，跳过版本号一致性检查"
+fi
+
+echo
 if [[ "$FAILURES" -eq 0 ]]; then
   echo "✅ 派生项目同步边界检查通过。"
   echo "   下一步：若需要整理项目内容，另开分支执行 ai/prompts/maintainers/15-post-sync-cleanup.md，先审计并输出迁移计划。"

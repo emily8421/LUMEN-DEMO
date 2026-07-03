@@ -31,9 +31,12 @@
 - **提案先行**：先新增或更新 `TEMPLATE-UPGRADE-*.md`（动机 / 拟改 / 版本影响 / 影响面 / 验证），改的过程中持续补充，不要改完再回忆补。提案组织建议（沿用现有、同一 PR 合并一份）见 `CONTRIBUTING.md` §3.1。
 - **影响下游就 bump 版本**：任何影响下游同步判断的合并都递增根目录 `VERSION` 并更新 `CHANGELOG.md`（版本规则见 `CONTRIBUTING.md` §4）。
 - **长任务维护续接**：多提案或长任务按 `ai/session-rules.md` 维护本地续接文件（`.ai/session-handoff.md`）；真实续接文件不提交。
+- **多会话并发**：多个 AI 会话同时操作本仓库时，各用独立 worktree（`git worktree add`），勿共用工作区——否则 commit 会落错分支。见 `git-guide.md` §4「多会话并发操作」。
 - 完成后，已处理提案移到 `_archive/proposals/`，未处理或延后的留在 `_proposals/`。
 
 ## 3. 发布 Checklist
+
+> **MINOR / MAJOR 发布前额外跑 L3 端到端回归**：`bash scripts/e2e-sync-check.sh` + 按 `template-docs/e2e-regression-checklist.md` 跑人工项（R4–R6）+ 用 `template-docs/e2e-report-template.md` 出报告确认。PATCH（仅文档 / 小修）可豁免。
 
 每次发版前逐条过：
 
@@ -62,6 +65,7 @@
 - `scripts/check-template.sh` / `.ps1` 只用于模板仓库完整性自检；派生项目同步验收用 `scripts/check-derived-sync.sh` / `.ps1`。
 - `NEXT-STEPS.md` / `.ai/session-handoff.md` 是本地续接便签，不属于模板方法论文档；保持本地临时性，通过 `.gitignore` 排除，不进同步清单和正式提交。模板只同步 `ai/session-rules.md` 与 `template-docs/session-handoff.example.md`。
 - 真实派生项目同步后的问题优先沉淀到 `template-docs/derived-sync-report-template.md` 运行记录；只有可通用于多个项目的问题，才去项目化转写为 `_proposals/TEMPLATE-UPGRADE-*.md` 回流。
+- **批量同步**：维护者发新版后，可用 `scripts/sync-all-derived.sh <父目录> --dry-run|--commit` 一条指令更新父目录下所有派生项目（场景 C8）；默认 dry-run，工作区不干净 / 非派生 / 模板本体自动跳过。要 PR-per-project 可审计流程仍走 A13。
 
 ## 5. 自检与 CI
 

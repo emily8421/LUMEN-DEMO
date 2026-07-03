@@ -6,6 +6,96 @@
 
 模板版本采用三段式 `vMAJOR.MINOR.PATCH`，以根目录 `VERSION` 为单一审计入口。任何会影响下游同步判断的模板合并都应递增版本；`ai/global-rules.md` 顶部仅记录全局规则自身版本。
 
+## v1.25.0（2026-07-03）
+
+派生 → 模板反馈与提案回流渠道（标准化 + 半自动）。回流自派生提案 `derived-feedback-channel`。
+
+- **来源标识规则**（`ai/global-rules.md` §9 增补）：回流提案 / 反馈头部标 `> 来源：<派生>(owner/repo)`，解决来源不可识别（曾导致回流 PR 被误判为「另一会话并发」）。
+- **2 新命令**（跨仓库开 issue，免 fork）：
+  - `submit-proposal`（`/run submit-proposal` + `ai/prompts/maintainers/17-submit-proposal.md`）：成熟提案校验（去项目化 + 来源 + 字段）后 `gh issue create`（label `proposal`）。
+  - `submit-feedback`（`/run submit-feedback` + `ai/prompts/maintainers/18-submit-feedback.md`）：半自动汇集候选问题（sync 运行记录 / audit / check 告警 / 草稿）+ 人工勾选 + 开 issue（label `feedback`）。
+- **Issue 模板** `.github/ISSUE_TEMPLATE/derived-feedback.md`（template-local）：预填来源 / 类型 / 去项目化确认。
+- **`template-proposal-summary`（11）扩展**：除 `_proposals/`，也读模板仓带 `proposal`/`feedback` 标签的 issue。
+- **新场景 A15**（scenario-guides + 速查索引 + SOP 场景索引）：「回流提案 / 反馈到模板」——派生使用者上报侧（C1 是维护者收侧）。
+- 动机：团队场景（多成员 / 多机器 / 多派生）回流摩擦 + 来源混淆；半自动（非全自动）保留人工判断。
+- check-template 加断言（§9 来源标识 + commands/README `submit-proposal` + 命令循环含 2 新命令 + 4 新文件入 sync 清单）；全过。
+- 回流自 `_proposals/TEMPLATE-UPGRADE-derived-feedback-channel.md`。
+
+## v1.24.5（2026-07-03）
+
+多会话并发操作规范：git-guide + MAINTAINERS + session-rules 记录「独立 worktree」约定，防并发 commit 落错分支。
+
+- `git-guide.md` §4（场景 B）：加「多会话并发操作」小节——`git worktree add` 命令 + why（共用工作区 = 共用 HEAD，`先确认分支再 commit` 非原子，必然偶发落错）+ 完成清理。
+- `MAINTAINERS.md` §2：加「多会话并发」指针 bullet（→ git-guide §4）。
+- `ai/session-rules.md`：加 §7「多会话并发操作」AI 行为约定（并发前先确认是否开独立 worktree）。
+- 动机：多次 AI 会话并发操作模板仓导致 commit 落错分支（3 起）；git 无自动机制，须靠每会话独立目录这一约定。
+- check-template 全过。
+
+## v1.24.4（2026-07-03）
+
+INIT-PROMPT reframe：标题 + 定位行对齐「启动入口」定位（#17 子问）。
+
+- `INIT-PROMPT.md`：标题「常用 Prompt 模板索引」→「**AI 任务启动入口**」（原标题 v1.22.2 后 stale——索引已迁到 `ai/prompts/README` + `commands-README`）；正文首行改为定位声明「首次在本模板项目里启动 AI 工作时，从这里入手」。
+- 解决名 / 题 / 内容不一致：文件名 `INIT-PROMPT` + 新标题「启动入口」+ 内容（4 入口指针 + 原则）现在三者一致。
+- 不改规则、不挪位、不断引用 / 断言（`ai/commands/README.md` 指针保留）；check-template 全过。
+- 回应 #17 子问（INIT-PROMPT 定位评估）。
+
+## v1.24.3（2026-07-03）
+
+`check-derived-sync` 加非阻断「README 模板版本号 vs VERSION」一致性告警（回流自派生项目提案 readme-version-check）。
+
+- `scripts/check-derived-sync.sh` + `.ps1`：同步边界检查后加一项**非阻断**告警——读 `VERSION` + 扫 README 里「当前 / 已同步」语义的模板版本声明，与 `VERSION` 不一致就告警（不计入失败、不改退出码）；README 无版本声明则跳过。
+- 动机：根 README 是项目专属（sync 不碰），其「同步至 vX.Y.Z」声明全靠人工维护，sync 后易滞后且无提示（实测某派生项目跨多版同步 README 仍标旧版本）。
+- 非阻断设计：README 可能有历史 / 叙事性版本引用，硬阻断会误伤；告警 + 人工核对是正确粒度。
+- check-template 加防滞后断言（`check-derived-sync` 含「README 模板版本」）。
+- 回流自派生项目提案 `TEMPLATE-UPGRADE-readme-version-check`；非破坏；check-template 全过。
+
+## v1.24.2（2026-07-03）
+
+global-rules §8.1 加「双维度总览表」撰写推荐（回流自派生项目提案 phase-overview-table，另一 AI 起草）。
+
+- `ai/global-rules.md` §8.1：加推荐——`docs/03-prd.md` §3 路线图顶部用「双维度总览表」集中呈现阶段 × 交付物形态（Demo/MVP/产品），避免交付物形态被要素级 `[P1]`/`[P2]`/`[愿景]` 标签淹没。Lean 剖面可裁剪列集；非强制。
+- `docs/03-prd.md` §3：加「双维度总览表」标注，显式说明下方表是双维度总览、与要素级标签形成「全景 ↔ 要素」对照（呼应 §8.1）。
+- 动机：交付物形态是阶段级属性（少数点声明），功能范围是要素级标签（遍布 04-09，上百次），前者易被后者淹没；总览表让 Demo→MVP→产品 演进线一目了然。
+- cherry-pick 自 `change/phase-overview-table`（去项目化提案）；非破坏、不改双维度定义；check-template 全过。
+- 提案：`_proposals/TEMPLATE-UPGRADE-phase-overview-table.md`。
+
+## v1.24.1（2026-07-02）
+
+v1.24 infrastructure release 收官。**PR-7 测试基础设施（#9）**。
+
+- **L3 端到端回归机制**：
+  - `template-docs/e2e-regression-checklist.md`（随模板同步）：6 项回归（R1 同步链路 / R2 check-derived-sync / R3 sync-all-derived 批量 / R4 场景引导路由 / R5 文档生成 / R6 PowerShell fallback），可自动化 + 人工 + 通过标准。
+  - `scripts/e2e-sync-check.sh`（随模板同步）：L3 发布门，聚合 `check-template`（含 doc-standards 镜像 + 新项目烟测）+ `sync-all-derived` 批量烟测，人工项指向 checklist。运行通过。
+  - `template-docs/e2e-report-template.md`（随模板同步）：回归报告模板。
+  - `MAINTAINERS` 发布 Checklist 补：MINOR / MAJOR 发布前跑 L3 + 报告确认（PATCH 可豁免）。
+- 专用测试派生项目 `ai-project-template-e2e` 是**外部 repo**（维护者 `gh repo create` + `new-project` 派生），模板仓内只给文档 + 命令。
+- check-template 加 5 断言（3 `require_file` + MAINTAINERS L3 + 回归清单 R6）。
+- **同步归属修订（含 PR-6）**：`scripts/sync-all-derived.sh` + `scripts/e2e-sync-check.sh` + `template-docs/e2e-regression-checklist.md` + `template-docs/e2e-report-template.md` 改为**随模板下行同步**（加入 `template-sync.json` + `sync-template.sh` 兜底清单 + Sync notice），消除 synced 文档（MAINTAINERS / scenario-guides / SOP / git-guide）对 template-local 文件的悬空引用；去掉 template-local 表述。
+- 覆盖用户诉求 **#9**（最小测试清单 + 回归机制 + 专用测试派生项目 + 报告）。
+- 提案：`_proposals/TEMPLATE-UPGRADE-test-infra-pr7-v1.24.1.md`。
+- **#1–#16 + #9 全部完成；v1.23 文档重构 + v1.24 infrastructure release 收官。**
+
+## v1.24.0（2026-07-02）
+
+v1.24 infrastructure release 启动。**PR-6 批量同步派生项目（#15）**。
+
+- **新增 `scripts/sync-all-derived.sh`**（template-local 维护者脚本，不进 sync 清单）：一条指令批量同步父目录下所有派生项目——遍历子目录、判定派生项目（`VERSION`+`scripts/sync-template.sh`+`docs/`，排除模板本体 `_examples/`）、逐个跑该项目的 `sync-template` + `check-derived-sync`、汇总成功 / 跳过 / 失败。默认 `--dry-run`，`--commit` 才写；工作区有未提交跟踪改动 / 非派生 / 同步失败 自动跳过，绝不强行写入。最小自测通过（2 假派生 + 非派生 + 模板本体）。
+- **新场景 C8 批量同步所有派生项目**（`scenario-guides.md`，C 维护者）：触发「批量同步 / sync all derived」；步骤 确认目录版本账户 → dry-run 全预览 → commit 批量 → 看汇总。`--commit` 在每个派生当前分支提交；要 PR-per-project 可审计流程改用 A13。
+- **交叉引用**：scenario-guides（C8 + 速查索引 C1–C8 + §5 C 头 C1–C8）、SOP（场景索引 C8 行）、MAINTAINERS（下行同步节批量 bullet）、git-guide §5（批量同步 note）。
+- **check-template 新断言**：`require_file scripts/sync-all-derived.sh` + scenario-guides C8 + SOP / MAINTAINERS `sync-all-derived` 引用。
+- 覆盖用户诉求 **#15**（23 场景未覆盖的「一条指令批量更新派生项目」缺口）。
+- 提案：`_proposals/TEMPLATE-UPGRADE-batch-sync-pr6-v1.24.0.md`。
+
+## v1.23.7（2026-07-02）
+
+文档体系重构 PR-5（ai/ 规则件）：document-lifecycle-rules 读者导向 + global-rules 去重，覆盖用户诉求 #12 + #14。
+
+- `ai/document-lifecycle-rules.md`（#12）：顶部加**阅读地图**（是什么 / 为什么 / 怎么做 / 规范 / 图表 → §1–§13 映射）；§1 加「文档体系是什么 + 为什么需要这套规则」framing。**不重组、不重编号**（§2 / §3 / §5 / §6 / §13 被 7 处跨引用）；6 锚点全保留。
+- `ai/global-rules.md`（#14）：§6「最佳实践流程总览」改为 stub 指针（指向 §1.1，删重复的 Scenario→Code 链，保留「避免想法→AI→代码」）；**保留 §6 号**（§7 / §8 / §9 被 6 处跨引用，不能重编号）。§8 阶段双维度不动（与 doc-lifecycle §4 文档剖面是不同概念，非重复——纠正 #13 评估误判）。
+- 11 个 global-rules 锚点 + 全部跨引用保留；check-template 全过。
+- 提案：`_proposals/TEMPLATE-UPGRADE-ai-rules-pr5-v1.23.7.md`。
+
 ## v1.23.6（2026-07-02）
 
 文档体系重构 PR-5b（导航衔接）：SOP 场景索引 ↔ scenario-guides 场景码对齐，覆盖用户诉求 #16。

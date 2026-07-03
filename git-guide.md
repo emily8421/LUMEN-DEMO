@@ -88,6 +88,23 @@ git branch -d <已合并分支名>
 
 派生项目里日常开发是否也走 PR 由项目自行决定；模板仓库强制走 PR。
 
+### 多会话并发操作（重要）
+
+多个 AI 会话（或终端）**同时操作同一仓库**时，共用一个工作目录 = 共用一个 HEAD；`先确认分支再 commit` 是非原子操作，**必然偶发 commit 落错分支**。git 本身没有「自动防多会话切分支」的机制——必须靠**每会话一个独立 worktree**：
+
+```bash
+# 会话 A 在主仓
+cd /path/ai-project-template
+
+# 会话 B 开独立 worktree（建 + 进；各工作区、各 HEAD，共享同一 .git）
+git worktree add ../ai-tpl-wt2 -b change/B的分支
+cd ../ai-tpl-wt2          # B 在这里改 / 提交 / 推送，完全不碰 A 的工作区
+# 完成后回主仓清理
+cd /path/ai-project-template && git worktree remove ../ai-tpl-wt2
+```
+
+> 详见 `ai/session-rules.md` §7（AI 行为约定）。
+
 ## 5. 场景 C：派生项目同步模板（使用者）
 
 你要把模板方法论的更新拉到派生项目（**模板 → 派生，下行获取，不回传**）。
@@ -95,6 +112,8 @@ git branch -d <已合并分支名>
 本节是派生项目同步模板方法论的**操作 SOP 权威文档**；`ai/prompts/maintainers/12-sync-template.md` 只是把本节整理成可复制给 AI 执行的 Prompt，`CONTRIBUTING.md` 只记录治理要求。
 
 派生项目同步模板方法论更新时，优先使用同步脚本，不要手动逐文件复制。该流程是**模板 → 派生项目**的下行获取，不会把派生项目内容提交回模板。
+
+> **批量同步（维护者）**：发新版后要一次更新父目录下所有派生项目，用 `bash scripts/sync-all-derived.sh <父目录> --dry-run`（场景 C8），不用逐个进派生项目终端；确认后 `--commit`。
 
 ### 5.1 路径判定
 

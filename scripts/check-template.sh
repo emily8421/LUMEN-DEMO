@@ -553,7 +553,9 @@ for command_file in \
   ai/commands/sprint-summary.md \
   ai/commands/collect-env.md \
   ai/commands/new-project.md \
-  ai/commands/commit-message.md; do
+  ai/commands/commit-message.md \
+  ai/commands/submit-proposal.md \
+  ai/commands/submit-feedback.md; do
   require_file "$command_file"
   require_contains "$command_file" '## 必读文件' "$command_file 含必读文件"
   require_contains "$command_file" '## 写入风险' "$command_file 含写入风险"
@@ -567,6 +569,10 @@ require_file ".github/workflows/template-check.yml"
 require_file ".github/pull_request_template.md"
 require_file ".github/ISSUE_TEMPLATE/template-change.md"
 require_file "scripts/new-project.sh"
+require_file "scripts/sync-all-derived.sh"
+require_file "scripts/e2e-sync-check.sh"
+require_file "template-docs/e2e-regression-checklist.md"
+require_file "template-docs/e2e-report-template.md"
 require_file "scripts/sync-template.sh"
 require_file "scripts/sync-template.ps1"
 require_file "scripts/check-template.sh"
@@ -646,6 +652,7 @@ require_contains "ai/document-lifecycle-rules.md" '横切事实' "document-lifec
 require_contains "ai/document-lifecycle-rules.md" '外部文档接入规则' "document-lifecycle 定义外部文档接入"
 require_contains "docs/README.md" 'ai/document-lifecycle-rules\.md' "docs README 指向文档生命周期规则"
 require_contains "ai/global-rules.md" 'docs/design/<子系统>\.md' "global-rules 使用 docs/design 子系统设计路径"
+require_contains "ai/global-rules.md" '回流来源标识' "global-rules §9 含回流来源标识规则"
 require_contains "ai/global-rules.md" '阶段双维度' "global-rules 定义阶段双维度"
 require_contains "ai/global-rules.md" '交付物形态.*Demo.*MVP.*产品' "global-rules 定义交付物形态"
 require_contains "ai/global-rules.md" '不得把 Demo 声称为 MVP / 产品' "global-rules 禁止混淆 Demo 与 MVP/产品"
@@ -718,6 +725,7 @@ require_contains "scripts/check-derived-sync.ps1" 'check-derived-sync\.sh' "chec
 require_contains "scripts/check-derived-sync.ps1" 'Invoke-NativeDerivedSyncCheck' "check-derived-sync PowerShell 入口含原生 fallback"
 require_contains "scripts/check-derived-sync.ps1" 'PowerShell fallback derived sync boundary check' "check-derived-sync fallback 输出明确标识"
 require_contains "scripts/check-derived-sync.sh" '同步清单外变更' "check-derived-sync 检查同步清单外变更"
+require_contains "scripts/check-derived-sync.sh" 'README 模板版本' "check-derived-sync 含 README 模板版本一致性告警（非阻断）"
 require_contains "scripts/check-derived-sync.sh" 'README\.md\|ai/project-rules\.md\|docs/0\[0-9\]-\*' "check-derived-sync 保护项目专属文件"
 require_contains "scripts/check-derived-sync.sh" 'git show --name-only --stat' "check-derived-sync 输出最近同步提交文件"
 require_contains "scripts/check-derived-sync.sh" 'ai/prompts/maintainers/15-post-sync-cleanup\.md' "check-derived-sync 指向同步后整理 Prompt"
@@ -767,6 +775,11 @@ require_file "template-docs/scenario-guides.md"
 require_contains "template-docs/scenario-guides.md" '场景路由入口' "scenario-guides 含场景路由入口"
 require_contains "template-docs/scenario-guides.md" '引导计划输出契约' "scenario-guides 含引导计划契约"
 require_contains "template-docs/scenario-guides.md" 'A0 冷启动' "scenario-guides 含冷启动场景"
+require_contains "template-docs/scenario-guides.md" 'C8 批量同步所有派生项目' "scenario-guides 含 C8 批量同步场景"
+require_contains "SOP.md" 'sync-all-derived' "SOP 含批量同步脚本入口"
+require_contains "MAINTAINERS.md" 'sync-all-derived' "MAINTAINERS 含批量同步脚本说明"
+require_contains "MAINTAINERS.md" 'e2e-sync-check' "MAINTAINERS 含 L3 端到端回归入口"
+require_contains "template-docs/e2e-regression-checklist.md" 'R6' "e2e 回归清单含 R6 PowerShell fallback 项"
 require_contains "template-docs/scenario-guides.md" 'mermaid' "scenario-guides 含图表格式默认"
 require_contains "template-docs/scenario-guides.md" '当前 `gh` 登录账户' "scenario-guides 账户约定用当前 gh 登录账户（去账户化）"
 # 去账户化：scenario-guides 账户约定用「当前 gh 登录账户」（见上条正向断言）。
@@ -775,6 +788,7 @@ require_file "ai/commands/scenario.md"
 require_contains "ai/commands/scenario.md" 'template-docs/scenario-guides\.md' "scenario 命令路由到 scenario-guides"
 require_contains "ai/commands/scenario.md" '/run scenario' "scenario 命令含 /run scenario"
 require_contains "ai/commands/README.md" '/run scenario' "commands README 含 scenario 元命令"
+require_contains "ai/commands/README.md" 'submit-proposal' "commands README 含 submit-proposal 回流命令"
 require_contains "template-sync.json" '"template-docs/scenario-guides\.md"' "template-sync 同步 scenario-guides"
 require_contains "template-sync.json" '"ai/commands/scenario\.md"' "template-sync 同步 scenario 命令"
 require_contains "ai/document-lifecycle-rules.md" '设计文档图表规范' "document-lifecycle 含图表规范"

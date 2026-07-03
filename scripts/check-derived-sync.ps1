@@ -219,6 +219,27 @@ function Invoke-NativeDerivedSyncCheck {
   }
 
   Write-Host ""
+  Write-Host "==> 根 README 模板版本号一致性（非阻断）"
+  if ((Test-Path -LiteralPath "VERSION") -and (Test-Path -LiteralPath "README.md")) {
+    $curVer = (Get-Content -Raw -Encoding UTF8 VERSION).Trim()
+    $readmeVer = ""
+    foreach ($line in (Get-Content -Encoding UTF8 README.md)) {
+      if (($line -match '当前|已同步') -and ($line -match 'v[0-9]+\.[0-9]+\.[0-9]+')) {
+        $readmeVer = $matches[0]
+      }
+    }
+    if (-not $readmeVer) {
+      Write-Host "INFO  README 未声明当前模板版本号，跳过（README 不强制写版本号）"
+    } elseif ($readmeVer -ne $curVer) {
+      Write-Host "WARN  README 模板版本声明 $readmeVer 与 VERSION $curVer 不一致，请人工核对（非阻断）"
+    } else {
+      Write-Host "OK    README 模板版本声明 $readmeVer 与 VERSION 一致"
+    }
+  } else {
+    Write-Host "INFO  缺少 VERSION 或 README.md，跳过版本号一致性检查"
+  }
+
+  Write-Host ""
   if ($script:Failures -eq 0) {
     Write-Host "OK derived sync boundary check passed."
     Write-Host "   Next: if project cleanup is needed, use ai/prompts/maintainers/15-post-sync-cleanup.md on a separate branch."
