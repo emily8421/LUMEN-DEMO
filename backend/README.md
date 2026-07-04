@@ -1,6 +1,6 @@
 ﻿# Backend Runtime
 
-> Phase1 backend runtime notes. Sprint-1 currently exposes demo auth and spaces APIs only.
+> Phase1 backend runtime notes. Sprint-2 currently exposes demo auth, spaces, document CRUD, and document version APIs.
 
 ## Python Runtime
 
@@ -68,6 +68,26 @@ Invoke-RestMethod -Method Post -Uri http://127.0.0.1:18000/api/spaces/switch `
   -ContentType 'application/json' `
   -Headers @{ Authorization = "Bearer $token" } `
   -Body '{"space_id":20}'
+
+$doc = Invoke-RestMethod -Method Post -Uri http://127.0.0.1:18000/api/documents `
+  -ContentType 'application/json' `
+  -Headers @{ Authorization = "Bearer $token" } `
+  -Body '{"title":"Sprint-2 Demo","content_md":"v1","permission":"team"}'
+
+$docId = $doc.data.id
+
+foreach ($version in 2..4) {
+  Invoke-RestMethod -Method Put -Uri "http://127.0.0.1:18000/api/documents/$docId" `
+    -ContentType 'application/json' `
+    -Headers @{ Authorization = "Bearer $token" } `
+    -Body "{`"title`":`"Sprint-2 Demo`",`"content_md`":`"v$version`",`"permission`":`"team`"}"
+}
+
+Invoke-RestMethod -Method Get -Uri "http://127.0.0.1:18000/api/documents/$docId/versions" `
+  -Headers @{ Authorization = "Bearer $token" }
+
+Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:18000/api/documents/$docId/versions/2/restore" `
+  -Headers @{ Authorization = "Bearer $token" }
 ```
 
 ## Validation
@@ -110,5 +130,6 @@ If local port binding remains blocked by the host environment, `tests/backend/te
 - Demo token signing key defaults to a local development value and can be overridden with `LUMEN_DEMO_TOKEN_KEY`.
 - Sprint-1 API uses an in-memory demo repository until PostgreSQL repository integration is implemented.
 - SQL foundation lives in `backend/migrations/001_sprint1_space_permissions.sql`.
+
 
 

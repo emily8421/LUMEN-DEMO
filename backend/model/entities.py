@@ -1,4 +1,4 @@
-﻿"""Core data models for Sprint-1 space and permission logic."""
+﻿"""Core data models for Phase1 space, permission, and document logic."""
 
 from __future__ import annotations
 
@@ -52,3 +52,13 @@ class Document:
     permission: DocumentPermission
     document_type: str = "markdown"
     current_version: int = 1
+
+
+@dataclass(frozen=True)
+class DocumentVersion:
+    id: int
+    document_id: int
+    version_no: int
+    content_md: str
+    editor_id: int
+    created_at: str

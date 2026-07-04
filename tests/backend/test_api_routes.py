@@ -23,6 +23,46 @@ class ApiRouteTest(unittest.TestCase):
         self.assertEqual(switch_response["data"]["current_space_id"], 20)
         self.assertIn("token", switch_response["data"])
 
+    def test_document_crud_versions_and_restore(self) -> None:
+        from backend.api.auth import LoginRequest, login
+        from backend.api.documents import (
+            DocumentWriteRequest,
+            create_document_endpoint,
+            get_document_endpoint,
+            list_document_versions,
+            list_documents,
+            restore_document_version,
+            update_document_endpoint,
+        )
+
+        token = login(LoginRequest(external_id="alice", current_space_id=10))["data"]["token"]
+        authorization = f"Bearer {token}"
+
+        created_response = create_document_endpoint(
+            DocumentWriteRequest(title="Sprint-2 Demo", content_md="v1", permission="team"),
+            authorization=authorization,
+        )
+        document_id = created_response["data"]["id"]
+
+        for version_no in range(2, 5):
+            update_document_endpoint(
+                document_id,
+                DocumentWriteRequest(title="Sprint-2 Demo", content_md=f"v{version_no}", permission="team"),
+                authorization=authorization,
+            )
+
+        list_response = list_documents(authorization=authorization)
+        detail_response = get_document_endpoint(document_id, authorization=authorization)
+        versions_response = list_document_versions(document_id, authorization=authorization)
+        restored_response = restore_document_version(document_id, 2, authorization=authorization)
+
+        self.assertIn(document_id, [document["id"] for document in list_response["data"]])
+        self.assertEqual(detail_response["data"]["current_version"], 4)
+        self.assertEqual([version["version_no"] for version in versions_response["data"]], [1, 2, 3, 4])
+        self.assertEqual(restored_response["data"]["current_version"], 2)
+        self.assertEqual(restored_response["data"]["content_md"], "v2")
+
 
 if __name__ == "__main__":
     unittest.main()
+
