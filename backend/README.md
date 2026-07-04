@@ -90,6 +90,23 @@ Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:18000/api/documents/$docId
   -Headers @{ Authorization = "Bearer $token" }
 ```
 
+### Sprint-3 degraded text import
+
+When Docker / PDF / OCR / Embedding are not ready, Sprint-3 exposes a degraded Demo import path for pre-extracted `.txt` / `.md` content. It creates a Markdown document and in-memory chunks, but does not parse PDFs, run OCR, or write embeddings.
+
+```powershell
+$samplePath = Join-Path $PWD "sample-import.md"
+Set-Content -Encoding UTF8 $samplePath "# Imported`n`nPre-extracted Sprint-3 demo text."
+
+curl.exe -s -X POST http://127.0.0.1:18000/api/import `
+  -H "Authorization: Bearer $token" `
+  -F "title=Imported Demo" `
+  -F "permission=team" `
+  -F "file=@$samplePath;type=text/markdown"
+```
+
+The response contains `status=done`, `parsed_doc_id`, `chunk_count`, and `mode=degraded_text`. Use `GET /api/documents/{parsed_doc_id}` to read the generated document.
+
 ## Validation
 
 ```powershell

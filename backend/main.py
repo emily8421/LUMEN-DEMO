@@ -18,6 +18,7 @@ def create_app():
 
     from backend.api.auth import router as auth_router
     from backend.api.documents import router as documents_router
+    from backend.api.imports import router as imports_router
     from backend.api.spaces import router as spaces_router
 
     app = FastAPI(title="LUMEN Knowledge Base API")
@@ -35,6 +36,8 @@ def create_app():
         app.include_router(spaces_router)
     if documents_router is not None:
         app.include_router(documents_router)
+    if imports_router is not None:
+        app.include_router(imports_router)
     return app
 
 

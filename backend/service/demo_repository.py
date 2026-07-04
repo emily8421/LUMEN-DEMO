@@ -5,7 +5,17 @@ from __future__ import annotations
 from dataclasses import replace
 from datetime import UTC, datetime
 
-from backend.model.entities import Document, DocumentPermission, DocumentVersion, Space, SpaceMember, SpaceRole, User
+from backend.model.entities import (
+    Document,
+    DocumentChunk,
+    DocumentPermission,
+    DocumentVersion,
+    ImportJob,
+    Space,
+    SpaceMember,
+    SpaceRole,
+    User,
+)
 
 
 class DemoRepository:
@@ -49,8 +59,12 @@ class DemoRepository:
             DocumentVersion(id=1, document_id=100, version_no=1, content_md="# Nova\n\nInitial sprint note.", editor_id=1, created_at=_now_iso()),
             DocumentVersion(id=2, document_id=200, version_no=1, content_md="# BrightLite\n\nPrivate context.", editor_id=3, created_at=_now_iso()),
         ]
+        self.import_jobs: list[ImportJob] = []
+        self.document_chunks: list[DocumentChunk] = []
         self._next_document_id = 201
         self._next_version_id = 3
+        self._next_import_id = 1
+        self._next_chunk_id = 1
 
     def find_user_by_external_id(self, external_id: str) -> User | None:
         return next((user for user in self.users if user.external_id == external_id), None)
@@ -120,6 +134,7 @@ class DemoRepository:
     def delete_document(self, document_id: int) -> None:
         self.documents = [document for document in self.documents if document.id != document_id]
         self.document_versions = [version for version in self.document_versions if version.document_id != document_id]
+        self.document_chunks = [chunk for chunk in self.document_chunks if chunk.document_id != document_id]
 
     def list_document_versions(self, document_id: int) -> list[DocumentVersion]:
         return sorted(
@@ -153,10 +168,74 @@ class DemoRepository:
             raise KeyError(document_id)
         return document
 
+    def create_import_job(self, space_id: int, source_filename: str, created_by: int) -> ImportJob:
+        import_job = ImportJob(
+            id=self._next_import_id,
+            space_id=space_id,
+            source_filename=source_filename,
+            status="processing",
+            created_by=created_by,
+            created_at=_now_iso(),
+        )
+        self._next_import_id += 1
+        self.import_jobs.append(import_job)
+        return import_job
+
+    def complete_import_job(self, import_id: int, parsed_doc_id: int, chunk_count: int) -> ImportJob:
+        import_job = self.require_import_job(import_id)
+        updated_import = replace(
+            import_job,
+            status="done",
+            parsed_doc_id=parsed_doc_id,
+            chunk_count=chunk_count,
+            error=None,
+        )
+        self._replace_import_job(updated_import)
+        return updated_import
+
+    def fail_import_job(self, import_id: int, error: str) -> ImportJob:
+        import_job = self.require_import_job(import_id)
+        updated_import = replace(import_job, status="failed", error=error)
+        self._replace_import_job(updated_import)
+        return updated_import
+
+    def require_import_job(self, import_id: int) -> ImportJob:
+        import_job = next((job for job in self.import_jobs if job.id == import_id), None)
+        if import_job is None:
+            raise KeyError(import_id)
+        return import_job
+
+    def replace_document_chunks(self, document_id: int, chunk_texts: list[str]) -> list[DocumentChunk]:
+        self.document_chunks = [chunk for chunk in self.document_chunks if chunk.document_id != document_id]
+        chunks: list[DocumentChunk] = []
+        for ordinal, text in enumerate(chunk_texts, start=1):
+            chunk = DocumentChunk(
+                id=self._next_chunk_id,
+                document_id=document_id,
+                ordinal=ordinal,
+                text=text,
+            )
+            self._next_chunk_id += 1
+            chunks.append(chunk)
+        self.document_chunks.extend(chunks)
+        return chunks
+
+    def list_document_chunks(self, document_id: int) -> list[DocumentChunk]:
+        return sorted(
+            [chunk for chunk in self.document_chunks if chunk.document_id == document_id],
+            key=lambda chunk: chunk.ordinal,
+        )
+
     def _replace_document(self, updated_document: Document) -> None:
         self.documents = [
             updated_document if document.id == updated_document.id else document
             for document in self.documents
+        ]
+
+    def _replace_import_job(self, updated_import: ImportJob) -> None:
+        self.import_jobs = [
+            updated_import if import_job.id == updated_import.id else import_job
+            for import_job in self.import_jobs
         ]
 
     def _next_document_version_no(self, document_id: int) -> int:

@@ -62,3 +62,24 @@ class DocumentVersion:
     content_md: str
     editor_id: int
     created_at: str
+
+
+@dataclass(frozen=True)
+class ImportJob:
+    id: int
+    space_id: int
+    source_filename: str
+    status: str
+    created_by: int
+    parsed_doc_id: int | None = None
+    chunk_count: int = 0
+    error: str | None = None
+    created_at: str = ""
+
+
+@dataclass(frozen=True)
+class DocumentChunk:
+    id: int
+    document_id: int
+    ordinal: int
+    text: str
