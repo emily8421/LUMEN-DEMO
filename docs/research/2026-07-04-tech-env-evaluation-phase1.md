@@ -1,4 +1,4 @@
-# 技术路线与环境评估报告：Phase1 后端运行基线
+﻿# 技术路线与环境评估报告：Phase1 后端运行基线
 
 ## 1. 评估摘要
 
@@ -121,3 +121,79 @@
 - 是否批准在进入 Sprint-2 前执行一次完整 Phase1 依赖矩阵验证。
 - 若 Python 3.14 路线验证通过，是否同步升级后端基线和依赖锁定版本。
 - 是否将“技术路线与环境评估报告”作为本项目后续 Phase / 首个编码 Sprint 的固定门禁。
+
+## 9. 依赖矩阵实测记录（2026-07-04）
+
+> 本节记录本轮按“优先评估 Python 3.14 路线”执行的实际验证结果。验证尽量使用隔离目录，避免污染全局环境。
+
+### 9.1 验证环境
+
+| 项 | 结果 |
+|---|---|
+| Python | 3.14.3 |
+| venv | `python -m venv .venv-py314-eval` 创建过程触发 `ensurepip` 非零退出，生成的 venv 无 pip；该问题需单独排查 |
+| 替代验证方式 | 使用 `pip install --target <临时目录>` 做隔离安装 / 导入验证，验证后已清理临时目录 |
+| pip index | 清华镜像 |
+| Docker | Docker CLI 存在，但 Docker Desktop Linux engine 未运行，无法连接 daemon |
+| Node / npm | Node.js `v22.17.1`；`npm.cmd 11.11.0` 可用，PowerShell 直接执行 `npm.ps1` 会被 ExecutionPolicy 拦截 |
+
+### 9.2 Python 3.14 依赖验证结果
+
+| 层 | 验证包 / 版本 | 安装结果 | 导入 / 最小运行结果 | 结论 |
+|---|---|---|---|---|
+| FastAPI API | FastAPI 0.136.3 / Uvicorn 0.49.0 / Pydantic 2.13.4 | 成功，`pydantic-core 2.46.4 cp314` wheel 可用 | `create_app()` 可创建；`/api/auth/login`、`/api/spaces`、`/api/spaces/switch` 路由存在 | Go |
+| ORM / 迁移 | SQLAlchemy 2.0.51 / Alembic 1.18.5 / psycopg 3.3.4 | 成功 | 导入成功 | Go（未连真实 PostgreSQL） |
+| 文档解析 | python-docx 1.2.0 / pdfplumber 0.11.10 / Pillow 12.3.0 / pypdfium2 5.11.0 | 成功 | 导入成功 | Go（未做样本文档解析） |
+| Embedding | sentence-transformers 5.6.0 / torch 2.12.1 / transformers 5.13.0 | 成功 | `import torch` 失败：`WinError 1114`，加载 `torch/lib/c10.dll` 或其依赖失败 | No-Go（当前本机 / 验证方式下） |
+| OCR（当前文档基线） | PaddleOCR 2.8.1 | dry-run 失败：依赖 `numpy<2.0`，Python 3.14 可用 numpy 版本为 2.x | 未进入导入验证 | No-Go |
+| OCR（较新版本路线） | `paddleocr` 未钉版本 | dry-run 可解析到较新依赖组合，但包体较大且未安装 / 未导入验证 | 未验证 | Conditional |
+| Docker / PostgreSQL / pgvector | Docker 29.5.2 CLI | CLI 存在 | Docker daemon 连接失败：`dockerDesktopLinuxEngine` pipe 不存在 | No-Go（需启动 Docker Desktop） |
+| API 端口启动 | Uvicorn localhost | 依赖可导入 | 绑定 localhost 端口仍出现 WinError 10013 | No-Go（端口 / 权限问题，与 Python 版本独立） |
+
+### 9.3 实测命令摘要
+
+已通过：
+
+```powershell
+python -m pip install --target .eval-py314-site --only-binary=:all: fastapi==0.136.3 uvicorn==0.49.0 pydantic==2.13.4
+python -m pip install --target .eval-py314-site --only-binary=:all: SQLAlchemy alembic psycopg python-docx pdfplumber
+$env:PYTHONPATH = (Join-Path (Get-Location) '.eval-py314-site')
+python -c "import fastapi,uvicorn,pydantic,sqlalchemy,alembic,psycopg,docx,pdfplumber,PIL,pypdfium2; from backend.main import create_app; print([r.path for r in create_app().routes if r.path.startswith('/api')])"
+python -m pip install --target .eval-py314-embedding --only-binary=:all: sentence-transformers==5.6.0
+```
+
+失败 / 未通过：
+
+```text
+python -m venv .venv-py314-eval
+# ensurepip 非零退出，venv 中无 pip
+
+import torch
+# WinError 1114: 加载 torch/lib/c10.dll 或其依赖失败
+
+python -m pip install --dry-run --only-binary=:all: paddleocr==2.8.1
+# No matching distribution for numpy<2.0 on Python 3.14
+
+docker info
+# Docker daemon 未运行 / pipe 不存在
+
+uvicorn backend.main:app --host 127.0.0.1 --port 8011
+# WinError 10013 端口绑定失败
+```
+
+### 9.4 更新后的 Go / No-Go 判断
+
+| 范围 | 结论 | 说明 |
+|---|---|---|
+| Sprint-1 后端 API / 权限底座 | Go | 当前代码和 API handler 测试可继续使用 |
+| Python 3.14 + 后端 Web / ORM / 文档解析基础栈 | Conditional Go | 依赖安装 / 导入通过，但尚未连真实 DB、未跑端口服务 |
+| Python 3.14 + Phase1 完整闭环 | No-Go（当前） | Embedding torch 导入失败、PaddleOCR 2.8.x 不兼容、Docker daemon 未运行、端口绑定失败 |
+| 是否立即修订 `docs/05-tech-spec.md` 为 Python 3.14 | 暂不建议 | 需要先解决 Embedding / OCR / Docker / 端口问题，或明确降级策略 |
+
+### 9.5 建议后续动作
+
+1. 优先排查 Python 3.14 下 `torch` 导入失败：确认是否与 `--target` 安装方式、VC++ runtime、CUDA / CPU wheel、PATH / DLL 搜索路径有关；建议在可用 pip 的标准 venv 中复测。
+2. 决定 OCR 路线：若坚持 PaddleOCR 2.8.x，则 Python 3.14 路线不成立；若接受升级 PaddleOCR 或 Phase1 关闭 OCR，需要同步 `docs/05-tech-spec.md` / `docs/09-verification.md`。
+3. 启动 Docker Desktop 后验证 PostgreSQL + pgvector 镜像、容器和扩展。
+4. 排查 WinError 10013：端口占用 / 保留 / 防火墙 / 安全策略；不应归因于 Python 版本。
+5. 在上述阻塞解决前，不建议把整个 Phase1 后端基线升级为 Python 3.14；可先局部记录“后端 Web / ORM / 文档解析基础栈已具备 Python 3.14 升级可行性”。
