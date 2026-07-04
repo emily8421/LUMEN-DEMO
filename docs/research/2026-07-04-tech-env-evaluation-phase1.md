@@ -197,3 +197,62 @@ uvicorn backend.main:app --host 127.0.0.1 --port 8011
 3. 启动 Docker Desktop 后验证 PostgreSQL + pgvector 镜像、容器和扩展。
 4. 排查 WinError 10013：端口占用 / 保留 / 防火墙 / 安全策略；不应归因于 Python 版本。
 5. 在上述阻塞解决前，不建议把整个 Phase1 后端基线升级为 Python 3.14；可先局部记录“后端 Web / ORM / 文档解析基础栈已具备 Python 3.14 升级可行性”。
+
+## 10. Docker / 端口 / OCR 路线诊断（2026-07-04）
+
+### 10.1 Docker daemon
+
+诊断结果：
+
+- `docker context ls` 显示当前上下文为 `desktop-linux`，endpoint 为 `npipe:////./pipe/dockerDesktopLinuxEngine`。
+- `docker version` 只能返回 Client 信息，无法连接 Server。
+- `docker info` Server 字段为空，并报错：`dockerDesktopLinuxEngine` pipe 不存在。
+- `wsl -l -v` / Docker 相关 WSL 枚举出现 `E_ACCESSDENIED`。
+
+判断：Docker CLI 已安装，但 Docker Desktop Linux engine 未运行或当前用户无权访问 WSL / Docker Desktop engine。该问题与 Python 版本无关。
+
+建议处理：
+
+1. 手动启动 Docker Desktop，并确认界面显示 Engine running。
+2. 若仍失败，检查 WSL 权限 / Docker Desktop 后端设置。
+3. Docker 可用后再验证 PostgreSQL + pgvector；当前不能把数据库容器路线判为 Go。
+
+### 10.2 localhost 端口绑定
+
+诊断结果：
+
+- `netsh interface ipv4 show excludedportrange protocol=tcp` 显示端口 `7998-8097` 被系统排除，因此 `8000`、`8010`、`8020` 均不可绑定。
+- Python 原生 socket bind 测试：`8000 / 8010 / 8020` 均返回 WinError 10013；`18000 / 28000 / 49152` 可绑定。
+- 使用 `127.0.0.1:18000` 启动 Uvicorn 后，Sprint-1 smoke test 成功：登录、空间列表、空间切换均返回预期结果。
+
+判断：端口绑定失败是 Windows 端口排除范围导致，不是 FastAPI / Uvicorn / Python 版本问题。
+
+建议处理：
+
+- 将本地后端默认端口从 `8000` 调整为 `18000`，或在运行说明中明确避开 `7998-8097`。
+- 若后续必须使用 8000，需要管理员权限调整端口排除 / 相关服务配置，不建议作为 Demo 前置条件。
+
+### 10.3 OCR 路线
+
+诊断结果：
+
+- 当前文档基线 `PaddleOCR 2.8.1` 在 Python 3.14 下 dry-run 失败，原因是其依赖 `numpy<2.0`，而 Python 3.14 可用 numpy wheel 为 2.x。
+- `paddleocr>=3.0` dry-run 会进入 3.x / paddlex 依赖路线；在 `--only-binary=:all:` 条件下卡在 `GPUtil>=1.4` 无可用二进制包。该失败不等同于 3.x 路线不可行，但说明依赖链仍需进一步安装 / 导入验证。
+
+判断：
+
+- 若坚持 PaddleOCR 2.8.x，则 Python 3.14 作为完整 Phase1 基线不成立。
+- 若允许 Phase1 OCR 降级为“已提取文本”或升级到 PaddleOCR 3.x，则 Python 3.14 路线仍可继续评估。
+
+建议决策：Phase1 Demo 优先采用 OCR 降级策略，不把 OCR 作为阻塞 Python 3.14 Web/ORM/文档解析基础栈的条件；若必须演示 OCR，再单独评估 PaddleOCR 3.x 或替代 OCR 引擎。
+
+### 10.4 更新后的建议
+
+| 问题 | 结论 | 是否阻塞 Sprint-2 |
+|---|---|---|
+| Docker daemon 未运行 | 需手动启动 / 修复 WSL 权限后再验证 DB 容器 | 不阻塞文档管理 service 设计；阻塞真实 PostgreSQL 集成 |
+| 端口 8000/8010/8020 不可绑定 | 改用 18000 可成功跑通 Sprint-1 API | 不阻塞，改默认端口即可 |
+| PaddleOCR 2.8.x 不支持 Python 3.14 | 当前 OCR 基线不适配 | 不阻塞 Sprint-2；进入导入/OCR Sprint 前必须决策降级或升级 |
+| torch 导入失败 | Embedding 路线仍阻塞 Python 3.14 完整闭环 | 不阻塞 Sprint-2 文档 CRUD；阻塞检索/RAG Sprint |
+
+因此，Sprint-2（文档管理 + 版本）可以继续，但真实 PostgreSQL 接入前需先恢复 Docker daemon；检索 / RAG / OCR 相关 Sprint 前必须解决 torch / OCR 路线。

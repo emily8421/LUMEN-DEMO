@@ -42,29 +42,29 @@ powershell -ExecutionPolicy Bypass -File scripts/run-backend.ps1
 Equivalent direct command:
 
 ```powershell
-python -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
+python -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 18000
 ```
 
-If port `8000` is blocked or reserved, try another port:
+If port `18000` is blocked or reserved, try another port:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts/run-backend.ps1 -Port 8010
+powershell -ExecutionPolicy Bypass -File scripts/run-backend.ps1 -Port 28000
 ```
 
 ## Smoke Test
 
-Replace `8000` with the port you used if needed.
+Replace `18000` with the port you used if needed.
 
 ```powershell
-$login = Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8000/api/auth/login `
+$login = Invoke-RestMethod -Method Post -Uri http://127.0.0.1:18000/api/auth/login `
   -ContentType 'application/json' `
   -Body '{"external_id":"alice","current_space_id":10}'
 
 $token = $login.data.token
-Invoke-RestMethod -Method Get -Uri http://127.0.0.1:8000/api/spaces `
+Invoke-RestMethod -Method Get -Uri http://127.0.0.1:18000/api/spaces `
   -Headers @{ Authorization = "Bearer $token" }
 
-Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8000/api/spaces/switch `
+Invoke-RestMethod -Method Post -Uri http://127.0.0.1:18000/api/spaces/switch `
   -ContentType 'application/json' `
   -Headers @{ Authorization = "Bearer $token" } `
   -Body '{"space_id":20}'
@@ -93,14 +93,14 @@ Cause: Windows may block binding the selected address / port because of permissi
 Try:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts/run-backend.ps1 -Port 8010
-powershell -ExecutionPolicy Bypass -File scripts/run-backend.ps1 -HostAddress 127.0.0.1 -Port 8020
+powershell -ExecutionPolicy Bypass -File scripts/run-backend.ps1 -Port 28000
+powershell -ExecutionPolicy Bypass -File scripts/run-backend.ps1 -HostAddress 127.0.0.1 -Port 28000
 ```
 
 You can also inspect whether a port is in use:
 
 ```powershell
-netstat -ano | findstr :8000
+netstat -ano | findstr :18000
 ```
 
 If local port binding remains blocked by the host environment, `tests/backend/test_api_routes.py` validates the Sprint-1 API handlers without opening a socket.
@@ -110,3 +110,5 @@ If local port binding remains blocked by the host environment, `tests/backend/te
 - Demo token signing key defaults to a local development value and can be overridden with `LUMEN_DEMO_TOKEN_KEY`.
 - Sprint-1 API uses an in-memory demo repository until PostgreSQL repository integration is implemented.
 - SQL foundation lives in `backend/migrations/001_sprint1_space_permissions.sql`.
+
+

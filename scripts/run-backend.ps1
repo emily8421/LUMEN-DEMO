@@ -1,6 +1,6 @@
 ﻿param(
     [string]$HostAddress = "127.0.0.1",
-    [int]$Port = 8000
+    [int]$Port = 18000
 )
 
 $ErrorActionPreference = "Stop"
@@ -12,3 +12,4 @@ if ($versionOutput -ne "3.12") {
 
 python -c "import fastapi, uvicorn, pydantic" | Out-Null
 python -m uvicorn backend.main:app --reload --host $HostAddress --port $Port
+
