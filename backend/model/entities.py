@@ -21,6 +21,13 @@ class SpaceRole(StrEnum):
     MEMBER = "member"
 
 
+class TermStatus(StrEnum):
+    """Term lifecycle status defined by docs/design/term-management.md."""
+
+    CONFIRMED = "confirmed"
+    PENDING = "pending"
+
+
 @dataclass(frozen=True)
 class User:
     id: int
@@ -83,3 +90,15 @@ class DocumentChunk:
     document_id: int
     ordinal: int
     text: str
+
+
+@dataclass(frozen=True)
+class Term:
+    id: int
+    space_id: int | None
+    term: str
+    definition: str
+    aliases: list[str]
+    owner_id: int
+    status: TermStatus
+    source_document_id: int | None = None

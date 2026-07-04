@@ -57,6 +57,7 @@ if APIRouter is not None:
             "doc_id": source.doc_id,
             "title": source.title,
             "snippet": source.snippet,
+            "source_type": source.source_type,
         }
 else:
     router = None

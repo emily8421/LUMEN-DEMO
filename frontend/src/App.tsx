@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   createDocument,
+  createTerm,
   deleteDocument,
+  deleteTerm,
   DocumentPermission,
   DocumentVersion,
   getDocument,
   KnowledgeDocument,
   listDocuments,
   listSpaces,
+  listTerms,
   listVersions,
   login,
   queryKnowledgeBase,
@@ -17,7 +20,11 @@ import {
   restoreVersion,
   Space,
   switchSpace,
+  Term,
+  TermStatus,
+  TermWritePayload,
   updateDocument,
+  updateTerm,
 } from './api';
 
 const permissionLabels: Record<DocumentPermission, string> = {
@@ -32,7 +39,16 @@ const emptyDraft = {
   permission: 'team' as DocumentPermission,
 };
 
+const emptyTermDraft = {
+  term: '',
+  definition: '',
+  aliases: '',
+  status: 'confirmed' as TermStatus,
+};
+
 type Draft = typeof emptyDraft;
+
+type TermDraft = typeof emptyTermDraft;
 
 type Session = {
   token: string;
@@ -56,6 +72,9 @@ function App() {
   const [searchResult, setSearchResult] = useState<SearchResponse | null>(null);
   const [question, setQuestion] = useState('');
   const [queryResult, setQueryResult] = useState<QueryResponse | null>(null);
+  const [terms, setTerms] = useState<Term[]>([]);
+  const [selectedTermId, setSelectedTermId] = useState<number | null>(null);
+  const [termDraft, setTermDraft] = useState<TermDraft>(emptyTermDraft);
 
   const selectedDocument = useMemo(
     () => documents.find((document) => document.id === selectedId) ?? null,
@@ -117,9 +136,10 @@ function App() {
       return;
     }
 
-    const [spaceResult, documentResult] = await Promise.all([listSpaces(token), listDocuments(token)]);
+    const [spaceResult, documentResult, termResult] = await Promise.all([listSpaces(token), listDocuments(token), listTerms(token)]);
     setSpaces(spaceResult);
     setDocuments(documentResult);
+    setTerms(termResult.items);
     setSelectedId((currentId) => {
       if (currentId && documentResult.some((document) => document.id === currentId)) {
         return currentId;
@@ -167,6 +187,8 @@ function App() {
       setSelectedId(null);
       setSearchResult(null);
       setQueryResult(null);
+      setSelectedTermId(null);
+      setTermDraft(emptyTermDraft);
       setNotice('空间已切换，文档列表已刷新。');
     });
   }
@@ -194,6 +216,40 @@ function App() {
       const result = await queryKnowledgeBase(session.token, question.trim());
       setQueryResult(result);
       setNotice(`问答完成：${result.sources.length} 个来源。`);
+    });
+  }
+
+  async function handleSaveTerm(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!session) {
+      return;
+    }
+
+    await runAction('正在保存术语...', async () => {
+      const payload = normalizeTermDraft(termDraft);
+      const savedTerm = selectedTermId
+        ? await updateTerm(session.token, selectedTermId, payload)
+        : await createTerm(session.token, payload);
+      const result = await listTerms(session.token);
+      setTerms(result.items);
+      setSelectedTermId(savedTerm.id);
+      setTermDraft(termToDraft(savedTerm));
+      setNotice(`术语已保存：${savedTerm.term}`);
+    });
+  }
+
+  async function handleDeleteTerm() {
+    if (!session || !selectedTermId) {
+      return;
+    }
+
+    await runAction('正在删除术语...', async () => {
+      await deleteTerm(session.token, selectedTermId);
+      const result = await listTerms(session.token);
+      setTerms(result.items);
+      setSelectedTermId(null);
+      setTermDraft(emptyTermDraft);
+      setNotice('术语已删除。');
     });
   }
 
@@ -461,13 +517,96 @@ function App() {
                       {queryResult.sources.map((source) => (
                         <li key={`${source.doc_id}-${source.snippet}`}>
                           <strong>{source.title}</strong>
-                          <small>文档 #{source.doc_id}</small>
+                          <small>{source.source_type === 'term' ? '术语表来源' : `文档 #${source.doc_id}`}</small>
                           <p>{source.snippet}</p>
                         </li>
                       ))}
                     </ul>
                   )}
                 </div>
+              )}
+            </section>
+
+            <section className="term-panel card">
+              <p className="eyebrow">REQ-036</p>
+              <div className="section-title">
+                <h2>术语管理</h2>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedTermId(null);
+                    setTermDraft(emptyTermDraft);
+                  }}
+                  disabled={isBusy}
+                >
+                  新建
+                </button>
+              </div>
+              <form className="compact-form" onSubmit={handleSaveTerm}>
+                <label>
+                  标准名称
+                  <input
+                    value={termDraft.term}
+                    onChange={(event) => setTermDraft({ ...termDraft, term: event.target.value })}
+                    placeholder="例如：触发延迟"
+                  />
+                </label>
+                <label>
+                  定义
+                  <textarea
+                    className="question-input"
+                    value={termDraft.definition}
+                    onChange={(event) => setTermDraft({ ...termDraft, definition: event.target.value })}
+                    placeholder="例如：从条件满足到指令发出"
+                    rows={3}
+                  />
+                </label>
+                <label>
+                  别名（逗号分隔）
+                  <input
+                    value={termDraft.aliases}
+                    onChange={(event) => setTermDraft({ ...termDraft, aliases: event.target.value })}
+                    placeholder="例如：开关延迟, 联动延迟"
+                  />
+                </label>
+                <label>
+                  状态
+                  <select
+                    value={termDraft.status}
+                    onChange={(event) => setTermDraft({ ...termDraft, status: event.target.value as TermStatus })}
+                  >
+                    <option value="confirmed">已确认</option>
+                    <option value="pending">待确认</option>
+                  </select>
+                </label>
+                <div className="button-row">
+                  <button type="submit" disabled={isBusy || termDraft.term.trim().length === 0 || termDraft.definition.trim().length === 0}>保存术语</button>
+                  {selectedTermId ? (
+                    <button type="button" className="danger" onClick={() => void handleDeleteTerm()} disabled={isBusy}>删除</button>
+                  ) : null}
+                </div>
+              </form>
+              {terms.length === 0 ? (
+                <p className="empty-state">当前空间暂无术语。</p>
+              ) : (
+                <ul className="term-list">
+                  {terms.map((term) => (
+                    <li key={term.id}>
+                      <button
+                        type="button"
+                        className={term.id === selectedTermId ? 'active' : ''}
+                        onClick={() => {
+                          setSelectedTermId(term.id);
+                          setTermDraft(termToDraft(term));
+                        }}
+                      >
+                        <strong>{term.term}</strong>
+                        <small>{term.space_id ? '当前空间' : '全局'} · {term.status === 'confirmed' ? '已确认' : '待确认'}</small>
+                        <span>{term.definition}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
               )}
             </section>
           </aside>
@@ -487,6 +626,24 @@ function normalizeDraft(draft: Draft) {
     title: draft.title.trim(),
     content_md: draft.content_md,
     permission: draft.permission,
+  };
+}
+
+function normalizeTermDraft(draft: TermDraft): TermWritePayload {
+  return {
+    term: draft.term.trim(),
+    definition: draft.definition.trim(),
+    aliases: draft.aliases.split(',').map((alias) => alias.trim()).filter(Boolean),
+    status: draft.status,
+  };
+}
+
+function termToDraft(term: Term): TermDraft {
+  return {
+    term: term.term,
+    definition: term.definition,
+    aliases: term.aliases.join(', '),
+    status: term.status,
   };
 }
 

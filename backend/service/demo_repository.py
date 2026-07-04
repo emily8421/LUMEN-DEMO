@@ -14,6 +14,8 @@ from backend.model.entities import (
     Space,
     SpaceMember,
     SpaceRole,
+    Term,
+    TermStatus,
     User,
 )
 
@@ -61,10 +63,22 @@ class DemoRepository:
         ]
         self.import_jobs: list[ImportJob] = []
         self.document_chunks: list[DocumentChunk] = []
+        self.terms: list[Term] = [
+            Term(
+                id=1,
+                space_id=None,
+                term="触发延迟",
+                definition="从触发条件满足到指令发出。",
+                aliases=["开关延迟"],
+                owner_id=1,
+                status=TermStatus.CONFIRMED,
+            )
+        ]
         self._next_document_id = 201
         self._next_version_id = 3
         self._next_import_id = 1
         self._next_chunk_id = 1
+        self._next_term_id = 2
 
     def find_user_by_external_id(self, external_id: str) -> User | None:
         return next((user for user in self.users if user.external_id == external_id), None)
@@ -232,6 +246,69 @@ class DemoRepository:
             key=lambda chunk: (chunk.document_id, chunk.ordinal),
         )
 
+    def list_terms(self) -> list[Term]:
+        return sorted(
+            self.terms,
+            key=lambda term: (term.space_id is not None, term.space_id or 0, term.term, term.id),
+        )
+
+    def get_term(self, term_id: int) -> Term | None:
+        return next((term for term in self.terms if term.id == term_id), None)
+
+    def create_term(
+        self,
+        space_id: int | None,
+        term: str,
+        definition: str,
+        aliases: list[str],
+        owner_id: int,
+        status: TermStatus,
+        source_document_id: int | None = None,
+    ) -> Term:
+        created_term = Term(
+            id=self._next_term_id,
+            space_id=space_id,
+            term=term,
+            definition=definition,
+            aliases=aliases,
+            owner_id=owner_id,
+            status=status,
+            source_document_id=source_document_id,
+        )
+        self._next_term_id += 1
+        self.terms.append(created_term)
+        return created_term
+
+    def update_term(
+        self,
+        term_id: int,
+        term: str,
+        definition: str,
+        aliases: list[str],
+        status: TermStatus,
+        source_document_id: int | None = None,
+    ) -> Term:
+        existing_term = self.require_term(term_id)
+        updated_term = replace(
+            existing_term,
+            term=term,
+            definition=definition,
+            aliases=aliases,
+            status=status,
+            source_document_id=source_document_id,
+        )
+        self._replace_term(updated_term)
+        return updated_term
+
+    def delete_term(self, term_id: int) -> None:
+        self.terms = [term for term in self.terms if term.id != term_id]
+
+    def require_term(self, term_id: int) -> Term:
+        term = self.get_term(term_id)
+        if term is None:
+            raise KeyError(term_id)
+        return term
+
     def _replace_document(self, updated_document: Document) -> None:
         self.documents = [
             updated_document if document.id == updated_document.id else document
@@ -242,6 +319,12 @@ class DemoRepository:
         self.import_jobs = [
             updated_import if import_job.id == updated_import.id else import_job
             for import_job in self.import_jobs
+        ]
+
+    def _replace_term(self, updated_term: Term) -> None:
+        self.terms = [
+            updated_term if term.id == updated_term.id else term
+            for term in self.terms
         ]
 
     def _next_document_version_no(self, document_id: int) -> int:

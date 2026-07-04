@@ -1,9 +1,10 @@
 import unittest
 
-from backend.model.entities import DocumentPermission
+from backend.model.entities import DocumentPermission, TermStatus
 from backend.service.demo_repository import DemoRepository
 from backend.service.document import DocumentCreate, create_document
 from backend.service.rag import NOT_FOUND_ANSWER, RagValidationError, answer_question
+from backend.service.term import TermWrite, create_term
 
 
 class RagServiceTest(unittest.TestCase):
@@ -25,9 +26,10 @@ class RagServiceTest(unittest.TestCase):
 
         self.assertIn("降级模式", answer.answer)
         self.assertIn("280ms", answer.answer)
-        self.assertEqual(len(answer.sources), 1)
-        self.assertEqual(answer.sources[0].doc_id, document.id)
-        self.assertEqual(answer.sources[0].title, "Latency Note")
+        document_sources = [source for source in answer.sources if source.source_type == "document"]
+        self.assertEqual(len(document_sources), 1)
+        self.assertEqual(document_sources[0].doc_id, document.id)
+        self.assertEqual(document_sources[0].title, "Latency Note")
 
     def test_answer_question_returns_not_found_without_candidates(self) -> None:
         answer = answer_question(DemoRepository(), user_id=1, current_space_id=10, question="不存在的问题")
@@ -61,6 +63,32 @@ class RagServiceTest(unittest.TestCase):
             answer_question(DemoRepository(), user_id=1, current_space_id=10, question="  ")
 
         self.assertEqual(str(context.exception), "question is required")
+
+    def test_answer_question_injects_space_term_source(self) -> None:
+        repository = DemoRepository()
+        create_term(
+            repository,
+            user_id=1,
+            current_space_id=10,
+            request=TermWrite(term="触发延迟", definition="空间定义：从条件满足到指令发出", aliases=[], status=TermStatus.CONFIRMED),
+        )
+        document = create_document(
+            repository,
+            user_id=1,
+            current_space_id=10,
+            request=DocumentCreate(
+                title="Latency Note",
+                content_md="场景联动触发延迟是 280ms。",
+                permission=DocumentPermission.TEAM,
+            ),
+        )
+        repository.replace_document_chunks(document.id, ["场景联动触发延迟是 280ms。"])
+
+        answer = answer_question(repository, user_id=1, current_space_id=10, question="触发延迟是多少？")
+
+        self.assertIn("按当前空间术语解释", answer.answer)
+        self.assertIn("空间定义", answer.answer)
+        self.assertIn("term", [source.source_type for source in answer.sources])
 
 
 if __name__ == "__main__":

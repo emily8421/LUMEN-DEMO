@@ -256,6 +256,45 @@ p {
   padding: 12px;
 }
 
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.term-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.term-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.term-list button {
+  display: grid;
+  width: 100%;
+  gap: 6px;
+  border: 1px solid #dbeafe;
+  background: #f8fafc;
+  color: #1e293b;
+  text-align: left;
+}
+
+.term-list button.active {
+  border-color: #2563eb;
+  background: #dbeafe;
+}
+
+.term-list small,
+.term-list span {
+  color: #64748b;
+}
+
 .version-list li {
   display: grid;
   gap: 8px;

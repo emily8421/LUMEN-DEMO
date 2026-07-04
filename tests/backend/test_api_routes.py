@@ -314,6 +314,44 @@ class ApiRouteTest(unittest.TestCase):
         self.assertIn("280ms", query_response["data"]["answer"])
         self.assertEqual(query_response["data"]["sources"][0]["doc_id"], created_response["data"]["id"])
 
+    def test_terms_api_crud_and_rag_term_source(self) -> None:
+        from backend.api.auth import LoginRequest, login
+        from backend.api.documents import DocumentWriteRequest, create_document_endpoint
+        from backend.api.rag import QueryRequest, query_endpoint
+        from backend.api.terms import TermWriteRequest, create_term_endpoint, delete_term_endpoint, list_terms_endpoint, update_term_endpoint
+
+        token = login(LoginRequest(external_id="alice", current_space_id=10))["data"]["token"]
+        authorization = f"Bearer {token}"
+        create_document_endpoint(
+            DocumentWriteRequest(title="Term Source", content_md="场景联动触发延迟是 280ms。", permission="team"),
+            authorization=authorization,
+        )
+        created_response = create_term_endpoint(
+            TermWriteRequest(
+                term="触发延迟",
+                definition="空间定义：从条件满足到指令发出",
+                aliases=["开关延迟"],
+                status="confirmed",
+            ),
+            authorization=authorization,
+        )
+        term_id = created_response["data"]["id"]
+
+        list_response = list_terms_endpoint(authorization=authorization)
+        query_response = query_endpoint(QueryRequest(question="触发延迟是多少？"), authorization=authorization)
+        updated_response = update_term_endpoint(
+            term_id,
+            TermWriteRequest(term="触发延迟", definition="更新后的空间定义", aliases=[], status="pending"),
+            authorization=authorization,
+        )
+        delete_response = delete_term_endpoint(term_id, authorization=authorization)
+
+        self.assertEqual(list_response["data"]["items"][0]["id"], term_id)
+        self.assertIn("空间定义", query_response["data"]["answer"])
+        self.assertIn("term", [source["source_type"] for source in query_response["data"]["sources"]])
+        self.assertEqual(updated_response["data"]["status"], "pending")
+        self.assertTrue(delete_response["data"]["deleted"])
+
 
 if __name__ == "__main__":
     unittest.main()

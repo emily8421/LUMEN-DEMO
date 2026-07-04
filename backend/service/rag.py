@@ -7,6 +7,7 @@ from dataclasses import dataclass
 
 from backend.model.entities import Document, DocumentChunk
 from backend.service.permission import filter_visible_documents
+from backend.service.term import find_matching_terms
 
 
 NOT_FOUND_ANSWER = "未在当前空间知识库找到相关内容"
@@ -20,9 +21,10 @@ class RagValidationError(Exception):
 
 @dataclass(frozen=True)
 class RagSource:
-    doc_id: int
+    doc_id: int | None
     title: str
     snippet: str
+    source_type: str = "document"
 
 
 @dataclass(frozen=True)
@@ -51,7 +53,22 @@ def answer_question(repository, user_id: int, current_space_id: int, question: s
         RagSource(doc_id=candidate.document.id, title=candidate.document.title, snippet=candidate.snippet)
         for candidate in selected_candidates
     ]
-    answer = _build_degraded_answer(sources)
+    matched_terms = find_matching_terms(
+        repository,
+        current_space_id,
+        "\n".join([normalized_question, *(candidate.snippet for candidate in selected_candidates)]),
+    )
+    term_sources = [
+        RagSource(
+            doc_id=term.source_document_id,
+            title=f"术语：{term.term}",
+            snippet=f"{term.definition}（状态：{term.status}；别名：{', '.join(term.aliases) or '无'}）",
+            source_type="term",
+        )
+        for term in matched_terms
+    ]
+    answer = _build_degraded_answer(sources, term_sources)
+    sources.extend(term_sources)
     return RagAnswer(answer=answer, sources=sources)
 
 
@@ -158,8 +175,11 @@ def _first_match_index(normalized_text: str, terms: list[str]) -> int:
     return min(indexes) if indexes else -1
 
 
-def _build_degraded_answer(sources: list[RagSource]) -> str:
+def _build_degraded_answer(sources: list[RagSource], term_sources: list[RagSource]) -> str:
     snippets = "；".join(source.snippet for source in sources)
+    term_context = "；".join(source.snippet for source in term_sources)
+    if term_context:
+        return f"降级模式：未调用 LLM；按当前空间术语解释：{term_context}；以下内容仅来自当前空间知识库候选片段：{snippets}"
     return f"降级模式：未调用 LLM；以下内容仅来自当前空间知识库候选片段：{snippets}"
 
 
