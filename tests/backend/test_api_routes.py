@@ -62,7 +62,65 @@ class ApiRouteTest(unittest.TestCase):
         self.assertEqual(restored_response["data"]["current_version"], 2)
         self.assertEqual(restored_response["data"]["content_md"], "v2")
 
+    def test_document_api_returns_not_found_for_invisible_document(self) -> None:
+        from fastapi import HTTPException
+
+        from backend.api.auth import LoginRequest, login
+        from backend.api.documents import get_document_endpoint, list_document_versions
+
+        token = login(LoginRequest(external_id="alice", current_space_id=20))["data"]["token"]
+        authorization = f"Bearer {token}"
+
+        with self.assertRaises(HTTPException) as detail_context:
+            get_document_endpoint(200, authorization=authorization)
+        with self.assertRaises(HTTPException) as versions_context:
+            list_document_versions(200, authorization=authorization)
+
+        self.assertEqual(detail_context.exception.status_code, 404)
+        self.assertEqual(detail_context.exception.detail["msg"], "document not found")
+        self.assertEqual(versions_context.exception.status_code, 404)
+        self.assertEqual(versions_context.exception.detail["msg"], "document not found")
+
+    def test_document_api_delete_then_read_returns_not_found(self) -> None:
+        from fastapi import HTTPException
+
+        from backend.api.auth import LoginRequest, login
+        from backend.api.documents import DocumentWriteRequest, create_document_endpoint, delete_document_endpoint, get_document_endpoint
+
+        token = login(LoginRequest(external_id="alice", current_space_id=10))["data"]["token"]
+        authorization = f"Bearer {token}"
+        created_response = create_document_endpoint(
+            DocumentWriteRequest(title="Delete Me", content_md="content", permission="private"),
+            authorization=authorization,
+        )
+        document_id = created_response["data"]["id"]
+
+        delete_response = delete_document_endpoint(document_id, authorization=authorization)
+        with self.assertRaises(HTTPException) as context:
+            get_document_endpoint(document_id, authorization=authorization)
+
+        self.assertTrue(delete_response["data"]["deleted"])
+        self.assertEqual(context.exception.status_code, 404)
+
+    def test_document_api_restore_missing_version_returns_not_found(self) -> None:
+        from fastapi import HTTPException
+
+        from backend.api.auth import LoginRequest, login
+        from backend.api.documents import DocumentWriteRequest, create_document_endpoint, restore_document_version
+
+        token = login(LoginRequest(external_id="alice", current_space_id=10))["data"]["token"]
+        authorization = f"Bearer {token}"
+        created_response = create_document_endpoint(
+            DocumentWriteRequest(title="Missing Version", content_md="v1", permission="team"),
+            authorization=authorization,
+        )
+
+        with self.assertRaises(HTTPException) as context:
+            restore_document_version(created_response["data"]["id"], 99, authorization=authorization)
+
+        self.assertEqual(context.exception.status_code, 404)
+        self.assertEqual(context.exception.detail["msg"], "version not found")
+
 
 if __name__ == "__main__":
     unittest.main()
-

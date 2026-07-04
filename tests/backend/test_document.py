@@ -3,6 +3,7 @@
 from backend.model.entities import Document, DocumentPermission, SpaceMember, SpaceRole
 from backend.service.document import (
     DocumentCreate,
+    DocumentAccessError,
     DocumentNotFoundError,
     DocumentUpdate,
     create_document,
@@ -65,7 +66,18 @@ class DocumentServiceTest(unittest.TestCase):
         with self.assertRaises(DocumentNotFoundError):
             get_visible_document(repository, user_id=1, current_space_id=20, document_id=200)
 
+    def test_non_member_cannot_create_document(self) -> None:
+        repository = DemoRepository()
+
+        with self.assertRaises(DocumentAccessError):
+            create_document(
+                repository,
+                user_id=3,
+                current_space_id=10,
+                request=DocumentCreate(title="Denied", content_md="", permission=DocumentPermission.TEAM),
+            )
 
 if __name__ == "__main__":
     unittest.main()
+
 
