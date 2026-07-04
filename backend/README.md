@@ -4,31 +4,56 @@
 
 ## Python Runtime
 
-- Target runtime: Python 3.12.x, per `docs/05-tech-spec.md`.
-- Local auxiliary Python may differ; before productionizing, create a Python 3.12 virtual environment.
+- Current documented backend runtime baseline: Python 3.12.x, per `docs/05-tech-spec.md`.
+- Local environment currently has Python 3.14.3; Python 3.14 support is under formal evaluation in `docs/research/2026-07-04-tech-env-evaluation-phase1.md`.
+- Do not treat Python 3.12 as a permanent preference by default. The project should prefer the current local/team runtime when dependencies support it; use Python 3.12 only until the Python 3.14 route is evaluated and accepted.
 
 ## Install Dependencies
 
+Current documented baseline path:
+
 ```powershell
-python -m venv .venv
+py -3.12 -m venv .venv
 .\.venv\Scripts\Activate.ps1
+python --version
 python -m pip install --upgrade pip
 python -m pip install -r backend/requirements.txt
 ```
 
+If `py` is unavailable or cannot be executed, install Python 3.12 first and use the Python 3.12 executable directly, for example:
+
+```powershell
+& "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe" -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python --version
+python -m pip install --upgrade pip
+python -m pip install -r backend/requirements.txt
+```
+
+Python 3.14 route: do not reuse the current pinned `backend/requirements.txt` blindly. First complete the dependency matrix evaluation in `docs/research/2026-07-04-tech-env-evaluation-phase1.md`, then update `docs/05-tech-spec.md` and this requirements file together.
+
 ## Start API
 
 ```powershell
-uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
+.\.venv\Scripts\Activate.ps1
+powershell -ExecutionPolicy Bypass -File scripts/run-backend.ps1
 ```
 
-Or use the local helper:
+Equivalent direct command:
 
 ```powershell
-.\scripts\run-backend.ps1
+python -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+If port `8000` is blocked or reserved, try another port:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/run-backend.ps1 -Port 8010
 ```
 
 ## Smoke Test
+
+Replace `8000` with the port you used if needed.
 
 ```powershell
 $login = Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8000/api/auth/login `
@@ -53,9 +78,35 @@ python -m compileall backend tests/backend
 python -c "from backend.main import create_app; app=create_app(); print([route.path for route in app.routes if route.path.startswith('/api')])"
 ```
 
+## Troubleshooting
+
+### `pydantic-core` build fails on Python 3.14
+
+Current known failure: Phase1 pins Pydantic 2.10.x per `docs/05-tech-spec.md`; with Python 3.14 this can fall back to building `pydantic-core` from source and require MSVC `link.exe`.
+
+This does not prove Python 3.14 is unsuitable. It proves the current pinned dependency set is not valid for Python 3.14. Complete the evaluation in `docs/research/2026-07-04-tech-env-evaluation-phase1.md` before changing the baseline.
+
+### `WinError 10013` when starting Uvicorn
+
+Cause: Windows may block binding the selected address / port because of permissions, reservation, firewall, security software, or another service.
+
+Try:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/run-backend.ps1 -Port 8010
+powershell -ExecutionPolicy Bypass -File scripts/run-backend.ps1 -HostAddress 127.0.0.1 -Port 8020
+```
+
+You can also inspect whether a port is in use:
+
+```powershell
+netstat -ano | findstr :8000
+```
+
+If local port binding remains blocked by the host environment, `tests/backend/test_api_routes.py` validates the Sprint-1 API handlers without opening a socket.
+
 ## Notes
 
 - Demo token signing key defaults to a local development value and can be overridden with `LUMEN_DEMO_TOKEN_KEY`.
 - Sprint-1 API uses an in-memory demo repository until PostgreSQL repository integration is implemented.
 - SQL foundation lives in `backend/migrations/001_sprint1_space_permissions.sql`.
-- If local port binding is restricted by the host environment, `tests/backend/test_api_routes.py` validates the Sprint-1 API handlers without opening a socket.
