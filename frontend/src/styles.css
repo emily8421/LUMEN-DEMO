@@ -1,0 +1,231 @@
+:root {
+  color: #192230;
+  background: #edf2f7;
+  font-family:
+    Inter, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 1180px;
+  min-height: 100vh;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  border: 0;
+  border-radius: 10px;
+  background: #2563eb;
+  color: #ffffff;
+  cursor: pointer;
+  font-weight: 700;
+  padding: 10px 14px;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+button.danger {
+  background: #dc2626;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #192230;
+  padding: 10px 12px;
+}
+
+textarea {
+  min-height: 360px;
+  resize: vertical;
+}
+
+label {
+  display: grid;
+  gap: 8px;
+  color: #475569;
+  font-weight: 700;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+.app-shell {
+  display: grid;
+  min-height: 100vh;
+  padding: 24px;
+  gap: 18px;
+}
+
+.topbar,
+.status-bar,
+.card {
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
+}
+
+.topbar,
+.status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+}
+
+.topbar h1 {
+  font-size: 28px;
+}
+
+.session-card {
+  display: grid;
+  gap: 4px;
+  min-width: 220px;
+  border-radius: 16px;
+  background: #eff6ff;
+  padding: 12px 16px;
+  text-align: right;
+}
+
+.session-card span,
+.session-card strong,
+.eyebrow,
+.empty-state,
+.version-list small,
+.document-list small {
+  color: #64748b;
+}
+
+.eyebrow {
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.card {
+  padding: 20px;
+}
+
+.login-panel {
+  align-self: start;
+  justify-self: center;
+  width: 460px;
+  display: grid;
+  gap: 18px;
+}
+
+.login-panel form,
+.editor-form,
+.sidebar,
+.versions-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.workspace-grid {
+  display: grid;
+  grid-template-columns: 300px minmax(520px, 1fr) 300px;
+  gap: 18px;
+  align-items: start;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.document-list,
+.version-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.document-list button {
+  display: grid;
+  width: 100%;
+  gap: 6px;
+  border: 1px solid #dbeafe;
+  background: #f8fafc;
+  color: #1e293b;
+  text-align: left;
+}
+
+.document-list button.active {
+  border-color: #2563eb;
+  background: #dbeafe;
+}
+
+.document-list span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.editor-panel {
+  min-height: 660px;
+}
+
+.versions-panel {
+  min-height: 320px;
+}
+
+.version-list li {
+  display: grid;
+  gap: 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.version-list div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.version-list button {
+  justify-self: start;
+  background: #0f766e;
+}
+
+.status-bar {
+  position: sticky;
+  bottom: 24px;
+}
+
+.status-bar strong {
+  color: #dc2626;
+}
