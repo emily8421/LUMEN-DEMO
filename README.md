@@ -15,16 +15,16 @@
 
 ## 快速开始
 
-> 当前**设计完成、尚未编码**（`backend/ frontend/ docker/ tests/` 为空）。下面是理解项目与准备开发的最短路径。
+> 当前已进入 Phase1 编码：Sprint-1 空间与权限底座第一版已实现；后端运行说明见 `backend/README.md`。
 
 1. **读懂项目**：`docs/00-scenario.md`（背景 / 用户 / 场景）→ `docs/03-prd.md §3`（阶段路线图）→ 本 README「文档导航」。
 2. **确认运行环境**：见 `docs/env/local-env.md`（本机 Win11 / i7 / 31.7GB / RTX 3050）与 `ai/project-rules.md §2.5` 资源约束。
 3. **AI 协作入口**：任选 AI CLI（Claude Code / Cursor / Codex），入口文件均指向 `ai/index.md`；说一个场景意图即可（如「更新方法论」「修单个文档」），路由见 `ai/commands/README.md`。
-4. **进入开发**：按 `docs/08-dev-plan.md` 的 Sprint 推进；编码前先读 `ai/index.md` 列出的全部规则。
+4. **运行后端**：按 `backend/README.md` 安装依赖并启动 FastAPI；编码前先读 `ai/index.md` 列出的全部规则。
 
 ## 当前状态
 
-- **阶段**：Phase1（功能范围 `[P1]` · 交付物形态 **Demo**）——**设计完成、尚未编码**。`backend/ frontend/ docker/ tests/` 目前为空，待按 `docs/08-dev-plan.md` 的 Sprint 推进。
+- **阶段**：Phase1（功能范围 `[P1]` · 交付物形态 **Demo**）——Sprint-1 空间与权限底座第一版已实现并推送；前端、导入、检索、问答、术语等后续 Sprint 仍待推进。
 - **演进路线**：Phase1 **Demo**（当前）→ Phase2 **MVP** → 远期愿景 **产品**；双维度（功能范围 + 交付物形态）总览见 `docs/03-prd.md` §3。
 - **基准**：需求 / 架构 / 数据 / 接口 / 验证均已落在 `docs/`，是开发的唯一事实来源；阶段归属以 `docs/03-prd.md` §3 路线图为准。
 
@@ -67,6 +67,7 @@
 > 验证计划与 REQ→用例追溯见 `docs/09-verification.md`；本机资源验证见其 §4。
 
 - 单元 / 集成 / 验收测试覆盖 REQ-001..011（Phase1）；数据夹具：`nova-internal` / `brightlite-team` 双空间 + 三级权限。
+- Sprint-1 后端验证：`python -m unittest discover -s tests/backend -v` 与 `python -m compileall backend tests/backend`。
 - 本机资源验证：Docker Compose 起库后确认 Demo 在内存 / 显存 / 磁盘软上限内运行。
 
 ## 项目结构
@@ -77,7 +78,8 @@ LUMEN_demo_T2.1/
 ├─ ai/          # AI 行为规范（global-rules / project-rules / index）
 ├─ tasks/       # 任务单（按需启用）
 ├─ scripts/     # 模板脚本（sync-template.* / check-derived-sync.* / check-template.* / collect-env.ps1 / new-project.sh 等，含 PowerShell 入口）
-├─ backend/ frontend/ docker/ tests/   # 待编码（按 08-dev-plan Sprint 推进）
+├─ backend/     # FastAPI 后端；Sprint-1 已有 auth / spaces / permission 底座
+├─ frontend/ docker/ tests/            # 按 08-dev-plan Sprint 继续推进
 ├─ _proposals/                        # 模板优化提案起草区（回流模板仓库前临时存放）
 └─ AGENTS.md / CLAUDE.md / .cursor/    # 各 AI 工具入口，指向 ai/index.md
 ```
