@@ -225,6 +225,70 @@ class ApiRouteTest(unittest.TestCase):
         self.assertEqual(context.exception.status_code, 422)
         self.assertEqual(context.exception.detail["code"], 4220)
 
+    def test_query_api_returns_degraded_answer_with_sources(self) -> None:
+        import asyncio
+
+        from backend.api.auth import LoginRequest, login
+        from backend.api.imports import import_file_endpoint
+        from backend.api.rag import QueryRequest, query_endpoint
+
+        token = login(LoginRequest(external_id="alice", current_space_id=10))["data"]["token"]
+        authorization = f"Bearer {token}"
+
+        class FakeUploadFile:
+            filename = "rag-source.md"
+
+            async def read(self) -> bytes:
+                return "# RAG\n\n场景联动触发延迟是 280ms。".encode("utf-8")
+
+        import_response = asyncio.run(
+            import_file_endpoint(
+                file=FakeUploadFile(),
+                title="RAG Source",
+                permission="team",
+                authorization=authorization,
+            )
+        )
+
+        query_response = query_endpoint(
+            QueryRequest(question="场景联动触发延迟是多少？"),
+            authorization=authorization,
+        )
+
+        self.assertEqual(query_response["code"], 0)
+        self.assertIn("降级模式", query_response["data"]["answer"])
+        self.assertIn("280ms", query_response["data"]["answer"])
+        self.assertEqual(query_response["data"]["sources"][0]["doc_id"], import_response["data"]["parsed_doc_id"])
+        self.assertEqual(query_response["data"]["sources"][0]["title"], "RAG Source")
+
+    def test_query_api_returns_not_found_without_sources(self) -> None:
+        from backend.api.auth import LoginRequest, login
+        from backend.api.rag import QueryRequest, query_endpoint
+        from backend.service.rag import NOT_FOUND_ANSWER
+
+        token = login(LoginRequest(external_id="alice", current_space_id=10))["data"]["token"]
+        authorization = f"Bearer {token}"
+
+        query_response = query_endpoint(QueryRequest(question="完全不存在的问题"), authorization=authorization)
+
+        self.assertEqual(query_response["data"]["answer"], NOT_FOUND_ANSWER)
+        self.assertEqual(query_response["data"]["sources"], [])
+
+    def test_query_api_rejects_blank_question(self) -> None:
+        from fastapi import HTTPException
+
+        from backend.api.auth import LoginRequest, login
+        from backend.api.rag import QueryRequest, query_endpoint
+
+        token = login(LoginRequest(external_id="alice", current_space_id=10))["data"]["token"]
+        authorization = f"Bearer {token}"
+
+        with self.assertRaises(HTTPException) as context:
+            query_endpoint(QueryRequest(question=" "), authorization=authorization)
+
+        self.assertEqual(context.exception.status_code, 422)
+        self.assertEqual(context.exception.detail["code"], 4220)
+
 
 if __name__ == "__main__":
     unittest.main()
