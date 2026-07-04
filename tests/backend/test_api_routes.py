@@ -177,6 +177,54 @@ class ApiRouteTest(unittest.TestCase):
         self.assertEqual(context.exception.status_code, 422)
         self.assertEqual(context.exception.detail["code"], 4220)
 
+    def test_search_api_returns_imported_text_hits(self) -> None:
+        import asyncio
+
+        from backend.api.auth import LoginRequest, login
+        from backend.api.imports import import_file_endpoint
+        from backend.api.search import search_endpoint
+
+        token = login(LoginRequest(external_id="alice", current_space_id=10))["data"]["token"]
+        authorization = f"Bearer {token}"
+
+        class FakeUploadFile:
+            filename = "searchable.md"
+
+            async def read(self) -> bytes:
+                return b"# Searchable\n\nSprint-4A degraded search target."
+
+        import_response = asyncio.run(
+            import_file_endpoint(
+                file=FakeUploadFile(),
+                title="Searchable Import",
+                permission="team",
+                authorization=authorization,
+            )
+        )
+
+        search_response = search_endpoint(q="degraded search", authorization=authorization)
+
+        self.assertEqual(search_response["code"], 0)
+        self.assertEqual(search_response["data"]["total"], 1)
+        self.assertEqual(search_response["data"]["items"][0]["doc_id"], import_response["data"]["parsed_doc_id"])
+        self.assertEqual(search_response["data"]["items"][0]["title"], "Searchable Import")
+        self.assertIn("degraded search", search_response["data"]["items"][0]["snippet"])
+
+    def test_search_api_rejects_blank_query(self) -> None:
+        from fastapi import HTTPException
+
+        from backend.api.auth import LoginRequest, login
+        from backend.api.search import search_endpoint
+
+        token = login(LoginRequest(external_id="alice", current_space_id=10))["data"]["token"]
+        authorization = f"Bearer {token}"
+
+        with self.assertRaises(HTTPException) as context:
+            search_endpoint(q=" ", authorization=authorization)
+
+        self.assertEqual(context.exception.status_code, 422)
+        self.assertEqual(context.exception.detail["code"], 4220)
+
 
 if __name__ == "__main__":
     unittest.main()

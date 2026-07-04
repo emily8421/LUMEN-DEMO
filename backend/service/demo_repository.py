@@ -226,6 +226,12 @@ class DemoRepository:
             key=lambda chunk: chunk.ordinal,
         )
 
+    def list_all_document_chunks(self) -> list[DocumentChunk]:
+        return sorted(
+            self.document_chunks,
+            key=lambda chunk: (chunk.document_id, chunk.ordinal),
+        )
+
     def _replace_document(self, updated_document: Document) -> None:
         self.documents = [
             updated_document if document.id == updated_document.id else document
