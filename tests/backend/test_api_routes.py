@@ -239,7 +239,7 @@ class ApiRouteTest(unittest.TestCase):
             filename = "rag-source.md"
 
             async def read(self) -> bytes:
-                return "# RAG\n\n场景联动触发延迟是 280ms。".encode("utf-8")
+                return "# RAG\n\n独有问答锚点 alpha-280 是 280ms。".encode("utf-8")
 
         import_response = asyncio.run(
             import_file_endpoint(
@@ -251,7 +251,7 @@ class ApiRouteTest(unittest.TestCase):
         )
 
         query_response = query_endpoint(
-            QueryRequest(question="场景联动触发延迟是多少？"),
+            QueryRequest(question="独有问答锚点 alpha-280 是多少？"),
             authorization=authorization,
         )
 
@@ -288,6 +288,31 @@ class ApiRouteTest(unittest.TestCase):
 
         self.assertEqual(context.exception.status_code, 422)
         self.assertEqual(context.exception.detail["code"], 4220)
+
+    def test_created_document_is_searchable_and_queryable(self) -> None:
+        from backend.api.auth import LoginRequest, login
+        from backend.api.documents import DocumentWriteRequest, create_document_endpoint
+        from backend.api.rag import QueryRequest, query_endpoint
+        from backend.api.search import search_endpoint
+
+        token = login(LoginRequest(external_id="alice", current_space_id=10))["data"]["token"]
+        authorization = f"Bearer {token}"
+        created_response = create_document_endpoint(
+            DocumentWriteRequest(
+                title="Frontend Indexed Note",
+                content_md="场景联动触发延迟是 280ms。\nSprint-4 smoke search target.",
+                permission="team",
+            ),
+            authorization=authorization,
+        )
+
+        search_response = search_endpoint(q="smoke search", authorization=authorization)
+        query_response = query_endpoint(QueryRequest(question="场景联动触发延迟是多少？"), authorization=authorization)
+
+        self.assertEqual(search_response["data"]["total"], 1)
+        self.assertEqual(search_response["data"]["items"][0]["doc_id"], created_response["data"]["id"])
+        self.assertIn("280ms", query_response["data"]["answer"])
+        self.assertEqual(query_response["data"]["sources"][0]["doc_id"], created_response["data"]["id"])
 
 
 if __name__ == "__main__":

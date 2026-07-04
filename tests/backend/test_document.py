@@ -60,6 +60,31 @@ class DocumentServiceTest(unittest.TestCase):
         self.assertEqual(restored.current_version, 2)
         self.assertEqual(restored.content_md, "v2")
 
+    def test_create_update_and_restore_sync_search_chunks(self) -> None:
+        repository = DemoRepository()
+        document = create_document(
+            repository,
+            user_id=1,
+            current_space_id=10,
+            request=DocumentCreate(title="Indexed", content_md="front search first", permission=DocumentPermission.TEAM),
+        )
+
+        self.assertEqual([chunk.text for chunk in repository.list_document_chunks(document.id)], ["front search first"])
+
+        updated = update_document(
+            repository,
+            user_id=1,
+            current_space_id=10,
+            document_id=document.id,
+            request=DocumentUpdate(title="Indexed", content_md="rag answer second", permission=DocumentPermission.TEAM),
+        )
+        self.assertEqual([chunk.text for chunk in repository.list_document_chunks(updated.id)], ["rag answer second"])
+
+        restored = restore_version(repository, user_id=1, current_space_id=10, document_id=document.id, version_no=1)
+
+        self.assertEqual(restored.id, document.id)
+        self.assertEqual([chunk.text for chunk in repository.list_document_chunks(restored.id)], ["front search first"])
+
     def test_private_document_looks_not_found_for_other_member(self) -> None:
         repository = DemoRepository()
 

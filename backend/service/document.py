@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from backend.model.entities import Document, DocumentPermission, DocumentVersion, SpaceMember
+from backend.service.chunking import clean_text, split_text_into_chunks
 from backend.service.permission import can_view_document, filter_visible_documents, is_space_member
 
 
@@ -53,13 +54,15 @@ def create_document(
     if not is_space_member(user_id, current_space_id, memberships):
         raise DocumentAccessError("space access denied")
 
-    return repository.create_document(
+    document = repository.create_document(
         space_id=current_space_id,
         title=request.title,
         content_md=request.content_md,
         owner_id=user_id,
         permission=request.permission,
     )
+    sync_document_chunks(repository, document)
+    return document
 
 
 def get_visible_document(repository, user_id: int, current_space_id: int, document_id: int) -> Document:
@@ -81,13 +84,15 @@ def update_document(
     request: DocumentUpdate,
 ) -> Document:
     get_visible_document(repository, user_id, current_space_id, document_id)
-    return repository.update_document(
+    document = repository.update_document(
         document_id=document_id,
         title=request.title,
         content_md=request.content_md,
         permission=request.permission,
         editor_id=user_id,
     )
+    sync_document_chunks(repository, document)
+    return document
 
 
 def delete_document(repository, user_id: int, current_space_id: int, document_id: int) -> None:
@@ -110,4 +115,12 @@ def restore_version(
     get_visible_document(repository, user_id, current_space_id, document_id)
     if repository.get_document_version(document_id, version_no) is None:
         raise VersionNotFoundError("version not found")
-    return repository.restore_document_version(document_id, version_no, editor_id=user_id)
+    document = repository.restore_document_version(document_id, version_no, editor_id=user_id)
+    sync_document_chunks(repository, document)
+    return document
+
+
+def sync_document_chunks(repository, document: Document) -> None:
+    cleaned_text = clean_text(document.content_md)
+    chunk_texts = split_text_into_chunks(cleaned_text) if cleaned_text else []
+    repository.replace_document_chunks(document.id, chunk_texts)
