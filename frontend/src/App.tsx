@@ -10,6 +10,10 @@ import {
   listSpaces,
   listVersions,
   login,
+  queryKnowledgeBase,
+  QueryResponse,
+  searchDocuments,
+  SearchResponse,
   restoreVersion,
   Space,
   switchSpace,
@@ -48,6 +52,10 @@ function App() {
   const [notice, setNotice] = useState('请使用 Demo 账号登录。');
   const [isBusy, setIsBusy] = useState(false);
   const [error, setError] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResult, setSearchResult] = useState<SearchResponse | null>(null);
+  const [question, setQuestion] = useState('');
+  const [queryResult, setQueryResult] = useState<QueryResponse | null>(null);
 
   const selectedDocument = useMemo(
     () => documents.find((document) => document.id === selectedId) ?? null,
@@ -157,7 +165,35 @@ function App() {
         currentSpaceId: result.current_space_id,
       });
       setSelectedId(null);
+      setSearchResult(null);
+      setQueryResult(null);
       setNotice('空间已切换，文档列表已刷新。');
+    });
+  }
+
+  async function handleSearch(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!session) {
+      return;
+    }
+
+    await runAction('正在搜索当前空间...', async () => {
+      const result = await searchDocuments(session.token, searchQuery.trim());
+      setSearchResult(result);
+      setNotice(`搜索完成：${result.total} 条结果。`);
+    });
+  }
+
+  async function handleQuery(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!session) {
+      return;
+    }
+
+    await runAction('正在问答当前空间...', async () => {
+      const result = await queryKnowledgeBase(session.token, question.trim());
+      setQueryResult(result);
+      setNotice(`问答完成：${result.sources.length} 个来源。`);
     });
   }
 
@@ -339,29 +375,101 @@ function App() {
             </form>
           </section>
 
-          <aside className="versions-panel card">
-            <p className="eyebrow">REQ-006</p>
-            <h2>版本历史</h2>
-            {!selectedDocument || isCreating ? (
-              <p className="empty-state">保存文档后可查看版本历史。</p>
-            ) : versions.length === 0 ? (
-              <p className="empty-state">暂无版本记录。</p>
-            ) : (
-              <ol className="version-list">
-                {versions.map((version) => (
-                  <li key={version.version_no}>
-                    <div>
-                      <strong>版本 {version.version_no}</strong>
-                      <small>编辑者 #{version.editor_id}</small>
-                    </div>
-                    <p>{version.content_md.slice(0, 48) || '空内容'}</p>
-                    <button type="button" onClick={() => void handleRestore(version.version_no)} disabled={isBusy}>
-                      恢复
-                    </button>
-                  </li>
-                ))}
-              </ol>
-            )}
+          <aside className="insight-panel">
+            <section className="versions-panel card">
+              <p className="eyebrow">REQ-006</p>
+              <h2>版本历史</h2>
+              {!selectedDocument || isCreating ? (
+                <p className="empty-state">保存文档后可查看版本历史。</p>
+              ) : versions.length === 0 ? (
+                <p className="empty-state">暂无版本记录。</p>
+              ) : (
+                <ol className="version-list">
+                  {versions.map((version) => (
+                    <li key={version.version_no}>
+                      <div>
+                        <strong>版本 {version.version_no}</strong>
+                        <small>编辑者 #{version.editor_id}</small>
+                      </div>
+                      <p>{version.content_md.slice(0, 48) || '空内容'}</p>
+                      <button type="button" onClick={() => void handleRestore(version.version_no)} disabled={isBusy}>
+                        恢复
+                      </button>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </section>
+
+            <section className="search-panel card">
+              <p className="eyebrow">REQ-007</p>
+              <h2>全文搜索</h2>
+              <form className="compact-form" onSubmit={handleSearch}>
+                <label>
+                  关键词
+                  <input
+                    value={searchQuery}
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                    placeholder="例如：触发延迟"
+                  />
+                </label>
+                <button type="submit" disabled={isBusy || searchQuery.trim().length === 0}>搜索</button>
+              </form>
+              {!searchResult ? (
+                <p className="empty-state">输入关键词检索当前空间可见文档。</p>
+              ) : searchResult.items.length === 0 ? (
+                <p className="empty-state">未找到匹配文档。</p>
+              ) : (
+                <ul className="result-list">
+                  {searchResult.items.map((item) => (
+                    <li key={`${item.doc_id}-${item.chunk_id}`}>
+                      <strong>{item.title}</strong>
+                      <small>文档 #{item.doc_id} · chunk {item.ordinal}</small>
+                      <p>{item.snippet}</p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+
+            <section className="query-panel card">
+              <p className="eyebrow">REQ-008</p>
+              <h2>RAG 问答</h2>
+              <form className="compact-form" onSubmit={handleQuery}>
+                <label>
+                  问题
+                  <textarea
+                    className="question-input"
+                    value={question}
+                    onChange={(event) => setQuestion(event.target.value)}
+                    placeholder="例如：场景联动触发延迟是多少？"
+                    rows={3}
+                  />
+                </label>
+                <button type="submit" disabled={isBusy || question.trim().length === 0}>提问</button>
+              </form>
+              {!queryResult ? (
+                <p className="empty-state">输入问题后，会基于当前空间可见文档返回降级答案。</p>
+              ) : (
+                <div className="answer-box">
+                  <strong>答案</strong>
+                  <p>{queryResult.answer}</p>
+                  {queryResult.sources.length === 0 ? (
+                    <p className="empty-state">暂无来源。</p>
+                  ) : (
+                    <ul className="result-list">
+                      {queryResult.sources.map((source) => (
+                        <li key={`${source.doc_id}-${source.snippet}`}>
+                          <strong>{source.title}</strong>
+                          <small>文档 #{source.doc_id}</small>
+                          <p>{source.snippet}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </section>
           </aside>
         </div>
       )}

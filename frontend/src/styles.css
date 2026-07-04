@@ -144,7 +144,10 @@ p {
 .login-panel form,
 .editor-form,
 .sidebar,
-.versions-panel {
+.versions-panel,
+.insight-panel,
+.compact-form,
+.answer-box {
   display: grid;
   gap: 16px;
 }
@@ -199,6 +202,58 @@ p {
 
 .versions-panel {
   min-height: 320px;
+}
+
+.insight-panel {
+  align-content: start;
+}
+
+.search-panel,
+.query-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.compact-form button {
+  justify-self: start;
+}
+
+.question-input {
+  min-height: 96px;
+}
+
+.result-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.result-list li {
+  display: grid;
+  gap: 6px;
+  border: 1px solid #e0e7ff;
+  border-radius: 14px;
+  background: #f8fafc;
+  padding: 12px;
+}
+
+.result-list small {
+  color: #64748b;
+}
+
+.result-list p,
+.answer-box p {
+  color: #334155;
+  line-height: 1.55;
+}
+
+.answer-box {
+  border-left: 4px solid #2563eb;
+  border-radius: 12px;
+  background: #eff6ff;
+  padding: 12px;
 }
 
 .version-list li {
