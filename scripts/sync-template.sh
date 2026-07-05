@@ -93,6 +93,7 @@ DEFAULT_SYNC_FILES=(
   "scripts/check-template.ps1"
   "scripts/check-derived-sync.sh"
   "scripts/check-derived-sync.ps1"
+  "scripts/check-github-context.ps1"
   "scripts/collect-env.ps1"
   "scripts/check-prereqs.ps1"
   "scripts/bootstrap-dev-env.ps1"
@@ -309,4 +310,12 @@ else
   git commit -q -m "sync template $VERSION from ai-project-template" -- "${UPDATED_FILES[@]}"
   echo "✅ 已提交：sync template $VERSION"
   echo "   推送: git push"
+  echo
+  echo "下一步（不要停在同步提交）："
+  echo "  1. 运行派生边界检查: powershell -ExecutionPolicy Bypass -File scripts/check-derived-sync.ps1"
+  echo "  2. 在 AI 中执行: /run post-sync-cleanup"
+  echo "  3. 在 AI 中执行: /run docs-system-audit（同步后审计模式）"
+  echo "  4. 按项目技术栈运行测试 / lint / build；无法运行的记录为未验证项"
+  echo "  5. 生成或更新同步运行记录: sync-records/template-sync/YYYY-MM-DD-sync-template-$VERSION.md"
+  echo "     可参考: template-docs/derived-sync-report-template.md"
 fi
