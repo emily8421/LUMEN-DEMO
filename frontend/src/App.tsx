@@ -542,6 +542,10 @@ function App() {
                   新建
                 </button>
               </div>
+              <div className="subsection-heading">
+                <strong>术语编辑</strong>
+                <span>{selectedTermId ? '正在编辑已选术语' : '填写后创建当前空间术语'}</span>
+              </div>
               <form className="compact-form" onSubmit={handleSaveTerm}>
                 <label>
                   标准名称
@@ -586,6 +590,10 @@ function App() {
                   ) : null}
                 </div>
               </form>
+              <div className="subsection-heading">
+                <strong>当前空间术语</strong>
+                <span>点击条目可载入到上方编辑区</span>
+              </div>
               {terms.length === 0 ? (
                 <p className="empty-state">当前空间暂无术语。</p>
               ) : (
