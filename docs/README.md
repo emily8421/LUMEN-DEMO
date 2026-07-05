@@ -7,15 +7,16 @@
 
 ## 1. 输入与输出：两类文档
 
-`docs/` 里的文档分两类——你提供的人工输入，和 AI 生成的项目事实。
+`docs/` 里的文档分两类——你提供的原始输入，和 AI 生成的项目事实。
 
 | 类型 | 目录 | 谁放 / 怎么来 |
 |---|---|---|
-| **人工输入**（原料） | `docs/vision/`、`docs/inputs/` | 你提供：愿景叙事、客户 PRD/SRS、brief、现有系统说明、外部接入包 |
+| **原始输入**（统一入口） | `docs/inputs/` | 你提供：愿景草稿、客户 PRD/SRS、brief、现有系统说明、外部接入包 |
+| **整理后愿景**（可选源文档） | `docs/vision/` | AI 或团队从输入评审中提炼：产品愿景叙事、完整场景与长期业务图景 |
 | **AI 输出**（项目事实，约束代码） | `docs/`（根 `00-09`）、`docs/design/` | AI 根据输入评审后生成：需求 / 设计 / 计划 / 验证 |
 | 辅助留痕 | `docs/decisions/`、`docs/research/`、`docs/env/`、`docs/meetings/`、`docs/archive/` | 决策记录 / 调研 / 环境 / 会议 / 归档 |
 
-一句话：**人写输入 → AI 生成 `00-09` 与 `design/` → `00-09` 约束代码**。人工输入不直接驱动开发，必须先经评审（`ai/prompts/docs/01-review-inputs.md`）再进入 `00-09`。
+一句话：**人把原始材料放入 `docs/inputs/` → AI 评审是否足以生成 `product-vision` → AI 生成 `00-09` 与 `design/` → `00-09` 约束代码**。原始输入不直接驱动开发，必须先经评审（`ai/prompts/docs/01-review-inputs.md`）再进入 `docs/vision/product-vision.md` 或 `00-09`。
 
 ## 2. 核心文档 00-09 各自干什么
 
@@ -57,11 +58,11 @@
 
 | 子目录 | 放什么 | 命名建议 |
 |---|---|---|
-| `docs/vision/` | 产品愿景、叙事、业务背景等输入材料 | `product-vision.md`、`market-notes.md` |
-| `docs/inputs/` | 尚未归类、尚未转成 00-09 的原始输入包，如小工具 brief、客户 PRD/SRS、外部需求包、现有系统说明 | `initial-brief.md`、`client-prd.md`、`<topic>/README.md` |
-| `docs/design/` | 子系统 / 模块详细设计 | `<subsystem>.md`、`auth.md`、`workflow-engine.md` |
+| `docs/inputs/` | 用户原始材料的统一入口；尚未归类、尚未转成 `product-vision` 或 00-09 的输入包，如愿景草稿、小工具 brief、客户 PRD/SRS、外部需求包、现有系统说明 | `initial-brief.md`、`client-prd.md`、`input-review-report.md`、`<topic>/README.md` |
+| `docs/vision/` | 可选的整理后产品愿景叙事 / 长期业务图景；通常由 AI 或团队从 `docs/inputs/` 评审、补齐、确认后生成 | `product-vision.md`、`market-notes.md` |
+| `docs/design/` | 子系统 / 模块 / 前端交互详细设计 | `<subsystem>.md`、`auth.md`、`workflow-engine.md`、`frontend-interaction.md` |
 | `docs/decisions/` | 架构决策记录（ADR）和重要取舍 | `ADR-0001-title.md` |
-| `docs/research/` | 技术调研、竞品分析、实验结论 | `topic-summary.md` |
+| `docs/research/` | 技术调研、竞品分析、实验结论、技术环境评估报告 | `topic-summary.md`、`YYYY-MM-DD-tech-env-evaluation-<scope>.md` |
 | `docs/env/` | 本机环境、资源约束、服务器预案 | `local-env.md`、`server-plan.md` |
 | `docs/meetings/` | 会议纪要、访谈记录、评审记录 | `YYYY-MM-DD-topic.md` |
 | `docs/archive/` | 已废弃但需留痕的项目文档 | 保留原名或加日期前缀 |
@@ -86,6 +87,10 @@ docs/design-auth.md
 docs/workflow-engine-design.md
 ```
 
+前端交互设计也是条件性详细设计文档，推荐放在 `docs/design/frontend-interaction.md`，或按入口拆成 `docs/design/customer-app-interaction.md`、`docs/design/admin-console-interaction.md`、`docs/design/mobile-app-interaction.md`。不要新增 `docs/10-ui-design.md`、`docs/ui-design.md` 或 `docs/design-ui.md`。
+
+独立 Web、移动端、小程序、桌面端等 UI 型项目，若存在多页面、多角色、复杂表单、状态流、验收依赖点击路径，或 Sprint 修改范围包含页面 / 组件 / 管理页 / 搜索问答 UI，应在前端开发前补交互设计，或在 `ai/project-rules.md` §3 / `docs/05-tech-spec.md` 写明豁免理由。该文档只承接 `03/04/05/07/08/09` 已授权内容，写页面流、状态、文案、接口依赖和验收路径，不新增需求、接口或验收目标。
+
 ## 7. AI 新增文档规则
 
 AI 判断需要新增文档时，必须按以下顺序处理：
@@ -96,7 +101,7 @@ AI 判断需要新增文档时，必须按以下顺序处理：
 4. 等待人工确认后再创建文件。
 5. 新文档必须在标题下写明定位：输入材料 / 详细设计 / 决策记录 / 调研记录 / 会议记录 / 归档。
 
-外部接入文档（策略、调研、决策、会议、接口或客户输入材料）必须先写明与本仓库 docs 的映射、定位声明和影响范围。尚未归类的原始输入先放 `docs/inputs/`；评审后，策略 / 决策类放 `docs/decisions/`，调研 / 实验类放 `docs/research/`，会议或访谈放 `docs/meetings/`，不要误放入 `docs/vision/`。
+外部接入文档（策略、调研、决策、会议、接口或客户输入材料）必须先写明与本仓库 docs 的映射、定位声明和影响范围。尚未归类的原始输入先放 `docs/inputs/`；评审后，策略 / 决策类放 `docs/decisions/`，调研 / 实验类放 `docs/research/`，会议或访谈放 `docs/meetings/`。不要把未经评审的原始材料直接放入 `docs/vision/`；`docs/vision/` 只承载整理后的愿景叙事或兼容旧项目已有愿景文档。
 
 ## 8. 裁剪决策表
 
@@ -108,17 +113,20 @@ AI 判断需要新增文档时，必须按以下顺序处理：
 | 有数据库 / 文件存储 | 保留 `docs/06-db-design.md` | 按技术栈保留 `backend/`、`docker/` 等 | 当前阶段写细，后续阶段可只保留骨架 |
 | 无对外接口 | 删除 `docs/07-api-spec.md`，并在 §3 声明省略 | 不因 API 预留 `backend/` | 纯内部库 / 纯计算模块适用 |
 | CLI / 本地脚本 | 保留 `docs/07-api-spec.md` | 通常保留 `scripts/`，按需保留 `tests/` | 07 用于描述命令、参数、输出契约 |
-| 独立 Web / 移动端演示 | `docs/04-05` 必须体现前端架构 | 保留 `frontend/`，按需保留 `backend/` | 若愿景含页面/点击/手机等交互词，需人工复核演示形态 |
+| 独立 Web / 移动端 / 小程序 / 桌面端演示 | `docs/04-05` 必须体现前端架构；复杂 UI 按触发条件补 `docs/design/frontend-interaction.md` | 保留 `frontend/`，按需保留 `backend/` | 若愿景含页面/点击/手机等交互词，需人工复核演示形态；前端隐藏不等于权限边界 |
 | 消息通道内交互 / 不需演示 | `docs/04-05` 不强制写前端 | 通常删除 `frontend/` | 若后续变更演示形态，再补前端设计 |
 | 暂无自动化测试 | `docs/09-verification.md` 仍保留 | 可暂删 `tests/` | 09 至少记录人工验证和本机资源验证 |
 | 需要容器 / 外部服务 | `docs/04-05` 写明运行拓扑 | 保留 `docker/` | Demo 优先本机；资源不足再写服务器预案 |
+| 需要真实运行依赖 | `docs/05` 前或首个相关 Sprint 前补 `docs/research/*tech-env-evaluation*.md`，或记录豁免理由 | 按技术栈保留依赖文件 / 启动脚本 | `collect-env` 只采集事实，不等于依赖安装 / 最小运行验证通过 |
 
 ## 9. 轻量项目路径
 
 若项目是小脚本、一次性实验或纯工具库，仍保留基本边界与验证口径即可：
 
-1. 写最小 `docs/vision/product-vision.md`。
-2. 运行 `scripts/collect-env.ps1`，确认本机可运行边界。
-3. 按上面的裁剪表决定是否省略 `docs/06`、`docs/07` 和代码目录。
-4. 保留最小版 `docs/03-prd.md`、`04-architecture.md`、`05-tech-spec.md`、`08-dev-plan.md`、`09-verification.md`。
-5. 每次只实现一个小任务；验证结果记录到 `docs/09-verification.md` 或当前 Sprint。
+1. 把最小 brief 写入 `docs/inputs/initial-brief.md`，至少回答目标用户、问题 / 价值、核心场景、输入输出、非目标和验收方式。
+2. 用 `ai/prompts/docs/01-review-inputs.md` 做输入评审；不足时先生成 `docs/inputs/input-review-report.md` 和最小补充清单，补齐后复评。
+3. 评审通过后再生成或更新 `docs/vision/product-vision.md`，作为 `00-09` 的上游愿景锚点。
+4. 运行 `scripts/collect-env.ps1`，确认本机可运行边界。
+5. 按上面的裁剪表决定是否省略 `docs/06`、`docs/07` 和代码目录。
+6. 保留最小版 `docs/03-prd.md`、`04-architecture.md`、`05-tech-spec.md`、`08-dev-plan.md`、`09-verification.md`。
+7. 每次只实现一个小任务；验证结果记录到 `docs/09-verification.md` 或当前 Sprint。

@@ -20,7 +20,7 @@
 | `docs/` | 文档体系生成、输入评审、单文档修订、文档反向同步 |
 | `dev/` | 单任务开发、Bug 修复、Sprint 验收 |
 | `review/` | 项目审查与 docs checklist |
-| `planning/` | Phase 升级评估 |
+| `planning/` | Phase / Sprint 规划与 Phase 升级评估 |
 | `setup/` | 环境采集与新建派生项目 |
 | `git/` | Commit message 辅助 |
 | `maintainers/` | 模板维护、同步和提案汇总 |

@@ -20,8 +20,12 @@
 ```text
 更新方法论
 做文档体系审核
+做文档评估
+做技术环境评估 / 技术路线评估
+补前端交互设计 / 补 UI 设计
 同步后整理项目
 执行当前 Sprint
+读取续接点 / 继续上次
 ```
 
 > **场景优先**：当用户说出的是**具体场景意图**（如「帮我新建项目」「帮我准备输入」「帮我规划阶段」「帮我打磨文档」）而非某个具体 command 时，AI 应先走 `/run scenario`（见 `ai/commands/scenario.md`），由 `template-docs/scenario-guides.md` 先产出「做什么 + 为什么」引导计划，确认后再路由到具体 command 执行。新手首次打开 AI CLI 也走此路径。
@@ -34,6 +38,8 @@ AI 识别到命令意图后，应：
 4. 说明将执行的命令、影响范围、是否只读、是否会写文件。
 5. 涉及写入、安装、提交、同步或状态改变时，先取得用户确认。
 6. 若任务持续多步，按 `ai/session-rules.md` 更新本地续接文件。
+
+若命令输出会写入正式文档、任务单或续接文件中的“待人工确认项”，不得只列问题；应包含 AI 建议、建议依据、备选方案、取舍影响和阻塞关系，并明确 AI 建议不等于用户已确认事实。
 
 ## 命令文件格式
 
@@ -54,11 +60,13 @@ AI 识别到命令意图后，应：
 | `sync-methodology` | 更新方法论 / 同步模板方法论 | `git-guide.md` §5、`ai/prompts/maintainers/12-sync-template.md` |
 | `post-sync-cleanup` | 同步后整理项目 | `ai/prompts/maintainers/15-post-sync-cleanup.md` |
 | `docs-system-audit` | 文档体系审核 / PLM 链路审计 | `ai/prompts/review/16-docs-system-audit.md` |
+| `docs-evaluation` | 文档评估 / 阶段转换评估 / 单文档评估 | `ai/prompts/review/19-docs-evaluation.md` |
+| `tech-env-evaluation` | 技术环境评估 / 技术路线评估 / 依赖安装验证 / 本机能不能跑 | `ai/prompts/review/20-tech-env-evaluation.md` |
 | `template-proposal-summary` | 汇总模板优化提案 | `ai/prompts/maintainers/11-template-proposal-summary.md` |
 | `generate-docs` | 生成文档体系 / 补齐 00-09 | `ai/prompts/docs/00-generate-or-complete-docs.md` |
 | `review-inputs` | 评审输入材料 | `ai/prompts/docs/01-review-inputs.md` |
 | `project-review` | 项目审查 / 实现合规审查 | `ai/prompts/review/03-project-review.md` |
-| `edit-single-doc` | 修订单个文档 | `ai/prompts/docs/04-edit-single-doc.md` |
+| `edit-single-doc` | 修订单个文档 / 补前端交互设计 / 补 UI 设计 | `ai/prompts/docs/04-edit-single-doc.md` |
 | `sync-docs-from-code` | 代码反向同步文档 | `ai/prompts/docs/07-sync-docs-from-code.md` |
 | `phase-upgrade` | Phase 升级评估 | `ai/prompts/planning/08-phase-upgrade.md` |
 | `docs-checklist` | 开发前文档检查 | `ai/prompts/review/10-docs-checklist.md` |

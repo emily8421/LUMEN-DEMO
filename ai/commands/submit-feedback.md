@@ -18,7 +18,7 @@
 ## 必读文件
 
 - `ai/index.md`
-- 派生候选来源：`docs/archive/template-sync/`（sync 运行记录可优化点）、docs-audit 报告、check 告警、`_proposals/` 草稿
+- 派生候选来源：`sync-records/template-sync/` 或旧路径 `docs/archive/template-sync/`（sync 运行记录可优化点）、docs-audit 报告、check 告警、`_proposals/` 草稿
 - `ai/global-rules.md` §9（回流来源标识 + 去项目化）
 
 ## 执行流程

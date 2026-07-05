@@ -13,11 +13,11 @@
 
 **不适用场景**：还没有运行验证，或验收标准本身不清楚；应先补验证或修订 `docs/08-dev-plan.md`。
 
-**使用前准备**：提供 Sprint 条目、实际改动、测试 / 自检结果和未完成事项。
+**使用前准备**：提供 Sprint 条目、实际改动、关联 REQ / Task / Test Case、测试 / 自检结果、验收证据和未完成事项。
 
 **续接要求**：总结完成后，把已完成项、未完成项、风险、验证结果和下次优先事项写入 / 更新续接文件。
 
-**预期产出**：逐项验收结果、文件清单、commit message 建议、是否进入下一 Sprint 的判断。
+**预期产出**：逐项验收结果、文件清单、验证证据、`docs/09-verification.md` 验收记录 / Sprint 验收包更新建议、commit message 建议、是否进入下一 Sprint 的判断。
 
 **使用后下一步**：通过则提交；未通过则拆出修复任务或回到 `ai/prompts/dev/02-run-task.md`。
 
@@ -26,7 +26,10 @@
 
 输出：
 1. 验收标准逐项结果（通过/未通过+原因）
-2. 本Sprint修改/新增的文件清单
-3. 建议的Commit message
-4. 是否可以进入下一个Sprint
+2. 关联 REQ / Sprint / Task / Test Case 核对
+3. 本 Sprint 修改/新增的文件清单
+4. 验证命令 / 人工步骤 / 日志 / 截图等证据摘要
+5. 需要写入 `docs/09-verification.md` 的验收记录、Sprint 验收包、风险与未验证项
+6. 建议的 Commit message
+7. 是否可以进入下一个 Sprint
 ```

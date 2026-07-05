@@ -3,11 +3,13 @@
 > Sync notice: This file is maintained by `ai-project-template` and may be overwritten when a derived project syncs template methodology.
 > Do not edit it directly in derived projects; propose reusable changes in `_proposals/` and upstream them to the template repository.
 
-**用途**：项目已成型（完成若干 Sprint / Phase）后，用 `ai/document-lifecycle-rules.md` 回溯审视整条 PLM 链路的合理性、可行性与一致性。
+**用途**：项目已成型（完成若干 Sprint / Phase）后，用 `ai/document-lifecycle-rules.md` 回溯审视整条 PLM 链路的合理性、可行性与一致性；派生项目同步模板方法论后，可作为同步后审计模式，判断旧方法生成内容是否需要按新方法回梳。
 
 **目的**：一次性产出全链路健康度报告，而不是分别跑生成、编码前验收、合规审查再拼接；定位追溯断点、横切传播残留、外部文档孤岛和阶段可行性缺口。
 
-**适用场景**：项目已成型，想用最新方法论回头审视「vision → 需求是否合理、需求 → 设计是否可行、设计 → 计划 → 验证是否自洽」。
+**与 docs-evaluation 的区别**：`docs-system-audit` 偏事后全链路回溯和同步后回梳，重点发现断点、漂移和规范基线缺口；`docs-evaluation` 偏阶段转换判断、单文档评估和正式评估留痕，输出 `Go / Conditional Go / No Go`。
+
+**适用场景**：项目已成型，想用最新方法论回头审视「vision → 需求是否合理、需求 → 设计是否可行、设计 → 计划 → 验证是否自洽」；或刚完成 `sync-methodology`，需要确认旧派生文档与最新方法论之间的兼容差异、规范基线缺口和项目事实问题。
 
 **不适用场景**：
 
@@ -24,7 +26,9 @@
 ```text
 请基于 ai/index.md 列出的规则文件（尤其 ai/document-lifecycle-rules.md）+ 本项目 docs/ 全部文档，做一次「文档体系全链路回溯审计」。
 
-适用场景：项目已成型（完成若干 Sprint / Phase），用最新方法论回头审视整条 PLM 链路的合理性、可行性与一致性。区别于 00（生成）/ 10（编码前验收）/ 03（合规审查），本提示词是「事后全链路回溯」。
+适用场景：项目已成型（完成若干 Sprint / Phase），用最新方法论回头审视整条 PLM 链路的合理性、可行性与一致性；或派生项目刚完成模板方法论同步，需要执行“同步后审计模式”。区别于 00（生成）/ 10（编码前验收）/ 19（阶段评估）/ 03（合规审查），本提示词是「事后全链路回溯」。
+
+若为同步后审计模式，请先读取最近一次 `sync-records/template-sync/` 同步运行记录；若不存在，再兼容读取旧路径 `docs/archive/template-sync/`。输出时单独列出“同步后回梳建议”，说明哪些是新规范带来的结构缺口，哪些是可接受兼容差异，哪些是项目事实风险。
 
 按以下维度逐段核查并输出：
 
@@ -45,9 +49,11 @@
    - 横切传播残留：权威源已变更但下游措辞、引用或阶段标签未同步。
    - 规范基线缺口：对照 `ai/doc-standards/00-09`（旧项目 fallback：`docs/_scaffold/00-09`）发现的章节 / 元信息 / 矩阵结构缺失；不代表业务事实错误。
    - 可行性 / 部署缺口：技术可行性、资源、调度、运行环境或验证入口未说明。
+   - 前端交互缺口：UI 型项目缺少 `docs/design/frontend-interaction.md` / `docs/design/*interaction*.md` 或豁免理由；页面流、状态、接口依赖、验收路径不可追溯，或把前端可见性误写为权限边界。
    - 本地续接状态：若存在 `NEXT-STEPS.md`、`.ai/session-handoff.md` 等本地便签，列出需同步的状态项；该类文件不是模板正式文档。
 3. 每个问题给出：类型、严重度、文件:行、权威源、建议修复方式、是否改业务事实。
 4. 回梳计划（按横切事实或高优先级断点分组）+ 审计新发现（可行性 / 部署缺口）+ 待人工确认项。
+5. 若为同步后审计模式，输出同步报告回写建议：审计摘要、需回梳文档、阻塞项、可延后项、下一步命令。
 
 旧派生文档兼容审计：不要求 `docs/00-09` 逐字重写成 `ai/doc-standards` 示例骨架，但必须检查并报告：同一文档内 H2/H3 标题编号风格是否统一、连续、无明显跳号或重复；是否存在必要但缺失的关键版块；若补充版块，必须保持原项目语义和历史事实，不得机械重写或删除旧内容。若历史项目使用 `F-*` 等自定义需求编号，不要强制全文重命名，优先建议新增 `U-ID ↔ 旧编号` 兼容矩阵以满足追溯闭合。
 

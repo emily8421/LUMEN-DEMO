@@ -53,6 +53,52 @@ mkdir -p "$(dirname "$TARGET")"
 DEFAULT_GIT_NAME="${GIT_AUTHOR_NAME:-Codex Local Init}"
 DEFAULT_GIT_EMAIL="${GIT_AUTHOR_EMAIL:-codex-local-init@example.invalid}"
 
+write_derived_project_workflow() {
+  mkdir -p "$TARGET/.github/workflows"
+  rm -f "$TARGET/.github/workflows/template-check.yml"
+  cat > "$TARGET/.github/workflows/project-check.yml" <<'EOF'
+name: Project Check
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  project-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check whitespace
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            git diff --check "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}"
+          elif [[ "${{ github.event.before }}" =~ ^0+$ ]]; then
+            git diff-tree --check --no-commit-id --root -r "${{ github.sha }}"
+          else
+            git diff --check "${{ github.event.before }}" "${{ github.sha }}"
+          fi
+
+      - name: Check template sync boundary
+        shell: bash
+        run: |
+          subject="$(git log -1 --format=%s)"
+          if [[ "$subject" =~ ^sync[[:space:]]template[[:space:]]v[0-9]+\.[0-9]+\.[0-9]+[[:space:]]from[[:space:]]ai-project-template$ ]]; then
+            bash scripts/check-derived-sync.sh HEAD
+          else
+            echo "Not a template sync commit; skip derived sync boundary check."
+          fi
+EOF
+}
+
 if [[ "$USE_LOCAL" -eq 1 ]]; then
   TEMPLATE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
   echo "==> 模板（本地）: $TEMPLATE_DIR（请确保已 git pull 到最新）"
@@ -85,6 +131,8 @@ TEMPLATE-UPGRADE-vX.Y.Z-patch.md  # 可选：具体 old→new 修改建议
 模板改动合并并下行同步后，应将本项目内已处理的提案移动到项目历史记录 / \`_archive/proposals/\` 或删除，避免继续作为待办重复执行。
 EOF
 
+write_derived_project_workflow
+
 cat > "$TARGET/README.md" <<EOF
 # $BASE
 
@@ -109,9 +157,9 @@ cat > "$TARGET/README.md" <<EOF
 
 1. 若尚未确认机器环境，先看 \`template-docs/env-setup.md\`，运行 \`powershell -ExecutionPolicy Bypass -File scripts/check-prereqs.ps1\`；缺必备工具时再执行 \`scripts/bootstrap-dev-env.ps1\` 或手工安装。
 2. 运行 \`powershell -ExecutionPolicy Bypass -File scripts/collect-env.ps1\` 生成 \`docs/env/local-env.md\`，补齐本机必须跑通的功能、允许降级 / Mock 项与服务器预案。
-3. 准备可审计上游输入：可先把产品愿景写入 \`docs/vision/product-vision.md\`，或把尚未归类的小工具 brief、PRD / SRS、任务单、现有系统说明放入 \`docs/inputs/\`。
+3. 准备可审计上游输入：把产品愿景草稿、小工具 brief、PRD / SRS、任务单、现有系统说明等原始材料统一先放入 \`docs/inputs/\`；若已经有成熟 \`docs/vision/product-vision.md\`，后续也要用输入评审复核来源和缺口。
 4. 初填 \`ai/project-rules.md\` 的项目名称、Phase1 目标、技术栈倾向、运行环境约束与项目形态裁剪；不确定项标“待确认”。
-5. 在 AI CLI 中说“评审输入材料”（或 \`/run review-inputs\`），让 AI 读取 \`ai/commands/\` 路由并评审输入材料；评审通过后说“生成文档体系”（或 \`/run generate-docs\`），多入口生成 / 补齐 \`docs/00-09\`、必要的 \`docs/design/\` 详细设计、项目 README 与 Sprint1；底层 Prompt 见 \`ai/prompts/docs/00-generate-or-complete-docs.md\`。
+5. 在 AI CLI 中说“评审输入材料”（或 \`/run review-inputs\`），让 AI 评估 Product Vision 就绪度；不足时先按 \`docs/inputs/input-review-report.md\` 和最小补充清单补齐，复评通过后再说“生成文档体系”（或 \`/run generate-docs\`），先生成 / 更新 \`docs/vision/product-vision.md\`，再多入口生成 / 补齐 \`docs/00-09\`、必要的 \`docs/design/\` 详细设计、项目 README 与 Sprint1；底层 Prompt 见 \`ai/prompts/docs/00-generate-or-complete-docs.md\`。
 6. 人工确认 \`docs/03-prd.md\` §3 阶段路线图、交付物形态和 \`docs/05-tech-spec.md\` 的本机 Demo 可行性；确认后再说“执行当前 Sprint”（或 \`/run run-dev-task\`）。
 
 > 纯本地烟测可以暂时不安装 AI CLI；真正开始 AI 协作开发前，至少准备并登录一种 AI CLI，安装顺序见 \`template-docs/ai-cli-setup.md\`。
@@ -137,8 +185,8 @@ cat > "$TARGET/README.md" <<EOF
 ## 文档入口
 
 - \`docs/00-scenario.md\`：场景
-- \`docs/vision/product-vision.md\`：产品愿景叙事源文档
-- \`docs/inputs/\`：尚未归类、尚未转成 00-09 的原始输入包
+- \`docs/inputs/\`：原始输入统一入口，可放愿景草稿、PRD / SRS、brief、任务说明、现有系统说明和评估报告
+- \`docs/vision/product-vision.md\`：由输入评审通过后生成 / 更新的产品愿景叙事源文档
 - \`docs/01-user-requirements.md\`：用户需求
 - \`docs/02-srs.md\`：软件需求规格
 - \`docs/03-prd.md\`：产品需求与阶段路线图
@@ -227,3 +275,4 @@ fi
 echo "后续："
 echo "  cd \"$TARGET\""
 echo "  填写 docs/00-scenario.md ~ 02-srs.md，运行 scripts/collect-env.ps1，再按 README 快速开始推进"
+echo "  GitHub Actions 已使用派生项目版 .github/workflows/project-check.yml；普通 PR 不运行模板仓 check-template"

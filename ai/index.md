@@ -7,6 +7,7 @@
 
 - ai/global-rules.md
 - ai/document-lifecycle-rules.md
+- ai/implementation-lifecycle-rules.md
 - ai/session-rules.md
 - ai/commands/README.md
 - ai/project-rules.md

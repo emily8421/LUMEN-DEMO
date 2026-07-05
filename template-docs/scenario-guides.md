@@ -21,7 +21,7 @@
 | 本地有模板仓库或派生项目 | ✅ 完整可用——AI 能读本文件，按场景剧本引导 | 直接说场景意图或 `/run scenario` |
 | 只有仓库链接、本地零资产 | ⚠️ AI 读不到本文件——A0 冷启动需先手动获取资产 | 手动 `git clone https://github.com/emily8421/ai-project-template.git`（拿模板与脚本），再 `bash scripts/new-project.sh <项目名>` 派生；或加入已有派生 `git clone <派生仓库>`；**拿到本地项目后才进入 AI 场景引导** |
 
-> 也就是说：**A0 冷启动是唯一「AI 无法读本文件就要起步」的场景**，靠手动或 AI 通用引导完成资产获取；一旦本地有了项目（含本文件），A1–A15、C1–C8 才进入 AI 场景引导。
+> 也就是说：**A0 冷启动是唯一「AI 无法读本文件就要起步」的场景**，靠手动或 AI 通用引导完成资产获取；一旦本地有了项目（含本文件），M0/M1、A1–A16、C1–C8 才进入 AI 场景引导。
 
 ## 1. 角色
 
@@ -41,7 +41,7 @@ AI 收到场景意图后，**第一步判断 cwd 状态再路由**——「已�
 |---|---|---|
 | 零本地资产 | 无 `.git` / 空目录 / 用户明确「只有仓库链接」 | **无论目标是什么，先走 A0**，再衔接 |
 | 在模板仓库 | 有 `template-sync.json` + `_proposals/` + 模板标识 `README` | → **A2 新建派生** 或 **C 维护场景** |
-| 在派生项目 | 有 `VERSION` + `ai/` + `docs/`，但非模板本体 | → **A3–A14** |
+| 在派生项目 | 有 `VERSION` + `ai/` + `docs/`，但非模板本体 | → **A3–A16** |
 
 零资产时不得跳过 A0。
 
@@ -90,7 +90,7 @@ AI 识别场景后，**先输出引导计划给用户看（用人话 + 为什么
 
 **场景速查索引**（按角色；完整剧本见下方各场景条目）
 
-**A 使用者**（A0–A14）
+**A 使用者**（A0–A16）
 
 | 场景 | 触发说法 | 一句话 |
 |---|---|---|
@@ -98,11 +98,11 @@ AI 识别场景后，**先输出引导计划给用户看（用人话 + 为什么
 | A1 环境准备 | 「检查环境」「装工具」「第一次用」 | check-prereqs + bootstrap + 装 AI CLI |
 | A2 新建派生项目 | 「新建项目」「从模板创建项目」 | new-project.sh 派生 + 建远端 |
 | A3 新项目第一次运行 | 「第一次运行」「采集环境」 | collect-env + 初填 project-rules |
-| A4 准备输入材料 | 「准备输入」「写愿景」「整理需求」 | 整理愿景 / PRD / brief 归位 |
-| A5 评审输入材料 | 「评审输入」「材料够吗」「判断入口模式」 | 判入口模式 + 文档剖面 + 缺口 |
-| A6 生成文档骨架 | 「生成文档」「铺 00-09」 | generate-docs 一键铺骨架 |
+| A4 准备输入材料 | 「准备输入」「写愿景」「整理需求」 | 原始材料统一放入 `docs/inputs/` |
+| A5 评审输入材料 | 「评审输入」「材料够吗」「判断入口模式」 | Product Vision 就绪评估 + 缺口补齐 |
+| A6 生成文档骨架 | 「生成文档」「铺 00-09」 | 先生成 product-vision，再铺 docs 骨架 |
 | A7 PLM 文档精修 | 「打磨文档」「精修 02-srs」「补 ER 图」 | 按 PLM 阶段精修（见 §6） |
-| A8 文档体系审计 | 「审计文档」「PLM 链路检查」「开发前检查」 | docs-system-audit 出报告 |
+| A8 文档评估 / 审计 / 检查 | 「评估文档」「审计文档」「PLM 链路检查」「开发前检查」 | docs-evaluation 判阶段，docs-system-audit 找问题，docs-checklist 拦编码 |
 | A9 阶段规划与路线图 | 「规划阶段」「Demo 做什么」「排路线图」 | 分阶段 + 路线图 |
 | A10 执行 Sprint / 任务 | 「执行 Sprint」「做这个任务」「开始编码」 | 编码 + 合规审查 + 提交 |
 | A11 修 Bug | 「修 Bug」「修复缺陷」「这个报错」 | 定位根因 + 小范围修复 |
@@ -110,25 +110,26 @@ AI 识别场景后，**先输出引导计划给用户看（用人话 + 为什么
 | A13 同步模板到派生项目 | 「同步模板」「更新方法论」 | sync-template 下行同步 |
 | A14 Phase 升级 | 「升级 Phase」「进入下一阶段」「Phase2」 | 指针后移 + 原位补设计 |
 | A15 回流提案 / 反馈到模板 | 「提交提案给维护者」「回流模板」「反馈使用问题」 | 派生→模板开 issue（submit-proposal / submit-feedback，免 fork） |
+| A16 会话续接 / 中断恢复 | 「读取续接点」「继续上次」「换了 CLI 接着做」 | 跨 CLI 统一恢复入口：Git 客观事实优先，handoff 补充，被动中断以 Git 为锚 |
 
 **C 维护者**（C1–C8）
 
 | 场景 | 触发说法 | 一句话 |
 |---|---|---|
-| C1 处理 `_proposals` 提案 | 「处理提案」「汇总模板优化」 | 读提案 + 去重 / 冲突分析 + 落地 |
+| C1 处理提案收件箱 | 「处理提案」「汇总模板优化」「处理 issue 提案」 | 读 `_proposals` + issue 提案，去重 / 冲突分析 + 落地 |
 | C2 版本 bump 与发布 | 「发版本」「bump 版本」「打 tag」 | VERSION / CHANGELOG + check + tag / Release |
 | C3 模板自检 | 「自检模板」「跑 check-template」 | check-template 全过 |
 | C4 维护分支→PR→合并→归档 | 「提 PR」「合并分支」「走 PR 流程」 | 切分支 + 实现 + PR + 合并 + 归档 |
 | C5 维护下行同步机制 | 「改同步清单」「加同步文件」「改 sync 脚本」 | 改 template-sync.json / 脚本 + 加断言 |
-| C6 派生同步验收 | 「验收派生同步」「同步报告」 | check-derived-sync + 运行记录 + 回流 |
-| C7 设计 / 新增模板能力 | 「加新规则」「加 command/prompt」「加脚本」 | 提案 + 落地 + 断言 |
+| C6 派生同步验收（跨仓） | 「验收派生同步」「同步报告」 | 在派生项目 check-derived-sync + 运行记录 + 回流 |
+| C7 模板能力设计流程 | 「加新规则」「加 command/prompt」「加脚本」 | 提案 → 影响面 → 同步清单 → 自检断言 → PR → 发布 |
 | C8 批量同步所有派生项目 | 「批量同步」「一次更新所有派生」「sync all derived」 | 发版后一条指令更新父目录下所有派生（`sync-all-derived.sh`） |
 
-**元场景**：M1 用场景引导做事——任何「我想 <做某事>」、`/run scenario`、新手首次打开 AI CLI 的统一入口。
+**元场景**：M0 帮助 / 能力索引 / 角色选择；M1 用场景引导做事——任何「我想 <做某事>」、`/run scenario`、新手首次打开 AI CLI 的统一入口。
 
 ---
 
-### A 使用者（A0–A15）
+### A 使用者（A0–A16）
 
 #### A0 冷启动（只有仓库链接）
 - **说明**：你只有模板或项目的仓库链接、本地还没任何文件夹时，从这里起步。⚠️ 此时本地还没有本文件，AI 无法按场景剧本引导——需先手动 `git clone` / `bash new-project.sh`（或让 AI 凭通用知识指导），拿到本地项目后才进入 AI 场景引导。
@@ -191,54 +192,57 @@ AI 识别场景后，**先输出引导计划给用户看（用人话 + 为什么
 - **cmd 指针**：`README` 快速开始 + `git-guide.md` §2.3
 
 #### A4 准备输入材料 ◐
-- **说明**：把你想做的项目整理成可审计的输入（愿景/PRD/brief），按你手上已有什么分层引导。
+- **说明**：把你想做的项目整理成可审计的原始输入；不要求先写完美愿景，统一先放 `docs/inputs/`。
 - **触发**：「准备输入」「我该提供什么」「写愿景」「整理需求」
 - **cwd·前置**：在派生项目 · project-rules 已初填
 
 | # | 做什么 | 为什么 | 机器执行 |
 |---|---|---|---|
 | 1 | 看你手上已有什么材料 | 分层引导，避免对老用户重复要求、对新用户门槛太高 | 判断已有材料 |
-| 2 | 有完整文档→帮你归位 | 按分区规则归位才能被评审和追溯 | 放 `docs/vision/`·`docs/inputs/`·`docs/decisions/` |
-| 3 | 只有零散想法→给你最小模板填关键字段 | 最小字段就能起步，不必一次写完美 | 填 `docs/inputs/initial-brief.md`（目标用户/核心场景/输入输出/验收/非目标） |
-| 4 | 准备好转评审 | 材料要经评审判定入口模式和缺口 | 转 A5 |
+| 2 | 有完整文档→先作为输入包归位 | 普通用户只记一个投递入口，后续由 AI 评审分类 | 放 `docs/inputs/`；决策/调研/会议材料可在评审后转 `docs/decisions/`·`docs/research/`·`docs/meetings/` |
+| 3 | 已有成熟愿景→兼容读取 | 老项目不强制迁移，但要保留来源锚点 | 可保留 `docs/vision/product-vision.md`，并在 A5 复评 |
+| 4 | 只有零散想法或空输入→给你最小清单 | 最小字段就能起步，不必一次写完美 | 填 `docs/inputs/initial-brief.md`（目标用户/问题价值/核心场景/能力/输入输出/验收/非目标） |
+| 5 | 准备好转评审 | 材料要经愿景就绪评估判定缺口 | 转 A5 |
 
-- **完成判据**：`docs/inputs/` 或 `docs/vision/` 至少有一份可审计输入
+- **完成判据**：`docs/inputs/` 有原始输入；或已有 `docs/vision/product-vision.md` 并准备在 A5 复评
 - **下一步**：A5
 - **cmd 指针**：`ai/document-lifecycle-rules.md` §3 多入口策略
 - ◐ 待补：`docs/inputs/initial-brief.md` 最小模板（放 `_examples/` 供引用）
 
 #### A5 评审输入材料
-- **说明**：让 AI 评审你的输入够不够、属于哪种起步方式、还缺什么。
-- **触发**：「评审输入」「这些材料够吗」「判断入口模式」
-- **cwd·前置**：在派生项目 · 已有输入材料
+- **说明**：让 AI 评审输入是否足以生成 product-vision；不足时给出评估报告和最小补充清单，补齐后复评。
+- **触发**：「评审输入」「这些材料够吗」「判断入口模式」「能生成愿景吗」「inputs 为空怎么办」
+- **cwd·前置**：在派生项目 · 已有输入材料，或明确需要从空输入开始补齐
 
 | # | 做什么 | 为什么 | 机器执行 |
 |---|---|---|---|
-| 1 | 评审材料够不够、属于哪种起步方式 | 不同入口（愿景/PRD/小工具）走不同文档剖面 | `review-inputs`(01) |
-| 2 | 告诉你还缺什么 | 让你明确补哪些，而不是凭感觉 | 输出入口模式 + 文档剖面 + 缺口清单 |
-| 3 | 不够回 A4 补，够了进 A6 | 保证文档体系建立在充分输入上 | 不足回 A4 / 足进 A6 |
+| 1 | 盘点 `docs/inputs/` 和已有愿景 | 原始材料可能混杂，先确认来源和冲突 | `review-inputs`(01) |
+| 2 | 做 Product Vision 就绪评估 | 先判断能否形成完整愿景，再谈 00-09 | Ready / Conditionally Ready / Not Ready |
+| 3 | 告诉你还缺什么 | 让你明确补哪些，而不是凭感觉 | 输出缺口矩阵 + AI 建议与依据 + 最小补充清单 |
+| 4 | 不够回 A4 补并复评，够了进 A6 | 保证文档体系建立在充分输入上 | 不足写 `docs/inputs/input-review-report.md` 建议 / 足进 A6 |
 
-- **完成判据**：入口模式与文档剖面已判定 · 追溯来源已锚定
+- **完成判据**：Product Vision 就绪度已判定 · 入口模式与文档剖面已判定 · 追溯来源已锚定
 - **下一步**：A6
 - **cmd 指针**：`ai/prompts/docs/01-review-inputs.md`
 
 #### A6 生成文档骨架
-- **说明**：根据评审结果，一键铺出 00-09 工程文档骨架（细节留给 A7 打磨）。
-- **触发**：「生成文档」「铺文档骨架」「生成 00-09」
-- **cwd·前置**：在派生项目 · 输入已评审通过
+- **说明**：根据评审结果，先生成 / 更新 product-vision，再铺出 00-09 工程文档骨架（细节留给 A7 打磨）。
+- **触发**：「生成文档」「铺文档骨架」「生成 00-09」「生成 product-vision」
+- **cwd·前置**：在派生项目 · 输入已评审通过，Product Vision 就绪度为 Ready 或 Conditionally Ready
 
 | # | 做什么 | 为什么 | 机器执行 |
 |---|---|---|---|
-| 1 | 一键铺出工程文档骨架 | 先铺完整框架，细节后续打磨，符合积累式演进 | `generate-docs`(00) 铺 `docs/00-09`（按剖面裁剪 06/07）+ `docs/design/` + README + Sprint1 雏形 |
-| 2 | 提醒骨架要靠 A7 打磨 | 一键生成会有缺口/漂移，必须逐文档精修 | 转 A7 |
+| 1 | 生成 / 更新 product-vision | 让 00-09 有完整愿景锚点和来源链 | `generate-docs`(00) 写 `docs/vision/product-vision.md` |
+| 2 | 铺出工程文档骨架 | 先铺完整框架，细节后续打磨，符合积累式演进 | `generate-docs`(00) 铺 `docs/00-09`（按剖面裁剪 06/07）+ `docs/design/` + README + Sprint1 雏形 |
+| 3 | 提醒骨架要靠 A7 打磨 | 一键生成会有缺口/漂移，必须逐文档精修 | 转 A7 |
 
-- **完成判据**：00-09 骨架齐全 · REQ 全覆盖 · 阶段标签到位
+- **完成判据**：product-vision 已有来源锚点 · 00-09 骨架齐全 · REQ 全覆盖 · 阶段标签到位
 - **下一步**：A7
 - **cmd 指针**：`ai/prompts/docs/00-generate-or-complete-docs.md`
 
 #### A7 PLM 文档精修（转换子场景集，见 §6）
-- **说明**：按 PLM 阶段把骨架打磨成详细设计，防止一键生成有缺口或漂移。
-- **触发**：「打磨文档」「精修 02-srs」「需求转设计」「补 ER 图」
+- **说明**：按 PLM 阶段把骨架打磨成详细设计，防止一键生成有缺口或漂移；UI 型项目可在此补前端交互设计。
+- **触发**：「打磨文档」「精修 02-srs」「需求转设计」「补 ER 图」「补前端交互设计」「补 UI 设计」「整理页面设计」
 - **cwd·前置**：在派生项目 · 已有 00-09 骨架
 
 | # | 做什么 | 为什么 | 机器执行 |
@@ -250,36 +254,52 @@ AI 识别场景后，**先输出引导计划给用户看（用人话 + 为什么
 - **下一步**：A8
 - **cmd 指针**：`ai/prompts/docs/04-edit-single-doc.md`
 
-#### A8 文档体系审计
-- **说明**：编码前审计整条文档链，检查断点、越界、漂移（先出报告不改文件）。
-- **触发**：「审计文档」「PLM 链路检查」「开发前检查」
+#### A8 文档评估 / 审计 / 检查
+- **说明**：编码前或阶段转换前判断文档是否能继续往下走；评估给 Go / Conditional Go / No Go，审计找断点，checklist 做最后拦截。
+- **触发**：「评估文档」「评估能不能进入下一阶段」「审计文档」「PLM 链路检查」「开发前检查」
 - **cwd·前置**：在派生项目 · 文档基本成型
 
 | # | 做什么 | 为什么 | 机器执行 |
 |---|---|---|---|
-| 1 | 回溯审计整条文档链 | 检查有没有断点/越界，对照规范基线 | `docs-system-audit`(16)（对照 `ai/doc-standards`，先出报告不改文件） |
-| 2 | 开发前过一遍 checklist | 编码前最后一道边界复查 | `docs-checklist`(10) |
-| 3 | 把问题清单给你 | 先看清问题再决定改，避免边审边改乱套 | 输出报告（悬空 ID / 越界 / 漂移） |
+| 1 | 做阶段或单文档评估 | 判断能否进入下一阶段，并留下 Go / Conditional Go / No Go 依据 | `docs-evaluation`(19)，可评整体 / E1-E6 / 单文档 |
+| 2 | 回溯审计整条文档链 | 检查有没有断点/越界，对照规范基线 | `docs-system-audit`(16)（对照 `ai/doc-standards`，先出报告不改文件） |
+| 3 | 开发前过一遍 checklist | 编码前最后一道边界复查 | `docs-checklist`(10) |
+| 4 | 把结论和问题清单给你 | 先看清问题再决定改，避免边审边改乱套 | 输出评估 / 审计报告（Go 结论、悬空 ID / 越界 / 漂移） |
 
-- **完成判据**：审计报告无阻断项 · 人工确认 03 §3 路线图 + 05 本机可行性
+- **完成判据**：评估结论为 Go 或 Conditional Go 且条件已处理 / 接受 · 审计报告无阻断项 · 人工确认 03 §3 路线图 + 05 本机可行性
 - **下一步**：A9
-- **cmd 指针**：`ai/prompts/review/16-docs-system-audit.md` + `ai/prompts/review/10-docs-checklist.md`
+- **cmd 指针**：`ai/prompts/review/19-docs-evaluation.md` + `ai/prompts/review/16-docs-system-audit.md` + `ai/prompts/review/10-docs-checklist.md`
 
-#### A9 阶段规划与路线图 ◐
+#### A8.5 技术路线与环境支撑评估
+- **说明**：真实运行依赖项目在生成 / 修订 05 或进入首个相关 Sprint 前，评估本机 / 团队环境是否支撑技术路线。
+- **触发**：「技术环境评估」「技术路线评估」「评估依赖能不能装」「评估本机能不能跑」「依赖安装验证」「最小运行验证」
+- **cwd·前置**：在派生项目 · 已有或准备生成 `docs/env/local-env.md`、`docs/05-tech-spec.md`
+
+| # | 做什么 | 为什么 | 机器执行 |
+|---|---|---|---|
+| 1 | 区分采集和评估 | `collect-env` 只记录事实，不证明依赖能跑 | 读取 `docs/env/local-env.md` |
+| 2 | 盘点真实运行依赖 | 找出 Python / Node / Docker / DB / 模型 / 外部 API 风险 | `tech-env-evaluation`(20) |
+| 3 | 输出验证计划和 Go 结论 | 安装 / 导入 / 最小运行需确认后执行 | `docs/research/YYYY-MM-DD-tech-env-evaluation-<scope>.md`（确认后落盘） |
+| 4 | 回写 05 / 09 建议 | 评估结论要驱动技术方案和验证计划 | `edit-single-doc`(04) |
+
+- **完成判据**：结论为 Go / Conditional Go 且条件明确 · 05/09 修改建议清晰 · 跳过验证时有风险和补做时点
+- **下一步**：A9 / A10
+- **cmd 指针**：`ai/prompts/review/20-tech-env-evaluation.md`
+
+#### A9 阶段规划与路线图
 - **说明**：基于完整设计，规划怎么分阶段实现（先 Demo 可演示 → MVP 可用 → 完整产品）。
 - **触发**：「规划阶段」「Demo 做什么」「划分 MVP」「排路线图」
 - **cwd·前置**：在派生项目 · 文档体系已审计
 
 | # | 做什么 | 为什么 | 机器执行 |
 |---|---|---|---|
-| 1 | 建议你怎么分阶段实现 | 完整设计要拆成 Demo/MVP/产品 才能增量实现 | 评审 `03/04/05` + `global-rules §8` 阶段双维度 |
-| 2 | 告诉你哪些功能进第一阶段 | P1 聚焦核心价值，避免一次想做太多 | 建议功能范围（P1/P2/愿景）× 交付物（Demo/MVP/产品）划分 |
-| 3 | 把划分写进路线图和计划 | 阶段划分要落到权威文档才有效 | 落实 `03-prd.md` §3 + `08-dev-plan.md` Sprint + `project-rules §1` |
+| 1 | 核对当前 Phase 边界 | 防止把愿景或后续阶段当成本阶段任务 | 读 `implementation-lifecycle-rules` + `03/04/05/08/09` |
+| 2 | 规划 Sprint / Task / 验证闭环 | 计划必须可实现、可验证、可验收 | `ai/prompts/planning/19-plan-phases-and-sprints.md` |
+| 3 | 把划分写进路线图和计划 | 阶段划分要落到权威文档才有效 | 输出 `03-prd.md` §3、`08-dev-plan.md`、`09-verification.md`、`project-rules §1` 修订草稿 |
 
-- **完成判据**：03 §3 标注功能范围+交付物形态+进入/退出标准 · 08 拆出 P1 Sprint
+- **完成判据**：03 §3 标注功能范围+交付物形态+进入/退出标准 · 08 拆出 P1 Sprint · 09 有测试等级 / 验证包
 - **下一步**：A10
-- **cmd 指针**：`ai/global-rules.md` §8 + `ai/prompts/planning/08-phase-upgrade.md`（初次划分参考）
-- ◐ 待补：阶段规划专门引导 prompt
+- **cmd 指针**：`ai/implementation-lifecycle-rules.md` + `ai/prompts/planning/19-plan-phases-and-sprints.md`
 
 #### A10 执行 Sprint / 任务（编码 + 合规审查 + 提交）
 - **说明**：实现一个任务，做实现合规审查并提交（可选 PR）。
@@ -288,12 +308,12 @@ AI 识别场景后，**先输出引导计划给用户看（用人话 + 为什么
 
 | # | 做什么 | 为什么 | 机器执行 |
 |---|---|---|---|
-| 1 | 动手前再复查文档和边界 | 确保编码依据充分、不越界 | `docs-checklist`(10) |
-| 2 | 实现这个任务（小范围） | 一功能一任务一提交，便于验收 | `run-dev-task`(02)（限 1–3 文件） |
-| 3 | 审查实现是否符合设计、有没有越界 | 防止实现偏离设计或越出本阶段 | `project-review`(03)（`global-rules §4` 六维度 + 边界审查） |
+| 1 | 动手前再复查文档、Phase、验证包和技术环境门禁 | 确保编码依据充分、不越界，真实运行依赖已评估 | `docs-checklist`(10) + `implementation-lifecycle-rules` + 必要时 `tech-env-evaluation`(20) |
+| 2 | 实现这个任务（小范围） | 一功能一任务一提交，便于验收 | `run-dev-task`(02)（关联 REQ / Sprint / Task / Test Case，限 1–3 文件） |
+| 3 | 审查实现是否符合设计、有没有越界 | 防止实现偏离设计或越出本阶段 | `project-review`(03)（六维度 + Phase 边界 + 验证闭环） |
 | 4 | 生成提交信息并提交（可选 PR） | 完成式提交信息 + PR 便于审查合并 | `commit-message`(06) + 可选 PR（`git-guide §3.1`） |
 
-- **完成判据**：任务验收标准达成 · 合规审查无越界 · 提交完成
+- **完成判据**：任务验收标准达成 · 关联 Test Case 已验证 · 合规审查无越界 · 提交完成
 - **下一步**：A11（修 Bug）/ A12（验证）
 - **cmd 指针**：`ai/prompts/dev/02-run-task.md` + `git-guide.md` §3
 
@@ -306,7 +326,7 @@ AI 识别场景后，**先输出引导计划给用户看（用人话 + 为什么
 |---|---|---|---|
 | 1 | 定位 Bug 根因 | 治根不治标，避免反复 | `fix-bug`(05) |
 | 2 | 在小范围内修复 | 限定范围减少回归风险 | 修复（限 1–3 文件） |
-| 3 | 提交并验证 | 确认 Bug 消除且无新问题 | `commit-message`(06) + 回归验证 |
+| 3 | 提交并验证 | 确认 Bug 消除且无新问题 | `commit-message`(06) + `docs/09-verification.md` 缺陷与回归记录 |
 
 - **完成判据**：Bug 复现路径消除 · 无回归
 - **下一步**：A12（验证）/ A10（继续 Sprint）
@@ -319,26 +339,29 @@ AI 识别场景后，**先输出引导计划给用户看（用人话 + 为什么
 
 | # | 做什么 | 为什么 | 机器执行 |
 |---|---|---|---|
-| 1 | 核对每个需求有没有对应用例、能不能跑通 | 保证每个需求都有验证且能过 | 按 `docs/09-verification.md` 跑 REQ→用例追溯 + 资源验证 |
-| 2 | 实际运行测试 | 文档验证不等于实际能跑 | 执行项目测试命令 |
-| 3 | 出 Sprint 验收总结并留痕 | 留痕才能追溯阶段完成度 | `sprint-summary`(09) → 记到 09 / Sprint 验收 |
+| 1 | 核对每个需求有没有对应用例、能不能跑通 | 保证每个需求都有验证且能过 | 按 `docs/09-verification.md` 跑 REQ→用例追溯 + 测试等级矩阵 + 资源验证 |
+| 2 | 实际运行测试并收集证据 | 文档验证不等于实际能跑 | 执行项目测试命令 / 人工步骤，记录命令、日志、截图或结论 |
+| 3 | 出 Sprint 验收总结并留痕 | 留痕才能追溯阶段完成度 | `sprint-summary`(09) → 写入 09 的 Sprint 验收包 / 验收记录 |
 
-- **完成判据**：当前阶段 REQ 全部可验证通过 · 验收记录留痕
+- **完成判据**：当前阶段 REQ 全部可验证通过 · Sprint 验收包完整 · 风险 / 未验证项留痕
 - **下一步**：A13（同步）/ A14（Phase 升级）
 - **cmd 指针**：`ai/prompts/dev/09-sprint-summary.md`
 
 #### A13 同步模板到派生项目
-- **说明**：把模板方法论的更新拉到你的派生项目（不回传）。
+- **说明**：把模板方法论的更新拉到你的派生项目（不回传），并完成同步后的边界验证、整理、文档审计、项目验证建议和同步报告留痕。
 - **触发**：「同步模板」「更新方法论」「sync template」
 - **cwd·前置**：在派生项目 · 有 `scripts/sync-template.ps1` + `template-sync.json`
 
 | # | 做什么 | 为什么 | 机器执行 |
 |---|---|---|---|
-| 1 | 预览模板有哪些更新、会不会动项目文件 | 先确认安全再改，避免误覆盖 | `sync-methodology`(12) `--dry-run` |
-| 2 | 确认安全后应用更新 | 拿到模板方法论更新 | `--commit` |
-| 3 | 同步后整理、审计、边界检查 | 确保同步后项目一致、边界没破 | `post-sync-cleanup`(15) + `docs-system-audit`(16) + `scripts/check-derived-sync.ps1` |
+| 1 | 先输出标准闭环计划 | 用户知道同步不只是拉文件，还要整理、审计、验证、留痕 | `sync-methodology`(12) |
+| 2 | 预览模板有哪些更新、会不会动项目文件 | 先确认安全再改，避免误覆盖 | `--dry-run` |
+| 3 | 确认安全后应用更新并做边界验证 | 拿到模板方法论更新，确认没误覆盖项目件 | `--commit` + `scripts/check-derived-sync.ps1` |
+| 4 | 同步后整理项目 | README、`project-rules`、docs 分区等项目事实不会被同步脚本自动迁移 | `post-sync-cleanup`(15)，先出迁移计划 |
+| 5 | 文档体系同步后审计 | 检查旧方法生成的 `docs/00-09` 是否需按新规范回梳 | `docs-system-audit`(16)，同步后审计模式 |
+| 6 | 给项目验证建议并形成同步报告 | 留下命令、结果、风险、未验证项和后续任务 | `template-docs/derived-sync-report-template.md` → `sync-records/template-sync/` |
 
-- **完成判据**：同步清单文件更新 · 项目专属文件未被覆盖 · `check-derived-sync` 通过
+- **完成判据**：同步清单文件更新 · 项目专属文件未被覆盖 · `check-derived-sync` 通过 · 已输出整理 / 审计摘要 · 已给项目验证建议 · 已形成或更新同步报告
 - **下一步**：A14 / 回 A10 继续
 - **cmd 指针**：`git-guide.md` §5 + `ai/prompts/maintainers/12-sync-template.md`
 
@@ -374,33 +397,52 @@ AI 识别场景后，**先输出引导计划给用户看（用人话 + 为什么
 - **下一步**：等模板维护者处理（C1）；模板新版下行同步后（A13）拿到结果
 - **cmd 指针**：`ai/commands/submit-proposal.md` / `submit-feedback.md`
 
+#### A16 会话续接 / 中断恢复（跨 CLI 接手）
+- **说明**：窗口中断、重新打开、或某个 AI CLI 撞 token / 时间上限被迫换另一个 CLI 接手时，恢复上次工作上下文。这是跨 Claude / Codex / Cursor 等多 CLI 的统一恢复入口——续接文件 + Git 是公共状态，换 CLI 不丢上下文。
+- **触发**：「读取续接点」「继续上次」「接着干」「我上次做到哪了」「换了 CLI 接着做」「恢复上下文」
+- **cwd·前置**：在已有项目（模板或派生）· 可能有 `.ai/session-handoff.md` / `NEXT-STEPS.md`
+
+| # | 做什么 | 为什么 | 机器执行 |
+|---|---|---|---|
+| 1 | 先取 Git 客观事实 | 客观事实永远最新，先看它不被过时记录误导 | `git status --short --branch` + `git log --oneline -8` + `git stash list` |
+| 2 | 再读续接文件 | handoff 给意图 / 计划 / 待确认项 | 读 `.ai/session-handoff.md`（无则 `NEXT-STEPS.md`） |
+| 3 | 交叉核对，判主动 / 被动中断 | 被动中断（含跨 CLI）handoff 可能过时，必须以 Git 为锚 | 按 `session-rules §1` 裁决优先级链 |
+| 4 | 向用户简述恢复状态 | 让用户确认上下文重建对不对 | 输出「当前任务 / 已完成 / 下一步 / 待确认」，冲突先报告后动 |
+
+- **完成判据**：已向用户简述恢复状态 · 冲突已报告 · 用户已确认下一步
+- **下一步**：回到被中断的场景（A10 编码 / A7 文档 / C4 PR 等），或开始新任务
+- **cmd 指针**：`ai/session-rules.md` §1 裁决优先级 + §2 恢复流程
+
 ### C 维护者（C1–C8）
 
 > cwd：均在 `ai-project-template` 模板仓库。
 
-#### C1 处理 `_proposals` 提案
-- **说明**：汇总和处理模板优化提案，落地或决议归档。
-- **触发**：「处理提案」「汇总模板优化」「评审 TEMPLATE-UPGRADE」
+#### C1 处理提案收件箱
+- **说明**：汇总和处理模板优化提案，来源包括 `_proposals/TEMPLATE-UPGRADE-*.md`、带 `proposal` / `feedback` 标签的 GitHub issue，以及标题为 `TEMPLATE-UPGRADE:` 的 open issue；处理结果落地、关闭 issue 或决议归档。
+- **触发**：「处理提案」「汇总模板优化」「评审 TEMPLATE-UPGRADE」「处理 issue 提案」
 
 | # | 做什么 | 为什么 | 机器执行 |
 |---|---|---|---|
-| 1 | 读全部提案，做去重/冲突/依赖分析 | 看清才能合并或分阶段 | `template-proposal-summary`(11) |
-| 2 | 切维护分支，按计划辅助修改 | 模板改动必须走分支 PR | 切分支 + 落地（规则/脚本/文档） |
-| 3 | 开 PR、评审、合并后归档 | main 受保护禁直推；已处理提案要归档 | `gh pr create` → 评审合并 → 移到 `_archive/proposals/` |
+| 1 | 读全部本地提案和 issue 提案 | issue 是派生免 fork 回流入口，不能只看 `_proposals` | `template-proposal-summary`(11) + `gh issue list` |
+| 2 | 做 triage：补标签、去项目化、去重/冲突/依赖分析 | 避免漏掉未打标签的 `TEMPLATE-UPGRADE:` issue，也避免重复落地 | 标签 `proposal` / `feedback` + 分阶段计划 |
+| 3 | 切维护分支，按计划辅助修改 | 模板改动必须走分支 PR | 切分支 + 落地（规则/脚本/文档） |
+| 4 | 开 PR、评审、合并后归档 / 关闭 issue | main 受保护禁直推；已处理提案要有收口记录 | `gh pr create` → 评审合并 → 移到 `_archive/proposals/` / `gh issue close` |
 
-- **完成判据**：提案落地或决议留存 · 已处理提案归档
+- **完成判据**：提案落地或决议留存 · 已处理本地提案归档 · 已处理 issue 关闭或标记后续状态
 - **下一步**：C2 / C3
 - **cmd 指针**：`CONTRIBUTING.md` + `git-guide.md` §3-4
 
 #### C2 版本 bump 与发布 ◐
 - **说明**：发布模板新版本——改版本号、跑自检、打 tag、发 Release。
 - **触发**：「发版本」「bump 版本」「打 tag」
+- **适用 / 不适用**：适用于模板改动 PR 合并后的模板版本发布；不适用于派生项目业务发版。
 
 | # | 做什么 | 为什么 | 机器执行 |
 |---|---|---|---|
-| 1 | 按 checklist 改版本号和 CHANGELOG | 版本是同步的事实源，必须记录 | 改 `VERSION` + `CHANGELOG.md`（按 `MAINTAINERS` checklist） |
-| 2 | 跑自检 | 确保文档没滞后于脚本 | `scripts/check-template.ps1` 防滞后断言 |
-| 3 | 打 tag 并发 GitHub Release | tag 是版本锚点，Release 给使用者看 | `git tag vX.Y.Z` + 发 Release |
+| 1 | 判断版本影响 | PATCH / MINOR / MAJOR 决定同步和回归要求 | 读 `MAINTAINERS.md` + `CONTRIBUTING.md` |
+| 2 | 按 checklist 改版本号和 CHANGELOG | 版本是同步的事实源，必须记录 | 改 `VERSION` + `CHANGELOG.md`（按 `MAINTAINERS` checklist） |
+| 3 | 跑自检 / 回归 | 确保文档没滞后于脚本 | `scripts/check-template.ps1`；MINOR / MAJOR 跑 e2e checklist |
+| 4 | 打 tag 并发 GitHub Release | tag 是版本锚点，Release 给使用者看 | `git tag vX.Y.Z` + 发 Release |
 
 - **完成判据**：VERSION/CHANGELOG/tag/Release 一致 · check-template 通过
 - **下一步**：C3
@@ -438,46 +480,49 @@ AI 识别场景后，**先输出引导计划给用户看（用人话 + 为什么
 #### C5 维护下行同步机制 ◐
 - **说明**：维护同步机制本身——改同步清单、同步脚本、边界检查。
 - **触发**：「改同步清单」「加同步文件」「改 sync 脚本」
+- **适用 / 不适用**：适用于模板仓维护 `template-sync.json`、`sync-template.*`、`check-derived-sync.*`、doc-standards 镜像和同步运行记录规则；派生项目执行同步走 A13，单个派生同步验收走 C6。
 
 | # | 做什么 | 为什么 | 机器执行 |
 |---|---|---|---|
-| 1 | 改同步清单或脚本（含 fallback） | 同步机制本身要演进 | 改 `template-sync.json` / `scripts/sync-template.*` / `check-derived-sync.ps1` |
+| 1 | 改同步清单或脚本（含 fallback） | 同步机制本身要演进 | 改 `template-sync.json` / `scripts/sync-template.*` / `check-derived-sync.*` |
 | 2 | 同步更新相关文档 | 文档要跟上机制变化 | 更新 `git-guide §5` + `MAINTAINERS` 同步清单规则 |
 | 3 | 加自检断言 | 防止机制改了文档没跟（防滞后） | `scripts/check-template.*` 加断言 |
 
 - **完成判据**：清单与脚本一致 · check-template 通过
 - **下一步**：C3
-- **cmd 指针**：`git-guide.md` §5 + `template-sync.json`
-- ◐ 待补：无专门 command
+- **cmd 指针**：`git-guide.md` §5 + `template-sync.json` + `scripts/check-derived-sync.*`
 
-#### C6 派生同步验收
+#### C6 派生同步验收（跨仓）
 - **说明**：验收派生项目的同步结果，确认没误覆盖项目专属文件，并留痕报告。
 - **触发**：「验收派生同步」「同步报告」
+- **cwd·前置**：跨仓场景；先在模板仓确认目标模板版本，再切到目标派生项目运行检查。
 
 | # | 做什么 | 为什么 | 机器执行 |
 |---|---|---|---|
-| 1 | 在派生项目跑边界检查 | 确认没误覆盖项目专属文件 | `scripts/check-derived-sync.ps1` |
-| 2 | 记录这次同步的命令/结果/问题 | 留痕才能追溯 | `template-docs/derived-sync-report-template.md` |
-| 3 | 把可通用优化点转提案回流 | 通用问题回流模板，惠及所有项目 | 转写 `_proposals/TEMPLATE-UPGRADE-*.md`（回 C1） |
+| 1 | 明确目标派生仓库和模板版本 | 避免在错误仓库验收 | 列出派生仓 cwd、`VERSION`、同步提交 |
+| 2 | 在派生项目跑边界检查 | 确认没误覆盖项目专属文件 | `scripts/check-derived-sync.ps1` / `.sh` |
+| 3 | 记录这次同步的命令/结果/问题 | 留痕才能追溯 | `template-docs/derived-sync-report-template.md` → `sync-records/template-sync/` |
+| 4 | 把可通用优化点转提案回流 | 通用问题回流模板，惠及所有项目 | 转写 `_proposals/TEMPLATE-UPGRADE-*.md`（回 C1） |
 
 - **完成判据**：边界检查通过 · 同步报告留痕
 - **下一步**：C1
 - **cmd 指针**：`git-guide.md` §5.4 + `template-docs/derived-sync-report-template.md`
 
-#### C7 设计 / 新增模板能力 ◐
+#### C7 模板能力设计流程
 - **说明**：给模板新增规则、文档骨架、command、prompt、脚本等能力（本提案即此场景产物）。
 - **触发**：「加新规则」「加文档骨架」「加 command/prompt」「加脚本」
 
 | # | 做什么 | 为什么 | 机器执行 |
 |---|---|---|---|
 | 1 | 先写去项目化提案 | 提案才能通用化、可审计 | `_proposals/TEMPLATE-UPGRADE-*.md`（`global-rules §9`） |
-| 2 | 切维护分支落地 | 规则/脚本/断言/版本要一起改 | 分支 + 落地 |
-| 3 | PR、合并、归档 | 走治理流程 | C4 流程 + 归档（本场景即本提案 scenario-guides 的产物） |
+| 2 | 做影响面分析 | 避免只改一个入口导致体系断裂 | 规则 / prompt / command / scenario / scripts / sync 清单 / check-template / docs 骨架 |
+| 3 | 设计分步落地计划 | 大能力拆 PR，降低审查风险 | 明确本 PR 做什么、后续 PR 做什么 |
+| 4 | 实现并自检 | 模板能力要能同步到派生 | 改文件 + `template-sync.json` + `scripts/check-template.*` |
+| 5 | 走 PR 与发布 | 模板演进必须可追溯 | C4 PR → C2 版本发布 |
 
-- **完成判据**：新能力落地 · check-template 含对应断言 · CHANGELOG 记录
+- **完成判据**：新增能力有入口、有同步、有自检、有文档 · CHANGELOG 记录
 - **下一步**：C2（发版本）
-- **cmd 指针**：`ai/global-rules.md` §9 + `CONTRIBUTING.md`
-- ◐ 待补：无专门 command
+- **cmd 指针**：`ai/global-rules.md` §9 + `CONTRIBUTING.md` + `template-sync.json` + `scripts/check-template.sh`
 
 #### C8 批量同步所有派生项目
 - **说明**：维护者发新模板版本后，一条指令批量更新父目录下的所有派生项目，不用逐个进派生项目终端。
@@ -497,6 +542,20 @@ AI 识别场景后，**先输出引导计划给用户看（用人话 + 为什么
 - **注意**：`--commit` 在每个派生当前分支提交；要 PR-per-project 可审计流程改用 A13。
 
 ### 元场景
+
+#### M0 帮助 / 能力索引 / 角色选择
+- **说明**：用户不知道该怎么问、想看能力列表或说“你能做什么”时，从这里开始。
+- **触发**：「help」「帮助」「你能做什么」「怎么用这个模板」「列出场景」
+
+| # | 做什么 | 为什么 | 机器执行 |
+|---|---|---|---|
+| 1 | 判断 cwd 状态 | 零资产 / 模板仓 / 派生项目可用场景不同 | §2 cwd 三分支 |
+| 2 | 识别用户角色 | 使用者、维护者、两者都是、不确定会看到不同索引 | §1 角色 |
+| 3 | 输出对应场景索引 | 先让用户选方向，不急着执行 | A 场景、C 场景或两者，推荐 2–3 个下一步 |
+| 4 | 用户选定后转 M1 | M1 负责输出可执行引导计划 | 交给 M1 |
+
+- **完成判据**：用户明确角色和下一步场景。
+- **下一步**：M1。
 
 #### M1 用场景引导做事
 - **说明**：任何场景意图的统一入口——AI 先判断位置、给引导计划，确认后再执行。
@@ -521,10 +580,10 @@ A7 按 `ai/document-lifecycle-rules.md` §2/§5 的 PLM 链路组织为**有方�
 
 | 子场景 | 这一步帮你做什么（人话） | 上游 → 下游 | 依据（doc-lifecycle §5） |
 |---|---|---|---|
-| A7.1 | 把愿景和输入材料落成需求文档 | 愿景 + 输入材料 → 需求阶段（00-03） | 00/01/02/03 行 |
+| A7.1 | 把愿景和输入材料落成需求文档 | inputs 评审结果 + product-vision → 需求阶段（00-03） | 00/01/02/03 行 |
 | A7.2 | 由需求推导总体架构和技术方案 | 需求（00-03）→ 总体设计（04-05） | 04/05 行 |
 | A7.3 | 由需求反推验收用例（早定验收口径） | 需求（00-03）→ 测试用例（09） | 09 行 |
-| A7.4 | 由总体设计细化数据库、接口、子系统 | 总体设计（04-05）→ 详细设计（06-07 + docs/design） | 06/07/design 行 |
+| A7.4 | 由总体设计细化数据库、接口、子系统和前端交互 | 总体设计（04-05）→ 详细设计（06-07 + docs/design） | 06/07/design 行 |
 | A7.5 | 由详细设计拆 Sprint 和任务 | 详细设计 → 实现计划（08 + tasks） | 08/tasks 行 |
 | A7.6 | 由实现计划细化验证策略 | 实现计划 → 验证（09） | 09 行 |
 | A7.7 | 代码改了，把事实反向同步回文档 | 代码 → 文档反向同步 | §9 变更传播；`sync-docs-from-code`(07) |
@@ -542,7 +601,7 @@ A7 按 `ai/document-lifecycle-rules.md` §2/§5 的 PLM 链路组织为**有方�
 | `05-tech-spec.md` | 技术栈分层、部署拓扑 |
 | `06-db-design.md` | ER 图 |
 | `07-api-spec.md` | 接口交互/时序图 |
-| `docs/design/*` | 流程图、状态机、交互图 |
+| `docs/design/*` | 流程图、状态机、交互图；前端交互设计应含页面流 / 状态流图 |
 
 > 规范是「建议 + 默认」而非「强制」；A3 填 project-rules、A7 精修设计文档时引导用户确认图表偏好。权威定义在 `ai/document-lifecycle-rules.md` / `ai/doc-standards/`，本节为引用。
 

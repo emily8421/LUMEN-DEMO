@@ -22,7 +22,7 @@
 
 模板方法论在「模板仓库」与「派生项目」间双向流动，两方向互补、构成闭环：
 
-- **上行·改进**：派生项目发现可通用优化 → 在本项目 `_proposals/` 起草 `TEMPLATE-UPGRADE-*.md` → 回到模板仓库提交到 `_proposals/` 收件箱 → 模板 PR 合并 → 提案归档 → 模板演进。
+- **上行·改进**：派生项目发现可通用优化 → 在本项目 `_proposals/` 起草 `TEMPLATE-UPGRADE-*.md` → 通过 `submit-proposal` / `submit-feedback` 提交到模板仓 GitHub issue，或回到模板仓库提交到 `_proposals/` 文件收件箱 → 模板维护者在 C1 中统一 triage → 模板 PR 合并 → issue 关闭 / 提案归档 → 模板演进。
 - **下行·对齐**：派生项目执行 `scripts/sync-template.sh` → 拉取模板最新方法论覆盖本地同步清单 → 按项目提交记录审计版本。
 - **观察·回流**（闭环已内建在同步流程里）：派生项目同步时，`/run sync-methodology` 按 `template-docs/derived-sync-report-template.md` 生成**同步运行记录**（记问题 + 「可优化点归纳表」），`/run post-sync-cleanup` 再从运行记录归纳**可回流模板的建议**；只有可通用于多个项目的问题，才去项目化转写为 `_proposals/TEMPLATE-UPGRADE-*.md`。运行记录可含派生项目事实，但回流提案必须去项目化。
 
@@ -76,11 +76,11 @@
 ```text
 1. 在派生项目 `_proposals/` 中把优化写成「去项目化」提案：TEMPLATE-UPGRADE-*.md
    （动机 / 拟改文件 / 版本影响 / 影响面 / 验证方式），可选附 TEMPLATE-UPGRADE-*-patch.md
-2. 到【模板仓库】开分支，把提案文件提交到模板仓库 `_proposals/` 收件箱（临时记录）
-3. 模板维护者使用 `ai/prompts/maintainers/11-template-proposal-summary.md` 读取 `_proposals/` 全部提案，输出去重 / 冲突 / 依赖分析与优化计划
+2. 优先用 `/run submit-proposal` / `/run submit-feedback` 在【模板仓库】创建 GitHub issue（label `proposal` / `feedback` + 来源标识）；也可到模板仓开分支，把提案文件提交到模板仓库 `_proposals/` 文件收件箱（临时记录）。
+3. 模板维护者使用 C1 / `ai/prompts/maintainers/11-template-proposal-summary.md` 读取 `_proposals/` 全部提案、带 `proposal` / `feedback` 标签的 issue，以及标题为 `TEMPLATE-UPGRADE:` 的 open issue，输出去重 / 冲突 / 依赖分析与优化计划
 4. 按优化计划修改模板文件，走 §3 的 PR 流程评审、合并
 5. 合并后下行同步回原派生项目（及其他项目）
-6. 派生项目里已处理的提案可移动到项目历史记录或删除；模板仓库 `_proposals/` 中已处理提案必须归档到 `_archive/proposals/`，变更事实以根目录 `VERSION`、CHANGELOG 和 git log 为准
+6. 派生项目里已处理的提案可移动到项目历史记录或删除；模板仓库 `_proposals/` 中已处理提案必须归档到 `_archive/proposals/`；GitHub issue 已处理后应关闭，未处理则保留标签 / 状态说明；变更事实以根目录 `VERSION`、CHANGELOG 和 git log 为准
 ```
 
 提案与 patch 的分工：

@@ -30,7 +30,7 @@
 
 执行要求：
 1. 扫描候选来源：
-   - docs/archive/template-sync/ 下最近 sync 运行记录的可优化点
+   - sync-records/template-sync/ 或旧路径 docs/archive/template-sync/ 下最近 sync 运行记录的可优化点
    - docs-audit 报告（16-docs-system-audit 产出）的问题
    - check 告警（check-derived-sync / check-template 输出的 warning）
    - _proposals/ 未成熟草稿

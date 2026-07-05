@@ -26,7 +26,7 @@ bash scripts/new-project.sh ai-project-template-e2e --account <你的账号> --v
 | R1 | 同步链路 | bootstrap sync 脚本 → `sync-template --dry-run` → `--commit` | 只动同步清单文件，不覆盖项目专属 | dry-run 无项目专属文件；commit 成功 | ✅ `e2e-sync-check.sh`（经 check-template 的 doc-standards 镜像自检） |
 | R2 | check-derived-sync | 同步后跑 `check-derived-sync` | 通过 | 退出 0 | ✅ `e2e-sync-check.sh` |
 | R3 | sync-all-derived 批量 | `sync-all-derived.sh <含 e2e 的父目录> --dry-run` | 识别 e2e 并预览同步 | 汇总无失败 | ✅ `e2e-sync-check.sh` 烟测 |
-| R4 | 场景引导路由 | `/run scenario` 在 零资产 / 模板仓 / 派生项目 三种 cwd | 分别路由到 A0 / A2 或 C / A3–A14 | 路由正确 | ❌ 人工 |
+| R4 | 场景引导路由 | `/run scenario` 在 零资产 / 模板仓 / 派生项目 三种 cwd | 分别路由到 A0 / A2 或 C / A3–A16 | 路由正确 | ❌ 人工 |
 | R5 | 文档生成 | `/run review-inputs` + `/run generate-docs` | 产出 00-09 + REQ 覆盖 | 骨架齐全 | ❌ 人工 |
 | R6 | PowerShell fallback | 模拟 Git Bash 不可用 → `sync-template.ps1` / `check-derived-sync.ps1` | 进 PowerShell fallback 并完成 | fallback 标识 + 完成 | ❌ 人工（环境模拟） |
 

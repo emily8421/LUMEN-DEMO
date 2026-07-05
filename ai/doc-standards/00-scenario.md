@@ -11,7 +11,7 @@
 | 项 | 内容 |
 |---|---|
 | 输入来源 |  |
-| 入口模式 | Vision-first / Scenario-first / URS-first / SRS-first / PRD-first / Existing-system / Task-first / Small-tool brief / External-input |
+| 入口模式 | Inputs-first / Vision-first / Scenario-first / URS-first / SRS-first / PRD-first / Existing-system / Task-first / Small-tool brief / External-input |
 | 文档剖面 | Full / Standard / Lean |
 | 当前状态 | 草稿 / 待人工确认 / 已确认 |
 | 最后更新 | YYYY-MM-DD |
@@ -67,4 +67,8 @@
 
 ## 7. 待人工确认项
 
--
+> 待确认项必须保留 AI 建议、建议依据、备选方案和取舍影响；AI 建议不等于用户确认。
+
+| ID | 待确认项 | AI 建议 | 建议依据 | 备选方案 | 取舍影响 / 阻塞关系 |
+|---|---|---|---|---|---|
+| C-001 |  |  |  |  |  |

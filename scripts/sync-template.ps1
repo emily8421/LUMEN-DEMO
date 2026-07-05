@@ -289,6 +289,10 @@ function Invoke-NativeTemplateSync {
 
   $version = Get-TemplateVersion -Ref $ref
   Write-Host "==> Template version: $version"
+  if (Test-Path -LiteralPath ".github/workflows/template-check.yml" -PathType Leaf) {
+    Write-Warning "Detected .github/workflows/template-check.yml. This workflow is for template repository self-checks; derived project PRs should not run scripts/check-template.sh. Migrate to .github/workflows/project-check.yml with git diff --check for normal PRs and scripts/check-derived-sync.sh HEAD only for template sync commits."
+    Write-Host ""
+  }
   Write-Host "==> Sync files:"
 
   if ($mode -eq "--dry-run") {

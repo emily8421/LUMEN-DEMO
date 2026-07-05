@@ -1,4 +1,4 @@
-<#
+﻿<#
 check-template.ps1 - Windows PowerShell entrypoint for template self-check.
 
 Usage:
@@ -151,6 +151,8 @@ function Invoke-NativeTemplateCheck {
   Write-Host "Git Bash could not be started from PowerShell on this machine."
   Write-Host "Running a native structural subset check instead."
   Write-Host ""
+  Write-Host "Note: This is a structural fallback check, not equivalent to the full"
+  Write-Host "      template self-check. For release, always rely on CI or Bash self-check."
 
   foreach ($path in @(
       "README.md",
@@ -170,8 +172,10 @@ function Invoke-NativeTemplateCheck {
       "ai/index.md",
       "ai/global-rules.md",
       "ai/document-lifecycle-rules.md",
+      "ai/implementation-lifecycle-rules.md",
       "ai/project-rules.md",
       "ai/commands/scenario.md",
+      "ai/commands/docs-evaluation.md",
       "docs/README.md",
       "docs/env/README.md",
       "docs/inputs/README.md",
@@ -206,12 +210,11 @@ function Invoke-NativeTemplateCheck {
   }
 
   Require-Contains "CHANGELOG.md" ([regex]::Escape($version)) "CHANGELOG includes current VERSION"
-  Require-Contains "README.md" "template-docs/env-setup\.md" "README includes environment setup entry"
-  Require-Contains "README.md" "template-docs/smoke-test\.md" "README includes smoke test entry"
-  Require-Contains "README.md" "newbie AI CLI onboarding path" "README includes AI CLI onboarding path"
+  Require-Contains "README.md" "scenario-guides" "README quick start points to scenario-guides"
+  Require-Contains "README.md" "SOP\.md" "README quick start points to SOP"
+  Require-Contains "README.md" "template-docs/beginner-guide\.md" "README quick start points to beginner guide"
+  Require-Contains "README.md" "template-docs/ai-cli-setup\.md" "README includes AI CLI setup entry"
   Require-Contains "README.md" "scripts/check-prereqs\.ps1" "README starts with prerequisite check"
-  Require-Contains "README.md" "bash scripts/new-project\.sh my-demo --visibility private" "README includes default project creation path"
-  Require-Contains "README.md" "smoke-demo --local --no-remote" "README keeps local smoke-test path in maintainer section"
   Require-Contains "template-docs/beginner-guide.md" "scripts/bootstrap-dev-env\.ps1" "BEGINNER-GUIDE includes beginner environment decision path"
   Require-Contains "template-docs/beginner-guide.md" "scripts/check-prereqs\.ps1" "BEGINNER-GUIDE starts with prerequisite check"
   Require-Contains "template-docs/beginner-guide.md" "newbie AI CLI onboarding path" "BEGINNER-GUIDE includes AI CLI onboarding path"
@@ -231,13 +234,77 @@ function Invoke-NativeTemplateCheck {
   Require-Contains "scripts/check-prereqs.ps1" "Git Bash" "check-prereqs checks Git Bash"
   Require-Contains "scripts/sync-template.ps1" "Invoke-NativeTemplateSync" "sync-template PowerShell fallback exists"
   Require-Contains "scripts/check-derived-sync.ps1" "Invoke-NativeDerivedSyncCheck" "check-derived-sync PowerShell fallback exists"
-  Require-Contains "README.md" "PowerShell fallback" "README documents PowerShell fallback"
+  Require-Contains "SOP.md" "PowerShell fallback" "SOP documents PowerShell fallback"
+  Require-Contains "MAINTAINERS.md" "PowerShell native fallback" "MAINTAINERS documents PowerShell fallback"
   Require-Contains "template-docs/derived-sync-report-template.md" "PowerShell fallback" "sync report records PowerShell fallback"
   Require-Contains "scripts/bootstrap-dev-env.ps1" "Git\.Git" "bootstrap script installs Git for Windows"
   Require-Contains "scripts/bootstrap-dev-env.ps1" "GitHub\.cli" "bootstrap script installs GitHub CLI"
   Require-Contains "ai/commands/scenario.md" "scenario-guides\.md" "scenario command routes to scenario-guides"
   Require-Contains "README.md" "scenario-guides" "README points to scenario-guides"
   Require-Contains "ai/document-lifecycle-rules.md" "mermaid" "document-lifecycle defaults diagrams to mermaid"
+  Require-Contains "ai/document-lifecycle-rules.md" "Inputs-first" "document-lifecycle defines inputs-first mode"
+  Require-Contains "ai/document-lifecycle-rules.md" "input-review-report\.md" "document-lifecycle defines vision readiness review"
+  Require-Contains "docs/README.md" "input-review-report\.md" "docs README defines inputs review report"
+  Require-Contains "docs/inputs/README.md" "input-review-report\.md" "docs inputs README defines input review report"
+  Require-Contains "ai/prompts/docs/01-review-inputs.md" "Product Vision" "input review prompt checks Product Vision readiness"
+  Require-Contains "ai/prompts/docs/01-review-inputs.md" "input-review-report\.md" "input review prompt includes minimal supplement checklist"
+  Require-Contains "ai/prompts/docs/00-generate-or-complete-docs.md" "Not Ready" "generate docs prompt blocks not-ready input"
+  Require-Contains "ai/prompts/docs/00-generate-or-complete-docs.md" "product-vision\.md" "generate docs prompt creates product vision first"
+  Require-Contains "ai/commands/docs-evaluation.md" "Go" "docs-evaluation command defines Go conclusion"
+  Require-Contains "ai/prompts/review/19-docs-evaluation.md" "Go" "docs-evaluation prompt defines Go conclusion"
+  Require-Contains "ai/prompts/review/19-docs-evaluation.md" "E1" "docs-evaluation prompt defines phase evaluation codes"
+  Require-Contains "template-sync.json" "ai/commands/docs-evaluation\.md" "template-sync includes docs-evaluation command"
+  Require-Contains "template-sync.json" "ai/prompts/review/19-docs-evaluation\.md" "template-sync includes docs-evaluation prompt"
+  Require-Contains "template-docs/scenario-guides.md" "docs-evaluation" "scenario guides include docs-evaluation"
+  Require-Contains "ai/document-lifecycle-rules.md" "E1" "document lifecycle includes evaluation codes"
+  Require-Contains "ai/implementation-lifecycle-rules.md" "Conditional Go" "implementation lifecycle references evaluation result"
+  Require-Contains "ai/global-rules.md" "AI" "global rules mentions AI recommendations"
+  Require-Contains "ai/document-lifecycle-rules.md" "C-001" "document lifecycle defines confirmation item structure"
+  Require-Contains "ai/session-rules.md" "AI" "session rules define confirmation item structure"
+  Require-Contains "ai/doc-standards/README.md" "AI" "doc standards define confirmation item recommendations"
+  Require-Contains "ai/commands/README.md" "AI" "commands README mentions confirmation recommendations"
+  Require-Contains "docs/03-prd.md" "C-001" "docs templates include structured confirmation items"
+  Require-Contains "ai/prompts/review/10-docs-checklist.md" "AI" "docs checklist validates confirmation recommendations"
+  Require-Contains "ai/global-rules.md" "frontend-interaction\.md" "global-rules defines frontend interaction design path"
+  Require-Contains "ai/document-lifecycle-rules.md" "前端交互设计触发规则" "document lifecycle defines frontend interaction trigger rules"
+  Require-Contains "docs/README.md" "docs/design/frontend-interaction\.md" "docs README defines frontend interaction design path"
+  Require-Contains "ai/prompts/docs/00-generate-or-complete-docs.md" "docs/design/frontend-interaction\.md" "generate docs prompt handles frontend interaction design"
+  Require-Contains "ai/prompts/review/10-docs-checklist.md" "前端交互设计" "docs checklist validates frontend interaction design"
+  Require-Contains "ai/prompts/review/16-docs-system-audit.md" "前端交互" "docs system audit validates frontend interaction design"
+  Require-Contains "template-docs/scenario-guides.md" "补前端交互设计" "scenario guides route frontend interaction design requests"
+  Require-Contains "ai/commands/tech-env-evaluation.md" "技术环境评估" "tech-env-evaluation command exists"
+  Require-Contains "ai/prompts/review/20-tech-env-evaluation.md" "No-Go" "tech-env-evaluation prompt defines No-Go conclusion"
+  Require-Contains "template-sync.json" "ai/commands/tech-env-evaluation\.md" "template-sync includes tech-env-evaluation command"
+  Require-Contains "template-sync.json" "ai/prompts/review/20-tech-env-evaluation\.md" "template-sync includes tech-env-evaluation prompt"
+  Require-Contains "ai/document-lifecycle-rules.md" "tech-env-evaluation" "document lifecycle references tech env evaluation"
+  Require-Contains "ai/implementation-lifecycle-rules.md" "真实运行依赖" "implementation lifecycle gates real runtime dependencies"
+  Require-Contains "ai/prompts/setup/13-collect-env.md" "不替代技术路线" "collect-env prompt distinguishes collection from evaluation"
+  Require-Contains "docs/05-tech-spec.md" "技术环境评估结论" "05 tech spec includes tech env evaluation result section"
+  Require-Contains "docs/09-verification.md" "技术环境评估验证" "09 verification includes tech env evaluation verification"
+  Require-Contains "template-docs/scenario-guides.md" "A8.5 技术路线与环境支撑评估" "scenario guides route tech env evaluation"
+  Require-Contains "ai/index.md" "ai/implementation-lifecycle-rules\.md" "ai/index includes implementation lifecycle rules"
+  Require-Contains "ai/global-rules.md" "ai/implementation-lifecycle-rules\.md" "global-rules points to implementation lifecycle rules"
+  Require-Contains "ai/implementation-lifecycle-rules.md" "Phase" "implementation lifecycle defines Phase layer"
+  Require-Contains "ai/implementation-lifecycle-rules.md" "Test Case" "implementation lifecycle defines test case layer"
+  Require-Contains "ai/implementation-lifecycle-rules.md" "Commit / PR" "implementation lifecycle defines commit and PR layer"
+  Require-Contains "docs/08-dev-plan.md" "Test Case" "08 dev plan defines test case traceability"
+  Require-Contains "docs/08-dev-plan.md" "tasks/task-00X-xxx\.md" "08 dev plan includes task split file path"
+  Require-Contains "docs/09-verification.md" "TC-ID" "09 verification includes test case evidence"
+  Require-Contains "docs/09-verification.md" "BUG-001" "09 verification includes bug regression record"
+  Require-Contains "ai/prompts/planning/19-plan-phases-and-sprints.md" "docs/08-dev-plan\.md" "A9 planning prompt outputs 08 draft"
+  Require-Contains "ai/prompts/planning/19-plan-phases-and-sprints.md" "docs/09-verification\.md" "A9 planning prompt outputs 09 draft"
+  Require-Contains "template-docs/scenario-guides.md" "M0" "scenario guides include M0 help entry"
+  Require-Contains "template-docs/scenario-guides.md" "19-plan-phases-and-sprints" "scenario guides point A9 to planning prompt"
+  Require-Contains "template-docs/scenario-guides.md" "check-derived-sync" "scenario guides describe derived sync validation"
+  Require-Contains "ai/prompts/dev/02-run-task.md" "Test Case" "run task prompt requires test case traceability"
+  Require-Contains "ai/prompts/dev/09-sprint-summary.md" "docs/09-verification\.md" "sprint summary prompt writes verification record"
+  Require-Contains "template-docs/beginner-guide.md" "ai/implementation-lifecycle-rules\.md" "beginner guide points to implementation lifecycle"
+  Require-Contains "ai/project-rules.md" "CLI" "project rules mention CLI permission boundary"
+  Require-Contains "ai/project-rules.md" "git diff" "project rules mention git diff audit"
+  Require-Contains "template-docs/ai-cli-setup.md" "approval" "AI CLI setup mentions approval mode"
+  Require-Contains "template-docs/ai-cli-setup.md" "sandbox" "AI CLI setup mentions sandbox mode"
+  Require-Contains "ai/prompts/dev/02-run-task.md" "git status" "run task prompt asks for git status summary"
+  Require-Contains "ai/prompts/dev/05-fix-bug.md" "git status" "fix bug prompt asks for git status summary"
   Require-Contains "ai/project-rules.md" "mermaid" "project-rules includes diagram format preference"
 
   $syncFiles = Get-SyncFiles
