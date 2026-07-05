@@ -6,6 +6,20 @@
 
 模板版本采用三段式 `vMAJOR.MINOR.PATCH`，以根目录 `VERSION` 为单一审计入口。任何会影响下游同步判断的模板合并都应递增版本；`ai/global-rules.md` 顶部仅记录全局规则自身版本。
 
+## v1.30.3（2026-07-05）
+
+PowerShell 派生边界检查 fallback 空 stderr 热修：修复 `check-derived-sync.ps1` 在 Git Bash 探测阶段 stderr 文件为空时，Windows PowerShell 5.1 对 `$null.Trim()` 报错导致边界检查无法进入 fallback 的问题。
+
+- **脚本修复**：`scripts/check-derived-sync.ps1` 在读取 Bash probe stderr 时显式处理空文件 / `$null`，与 `sync-template.ps1` 的 v1.30.2 热修保持一致。
+- **发布目的**：确保旧派生项目同步到新版脚本后，可在 Git Bash / MSYS 启动失败的 Windows 环境继续运行派生同步边界检查。
+
+## v1.30.2（2026-07-05）
+
+PowerShell 同步 fallback 空 stderr 热修：修复 Git Bash 探测阶段 stderr 文件为空时，Windows PowerShell 5.1 对 `$null.Trim()` 报错导致 fallback 尚未进入就中断的问题。
+
+- **脚本修复**：`scripts/sync-template.ps1` 在读取 Bash probe stderr 时显式处理空文件 / `$null`，避免 `You cannot call a method on a null-valued expression`。
+- **发布目的**：补齐 v1.30.1 UTF-8 fallback 修复的 Windows PowerShell 5.1 实机兼容性缺口，确保旧派生项目 bootstrap 最新同步脚本后可继续进入 fallback dry-run / commit。
+
 ## v1.30.1（2026-07-05）
 
 PowerShell 同步 fallback UTF-8 兼容性修复：加固 Windows Git Bash / MSYS 启动失败后的原生 PowerShell 同步与边界检查路径，避免 Windows PowerShell 5.1 代码页误解码 UTF-8 模板文件。

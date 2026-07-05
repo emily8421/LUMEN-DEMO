@@ -66,7 +66,10 @@ function Test-TemplateBash {
       }
     }
 
-    $stderr = if (Test-Path $stderrFile) { (Get-Content $stderrFile -Raw).Trim() } else { "" }
+    $stderr = if (Test-Path $stderrFile) {
+      $stderrText = Get-Content $stderrFile -Raw
+      if ($null -eq $stderrText) { "" } else { $stderrText.Trim() }
+    } else { "" }
     return [pscustomobject]@{
       Ready    = ($proc.ExitCode -eq 0)
       ExitCode = $proc.ExitCode
