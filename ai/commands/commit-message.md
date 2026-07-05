@@ -27,6 +27,7 @@
 1. 只基于实际 diff 总结，不编造未发生的改动。
 2. 给出推荐 commit message 和备选说明。
 3. 如 diff 混杂，建议拆分提交。
+4. 若用户下一步要 push / 创建 PR / 合并 PR，提醒先运行 `scripts/check-github-context.ps1` 做只读预检，确认当前仓库、分支、remote、`gh` 账号和仓库权限。
 
 ## 写入风险
 

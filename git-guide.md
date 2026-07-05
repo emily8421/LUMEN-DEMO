@@ -24,6 +24,24 @@
 
 > ⚠️ Token / OAuth 权限取决于登录方式与授权范围。若 `gh` 报 scope 不足，优先运行 `gh auth status` 确认活跃账号，再按 GitHub 官方流程刷新授权、重新登录或更换具备对应权限的账号。
 
+### 1.1 GitHub 操作前预检（push / PR / merge）
+
+当你同时打开模板仓库和多个派生项目，或多个 AI CLI / 终端并行工作时，在任何 `git push`、`gh pr create`、`gh pr merge`、`git pull` 合并、tag / release 前，先确认当前上下文：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/check-github-context.ps1
+```
+
+如已知目标仓库，可加期望 owner / repo 做只读校验：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/check-github-context.ps1 -ExpectedOwner <owner> -ExpectedRepo <repo>
+```
+
+预检只读输出：当前 repo root、分支、origin、Git 提交身份、工作区状态、`gh auth status` 和 `gh repo view` 权限。它不会切账号、不会改 remote、不会 push / merge。若预检发现账号无权限、remote 不符合预期、工作区有未确认改动或 `gh repo view` 失败，应先停止并说明，不要继续执行远端操作。
+
+> 该预检不能替代 GitHub 授权：`gh auth login`、OAuth scope、SSO 授权、Git Credential Manager 和仓库权限仍需在本机按 GitHub 官方流程处理；模板只提供操作前门禁，避免多仓 / 多会话误操作。
+
 ## 2. 场景速查（你要做哪件事？）
 
 | 你想做 | 你是 | 去哪节 |
@@ -51,6 +69,7 @@
 git status
 git diff
 # 运行项目对应验证命令，例如：bash scripts/check-template.sh / npm test / pytest
+powershell -ExecutionPolicy Bypass -File scripts/check-github-context.ps1  # push / PR 前只读预检
 git add <文件路径>
 git commit -m "类型: 简短说明"
 git push -u origin <当前分支名>   # 首次推送该分支
@@ -129,7 +148,7 @@ cd /path/ai-project-template && git worktree remove ../ai-tpl-wt2
 无论哪种路径，`scripts/check-template.sh` / `scripts/check-template.ps1` 都是**模板仓库完整性自检**，不应作为派生项目同步成功判断。派生项目同步后只检查同步边界与最近提交。
 
 > Windows 说明：
-> 若 `scripts/sync-template.ps1` 或 `scripts/check-derived-sync.ps1` 报 Git Bash / MSYS 启动错误，脚本会先明确标注并进入 PowerShell fallback；fallback 可完成同步 dry-run / commit 与派生边界检查。若 fallback 也失败，再优先视为本机 Git / 权限 / 网络问题，不要先把它理解成模板缺了新手步骤。
+> 若 `scripts/sync-template.ps1` 或 `scripts/check-derived-sync.ps1` 报 Git Bash / MSYS 启动错误，脚本会先明确标注并进入 PowerShell fallback；fallback 可完成同步 dry-run / commit 与派生边界检查，并按 UTF-8 bytes 解码 Git 输出，避免 Windows PowerShell 5.1 代码页导致中文 Markdown、JSON 或文件名乱码。若 fallback 也失败，再优先视为本机 Git / 权限 / 网络问题，不要先把它理解成模板缺了新手步骤。
 
 ### 5.2 旧派生项目首次同步到 v1.6.8+
 
@@ -167,11 +186,13 @@ git status --short --branch
 git show --name-only --stat HEAD
 ```
 
-检查最新同步提交没有误覆盖 `README.md`、`ai/project-rules.md`、`docs/00-09` 或业务代码。同步到包含 `scripts/check-derived-sync.ps1` 的版本后，也可以运行：
+检查最新同步提交没有误覆盖 `README.md`、`ai/project-rules.md`、`docs/00-09` 或业务代码。旧派生项目首次同步到新版脚本后，不要停在同步提交；应继续读取新同步到的 `ai/prompts/maintainers/12-sync-template.md`，按标准闭环完成边界验证、同步后整理、文档体系审计、项目验证建议和同步运行记录。同步到包含 `scripts/check-derived-sync.ps1` 的版本后，也可以运行：
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/check-derived-sync.ps1
 ```
+
+随后继续执行 `/run post-sync-cleanup`、`/run docs-system-audit` 的同步后审计模式，并按 `template-docs/derived-sync-report-template.md` 生成或更新 `sync-records/template-sync/YYYY-MM-DD-sync-template-vX.Y.Z.md`。若项目当前 AI 入口仍是旧版本，先直接打开新同步到的 `ai/prompts/maintainers/12-sync-template.md` 作为后续步骤清单。
 
 ### 5.3 v1.6.8+ 后续同步
 
@@ -227,6 +248,7 @@ powershell -ExecutionPolicy Bypass -File scripts/check-template.ps1       # 仅�
 - 被 `template-sync.json` 列入的 Markdown 方法论文档会在同步时被覆盖；派生项目不要直接修改这些文件，如需改进请在 `_proposals/` 起草提案并回流模板。
 - 同步文件清单以 `template-sync.json` 为准；`scripts/sync-template.sh` 会优先读取模板远端清单。
 - 同步后若 `check-derived-sync` 失败，先修复同步边界问题，再 push / PR。
+- 若已经完成同步提交但不确定后续是否执行，使用 `/run sync-methodology` 的“同步后续接模式”：不要重新 dry-run / commit，先核对 `git log --oneline -8`、`VERSION`、最近同步记录和工作区，再从 `check-derived-sync` 开始补完后续闭环。
 - 同步后进入标准闭环：`check-derived-sync` 边界验证 → `post-sync-cleanup` 整理计划 → `docs-system-audit` 同步后审计 → 项目验证建议 → 同步报告留痕。
 - 同步后整理项目内容时，另开分支执行 `ai/prompts/maintainers/15-post-sync-cleanup.md` 第一段，先只审计并输出迁移计划，不要混入同步提交；整理摘要应回写同步报告。
 - 项目文档成型后，再用 `ai/prompts/review/16-docs-system-audit.md` 对照本次同步产出的 `ai/doc-standards` 规范基线，回溯审计整条 PLM 链路（先出报告不改文件；旧项目可 fallback 到 `docs/_scaffold`）。同步后审计模式应区分规范基线缺口、兼容差异和项目事实问题。

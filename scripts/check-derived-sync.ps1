@@ -102,11 +102,54 @@ function Require-File {
 function Get-GitText {
   param([Parameter(ValueFromRemainingArguments = $true)][string[]]$GitArgs)
 
-  $output = & git @GitArgs
-  if ($LASTEXITCODE -ne 0) {
-    throw "git $($GitArgs -join ' ') failed with exit code $LASTEXITCODE"
+  $text = Get-GitUtf8Text @GitArgs
+  if ($text.Length -eq 0) {
+    return @()
   }
-  return @($output)
+
+  $normalized = $text -replace "`r`n", "`n" -replace "`r", "`n"
+  $lines = @([regex]::Split($normalized, "`n"))
+  if ($normalized.EndsWith("`n") -and $lines.Count -gt 0) {
+    $lines = @($lines | Select-Object -First ($lines.Count - 1))
+  }
+  return $lines
+}
+
+function Get-GitUtf8Text {
+  param([Parameter(ValueFromRemainingArguments = $true)][string[]]$GitArgs)
+
+  $tmpDir = Join-Path ([System.IO.Path]::GetTempPath()) ("template-git-" + [guid]::NewGuid().ToString("N"))
+  New-Item -ItemType Directory -Path $tmpDir -Force | Out-Null
+  $stdoutFile = Join-Path $tmpDir "stdout.bin"
+  $stderrFile = Join-Path $tmpDir "stderr.bin"
+
+  try {
+    $proc = Start-Process -FilePath "git" `
+      -ArgumentList $GitArgs `
+      -NoNewWindow `
+      -Wait `
+      -PassThru `
+      -RedirectStandardOutput $stdoutFile `
+      -RedirectStandardError $stderrFile
+
+    if ($null -eq $proc) {
+      throw "git $($GitArgs -join ' ') failed to start"
+    }
+
+    $stdout = if (Test-Path $stdoutFile) { [System.IO.File]::ReadAllText($stdoutFile, [System.Text.Encoding]::UTF8) } else { "" }
+    $stderr = if (Test-Path $stderrFile) { [System.IO.File]::ReadAllText($stderrFile, [System.Text.Encoding]::UTF8).Trim() } else { "" }
+
+    if ($proc.ExitCode -ne 0) {
+      $message = "git $($GitArgs -join ' ') failed with exit code $($proc.ExitCode)"
+      if ($stderr) { $message = "$message`: $stderr" }
+      throw $message
+    }
+
+    return $stdout
+  }
+  finally {
+    Remove-Item $tmpDir -Recurse -Force -ErrorAction SilentlyContinue
+  }
 }
 
 function Test-SyncFile {
@@ -219,24 +262,24 @@ function Invoke-NativeDerivedSyncCheck {
   }
 
   Write-Host ""
-  Write-Host "==> 根 README 模板版本号一致性（非阻断）"
+  Write-Host "==> Root README template version consistency (non-blocking)"
   if ((Test-Path -LiteralPath "VERSION") -and (Test-Path -LiteralPath "README.md")) {
     $curVer = (Get-Content -Raw -Encoding UTF8 VERSION).Trim()
     $readmeVer = ""
     foreach ($line in (Get-Content -Encoding UTF8 README.md)) {
-      if (($line -match '当前|已同步') -and ($line -match 'v[0-9]+\.[0-9]+\.[0-9]+')) {
+      if (($line -match '\u5f53\u524d|\u5df2\u540c\u6b65') -and ($line -match 'v[0-9]+\.[0-9]+\.[0-9]+')) {
         $readmeVer = $matches[0]
       }
     }
     if (-not $readmeVer) {
-      Write-Host "INFO  README 未声明当前模板版本号，跳过（README 不强制写版本号）"
+      Write-Host "INFO  README does not declare current template version; skipped (README version declaration is optional)"
     } elseif ($readmeVer -ne $curVer) {
-      Write-Host "WARN  README 模板版本声明 $readmeVer 与 VERSION $curVer 不一致，请人工核对（非阻断）"
+      Write-Host "WARN  README template version $readmeVer differs from VERSION $curVer; please review manually (non-blocking)"
     } else {
-      Write-Host "OK    README 模板版本声明 $readmeVer 与 VERSION 一致"
+      Write-Host "OK    README template version $readmeVer matches VERSION"
     }
   } else {
-    Write-Host "INFO  缺少 VERSION 或 README.md，跳过版本号一致性检查"
+    Write-Host "INFO  VERSION or README.md is missing; skipped version consistency check"
   }
 
   Write-Host ""

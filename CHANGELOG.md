@@ -6,6 +6,16 @@
 
 模板版本采用三段式 `vMAJOR.MINOR.PATCH`，以根目录 `VERSION` 为单一审计入口。任何会影响下游同步判断的模板合并都应递增版本；`ai/global-rules.md` 顶部仅记录全局规则自身版本。
 
+## v1.30.1（2026-07-05）
+
+PowerShell 同步 fallback UTF-8 兼容性修复：加固 Windows Git Bash / MSYS 启动失败后的原生 PowerShell 同步与边界检查路径，避免 Windows PowerShell 5.1 代码页误解码 UTF-8 模板文件。
+
+- **fallback Git 读取**：`scripts/sync-template.ps1` 与 `scripts/check-derived-sync.ps1` 新增 UTF-8 bytes 解码 helper，避免 `git show` / `git log` / `git diff-tree` 输出经系统代码页转换后乱码。
+- **同步写回**：`sync-template.ps1` 读取 `template-sync.json`、`VERSION` 和模板 Markdown / 文本文件时按 UTF-8 解码，并以 UTF-8 no BOM 写回，减少中文 Markdown、JSON 和文件名兼容风险。
+- **环境提示**：`scripts/check-prereqs.ps1`、`template-docs/env-setup.md` 与 `git-guide.md` 补充 Windows PowerShell 5.1 native command 代码页风险及 fallback 处理口径。
+- **自检防回归**：`scripts/check-template.sh` / `.ps1` 增加 PowerShell fallback UTF-8 helper 断言。
+- 回流自 `_archive/proposals/TEMPLATE-UPGRADE-powershell-sync-utf8-fallback.md`，对应 GitHub issue #92。
+
 ## v1.30.0（2026-07-05）
 
 技术路线与环境支撑评估机制：新增 `tech-env-evaluation` 命令与 20 号 Prompt，把运行时版本、依赖安装 / 导入 / 最小运行、Docker / 数据库 / 模型、网络权限和资源约束纳入编码前门禁。
