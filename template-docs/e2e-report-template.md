@@ -21,7 +21,7 @@
 
 ## 人工项（按 `template-docs/e2e-regression-checklist.md`）
 
-- R4 场景引导路由（A0 / A2 / C / A3–A14）：✅ / ❌ / 备注
+- R4 场景引导路由（A0 / A2 / C / A3–A16）：✅ / ❌ / 备注
 - R5 文档生成（review-inputs + generate-docs → 00-09）：✅ / ❌ / 备注
 - R6 PowerShell fallback：✅ / ❌ / 备注
 

@@ -137,13 +137,31 @@ codex
 - `Claude CLI` 的官方安装文档
 - `Codex CLI` 的官方安装文档
 
-## 6. 安装后进入模板工作
+## 6. 写入前确认与权限模式
+
+模板的 `ai/project-rules.md` 要求 AI 在文件写入、批量替换、安装依赖、生成产物、提交代码或改变项目状态前，先列出目的、预计文件、变更摘要、风险和验证方式，并等待用户确认。但这是**项目级行为规则**，不能替代 AI CLI / IDE 的底层权限模型。
+
+建议建立三层防线：
+
+1. **项目规则**：让 AI 遵守 `ai/project-rules.md` §6 和 `ai/implementation-lifecycle-rules.md` 的写入前确认协议。
+2. **工具配置**：在 Claude CLI / Claude Code、Codex CLI、Cursor / IDE 插件中优先启用写入前确认、patch 预览、approval / sandbox 或手动 apply 模式；具体名称和配置以各工具当前官方文档为准。
+3. **Git 审计**：开始任务前看 `git status --short --branch`；修改后让 AI 输出文件清单，必要时人工审阅 `git diff`。
+
+工具侧建议：
+
+- **Claude CLI / Claude Code**：查看官方权限、approval、allowed tools 或 tool confirmation 配置，优先使用写入前确认或受限工具模式。
+- **Codex CLI**：查看本机 Codex 配置，优先选择需要确认的 approval 模式和受限 sandbox，避免在不可信仓库中允许无确认写入。
+- **Cursor / IDE 插件**：启用 apply 前 diff 预览、手动确认或仅建议不自动应用；大批量修改前先让 AI 输出文件清单。
+
+不要把这段理解为“模板能硬性拦截所有写入”。硬拦截取决于工具权限；模板提供的是项目期望、配置建议和 Git 审计兜底。
+
+## 7. 安装后进入模板工作
 
 > Keyword for template checks: newbie AI CLI onboarding path.
 
 当 `claude` 或 `codex` 命令已经能启动，并且你位于 `ai-project-template` 模板仓库或派生项目根目录时，不用记具体步骤，直接对 AI 说一个具体场景（如「我想用这个模板新建项目」「帮我准备输入材料」）。AI 会读取 `template-docs/scenario-guides.md`，按场景剧本先给你「做什么 + 为什么」的引导计划，确认后再路由到具体命令执行；也可 `/run scenario`。它会自动判断你是新建项目还是在已有项目里，给出对应步骤（完整场景目录与契约见 `template-docs/scenario-guides.md`）。
 
-## 7. 可复制给 AI 的提示词
+## 8. 可复制给 AI 的提示词
 
 ### 安装 Claude CLI
 

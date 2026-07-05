@@ -27,7 +27,7 @@
 1. 明确项目名、远端 / 本地模式、GitHub 可见性和账号需求。
 2. 说明不推荐手工复制模板文件夹。
 3. 用户确认后运行 `scripts/new-project.sh`。
-4. 引导采集环境、填写愿景和初始化 `ai/project-rules.md`。
+4. 引导采集环境、把原始输入放入 `docs/inputs/`、评审 Product Vision 就绪度并初始化 `ai/project-rules.md`。
 
 ## 写入风险
 

@@ -13,13 +13,13 @@
 
 **不适用场景**：还未完成模板方法论同步；或用户要求直接开发新功能。
 
-**使用前准备**：确认当前在派生项目根目录，工作区状态已知；已完成 `scripts/sync-template.*` 同步并提交或准备单独提交同步后整理改动；如存在 `docs/archive/template-sync/` 同步运行记录，先读取最近一份。
+**使用前准备**：确认当前在派生项目根目录，工作区状态已知；已完成 `scripts/sync-template.*` 同步并提交或准备单独提交同步后整理改动；如存在推荐路径 `sync-records/template-sync/` 或旧路径 `docs/archive/template-sync/` 同步运行记录，优先读取推荐路径最近一份，旧路径仅作兼容读取。
 
 **续接要求**：第一段输出迁移计划后，必须把迁移范围、待确认项、禁止事项和下一步写入 / 更新续接文件。
 
-**预期产出**：先输出审计结果与迁移计划，并从同步运行记录中提炼可回流模板优化点；人工确认后，执行 docs 分区整理、README 补齐、`ai/project-rules.md` 补齐和运行环境约束补齐。
+**预期产出**：先输出审计结果与迁移计划，并从同步运行记录中提炼可回流模板优化点；同时给出同步报告回写建议。人工确认后，执行 docs 分区整理、README 补齐、`ai/project-rules.md` 补齐和运行环境约束补齐。
 
-**使用后下一步**：人工确认迁移计划后，用本节第二段 Prompt 执行迁移；完成后运行项目自检 / 文档检查并单独提交。若想用最新规范回溯审视文档体系（sync 后 `ai/doc-standards/00-09` 已刷新；旧项目可 fallback 到 `docs/_scaffold/00-09`），运行 `ai/prompts/review/16-docs-system-audit.md`——它会对照规范镜像核查项目 `docs/00-09` 的章节完整性与撰写规范偏离。
+**使用后下一步**：人工确认迁移计划后，用本节第二段 Prompt 执行迁移；完成后运行项目自检 / 文档检查并单独提交，并把整理摘要回写 `sync-records/template-sync/` 同步报告或 `.ai/session-handoff.md`。若想用最新规范回溯审视文档体系（sync 后 `ai/doc-standards/00-09` 已刷新；旧项目可 fallback 到 `docs/_scaffold/00-09`），运行 `ai/prompts/review/16-docs-system-audit.md` 的同步后审计模式——它会对照规范镜像核查项目 `docs/00-09` 的章节完整性与撰写规范偏离。
 
 ### 第一段：同步后整理审计与迁移计划
 
@@ -37,15 +37,16 @@
 1. 读取规则
    - 先读取 `ai/index.md` 列出的全部规则文件。
    - 再读取 `docs/README.md`，理解最新 docs 分区规则。
-   - 再读取 `ai/project-rules.md`、根 `README.md`、`docs/00-09`、`docs/vision/product-vision.md`（如存在）。
-   - 如存在 `docs/archive/template-sync/` 下的同步运行记录，读取最近一份，提取同步问题、待确认项和可回流模板优化点。
+   - 再读取 `ai/project-rules.md`、根 `README.md`、`docs/00-09`、`docs/inputs/`、`docs/vision/product-vision.md`（如存在）。
+   - 如存在 `sync-records/template-sync/` 或旧路径 `docs/archive/template-sync/` 下的同步运行记录，优先读取推荐路径 `sync-records/template-sync/` 最近一份，旧路径仅作兼容读取，提取同步问题、待确认项和可回流模板优化点。
 
 2. 审计当前 docs 结构
    - 列出 `docs/` 根目录下所有文件和子目录。
    - 判断哪些文件允许留在 `docs/` 根目录：`README.md`、`00-scenario.md` ~ `09-verification.md`。
    - 找出不应留在 `docs/` 根目录的文件，例如调研文档、会议纪要、临时分析、子系统详细设计、ADR、环境记录、历史归档。
    - 按 `docs/README.md` 给出建议迁移路径：
-     - 愿景 / 叙事 → `docs/vision/`
+     - 未经评审的愿景草稿 / 客户输入 / brief / 现有系统说明 → `docs/inputs/`
+     - 经输入评审、补齐和确认后的产品愿景叙事 → `docs/vision/`
      - 子系统 / 模块详细设计 → `docs/design/`
      - 架构决策记录 → `docs/decisions/`
      - 技术调研 / 实验 → `docs/research/`
@@ -117,6 +118,7 @@
    - 哪些文件移动可能影响链接
    - 哪些引用需要同步更新
    - 哪些内容不建议移动
+   - 如存在 `.github/workflows/template-check.yml`，提示这是模板仓自检入口；派生项目普通 PR 应迁移到 `.github/workflows/project-check.yml`，不要用 `scripts/check-template.sh` 阻塞项目 PR
 
    G. 待人工确认问题
    - 列出所有无法自动判断的问题
@@ -125,6 +127,11 @@
    - 从同步运行记录和本次整理中归纳可通用于多个项目的问题
    - 区分项目专属问题 / 环境问题 / 模板方法论问题
    - 对建议回流模板的问题，给出 `_proposals/TEMPLATE-UPGRADE-*.md` 草案标题和去项目化摘要
+
+   I. 同步报告回写建议
+   - 建议回写到 `sync-records/template-sync/YYYY-MM-DD-sync-template-vX.Y.Z.md` 的整理摘要
+   - 已处理项、未处理项、待确认项、后续文档审计入口
+   - 若用户暂不提交长期报告，写入 `.ai/session-handoff.md` 的临时续接内容
 
 7. 等我确认后再执行迁移
    - 未经确认，不要移动 / 重命名 / 删除文件。
@@ -156,5 +163,6 @@
 4. 环境约束补齐情况
 5. 未能自动确认的链接 / 风险
 6. 从同步运行记录提炼出的模板优化建议 / 已新增提案
-7. 建议验证命令
+7. 同步报告回写建议
+8. 建议验证命令
 ```

@@ -50,9 +50,10 @@
 
 至少要有一种明确的输入（它们如何变成代码，见 §4）：
 
-- 产品愿景 / 叙事（放 `docs/vision/`），或
-- 客户 PRD / SRS / 任务说明 / 现有系统说明（放 `docs/inputs/`），或
+- 产品愿景草稿 / 叙事 / 客户 PRD / SRS / 任务说明 / 现有系统说明（统一先放 `docs/inputs/`），或
 - 只有一句想法 → 用 `docs/inputs/initial-brief.md` 填关键字段起步。
+
+AI 会先评审 `docs/inputs/` 是否足以生成 `docs/vision/product-vision.md`；不足时给出 `docs/inputs/input-review-report.md` 和最小补充清单，补齐后再复评。
 
 **(c) 项目决策**
 
@@ -66,7 +67,7 @@
 
 用法很简单：在项目根目录打开 AI CLI（`Claude CLI` / `Codex CLI`），说一个具体场景，比如「帮我新建项目」「帮我准备输入材料」「帮我规划阶段」。AI 会读 `template-docs/scenario-guides.md`，先用人话告诉你「打算做什么、为什么」，你确认后它再执行——你不用记具体步骤。也可以直接 `/run scenario`。
 
-- 完整场景目录（23 个剧本，从零起步到 Phase 升级）：`template-docs/scenario-guides.md`。
+- 完整场景目录（使用者 / 维护者 / 元场景，从零起步到 Phase 升级）：`template-docs/scenario-guides.md`。
 - 知道要做什么、想找具体命令：`SOP.md` 场景索引 / `ai/commands/README.md` 命令表。
 
 ## 4. 输入材料 → 文档体系 → 实现代码（核心心智）
@@ -76,25 +77,27 @@
 ```text
 你准备的输入材料            AI 生成的文档体系              AI 写的实现代码
 ──────────────         ─────────────────────         ────────────────
-docs/vision/ 愿景叙事       docs/00-09（根·项目事实）        frontend/ backend/
-docs/inputs/ 原始输入  ──→  docs/design/ 子系统设计    ──→  tests/ scripts/
-客户 PRD / SRS / brief      （约束代码·可审计）              docker/
-                            ↑
-                            └ 代码事实可反向同步回文档 ──────┘
+docs/inputs/ 原始输入  ──→  docs/vision/product-vision.md  ──→  docs/00-09（根·项目事实） ──→ frontend/ backend/
+客户 PRD / SRS / brief      （整理后愿景锚点）                    docs/design/ 子系统设计       tests/ scripts/ docker/
+补充清单 / 评估报告          ↑                                     （约束代码·可审计）
+                            └ 不足则补齐后复评                        └ 代码事实可反向同步回文档
 ```
 
-- **人工输入**（你提供，原料）：`docs/vision/`、`docs/inputs/` 里的东西；不直接驱动开发。
+- **原始输入**（你提供，原料）：`docs/inputs/` 里的东西；不直接驱动开发。
+- **整理后愿景**（AI / 团队提炼）：`docs/vision/product-vision.md`，由输入评审通过后生成或更新。
 - **AI 输出**（项目事实，约束代码）：`docs/00-09` 根文档 + `docs/design/` 子系统设计。
 - 加工是**单向链**（先文档后代码），但代码实现后的事实可以**反向同步**回文档（`/run sync-docs-from-code`）。
 
 这条链按 PLM 阶段走（权威见 `ai/document-lifecycle-rules.md` §2）：
 
 ```text
-输入材料 → 需求(00→01→02→03) → 总体设计(04→05) → 详细设计(06/07/design)
-        → 开发计划(08) → 验证(09) → 代码
+输入材料 → 愿景就绪评估 → product-vision → 需求(00→01→02→03)
+        → 总体设计(04→05) → 详细设计(06/07/design) → 开发计划(08) → 验证(09) → 代码
 ```
 
 > 每一步都不许跳：禁止从想法直接生成代码。文档之间的追溯链（U-ID → REQ-ID → Phase → 设计 → Sprint → 测试 → 代码）让每行代码都能查到它对应哪条需求。输入/输出总体区分见 `docs/README.md` §1。
+
+进入实现阶段后，执行闭环权威见 `ai/implementation-lifecycle-rules.md`：先用 A9 / `ai/prompts/planning/19-plan-phases-and-sprints.md` 规划 Phase、Sprint、Task 和验证包，再用 A10 小步执行任务，最后用 A12 / `sprint-summary` 把验证证据写回 `docs/09-verification.md`。不要只看“代码能跑”，还要有 Test Case、验收记录和未验证风险。
 
 ## 5. 目录结构（三层）
 

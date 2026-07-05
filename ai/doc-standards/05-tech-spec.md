@@ -4,7 +4,7 @@
 >
 > **上游输入**：`docs/04-architecture.md`、`docs/03-prd.md`、`docs/env/local-env.md`、`ai/project-rules.md`。
 >
-> **下游输出**：约束 `docs/06-db-design.md`、`docs/07-api-spec.md`、`docs/08-dev-plan.md`、代码目录、依赖文件和验证方式。
+> **下游输出**：约束 `docs/06-db-design.md`、`docs/07-api-spec.md`、`docs/design/*`、`docs/08-dev-plan.md`、代码目录、依赖文件和验证方式。
 
 ## 0. 文档元信息
 
@@ -43,11 +43,19 @@
 
 ## 4. 运行环境与资源评估
 
-**撰写提要**：读取 `docs/env/local-env.md`，说明本机 Demo 是否可运行、资源瓶颈、降级策略和服务器预案。
+**撰写提要**：读取 `docs/env/local-env.md`，说明本机 Demo 是否可运行、资源瓶颈、降级策略和服务器预案。若项目涉及真实运行依赖，引用 `docs/research/*tech-env-evaluation*.md` 的 Go / Conditional Go / No-Go 结论；缺失时写明跳过理由、风险和补做时点。
 
 | 运行项 | 本机要求 | 当前本机是否满足 | 降级 / Mock | 服务器预案 |
 |---|---|---|---|---|
 |  |  | 是 / 否 / 待确认 |  |  |
+
+### 4.1 技术环境评估结论（如触发）
+
+- 评估报告：`docs/research/YYYY-MM-DD-tech-env-evaluation-<scope>.md` / 暂无（原因：）
+- 评估结论：Go / Conditional Go / No-Go / 待评估
+- 已验证项：依赖安装 / 导入 / 最小运行 / build / dev server / Docker / 模型加载
+- 未验证项与补做时点：
+- 对 09 验证计划和依赖文件的影响：
 
 ## 5. Phase 技术约束
 
@@ -56,6 +64,14 @@
 | Phase | 允许 | 禁止 | 技术状态说明 |
 |---|---|---|---|
 | Phase1 |  |  |  |
+
+## 5.1 前端交互设计边界（如适用）
+
+**撰写提要**：若项目包含独立 Web、移动端、小程序、桌面端或其他可点击 UI，判断是否触发 `docs/design/frontend-interaction.md` 或 `docs/design/*interaction*.md`；若豁免，写明理由。技术方案只写技术栈、运行方式、状态管理、权限执行位置和工程约束，不替代页面流、空态 / 错误态、文案和验收路径。
+
+- 前端交互设计：需要 / 不需要 / 豁免（理由：）
+- 交互设计路径：`docs/design/frontend-interaction.md` / `docs/design/...-interaction.md`
+- 权限边界：前端隐藏 / 禁用 / 路由守卫仅作可见性控制；权限必须由后端接口和服务层执行
 
 ## 6. 编码约定
 
@@ -86,4 +102,8 @@
 
 ## 9. 待人工确认项
 
--
+> 待确认项必须保留 AI 建议、建议依据、备选方案和取舍影响；AI 建议不等于用户确认。
+
+| ID | 待确认项 | AI 建议 | 建议依据 | 备选方案 | 取舍影响 / 阻塞关系 |
+|---|---|---|---|---|---|
+| C-001 |  |  |  |  |  |

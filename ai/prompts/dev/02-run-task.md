@@ -13,7 +13,7 @@
 
 **不适用场景**：需求、架构或技术方案还未确认；这种情况先回到 `ai/prompts/docs/01-review-inputs.md` 或 `ai/prompts/review/10-docs-checklist.md`。
 
-**使用前准备**：确认当前 Sprint 的目标、输入文档、修改范围、验收标准和禁止事项已写在 `docs/08-dev-plan.md` 或 `tasks/` 中。
+**使用前准备**：确认当前 Sprint / Task 的目标、输入文档、修改范围、测试等级 / 验证包、验收标准和禁止事项已写在 `docs/08-dev-plan.md` 或 `tasks/` 中，并已能关联 `docs/09-verification.md` 的 Test Case。若任务触发真实运行依赖，确认已有技术路线与环境支撑评估或明确跳过记录。
 
 **续接要求**：输出执行计划后，按 `ai/session-rules.md` 写入 / 更新 `.ai/session-handoff.md`（兼容 `NEXT-STEPS.md`）；每完成一个步骤、修改文件后或遇到阻塞时刷新当前进度与下一步。
 
@@ -26,7 +26,11 @@
 
 执行前请先阅读：
 - ai/index.md 列出的全部规则文件
+- ai/implementation-lifecycle-rules.md
 - docs/03-prd.md（相关章节）
+- docs/08-dev-plan.md（当前 Sprint / Task）
+- docs/09-verification.md（关联 Test Case / 验证包）
+- docs/research/*tech-env-evaluation*.md（若本任务涉及 backend / frontend / docker / 数据库 / 本机模型 / 外部 API 等真实运行依赖）
 - docs/07-api-spec.md（若本项目有对外接口，阅读相关接口）
 - docs/06-db-design.md（若本任务涉及持久化，阅读相关表结构）
 
@@ -34,8 +38,10 @@
 
 要求：
 1. 先说明实现方案
-2. 本任务涉及文档或代码变更时，先按 `ai/document-lifecycle-rules.md` 说明上游依据与下游影响；列出将新增或修改的文件（限制1~3个）
-3. 确认不超出本任务范围
-4. 再开始生成代码
-5. 完成后说明修改了哪些文件，以及如何验证
+2. 本任务涉及文档或代码变更时，先按 `ai/document-lifecycle-rules.md` 说明上游依据与下游影响；再按 `ai/implementation-lifecycle-rules.md` 列出关联 REQ / Sprint / Task / Test Case、预期修改文件（限制1–3个）和验证方式
+3. 写入前列出全部预计文件、变更摘要、风险和验证方式，等待我确认；修改后输出 `git status` 摘要和文件清单
+4. 若任务涉及真实运行依赖但缺少技术环境评估，先停止并建议运行 `tech-env-evaluation`；若用户明确跳过，记录跳过原因、风险、影响范围和补做时点
+5. 确认不超出当前 Phase 和本任务范围
+6. 再开始生成代码
+7. 完成后说明修改了哪些文件、运行了哪些验证、结果如何、哪些风险或未验证项需要写入 09
 ```

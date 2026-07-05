@@ -7,12 +7,14 @@
 
 - `/run review-inputs`
 - 评审输入材料
+- 评估能不能生成 product-vision
 - 判断能不能生成文档
 - 检查愿景是否足够
+- inputs 为空怎么办
 
 ## 适用场景
 
-生成文档体系前，需要判断现有输入是否足够、应该采用哪个入口模式和文档剖面。
+生成文档体系前，需要判断 `docs/inputs/` 中的现有输入是否足以生成 / 更新 `docs/vision/product-vision.md`，以及应该采用哪个入口模式和文档剖面。若输入为空或不足，本命令负责输出评估报告和最小补充清单。
 
 ## 必读文件
 
@@ -25,13 +27,14 @@
 ## 执行流程
 
 1. 读取输入评审 Prompt。
-2. 盘点输入材料类型、可信度、缺口和冲突。
-3. 判断是否可进入 `generate-docs`。
-4. 输出缺口清单、推荐入口和待人工确认项。
+2. 优先盘点 `docs/inputs/`；兼容读取已有 `docs/vision/product-vision.md`，但不把 `docs/vision/` 当作新项目默认输入入口。
+3. 评估 Product Vision 就绪度：Ready / Conditionally Ready / Not Ready。
+4. 若不足，输出 `docs/inputs/input-review-report.md` 建议路径、缺口矩阵、AI 建议与依据、最小补充清单。
+5. 若通过，输出可交给 `generate-docs` 的愿景输入摘要、来源锚点、推荐入口和待人工确认项。
 
 ## 写入风险
 
-默认只读；不足时只输出建议，不直接补写项目事实。
+默认只读；不足时只输出建议，不直接补写项目事实。若用户要求保存评估报告，写入前必须确认范围。
 
 ## 续接要求
 
