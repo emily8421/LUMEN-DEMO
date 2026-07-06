@@ -58,6 +58,46 @@ class RagServiceTest(unittest.TestCase):
         self.assertEqual(other_member_answer.answer, NOT_FOUND_ANSWER)
         self.assertEqual(other_member_answer.sources, [])
 
+    def test_answer_question_can_reference_visible_title_match(self) -> None:
+        repository = DemoRepository()
+        document = create_document(
+            repository,
+            user_id=1,
+            current_space_id=10,
+            request=DocumentCreate(
+                title="Title Only RAG Keyword",
+                content_md="正文没有目标词。",
+                permission=DocumentPermission.TEAM,
+            ),
+        )
+        repository.replace_document_chunks(document.id, ["正文没有目标词。"])
+
+        answer = answer_question(repository, user_id=1, current_space_id=10, question="Title Only RAG 是什么")
+
+        self.assertIn("仅命中文档标题", answer.answer)
+        self.assertEqual(answer.sources[0].doc_id, document.id)
+        self.assertEqual(answer.sources[0].snippet, "标题匹配：Title Only RAG Keyword")
+
+    def test_answer_question_title_match_keeps_private_document_filtered(self) -> None:
+        repository = DemoRepository()
+        create_document(
+            repository,
+            user_id=1,
+            current_space_id=10,
+            request=DocumentCreate(
+                title="Private RAG Title Keyword",
+                content_md="公开正文。",
+                permission=DocumentPermission.PRIVATE,
+            ),
+        )
+
+        owner_answer = answer_question(repository, user_id=1, current_space_id=10, question="Private RAG Title 是什么")
+        other_member_answer = answer_question(repository, user_id=2, current_space_id=10, question="Private RAG Title 是什么")
+
+        self.assertEqual(len(owner_answer.sources), 1)
+        self.assertEqual(other_member_answer.answer, NOT_FOUND_ANSWER)
+        self.assertEqual(other_member_answer.sources, [])
+
     def test_answer_question_rejects_blank_question(self) -> None:
         with self.assertRaises(RagValidationError) as context:
             answer_question(DemoRepository(), user_id=1, current_space_id=10, question="  ")
@@ -89,6 +129,21 @@ class RagServiceTest(unittest.TestCase):
         self.assertIn("按当前空间术语解释", answer.answer)
         self.assertIn("空间定义", answer.answer)
         self.assertIn("term", [source.source_type for source in answer.sources])
+
+    def test_answer_question_returns_term_source_without_document_candidate(self) -> None:
+        repository = DemoRepository()
+        create_term(
+            repository,
+            user_id=1,
+            current_space_id=10,
+            request=TermWrite(term="验收术语", definition="空间术语定义", aliases=["术语验收"], status=TermStatus.CONFIRMED),
+        )
+
+        answer = answer_question(repository, user_id=1, current_space_id=10, question="术语验收 是什么")
+
+        self.assertIn("按当前空间术语解释", answer.answer)
+        self.assertIn("空间术语定义", answer.answer)
+        self.assertEqual([source.source_type for source in answer.sources], ["term"])
 
 
 if __name__ == "__main__":

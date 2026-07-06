@@ -48,6 +48,45 @@ class SearchServiceTest(unittest.TestCase):
         self.assertEqual(owner_results.total, 1)
         self.assertEqual(other_member_results.total, 0)
 
+    def test_search_matches_visible_document_title(self) -> None:
+        repository = DemoRepository()
+        document = create_document(
+            repository,
+            user_id=1,
+            current_space_id=10,
+            request=DocumentCreate(
+                title="Title Only Keyword",
+                content_md="正文没有目标词。",
+                permission=DocumentPermission.TEAM,
+            ),
+        )
+        repository.replace_document_chunks(document.id, ["正文没有目标词。"])
+
+        result_page = search_documents(repository, user_id=1, current_space_id=10, query="title only")
+
+        self.assertEqual(result_page.total, 1)
+        self.assertEqual(result_page.items[0].doc_id, document.id)
+        self.assertEqual(result_page.items[0].snippet, "标题匹配：Title Only Keyword")
+
+    def test_search_title_match_keeps_private_document_filtered(self) -> None:
+        repository = DemoRepository()
+        create_document(
+            repository,
+            user_id=1,
+            current_space_id=10,
+            request=DocumentCreate(
+                title="Private Title Keyword",
+                content_md="公开正文。",
+                permission=DocumentPermission.PRIVATE,
+            ),
+        )
+
+        owner_results = search_documents(repository, user_id=1, current_space_id=10, query="private title")
+        other_member_results = search_documents(repository, user_id=2, current_space_id=10, query="private title")
+
+        self.assertEqual(owner_results.total, 1)
+        self.assertEqual(other_member_results.total, 0)
+
     def test_search_filters_current_space(self) -> None:
         repository = DemoRepository()
         nova_document = create_document(

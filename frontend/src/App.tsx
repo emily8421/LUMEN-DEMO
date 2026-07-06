@@ -7,6 +7,7 @@ import {
   DocumentPermission,
   DocumentVersion,
   getDocument,
+  importDocument,
   KnowledgeDocument,
   listDocuments,
   listSpaces,
@@ -46,9 +47,16 @@ const emptyTermDraft = {
   status: 'confirmed' as TermStatus,
 };
 
+const emptyImportDraft = {
+  title: '',
+  permission: 'team' as DocumentPermission,
+};
+
 type Draft = typeof emptyDraft;
 
 type TermDraft = typeof emptyTermDraft;
+
+type ImportDraft = typeof emptyImportDraft;
 
 type Session = {
   token: string;
@@ -75,6 +83,10 @@ function App() {
   const [terms, setTerms] = useState<Term[]>([]);
   const [selectedTermId, setSelectedTermId] = useState<number | null>(null);
   const [termDraft, setTermDraft] = useState<TermDraft>(emptyTermDraft);
+  const [importDraft, setImportDraft] = useState<ImportDraft>(emptyImportDraft);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importInputKey, setImportInputKey] = useState(0);
+  const [lastImportSummary, setLastImportSummary] = useState('');
 
   const selectedDocument = useMemo(
     () => documents.find((document) => document.id === selectedId) ?? null,
@@ -219,6 +231,32 @@ function App() {
     });
   }
 
+  async function handleImport(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!session || !importFile) {
+      return;
+    }
+
+    await runAction('正在导入已提取文本...', async () => {
+      const result = await importDocument(session.token, {
+        file: importFile,
+        title: importDraft.title,
+        permission: importDraft.permission,
+      });
+      await refreshWorkspace(session.token);
+      setSelectedId(result.parsed_doc_id);
+      setIsCreating(false);
+      setSearchResult(null);
+      setQueryResult(null);
+      setImportDraft(emptyImportDraft);
+      setImportFile(null);
+      setImportInputKey((currentKey) => currentKey + 1);
+      const summary = `导入完成：文档 #${result.parsed_doc_id}，${result.chunk_count} 个 chunk（${result.mode}）`;
+      setLastImportSummary(summary);
+      setNotice(summary);
+    });
+  }
+
   async function handleSaveTerm(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!session) {
@@ -319,8 +357,8 @@ function App() {
     <main className="app-shell">
       <header className="topbar">
         <div>
-          <p className="eyebrow">LUMEN Demo · Sprint-2</p>
-          <h1>文档管理与版本历史</h1>
+          <p className="eyebrow">LUMEN Demo · Sprint-6</p>
+          <h1>桌面端知识库集成验收</h1>
         </div>
         {session ? (
           <div className="session-card">
@@ -384,6 +422,44 @@ function App() {
                   ))}
                 </ul>
               )}
+            </section>
+
+            <section className="import-panel">
+              <p className="eyebrow">REQ-009 / REQ-010 · 降级</p>
+              <h2>导入已提取文本</h2>
+              <p className="empty-state">Sprint-6 仅走通降级导入：上传 .txt / .md，真实 PDF / OCR 记录为未验证。</p>
+              <form className="compact-form" onSubmit={handleImport}>
+                <label>
+                  文件
+                  <input
+                    key={importInputKey}
+                    type="file"
+                    accept=".txt,.md,text/plain,text/markdown"
+                    onChange={(event) => setImportFile(event.target.files?.[0] ?? null)}
+                  />
+                </label>
+                <label>
+                  标题（可选）
+                  <input
+                    value={importDraft.title}
+                    onChange={(event) => setImportDraft({ ...importDraft, title: event.target.value })}
+                    placeholder="默认使用文件名"
+                  />
+                </label>
+                <label>
+                  权限
+                  <select
+                    value={importDraft.permission}
+                    onChange={(event) => setImportDraft({ ...importDraft, permission: event.target.value as DocumentPermission })}
+                  >
+                    {Object.entries(permissionLabels).map(([value, label]) => (
+                      <option key={value} value={value}>{label}</option>
+                    ))}
+                  </select>
+                </label>
+                <button type="submit" disabled={isBusy || !importFile}>导入</button>
+              </form>
+              {lastImportSummary ? <p className="import-summary">{lastImportSummary}</p> : null}
             </section>
           </aside>
 

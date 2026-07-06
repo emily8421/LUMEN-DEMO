@@ -99,6 +99,20 @@ export type TermWritePayload = {
   source_document_id?: number | null;
 };
 
+export type ImportResponse = {
+  import_id: number;
+  status: string;
+  parsed_doc_id: number;
+  chunk_count: number;
+  mode: string;
+};
+
+export type ImportDocumentPayload = {
+  file: File;
+  title: string;
+  permission: DocumentPermission;
+};
+
 export async function login(username: string): Promise<LoginResponse> {
   return request<LoginResponse>('/api/auth/login', {
     method: 'POST',
@@ -180,6 +194,21 @@ export async function queryKnowledgeBase(token: string, question: string): Promi
   });
 }
 
+export async function importDocument(token: string, payload: ImportDocumentPayload): Promise<ImportResponse> {
+  const formData = new FormData();
+  formData.append('file', payload.file);
+  if (payload.title.trim()) {
+    formData.append('title', payload.title.trim());
+  }
+  formData.append('permission', payload.permission);
+
+  return request<ImportResponse>('/api/import', {
+    method: 'POST',
+    token,
+    body: formData,
+  });
+}
+
 export async function listTerms(token: string): Promise<TermListResponse> {
   return request<TermListResponse>('/api/terms', { token });
 }
@@ -214,8 +243,11 @@ type RequestOptions = Omit<RequestInit, 'headers'> & {
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const headers = new Headers({
     Accept: 'application/json',
-    'Content-Type': 'application/json',
   });
+
+  if (!(options.body instanceof FormData)) {
+    headers.set('Content-Type', 'application/json');
+  }
 
   if (options.token) {
     headers.set('Authorization', `Bearer ${options.token}`);
