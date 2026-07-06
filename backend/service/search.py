@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from backend.model.entities import DocumentChunk
+from backend.model.entities import Document, DocumentChunk
 
 from backend.service.permission import filter_visible_documents
 
@@ -56,10 +56,12 @@ def search_documents(
     documents_by_id = {document.id: document for document in visible_documents}
     chunks = repository.list_all_document_chunks()
     matches: list[SearchResult] = []
+    matched_document_ids: set[int] = set()
     for chunk in chunks:
         document = documents_by_id.get(chunk.document_id)
         if document is None or not _chunk_matches(chunk, normalized_query):
             continue
+        matched_document_ids.add(document.id)
         matches.append(
             SearchResult(
                 doc_id=document.id,
@@ -67,6 +69,18 @@ def search_documents(
                 snippet=_build_snippet(chunk.text, normalized_query),
                 chunk_id=chunk.id,
                 ordinal=chunk.ordinal,
+            )
+        )
+    for document in visible_documents:
+        if document.id in matched_document_ids or not _title_matches(document, normalized_query):
+            continue
+        matches.append(
+            SearchResult(
+                doc_id=document.id,
+                title=document.title,
+                snippet=f"标题匹配：{document.title}",
+                chunk_id=0,
+                ordinal=0,
             )
         )
 
@@ -83,6 +97,10 @@ def _normalize_query(query: str) -> str:
 
 def _chunk_matches(chunk: DocumentChunk, normalized_query: str) -> bool:
     return normalized_query in chunk.text.lower()
+
+
+def _title_matches(document: Document, normalized_query: str) -> bool:
+    return normalized_query in document.title.lower()
 
 
 def _build_snippet(text: str, normalized_query: str) -> str:
