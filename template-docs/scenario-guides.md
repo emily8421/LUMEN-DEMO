@@ -348,20 +348,23 @@ AI 识别场景后，**先输出引导计划给用户看（用人话 + 为什么
 - **cmd 指针**：`ai/prompts/dev/09-sprint-summary.md`
 
 #### A13 同步模板到派生项目
-- **说明**：把模板方法论的更新拉到你的派生项目（不回传），并完成同步后的边界验证、整理、文档审计、项目验证建议和同步报告留痕。
-- **触发**：「同步模板」「更新方法论」「sync template」
-- **cwd·前置**：在派生项目 · 有 `scripts/sync-template.ps1` + `template-sync.json`
+- **说明**：把模板方法论的更新拉到你的派生项目（不回传），并完成同步后的边界验证、整理、文档审计、项目验证建议和同步报告留痕；若已完成同步提交但旧流程未跑后续，则进入“同步后续接模式”，跳过 dry-run / commit，从边界验证开始补完闭环。
+- **触发**：「同步模板」「更新方法论」「sync template」「已同步但没做后续」「补完同步后流程」「同步后续接」
+- **cwd·前置**：在派生项目；若缺少 `scripts/sync-template.ps1`、`template-sync.json`，或 `VERSION` 低于 `v1.6.8` / 无法判断脚本是否为新版，仍属于本场景，先按 `git-guide.md` §5.2 走旧派生项目首次同步 bootstrap，再继续完整 A13 闭环。
 
 | # | 做什么 | 为什么 | 机器执行 |
 |---|---|---|---|
-| 1 | 先输出标准闭环计划 | 用户知道同步不只是拉文件，还要整理、审计、验证、留痕 | `sync-methodology`(12) |
+| 1 | 先输出标准闭环计划 | 用户知道同步不只是拉文件，还要整理、审计、验证、留痕；旧派生项目 bootstrap 拿到新版流程后，也不能停在同步提交 | `sync-methodology`(12)；旧项目先按 `git-guide.md` §5.2 bootstrap，再读取新版 `ai/prompts/maintainers/12-sync-template.md` 继续 |
 | 2 | 预览模板有哪些更新、会不会动项目文件 | 先确认安全再改，避免误覆盖 | `--dry-run` |
 | 3 | 确认安全后应用更新并做边界验证 | 拿到模板方法论更新，确认没误覆盖项目件 | `--commit` + `scripts/check-derived-sync.ps1` |
 | 4 | 同步后整理项目 | README、`project-rules`、docs 分区等项目事实不会被同步脚本自动迁移 | `post-sync-cleanup`(15)，先出迁移计划 |
 | 5 | 文档体系同步后审计 | 检查旧方法生成的 `docs/00-09` 是否需按新规范回梳 | `docs-system-audit`(16)，同步后审计模式 |
-| 6 | 给项目验证建议并形成同步报告 | 留下命令、结果、风险、未验证项和后续任务 | `template-docs/derived-sync-report-template.md` → `sync-records/template-sync/` |
+| 6 | 做提案回流收口检查 | 派生提案可能已通过模板 issue / PR 被采纳，同步后应判断本地草稿和 issue 记录是否可归档 | 扫描 `_proposals/`、`.ai/session-handoff.md`、`sync-records/template-sync/`、issue 链接；必要时 `gh issue view` |
+| 7 | 给项目验证建议并形成同步报告 | 留下命令、结果、风险、未验证项、提案收口结论和后续任务 | `template-docs/derived-sync-report-template.md` → `sync-records/template-sync/` |
 
-- **完成判据**：同步清单文件更新 · 项目专属文件未被覆盖 · `check-derived-sync` 通过 · 已输出整理 / 审计摘要 · 已给项目验证建议 · 已形成或更新同步报告
+> **同步后续接模式**：若 Git 显示已存在最近的 `sync template vX.Y.Z from ai-project-template` 同步提交，或 `VERSION` 已是目标版本且用户明确说“已同步，只补后续”，不要重新执行 dry-run / commit；先核对最新同步提交和工作区，再从第 3 步的边界验证开始补跑 workflow 检查、`post-sync-cleanup`、`docs-system-audit`、项目验证建议和同步运行记录。
+
+- **完成判据**：同步清单文件更新 · 项目专属文件未被覆盖 · `check-derived-sync` 通过 · 已输出整理 / 审计摘要 · 已完成提案回流收口判断 · 已给项目验证建议 · 已形成或更新同步报告
 - **下一步**：A14 / 回 A10 继续
 - **cmd 指针**：`git-guide.md` §5 + `ai/prompts/maintainers/12-sync-template.md`
 

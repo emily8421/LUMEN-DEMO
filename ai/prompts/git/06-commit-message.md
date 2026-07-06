@@ -15,7 +15,7 @@
 
 **预期产出**：一条或多条候选 commit message，必要时建议拆分提交。
 
-**使用后下一步**：人工选择提交信息，执行 `git add` / `git commit`。
+**使用后下一步**：人工选择提交信息，执行 `git add` / `git commit`。若随后要 `git push`、创建 / 合并 PR 或执行其他远端操作，先运行 `powershell -ExecutionPolicy Bypass -File scripts/check-github-context.ps1` 做只读预检，确认 cwd、remote、分支、`gh` 账号和仓库权限。
 
 ```text
 请根据本次修改内容，生成符合 ai/global-rules.md 规范的Commit message：

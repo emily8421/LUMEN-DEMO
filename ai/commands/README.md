@@ -57,7 +57,7 @@ AI 识别到命令意图后，应：
 | 命令 | 常见说法 | 路由到 |
 |---|---|---|
 | `scenario` | 我想<场景> / 帮我<做某事> / 新手引导 | `template-docs/scenario-guides.md`（元命令：先产出引导计划，再路由到具体 command） |
-| `sync-methodology` | 更新方法论 / 同步模板方法论 | `git-guide.md` §5、`ai/prompts/maintainers/12-sync-template.md` |
+| `sync-methodology` | 更新方法论 / 同步模板方法论 / 已同步但没做后续 / 补完同步后流程 | `git-guide.md` §5、`ai/prompts/maintainers/12-sync-template.md` |
 | `post-sync-cleanup` | 同步后整理项目 | `ai/prompts/maintainers/15-post-sync-cleanup.md` |
 | `docs-system-audit` | 文档体系审核 / PLM 链路审计 | `ai/prompts/review/16-docs-system-audit.md` |
 | `docs-evaluation` | 文档评估 / 阶段转换评估 / 单文档评估 | `ai/prompts/review/19-docs-evaluation.md` |

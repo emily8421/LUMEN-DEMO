@@ -182,6 +182,7 @@ function Invoke-NativeTemplateCheck {
       "scripts/check-prereqs.ps1",
       "scripts/bootstrap-dev-env.ps1",
       "scripts/collect-env.ps1",
+      "scripts/check-github-context.ps1",
       "scripts/new-project.sh",
       "scripts/sync-template.sh",
       "scripts/check-template.sh"
@@ -232,8 +233,17 @@ function Invoke-NativeTemplateCheck {
   Require-Contains "scripts/new-project.sh" "check-prereqs\.ps1" "new-project README template includes prerequisite check step"
   Require-Contains "scripts/new-project.sh" "newbie AI CLI onboarding path" "new-project README template includes AI CLI onboarding path"
   Require-Contains "scripts/check-prereqs.ps1" "Git Bash" "check-prereqs checks Git Bash"
+  Require-Contains "scripts/check-github-context.ps1" "gh auth status" "GitHub context preflight checks gh auth status"
+  Require-Contains "git-guide.md" "scripts/check-github-context\.ps1" "git-guide documents GitHub context preflight"
+  Require-Contains "SOP.md" "check-github-context\.ps1" "SOP includes GitHub context preflight command"
+  Require-Contains "ai/commands/submit-proposal.md" "--body-file" "submit-proposal uses body-file for Markdown issue body"
+  Require-Contains "ai/prompts/maintainers/17-submit-proposal.md" "--body-file" "submit-proposal prompt uses body-file"
+  Require-Contains "ai/prompts/maintainers/17-submit-proposal.md" "来源标签缺失" "submit-proposal prompt handles missing source label"
+  Require-Contains "ai/prompts/maintainers/17-submit-proposal.md" "半成品 issue" "submit-proposal prompt checks partial issue after failure"
   Require-Contains "scripts/sync-template.ps1" "Invoke-NativeTemplateSync" "sync-template PowerShell fallback exists"
   Require-Contains "scripts/check-derived-sync.ps1" "Invoke-NativeDerivedSyncCheck" "check-derived-sync PowerShell fallback exists"
+  Require-Contains "scripts/sync-template.ps1" "Get-GitUtf8Text" "sync-template PowerShell fallback decodes Git output as UTF-8"
+  Require-Contains "scripts/check-derived-sync.ps1" "Get-GitUtf8Text" "check-derived-sync PowerShell fallback decodes Git output as UTF-8"
   Require-Contains "SOP.md" "PowerShell fallback" "SOP documents PowerShell fallback"
   Require-Contains "MAINTAINERS.md" "PowerShell native fallback" "MAINTAINERS documents PowerShell fallback"
   Require-Contains "template-docs/derived-sync-report-template.md" "PowerShell fallback" "sync report records PowerShell fallback"

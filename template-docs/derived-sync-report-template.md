@@ -64,6 +64,7 @@ sync-records/template-sync/YYYY-MM-DD-sync-template-vX.Y.Z.md
 ## 遇到的问题
 
 - Git / gh / Git Bash / PowerShell / 网络问题（如触发 fallback，请记录脚本输出的 fallback 标识与结果）：
+- `gh issue create` / `submit-proposal` 问题（认证、重复 issue、`--body-file`、标签缺失、来源标签降级）：
 - 同步脚本问题：
 - Prompt / 快捷命令理解问题：
 - 文档说明不清：
@@ -78,6 +79,14 @@ sync-records/template-sync/YYYY-MM-DD-sync-template-vX.Y.Z.md
 ## 已生成的回流提案
 
 - `_proposals/TEMPLATE-UPGRADE-xxx.md`
+
+## 提案回流收口
+
+- 扫描范围：`_proposals/` / `.ai/session-handoff.md` / `sync-records/template-sync/` / 模板仓 issue 链接
+- 已确认被模板采纳或已有决议的提案：
+- 已归档到 `_archive/proposals/` 的本地提案：
+- 仍需保留在 `_proposals/` 的提案：
+- 无法判断是否已处理的 issue / 提案与待确认项：
 
 ## 后续动作
 

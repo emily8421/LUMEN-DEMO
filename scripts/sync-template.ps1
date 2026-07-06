@@ -66,7 +66,10 @@ function Test-TemplateBash {
       }
     }
 
-    $stderr = if (Test-Path $stderrFile) { (Get-Content $stderrFile -Raw).Trim() } else { "" }
+    $stderr = if (Test-Path $stderrFile) {
+      $stderrText = Get-Content $stderrFile -Raw
+      if ($null -eq $stderrText) { "" } else { $stderrText.Trim() }
+    } else { "" }
     return [pscustomobject]@{
       Ready    = ($proc.ExitCode -eq 0)
       ExitCode = $proc.ExitCode
@@ -90,11 +93,54 @@ function Invoke-Git {
 function Get-GitText {
   param([Parameter(ValueFromRemainingArguments = $true)][string[]]$GitArgs)
 
-  $output = & git @GitArgs
-  if ($LASTEXITCODE -ne 0) {
-    throw "git $($GitArgs -join ' ') failed with exit code $LASTEXITCODE"
+  $text = Get-GitUtf8Text @GitArgs
+  if ($text.Length -eq 0) {
+    return @()
   }
-  return @($output)
+
+  $normalized = $text -replace "`r`n", "`n" -replace "`r", "`n"
+  $lines = @([regex]::Split($normalized, "`n"))
+  if ($normalized.EndsWith("`n") -and $lines.Count -gt 0) {
+    $lines = @($lines | Select-Object -First ($lines.Count - 1))
+  }
+  return $lines
+}
+
+function Get-GitUtf8Text {
+  param([Parameter(ValueFromRemainingArguments = $true)][string[]]$GitArgs)
+
+  $tmpDir = Join-Path ([System.IO.Path]::GetTempPath()) ("template-git-" + [guid]::NewGuid().ToString("N"))
+  New-Item -ItemType Directory -Path $tmpDir -Force | Out-Null
+  $stdoutFile = Join-Path $tmpDir "stdout.bin"
+  $stderrFile = Join-Path $tmpDir "stderr.bin"
+
+  try {
+    $proc = Start-Process -FilePath "git" `
+      -ArgumentList $GitArgs `
+      -NoNewWindow `
+      -Wait `
+      -PassThru `
+      -RedirectStandardOutput $stdoutFile `
+      -RedirectStandardError $stderrFile
+
+    if ($null -eq $proc) {
+      throw "git $($GitArgs -join ' ') failed to start"
+    }
+
+    $stdout = if (Test-Path $stdoutFile) { [System.IO.File]::ReadAllText($stdoutFile, [System.Text.Encoding]::UTF8) } else { "" }
+    $stderr = if (Test-Path $stderrFile) { [System.IO.File]::ReadAllText($stderrFile, [System.Text.Encoding]::UTF8).Trim() } else { "" }
+
+    if ($proc.ExitCode -ne 0) {
+      $message = "git $($GitArgs -join ' ') failed with exit code $($proc.ExitCode)"
+      if ($stderr) { $message = "$message`: $stderr" }
+      throw $message
+    }
+
+    return $stdout
+  }
+  finally {
+    Remove-Item $tmpDir -Recurse -Force -ErrorAction SilentlyContinue
+  }
 }
 
 function Test-GitObject {
@@ -135,7 +181,7 @@ function Get-SyncFilesFromRef {
   param([string]$Ref)
 
   if (Test-GitObject -Ref $Ref -Path "template-sync.json") {
-    $jsonText = (Get-GitText show ("{0}:template-sync.json" -f $Ref)) -join "`n"
+    $jsonText = Get-GitUtf8Text show ("{0}:template-sync.json" -f $Ref)
     $json = $jsonText | ConvertFrom-Json
     return @($json.files | Where-Object { $_ })
   }
@@ -152,7 +198,7 @@ function Get-TemplateVersion {
   param([string]$Ref)
 
   if (Test-GitObject -Ref $Ref -Path "VERSION") {
-    $version = ((Get-GitText show ("{0}:VERSION" -f $Ref)) -join "").Trim()
+    $version = (Get-GitUtf8Text show ("{0}:VERSION" -f $Ref)).Trim()
     if ($version) { return $version }
   }
 
@@ -190,9 +236,9 @@ function Write-RemoteFileToLocal {
     New-Item -ItemType Directory -Path $parent -Force | Out-Null
   }
 
-  $content = (Get-GitText show ("{0}:{1}" -f $Ref, $RemotePath)) -join "`n"
+  $content = Get-GitUtf8Text show ("{0}:{1}" -f $Ref, $RemotePath)
   $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-  [System.IO.File]::WriteAllText((Join-Path (Get-Location) $LocalPath), $content + "`n", $utf8NoBom)
+  [System.IO.File]::WriteAllText((Join-Path (Get-Location) $LocalPath), $content, $utf8NoBom)
 }
 
 function Show-TemplateDiffStat {
@@ -216,9 +262,9 @@ function Show-TemplateDiffStat {
       New-Item -ItemType File -Path $localFile -Force | Out-Null
     }
 
-    $remoteContent = (Get-GitText show ("{0}:{1}" -f $Ref, $RemotePath)) -join "`n"
+    $remoteContent = Get-GitUtf8Text show ("{0}:{1}" -f $Ref, $RemotePath)
     $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-    [System.IO.File]::WriteAllText($remoteFile, $remoteContent + "`n", $utf8NoBom)
+    [System.IO.File]::WriteAllText($remoteFile, $remoteContent, $utf8NoBom)
     & git diff --no-index --stat -- $localFile $remoteFile | ForEach-Object { Write-Host ($_ -replace [regex]::Escape($tmpDir + [System.IO.Path]::DirectorySeparatorChar), "") }
     $global:LASTEXITCODE = 0
   }
@@ -379,6 +425,14 @@ function Invoke-NativeTemplateSync {
   Invoke-Git commit -q -m "sync template $version from ai-project-template" -- @($updatedFiles.ToArray())
   Write-Host "OK committed: sync template $version"
   Write-Host "   Push: git push"
+  Write-Host ""
+  Write-Host "Next steps (do not stop at the sync commit):"
+  Write-Host "  1. Run derived boundary check: powershell -ExecutionPolicy Bypass -File scripts/check-derived-sync.ps1"
+  Write-Host "  2. In AI, run: /run post-sync-cleanup"
+  Write-Host "  3. In AI, run: /run docs-system-audit (post-sync audit mode)"
+  Write-Host "  4. Run project tests / lint / build as applicable; record unavailable checks as unverified"
+  Write-Host "  5. Create or update: sync-records/template-sync/YYYY-MM-DD-sync-template-$version.md"
+  Write-Host "     Use: template-docs/derived-sync-report-template.md"
   return 0
 }
 

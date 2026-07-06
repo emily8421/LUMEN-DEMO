@@ -3,9 +3,9 @@
 > Sync notice: This file is maintained by `ai-project-template` and may be overwritten when a derived project syncs template methodology.
 > Do not edit it directly in derived projects; propose reusable changes in `_proposals/` and upstream them to the template repository.
 
-**用途**：在派生项目中，让 AI 按标准流程执行 `ai-project-template` 方法论下行同步。
+**用途**：在派生项目中，让 AI 按标准流程执行 `ai-project-template` 方法论下行同步；若派生项目已完成同步提交但旧流程未跑后续，则按“同步后续接模式”补完边界验证、整理、审计、验证建议和同步记录。
 
-**快捷命令**：`/run sync-methodology`（自然语言：更新方法论 / 同步模板方法论 / 派生项目同步模板）。
+**快捷命令**：`/run sync-methodology`（自然语言：更新方法论 / 同步模板方法论 / 派生项目同步模板 / 已同步但没做后续 / 补完同步后流程 / 同步后续接）。
 
 **目的**：避免人工记忆命令，确保先按派生项目版本选择正确入口，再 dry-run、确认不覆盖项目专属内容，最后完成同步、边界验证、同步后整理、文档体系审计、项目验证建议和同步报告留痕。
 
@@ -17,7 +17,7 @@
 
 **续接要求**：同步流程开始后，按 `ai/session-rules.md` 记录当前同步路径、目标版本、已执行命令、边界验证结果、整理 / 审计摘要、项目验证建议、待确认项和下一步。
 
-**预期产出**：同步分支、同步提交、派生同步边界检查结果、同步后整理计划、文档体系审计摘要、项目验证建议、派生同步运行记录、派生项目已处理提案归档计划和 PR 链接。
+**预期产出**：同步分支、同步提交、派生同步边界检查结果、同步后整理计划、文档体系审计摘要、提案回流收口结论、项目验证建议、派生同步运行记录、派生项目已处理提案归档计划和 PR 链接。
 
 **使用后下一步**：评审并合并派生项目同步 PR；用 `template-docs/derived-sync-report-template.md` 生成或更新同步运行记录；若 `post-sync-cleanup`、`docs-system-audit` 或项目验证建议发现待办，按最小任务继续处理。若 `ai/project-rules.md` 需要人工迁移新骨架项、`_proposals/` 中仍有未处理提案，或运行记录中出现可通用模板优化点，单独开任务处理。
 
@@ -30,21 +30,25 @@
 
 目标：将当前派生项目同步到 ai-project-template 最新模板方法论版本。目标版本必须以模板仓库根目录 `VERSION` 为准，不要使用本 Prompt 文本中的示例版本号。
 
-先说明本次标准闭环计划：同步预检 → dry-run → 同步提交 → `check-derived-sync` 边界验证 → `post-sync-cleanup` 整理计划 → `docs-system-audit` 同步后审计 → 项目验证建议 → `sync-records/template-sync/` 同步报告。每一步说明是否只读、是否会写文件；写入前等待确认。
+先说明本次标准闭环计划：同步预检 → dry-run → 同步提交 → `check-derived-sync` 边界验证 → `post-sync-cleanup` 整理计划 → `docs-system-audit` 同步后审计 → 项目验证建议 → `sync-records/template-sync/` 同步报告。每一步说明是否只读、是否会写文件；写入前等待确认。若用户明确说已同步但只需补后续，或 Git 显示最近已有 `sync template vX.Y.Z from ai-project-template` 同步提交，则进入“同步后续接模式”：不要重新执行 dry-run / commit，先核对同步提交、`VERSION`、工作区和既有同步记录，再从 `check-derived-sync` 边界验证开始补完后续闭环。
 
 执行要求：
 1. 先阅读 ai/index.md 及其列出的全部规则文件。
 2. 检查 git status；若有未提交改动，立即停止并说明，不要覆盖。
-3. 判断当前派生项目同步路径：
+3. 判断是否为同步后续接模式：
+   - 读取：git log --oneline -8、git status --short --branch、Get-Content VERSION、最近一次 `sync-records/template-sync/` 记录（若存在；旧路径 `docs/archive/template-sync/` 兼容读取）。
+   - 若最近提交或用户说明表明已经完成 `sync template vX.Y.Z from ai-project-template`，且本轮目标只是补完后续，不要重新 dry-run / commit；记录已同步版本和缺失环节，直接跳到第 11 步继续。
+   - 若无法确认同步提交是否可信，或 `VERSION` 与最近同步提交 / 目标版本冲突，停止并向用户说明冲突，不得覆盖文件。
+4. 判断当前派生项目同步路径：
    - 如果缺少 `scripts/sync-template.ps1`，或缺少 `template-sync.json`，或 `VERSION` 低于 `v1.6.8`，或不确定当前同步脚本是否为新版，则按“旧派生项目首次同步”路径执行。
    - 如果已有新版 `scripts/sync-template.ps1` 与 `template-sync.json`，则按“v1.6.8+ 后续同步”路径执行。
    - 不要运行 `scripts/check-template.sh` 或 `scripts/check-template.ps1` 作为派生项目同步验收；它们是模板仓库完整性自检。
-4. 先拉取模板 main 并读取目标版本：
+5. 先拉取模板 main 并读取目标版本：
    - 运行：git fetch --no-tags --depth=1 https://github.com/emily8421/ai-project-template.git main
    - 运行：git show FETCH_HEAD:VERSION
    - 记录输出的目标版本，例如 vX.Y.Z。
-5. 新建或切换到同步分支：chore/sync-template-vX.Y.Z（X.Y.Z 取上一步读取到的目标模板版本）。
-6. 如果是旧派生项目首次同步：
+6. 新建或切换到同步分支：chore/sync-template-vX.Y.Z（X.Y.Z 取上一步读取到的目标模板版本）。
+7. 如果是旧派生项目首次同步：
    - 先 bootstrap 最新同步脚本；旧项目使用 Bash 入口，不要无条件信任派生项目本地旧脚本：
    - 运行：git checkout FETCH_HEAD -- scripts/sync-template.sh
    - 运行：git add scripts/sync-template.sh
@@ -52,51 +56,55 @@
    - 若有 staged 差异，运行：git commit -m "chore: bootstrap latest sync script"
    - 运行：& "C:\Program Files\Git\bin\bash.exe" scripts/sync-template.sh --dry-run
    - 如果 Git for Windows 安装位置不同，用本机实际 `bash.exe` 路径替换示例路径。
-7. 如果是 v1.6.8+ 后续同步：
+8. 如果是 v1.6.8+ 后续同步：
    - 运行：powershell -ExecutionPolicy Bypass -File scripts/sync-template.ps1 --dry-run
-8. 检查 dry-run 输出，确认只涉及模板方法论同步文件；不应出现 README.md、ai/project-rules.md、docs/00-09、frontend/、backend/、tests/、docker/ 或业务代码。
-9. 如果 dry-run 合理，执行同步：
+9. 检查 dry-run 输出，确认只涉及模板方法论同步文件；不应出现 README.md、ai/project-rules.md、docs/00-09、frontend/、backend/、tests/、docker/ 或业务代码。
+10. 如果 dry-run 合理，执行同步：
    - 旧派生项目首次同步：运行 & "C:\Program Files\Git\bin\bash.exe" scripts/sync-template.sh --commit
    - v1.6.8+ 后续同步：运行 powershell -ExecutionPolicy Bypass -File scripts/sync-template.ps1 --commit
-10. 只做派生同步边界检查：
+11. 只做派生同步边界检查：
    - 运行：git status --short --branch
    - 运行：git show --name-only --stat HEAD
     - 如已同步到包含 `scripts/check-derived-sync.ps1` 的版本，运行：powershell -ExecutionPolicy Bypass -File scripts/check-derived-sync.ps1
     - 确认最新同步提交没有误覆盖 README.md、ai/project-rules.md、docs/00-09 或业务代码。
-11. 检查派生项目 workflow：
+12. 检查派生项目 workflow：
    - 普通 PR 不应运行 `scripts/check-template.sh` 或 `scripts/check-template.ps1`。
    - 若存在 `.github/workflows/template-check.yml`，说明它通常是模板仓自检入口，提示迁移为 `.github/workflows/project-check.yml`。
    - 派生项目版 workflow 应保留 `git diff --check`，并仅在提交信息匹配 `sync template vX.Y.Z from ai-project-template` 时运行 `scripts/check-derived-sync.sh HEAD`。
-12. 如本次同步引入新的项目专属骨架项，不要直接覆盖 ai/project-rules.md；列出需要人工迁移的字段，例如 `§2.5 运行环境与资源约束`。
-13. 如项目已同步到含 `scripts/collect-env.ps1` 的模板版本，但尚无 `docs/env/local-env.md`，提示运行：powershell -ExecutionPolicy Bypass -File scripts/collect-env.ps1，并补齐人工确认项。
-14. 检查本项目 `_proposals/`：
-   - 如果其中提案已被模板仓库采纳，并且本次同步已拿到对应模板版本，将这些已处理提案移动到本项目 `_archive/proposals/` 归档。
-   - 未处理、延后处理或不确定状态的提案继续保留在 `_proposals/`，不要误归档。
-   - 如执行归档，补充或更新 `_archive/proposals/README.md`，说明归档规则与对应模板版本 / PR。
-15. 如有归档改动，运行 git status 并确认只移动提案记录，不改业务文件。
-16. 进入同步后整理闭环：
+13. 如本次同步引入新的项目专属骨架项，不要直接覆盖 ai/project-rules.md；列出需要人工迁移的字段，例如 `§2.5 运行环境与资源约束`。
+14. 如项目已同步到含 `scripts/collect-env.ps1` 的模板版本，但尚无 `docs/env/local-env.md`，提示运行：powershell -ExecutionPolicy Bypass -File scripts/collect-env.ps1，并补齐人工确认项。
+15. 做提案回流收口检查：
+   - 扫描本项目 `_proposals/TEMPLATE-UPGRADE-*.md`、`.ai/session-handoff.md`、最近 `sync-records/template-sync/` 运行记录（旧路径 `docs/archive/template-sync/` 兼容读取），找出本项目曾提交到模板仓的 issue 链接、待处理提案和已生成回流提案。
+   - 若记录了模板仓 issue 链接，必要时运行 `gh issue view <编号或URL> --repo <模板owner>/<模板repo> --json number,title,state,labels,url,closedAt`，判断 issue 是否已关闭、是否仍标记 `proposal` / `feedback`、是否有后续说明。
+   - 对照本次同步到的模板 `VERSION`、`CHANGELOG.md`、PR 记录或 issue 关闭说明，判断提案是否已被采纳 / 已被替代处理 / 延后 / 未处理。
+   - 已被模板仓库采纳或有明确“已处理 / 不采纳”决议，并且本次同步已拿到对应模板版本的本地提案，移动到本项目 `_archive/proposals/` 归档。
+   - 只有 issue 已关闭但无法从 VERSION / CHANGELOG / PR / issue 说明判断处理结果时，不要误归档；记录为待确认项。
+   - 未处理、延后处理、仍 open 或不确定状态的提案继续保留在 `_proposals/`，不要误归档。
+   - 如执行归档，补充或更新 `_archive/proposals/README.md`，说明归档规则与对应模板版本 / PR / issue。
+16. 如有归档改动，运行 git status 并确认只移动提案记录，不改业务文件。
+17. 进入同步后整理闭环：
    - 触发或引导执行 `/run post-sync-cleanup`，先只读输出整理审计与迁移计划。
    - 实际移动、重命名、删除或修改项目事实文档前必须再次等待用户确认。
    - 将整理发现的问题、待确认项、迁移建议和可回流优化点记录到同步运行记录或 `.ai/session-handoff.md`。
-17. 进入文档体系同步后审计：
+18. 进入文档体系同步后审计：
    - 触发或引导执行 `/run docs-system-audit` 的同步后审计模式。
    - 对照最新 `ai/doc-standards/00-09`（旧项目 fallback：`docs/_scaffold/00-09`）检查项目 `docs/00-09`、`docs/design/`、`docs/env/`。
    - 区分规范基线缺口、兼容差异和项目事实问题；不要把旧文档机械重写成新规范。
    - 将回梳计划、待确认项和同步报告回写建议记录到同步运行记录或 `.ai/session-handoff.md`。
-18. 输出项目验证建议：
+19. 输出项目验证建议：
    - 根据项目形态建议运行测试、lint、文档自检、脚本验证或人工验收。
    - 若无法运行或项目没有验证入口，记录为未验证项，不得写成已通过。
-19. 生成或更新派生同步运行记录：
+20. 生成或更新派生同步运行记录：
    - 读取 `template-docs/derived-sync-report-template.md`。
    - 推荐保存到 `sync-records/template-sync/YYYY-MM-DD-sync-template-vX.Y.Z.md`（长期记录，与项目文档分离，便于审计和回流扫描）；如果用户暂不想提交长期记录，先写入 `.ai/session-handoff.md`。
-   - 记录同步前版本、目标版本、同步分支、dry-run / commit / check-derived-sync 命令、同步结果、是否新增 / 刷新 `ai/doc-standards/00-09`、是否残留旧 `docs/_scaffold/`、同步后整理摘要、文档体系审计摘要、项目验证建议、遇到的问题和后续动作。
-20. 从运行记录归纳可优化点：
+   - 记录同步前版本、目标版本、同步分支、dry-run / commit / check-derived-sync 命令、同步结果、是否新增 / 刷新 `ai/doc-standards/00-09`、是否残留旧 `docs/_scaffold/`、同步后整理摘要、文档体系审计摘要、提案回流收口结论、项目验证建议、遇到的问题和后续动作。
+21. 从运行记录归纳可优化点：
    - 区分项目专属问题、环境问题和模板方法论问题。
    - 对可通用于多个项目的问题，生成去项目化 `_proposals/TEMPLATE-UPGRADE-*.md`；不得包含客户、账号、路径敏感信息或项目专属业务细节。
    - 若没有可回流问题，记录“本次无模板回流提案”。
-21. 推送当前分支：git push -u origin chore/sync-template-vX.Y.Z。
-22. 创建 PR：gh pr create --fill。
-23. 最后汇总：同步到的模板版本、同步提交、采用的同步路径、同步边界检查结果、workflow 迁移建议、同步后整理状态、文档体系审计状态、项目验证建议、同步运行记录路径、是否需要人工迁移 project-rules、是否需要运行 collect-env、提案归档情况、是否生成回流提案和 PR 链接。
+22. 推送当前分支：git push -u origin chore/sync-template-vX.Y.Z。
+23. 创建 PR：gh pr create --fill。
+24. 最后汇总：同步到的模板版本、同步提交、采用的同步路径、同步边界检查结果、workflow 迁移建议、同步后整理状态、文档体系审计状态、提案回流收口结论、项目验证建议、同步运行记录路径、是否需要人工迁移 project-rules、是否需要运行 collect-env、提案归档情况、是否生成回流提案和 PR 链接。
 
 遇到以下情况必须停止并说明原因：
 - 工作区不干净。

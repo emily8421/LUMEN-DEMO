@@ -95,12 +95,17 @@ $pythonInstalled = Test-CommandExists "python"
 $codeInstalled = Test-CommandExists "code"
 $dockerInstalled = Test-CommandExists "docker"
 $javaInstalled = Test-CommandExists "java"
+$powerShellEdition = if ($PSVersionTable.PSEdition) { $PSVersionTable.PSEdition } else { "Desktop" }
+$powerShellDetails = $PSVersionTable.PSVersion.ToString()
+if ($powerShellEdition -eq "Desktop" -and $PSVersionTable.PSVersion.Major -le 5) {
+  $powerShellDetails += "; Windows PowerShell 5.1 may use the system code page for native command text, but sync fallback scripts decode Git output as UTF-8"
+}
 
 Add-Result $results "winget" "Required" $wingetInstalled $(if ($wingetInstalled) { Get-CommandVersion "winget" } else { "Not installed or unavailable; the bootstrap script depends on it" })
 Add-Result $results "Git" "Required" $gitInstalled (Get-CommandVersion "git")
 Add-Result $results "Git Bash" "Required" ($null -ne $gitBashPath) $(if ($gitBashPath) { $gitBashPath } else { "bash.exe not found; template Bash scripts will not run" })
 Add-Result $results "bash command in PATH" "Conditional" $bashCommandInstalled $(if ($bashCommandInstalled) { (Get-Command bash).Source } else { "Git Bash is installed, but 'bash' is not directly callable from PowerShell PATH" })
-Add-Result $results "PowerShell" "Required" $true ($PSVersionTable.PSVersion.ToString())
+Add-Result $results "PowerShell" "Required" $true $powerShellDetails
 Add-Result $results "GitHub CLI (gh)" "Conditional" $ghInstalled $(if ($ghInstalled) { Get-CommandVersion "gh" } else { "Required for remote repo creation and some sync flows; not required for local smoke tests" })
 Add-Result $results "Node.js" "Recommended" $nodeInstalled (Get-CommandVersion "node")
 Add-Result $results "npm" "Recommended" $npmInstalled (Get-CommandVersion "npm")
