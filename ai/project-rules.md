@@ -83,6 +83,17 @@
 - **`plantuml` 备选**：复杂部署拓扑或时序图等 mermaid 表达力不足时可用；预览需本机或 CI 安装 plantuml，故仅作备选、不设为默认。
 - 性质为「建议 + 默认」，图表服务于表达，不要求每类文档凑齐所有图（见 §13）。
 
+## 2.7 UI 原型策略
+
+> UI 型项目开发前原型策略；权威见 `ai/document-lifecycle-rules.md` UI 原型策略节与 `ai/doc-standards/ui-prototype-strategy.md`（模板 v1.39.0 引入）。
+
+- 是否涉及可点击 UI：是（React 桌面端）
+- 是否需要开发前可视化原型：已完成（Sprint-2 ~ Sprint-6）
+- 原型形式：代码原型 + mock 数据 + 浏览器 smoke / 截图证据
+- 原型权威位置：`frontend/` 实现代码 + `docs/09-verification.md` 浏览器 smoke 记录
+- 覆盖范围：文档导入 / 全文搜索 / RAG 问答 / 术语管理主流程与降级口径
+- 后续新 UI Sprint 沿用「代码原型 + mock」策略，不引入 Figma 等外部设计工具
+
 ## 3. 项目形态与文档裁剪
 
 > 本节用于初始化阶段，决定 docs/06、07 是否保留，以及 frontend/backend/tests/scripts/docker
