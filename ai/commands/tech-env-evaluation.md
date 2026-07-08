@@ -1,4 +1,4 @@
-﻿# Command: tech-env-evaluation
+# Command: tech-env-evaluation
 
 > Sync notice: This file is maintained by `ai-project-template` and may be overwritten when a derived project syncs template methodology.
 > Do not edit it directly in derived projects; propose reusable changes in `_proposals/` and upstream them to the template repository.
@@ -30,6 +30,7 @@
 - `ai/document-lifecycle-rules.md`
 - `ai/implementation-lifecycle-rules.md`
 - `ai/prompts/review/20-tech-env-evaluation.md`
+- `ai/doc-standards/05-tech-spec.md`
 - `docs/env/local-env.md`（如存在；不存在时先提示运行 `collect-env`）
 - `docs/04-architecture.md`、`docs/05-tech-spec.md`、`docs/08-dev-plan.md`、`docs/09-verification.md`（如存在）
 - 依赖文件、启动脚本、Docker / Compose 文件、模型配置（如存在）
@@ -41,12 +42,12 @@
 3. 只读盘点技术栈、运行时版本、关键依赖、Docker / 数据库 / 模型 / 网络权限 / 资源约束。
 4. 默认先输出评估计划、需验证命令、写入影响和风险；实际安装、拉镜像、启动服务或写报告前必须确认。
 5. 用户确认后，按范围执行安装 / 导入 / 最小运行 / build / dev server / compose / 模型加载等验证，并记录证据。
-6. 输出 `Go / Conditional Go / No-Go` 结论、阻塞项、降级策略、对 `docs/05` / `docs/09` / 依赖文件的修改建议。
+6. 输出 `Go / Conditional Go / No-Go` 结论、阻塞项、Risk-ID、readiness gate、降级策略、对 `docs/05` / `docs/09` / `docs/08` / 依赖文件的修改建议。
 7. 若用户确认落盘，将报告写入 `docs/research/YYYY-MM-DD-tech-env-evaluation-<scope>.md`。
 
 ## 写入风险
 
-默认只读；实际安装依赖、联网下载、拉取 Docker 镜像、启动服务、写入报告、修改 `docs/05-tech-spec.md` / `docs/09-verification.md` / 依赖文件前必须确认。报告不得写入 `docs/` 根目录，不替代 `docs/env/local-env.md` 或 `docs/05-tech-spec.md`。
+默认只读；实际安装依赖、联网下载、拉取 Docker 镜像、启动服务、写入报告、修改 `docs/05-tech-spec.md` / `docs/09-verification.md` / `docs/08-dev-plan.md` / 依赖文件前必须确认。报告不得写入 `docs/` 根目录，不替代 `docs/env/local-env.md` 或 `docs/05-tech-spec.md`。
 
 ## 续接要求
 

@@ -20,6 +20,7 @@
 - `ai/document-lifecycle-rules.md`
 - `ai/prompts/docs/07-sync-docs-from-code.md`
 - 相关代码、测试、配置和 docs
+- `ai/doc-standards/design-doc.md`（差异涉及 `docs/design/*`、子系统流程、权限、Mock / 降级或实现偏差时）
 
 ## 执行流程
 

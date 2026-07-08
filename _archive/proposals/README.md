@@ -18,3 +18,11 @@
 | `TEMPLATE-UPGRADE-phase-overview-table.md` | `v1.24.2`，本项目已同步至 `v1.25.0` | `global-rules §8.1` + `docs/03-prd.md §3` 增加「双维度总览表」撰写推荐（阶段 × 交付物形态全景）。 |
 | `TEMPLATE-UPGRADE-readme-version-check.md` | `v1.24.3`，本项目已同步至 `v1.25.0` | `check-derived-sync` 新增非阻断「README 模板版本号 vs VERSION」一致性告警。 |
 | `TEMPLATE-UPGRADE-derived-feedback-channel.md` | `v1.25.0`，本项目已同步至 `v1.25.0` | 来源标识规则（§9）+ `submit-proposal`/`submit-feedback` 命令（17/18 prompt）+ Issue 模板 + `template-proposal-summary` 扩展读 issue。 |
+| `TEMPLATE-UPGRADE-powershell-sync-fallback-utf8.md`（issue #92） | PR #99（v1.30.x），本项目已同步至 `v1.43.0` | Windows PowerShell 5.1 同步脚本 Git Bash / UTF-8 fallback，已落入 `git-guide.md §5.1` 与同步脚本 fallback 逻辑。 |
+| `TEMPLATE-UPGRADE-submit-proposal-gh-robustness.md`（issue #93） | PR #97（v1.30.x），本项目已同步至 `v1.43.0` | `submit-proposal` 改用 `--body-file`，补充创建前校验、来源标签降级与失败恢复流程。 |
+| `TEMPLATE-UPGRADE-00-03-requirements-chain-standard.md`（issue #105） | `v1.33.0`，本项目已同步至 `v1.43.0` | 00-03 需求链文档规范已落地为 `ai/doc-standards/00-03`。 |
+| `TEMPLATE-UPGRADE-04-05-architecture-tech-standard.md`（issue #106） | `v1.34.0`，本项目已同步至 `v1.43.0` | 04-05 架构与技术方案规范已落地为 `ai/doc-standards/04-05`。 |
+| `TEMPLATE-UPGRADE-06-07-db-api-contract-standard.md`（issue #107） | `v1.36.0`，本项目已同步至 `v1.43.0` | 06-07 DB / API 契约规范已落地为 `ai/doc-standards/06-07`。 |
+| `TEMPLATE-UPGRADE-08-dev-plan-progress-standard.md`（issue #108） | `v1.37.0`，本项目已同步至 `v1.43.0` | 08 开发计划 / 任务拆分 / 进度留痕规范已落地为 `ai/doc-standards/08`。 |
+| `TEMPLATE-UPGRADE-09-verification-standard-detail.md`（issue #109） | `v1.37.0`，本项目已同步至 `v1.43.0` | 09 Verification 文档规范已落地为 `ai/doc-standards/09`。 |
+| `TEMPLATE-UPGRADE-design-doc-standard.md`（issue #110） | `v1.38.0`，本项目已同步至 `v1.43.0` | `docs/design/*` 通用详细设计规范已落地为 `ai/doc-standards/design-doc.md`。 |

@@ -64,9 +64,10 @@
    - v1.6.8+ 后续同步：运行 powershell -ExecutionPolicy Bypass -File scripts/sync-template.ps1 --commit
 11. 只做派生同步边界检查：
    - 运行：git status --short --branch
-   - 运行：git show --name-only --stat HEAD
-    - 如已同步到包含 `scripts/check-derived-sync.ps1` 的版本，运行：powershell -ExecutionPolicy Bypass -File scripts/check-derived-sync.ps1
-    - 确认最新同步提交没有误覆盖 README.md、ai/project-rules.md、docs/00-09 或业务代码。
+   - 运行：git log --oneline -8，定位实际 `sync template vX.Y.Z from ai-project-template` 同步提交。
+   - 运行：git show --name-only --stat <sync-commit>。若 `HEAD` 是 PR merge commit，不要把 merge commit 当作同步提交校验。
+   - 如已同步到包含 `scripts/check-derived-sync.ps1` 的版本，运行：powershell -ExecutionPolicy Bypass -File scripts/check-derived-sync.ps1 <sync-commit>（若 `HEAD` 本身就是同步提交，可省略参数）。
+   - 确认实际同步提交没有误覆盖 README.md、ai/project-rules.md、docs/00-09 或业务代码。
 12. 检查派生项目 workflow：
    - 普通 PR 不应运行 `scripts/check-template.sh` 或 `scripts/check-template.ps1`。
    - 若存在 `.github/workflows/template-check.yml`，说明它通常是模板仓自检入口，提示迁移为 `.github/workflows/project-check.yml`。

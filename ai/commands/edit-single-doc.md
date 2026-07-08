@@ -21,10 +21,11 @@
 - `ai/prompts/docs/04-edit-single-doc.md`
 - 目标文档
 - 目标文档的上游输入文档
+- `ai/doc-standards/design-doc.md`（当目标是 `docs/design/*` 或用户说“补详细设计 / 补子系统设计”时）
 
 ## 执行流程
 
-1. 明确目标文档、上游依据、允许修改范围和下游影响。
+1. 明确目标文档、上游依据、允许修改范围和下游影响；若目标是 `docs/design/*`，同时判断触发 / 豁免条件与 `ai/doc-standards/design-doc.md` 的必填结构。
 2. 先输出修改计划。
 3. 用户确认后做最小修订。
 4. 输出变更摘要和需要同步检查的下游文档。

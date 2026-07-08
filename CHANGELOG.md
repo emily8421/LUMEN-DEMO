@@ -4,7 +4,227 @@
 > Do not edit it directly in derived projects; propose reusable changes in `_proposals/` and upstream them to the template repository.
 
 
-模板版本采用三段式 `vMAJOR.MINOR.PATCH`，以根目录 `VERSION` 为单一审计入口。任何会影响下游同步判断的模板合并都应递增版本；`ai/global-rules.md` 顶部仅记录全局规则自身版本。
+模板版本采用三段式 `vMAJOR.MINOR.PATCH`，以根目录 `VERSION` 为单一审计入口。版本是发布边界，不是提案数量边界；提案收件箱增长不触发版本递增，只有合并到同步范围内并改变模板行为或下游同步判断的 PR 才判断 `PATCH / MINOR / MAJOR`。`ai/global-rules.md` 顶部仅记录全局规则自身版本。
+
+## v1.43.0（2026-07-08）
+
+Docs scaffold P1 后续模板补强：补齐输入评审、产品愿景、待确认事项总览和 ADR 结构模板，让 `template-docs/docs-scaffold/` 覆盖主文档链路的上游输入、愿景、决策与 open items 常用入口。
+
+- **输入与愿景模板**：新增 `template-docs/docs-scaffold/inputs/input-review-report.md` 与 `vision/product-vision.md`，对应 `docs/inputs/input-review-report.md` 和 `docs/vision/product-vision.md` 的长期结构副本。
+- **决策与 open items 模板**：新增 `decisions/ADR-template.md` 与 `research/docs-open-items.md`，分别承接横切事实权威源和待确认事项总览。
+- **导航与同步**：更新 `README.md`、`docs/README.md`、`template-docs/README.md`、`template-docs/beginner-guide.md`、`template-docs/template-methodology.md` 和 `template-docs/docs-scaffold/README.md`，统一说明 inputs / vision / decisions / research scaffold 边界。
+- **同步与自检**：更新 `template-sync.json`、`scripts/sync-template.sh`、`scripts/check-template.sh` / `.ps1`，确保新增 P1 scaffold 下行同步并防止入口漂移。
+- **分批治理**：P2 的 env、meetings、archive、task template 继续保留在 `_proposals/TEMPLATE-UPGRADE-docs-scaffold-followups.md` 候选池，不并入本版本。
+- 回流自 `_proposals/TEMPLATE-UPGRADE-docs-scaffold-followups.md` P1 批次。
+
+## v1.42.1（2026-07-08）
+
+模板版本治理优化：将提案收件箱增长与模板发布边界解耦，明确 release impact / release strategy 判断，避免高频回流提案导致 `MINOR` 过快增长。
+
+- **版本边界**：`CONTRIBUTING.md` 明确版本是发布边界，不是提案数量或编辑次数边界；新增 / 更新 `_proposals/` 默认 `Release impact = none`。
+- **影响分级**：补充 `none / patch / minor / major` 决策表，区分治理文档 / 自检增强、模板能力新增和不兼容变更。
+- **聚合发布**：同一提案、同一 PR、同一维护主题下的多个 Batch 默认聚合为一个版本；后续候选留在提案池，不阻塞当前发布。
+- **维护 checklist**：`MAINTAINERS.md` 增加 release impact、release strategy、即时发布与同主题维护窗口判断。
+- **提案头部**：`_proposals/README.md` 建议新提案声明 `Release impact` 与 `Release strategy`，让版本判断在处理前置化。
+- **自检防回归**：`scripts/check-template.sh` / `.ps1` 增加版本治理关键文字断言。
+- 回流自 `_proposals/TEMPLATE-UPGRADE-version-governance.md`。
+
+## v1.42.0（2026-07-08）
+
+模板易用性文档补强：将前端交互设计、UI 原型策略 / 实现前原型从分散规则提升为独立细粒度标准，补充实现前原型场景，并新增长期结构模板库与人读术语表。
+
+- **细粒度标准**：新增 `ai/doc-standards/frontend-interaction.md` 与 `ai/doc-standards/ui-prototype-strategy.md`，分别规范前端交互设计和 UI 原型策略 / 实现前原型。
+- **记录模板**：新增 `template-docs/ui-prototype-strategy-template.md`，用于记录原型形式、权威位置、覆盖范围、未覆盖项、Mock / 降级口径和验收映射。
+- **场景路由**：`template-docs/scenario-guides.md` 新增 A7.5 UI 原型策略 / 实现前原型场景，区分 `00-03` 前的需求探索原型与前端实现前的可视化门禁。
+- **规则联动**：更新 `ai/doc-standards/README.md`、`ai/document-lifecycle-rules.md`、`docs/README.md`、`ai/prompts/docs/00-generate-or-complete-docs.md`、`ai/prompts/docs/04-edit-single-doc.md` 和命令索引，统一引用新标准。
+- **结构模板**：新增并扩展 `template-docs/docs-scaffold/`，长期保留 `docs/00-09`、`docs/design/*` 与 `docs/research/*` 的结构模板副本，区分项目事实、结构模板和 `ai/doc-standards/` 规则 / 审计基线。
+- **详细设计 / 门禁模板**：新增子系统详细设计、前端交互设计、UI 原型策略、需求探索原型和技术环境评估 scaffold，覆盖实现前设计与 readiness gate 的常用结构。
+- **术语入口**：新增 `template-docs/glossary.md`，按文档链路、ID / 追溯、阶段 / 交付物、状态词典、原型 / 前端交互、会话续接和模板治理 / 同步分类索引核心术语。
+- **人读导航**：更新 `README.md`、`template-docs/README.md`、`template-docs/beginner-guide.md`、`template-docs/template-methodology.md` 和 `docs/README.md`，增加 scaffold 与 glossary 入口并说明三层边界。
+- **同步与自检**：更新 `template-sync.json`、`scripts/sync-template.sh`、`scripts/check-template.sh` / `.ps1`，确保派生项目可同步新标准并防止入口漂移。
+- 回流自 `_proposals/TEMPLATE-UPGRADE-template-usability-docs.md` Batch 1 / Batch 2 / Batch 3 / Batch 4。
+
+## v1.41.1（2026-07-08）
+
+快速续接优先路由：明确“读取续接点 / 继续上次 / resume”是纯恢复摘要场景时，可先按最小只读路径输出结论，避免被入口规则误扩展为完整规则审计。
+
+- **入口裁剪**：`ai/index.md`、`AGENTS.md`、`CLAUDE.md` 与 `.cursor/rules/project-rules.mdc` 明确快速续接例外；分析、设计、编码或状态变更仍必须完整读取规则。
+- **续接规则**：`ai/session-rules.md` 增加流程分流，说明快速续接只服务恢复摘要；一旦继续执行任务，立即回到完整规则读取和对应 command。
+- **命令路由**：`ai/commands/README.md` 与 `ai/commands/resume.md` 明确 `resume` 不展开完整规则审计，后续执行再升级。
+- **自检防回归**：`scripts/check-template.sh` / `.ps1` 增加快速续接例外与入口裁剪断言。
+- 回流自 `_proposals/TEMPLATE-UPGRADE-fast-resume-routing.md`。
+
+## v1.41.0（2026-07-07）
+
+快速续接模式与 handoff stale 裁决：将“读取续接点 / 继续上次”默认限定为本地只读恢复，避免误扩展成完整规则审计、远端 issue / PR 复核或任务继续执行。
+
+- **快速恢复**：`ai/session-rules.md` 新增快速续接模式，默认只读 `git status`、最近提交、stash、`VERSION` 和 `.ai/session-handoff.md` 摘要；不联网、不查 GitHub issue / PR、不继续执行任务。
+- **过期裁决**：当 handoff 的分支、HEAD、版本或进度与 Git 客观事实不一致时，立即标记 `handoff stale`，以 Git 与当前用户输入为准，停止深挖旧记录。
+- **命令路由**：新增 `ai/commands/resume.md`，并在 `ai/commands/README.md` 注册 `resume`，统一承接“读取续接点 / 继续上次”。
+- **样例增强**：`template-docs/session-handoff.example.md` 增加 `Updated at`、`Status`、`Branch`、`HEAD`、`VERSION` 和 `Remote snapshot` 元数据头。
+- **同步与自检**：`template-sync.json`、`scripts/check-template.sh` / `.ps1` 增加 `resume` 命令和快速续接关键断言。
+- 回流自 `_proposals/TEMPLATE-UPGRADE-fast-session-resume.md`。
+
+## v1.40.0（2026-07-07）
+
+需求探索原型场景与模板：在正式 `00-03` 定稿、架构和技术路线选择前，用低保真 UI 原型、页面流、截图标注或静态 Mock 帮用户确认需求。
+
+- **早期场景**：`template-docs/scenario-guides.md` 新增 A5.5 需求探索原型 / Demo 前原型确认场景，触发说法包括“先看原型”“先做页面原型确认需求”“先别定技术栈，先画界面流程”。
+- **边界规则**：`ai/document-lifecycle-rules.md` 新增 §10.2，明确需求探索原型不是正式需求、架构、技术栈、接口、数据库、任务或验收事实；确认后必须回填 `00-03`。
+- **模板与路由**：新增 `template-docs/ui-prototype-exploration-template.md`、`ai/prompts/docs/22-ui-prototype-exploration.md` 和 `ai/commands/ui-prototype-exploration.md`，默认建议落盘到 `docs/research/YYYY-MM-DD-ui-prototype-exploration.md`。
+- **索引与同步**：更新 `ai/commands/README.md`、`ai/prompts/README.md`、`docs/README.md` 和 `template-sync.json`，让派生项目同步获得该场景能力。
+- **自检防回归**：`scripts/check-template.sh` / `.ps1` 增加 A5.5、探索模板、命令、Prompt、同步清单和 docs 分区关键断言。
+- 回流自 `_archive/proposals/TEMPLATE-UPGRADE-ui-prototype-exploration.md`。
+
+## v1.39.0（2026-07-07）
+
+UI 原型策略与可视化验收门禁：UI 型项目在进入前端实现前需选择可视化原型策略或写明豁免，减少实现后才暴露页面结构、状态反馈、信息密度和 Demo / Mock / 降级口径问题。
+
+- **生命周期规则**：`ai/document-lifecycle-rules.md` 新增 UI 原型策略触发与边界规则；满足前端交互触发条件且存在实现前预览、点击验收、多状态、多角色、权限可见性或 Demo / Mock / 降级误读风险时，必须选择原型策略或写明豁免。
+- **项目级字段**：`ai/project-rules.md` 新增 §2.7 UI 原型策略，记录是否需要开发前可视化原型、原型形式、权威位置、覆盖范围、与 `frontend-interaction` / `08` / `09` 的关系和豁免理由。
+- **标准与设计链路**：`ai/doc-standards/05-tech-spec.md` 和 `ai/doc-standards/README.md` 增加 UI 原型策略记录位，明确原型不替代 `00-09`、前端交互设计或 `09` 验收，不作为需求权威源。
+- **Prompt / 场景门禁**：文档生成、单文档修订、编码前 checklist、系统审计、文档评估和 A7 场景均检查原型形式、位置、覆盖主流程 / 关键状态 / 权限与降级、设备范围、未覆盖项和豁免理由。
+- **自检防回归**：`scripts/check-template.sh` / `.ps1` 增加 UI 原型策略、原型证据、项目规则 §2.7、生成 Prompt、checklist、audit 和 evaluation 关键断言。
+- 回流自 GitHub issue #131，镜像归档为 `_archive/proposals/_remote-issues/issue-131.md`，提案归档为 `_archive/proposals/TEMPLATE-UPGRADE-ui-prototype-strategy.md`。
+
+## v1.38.2（2026-07-07）
+
+C1 提案收件箱远端 issue 本地镜像硬门禁：防止维护者或 AI 直接基于未落盘远端 issue 正文做提案分析，确保先镜像、后分析。
+
+- **镜像硬门禁**：`_proposals/README.md` 明确远端 issue 正文只允许用于生成 / 刷新 `_proposals/_remote-issues/issue-<number>.md`，不得直接作为去重、冲突、依赖、分批计划、拟修改文件或续接记录依据。
+- **命令 / Prompt 阻断**：`template-proposal-summary` 命令和维护 Prompt 要求输出本轮本地镜像路径、`Updated` 与 `Mirrored at`；没有本地镜像路径的 issue 不得进入正文分析。
+- **误读纠偏**：若 AI 已误读远端正文但尚未落镜像，必须丢弃该轮分析结论，先刷新镜像，再重新读取本地镜像继续。
+- **场景与自检**：C1 场景增加“镜像路径确认后再分析”；`scripts/check-template.sh` / `.ps1` 增加镜像硬门禁、本地镜像路径和未落盘正文不得分析的关键断言。
+- 回流自 `_archive/proposals/TEMPLATE-UPGRADE-issue-mirror-hard-gate.md`。
+
+## v1.38.1（2026-07-07）
+
+GitHub issue / PR 查询鲁棒性补强：降低模板维护者处理提案收件箱时误判远端 open issue、PR 或关闭状态的风险。
+
+- **远端状态核对**：`_proposals/README.md` 明确 GitHub `/issues` API 同时返回 issue 与 PR，PowerShell 需用 `PSObject.Properties['pull_request']` 判断普通 issue，并在关闭 / 改标签 / 评论前执行“列表 + 单项状态复核”。
+- **维护 Prompt**：`template-proposal-summary` 要求 open 列表与单项状态交叉验证；若列表与单项状态冲突，以单项状态和 GitHub 页面为准并先报告。
+- **自检防回归**：`scripts/check-template.sh` / `.ps1` 增加 GitHub issue 稳定过滤与单项状态复核关键断言。
+- 回流自 `_archive/proposals/TEMPLATE-UPGRADE-github-issue-query-robustness.md`。
+
+## v1.38.0（2026-07-07）
+
+Batch 6 `docs/design/*` 通用详细设计标准落地：补齐非平凡子系统、复杂 UI、权限 / 安全、AI / 外部服务、导入 / 异步任务和高风险愿景能力的详细设计基线。
+
+- **design 独立标准**：新增 `ai/doc-standards/design-doc.md`，覆盖触发 / 豁免、元信息、职责边界、上游追溯、流程 / 状态机、数据 / 接口 / 权限契约、失败 / 降级、readiness gate、验收追溯、实现偏差 / 设计回写和待确认项。
+- **分类 checklist**：内置服务型、页面 / 交互型、权限 / 安全型、AI / RAG / 外部模型型、导入 / 异步任务 / 外部集成型、策略 / 规则型、配置型和高风险愿景型裁剪要求。
+- **生命周期门禁**：`document-lifecycle-rules`、`global-rules`、`project-rules` 明确 `docs/design/*` 触发、豁免、不得新增需求 / 接口 / 表 / 验收目标，以及实现偏差正式回写边界。
+- **Prompt / command 路由**：生成、单文档修订、代码反向同步、编码前 checklist、文档体系审计和文档评估均读取 design 标准并检查元信息、追溯、readiness gate、验收路径和实现偏差区。
+- **同步与自检**：`template-sync.json`、`sync-template` 和 `check-template` 纳入 `ai/doc-standards/design-doc.md`，并增加 design 标准、Prompt 引用和派生同步烟测断言。
+- 回流自 `_proposals/TEMPLATE-UPGRADE-batch-6-design-doc-standard.md`，对应 GitHub issue #110、#116。
+## v1.37.0（2026-07-07）
+
+Batch 5 开发计划、验证证据与正式回写闭环落地：补齐 `08-09` 独立细粒度标准，强化 Sprint 验证包、完成包、TC 详情、验收证据、缺陷 / 回归和 handoff 边界。
+
+- **08-09 独立标准**：新增 `ai/doc-standards/08-dev-plan.md`、`09-verification.md`，覆盖 Phase 目标、Sprint 总览、验证包、完成包、任务拆分规则、REQ → TC 追溯、TC 状态、用例详情、验收记录、Sprint 验收包、缺陷 / 回归和风险项。
+- **模板骨架增强**：`docs/08-dev-plan.md` 与 `docs/09-verification.md` 增加更精确的 Sprint / Task / TC / 完成包字段，并明确 `08` 管计划 / 进度摘要、`09` 管验证证据 / 验收记录。
+- **回写与续接边界**：`implementation-lifecycle-rules`、`session-rules`、`sprint-summary`、`run-dev-task`、`phase-upgrade` 和 `sync-docs-from-code` 强调 handoff 不替代正式 `08/09` 记录，长期事实需回写或说明暂不落盘原因。
+- **同步与自检**：`template-sync.json`、`sync-template` 和 `check-template` 更新为 `00-09` 独立标准直接同步，移除 docs→doc-standards 兼容镜像的实际条目。
+- 回流自 `_proposals/TEMPLATE-UPGRADE-batch-5-dev-plan-verification-evidence-handoff.md`，对应 GitHub issue #108、#109、#115。
+
+## v1.36.0（2026-07-07）
+
+Batch 4 DB / API 契约状态与升阶段门槛落地：补齐 `06-07` 独立细粒度标准，强化字段级、endpoint 级和 DB / API / TC 交叉追溯。
+
+- **06-07 独立标准**：新增 `ai/doc-standards/06-db-design.md`、`07-api-spec.md`，覆盖数据对象、概念模型、字段级契约、目标 / 当前实现对照、迁移 / seed / 回滚、API-ID、endpoint contract matrix、请求 / 响应 / 错误 / 权限 / 兼容契约和异步状态机。
+- **模板骨架增强**：`docs/06-db-design.md` 与 `docs/07-api-spec.md` 增加目标结构与当前实现对照、契约状态、DB / API 交叉追溯、API ↔ DB / Service / Test 映射和 Phase 升级所需验证入口。
+- **生命周期与 Prompt 门禁**：生成、修订单文档、体系审计、文档评估、Phase 升级和单任务执行均检查 DB / API 契约状态，防止草案、候选、Mock、默认关闭或目标设计被当成当前实现或稳定契约。
+- **同步与自检**：`template-sync.json`、`sync-template` 和 `check-template` 更新为 `00-07` 独立标准直接同步，`08-09` 暂保留兼容镜像，待 Batch 5 替换。
+- 回流自 `_proposals/TEMPLATE-UPGRADE-batch-4-db-api-contract-status-gates.md`，对应 GitHub issue #107、#114。
+
+## v1.35.0（2026-07-07）
+
+Batch 3.1 文档标准分层落地：明确 `ai/doc-standards/` 是细粒度标准源，补齐 `00-03` 独立标准，并让 `docs/00-09` 回归项目事实大纲模板。
+
+- **00-03 独立标准**：新增 `ai/doc-standards/00-scenario.md`、`01-user-requirements.md`、`02-srs.md`、`03-prd.md`，吸收 Batch 2 的需求链细则和 Batch 1 / 7 的状态、待确认与生成门禁规则。
+- **标准分层**：`ai/doc-standards/README.md` 与 `ai/document-lifecycle-rules.md` 明确 lifecycle / doc-standards / docs 大纲三层职责，以及按生成、精修、审计、评估 scope 读取对应标准。
+- **docs 大纲轻量化**：`docs/00-09` 每个 H2 章节统一使用 `【撰写提要：……】`，保留填写提示和占位表格，复杂规则进入 doc-standards。
+- **Prompt / command 路由**：生成、单文档修订、系统审计、文档评估、编码前 checklist 和 docs-evaluation 命令改为按范围读取对应 `ai/doc-standards/<doc>.md`。
+- **同步与自检**：`template-sync.json`、`sync-template` 和 `check-template` 更新为 `00-05` 独立标准直接同步，`06-09` 暂保留兼容镜像，待 Batch 4 / 5 替换。
+- 回流自 `_proposals/TEMPLATE-UPGRADE-batch-3-1-doc-standards-layering.md`。
+## v1.34.0（2026-07-07）
+
+Batch 3 架构与技术方案 readiness 规范落地：强化 `04-05` 总体设计、技术风险验证、依赖矩阵和 Phase / Sprint 前门禁。
+
+- **04-05 标准镜像**：新增 `ai/doc-standards/04-architecture.md`、`ai/doc-standards/05-tech-spec.md`，明确架构视图、COMP / MOD / Flow ID、ADR、技术状态、依赖配置、Risk-ID、readiness gate 和 `05 ↔ 09` 映射。
+- **模板骨架增强**：`docs/04-architecture.md` 补上下文边界、异常 / 降级 / 权限拒绝路径、部署端口 / 外部依赖和架构视图检查表；`docs/05-tech-spec.md` 补依赖敏感性、验证证据、技术风险矩阵和 readiness gate。
+- **生命周期与执行门禁**：`ai/document-lifecycle-rules.md` 和 `ai/implementation-lifecycle-rules.md` 要求真实依赖进入 Sprint / Phase 前具备 Risk-ID、readiness gate、验证证据和解锁条件。
+- **生成 / 审计 / 评估门禁**：`generate-docs`、`edit-single-doc`、`docs-system-audit`、`docs-evaluation`、`tech-env-evaluation`、`phase-upgrade` 强化 `04/05` 架构视图、依赖配置、技术风险验证和 readiness gate 检查。
+- **自检防回归**：`scripts/check-template.sh` / `.ps1` 增加 04-05 标准文件、风险矩阵、readiness gate 和 `05 ↔ 09` 映射断言。
+- 回流自 `_proposals/TEMPLATE-UPGRADE-batch-3-architecture-tech-risk-readiness.md`，对应 GitHub issue #106、#113。
+
+## v1.33.0（2026-07-07）
+
+Batch 2 需求链规范落地：强化 `00-03` 需求入口、健康度矩阵、Phase 状态传播和兼容补齐规则。
+
+- **00-03 骨架增强**：`docs/00-scenario.md`、`docs/01-user-requirements.md`、`docs/02-srs.md`、`docs/03-prd.md` 补充来源锚点、边界 / 非目标、用户 AC、验证入口、Phase 状态和证据 / 验收引用等字段。
+- **规范镜像说明**：`ai/doc-standards/README.md` 明确 `00-03` 需求链基线和 `SC-ID → U-ID → REQ-ID → Phase → AC / TC` 健康度链路；派生项目仍通过 doc-standards 镜像获得标准文件。
+- **生命周期规则**：`ai/document-lifecycle-rules.md` 增加 00-03 需求链健康度矩阵、P0 / P1 断点输出和旧项目兼容映射策略。
+- **生成 / 审计 / 评估门禁**：`generate-docs`、`edit-single-doc`、`docs-system-audit`、`docs-evaluation`、`phase-upgrade` 强化 `SC-ID → U-ID → REQ-ID → Phase → AC / TC` 检查和 Phase 状态传播。
+- **自检防回归**：`scripts/check-template.sh` / `.ps1` 增加 00-03 需求链、健康度矩阵、Phase 证据引用和 doc-standards 关键断言。
+- 回流自 `_proposals/TEMPLATE-UPGRADE-batch-2-requirements-chain-00-03.md`，对应 GitHub issue #105、#112。
+
+## v1.32.0（2026-07-07）
+
+Batch 7 文档体系生成引导落地：补全文档体系生成场景、open items 总览命令、专题方案讨论和定稿门禁。
+
+- **场景引导**：`template-docs/scenario-guides.md` 扩展 A17-A19，覆盖待确认事项总览、专题方案讨论和文档定稿门禁；A6 生成文档骨架增加 open items 更新和生成后收口路径。
+- **open items 入口**：新增 `ai/commands/docs-open-items.md`、`ai/prompts/docs/21-docs-open-items.md` 和 `template-docs/docs-open-items.example.md`，并加入 `template-sync.json`，统一待确认项字段、门禁结论和默认落盘路径。
+- **生成 / 评估 / 审计门禁**：`generate-docs`、`00-generate-or-complete-docs`、`docs-evaluation`、`docs-system-audit`、`phase-upgrade` 和 `docs-checklist` 均增加 open items 检查；阻塞项未关闭或未风险接受时不得无条件进入编码或 Phase 升级。
+- **专题讨论边界**：需求层人机交互、总体设计 / 技术选型、交互设计方案先输出多方案、依据、AI 推荐、待确认项和回填位置；人工确认前不得写成正式项目事实。
+- **自检防回归**：`scripts/check-template.sh` / `.ps1` 增加 Batch 7 关键断言，防止新增命令、Prompt、同步清单、场景和门禁规则被误删。
+- 回流自 `_proposals/TEMPLATE-UPGRADE-batch-7-docs-generation-guidance-open-items.md`。
+
+## v1.31.0（2026-07-07）
+
+Batch 1 文档治理底座落地：建立提案收件箱远端 issue 本地镜像机制、分批治理原则、横切状态词典、待确认事项总览和文档体系生成总控最低规则。
+
+- **提案收件箱镜像**：`_proposals/README.md`、`template-proposal-summary` 命令与维护者 Prompt 要求先刷新 `_proposals/_remote-issues/issue-<number>.md`，再基于本地镜像做去重、冲突和分批计划；关闭 issue 前仍以 GitHub 远端状态为准。
+- **分批治理**：C1 场景和提案汇总 Prompt 明确“一批一范围、报告先行、事实与模板分离、去重可审计、可续接”，降低大范围文档体系提案的评审和续接风险。
+- **状态与待确认门禁**：`ai/document-lifecycle-rules.md` 新增横切状态词典、状态传播规则和待确认事项总览；文档审计 / 评估 Prompt 将状态冲突、Mock / 降级 / 默认关闭 / 已验证 / 已启用等状态纳入 Go / Conditional Go / No Go 判断。
+- **文档体系生成总控**：A6 场景与 `00-generate-or-complete-docs` Prompt 要求用户说“生成整个文档体系”时，先说明阶段路线，并在“分阶段确认模式”和“输入充分后批量生成模式”之间确认。
+- **自检防回归**：`scripts/check-template.sh` / `.ps1` 增加 Batch 1 关键断言。
+- 回流自 `_proposals/TEMPLATE-UPGRADE-batch-1-proposal-inbox-governance-status-dictionary.md`，对应 GitHub issue #111、#117。
+
+## v1.30.7（2026-07-07）
+
+模板自检 CI 编码修复：移除关键文件 UTF-8 BOM，避免 GitHub Actions 中 Bash shebang 与版本号解析失败。
+
+- **脚本入口**：移除 `scripts/check-template.sh` 文件开头 BOM，确保 Linux runner 可正确识别 `#!/usr/bin/env bash`。
+- **版本解析**：移除 `VERSION` 与 `CHANGELOG.md` 文件开头 BOM，并将模板版本递增到 `v1.30.7`。
+- **影响范围**：仅修复编码 / CI 自检问题，不改变模板方法论或文档规范内容。
+
+## v1.30.6（2026-07-06）
+
+A13 同步闭环说法补充：在同步模板场景中增加可直接复述的完整闭环话术，并让命令索引显式提示 A13 完整闭环。
+
+- **场景引导**：`template-docs/scenario-guides.md` 的 A13 场景新增“完整闭环说法”，明确 `sync-methodology → post-sync-cleanup → docs-system-audit → 提案回流收口 → 同步报告留痕`。
+- **命令索引**：`ai/commands/README.md` 的 `sync-methodology` 入口补充 `A13 完整闭环` 触发提示。
+- **自检防回归**：`scripts/check-template.sh` / `.ps1` 增加 A13 完整闭环关键断言。
+- 回流自 `_proposals/TEMPLATE-UPGRADE-batch-0-a13-sync-closure.md`，对应 GitHub issue #118。
+
+## v1.30.5（2026-07-06）
+
+派生同步边界检查 merge commit 指引加固：补齐 `check-derived-sync` 在 PR merge 后应校验实际同步提交的提示，并避免 PowerShell fallback 使用易与自动变量混淆的参数名。
+
+- **同步提交定位**：`scripts/check-derived-sync.sh` 与 `.ps1` 在 `HEAD` 为 merge commit 时提示显式传入实际 `sync template vX.Y.Z from ai-project-template` 提交，失败输出同步给出 `<sync-commit>` 用法。
+- **PowerShell fallback**：`scripts/check-derived-sync.ps1` 将原生 fallback 参数从 `$Args` 改为 `$CheckArgs`，降低 Windows PowerShell 5.1 参数转发歧义风险。
+- **同步闭环文档**：`sync-methodology` Prompt 与派生同步运行记录模板要求记录实际同步提交，避免把 PR merge commit 当作同步边界检查目标。
+- **自检防回归**：`scripts/check-template.sh` / `.ps1` 增加显式同步提交、merge commit 指引和 fallback 参数名断言。
+- 回流自 GitHub issue #102。
+
+## v1.30.4（2026-07-06）
+
+会话续接运行时元数据边界加固：明确 `读取续接点` 必须按项目 Session Handoff 机制恢复，禁止把 CLI 私有 session、memory、subagent 或 cache 等运行时元数据直接作为项目续接事实。
+
+- **恢复依据**：`ai/session-rules.md` 明确恢复结论只能来自 Git 客观事实、项目续接文件、项目正式文档和当前用户输入。
+- **运行时边界**：Claude / Codex / Cursor 等 CLI 自身产生的 sessions、projects、memory、subagents、cache、trace、history、conversation dump、agent meta 文件仅可作为调试信息或用户明确要求时的辅助参考。
+- **交叉验证**：未经 Git、handoff 或项目文档验证，不得据此推断当前任务、阶段、待办事项、Agent / SubAgent 运行状态或项目事实；无法验证时必须标记为“推测信息”。
+- 回流自 `_proposals/TEMPLATE-UPGRADE-session-resume-runtime-metadata-boundary.md`。
 
 ## v1.30.3（2026-07-05）
 
