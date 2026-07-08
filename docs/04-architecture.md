@@ -10,8 +10,8 @@
 |---|---|
 | 输入来源 | `docs/02-srs.md`、`docs/03-prd.md`、`docs/env/local-env.md`、`ai/project-rules.md` |
 | 覆盖功能 / REQ | Phase1：REQ-001..REQ-011、REQ-036；P2 / 愿景保留架构骨架 |
-| 当前状态 | 已确认（Phase1 Demo 架构基线） |
-| 最后更新 | 2026-07-03 |
+| 当前状态 | 目标架构基线已定；运行时为**降级内存实现**（DB=内存 `demo_repository`，无 pgvector；Embedding/OCR/真实PDF/LLM 未接入，LLM 为 Mock）。Phase1 接受降级基线，真实化移至 Phase2/MVP；逐模块实现状态见 §2 |
+| 最后更新 | 2026-07-09 |
 
 ## 1. 整体架构图
 
@@ -35,20 +35,22 @@ flowchart TB
   vision[Vault / 录音转写 / 情报交付 愿景] -.技术验证后追加.-> api
 ```
 
+> 注：上图为**目标架构**。当前 Phase1 Demo 运行时为**降级内存实现**——`db` 节点实为内存 `demo_repository`（无 PostgreSQL/pgvector），`ai`（LLM/Embedding）与 `ingestion` 的 OCR/真实 PDF 解析均未接入（LLM 为 Mock）。逐模块实现状态见 §2，技术门禁见 `docs/05-tech-spec.md §5.1`。
+
 ## 2. 子系统 / 模块划分（完整框架）
 
-| 子系统 | 职责 | 阶段 | 状态 | 详细设计 |
-|---|---|---|---|---|
-| 空间与权限 | 多空间隔离、权限分级、查询时过滤 | [P1] | P1-已设计 | docs/design/permissions.md |
-| 文档管理 | CRUD、行内编辑、版本历史 | [P1] | P1-已设计 | （逻辑简单，见 06/07） |
-| 内容导入 | Word/PDF 解析、OCR、切块入库 | [P1] | P1-已设计 | docs/design/ingestion.md |
-| 检索问答 | 全文搜索、RAG（向量+全文+引用） | [P1] | P1-已设计 | docs/design/rag-retrieval.md |
-| 术语管理 | 空间级术语表、文档术语识别、问答口径对齐 | [P1] | P1-已设计 | docs/design/term-management.md |
-| 标签与视图 | 标签 / 时间轴 / 关联图导航 | [P2] | 骨架 | 待 P2 建 docs/design/ |
-| 协作与推送 | 多人编辑、跨空间只读推送 | [P2] | 骨架 | 待 P2 |
-| 存量接入 | Vault 挂载、录音转写、飞书同步 | [愿景] | 骨架 | 待技术验证 |
-| 情报分析（i2 精神） | 关联图↔时间轴联动、路径推理、人物网络、矛盾检测、证据地图、信号追踪 | [愿景] | 骨架 | docs/design/intelligence-analysis.md |
-| 情报交付 | 对外只读简报、管理层摘要、分析包 A Kit | [愿景] | 骨架 | 待技术验证 |
+| 子系统 | 职责 | 阶段 | 设计状态 | 实现状态（Phase1 Demo） | 详细设计 |
+|---|---|---|---|---|---|
+| 空间与权限 | 多空间隔离、权限分级、查询时过滤 | [P1] | P1-已设计 | 降级实现（内存；空间隔离 + 权限过滤可用） | docs/design/permissions.md |
+| 文档管理 | CRUD、行内编辑、版本历史 | [P1] | P1-已设计 | 降级实现（内存；CRUD/编辑/版本可用） | （逻辑简单，见 06/07） |
+| 内容导入 | Word/PDF 解析、OCR、切块入库 | [P1] | P1-已设计 | 降级实现（仅 `.md`/`.txt` 已提取文本；无 PDF/OCR/切块向量） | docs/design/ingestion.md |
+| 检索问答 | 全文搜索、RAG（向量+全文+引用） | [P1] | P1-已设计 | 降级实现（内存关键词匹配；RAG 不调 LLM，返回检索+模板） | docs/design/rag-retrieval.md |
+| 术语管理 | 空间级术语表、文档术语识别、问答口径对齐 | [P1] | P1-已设计 | 降级实现（内存；术语 CRUD + 问答口径注入可用） | docs/design/term-management.md |
+| 标签与视图 | 标签 / 时间轴 / 关联图导航 | [P2] | 骨架 | — | 待 P2 建 docs/design/ |
+| 协作与推送 | 多人编辑、跨空间只读推送 | [P2] | 骨架 | — | 待 P2 |
+| 存量接入 | Vault 挂载、录音转写、飞书同步 | [愿景] | 骨架 | — | 待技术验证 |
+| 情报分析（i2 精神） | 关联图↔时间轴联动、路径推理、人物网络、矛盾检测、证据地图、信号追踪 | [愿景] | 骨架 | — | docs/design/intelligence-analysis.md |
+| 情报交付 | 对外只读简报、管理层摘要、分析包 A Kit | [愿景] | 骨架 | — | 待技术验证 |
 
 ## 3. 技术选型理由
 
@@ -64,7 +66,7 @@ flowchart TB
 
 > 受 `ai/project-rules.md` §2.5 与 `docs/env/local-env.md` 约束。Demo 本机优先；资源不足再上公司服务器。
 
-- 本机单机（Demo 默认）：React 前端 + FastAPI（api/service/model 三层）+ PostgreSQL/pgvector，Docker Compose 起库；Embedding 本机运行 `bge-small-zh`，LLM 走公司内网中转 / 外部 OpenAI 兼容 API 或明确 Mock。
+- 本机单机（Demo 默认）：React 前端 + FastAPI（api/service/model 三层）。**当前运行时为降级内存实现**：后端直连内存 `demo_repository`，未起 PostgreSQL/pgvector（`docker/` 仅 `.gitkeep`，无 compose；Docker daemon No-Go，见 `docs/05-tech-spec.md §5.1` RG-001）；Embedding 未接入（RG-002 No-Go）；LLM 为 Mock（RG-004）。目标拓扑为 Docker Compose 起 PostgreSQL+pgvector + Embedding 本机 + LLM 中转，真实化移至 Phase2/MVP。
 - 数据边界：默认使用已标注的虚构 Demo 数据；允许按需导入部分真实团队文档，真实文档必须显式标注来源 / 敏感级别，并优先避免发送到外部模型。
 - 资源边界：Demo 峰值内存 < 8GB、显存 < 4GB、磁盘 < 20GB；允许本机安装项目所需依赖与镜像。
 - 远程 / 公司服务器边界：Phase1 Demo 暂不使用公司服务器；若本机 Embedding 在导入规模、响应时间或检索质量上不够用，再申请内网 Embedding / reranker 服务。
