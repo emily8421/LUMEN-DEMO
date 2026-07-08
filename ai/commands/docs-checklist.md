@@ -20,6 +20,7 @@
 - `ai/prompts/review/10-docs-checklist.md`
 - `docs/03-prd.md` 至 `docs/09-verification.md`（按项目形态存在则读取）
 - `ai/project-rules.md`
+- `ai/doc-standards/design-doc.md`（触发 `docs/design/*` 时）
 
 ## 执行流程
 

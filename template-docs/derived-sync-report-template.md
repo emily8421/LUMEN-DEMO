@@ -18,6 +18,7 @@ sync-records/template-sync/YYYY-MM-DD-sync-template-vX.Y.Z.md
 - 同步前模板版本：
 - 目标模板版本：
 - 同步分支：
+- 实际同步提交（非 PR merge commit）：
 - 操作入口：`/run sync-methodology` / 手动命令
 - AI 工具 / CLI：
 
@@ -25,7 +26,7 @@ sync-records/template-sync/YYYY-MM-DD-sync-template-vX.Y.Z.md
 
 - dry-run：
 - commit：
-- check-derived-sync：
+- check-derived-sync（记录传入的 `<sync-commit>`；若 `HEAD` 是 PR merge commit，不要用 merge commit 代替同步提交）：
 - 是否触发 PowerShell fallback（sync / check）：
 - post-sync-cleanup：
 - docs-system-audit（同步后审计）：

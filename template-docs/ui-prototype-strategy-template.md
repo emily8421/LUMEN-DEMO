@@ -1,0 +1,65 @@
+# UI Prototype Strategy Template（UI 原型策略 / 实现前原型记录模板）
+
+> Sync notice: This file is maintained by `ai-project-template` and may be overwritten when a derived project syncs template methodology.
+> Do not edit it directly in derived projects; propose reusable changes in `_proposals/` and upstream them to the template repository.
+
+> 定位：实现前 UI 原型策略记录；用于已有需求链和基本设计后、进入前端实现前确认原型形式、覆盖范围和验收映射。它不是需求权威源，不替代 `00-09`、`docs/design/frontend-interaction.md` 或 `09` 验收记录。
+
+## 0. 元信息
+
+| 字段 | 内容 |
+|---|---|
+| 项目 / 入口 |  |
+| 适用 Phase |  |
+| 交付物形态 | Demo / MVP / 产品 |
+| 策略状态 | 需要 / 不需要 / 豁免 / 待确认 |
+| 原型负责人 |  |
+| 最后更新 |  |
+| 关联文档 | `docs/03-prd.md` / `docs/05-tech-spec.md` / `docs/design/frontend-interaction.md` / `docs/09-verification.md` |
+
+## 1. 策略结论
+
+| 项 | 结论 |
+|---|---|
+| 是否需要开发前可视化原型 | 需要 / 不需要 / 豁免 |
+| 原型形式 | Figma / Penpot / Balsamiq / Axure / Storybook / 代码原型 / 截图标注 / 低保真草图 / 其他 |
+| 原型权威位置 | 链接 / 仓库路径 / Storybook / 截图目录 |
+| 豁免理由 | 不需要或暂不做时填写，说明风险、影响范围和补做时点 |
+
+## 2. 覆盖范围
+
+| Page-ID / Flow-ID | 页面 / 流程 | 覆盖状态 | 覆盖角色 | 覆盖设备 / 浏览器 | 原型证据 | 关联 REQ / TC |
+|---|---|---|---|---|---|---|
+
+## 3. 关键状态覆盖
+
+| Page / Component | 加载 | 空态 | 错误 | 禁用 | 成功 | 无权限 | 降级 / Mock | 风险提示 |
+|---|---|---|---|---|---|---|---|---|
+
+## 4. Mock / Demo / 降级口径
+
+| 能力 | 当前状态 | 用户可见提示 | 与真实能力差异 | 替换 / 启用条件 | 后续任务 |
+|---|---|---|---|---|---|
+
+## 5. 未覆盖项与风险
+
+| ID | 未覆盖项 | 原因 | 影响 | AI 建议 | 补做时点 / 阻塞关系 |
+|---|---|---|---|---|---|
+
+## 6. 评审记录
+
+| 日期 | 评审人 | 结论 | 反馈摘要 | 回填位置 | 状态 |
+|---|---|---|---|---|---|
+
+## 7. 回填与验收映射
+
+| 原型发现 / 确认项 | 回填文档 | 关联 ID | 是否已回填 | 验收入口 / 证据 |
+|---|---|---|---|---|
+
+## 8. 禁止事项确认
+
+- [ ] 原型未新增 `03` 未授权需求。
+- [ ] 原型未定义 `07` 未同步接口。
+- [ ] 原型未新增 `09` 未覆盖验收目标。
+- [ ] 前端可见性控制未替代后端权限边界。
+- [ ] Mock / 降级口径已明确用户可见提示。

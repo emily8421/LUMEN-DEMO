@@ -93,7 +93,7 @@ else
 fi
 
 echo
-echo "==> 最近同步提交"
+echo "==> 正在验证的同步提交"
 git show --name-only --stat --oneline --no-renames "$COMMIT"
 echo
 
@@ -101,6 +101,12 @@ mapfile -t CHANGED_FILES < <(git diff-tree --no-commit-id --name-only -r "$COMMI
 
 if [[ "${#CHANGED_FILES[@]}" -eq 0 ]]; then
   fail "提交 $COMMIT 未包含文件变更"
+fi
+
+parent_count="$(git rev-list --parents -n 1 "$COMMIT" 2>/dev/null | awk '{ print NF - 1 }')"
+if [[ "$COMMIT" == "HEAD" && "${parent_count:-0}" -gt 1 ]]; then
+  echo "ℹ️  HEAD 是 merge commit。若这是模板同步 PR 合并后的提交，请显式传入实际同步提交："
+  echo "    bash scripts/check-derived-sync.sh <sync-commit>"
 fi
 
 subject="$(git log -1 --format=%s "$COMMIT" 2>/dev/null || true)"
@@ -145,5 +151,6 @@ if [[ "$FAILURES" -eq 0 ]]; then
 else
   echo "❌ 派生项目同步边界检查失败：$FAILURES 项。" >&2
   echo "   见上方 ✗ 标注的失败项；另：派生同步验收用 check-derived-sync，不要用 check-template（模板自检）。" >&2
+  echo "   若 HEAD 是 PR merge commit，请改传实际同步提交：scripts/check-derived-sync.sh <sync-commit>。" >&2
   exit 1
 fi

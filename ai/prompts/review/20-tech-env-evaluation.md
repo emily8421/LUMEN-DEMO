@@ -1,4 +1,4 @@
-﻿# 20 技术路线与环境支撑评估
+# 20 技术路线与环境支撑评估
 
 > Sync notice: This file is maintained by `ai-project-template` and may be overwritten when a derived project syncs template methodology.
 > Do not edit it directly in derived projects; propose reusable changes in `_proposals/` and upstream them to the template repository.
@@ -86,7 +86,7 @@
    - 推荐方案、依据、备选和维护成本
 
 5. 依赖与工具支撑矩阵
-   - 每项包含：名称、目标版本、环境要求、验证方式、验证状态、风险
+   - 每项包含：名称、目标版本、环境要求、启用阶段、当前状态、配置来源、密钥 / 敏感性、验证方式、验证状态、风险
 
 6. 安装 / 导入 / 最小运行验证
    - 默认先列待执行命令，不自动执行
@@ -96,20 +96,24 @@
    - 说明是否需要联网、代理、管理员权限、端口、Docker、GPU / 大内存等
 
 8. 风险项与降级策略
-   - 每项包含 ID、优先级、风险、触发条件、影响、建议降级 / Mock / 服务器预案
+   - 每项包含 Risk-ID、优先级、风险、触发条件、影响、当前状态、建议降级 / Mock / 服务器预案、对应用例 / Sprint、解锁条件
 
-9. Go / Conditional Go / No-Go 结论
+9. Readiness gate
+   - 对真实外部服务、数据库、LLM、Docker / 部署、重型 SDK、权限安全或真实数据处理输出 RG-ID、进入标准、必需证据、状态和阻塞项
+   - 明确 Go / Conditional Go / No-Go 如何回填到 `docs/05-tech-spec.md` 的 Risk-ID / readiness gate、`docs/09-verification.md` 的 TC 和 `docs/08-dev-plan.md` 的 Sprint 前置条件
+
+10. Go / Conditional Go / No-Go 结论
    - 若 Conditional Go，列必须满足的条件和可安全进入的范围
    - 若 No-Go，列停止原因和重新评估触发条件
 
-10. 对 docs/05、docs/09、依赖文件的修改建议
+11. 对 docs/05、docs/09、docs/08 和依赖文件的修改建议
     - 指明应修订的章节、建议内容和是否需要用户确认
 
-11. 待人工确认项
+12. 待人工确认项
     - 使用结构化表格：`ID / 待确认项 / AI 建议 / 建议依据 / 备选方案 / 取舍影响 / 阻塞关系`
     - AI 建议不得写成已确认事实
 
-12. 报告落盘建议
+13. 报告落盘建议
     - 默认不写文件
     - 若用户确认记录，建议路径：`docs/research/YYYY-MM-DD-tech-env-evaluation-<scope>.md`
     - 说明报告不替代 `docs/env/local-env.md`、`docs/05-tech-spec.md` 或 `docs/09-verification.md`

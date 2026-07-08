@@ -19,6 +19,8 @@
 |---|---|
 | `README.md` | 5 分钟最小路径与总导航 |
 | `template-docs/beginner-guide.md` | 面向第一次使用者的操作手册 |
+| `template-docs/glossary.md` | 人读术语索引，不替代规则权威源 |
+| `template-docs/docs-scaffold/` | `docs/inputs` / `docs/vision` / `docs/00-09` / `docs/design` / `docs/decisions` / `docs/research` 结构模板副本，不替代项目事实文档 |
 | `SOP.md` | 场景索引与流程入口 |
 | `ai/index.md` | AI 规则入口 |
 | `ai/global-rules.md` | 跨项目通用规则 |
@@ -79,6 +81,8 @@
 |---|---|---|
 | 根目录 `README.md` | 总导航、最小路径、版本摘要 | 维护者细节、长篇教程 |
 | `template-docs/beginner-guide.md` | 初学者操作手册 | 规则正文、项目业务事实 |
+| `template-docs/glossary.md` | 核心术语短定义与权威来源指针 | 规则正文、长篇流程、项目事实 |
+| `template-docs/docs-scaffold/` | `docs/inputs`、`docs/vision`、`docs/00-09`、`docs/design`、`docs/decisions`、`docs/research` 原始大纲、占位表格、撰写提要 | 项目事实、规则审计基线 |
 | `template-docs/template-methodology.md` | 模板设计说明 | 派生项目过程文档 |
 | 根目录 `SOP.md` | 场景索引 | 大段重复命令、完整教程 |
 | `ai/` | AI 运行时规则 | 解释性长文、模板历史叙事 |
@@ -161,6 +165,7 @@ Prompt Library 设计：
 - 派生项目负责自己的 `ai/project-rules.md`、业务事实文档、代码和运行决策。
 - `template-sync.json` 只同步跨项目复用的方法论文件，不同步派生项目根 `README.md` 或业务文档。
 - 模板改动必须走提案、版本、PR、归档流程，避免派生项目各自演化成不同流派。
+- 版本是发布边界，不是提案数量边界；提案收件箱增长不触发版本递增，只有合并到同步范围内并改变模板行为或下游同步判断的 PR 才判断 `PATCH / MINOR / MAJOR`。
 
 ## 6. 演进策略 + 历史来源
 
@@ -171,7 +176,7 @@ Prompt Library 设计：
 - 项目轻量时，用 Lean 或 Standard 剖面快速启动。
 - 复杂度上升时，再逐步引入 `tasks/`、更多 `docs/design/`、更完整的验证矩阵。
 - 规则真正膨胀时，再拆规则文件或增加 Prompt，不提前过度设计。
-- 任何影响下游同步判断的改动，都通过 `VERSION`、`CHANGELOG.md` 和同步清单留痕。
+- 任何影响下游同步判断的发布，都通过 `VERSION`、`CHANGELOG.md` 和同步清单留痕；同主题小改可聚合为一个发布边界。
 
 ### 历史来源说明
 

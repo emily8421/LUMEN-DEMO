@@ -7,6 +7,7 @@
 
 - `/run generate-docs`
 - 生成文档体系
+- 生成整个文档体系
 - 补齐 00-09
 - 根据愿景 / inputs 生成 docs
 - 根据 inputs 生成 product-vision 和 docs
@@ -23,13 +24,16 @@
 - `docs/README.md`
 - `ai/prompts/docs/01-review-inputs.md`
 - `ai/prompts/docs/00-generate-or-complete-docs.md`
+- `ai/doc-standards/design-doc.md`（触发 `docs/design/*` 时）
 
 ## 执行流程
 
-1. 先用 `review-inputs` 判断输入材料、Product Vision 就绪度、入口模式和文档剖面。
-2. 若输入不足，先列缺口和最小补充清单，不猜测生成 product-vision 或 00-09。
-3. 输入通过后，先生成 / 更新 `docs/vision/product-vision.md`，再按 `00-generate-or-complete-docs` 生成或补齐 `00-09`。
-4. 生成后输出新增 / 修改文件清单、来源锚点和人工确认点。
+1. 若用户说“生成整个文档体系”，先展示阶段路线与两种模式：分阶段确认模式（推荐）/ 输入充分后批量生成模式，不直接写 00-09。
+2. 先用 `review-inputs` 判断输入材料、Product Vision 就绪度、入口模式和文档剖面。
+3. 若输入不足，先列缺口和最小补充清单，不猜测生成 product-vision 或 00-09；缺口项应可转入 `docs-open-items`。
+4. 输入通过后，先生成 / 更新 `docs/vision/product-vision.md`，再按 `00-generate-or-complete-docs` 生成或补齐 `00-09`。
+5. 每个阶段结束前更新待确认事项总览；完整文档体系生成后必须建议运行 `docs-evaluation` / `docs-system-audit` 和 `docs-open-items`。
+6. 生成后输出新增 / 修改文件清单、来源锚点和人工确认点。
 
 ## 写入风险
 

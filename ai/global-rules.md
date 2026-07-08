@@ -6,7 +6,7 @@
 > 本文件对所有基于本模板创建的项目逐字复用，不针对具体项目修改。
 > 如需调整通用原则，先改本模板仓库的本文件，再覆盖同步到各项目（见README）。
 >
-> **全局规则版本：v1.8（2026-06-26）**。本文件仅记录跨项目通用规则自身版本；
+> **全局规则版本：v1.9（2026-07-07）**。本文件仅记录跨项目通用规则自身版本；
 > 整个模板版本以根目录 `VERSION` 为准，并在 `CHANGELOG.md` 登记。
 
 ## 1. AI编程总体原则
@@ -99,7 +99,7 @@ ProjectName/
 额外项目文档必须按 `docs/README.md` 放入 `vision/`、`inputs/`、`design/`、`decisions/`、`research/`、`env/`、`meetings/`、`archive/` 等子目录，
 不占用、不挪动 `00-09` 编号，禁止把新增文档直接堆到 `docs/` 根目录。
 
-`frontend/` 是否启用取决于 `ai/project-rules.md` §3 的「演示形态」决策：消息通道内交互、CLI 或不需演示通常不启用；独立 Web 页面、移动端、小程序、桌面端等可点击 UI 通常启用，并在 `docs/04-architecture.md`、`docs/05-tech-spec.md` 体现前端设计。若项目存在多页面、多角色、复杂表单、状态流、验收依赖点击路径，或 Sprint 修改范围包含页面 / 组件 / 搜索问答 UI / 管理页 / 桌面端集成，开发前应补充 `docs/design/frontend-interaction.md` 或按入口拆分的 `docs/design/*interaction*.md`；若不补，须在 `ai/project-rules.md` §3 或 `docs/05-tech-spec.md` 写明豁免理由。根 `README.md` 是项目件，用于说明具体项目，不纳入下行同步清单，各项目自行维护。
+`frontend/` 是否启用取决于 `ai/project-rules.md` §3 的「演示形态」决策：消息通道内交互、CLI 或不需演示通常不启用；独立 Web 页面、移动端、小程序、桌面端等可点击 UI 通常启用，并在 `docs/04-architecture.md`、`docs/05-tech-spec.md` 体现前端设计。若项目存在多页面、多角色、复杂表单、状态流、验收依赖点击路径，或 Sprint 修改范围包含页面 / 组件 / 搜索问答 UI / 管理页 / 桌面端集成，开发前应补充 `docs/design/frontend-interaction.md` 或按入口拆分的 `docs/design/*interaction*.md`；若不补，须在 `ai/project-rules.md` §3 或 `docs/05-tech-spec.md` 写明豁免理由。满足前端交互触发条件且用户需实现前预览界面、页面信息密度高、主流程依赖点击验收、存在多状态 / 多角色 / 权限可见性，或 Demo / Mock / 降级口径可能被误读时，应在 `ai/project-rules.md` §2.7 / §3、`docs/05-tech-spec.md` 或前端交互设计中选择 UI 原型策略（Figma / Penpot / Balsamiq / Axure / Storybook / 代码原型 / 截图标注 / 其他）或写明豁免；原型不替代需求、设计或验收，不新增未授权需求 / 接口 / 权限 / 验收目标。非平凡子系统、复杂权限 / 安全边界、AI / 外部服务、导入 / 异步任务、跨模块状态机、Mock / 降级差异或高风险愿景能力，也应按 `ai/doc-standards/design-doc.md` 补充 `docs/design/<subsystem>.md` 或写明豁免理由。根 `README.md` 是项目件，用于说明具体项目，不纳入下行同步清单，各项目自行维护。
 
 两类常见的语义命名约定：
 - **原始输入包**：用户提供的愿景草稿、brief、客户 PRD/SRS、访谈、现有系统说明和外部接入材料，默认先放
@@ -111,9 +111,10 @@ ProjectName/
   确认足以生成 / 更新 product-vision 后，再用 `ai/prompts/docs/00-generate-or-complete-docs.md`，并按
   `ai/document-lifecycle-rules.md` 判断入口模式与文档剖面。
 - **子系统详细设计**：非平凡子系统用 `docs/design/<子系统>.md`，一个子系统一份，不编号；
-  与 04（总体）/ 06-07（数据·接口）互补，承载子系统内部逻辑。
+  与 04（总体）/ 06-07（数据·接口）互补，承载子系统内部逻辑、状态机、失败 / 降级、readiness gate、验收追溯和实现偏差回写；标准见 `ai/doc-standards/design-doc.md`。
 - **前端交互详细设计**：UI 型项目用 `docs/design/frontend-interaction.md`，或按入口拆成
-  `docs/design/customer-app-interaction.md`、`docs/design/admin-console-interaction.md` 等；它只细化既有需求的页面流、状态、文案、接口依赖和验收路径，不新增需求、接口或验收目标。
+  `docs/design/customer-app-interaction.md`、`docs/design/admin-console-interaction.md` 等；它是 `docs/design/*` 的页面 / 交互型子类型，只细化既有需求的页面流、状态、文案、接口依赖和验收路径，不新增需求、接口或验收目标。
+- **UI 原型策略**：UI 型项目在进入前端实现前选择是否需要可视化原型、采用何种形式、原型权威位置、覆盖页面 / 流程 / 状态 / 响应式范围，以及与 `docs/design/frontend-interaction.md`、`08`、`09` 的追溯；原型可以作为可视化证据，但不是需求权威源。
 
 AI 判断需要新增项目文档时，必须先阅读 `docs/README.md` 的分区规则；若无法判断放入哪个子目录，先提出建议路径并等待人工确认，不得自行创建到 `docs/` 根目录。
 

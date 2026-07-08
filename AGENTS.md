@@ -1,4 +1,4 @@
 # AGENTS.md
 
-本项目的全部AI行为规范见 ai/index.md，开发前必须先阅读该文件列出的全部文件，不得跳过。
+本项目的全部AI行为规范见 ai/index.md；开始分析、设计、编码或任何会改变项目状态的任务前，必须先阅读该文件列出的全部文件，不得跳过。仅当用户只要求“读取续接点 / 继续上次 / resume”且不要求继续执行任务时，可先按 ai/session-rules.md §3.1 快速续接模式做最小只读恢复；一旦进入后续执行，仍须回到 ai/index.md 完整规则读取。
 > Sync notice: This entry file is maintained by the template sync. Derived projects normally should not edit it directly; update `ai/index.md` routing or upstream reusable changes.
