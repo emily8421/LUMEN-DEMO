@@ -11,8 +11,8 @@
 | 当前 Phase | Phase1 |
 | 交付物形态 | Demo |
 | 输入基线 | `docs/03-prd.md` §3、`docs/04-architecture.md`、`docs/05-tech-spec.md`、`docs/09-verification.md` |
-| 当前状态 | 已确认（Phase1 Sprint 计划；执行状态以任务 / PR / 续接记录为准） |
-| 最后更新 | 2026-07-03 |
+| 当前状态 | Phase1 Sprint 计划已确认；Sprint-1~6 已按降级口径执行完成（见下方「当前进度记录」） |
+| 最后更新 | 2026-07-09 |
 
 ## Sprint-1：空间与权限底座
 
@@ -132,6 +132,21 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 ### 禁止事项
 - 不做移动端 / 响应式移动适配（Phase1 禁止，见 project-rules §1）
 - 不新增 P1 范围外功能
+
+## 当前进度记录（Phase1 · 降级口径）
+
+> 本表为 P1 回梳新增（对照 `ai/doc-standards/08-dev-plan.md §5`）。Sprint 计划为**目标**；实际执行为**降级内存实现**（无 pgvector / Embedding / OCR / 真实 LLM）。验收证据见 `docs/09-verification.md §5`。
+
+| Sprint | 目标（REQ） | 实际交付 | 关联提交 / PR | 验证结果 | 已回填 09 |
+|---|---|---|---|---|---|
+| Sprint-1 | 空间与权限底座（001/002/003） | 降级内存实现（权限过滤可用） | 含于 Sprint-2~4 提交基线 | 53 后端 tests 通过 | §2 / §5 |
+| Sprint-2 | 文档管理 + 版本（004/005/006） | 降级内存实现 + 前端编辑器 | `83fb782` | 通过（降级口径） | §5 |
+| Sprint-3 | 内容导入（009/010） | 降级文本导入（仅 `.md`/`.txt`，无 PDF/OCR） | `0fe169b` | 通过（降级口径） | §5 |
+| Sprint-4 | 检索与 RAG（007/008） | 内存搜索 + 降级 RAG（不调 LLM）+ 前端 UI | `da9f6e5`/`5144f2a`/`bc03839`/`c5c177e`(fix) | 通过（降级口径） | §5 / §5.1 |
+| Sprint-5 | 术语管理（036） | 空间术语 CRUD + 问答口径注入 | `5b78f0a` | 通过（降级口径） | §5 |
+| Sprint-6 | 桌面端集成与验收（011） | 桌面端集成 + Edge Headless / Chrome smoke | `cb6fb8a`（PR #28） | 部分通过 → 通过（降级口径） | §5 |
+
+> 未完成 / 移出 P1：真实 PDF 解析、图片 OCR（REQ-010 移至后续阶段）、pgvector 向量检索、真实 Embedding、真实 LLM——均移至 Phase2 / MVP（见 `docs/05-tech-spec.md §5.1` Readiness Gate）。
 
 ---
 
