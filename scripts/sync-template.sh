@@ -31,8 +31,30 @@ DEFAULT_SYNC_FILES=(
   "template-docs/smoke-test.md"
   "template-docs/smoke-test-report-template.md"
   "template-docs/template-methodology.md"
+  "template-docs/glossary.md"
+  "template-docs/docs-scaffold/README.md"
+  "template-docs/docs-scaffold/inputs/input-review-report.md"
+  "template-docs/docs-scaffold/vision/product-vision.md"
+  "template-docs/docs-scaffold/00-scenario.md"
+  "template-docs/docs-scaffold/01-user-requirements.md"
+  "template-docs/docs-scaffold/02-srs.md"
+  "template-docs/docs-scaffold/03-prd.md"
+  "template-docs/docs-scaffold/04-architecture.md"
+  "template-docs/docs-scaffold/05-tech-spec.md"
+  "template-docs/docs-scaffold/06-db-design.md"
+  "template-docs/docs-scaffold/07-api-spec.md"
+  "template-docs/docs-scaffold/08-dev-plan.md"
+  "template-docs/docs-scaffold/09-verification.md"
+  "template-docs/docs-scaffold/design/subsystem-design.md"
+  "template-docs/docs-scaffold/design/frontend-interaction.md"
+  "template-docs/docs-scaffold/design/ui-prototype-strategy.md"
+  "template-docs/docs-scaffold/decisions/ADR-template.md"
+  "template-docs/docs-scaffold/research/docs-open-items.md"
+  "template-docs/docs-scaffold/research/ui-prototype-exploration.md"
+  "template-docs/docs-scaffold/research/tech-env-evaluation.md"
   "template-docs/session-handoff.example.md"
   "template-docs/derived-sync-report-template.md"
+  "template-docs/ui-prototype-strategy-template.md"
   "template-sync.json"
   "ai/index.md"
   "ai/global-rules.md"
@@ -40,6 +62,19 @@ DEFAULT_SYNC_FILES=(
   "ai/implementation-lifecycle-rules.md"
   "ai/session-rules.md"
   "ai/doc-standards/README.md"
+  "ai/doc-standards/00-scenario.md"
+  "ai/doc-standards/01-user-requirements.md"
+  "ai/doc-standards/02-srs.md"
+  "ai/doc-standards/03-prd.md"
+  "ai/doc-standards/04-architecture.md"
+  "ai/doc-standards/05-tech-spec.md"
+  "ai/doc-standards/06-db-design.md"
+  "ai/doc-standards/07-api-spec.md"
+  "ai/doc-standards/08-dev-plan.md"
+  "ai/doc-standards/09-verification.md"
+  "ai/doc-standards/design-doc.md"
+  "ai/doc-standards/frontend-interaction.md"
+  "ai/doc-standards/ui-prototype-strategy.md"
   "ai/commands/README.md"
   "ai/commands/sync-methodology.md"
   "ai/commands/post-sync-cleanup.md"
@@ -107,20 +142,11 @@ DEFAULT_SYNC_FILES=(
   "ai/prompts/maintainers/18-submit-feedback.md"
 )
 
-# doc-standards 规范镜像：把模板 docs/00-09 撰写规范镜像到派生项目 ai/doc-standards/。
+# doc-standards 兼容镜像：历史保留入口；当前 00-09 均已升级为独立标准文件。
 # 与 SYNC_FILES 不同，这是 src(docs/0X) != dest(ai/doc-standards/0X) 的专用镜像步骤；
+# 00-09 已升级为独立标准文件，由 SYNC_FILES 同步，避免被项目模板骨架覆盖。
 # 产物是只读 AI 文档标准，不是项目事实，绝不覆盖派生项目自己的 docs/0X。
 DOC_STANDARD_DOCS=(
-  "docs/00-scenario.md"
-  "docs/01-user-requirements.md"
-  "docs/02-srs.md"
-  "docs/03-prd.md"
-  "docs/04-architecture.md"
-  "docs/05-tech-spec.md"
-  "docs/06-db-design.md"
-  "docs/07-api-spec.md"
-  "docs/08-dev-plan.md"
-  "docs/09-verification.md"
 )
 
 warn_derived_workflow_migration() {
@@ -254,7 +280,7 @@ if [[ "$MODE" == "--dry-run" ]]; then
   done
 
   echo
-  echo "==> doc-standards 规范镜像（docs/00-09 → ai/doc-standards/，只读规范，不覆盖项目事实）:"
+  echo "==> doc-standards 兼容镜像（当前无 docs/* 镜像；00-09 用独立标准文件）:"
   for src in "${DOC_STANDARD_DOCS[@]}"; do
     dest="ai/doc-standards/$(basename "$src")"
     if git cat-file -e "$REF:$src" 2>/dev/null; then
@@ -287,7 +313,7 @@ else
     fi
   done
 
-  echo "==> doc-standards 规范镜像（docs/00-09 → ai/doc-standards/，只读规范，不覆盖项目事实）:"
+  echo "==> doc-standards 兼容镜像（当前无 docs/* 镜像；00-09 用独立标准文件）:"
   for src in "${DOC_STANDARD_DOCS[@]}"; do
     dest="ai/doc-standards/$(basename "$src")"
     if git cat-file -e "$REF:$src" 2>/dev/null; then
