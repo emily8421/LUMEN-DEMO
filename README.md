@@ -2,7 +2,7 @@
 
 > 面向中小企业的团队知识库 demo：把分散在聊天 / 邮件 / 旧文件 / 笔记里的团队知识，沉淀到一个**支持空间隔离与三级文档权限**、可被 **AI 检索与问答（带来源引用）**、支持**多格式导入（Word / PDF / OCR）**的知识库。
 >
-> 本项目派生自 [`ai-project-template`](https://github.com/emily8421/ai-project-template)，采用其「文档驱动开发」方法论——**先文档、后代码**；当前已下行同步至模板 **v1.30.3**。
+> 本项目派生自 [`ai-project-template`](https://github.com/emily8421/ai-project-template)，采用其「文档驱动开发」方法论——**先文档、后代码**；当前已下行同步至模板 **v1.43.0**。
 
 ## 它能做什么
 
@@ -15,7 +15,7 @@
 
 ## 快速开始
 
-> 当前已进入 Phase1 编码：Sprint-2 ~ Sprint-5 主功能已完成；下一步是 Sprint-6 桌面端集成与验收。后端运行说明见 `backend/README.md`。
+> 当前已进入 Phase1 编码：Sprint-2 ~ Sprint-6 主功能已完成（含桌面端集成与验收）。后端运行说明见 `backend/README.md`。
 
 1. **读懂项目**：`docs/00-scenario.md`（背景 / 用户 / 场景）→ `docs/03-prd.md §3`（阶段路线图）→ 本 README「文档导航」。
 2. **确认运行环境**：见 `docs/env/local-env.md`（本机 Win11 / i7 / 31.7GB / RTX 3050）与 `ai/project-rules.md §2.5` 资源约束。
@@ -24,7 +24,7 @@
 
 ## 当前状态
 
-- **阶段**：Phase1（功能范围 `[P1]` · 交付物形态 **Demo**）——Sprint-2 ~ Sprint-5 主功能已完成并推送，包含前端文档编辑器、降级文本导入、全文搜索、降级 RAG 问答、前端搜索 / 问答 UI、术语管理与问答口径对齐；下一步是 Sprint-6 桌面端集成与验收。
+- **阶段**：Phase1（功能范围 `[P1]` · 交付物形态 **Demo**）——Sprint-2 ~ Sprint-6 主功能已完成并推送，包含前端文档编辑器、降级文本导入、全文搜索、降级 RAG 问答、前端搜索 / 问答 UI、术语管理与问答口径对齐，以及 Sprint-6 桌面端集成与降级口径验收。
 - **演进路线**：Phase1 **Demo**（当前）→ Phase2 **MVP** → 远期愿景 **产品**；双维度（功能范围 + 交付物形态）总览见 `docs/03-prd.md` §3。
 - **基准**：需求 / 架构 / 数据 / 接口 / 验证均已落在 `docs/`，是开发的唯一事实来源；阶段归属以 `docs/03-prd.md` §3 路线图为准。
 
@@ -87,11 +87,11 @@ LUMEN_demo_T2.1/
 
 ## 模板关系与同步
 
-本项目派生自 `ai-project-template`，方法论文件随模板演进（当前已同步至 **v1.30.3**）：
+本项目派生自 `ai-project-template`，方法论文件随模板演进（当前已同步至 **v1.43.0**）：
 
 - **上行（改方法论）**：在[模板仓库](https://github.com/emily8421/ai-project-template)走「分支 → PR → 评审 → 合并」（见其 `CONTRIBUTING.md`），**不在本项目直接改 `ai/global-rules.md`**。
 - **下行（同步到本项目）**：自模板 v1.6.8 起走 PowerShell 入口 `powershell -ExecutionPolicy Bypass -File scripts/sync-template.ps1 --commit`（先 `--dry-run`），同步清单见 `template-sync.json`；同步后用 `powershell -ExecutionPolicy Bypass -File scripts/check-derived-sync.ps1` 做派生边界验收。
-- **当前同步状态**：已同步至模板 **v1.30.3**，同步记录见 `sync-records/template-sync/2026-07-05-sync-template-v1.30.3.md`。
+- **当前同步状态**：已同步至模板 **v1.43.0**，同步记录见 `sync-records/template-sync/2026-07-08-sync-template-v1.43.0.md`。
 - git 工作流与账号说明见 `git-guide.md`。
 
 ---
