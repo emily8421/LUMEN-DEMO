@@ -10,8 +10,8 @@
 | 保留 / 省略决策 | 保留 |
 | 接口形态 | REST API |
 | 覆盖 REQ / 模块 | Phase1：REQ-001..REQ-011、REQ-036；P2 / 愿景接口保留骨架 |
-| 当前状态 | 已确认（P1 接口；错误码 / 鉴权细节待 05 / 实现期细化） |
-| 最后更新 | 2026-07-03 |
+| 当前状态 | P1 接口契约为**目标设计**；当前实现为**降级内存版**（见 §2「当前实现状态」列；search / query / import 降级，LLM 为 Mock）。真实化移至 Phase2/MVP |
+| 最后更新 | 2026-07-09 |
 
 ## 1. 统一约定
 
@@ -22,37 +22,39 @@
 
 ## 2. 接口清单（完整）
 
-| 方法 | 路径 | 用途 | 阶段 | 状态 | 追溯 |
-|---|---|---|---|---|---|
-| POST | /api/auth/login | 登录 | [P1] | P1-已设计 | REQ-001 基础 |
-| GET | /api/spaces | 列出我的空间 | [P1] | P1-已设计 | REQ-001/002 |
-| POST | /api/spaces/switch | 切换当前空间 | [P1] | P1-已设计 | REQ-002 |
-| GET | /api/documents | 文档列表 | [P1] | P1-已设计 | REQ-004 |
-| POST | /api/documents | 创建文档 | [P1] | P1-已设计 | REQ-004 |
-| GET/PUT/DELETE | /api/documents/{id} | 读/改/删 | [P1] | P1-已设计 | REQ-004/005 |
-| GET | /api/documents/{id}/versions | 版本列表 | [P1] | P1-已设计 | REQ-006 |
-| POST | /api/documents/{id}/versions/{v}/restore | 恢复版本 | [P1] | P1-已设计 | REQ-006 |
-| GET | /api/search?q= | 全文搜索 | [P1] | P1-已设计 | REQ-007 |
-| POST | /api/query | RAG 问答 | [P1] | P1-已设计 | REQ-008 |
-| POST | /api/import | 导入文件 | [P1] | P1-已设计 | REQ-009/010 |
-| GET/POST | /api/terms | 术语列表 / 创建术语 | [P1] | P1-已设计 | REQ-036 |
-| GET/PUT/DELETE | /api/terms/{id} | 术语详情 / 更新 / 删除 | [P1] | P1-已设计 | REQ-036 |
-| GET | /api/tags | 标签视图 | [P2] | 骨架 | REQ-012 |
-| POST | /api/spaces/push | 跨空间推送 | [P2] | 骨架 | REQ-015 |
-| GET | /api/briefs/{token} | 对外只读简报 | [愿景] | 骨架 | REQ-022 |
-| POST | /api/quick-entry | 快速录入索引条目 | [P2] | 骨架 | REQ-025 |
-| GET/POST | /api/doc-links | 内部链接 / 反向链接 | [P2] | 骨架 | REQ-026 |
-| POST | /api/export-pdf | 单文档导出 PDF | [P2] | 骨架 | REQ-027 |
-| POST | /api/sync/feishu | 飞书同步（webhook/拉取） | [愿景] | 骨架 | REQ-028 |
-| POST | /api/path | 路径推理（多跳） | [愿景] | 骨架 | REQ-030 |
-| GET | /api/people/{name} | 人物关系网络 | [愿景] | 骨架 | REQ-031 |
-| GET | /api/conflicts | 矛盾检测 | [愿景] | 骨架 | REQ-032 |
-| POST | /api/hypotheses | 假设检验 / 证据地图 | [愿景] | 骨架 | REQ-033 |
-| GET/POST | /api/signal-tracks | 信号追踪 | [愿景] | 骨架 | REQ-034 |
-| POST | /api/kits | 分析包 A Kit | [愿景] | 骨架 | REQ-035 |
-| … | （其余 P2 / 愿景接口骨架） | | | | |
+| 方法 | 路径 | 用途 | 阶段 | 设计状态 | 当前实现状态 | 追溯 |
+|---|---|---|---|---|---|---|
+| POST | /api/auth/login | 登录 | [P1] | P1-已设计 | 降级实现（内存；可用） | REQ-001 基础 |
+| GET | /api/spaces | 列出我的空间 | [P1] | P1-已设计 | 降级实现（内存；可用） | REQ-001/002 |
+| POST | /api/spaces/switch | 切换当前空间 | [P1] | P1-已设计 | 降级实现（内存；可用） | REQ-002 |
+| GET | /api/documents | 文档列表 | [P1] | P1-已设计 | 降级实现（内存；可用） | REQ-004 |
+| POST | /api/documents | 创建文档 | [P1] | P1-已设计 | 降级实现（内存；可用） | REQ-004 |
+| GET/PUT/DELETE | /api/documents/{id} | 读/改/删 | [P1] | P1-已设计 | 降级实现（内存；可用） | REQ-004/005 |
+| GET | /api/documents/{id}/versions | 版本列表 | [P1] | P1-已设计 | 降级实现（内存；可用） | REQ-006 |
+| POST | /api/documents/{id}/versions/{v}/restore | 恢复版本 | [P1] | P1-已设计 | 降级实现（内存；可用） | REQ-006 |
+| GET | /api/search?q= | 全文搜索 | [P1] | P1-已设计 | **降级实现（内存关键词匹配；无向量检索）** | REQ-007 |
+| POST | /api/query | RAG 问答 | [P1] | P1-已设计 | **降级实现（内存检索；不调 LLM，返回检索结果 + 模板）** | REQ-008 |
+| POST | /api/import | 导入文件 | [P1] | P1-已设计 | **降级实现（仅 `.md`/`.txt` 已提取文本；无 PDF/OCR）** | REQ-009/010 |
+| GET/POST | /api/terms | 术语列表 / 创建术语 | [P1] | P1-已设计 | 降级实现（内存；可用） | REQ-036 |
+| GET/PUT/DELETE | /api/terms/{id} | 术语详情 / 更新 / 删除 | [P1] | P1-已设计 | 降级实现（内存；可用） | REQ-036 |
+| GET | /api/tags | 标签视图 | [P2] | 骨架 | — | REQ-012 |
+| POST | /api/spaces/push | 跨空间推送 | [P2] | 骨架 | — | REQ-015 |
+| GET | /api/briefs/{token} | 对外只读简报 | [愿景] | 骨架 | — | REQ-022 |
+| POST | /api/quick-entry | 快速录入索引条目 | [P2] | 骨架 | — | REQ-025 |
+| GET/POST | /api/doc-links | 内部链接 / 反向链接 | [P2] | 骨架 | — | REQ-026 |
+| POST | /api/export-pdf | 单文档导出 PDF | [P2] | 骨架 | — | REQ-027 |
+| POST | /api/sync/feishu | 飞书同步（webhook/拉取） | [愿景] | 骨架 | — | REQ-028 |
+| POST | /api/path | 路径推理（多跳） | [愿景] | 骨架 | — | REQ-030 |
+| GET | /api/people/{name} | 人物关系网络 | [愿景] | 骨架 | — | REQ-031 |
+| GET | /api/conflicts | 矛盾检测 | [愿景] | 骨架 | — | REQ-032 |
+| POST | /api/hypotheses | 假设检验 / 证据地图 | [愿景] | 骨架 | — | REQ-033 |
+| GET/POST | /api/signal-tracks | 信号追踪 | [愿景] | 骨架 | — | REQ-034 |
+| POST | /api/kits | 分析包 A Kit | [愿景] | 骨架 | — | REQ-035 |
+| … | （其余 P2 / 愿景接口骨架） | | | | — | |
 
 ## 3. 请求 / 响应示例（[P1]）
+
+> 以下为**目标契约**示例。当前实现为降级内存版：`/api/import` 仅 `.md`/`.txt` 已提取文本（无 PDF/OCR）；`/api/query` 不调用外部 LLM（Mock，返回检索结果 + 模板）；`/api/search` 为内存关键词匹配。逐接口状态见 §2。
 
 ### POST /api/query （RAG 问答）
 - 请求：`{ "space_id": "brightlite-team", "question": "场景联动触发延迟是多少？" }`
@@ -84,7 +86,7 @@ sequenceDiagram
   participant API as FastAPI API
   participant Auth as 权限校验
   participant Service as 业务 service
-  participant DB as PostgreSQL + pgvector
+  participant DB as PostgreSQL + pgvector（目标；当前为内存 demo_repository）
   UI->>API: REST 请求（携带当前 space_id / session）
   API->>Auth: 鉴权 + 空间 / 文档权限校验
   Auth-->>API: 允许 / 拒绝
@@ -94,6 +96,8 @@ sequenceDiagram
   Service-->>API: 业务响应
   API-->>UI: { code, msg, data }
 ```
+
+> 注：上图为**目标架构**时序。当前 Phase1 Demo 的 DB 节点为内存 `demo_repository`（无 PostgreSQL/pgvector）；`POST /api/query` 不调用外部 LLM（Mock），`POST /api/import` 仅接受 `.md`/`.txt`。
 
 ### [P2] / [愿景] 接口（骨架·待该阶段细化）
 - `/api/tags`、`/api/spaces/push`：请求 / 响应待 P2 细化

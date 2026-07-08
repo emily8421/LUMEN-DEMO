@@ -10,8 +10,18 @@
 |---|---|
 | 输入来源 | `docs/00-scenario.md`、`docs/01-user-requirements.md` |
 | 覆盖 U-ID | U-01..U-42（按阶段标签区分 P1 / P2 / 愿景） |
+| 交付物形态 | Phase1 = **Demo**（功能范围 `[P1]`；与 `docs/03-prd.md §3` 一致） |
 | 当前状态 | 已确认（P1 可验证；P2 / 愿景待对应阶段细化） |
-| 最后更新 | 2026-07-03 |
+| 最后更新 | 2026-07-09 |
+
+## 0.1 非功能需求 / 约束 / 异常（委托声明）
+
+> 本节为 P1 回梳新增（对照 `ai/doc-standards/02-srs.md §2`）。LUMEN 作为 Lean 剖面 Demo，NFR / 约束 / 异常不在本文重述，委托如下权威源承载：
+
+- **非功能需求（性能 / 资源 / 可用性）**：见 `docs/05-tech-spec.md §5` 运行环境与资源评估（Demo 资源软上限、降级 / Mock 策略、Readiness Gate）与 `ai/project-rules.md §2.5`。
+- **技术约束 / 选型禁令**：见 `ai/project-rules.md` §1（Phase 边界）、§2（技术栈约束）。
+- **运行环境约束**：见 `docs/env/local-env.md` 与 `ai/project-rules.md §2.5`。
+- **异常场景**：REQ 级异常（库外问答「未找到」、权限拒绝 403 等）见各 REQ 验收口径与 `docs/09-verification.md`；错误码见 `docs/07-api-spec.md §1`。
 
 ## 1. [P1] 本期需求规格（可验证）
 

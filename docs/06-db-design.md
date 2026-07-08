@@ -11,34 +11,36 @@
 | 保留 / 省略决策 | 保留 |
 | 决策来源 | `ai/project-rules.md` §3（项目有 PostgreSQL + pgvector 持久化存储） |
 | 覆盖 REQ / 模块 | Phase1：空间 / 权限、文档、版本、导入、检索向量、术语管理 |
-| 当前状态 | 已确认（P1 表结构；P2 / 愿景表骨架待升阶段细化） |
-| 最后更新 | 2026-07-03 |
+| 当前状态 | P1 表结构为**目标设计**；当前实现为内存 `demo_repository`，**全部 P1 表均未在 PostgreSQL 落地**（迁移 `001/002` 已写未接线，`lumen_chunks`/`lumen_imports`/`lumen_terms` 无迁移）。真实化见 `docs/05-tech-spec.md §5.1` RG-001/002，移至 Phase2/MVP |
+| 最后更新 | 2026-07-09 |
 
 ## 1. 表清单（完整）
 
-| 表 | 用途 | 阶段 | 状态 | 追溯 |
-|---|---|---|---|---|
-| lumen_users | 账号 | [P1] | P1-已设计 | REQ-001 基础 |
-| lumen_spaces | 空间 | [P1] | P1-已设计 | REQ-001 |
-| lumen_space_members | 成员-空间-角色 | [P1] | P1-已设计 | REQ-001/002 |
-| lumen_documents | 文档 | [P1] | P1-已设计 | REQ-003/004 |
-| lumen_document_versions | 版本历史 | [P1] | P1-已设计 | REQ-006 |
-| lumen_chunks | 切块 + Embedding 向量 + 全文向量 | [P1] | P1-已设计 | REQ-007/008 |
-| lumen_imports | 导入任务 | [P1] | P1-已设计 | REQ-009/010 |
-| lumen_terms | 空间级术语表 | [P1] | P1-已设计 | REQ-036 |
-| lumen_tags | 标签 | [P2] | 骨架 | REQ-012 |
-| lumen_tag_links | 标签-文档关联 | [P2] | 骨架 | REQ-012 |
-| lumen_push_copies | 跨空间推送只读副本 | [P2] | 骨架 | REQ-015 |
-| lumen_vault_mounts | Vault 挂载配置 | [愿景] | 骨架 | REQ-018 |
-| lumen_audio_records | 录音转写记录 | [愿景] | 骨架 | REQ-019 |
-| lumen_brief_links | 对外只读简报链接 | [愿景] | 骨架 | REQ-022 |
-| lumen_doc_links | 文档间内部链接 / 反向链接 | [P2] | 骨架 | REQ-026 |
-| lumen_external_sync | 外部源同步配置（飞书等） | [愿景] | 骨架 | REQ-028 |
-| lumen_doc_participants | 文档参与人物（实体抽取） | [愿景] | 骨架 | REQ-031 |
-| lumen_hypotheses | 假设检验记录 | [愿景] | 骨架 | REQ-033 |
-| lumen_evidence | 证据条目（支持 / 反对） | [愿景] | 骨架 | REQ-033 |
-| lumen_signal_subscriptions | 信号追踪主题订阅 | [愿景] | 骨架 | REQ-034 |
-| lumen_analysis_kits | 分析包（A Kit）配置 | [愿景] | 骨架 | REQ-035 |
+| 表 | 用途 | 阶段 | 设计状态 | 当前实现状态 | 追溯 |
+|---|---|---|---|---|---|
+| lumen_users | 账号 | [P1] | P1-已设计 | 目标设计（迁移 001 已写未接线；当前内存） | REQ-001 基础 |
+| lumen_spaces | 空间 | [P1] | P1-已设计 | 目标设计（迁移 001 已写未接线；当前内存） | REQ-001 |
+| lumen_space_members | 成员-空间-角色 | [P1] | P1-已设计 | 目标设计（迁移 001 已写未接线；当前内存） | REQ-001/002 |
+| lumen_documents | 文档 | [P1] | P1-已设计 | 目标设计（迁移 001 已写未接线；当前内存） | REQ-003/004 |
+| lumen_document_versions | 版本历史 | [P1] | P1-已设计 | 目标设计（迁移 002 已写未接线；当前内存） | REQ-006 |
+| lumen_chunks | 切块 + Embedding 向量 + 全文向量 | [P1] | P1-已设计 | **目标设计（未迁移；依赖 pgvector + Embedding，当前无向量检索）** | REQ-007/008 |
+| lumen_imports | 导入任务 | [P1] | P1-已设计 | **目标设计（未迁移；当前导入仅 `.md`/`.txt` 已提取文本）** | REQ-009/010 |
+| lumen_terms | 空间级术语表 | [P1] | P1-已设计 | 目标设计（未迁移；当前内存） | REQ-036 |
+| lumen_tags | 标签 | [P2] | 骨架 | — | REQ-012 |
+| lumen_tag_links | 标签-文档关联 | [P2] | 骨架 | — | REQ-012 |
+| lumen_push_copies | 跨空间推送只读副本 | [P2] | 骨架 | — | REQ-015 |
+| lumen_vault_mounts | Vault 挂载配置 | [愿景] | 骨架 | — | REQ-018 |
+| lumen_audio_records | 录音转写记录 | [愿景] | 骨架 | — | REQ-019 |
+| lumen_brief_links | 对外只读简报链接 | [愿景] | 骨架 | — | REQ-022 |
+| lumen_doc_links | 文档间内部链接 / 反向链接 | [P2] | 骨架 | — | REQ-026 |
+| lumen_external_sync | 外部源同步配置（飞书等） | [愿景] | 骨架 | — | REQ-028 |
+| lumen_doc_participants | 文档参与人物（实体抽取） | [愿景] | 骨架 | — | REQ-031 |
+| lumen_hypotheses | 假设检验记录 | [愿景] | 骨架 | — | REQ-033 |
+| lumen_evidence | 证据条目（支持 / 反对） | [愿景] | 骨架 | — | REQ-033 |
+| lumen_signal_subscriptions | 信号追踪主题订阅 | [愿景] | 骨架 | — | REQ-034 |
+| lumen_analysis_kits | 分析包（A Kit）配置 | [愿景] | 骨架 | — | REQ-035 |
+
+> 当前实现说明：Phase1 Demo 后端为内存 `demo_repository`，**全部 P1 表均未在 PostgreSQL 落地**。`backend/migrations/001_sprint1_space_permissions.sql`、`002_sprint2_document_versions.sql` 已编写（users / spaces / members / documents、versions）但未接线（后端仍走内存仓储）；`lumen_chunks` / `lumen_imports` / `lumen_terms` 无迁移。pgvector + Embedding 真实化见 `docs/05-tech-spec.md §5.1` RG-001/002，移至 Phase2/MVP。
 
 ## 2. 表结构（[P1] 已设计）
 
@@ -91,7 +93,7 @@
 | created_at | timestamptz | |
 - 约束：`UNIQUE(document_id, version_no)`
 
-### lumen_chunks（pgvector，检索核心）
+### lumen_chunks（pgvector，检索核心 · 目标设计，当前未落地）
 | 字段 | 类型 | 说明 |
 |---|---|---|
 | id | bigint PK | |
