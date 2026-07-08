@@ -88,11 +88,13 @@
 > UI 型项目开发前原型策略；权威见 `ai/document-lifecycle-rules.md` UI 原型策略节与 `ai/doc-standards/ui-prototype-strategy.md`（模板 v1.39.0 引入）。
 
 - 是否涉及可点击 UI：是（React 桌面端）
-- 是否需要开发前可视化原型：已完成（Sprint-2 ~ Sprint-6）
+- 是否需要开发前可视化原型：已完成（Sprint-2 ~ Sprint-6）；后续新 UI Sprint 沿用「代码原型 + mock」策略，不引入 Figma 等外部设计工具
 - 原型形式：代码原型 + mock 数据 + 浏览器 smoke / 截图证据
-- 原型权威位置：`frontend/` 实现代码 + `docs/09-verification.md` 浏览器 smoke 记录
-- 覆盖范围：文档导入 / 全文搜索 / RAG 问答 / 术语管理主流程与降级口径
-- 后续新 UI Sprint 沿用「代码原型 + mock」策略，不引入 Figma 等外部设计工具
+- 原型权威位置：`frontend/` 实现代码 + `docs/09-verification.md §5` 浏览器 smoke 记录；详细设计见 `docs/design/frontend-interaction.md §8`
+- 覆盖范围：登录 / 空间切换 / 文档 CRUD / 行内编辑 / 版本恢复 / 导入 / 搜索 / RAG 问答 / 术语管理 / 桌面端集成（对齐 `docs/design/frontend-interaction.md §2.2` 全部 P1 页面）
+- 未覆盖项：真实 PDF / Word 解析、图片 OCR（REQ-009 真实化移至 Phase2；REQ-010 OCR 移至后续阶段）；移动端（Phase1 禁止）
+- 确认状态：已评审（降级口径）；Sprint-6 Edge Headless + Chrome 人工 smoke 通过（见 09 §5）
+- 与文档关系：承接 `docs/design/frontend-interaction.md`（页面流 / 状态 / 接口依赖）、`docs/08-dev-plan.md`（Sprint）、`docs/09-verification.md`（验收 TC）；不新增需求 / 接口 / 验收目标
 
 ## 3. 项目形态与文档裁剪
 
