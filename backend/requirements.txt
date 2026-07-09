@@ -13,3 +13,11 @@ pydantic==2.10.6
 # LLM adapter（RG-004）：OpenAI 兼容封装，支持 GLM/GPT 中转 + 本机 ollama；详见 backend/service/llm_adapter.py
 openai>=1.0
 
+# pgvector 接入（RG-001，Sprint-8 / task-008 T1）：DB 驱动与 ORM。锁 05 §1 的 Python 3.12 基线；
+# .venv(3.14) 实际装较新版本（sqlalchemy 2.0.51 / alembic 1.18.5 / psycopg 3.3.4 / pgvector 0.5.0），
+# 同 drift（见顶部注释 + 复核报告 §5.1），T7 统一定基线。
+sqlalchemy==2.0.36
+alembic==1.14.0
+psycopg[binary]==3.2.3
+pgvector==0.3.6
+

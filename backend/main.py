@@ -12,6 +12,21 @@ except ImportError:  # pragma: no cover - allows tests before dependencies are i
     JSONResponse = None
 
 
+from contextlib import asynccontextmanager
+
+
+@asynccontextmanager
+async def lifespan(_app):
+    """启动时初始化 PG + pgvector（task-008 T1）。连不上则降级，内存 demo 仍可用（T5 切换前）。"""
+    try:
+        from backend.service.db import init_db
+
+        init_db()
+    except Exception as exc:  # pragma: no cover - 依赖外部 PG 容器
+        print(f"[db] init skipped (degraded mode): {exc}")
+    yield
+
+
 def create_app():
     if FastAPI is None:
         raise RuntimeError("FastAPI is not installed")
@@ -24,7 +39,7 @@ def create_app():
     from backend.api.spaces import router as spaces_router
     from backend.api.terms import router as terms_router
 
-    app = FastAPI(title="LUMEN Knowledge Base API")
+    app = FastAPI(title="LUMEN Knowledge Base API", lifespan=lifespan)
 
     @app.exception_handler(HTTPException)
     async def business_http_exception_handler(request: Request, exc: HTTPException):
