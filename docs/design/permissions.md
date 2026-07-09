@@ -3,6 +3,21 @@
 > 对应 REQ-001 / 002 / 003。总体定位见 04；数据见 06（lumen_spaces / members / documents.permission）。
 > 按「完整骨架 + 阶段增量」：`[P1]` 写细，`[P2]` 骨架。
 
+## 0. 文档元信息
+
+| 项 | 内容 |
+|---|---|
+| 设计对象 | 空间与权限子系统（MOD-001） |
+| 文档路径 | docs/design/permissions.md |
+| 输入来源 | 02/03、04 §2/§5（Flow-002）、06（lumen_spaces / members / documents.permission）、07（API-001..013 入口校验） |
+| 覆盖 REQ | REQ-001、REQ-002、REQ-003 |
+| 所属 Phase | [P1] |
+| 交付物形态 | Demo |
+| 当前状态 | P1-已设计；权限逻辑已实现（内存），存储层为降级（见 §6） |
+| 流程 ID | Flow-D-002（权限过滤决策流，见 §2） |
+| 最后更新 | 2026-07-09 |
+| 下游影响 | 08 Sprint-1、09 TC-P1-001/002/003 |
+
 ## 1. 模型
 
 - **空间（space）**：隔离边界，成员关系在 `lumen_space_members`
@@ -44,3 +59,20 @@ flowchart LR
 
 - **被** docs/design/rag-retrieval、文档 / 搜索 service 调用做过滤
 - **被** 07 各接口在入口校验（鉴权 + 空间 + 文档权限）
+
+## 6. 实现偏差 / 设计回写
+
+> 对照 `ai/doc-standards/design-doc.md` §4.10。仅记录已实现的降级事实。
+
+| 偏差 ID | 代码 / 配置事实 | 原设计 | 偏差类型 | 处理结论 | 回写目标 | 验证 / 证据 |
+|---|---|---|---|---|---|---|
+| DEV-001 | 权限过滤在内存 `demo_repository` 实现（`backend/service/permission.py`：is_space_member / can_view_document / filter_visible_documents） | SQL where 子句过滤（`visible_document_where_clause` 目标设计） | Mock/降级 | 过滤逻辑等价已验证；存储层未落地 PostgreSQL，真实化移 Phase2 | 06、05 RG-001 | TC-P1-001/003 |
+
+## 7. 验收追溯
+
+| 设计点 | 关联 REQ | 关联 Sprint | 关联 TC | 验证方式 | 状态 |
+|---|---|---|---|---|---|
+| 跨空间隔离 | REQ-001 | Sprint-1 | TC-P1-001 | `tests/backend/test_permission.py`、`test_space.py` | 条件通过（内存） |
+| 空间切换 | REQ-002 | Sprint-1 | TC-P1-002 | `tests/backend/test_space.py`、`test_api_routes.py` | 条件通过 |
+| 私有文档对他人不可见 | REQ-003 | Sprint-1 | TC-P1-003 | `tests/backend/test_permission.py` | 条件通过 |
+| Flow-D-002 权限过滤决策流 | REQ-001/002/003 | Sprint-1 | TC-P1-001/002/003 | 见上 | 降级实现（逻辑等价） |

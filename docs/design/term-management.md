@@ -3,6 +3,21 @@
 > 对应 REQ-036。总体定位见 04；数据见 06（lumen_terms）；接口见 07（/api/terms）。
 > 按「完整骨架 + 阶段增量」：`[P1]` 写最小 Demo 能力，后续能力原位追加。
 
+## 0. 文档元信息
+
+| 项 | 内容 |
+|---|---|
+| 设计对象 | 术语管理子系统（MOD-005） |
+| 文档路径 | docs/design/term-management.md |
+| 输入来源 | 02/03、04 §2、06（lumen_terms）、07（API-012 / API-013） |
+| 覆盖 REQ | REQ-036 |
+| 所属 Phase | [P1] |
+| 交付物形态 | Demo |
+| 当前状态 | P1-已设计；实现为降级（内存术语；问答口径注入不调 LLM，见 §6） |
+| 流程 ID | Flow-D-005（术语维护）/ Flow-D-006（文档术语识别）/ Flow-D-007（问答口径对齐），见 §2 |
+| 最后更新 | 2026-07-09 |
+| 下游影响 | 08 Sprint-5、09 TC-P1-012 |
+
 ## 1. 职责
 
 维护空间级术语表，并在阅读、编辑与 RAG 问答中统一关键术语口径。
@@ -52,3 +67,20 @@ flowchart TB
 - **影响** docs/design/rag-retrieval：构造 Prompt 前注入术语上下文。
 - **写** 06 `lumen_terms`。
 - **被** 07 `/api/terms`、`/api/query` 调用。
+
+## 6. 实现偏差 / 设计回写
+
+> 对照 `ai/doc-standards/design-doc.md` §4.10。仅记录已实现的降级事实。
+
+| 偏差 ID | 代码 / 配置事实 | 原设计 | 偏差类型 | 处理结论 | 回写目标 | 验证 / 证据 |
+|---|---|---|---|---|---|---|
+| DEV-001 | 术语存储在内存 `demo_repository`（`backend/service/term.py`） | `lumen_terms` 表（PostgreSQL） | Mock/降级 | 术语 CRUD 逻辑已实现；存储未落地，真实化移 Phase2 | 06 lumen_terms、05 RG-001 | TC-P1-012 |
+| DEV-002 | 问答口径注入不调 LLM（与 rag-retrieval DEV-002 同源） | 术语定义注入 Prompt → LLM | Mock/降级 | 当前注入术语但 RAG 不调 LLM；真实化移 Phase2 | 07 API-010、05 RG-004 | TC-P1-012 |
+
+## 7. 验收追溯
+
+| 设计点 | 关联 REQ | 关联 Sprint | 关联 TC | 验证方式 | 状态 |
+|---|---|---|---|---|---|
+| 术语 CRUD + 空间优先 | REQ-036 | Sprint-5 | TC-P1-012 | `tests/backend/test_term.py` | 条件通过（内存） |
+| 问答口径对齐 | REQ-036 | Sprint-5 | TC-P1-012 | `tests/backend/test_rag.py` | 条件通过（不调 LLM） |
+| Flow-D-005/006/007 | REQ-036 | Sprint-5 | TC-P1-012 | 见上 | 降级实现 |
