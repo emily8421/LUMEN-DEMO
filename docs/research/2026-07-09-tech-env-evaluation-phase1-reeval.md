@@ -7,11 +7,11 @@
 ## 1. 评估摘要
 
 - **范围**：Phase1 真实化 4 阻塞（pgvector / Embedding / OCR / LLM）+ Web/ORM 基础栈。
-- **结论**：整体仍 **No-Go（完整闭环）**——4 个真实化阻塞**均未解除**；Web/ORM 基础栈 **Conditional Go**（与 2026-07-04 一致）。
-- **最关键 3 条理由**：
-  1. Docker daemon **仍 No-Go**（`dockerDesktopLinuxEngine` pipe 不存在），pgvector 全链路卡此；
+- **结论**：整体仍 **No-Go（完整闭环）**——RG-001（pgvector）、RG-003（OCR）未解除；**RG-002（Embedding）、RG-004（LLM）已验证 / Go**（2026-07-09 续）；Web/ORM 基础栈 Conditional Go。
+- **最关键阻塞（2026-07-09 续）**：
+  1. Docker daemon **仍 No-Go**（`dockerDesktopLinuxEngine` pipe 不存在），pgvector 全链路卡此——**唯一剩余硬阻塞**；
   2. `backend/requirements.txt` 与 `.venv` 实际版本 **drift**（锁的版本在 Python 3.14 下构建失败，实际跑的是另一套）；
-  3. **LLM 中转（RG-004）是唯一不依赖 Docker/torch 的真实化路径**，可独立 Spike。
+  3. ✅ **RG-002（Embedding）、RG-004（LLM）已验证 / Go**——torch 经 VC++ Redist 修复（§5.3）、LLM 经 GLM 中转验证（#45）。
 - **是否阻塞**：不阻塞当前降级 Demo（内存 `demo_repository`）继续可用；真实化移 Phase2/MVP（见 `05 §5.1`）。
 
 ## 2. 评估范围与依据
@@ -38,9 +38,9 @@
 | Python | 3.14.3（本机默认） | 本次诊断 + local-env |
 | Docker | 29.5.2 Client；**daemon 未运行**（pipe 不存在） | 本次诊断 |
 | .venv | 存在（Python 3.14.3） | 本次诊断 |
-| .venv 实际依赖 | fastapi 0.136.3 / pydantic 2.13.4 / pydantic_core 2.46.4 / python-docx 1.2.0 / uvicorn 0.49.0 | 本次诊断 pip list |
+| .venv 实际依赖 | fastapi 0.136.3 / pydantic 2.13.4 / pydantic_core 2.46.4 / python-docx 1.2.0 / uvicorn 0.49.0；RG-002 验证另装 torch 2.13.0+cpu / sentence-transformers 5.6.0 / numpy 2.5.1 / transformers 5.13.0（**仅验证用，未入 requirements.txt**） | 本次诊断 pip list + RG-002 验证 |
 | requirements.txt 锁定 | fastapi 0.115.14 / uvicorn 0.34.3 / pydantic 2.10.6 | backend/requirements.txt |
-| torch | **未装**（import 失败 = 缺包，非装坏） | 本次诊断 |
+| torch | **已装 2.13.0+cpu**（RG-002 验证：装 VC++ Redist 后 import OK，见 §5.3） | 本次诊断 + RG-002 验证 |
 | migrations | `001_sprint1_space_permissions.sql`、`002_sprint2_document_versions.sql`（已写未接线） | 本次诊断 |
 | docker/ | 空（仅 `.gitkeep`，无 compose） | 本次诊断 |
 | 端口 | `7998-8097` 被系统排除；改用 18000 可绑定（首评 §10.2 已解） | 首评 |
@@ -50,12 +50,12 @@
 | RG-ID | 真实依赖 | 2026-07-04 首评 | 2026-07-09 复核 | 变化 |
 |---|---|---|---|---|
 | RG-001 | PostgreSQL + pgvector | No-Go（Docker daemon 未起） | **仍 No-Go**（daemon 仍未起，pipe 不存在） | 未变 |
-| RG-002 | Embedding（bge-small-zh） | No-Go（`--target` 装 torch 后导入失败 WinError 1114） | **仍 No-Go**（`.venv` 根本未装 torch） | 未变（原因细化：未装而非装坏） |
+| RG-002 | Embedding（bge-small-zh） | No-Go（`--target` 装 torch 后导入失败 WinError 1114） | **已验证**（2026-07-09 续：VC++ Redist 修复后 torch 2.13.0+cpu import OK，bge-small-zh-v1.5 生成 512 维 float32；见 §5.3） | **解除**（已验证；待 pgvector 接入才已启用） |
 | RG-003 | OCR（PaddleOCR） | No-Go（2.8.x 依赖 numpy<2.0，Python 3.14 无） | **仍 No-Go（降级）** | 未变 |
-| RG-004 | LLM（OpenAI 兼容） | Mock（未配置） | **仍 Mock** | 未变（最少阻塞） |
+| RG-004 | LLM（OpenAI 兼容） | Mock（未配置） | **Go（GLM-5.2 已验证，Sprint-7 #45）** | **解除**（05 §5.1 已回填） |
 | RG-005 | Web/ORM 基础栈 | Conditional Go（53 tests） | **Conditional Go**（未变） | 未变 |
 
-> 4 个真实化阻塞自首评以来**一个都没解除**；环境侧（Docker 启动、torch 安装、OCR 定版、LLM 凭据）均需本机 / 人工操作，AI 在 sandbox 无法代劳。
+> 2026-07-09 续：RG-002（Embedding）、RG-004（LLM）**已验证 / Go**；RG-001（pgvector / Docker）、RG-003（OCR）**仍 No-Go 未变**。torch 经 VC++ Redist 修复、LLM 经 GLM 中转验证；待解锁仅余 Docker（pgvector）与 OCR。
 
 ## 5. 新发现（本次复核增量）
 
@@ -67,23 +67,28 @@
 ### 5.2 `python-docx 1.2.0` 已在 .venv
 - .docx 解析基础栈就绪（首评 §9.2 验证导入 Go）；但 `pdfplumber` / `psycopg` / `sqlalchemy` / `alembic` 仍缺（requirements.txt 未列）。
 
-### 5.3 torch「未装」而非「装坏」
-- 首评用 `pip install --target` 装 torch 后导入失败（WinError 1114 加载 c10.dll），怀疑 `--target` 安装方式 + DLL 搜索路径问题（首评 §9.5 建议 1）。
-- 本次：`.venv` 直接**未装 torch**。**在标准 venv（非 --target）直接装 torch 是否 OK，仍未验证**——这是 RG-002 可能的低成本解锁点。
+### 5.3 RG-002 已验证（2026-07-09 续，TE-C-004 闭合）
+- **根因**：首评 / 复核 `import torch` 失败 `WinError 1114`（加载 `c10.dll`）的真因是**本机 VC++ runtime 过旧**（`v14.28.29325`，2020 VS2019 时代）+ `C:\Windows\System32\VCRUNTIME140.dll` 缺失，torch 2.13 `c10.dll` 需更新 runtime 初始化。**非** `--target` 安装方式问题（标准 venv 同样失败）。
+- **修复**：装 Microsoft Visual C++ Redistributable 2015-2022 x64 最新版（`https://aka.ms/vs/17/release/vc_redist.x64.exe`）后，标准 venv `import torch` → `torch OK 2.13.0+cpu`。
+- **Embedding 验证**：`.venv` 装 `sentence-transformers 5.6.0`（带 numpy 2.5.1 / transformers 5.13.0 / tokenizers / scipy / scikit-learn，**仅验证用，未入 requirements.txt**），加载 `BAAI/bge-small-zh-v1.5` 生成向量 = **`dim (1, 512) float32`**（与 project-rules §2 的 512 维约束一致）。
+- **关键环境约束（真实化接入必须遵循，否则公司网络下必崩）**：
+  - **`HF_HUB_DISABLE_XET=1`**：huggingface_hub 1.22 默认装 `hf-xet` 走 Xet 协议**绕过 HTTP 代理**，公司网络下连不上（curl / python requests 通，但 huggingface_hub 加载模型失败）；禁用后走传统 HTTP，经本地 `HTTPS_PROXY=http://127.0.0.1:7897` 可达 huggingface.co。
+  - 模型缓存 `C:\Users\maixh\.cache\huggingface\hub\`（Windows symlink 警告，无害）。
+- **状态**：RG-002「本机 Embedding 可运行」**已验证**（≠已启用，尚未接入后端 RAG / pgvector；接入待 RG-001 Docker 解锁）。
 
 ## 6. 解锁路线图（按 价值 / 阻塞 排序）
 
 | 顺序 | 解锁项 | 前置 | 解锁后价值 | 谁执行 |
 |---|---|---|---|---|
-| 1 | **LLM 中转（RG-004）** | 公司内网 OpenAI 兼容 endpoint + key | RAG 从"返回模板"→**真实问答**；不依赖 Docker/torch | 用户提供凭据 + AI 改 `rag.py`/adapter |
+| 1 | **LLM 中转（RG-004）** | ✅ **已验证**（GLM-5.2，Sprint-7 #45） | RAG 从"返回模板"→**真实问答** | 已完成 |
 | 2 | **Docker daemon（RG-001 前置）** | 手动启动 Docker Desktop + WSL 权限 | 解锁 pgvector 容器路线 | 用户本机 |
 | 3 | **pgvector 接入（RG-001）** | Docker 起来 + 补 `docker-compose.yml` + 接线 SQLAlchemy/Alembic/psycopg + 跑 migration | 向量检索真实化（REQ-007/008） | Docker 解锁后 AI 可做 |
-| 4 | **Embedding（RG-002）** | 标准装 torch（复测 §9.5）或公司内网 `/v1/embeddings` | 向量召回 | AI 验证 + 可能服务器 |
+| 4 | **Embedding（RG-002）** | ✅ **已验证**（torch 修复 + 512 维 float32） | 向量召回（待 pgvector 接入生成真实向量） | AI 验证完成；接入待 RG-001 |
 | 5 | OCR（RG-003） | PaddleOCR 3.x 或替代引擎定版 | REQ-010 | 最低优先，降级已接受 |
 
 ## 7. Readiness Gate 复核结论
 
-> 与 `05 §5.1` 一致，本次复核确认 RG-001..005 状态**均未变**，无需修订 05 §5.1（除非落实解锁）。`05 ↔ 09 §6` 双向链接（RG-ID）已在 P0/P1 批次建立。
+> 2026-07-09 续：RG-002、RG-004 **已变**（已验证 / Go），本次回填执行修订 `05 §5.1` 对应行 + `09 §6`。RG-001（pgvector / Docker）、RG-003（OCR）**仍 No-Go 未变**。`05 ↔ 09 §6` 双向链接（RG-ID）已在 P0/P1 批次建立。
 
 ## 8. Go / Conditional Go / No-Go 结论
 
@@ -91,8 +96,9 @@
 |---|---|---|
 | 当前降级 Demo（内存） | Go | 继续可用，53 tests + 浏览器 smoke 通过 |
 | Web/ORM 基础栈（RG-005） | Conditional Go | 已接入，但 requirements.txt drift 待修 |
-| LLM 真实化（RG-004） | Conditional Go | **可独立 Spike**，仅需凭据 + 改 adapter |
-| 完整闭环（pgvector + Embedding + OCR + LLM） | **No-Go** | 4 阻塞未解除，真实化移 Phase2/MVP |
+| Embedding（RG-002） | Conditional Go | **已验证**（torch 修复 + 512 维 float32），待 pgvector 接入才已启用 |
+| LLM 真实化（RG-004） | Go | GLM-5.2 已验证（Sprint-7，#45） |
+| 完整闭环（pgvector + Embedding + OCR + LLM） | **No-Go** | RG-001（pgvector/Docker）、RG-003（OCR）未解除；RG-002/004 已验证 |
 
 ## 9. 修改建议（需用户确认后另行 PR）
 
@@ -104,10 +110,10 @@
 
 | ID | 待确认项 | AI 建议 | 建议依据 | 备选 | 取舍影响 / 阻塞 |
 |---|---|---|---|---|---|
-| TE-C-001 | 是否有公司内网 OpenAI 兼容 LLM endpoint + key 可用于 Demo | 有则启动 RG-004 Spike（最高价值真实化） | RG-004 是唯一不依赖 Docker/torch 的路径 | 无则 LLM 继续 Mock，转 Phase2 规划 | 阻塞 RAG 真实化 |
+| TE-C-001 | ~~是否有公司内网 OpenAI 兼容 LLM endpoint + key 可用于 Demo~~ | 有则启动 RG-004 Spike | RG-004 是唯一不依赖 Docker/torch 的路径 | 无则 LLM 继续 Mock，转 Phase2 规划 | ✅ **已闭合**（#45 GLM-5.2 验证） |
 | TE-C-002 | `requirements.txt` drift 修法 | 锁定版本对齐 .venv 实际（0.136.3/0.49.0/2.13.4） | 锁的版本在 Py3.14 装不上 | 标注双轨 / 降 Python | 不修则重建 venv 必失败 |
 | TE-C-003 | 是否启动 Docker Desktop 解锁 pgvector | 用户本机启动后通知 AI 补 compose + 接线 | pgvector 是向量检索唯一路径 | 用内网 `/v1/embeddings` + 外部向量库（违 project-rules §2） | 阻塞 RG-001/002 真实化 |
-| TE-C-004 | torch 标准装复测（验证首评 §9.5） | 在标准 venv `pip install torch` 复测 import | 首评 --target 方式致 DLL 失败，标准装可能 OK | 公司内网 Embedding 服务 | 阻塞 RG-002 |
+| TE-C-004 | ~~torch 标准装复测（验证首评 §9.5）~~ | 在标准 venv `pip install torch` 复测 import | 首评 --target 方式致 DLL 失败，标准装可能 OK | 公司内网 Embedding 服务 | ✅ **已闭合**（VC++ Redist 修复后 torch import OK，RG-002 验证，见 §5.3） |
 
 ## 11. 报告落盘说明
 

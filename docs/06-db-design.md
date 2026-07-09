@@ -100,7 +100,7 @@
 | document_id | bigint FK→documents | |
 | ordinal | int | 块序号 |
 | text | text | 块原文 |
-| embedding | vector(512) | pgvector 向量，对应本机 `bge-small-zh` Embedding |
+| embedding | vector(512) | pgvector 向量，对应本机 `bge-small-zh` Embedding（512 维，RG-002 已验证 float32，待 pgvector 接入） |
 | ts_vector | tsvector | 全文检索向量 |
 - 索引：向量近邻（ivfflat / hnsw，参数待 05）+ `ts_vector` GIN
 
