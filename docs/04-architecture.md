@@ -66,7 +66,7 @@ flowchart LR
 | COMP-001 | React 前端 SPA | 桌面浏览器 UI（文档 / 搜索 / 问答 / 术语） | 浏览器 | REST / JSON | [P1] | 降级实现（可用） | REQ-011、004~008、036 |
 | COMP-002 | FastAPI 后端（api / service / model 三层） | REST API、权限校验、业务逻辑 | 本机单进程 | HTTP | [P1] | 降级实现（内存仓储） | 全 P1 |
 | COMP-003 | 数据存储 | PostgreSQL + pgvector（目标）；当前内存 `demo_repository` | 目标 Docker Compose / 当前内存 | SQL（目标） | [P1] | 目标设计（未接入；RG-001） | REQ-003~010、036 |
-| COMP-004 | AI 服务 | LLM 中转 + 本机 Embedding（目标）；当前 LLM Mock / Embedding No-Go | 目标本机 + 内网 | OpenAI 兼容 API | [P1] | 目标设计（未接入；RG-002/004） | REQ-008、036 |
+| COMP-004 | AI 服务 | LLM 中转 + 本机 Embedding（目标）；当前 LLM 已验证可切 / Embedding 已验证待接入 | 目标本机 + 内网 | OpenAI 兼容 API | [P1] | 目标设计（未接入；RG-002 已验证/004 Go） | REQ-008、036 |
 
 ## 2. 子系统 / 模块划分（完整框架）
 
@@ -98,7 +98,7 @@ flowchart LR
 | ADR | 决策 | 状态 | 适用 Phase | 替代方案 | 取舍影响 | 验证方式 |
 |---|---|---|---|---|---|---|
 | ADR-001 | PostgreSQL + pgvector 一体化存储 | 已确认（目标；当前未接入） | Phase1+ | Milvus / Qdrant 独立向量库 | 少一个组件、一致性成本低；强依赖 pgvector 扩展与 Docker | RG-001 解锁后接入（05 §5.1） |
-| ADR-002 | AI 走 OpenAI 兼容接口 + 本机 Embedding | 已确认（目标；LLM Mock / Embedding No-Go） | Phase1+ | 绑定单一闭源 LLM SDK | 厂商解耦、可迁内网；需 adapter 适配 | RG-002 / RG-004（05 §5.1） |
+| ADR-002 | AI 走 OpenAI 兼容接口 + 本机 Embedding | 已确认（目标；LLM 已验证 / Embedding 已验证待接入） | Phase1+ | 绑定单一闭源 LLM SDK | 厂商解耦、可迁内网；需 adapter 适配 | RG-002 / RG-004（05 §5.1） |
 | ADR-003 | 导入流水线收敛异构格式为文本→切块→Embedding | 已确认（目标；当前仅 `.md`/`.txt`） | Phase1+ | 各格式独立检索路径 | 检索侧统一数据形态；解析复杂度集中于导入 | TC-P1-009 / 010（09 §2） |
 | ADR-004 | 权限下沉到 SQL / 检索层（查询时过滤） | 已确认（当前内存等价实现） | Phase1+ | 应用层记忆当前空间 | 防漏过滤、安全边界强；强依赖查询层正确性 | TC-P1-001 / 003（09 §2） |
 | ADR-005 | RAG / 导入 / 权限独立成 docs/design/ | 已确认 | Phase1+ | 全部并入 04 | 子系统可独立演进；多份详细设计需维护 | `docs/design/*` 已存在 |
@@ -107,7 +107,7 @@ flowchart LR
 
 > 受 `ai/project-rules.md` §2.5 与 `docs/env/local-env.md` 约束。Demo 本机优先；资源不足再上公司服务器。
 
-- 本机单机（Demo 默认）：React 前端 + FastAPI（api/service/model 三层）。**当前运行时为降级内存实现**：后端直连内存 `demo_repository`，未起 PostgreSQL/pgvector（`docker/` 仅 `.gitkeep`，无 compose；Docker daemon No-Go，见 `docs/05-tech-spec.md §5.1` RG-001）；Embedding 未接入（RG-002 No-Go）；LLM 为 Mock（RG-004）。目标拓扑为 Docker Compose 起 PostgreSQL+pgvector + Embedding 本机 + LLM 中转，真实化移至 Phase2/MVP。
+- 本机单机（Demo 默认）：React 前端 + FastAPI（api/service/model 三层）。**当前运行时为降级内存实现**：后端直连内存 `demo_repository`，未起 PostgreSQL/pgvector（`docker/` 仅 `.gitkeep`，无 compose；Docker daemon No-Go，见 `docs/05-tech-spec.md §5.1` RG-001）；Embedding 未接入（RG-002 已验证·待 pgvector 接入）；LLM 已验证可切（RG-004 Go）。目标拓扑为 Docker Compose 起 PostgreSQL+pgvector + Embedding 本机 + LLM 中转，真实化移至 Phase2/MVP。
 - 数据边界：默认使用已标注的虚构 Demo 数据；允许按需导入部分真实团队文档，真实文档必须显式标注来源 / 敏感级别，并优先避免发送到外部模型。
 - 资源边界：Demo 峰值内存 < 8GB、显存 < 4GB、磁盘 < 20GB；允许本机安装项目所需依赖与镜像。
 - 远程 / 公司服务器边界：Phase1 Demo 暂不使用公司服务器；若本机 Embedding 在导入规模、响应时间或检索质量上不够用，再申请内网 Embedding / reranker 服务。

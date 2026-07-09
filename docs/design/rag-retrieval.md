@@ -89,7 +89,7 @@ flowchart TB
 |---|---|---|---|---|---|---|
 | DEV-001 | `backend/service/search.py` 内存关键词匹配（`_chunk_matches` / `_title_matches`） | ts_vector 全文检索 + 向量近邻 | Mock/降级 | 内存关键词检索；pgvector/Embedding 真实化移 Phase2 | 06 lumen_chunks、05 RG-001/002 | TC-P1-007 |
 | DEV-002 | `backend/service/rag.py` 接入 `llm_adapter`（Sprint-7）；GLM-5.2 真实问答已验证 | 候选块 + 术语 → LLM 生成 | 已实现（GLM-5.2 验证） | 默认 mock 降级可切；GPT/ollama 待验证；向量召回仍缺（DEV-003） | 07 API-010、05 RG-004 | TC-P1-008 |
-| DEV-003 | 无向量检索（embedding 未生成） | 问题 → Embedding → `lumen_chunks.embedding` 近邻 topK | Mock/降级 | 向量召回未实现；当前仅关键词 | 06 lumen_chunks、05 RG-002 | TC-P1-008 |
+| DEV-003 | 无向量检索（embedding 未生成） | 问题 → Embedding → `lumen_chunks.embedding` 近邻 topK | Mock/降级 | 向量召回未实现；RG-002 已验证（bge-small-zh 512 维 float32），待 pgvector 接入生成真实向量 | 06 lumen_chunks、05 RG-002 | TC-P1-008 |
 
 ## 8. 验收追溯
 

@@ -35,7 +35,7 @@
 | TC-P1-005 | REQ-005 行内编辑 | 编辑保存后内容持久、再打开一致 | [P1] | 条件通过（降级口径·内存） |
 | TC-P1-006 | REQ-006 版本 | 3 次修改 → 3 版本 → 能恢复指定版本 | [P1] | 条件通过（降级口径·内存） |
 | TC-P1-007 | REQ-007 搜索 | 已知关键词返回正确文档 | [P1] | 条件通过（降级口径·内存关键词匹配） |
-| TC-P1-008 | REQ-008 RAG | 库内问答正确 + 标来源；库外回复"未找到" | [P1] | 通过（真实 LLM·glm-5.2；向量检索仍缺 RG-002） |
+| TC-P1-008 | REQ-008 RAG | 库内问答正确 + 标来源；库外回复"未找到" | [P1] | 通过（真实 LLM·glm-5.2；向量检索仍缺——RG-002 已验证，待 pgvector 接入） |
 | TC-P1-009 | REQ-009 导入 | 导入 .pdf 后可搜、可问答引用 | [P1] | 条件通过（仅 `.md`/`.txt`；真实 PDF 未验证） |
 | TC-P1-010 | REQ-010 OCR | 中文白板照片 OCR 后可搜 | [P1] | 后续阶段（OCR 未实现，降级移出 P1 必过） |
 | TC-P1-011 | REQ-011 桌面端 | Chrome / Edge 完成上述全部 | [P1] | 条件通过（降级口径·Edge Headless + Chrome 人工 smoke） |
@@ -112,7 +112,7 @@
 | 风险 / 未验证项 | 影响范围 | 当前处理 |
 |---|---|---|
 | PostgreSQL+pgvector 未接入（当前内存 Demo） | REQ-007/008 真实化 | Phase1 接受降级基线；真实化移至 Phase2/MVP（见 `docs/05-tech-spec.md §5.1` RG-001） |
-| 真实 Embedding（bge-small-zh）未接入 | REQ-007/008 向量检索 | 评估报告 No-Go（torch）；移至 Phase2/MVP（RG-002） |
+| 真实 Embedding（bge-small-zh）未接入后端 | REQ-007/008 向量检索 | RG-002 已验证（torch 修复，512 维 float32）；待 pgvector 接入生成真实向量（RG-001） |
 | Docker Desktop Linux engine 阻塞 | 起库 / 真实 PostgreSQL | 当前后端直连内存仓储；Docker daemon 未起，待解锁后接 pgvector |
 | OCR 质量与资源占用 | REQ-010、内容导入 | OCR 未实现，REQ-010 移至后续阶段（RG-003）；当前降级为已提取文本 |
 | LLM 外部调用可用性 | REQ-008、REQ-036 | GLM `glm-5.2` 真实问答已验证（Sprint-7，RG-004→Go）；GPT/ollama 待验证 |

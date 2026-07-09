@@ -192,9 +192,9 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 | Sprint-4 | 2026-07-04 | 007/008 | 内存搜索 + 降级 RAG（不调 LLM）+ 前端 UI | `da9f6e5`/`5144f2a`/`bc03839`/`c5c177e`(fix) | 通过（降级口径） | pgvector/Embedding/LLM 未接（RG-001/002/004）→ Phase2 | §5 / §5.1 |
 | Sprint-5 | 2026-07-05 | 036 | 空间术语 CRUD + 问答口径注入 | `5b78f0a` | 通过（降级口径） | — | §5 |
 | Sprint-6 | 2026-07-06 | 011 | 桌面端集成 + Edge Headless / Chrome smoke | `cb6fb8a`（PR #28） | 部分通过 → 通过（降级口径） | 真实 PDF / OCR 未验证 → Phase2 | §5 |
-| Sprint-7 | 2026-07-09 | 008 | LLM adapter（`llm_adapter.py`）+ rag 接入 + `.env` 模板 | （本 PR） | 55 tests + GLM-5.2 真实问答验证 | GPT/ollama 待验证；向量检索仍缺（RG-002） | §5 / §6 |
+| Sprint-7 | 2026-07-09 | 008 | LLM adapter（`llm_adapter.py`）+ rag 接入 + `.env` 模板 | `754d5eb`/`78a8550`（PR #45） | 55 tests + GLM-5.2 真实问答验证 | GPT/ollama 待验证；向量检索仍缺（RG-002 已验证·待 pgvector） | §5 / §6 |
 
-> 未完成 / 移出 P1：真实 PDF 解析、图片 OCR（REQ-010 移至后续阶段）、pgvector 向量检索、真实 Embedding、真实 LLM——均移至 Phase2 / MVP（见 `docs/05-tech-spec.md §5.1` Readiness Gate）。
+> 未完成 / 移出 P1：真实 PDF 解析、图片 OCR（REQ-010 移至后续阶段）、pgvector 向量检索接入。**RG-002（Embedding）、RG-004（LLM）已验证**（待 pgvector 接入生成真实向量）；OCR + pgvector 接入移至 Phase2 / MVP（见 `docs/05-tech-spec.md §5.1` Readiness Gate）。
 
 ---
 
