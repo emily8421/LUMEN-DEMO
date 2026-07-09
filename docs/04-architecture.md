@@ -37,30 +37,71 @@ flowchart TB
 
 > 注：上图为**目标架构**。当前 Phase1 Demo 运行时为**降级内存实现**——`db` 节点实为内存 `demo_repository`（无 PostgreSQL/pgvector），`ai`（LLM/Embedding）与 `ingestion` 的 OCR/真实 PDF 解析均未接入（LLM 为 Mock）。逐模块实现状态见 §2，技术门禁见 `docs/05-tech-spec.md §5.1`。
 
+### 1.1 系统上下文图（信任边界）
+
+> 标外部参与者 / 系统与信任边界（对照 `ai/doc-standards/04-architecture.md` §3 系统上下文检查表）。明确哪些外部系统是真实 / Mock / 候选 / 默认关闭。
+
+```mermaid
+flowchart LR
+  subgraph 客户端
+    user((知识工作者<br/>桌面浏览器))
+  end
+  subgraph LUMEN受信域
+    system[LUMEN KnowledgeBase<br/>FastAPI + 内存 demo_repository]
+  end
+  subgraph 外部
+    llm[公司内网 LLM 中转<br/>OpenAI 兼容]
+  end
+  user -->|REST / JSON / Bearer token| system
+  system -.->|目标：RAG prompt<br/>当前 Mock，不外发| llm
+```
+
+- **外部系统状态**：公司内网 LLM 中转 = **目标设计**（当前 Mock，不外发，见 RG-004）；飞书同步 / Vault 挂载 = 愿景候选（未实现）。
+- **数据外发边界**：跨 LUMEN 受信域 → 外部 LLM 为唯一数据外发点。Phase1 降级基线不外发；目标态接入前须过滤敏感片段、优先避免发送真实团队文档（见 `ai/project-rules.md §2.5`、`docs/06-db-design.md §5`）。
+
+### 1.2 容器 / 组件视图
+
+| COMP-ID | 组件 / 进程 | 职责 | 部署位置 | 通信方式 | 阶段 | 状态 | 关联 REQ |
+|---|---|---|---|---|---|---|---|
+| COMP-001 | React 前端 SPA | 桌面浏览器 UI（文档 / 搜索 / 问答 / 术语） | 浏览器 | REST / JSON | [P1] | 降级实现（可用） | REQ-011、004~008、036 |
+| COMP-002 | FastAPI 后端（api / service / model 三层） | REST API、权限校验、业务逻辑 | 本机单进程 | HTTP | [P1] | 降级实现（内存仓储） | 全 P1 |
+| COMP-003 | 数据存储 | PostgreSQL + pgvector（目标）；当前内存 `demo_repository` | 目标 Docker Compose / 当前内存 | SQL（目标） | [P1] | 目标设计（未接入；RG-001） | REQ-003~010、036 |
+| COMP-004 | AI 服务 | LLM 中转 + 本机 Embedding（目标）；当前 LLM Mock / Embedding No-Go | 目标本机 + 内网 | OpenAI 兼容 API | [P1] | 目标设计（未接入；RG-002/004） | REQ-008、036 |
+
 ## 2. 子系统 / 模块划分（完整框架）
 
-| 子系统 | 职责 | 阶段 | 设计状态 | 实现状态（Phase1 Demo） | 详细设计 |
-|---|---|---|---|---|---|
-| 空间与权限 | 多空间隔离、权限分级、查询时过滤 | [P1] | P1-已设计 | 降级实现（内存；空间隔离 + 权限过滤可用） | docs/design/permissions.md |
-| 文档管理 | CRUD、行内编辑、版本历史 | [P1] | P1-已设计 | 降级实现（内存；CRUD/编辑/版本可用） | （逻辑简单，见 06/07） |
-| 内容导入 | Word/PDF 解析、OCR、切块入库 | [P1] | P1-已设计 | 降级实现（仅 `.md`/`.txt` 已提取文本；无 PDF/OCR/切块向量） | docs/design/ingestion.md |
-| 检索问答 | 全文搜索、RAG（向量+全文+引用） | [P1] | P1-已设计 | 降级实现（内存关键词匹配；RAG 不调 LLM，返回检索+模板） | docs/design/rag-retrieval.md |
-| 术语管理 | 空间级术语表、文档术语识别、问答口径对齐 | [P1] | P1-已设计 | 降级实现（内存；术语 CRUD + 问答口径注入可用） | docs/design/term-management.md |
-| 标签与视图 | 标签 / 时间轴 / 关联图导航 | [P2] | 骨架 | — | 待 P2 建 docs/design/ |
-| 协作与推送 | 多人编辑、跨空间只读推送 | [P2] | 骨架 | — | 待 P2 |
-| 存量接入 | Vault 挂载、录音转写、飞书同步 | [愿景] | 骨架 | — | 待技术验证 |
-| 情报分析（i2 精神） | 关联图↔时间轴联动、路径推理、人物网络、矛盾检测、证据地图、信号追踪 | [愿景] | 骨架 | — | docs/design/intelligence-analysis.md |
-| 情报交付 | 对外只读简报、管理层摘要、分析包 A Kit | [愿景] | 骨架 | — | 待技术验证 |
+| MOD-ID | 子系统 | 职责 | 输入 → 输出 | 边界（不负责） | 阶段 | 设计状态 | 实现状态（Phase1 Demo） | 详细设计 |
+|---|---|---|---|---|---|---|---|---|
+| MOD-001 | 空间与权限 | 多空间隔离、权限分级、查询时过滤 | 用户 / 空间成员关系 → 过滤后可见数据 | 不负责文档内容解析 | [P1] | P1-已设计 | 降级实现（内存；空间隔离 + 权限过滤可用） | docs/design/permissions.md |
+| MOD-002 | 文档管理 | CRUD、行内编辑、版本历史 | 文档字段 → 持久化文档 / 版本 | 不负责检索 / 导入 | [P1] | P1-已设计 | 降级实现（内存；CRUD/编辑/版本可用） | （逻辑简单，见 06/07） |
+| MOD-003 | 内容导入 | Word/PDF 解析、OCR、切块入库 | 文件 → 切块 + 文档 | 不负责检索 / 问答 | [P1] | P1-已设计 | 降级实现（仅 `.md`/`.txt` 已提取文本；无 PDF/OCR/切块向量） | docs/design/ingestion.md |
+| MOD-004 | 检索问答 | 全文搜索、RAG（向量+全文+引用） | 查询 → 结果 + 来源 | 不负责导入解析 | [P1] | P1-已设计 | 降级实现（内存关键词匹配；RAG 不调 LLM，返回检索+模板） | docs/design/rag-retrieval.md |
+| MOD-005 | 术语管理 | 空间级术语表、文档术语识别、问答口径对齐 | 术语 → 口径注入 | 不负责问答生成 | [P1] | P1-已设计 | 降级实现（内存；术语 CRUD + 问答口径注入可用） | docs/design/term-management.md |
+| MOD-006 | 标签与视图 | 标签 / 时间轴 / 关联图导航 | — | — | [P2] | 骨架 | — | 待 P2 建 docs/design/ |
+| MOD-007 | 协作与推送 | 多人编辑、跨空间只读推送 | — | — | [P2] | 骨架 | — | 待 P2 |
+| MOD-008 | 存量接入 | Vault 挂载、录音转写、飞书同步 | — | — | [愿景] | 骨架 | — | 待技术验证 |
+| MOD-009 | 情报分析（i2 精神） | 关联图↔时间轴联动、路径推理、人物网络、矛盾检测、证据地图、信号追踪 | — | — | [愿景] | 骨架 | — | docs/design/intelligence-analysis.md |
+| MOD-010 | 情报交付 | 对外只读简报、管理层摘要、分析包 A Kit | — | — | [愿景] | 骨架 | — | 待技术验证 |
 
-## 3. 技术选型理由
+## 3. 架构决策与取舍（ADR）
 
-> 与 05 互补：这里讲"为什么"，05 讲"具体版本"。
+> 与 05 互补：这里讲"为什么"，05 讲"具体版本"。决策状态用 §7.1 横切状态词典；决策已采纳但实现未接入的，状态标「已确认（目标）」。
 
 - **PostgreSQL + pgvector**：关系数据与向量检索一体，Phase1 少引一个独立向量库（Milvus/Qdrant），降低部署与一致性成本。
 - **AI 调用边界**：LLM 不绑单一闭源 SDK，走 OpenAI 兼容接口；Embedding Phase1 本机运行 `bge-small-zh`（512 维），通过 adapter 保留迁移到内网 Embedding 服务的空间。
 - **导入流水线收敛异构格式**：Word / PDF / 图片统一走"提取纯文本 → 切块 → Embedding"，检索侧只面对一种数据形态。
 - **权限下沉到 SQL / 检索层**：空间隔离 + 文档权限在数据查询时过滤，不依赖应用层记忆，防漏过滤。
 - **子系统拆分**：RAG / 导入 / 权限各自非平凡且可独立演进，单独成 docs/design/；文档 CRUD 简单，不单列。
+
+### 3.1 ADR 矩阵
+
+| ADR | 决策 | 状态 | 适用 Phase | 替代方案 | 取舍影响 | 验证方式 |
+|---|---|---|---|---|---|---|
+| ADR-001 | PostgreSQL + pgvector 一体化存储 | 已确认（目标；当前未接入） | Phase1+ | Milvus / Qdrant 独立向量库 | 少一个组件、一致性成本低；强依赖 pgvector 扩展与 Docker | RG-001 解锁后接入（05 §5.1） |
+| ADR-002 | AI 走 OpenAI 兼容接口 + 本机 Embedding | 已确认（目标；LLM Mock / Embedding No-Go） | Phase1+ | 绑定单一闭源 LLM SDK | 厂商解耦、可迁内网；需 adapter 适配 | RG-002 / RG-004（05 §5.1） |
+| ADR-003 | 导入流水线收敛异构格式为文本→切块→Embedding | 已确认（目标；当前仅 `.md`/`.txt`） | Phase1+ | 各格式独立检索路径 | 检索侧统一数据形态；解析复杂度集中于导入 | TC-P1-009 / 010（09 §2） |
+| ADR-004 | 权限下沉到 SQL / 检索层（查询时过滤） | 已确认（当前内存等价实现） | Phase1+ | 应用层记忆当前空间 | 防漏过滤、安全边界强；强依赖查询层正确性 | TC-P1-001 / 003（09 §2） |
+| ADR-005 | RAG / 导入 / 权限独立成 docs/design/ | 已确认 | Phase1+ | 全部并入 04 | 子系统可独立演进；多份详细设计需维护 | `docs/design/*` 已存在 |
 
 ## 4. 部署 / 运行拓扑约束
 
@@ -76,7 +117,9 @@ flowchart TB
 
 > 本节固定 Sprint-1 权限底座的架构边界：空间、文档权限、搜索和 RAG 必须共用同一套权限过滤原则，禁止仅在前端隐藏或仅靠业务层记忆当前空间。
 
-### 5.1 登录与空间切换
+### 5.1 登录与空间切换（Flow-001）
+
+> **Flow-001 登录与空间切换**：成功（签发 token + 切换签新 token）｜异常（账号无效 → 4001）｜权限拒绝（非空间成员切换 → 4003）｜降级（内存 Demo 账号，无真实账号系统）｜关联 API-001/002/003、TC-P1-001/002。
 
 ```mermaid
 sequenceDiagram
@@ -99,7 +142,9 @@ sequenceDiagram
   API-->>Browser: 新 token
 ```
 
-### 5.2 文档访问、搜索与 RAG 统一过滤
+### 5.2 文档访问、搜索与 RAG 统一过滤（Flow-002）
+
+> **Flow-002 文档访问 / 搜索 / RAG 统一过滤**：成功（成员校验 → 过滤 → 可见结果）｜异常（token 无效 → 4001）｜权限拒绝（非成员 → 403 / 空；私有文档对他人 → 空）｜降级（内存关键词检索；RAG 不调 LLM，返回检索 + 模板）｜外部不可用（LLM Mock，不外发）｜关联 API-004~010、TC-P1-003~008。
 
 ```mermaid
 flowchart TB
@@ -133,18 +178,20 @@ flowchart TB
 - **双层过滤**：SQL / 检索层必须过滤；RAG 构造 Prompt 前必须再次过滤候选 chunk。
 - **前端不可作为权限边界**：前端隐藏入口只改善体验，不作为安全判断依据。
 
-## 6. REQ / 功能 → 模块追溯矩阵
+## 6. REQ / 功能 → 模块 / Flow 追溯矩阵
 
-| REQ | 功能范围 | 主要模块 / 子系统 | 下游设计 |
-|---|---|---|---|
-| REQ-001 / 002 / 003 | 空间隔离、空间切换、权限过滤 | 空间与权限、文档管理、检索问答 | `docs/design/permissions.md`、`docs/06-db-design.md`、`docs/07-api-spec.md` |
-| REQ-004 / 005 / 006 | 文档 CRUD、行内编辑、版本历史 | 文档管理 | `docs/06-db-design.md`、`docs/07-api-spec.md` |
-| REQ-007 / 008 | 全文搜索、RAG 问答 | 检索问答 | `docs/design/rag-retrieval.md`、`docs/06-db-design.md`、`docs/07-api-spec.md` |
-| REQ-009 / 010 | Word / PDF / OCR 导入 | 内容导入、检索问答 | `docs/design/ingestion.md`、`docs/06-db-design.md`、`docs/07-api-spec.md` |
-| REQ-011 | 桌面浏览器访问 | React 前端、FastAPI API、各 P1 子系统 | `docs/08-dev-plan.md` Sprint-6、`docs/09-verification.md` |
-| REQ-036 | 术语管理 | 术语管理、检索问答、文档管理 | `docs/design/term-management.md`、`docs/06-db-design.md`、`docs/07-api-spec.md` |
-| REQ-012..017 / 024..027 | P2 优化扩展 | 标签与视图、协作与推送、文档管理扩展 | 升 Phase2 时细化 |
-| REQ-018..023 / 028..035 | 愿景功能 | 存量接入、情报分析、情报交付 | 技术验证通过后细化 |
+> 补 MOD-ID / Flow-ID / 覆盖状态列（对照 `ai/doc-standards/04-architecture.md` §4 追溯链 `REQ/NFR → Phase → COMP-ID → MOD-ID → Flow-ID → design/API/DB/TC`）。COMP 见 §1.2，MOD 见 §2，Flow 见 §5。
+
+| REQ | Phase | MOD-ID | Flow-ID | 下游设计 | 覆盖状态 |
+|---|---|---|---|---|---|
+| REQ-001 / 002 / 003 | [P1] | MOD-001（+ MOD-002 / 004） | Flow-001 / 002 | `docs/design/permissions.md`、`docs/06-db-design.md`、`docs/07-api-spec.md` | 已设计（降级实现） |
+| REQ-004 / 005 / 006 | [P1] | MOD-002 | Flow-002 | `docs/06-db-design.md`、`docs/07-api-spec.md` | 已设计（降级实现） |
+| REQ-007 / 008 | [P1] | MOD-004 | Flow-002 | `docs/design/rag-retrieval.md`、`docs/06-db-design.md`、`docs/07-api-spec.md` | 已设计（降级实现） |
+| REQ-009 / 010 | [P1] | MOD-003（+ MOD-004） | Flow-002 | `docs/design/ingestion.md`、`docs/06-db-design.md`、`docs/07-api-spec.md` | 已设计（降级实现） |
+| REQ-011 | [P1] | COMP-001 / 002（全 P1） | Flow-001 / 002 | `docs/08-dev-plan.md` Sprint-6、`docs/09-verification.md` | 已设计（降级实现） |
+| REQ-036 | [P1] | MOD-005（+ MOD-004 / 002） | Flow-002 | `docs/design/term-management.md`、`docs/06-db-design.md`、`docs/07-api-spec.md` | 已设计（降级实现） |
+| REQ-012..017 / 024..027 | [P2] | MOD-006 / 007（+ MOD-002） | — | 升 Phase2 时细化 | 骨架 |
+| REQ-018..023 / 028..035 | [愿景] | MOD-008 / 009 / 010 | — | 技术验证通过后细化 | 骨架 |
 
 ## 7. 待人工确认项
 
