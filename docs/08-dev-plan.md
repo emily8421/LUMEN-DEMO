@@ -14,6 +14,52 @@
 | 当前状态 | Phase1 Sprint 计划已确认；Sprint-1~6 已按降级口径执行完成（见下方「当前进度记录」） |
 | 最后更新 | 2026-07-09 |
 
+## Sprint 总览
+
+> 对照 `ai/doc-standards/08-dev-plan.md` §2。状态用 §7.1 横切状态词典；Sprint 均为**降级实现**（无 pgvector / Embedding / OCR / 真实 LLM）。
+
+| Sprint | 目标 | 覆盖 REQ | 输入设计 / 契约 | 修改范围 | 验证包 | 状态 | 任务单 |
+|---|---|---|---|---|---|---|---|
+| Sprint-1 | 空间与权限底座 | 001/002/003 | 06、design/permissions | backend auth/space/permission | 见「Sprint 验证包」/ TC-P1-001~003 | 已完成（降级） | — |
+| Sprint-2 | 文档管理 + 版本 | 004/005/006 | 06、07（documents） | backend document + frontend 编辑器 | / TC-P1-004~006 | 已完成（降级） | — |
+| Sprint-3 | 内容导入 | 009/010 | design/ingestion、06、07 | backend import + scripts | / TC-P1-009/010 | 已完成（降级·仅 `.md`/`.txt`） | — |
+| Sprint-4 | 检索与 RAG | 007/008 | design/rag-retrieval、06、07 | backend search/rag + frontend | / TC-P1-007/008 | 已完成（降级） | — |
+| Sprint-5 | 术语管理 | 036 | design/term-management、06、07 | backend term/rag + frontend | / TC-P1-012 | 已完成（降级） | — |
+| Sprint-6 | 桌面端集成与验收 | 011 | 09 + 前置 Sprint | frontend 桌面端集成 | / TC-P1-011 | 已完成（降级） | — |
+
+## 依赖关系与里程碑
+
+| 项 | 前置依赖 | 阻塞风险 | 可并行 | 处理方式 | 里程碑 |
+|---|---|---|---|---|---|
+| Sprint-1 权限底座 | 无 | — | 否（后续依赖） | 最先执行 | M1 权限底座就绪 |
+| Sprint-2 文档 | Sprint-1 | — | 可与 Sprint-3 部分并行 | 顺序 | M2 文档可用 |
+| Sprint-3 导入 | Sprint-2（产物为文档） | OCR / PDF 未实现 → 降级 | — | 降级先行（`.md`/`.txt`） | M3 导入可用（降级） |
+| Sprint-4 检索 RAG | Sprint-2 / 3（供数） | pgvector / Embedding 未接入 → 降级 | — | 降级先行（内存关键词） | M4 检索 RAG 可用（降级） |
+| Sprint-5 术语 | Sprint-4（RAG 口径注入） | — | — | 顺序 | M5 术语对齐 |
+| Sprint-6 桌面端 | Sprint-1~5 全部 | — | 否（横切验收） | 最后执行 | M6 Phase1 Demo 验收 |
+
+## 任务拆分规则
+
+- Phase1 不强制 `tasks/` 独立文件（`ai/global-rules.md` §3）；Sprint 五段式（目标 / 输入文档 / 修改范围 / 验收标准 / 禁止事项）承载任务边界。
+- 拆分触发（`ai/implementation-lifecycle-rules.md` §4）：修改 > 3 文件 / 模块、验收无法一次完成、多不相干功能、多人 / 多 AI 并行、跨测试等级逐步验证。
+- Sprint-2 / Sprint-6 未拆 task 文件（Phase1 合规，审计「可接受兼容差异」已认定）。
+- 分支 / worktree：每个 Sprint / PR 独立分支；多会话并行操作同一仓库时用 `git worktree`（见 `ai/session-rules.md` §8）。
+
+## Sprint 验证包
+
+> 每个 Sprint 的验证包（对照 `ai/doc-standards/08-dev-plan.md` §3）：关联 TC / 测试等级 / 自动化命令 / Mock·降级口径。完成包（改动文件 / 验证结果 / 提交 / 残留风险）见文末「Sprint 完成包与进度记录」。
+
+| Sprint | 关联 TC | 测试等级 | 自动化命令 | 人工步骤 | Mock / 降级口径 |
+|---|---|---|---|---|---|
+| Sprint-1 | TC-P1-001/002/003 | 单元 + 集成 | `.venv\Scripts\python.exe -m unittest discover -s tests/backend`（test_permission / test_space） | — | 内存权限过滤（无真实账号系统） |
+| Sprint-2 | TC-P1-004/005/006 | 单元 + 集成 | 同上（test_document） | 前端编辑器 smoke | 内存文档 / 版本（无 DB） |
+| Sprint-3 | TC-P1-009/010 | 集成 | 同上（test_imports） | — | 仅 `.md`/`.txt` 文本切块；无 PDF/OCR/向量 |
+| Sprint-4 | TC-P1-007/008 | 单元 + 集成 | 同上（test_search / test_rag） | 前端搜索 / 问答 smoke | 内存关键词检索；RAG 不调 LLM |
+| Sprint-5 | TC-P1-012 | 单元 + 集成 | 同上（test_term / test_rag） | 前端术语管理 smoke | 内存术语；问答口径注入（不调 LLM） |
+| Sprint-6 | TC-P1-011 | 系统 / E2E | — | Edge Headless + Chrome 人工 smoke（09 §5） | 桌面端全 P1 功能（降级口径） |
+
+> 资源 / 环境验证（Docker / pgvector / Embedding）当前 No-Go（见 05 RG-001/002），不在 P1 验证范围。
+
 ## Sprint-1：空间与权限底座
 
 ### 目标
@@ -133,18 +179,18 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 - 不做移动端 / 响应式移动适配（Phase1 禁止，见 project-rules §1）
 - 不新增 P1 范围外功能
 
-## 当前进度记录（Phase1 · 降级口径）
+## Sprint 完成包与进度记录
 
-> 本表为 P1 回梳新增（对照 `ai/doc-standards/08-dev-plan.md §5`）。Sprint 计划为**目标**；实际执行为**降级内存实现**（无 pgvector / Embedding / OCR / 真实 LLM）。验收证据见 `docs/09-verification.md §5`。
+> 对照 `ai/doc-standards/08-dev-plan.md` §4（完成包）+ §5（进度记录）。Sprint 计划为**目标**；实际执行为**降级内存实现**（无 pgvector / Embedding / OCR / 真实 LLM）。验收证据见 `docs/09-verification.md §5`。
 
-| Sprint | 目标（REQ） | 实际交付 | 关联提交 / PR | 验证结果 | 已回填 09 |
-|---|---|---|---|---|---|
-| Sprint-1 | 空间与权限底座（001/002/003） | 降级内存实现（权限过滤可用） | 含于 Sprint-2~4 提交基线 | 53 后端 tests 通过 | §2 / §5 |
-| Sprint-2 | 文档管理 + 版本（004/005/006） | 降级内存实现 + 前端编辑器 | `83fb782` | 通过（降级口径） | §5 |
-| Sprint-3 | 内容导入（009/010） | 降级文本导入（仅 `.md`/`.txt`，无 PDF/OCR） | `0fe169b` | 通过（降级口径） | §5 |
-| Sprint-4 | 检索与 RAG（007/008） | 内存搜索 + 降级 RAG（不调 LLM）+ 前端 UI | `da9f6e5`/`5144f2a`/`bc03839`/`c5c177e`(fix) | 通过（降级口径） | §5 / §5.1 |
-| Sprint-5 | 术语管理（036） | 空间术语 CRUD + 问答口径注入 | `5b78f0a` | 通过（降级口径） | §5 |
-| Sprint-6 | 桌面端集成与验收（011） | 桌面端集成 + Edge Headless / Chrome smoke | `cb6fb8a`（PR #28） | 部分通过 → 通过（降级口径） | §5 |
+| Sprint | 日期 | 目标（REQ） | 实际交付 | 关联提交 / PR | 验证结果 | 残留风险 / 下一步 | 已回填 09 |
+|---|---|---|---|---|---|---|---|
+| Sprint-1 | 2026-07-03~ | 001/002/003 | 降级内存实现（权限过滤可用） | 含于 Sprint-2~4 提交基线 | 53 后端 tests 通过 | 真实 DB 未接（RG-001）→ Phase2 | §2 / §5 |
+| Sprint-2 | 2026-07-03 | 004/005/006 | 降级内存实现 + 前端编辑器 | `83fb782` | 通过（降级口径） | — | §5 |
+| Sprint-3 | 2026-07-03 | 009/010 | 降级文本导入（仅 `.md`/`.txt`，无 PDF/OCR） | `0fe169b` | 通过（降级口径） | PDF / OCR 未实现（RG-003）→ 后续阶段 | §5 |
+| Sprint-4 | 2026-07-04 | 007/008 | 内存搜索 + 降级 RAG（不调 LLM）+ 前端 UI | `da9f6e5`/`5144f2a`/`bc03839`/`c5c177e`(fix) | 通过（降级口径） | pgvector/Embedding/LLM 未接（RG-001/002/004）→ Phase2 | §5 / §5.1 |
+| Sprint-5 | 2026-07-05 | 036 | 空间术语 CRUD + 问答口径注入 | `5b78f0a` | 通过（降级口径） | — | §5 |
+| Sprint-6 | 2026-07-06 | 011 | 桌面端集成 + Edge Headless / Chrome smoke | `cb6fb8a`（PR #28） | 部分通过 → 通过（降级口径） | 真实 PDF / OCR 未验证 → Phase2 | §5 |
 
 > 未完成 / 移出 P1：真实 PDF 解析、图片 OCR（REQ-010 移至后续阶段）、pgvector 向量检索、真实 Embedding、真实 LLM——均移至 Phase2 / MVP（见 `docs/05-tech-spec.md §5.1` Readiness Gate）。
 
