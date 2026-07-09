@@ -129,6 +129,61 @@
 | created_at / updated_at | timestamptz | |
 - 约束：`UNIQUE(space_id, term)`；同名术语查询时空间级优先于全局术语
 
+### 字段级契约矩阵（[P1]）
+
+> 9 列字段级契约（对照 `ai/doc-standards/06-db-design.md §4.2`）。字段语义说明见上方各表简表。「目标」= pgvector / Embedding 依赖字段，当前未落地。
+
+| 表 | 字段 | 类型 | 必填 | 默认值 | 约束 | 来源 REQ | 敏感性 | 留存 / 删除 |
+|---|---|---|---|---|---|---|---|---|
+| lumen_users | id | bigint PK | 是 | — | PK | REQ-001 | 低 | 随账号删除 |
+| lumen_users | external_id | varchar | 是 | — | 唯一（登录标识） | REQ-001 | 中 | 随账号删除 |
+| lumen_users | name | varchar | 是 | — | — | REQ-001 | 低 | 随账号删除 |
+| lumen_users | created_at | timestamptz | 是 | now() | — | REQ-001 | 低 | 随账号删除 |
+| lumen_spaces | id | bigint PK | 是 | — | PK | REQ-001 | 低 | 随空间删除 |
+| lumen_spaces | code | varchar | 是 | — | UK | REQ-001 | 低 | 随空间删除 |
+| lumen_spaces | name | varchar | 是 | — | — | REQ-001 | 低 | 随空间删除 |
+| lumen_spaces | created_at | timestamptz | 是 | now() | — | REQ-001 | 低 | 随空间删除 |
+| lumen_space_members | user_id | bigint FK | 是 | — | FK→users, PK(user,space) | REQ-001/002 | 低 | 随成员关系删除 |
+| lumen_space_members | space_id | bigint FK | 是 | — | FK→spaces | REQ-001/002 | 低 | 随成员关系删除 |
+| lumen_space_members | role | varchar | 是 | — | admin / member | REQ-001/002 | 低 | 随成员关系删除 |
+| lumen_documents | id | bigint PK | 是 | — | PK | REQ-004 | 低 | 随文档删除 |
+| lumen_documents | space_id | bigint FK | 是 | — | FK→spaces, 索引(space,permission) | REQ-003/004 | 低 | 隔离边界 |
+| lumen_documents | title | varchar | 是 | — | — | REQ-004 | 低 | 随文档删除 |
+| lumen_documents | content_md | text | 是 | — | — | REQ-004/008 | 中 | 随文档；目标切块发外部 LLM |
+| lumen_documents | owner_id | bigint FK | 是 | — | FK→users | REQ-003 | 低 | 随文档删除 |
+| lumen_documents | permission | varchar | 是 | — | private / team / external | REQ-003 | 低 | 随文档删除 |
+| lumen_documents | type | varchar | 是 | markdown | markdown / index_entry | REQ-004/025 | 低 | 随文档删除 |
+| lumen_documents | current_version | int | 是 | 1 | — | REQ-006 | 低 | 随文档删除 |
+| lumen_documents | created_at / updated_at | timestamptz | 是 | now() | — | REQ-004 | 低 | 随文档删除 |
+| lumen_document_versions | id | bigint PK | 是 | — | PK | REQ-006 | 低 | 随版本删除 |
+| lumen_document_versions | document_id | bigint FK | 是 | — | FK→documents | REQ-006 | 低 | 随文档删除 |
+| lumen_document_versions | version_no | int | 是 | — | UNIQUE(document_id, version_no) | REQ-006 | 低 | 随版本删除 |
+| lumen_document_versions | content_md | text | 是 | — | — | REQ-006 | 中 | 随版本；目标发外部 LLM |
+| lumen_document_versions | editor_id | bigint FK | 是 | — | FK→users | REQ-006 | 低 | 随版本删除 |
+| lumen_document_versions | created_at | timestamptz | 是 | now() | — | REQ-006 | 低 | 随版本删除 |
+| lumen_chunks | id | bigint PK | 是 | — | PK | REQ-007/008 | 低 | 随文档删除 |
+| lumen_chunks | document_id | bigint FK | 是 | — | FK→documents | REQ-007/008 | 低 | 随文档删除 |
+| lumen_chunks | ordinal | int | 是 | — | — | REQ-007 | 低 | 随文档删除 |
+| lumen_chunks | text | text | 是 | — | — | REQ-007/008 | 中 | 随文档；目标召回片段发外部 LLM |
+| lumen_chunks | embedding | vector(512) | 目标 | — | pgvector 近邻索引（目标） | REQ-008 | 中 | 随文档；目标态未落地 |
+| lumen_chunks | ts_vector | tsvector | 目标 | — | GIN（目标） | REQ-007 | 低 | 随文档；目标态未落地 |
+| lumen_imports | id | bigint PK | 是 | — | PK | REQ-009 | 低 | 随导入任务删除 |
+| lumen_imports | space_id | bigint FK | 是 | — | FK→spaces | REQ-009 | 低 | 随导入任务删除 |
+| lumen_imports | source_filename | varchar | 是 | — | — | REQ-009 | 低 | 随导入任务删除 |
+| lumen_imports | mime | varchar | 是 | — | docx / pdf / image | REQ-009 | 低 | 随导入任务删除 |
+| lumen_imports | status | varchar | 是 | processing | processing / done / failed（见 07 §3.6） | REQ-009 | 低 | 随导入任务删除 |
+| lumen_imports | parsed_doc_id | bigint FK | 否 | — | FK→documents | REQ-009 | 低 | 随导入任务删除 |
+| lumen_imports | created_at | timestamptz | 是 | now() | — | REQ-009 | 低 | 随导入任务删除 |
+| lumen_terms | id | bigint PK | 是 | — | PK | REQ-036 | 低 | 随术语删除 |
+| lumen_terms | space_id | bigint FK | 否 | — | FK→spaces, nullable（空=全局术语） | REQ-036 | 低 | 随术语删除 |
+| lumen_terms | term | varchar | 是 | — | UNIQUE(space_id, term) | REQ-036 | 低 | 随术语删除 |
+| lumen_terms | definition | text | 是 | — | — | REQ-036 | 中 | 随术语；目标注入 RAG 发外部 LLM |
+| lumen_terms | aliases | jsonb | 否 | — | — | REQ-036 | 低 | 随术语删除 |
+| lumen_terms | owner_id | bigint FK | 是 | — | FK→users | REQ-036 | 低 | 随术语删除 |
+| lumen_terms | status | varchar | 是 | pending | confirmed / pending | REQ-036 | 低 | 随术语删除 |
+| lumen_terms | source_document_id | bigint FK | 否 | — | FK→documents, nullable | REQ-036 | 低 | 随术语删除 |
+| lumen_terms | created_at / updated_at | timestamptz | 是 | now() | — | REQ-036 | 低 | 随术语删除 |
+
 ### [P2] / [愿景] 表（骨架·待该阶段细化）
 - `lumen_tags` / `lumen_tag_links`：标签模型与聚合规则待 P2 细化（REQ-012）
 - `lumen_push_copies`：跨空间只读副本与权限同步待 P2 细化（REQ-015）
@@ -166,21 +221,38 @@ erDiagram
 
 `lumen_documents.permission` / `owner_id` 与 `lumen_space_members` 共同决定可见性（见 `docs/design/permissions.md`）；`lumen_terms` 中空间术语优先于全局术语。
 
-## 5. REQ → 表追溯矩阵
+## 5. 数据安全与留存
 
-| REQ | 相关表 | 说明 |
-|---|---|---|
-| REQ-001 / 002 | `lumen_users`、`lumen_spaces`、`lumen_space_members` | 账号、空间与成员关系支撑隔离和切换 |
-| REQ-003 | `lumen_documents`、`lumen_space_members` | 文档权限、作者与空间成员共同决定可见性 |
-| REQ-004 / 005 | `lumen_documents` | 文档 CRUD 与行内编辑持久化 |
-| REQ-006 | `lumen_document_versions` | 保存历史版本并支持恢复 |
-| REQ-007 / 008 | `lumen_documents`、`lumen_chunks` | 全文 / 向量检索与 RAG 来源引用 |
-| REQ-009 / 010 | `lumen_imports`、`lumen_documents`、`lumen_chunks` | 导入任务、解析产物与切块索引 |
-| REQ-011 | 全部 P1 表 | 桌面端通过 API 覆盖全部 P1 功能 |
-| REQ-036 | `lumen_terms`、`lumen_documents`、`lumen_chunks` | 空间术语维护、识别与问答口径对齐 |
-| REQ-012..017 / 024..027 | P2 表骨架 | 升 Phase2 时细化字段与索引 |
-| REQ-018..023 / 028..035 | 愿景表骨架 | 技术验证通过后细化字段与索引 |
+> 对照 `ai/doc-standards/06-db-design.md §4.5`（吸收 `docs/05-tech-spec.md` 数据安全面）。
+> **外部传输限制总则**：Phase1 降级基线**不调用外部 LLM**（RAG 返回检索结果 + 模板，见 07 §3.6 / 09 §6），故下列字段当前均**不外发**；目标态接入外部 LLM 后，发往模型前须过滤敏感片段、优先避免发送真实团队文档（见 `ai/project-rules.md §2.5`、`docs/05-tech-spec.md`）。
 
-## 6. 待人工确认项
+| 数据 / 表 / 字段 | 敏感性 | 访问控制 | 脱敏 / 加密 | 留存 / 删除 | 外部传输限制 | 验证入口 |
+|---|---|---|---|---|---|---|
+| lumen_documents.content_md | 中 | space + permission 过滤 | 明文存储（不脱敏） | 随文档删除 | 目标：切块后发外部 LLM；当前：不调 LLM，不外发 | TC-P1-008 |
+| lumen_document_versions.content_md | 中 | space + permission | 明文 | 随版本 / 文档删除 | 同上 | TC-P1-006 |
+| lumen_chunks.text | 中 | 经 document_id 间接受 space + permission 过滤 | 明文 | 随文档删除 | 目标：召回片段发外部 LLM；当前：内存关键词，不外发 | TC-P1-007/008 |
+| lumen_chunks.embedding | 中 | 同 text | 向量（非原文） | 随文档删除 | 不外发（本机 Embedding，见 05 RG-002） | TC-P1-008 |
+| lumen_terms.definition | 中 | space 成员可见 | 明文 | 随术语删除 | 目标：注入 RAG prompt 发外部 LLM；当前：不调 LLM | TC-P1-012 |
+| lumen_terms.aliases | 低 | space 成员可见 | — | 随术语删除 | 同 definition | TC-P1-012 |
+| lumen_users.external_id | 中 | 仅本人 / 系统 | — | 账号删除时清理 | 不外发 | TC-P1-001 |
+
+## 6. REQ → 表 / TC / Sprint 追溯矩阵
+
+> 在原 REQ→表 正向追溯上补 `TC-ID`（见 09 §2）与 `Sprint`（见 08 当前进度记录）反向列，闭合 `REQ → 表/字段 → TC → Sprint` 追溯链。
+
+| REQ | 相关表 | TC-ID | Sprint | 说明 |
+|---|---|---|---|---|
+| REQ-001 / 002 | `lumen_users`、`lumen_spaces`、`lumen_space_members` | TC-P1-001 / 002 | Sprint-1 | 账号、空间与成员关系支撑隔离和切换 |
+| REQ-003 | `lumen_documents`、`lumen_space_members` | TC-P1-003 | Sprint-1 | 文档权限、作者与空间成员共同决定可见性 |
+| REQ-004 / 005 | `lumen_documents` | TC-P1-004 / 005 | Sprint-2 | 文档 CRUD 与行内编辑持久化 |
+| REQ-006 | `lumen_document_versions` | TC-P1-006 | Sprint-2 | 保存历史版本并支持恢复 |
+| REQ-007 / 008 | `lumen_documents`、`lumen_chunks` | TC-P1-007 / 008 | Sprint-4 | 全文 / 向量检索与 RAG 来源引用 |
+| REQ-009 / 010 | `lumen_imports`、`lumen_documents`、`lumen_chunks` | TC-P1-009 / 010 | Sprint-3 | 导入任务、解析产物与切块索引 |
+| REQ-011 | 全部 P1 表 | TC-P1-011 | Sprint-6 | 桌面端通过 API 覆盖全部 P1 功能 |
+| REQ-036 | `lumen_terms`、`lumen_documents`、`lumen_chunks` | TC-P1-012 | Sprint-5 | 空间术语维护、识别与问答口径对齐 |
+| REQ-012..017 / 024..027 | P2 表骨架 | — | — | 升 Phase2 时细化字段与索引 |
+| REQ-018..023 / 028..035 | 愿景表骨架 | — | — | 技术验证通过后细化字段与索引 |
+
+## 7. 待人工确认项
 
 - 无新增确认项；P2 / 愿景表仅保留骨架，不进入 Phase1 迁移实现。
