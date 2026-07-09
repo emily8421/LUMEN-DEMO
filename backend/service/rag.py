@@ -6,6 +6,7 @@ import re
 from dataclasses import dataclass
 
 from backend.model.entities import Document, DocumentChunk
+from backend.service import llm_adapter
 from backend.service.permission import filter_visible_documents
 from backend.service.term import find_matching_terms
 
@@ -63,7 +64,7 @@ def answer_question(repository, user_id: int, current_space_id: int, question: s
         "\n".join([normalized_question, *(candidate.snippet for candidate in selected_candidates)]),
     )
     term_sources = _dedupe_sources([*question_term_sources, *snippet_term_sources])
-    answer = _build_degraded_answer(sources, term_sources)
+    answer = _build_answer(sources, term_sources, question, _resolve_chat_fn())
     sources.extend(term_sources)
     return RagAnswer(answer=answer, sources=sources)
 
@@ -210,6 +211,46 @@ def _build_snippet(text: str, terms: list[str]) -> str:
 def _first_match_index(normalized_text: str, terms: list[str]) -> int:
     indexes = [normalized_text.find(term) for term in terms if normalized_text.find(term) >= 0]
     return min(indexes) if indexes else -1
+
+
+def _build_answer(
+    sources: list[RagSource],
+    term_sources: list[RagSource],
+    question: str,
+    chat_fn=None,
+) -> str:
+    """Build the RAG answer. When ``chat_fn`` is provided, call the LLM with a
+    source-grounded prompt; fall back to the degraded answer when the LLM is not
+    configured or fails. ``chat_fn`` is injected so tests can exercise the LLM
+    path without a real endpoint."""
+    degraded = _build_degraded_answer(sources, term_sources)
+    if chat_fn is None:
+        return degraded
+    system_prompt = (
+        "你是 LUMEN 知识库问答助手。仅依据下方「给定内容」回答用户问题；"
+        "在答案中标注信息来自哪个来源；若给定内容无依据，"
+        f"回复「{NOT_FOUND_ANSWER}」，不要编造。"
+    )
+    user_prompt = f"问题：{question}\n\n{_format_context(sources, term_sources)}"
+    try:
+        llm_answer = chat_fn(system_prompt, user_prompt)
+    except Exception:
+        return degraded
+    return llm_answer or degraded
+
+
+def _resolve_chat_fn():
+    """Return the LLM chat callable when configured, else None (degraded mode)."""
+    return llm_adapter.chat if llm_adapter.load_config().enabled else None
+
+
+def _format_context(sources: list[RagSource], term_sources: list[RagSource]) -> str:
+    lines: list[str] = []
+    for index, source in enumerate(sources, start=1):
+        lines.append(f"[来源{index}] {source.title}：{source.snippet}")
+    for source in term_sources:
+        lines.append(f"[术语] {source.title}：{source.snippet}")
+    return "\n".join(lines)
 
 
 def _build_degraded_answer(sources: list[RagSource], term_sources: list[RagSource]) -> str:
