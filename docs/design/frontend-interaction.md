@@ -3,6 +3,22 @@
 > 本文是 Phase1（功能范围 `[P1]` · 交付物形态 Demo）的前端交互详细设计，承接 `docs/03-prd.md`、`docs/04-architecture.md`、`docs/05-tech-spec.md`、`docs/07-api-spec.md`、`docs/08-dev-plan.md` 与 `docs/09-verification.md`。
 > 本文只定义既有 P1 需求在 React 桌面浏览器中的呈现方式，不新增需求、接口、权限规则或验收目标。
 
+## 0. 文档元信息
+
+| 项 | 内容 |
+|---|---|
+| 设计对象 | 前端交互与桌面端界面（COMP-001） |
+| 文档路径 | docs/design/frontend-interaction.md |
+| 输入来源 | 03、04 §1.2 / §5（Flow-001/002）、05、07、08、09 |
+| 覆盖 REQ | REQ-001..011、REQ-036 |
+| 所属 Phase | [P1] |
+| 交付物形态 | Demo |
+| 当前状态 | P1-已实现（Sprint-2~6 代码原型）；依赖后端为降级（见文末「实现偏差」） |
+| 页面 / 流程 ID | Page-ID（§2.2）/ UF 用户流（§3） |
+| UI 原型策略 | 代码原型 + mock（见 §8、project-rules §2.7） |
+| 最后更新 | 2026-07-09 |
+| 下游影响 | 08 Sprint-2/4/5/6、09 TC-P1-001~012 |
+
 ## 1. 职责与边界
 
 ### 1.1 职责
@@ -52,18 +68,20 @@ flowchart LR
 
 ### 2.2 页面清单
 
-| 页面 | 对应 REQ | 主要接口 | Phase1 Demo 要点 |
-|---|---|---|---|
-| 登录页 | REQ-001 基础 | `POST /api/auth/login` | 使用 Demo 账号登录并获得 token |
-| 空间切换器 | REQ-001 / 002 | `GET /api/spaces`、`POST /api/spaces/switch` | 只展示用户所属空间，切换后全局上下文改变 |
-| 文档列表 / 编辑 | REQ-003 / 004 / 005 / 006 / 036 | `/api/documents*` | 文档 CRUD、行内编辑、权限标识、版本入口、术语提示 |
-| 导入面板 | REQ-009 / 010 | `POST /api/import` | 上传 .docx / .pdf / 图片，显示处理状态与失败原因 |
-| 搜索页 | REQ-003 / 007 / 036 | `GET /api/search?q=` | 关键词搜索、结果摘要、来源跳转、权限过滤空态 |
-| RAG 问答页 | REQ-003 / 008 / 036 | `POST /api/query` | 答案带来源；库外问题显示“未在知识库找到” |
-| 术语管理页 | REQ-036 | `/api/terms*` | 空间级术语列表、创建、编辑、状态展示 |
-| 桌面端集成 | REQ-011 | 全部 P1 接口 | Chrome / Edge 下跑通全部 P1 功能 |
+| Page-ID | 页面 | 对应 REQ | 主要接口 | Phase1 Demo 要点 |
+|---|---|---|---|---|
+| PG-001 | 登录页 | REQ-001 基础 | `POST /api/auth/login` | 使用 Demo 账号登录并获得 token |
+| PG-002 | 空间切换器 | REQ-001 / 002 | `GET /api/spaces`、`POST /api/spaces/switch` | 只展示用户所属空间，切换后全局上下文改变 |
+| PG-003 | 文档列表 / 编辑 | REQ-003 / 004 / 005 / 006 / 036 | `/api/documents*` | 文档 CRUD、行内编辑、权限标识、版本入口、术语提示 |
+| PG-004 | 导入面板 | REQ-009 / 010 | `POST /api/import` | 上传 .docx / .pdf / 图片，显示处理状态与失败原因 |
+| PG-005 | 搜索页 | REQ-003 / 007 / 036 | `GET /api/search?q=` | 关键词搜索、结果摘要、来源跳转、权限过滤空态 |
+| PG-006 | RAG 问答页 | REQ-003 / 008 / 036 | `POST /api/query` | 答案带来源；库外问题显示“未在知识库找到” |
+| PG-007 | 术语管理页 | REQ-036 | `/api/terms*` | 空间级术语列表、创建、编辑、状态展示 |
+| PG-008 | 桌面端集成 | REQ-011 | 全部 P1 接口 | Chrome / Edge 下跑通全部 P1 功能 |
 
 ## 3. 核心用户流（[P1]）
+
+> 用户流稳定 ID（**UF = 前端用户流 User Flow**，与 04 系统级 Flow-ID 命名空间独立）：UF-001 登录与空间切换 / UF-002 文档与版本 / UF-003 导入 / UF-004 搜索 / UF-005 RAG 问答 / UF-006 术语管理，对应 §3.1~§3.6。
 
 ### 3.1 登录与空间切换
 
@@ -157,17 +175,17 @@ sequenceDiagram
 
 ## 7. 与 API / Sprint / 验证追溯
 
-| UI 能力 | API 来源 | Sprint 来源 | 验证来源 |
-|---|---|---|---|
-| 登录、空间列表、空间切换 | `POST /api/auth/login`、`GET /api/spaces`、`POST /api/spaces/switch` | Sprint-1 | REQ-001 / 002 |
-| 权限过滤呈现 | `/api/documents`、`/api/search`、`/api/query` | Sprint-1 / 2 / 4 | REQ-003 |
-| 文档 CRUD / 编辑 / 删除 | `/api/documents*` | Sprint-2 | REQ-004 / 005 |
-| 版本历史 / 恢复 | `/api/documents/{id}/versions*` | Sprint-2 | REQ-006 |
-| 导入 | `POST /api/import` | Sprint-3 | REQ-009 / 010 |
-| 搜索 | `GET /api/search?q=` | Sprint-4 | REQ-007 |
-| RAG 问答 | `POST /api/query` | Sprint-4 | REQ-008 |
-| 术语管理 / 提示 | `/api/terms*` + 文档 / RAG 呈现 | Sprint-5 | REQ-036 |
-| 桌面端集成 | 全部 P1 接口 | Sprint-6 | REQ-011 |
+| UI 能力 | API 来源 | Sprint 来源 | 关联 TC | 验证来源 |
+|---|---|---|---|---|
+| 登录、空间列表、空间切换 | `POST /api/auth/login`、`GET /api/spaces`、`POST /api/spaces/switch` | Sprint-1 | TC-P1-001/002 | REQ-001 / 002 |
+| 权限过滤呈现 | `/api/documents`、`/api/search`、`/api/query` | Sprint-1 / 2 / 4 | TC-P1-003 | REQ-003 |
+| 文档 CRUD / 编辑 / 删除 | `/api/documents*` | Sprint-2 | TC-P1-004/005 | REQ-004 / 005 |
+| 版本历史 / 恢复 | `/api/documents/{id}/versions*` | Sprint-2 | TC-P1-006 | REQ-006 |
+| 导入 | `POST /api/import` | Sprint-3 | TC-P1-009/010 | REQ-009 / 010 |
+| 搜索 | `GET /api/search?q=` | Sprint-4 | TC-P1-007 | REQ-007 |
+| RAG 问答 | `POST /api/query` | Sprint-4 | TC-P1-008 | REQ-008 |
+| 术语管理 / 提示 | `/api/terms*` + 文档 / RAG 呈现 | Sprint-5 | TC-P1-012 | REQ-036 |
+| 桌面端集成 | 全部 P1 接口 | Sprint-6 | TC-P1-011 | REQ-011 |
 
 ## 8. UI 原型策略与可视化证据
 
@@ -196,6 +214,14 @@ sequenceDiagram
 | Phase1 Demo `[P1]` | P1-已设计 | 覆盖 P1 桌面端页面、核心用户流、状态与权限呈现 |
 | Phase2 MVP `[P2]` | 骨架 | 标签视图、时间轴 / 关联图、AI 润色、跨空间推送、协作、移动端待升阶段细化 |
 | 愿景产品 `[愿景]` | 骨架 | 情报分析、多维图谱、信号追踪等高级界面待技术验证后设计 |
+
+## 实现偏差 / 设计回写
+
+> 对照 `ai/doc-standards/design-doc.md` §4.10。前端本身已完整实现（Sprint-2~6 代码原型）；偏差来自**依赖的后端为降级实现**，前端已在 §4 / §8 披露降级口径。
+
+| 偏差 ID | 代码 / 配置事实 | 原设计 | 偏差类型 | 处理结论 | 回写目标 | 验证 / 证据 |
+|---|---|---|---|---|---|---|
+| DEV-001 | 前端调用降级后端：RAG 不调 LLM（返回检索 + 模板）、导入仅 `.md`/`.txt` | 前端呈现真实 RAG / PDF / OCR 结果 | Mock/降级 | 前端 UI 已完整实现并披露降级口径（§4 业务码 5030、§8）；依赖后端真实化（Phase2） | 07 API-009/010/011、05 RG-002/003/004 | TC-P1-008/009/011 |
 
 ## 10. 待人工确认项
 

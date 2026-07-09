@@ -3,6 +3,21 @@
 > 对应 REQ-009（Word / PDF）/ REQ-010（OCR）。总体定位见 04；数据见 06（lumen_imports / lumen_chunks）。
 > 按「完整骨架 + 阶段增量」：`[P1]` 写细，`[愿景]` 骨架。
 
+## 0. 文档元信息
+
+| 项 | 内容 |
+|---|---|
+| 设计对象 | 内容导入子系统（MOD-003） |
+| 文档路径 | docs/design/ingestion.md |
+| 输入来源 | 02/03、04 §2、05（RG-002/003）、06（lumen_imports / lumen_chunks）、07（API-011） |
+| 覆盖 REQ | REQ-009、REQ-010 |
+| 所属 Phase | [P1] |
+| 交付物形态 | Demo |
+| 当前状态 | P1-已设计；实现为降级（仅 `.md`/`.txt`，无 PDF/OCR/Embedding/向量，见 §6） |
+| 流程 ID | Flow-D-001（导入主流水线，见 §2） |
+| 最后更新 | 2026-07-09 |
+| 下游影响 | 08 Sprint-3、09 TC-P1-009/010 |
+
 ## 1. 职责
 
 异构文件 → 纯文本 → 切块 → Embedding → 入库，供检索问答。
@@ -45,3 +60,21 @@ flowchart LR
 - **为** docs/design/rag-retrieval 供 `lumen_chunks`
 - **被** 07 `/api/import` 调用
 - **写** 06 lumen_imports / lumen_chunks
+
+## 6. 实现偏差 / 设计回写
+
+> 对照 `ai/doc-standards/design-doc.md` §4.10。仅记录已实现的降级事实，不推测目标。
+
+| 偏差 ID | 代码 / 配置事实 | 原设计 | 偏差类型 | 处理结论 | 回写目标 | 验证 / 证据 |
+|---|---|---|---|---|---|---|
+| DEV-001 | `backend/service/imports.py` 仅支持 `.md`/`.txt` 已提取文本 | .docx / .pdf / 图片三路解析 | Mock/降级 | Phase1 接受降级基线；PDF 解析移 Phase2 | 06 lumen_imports、05 RG-003 | TC-P1-009 |
+| DEV-002 | 未接入 PaddleOCR；无 OCR | 图片 → PaddleOCR 中文 OCR | 后续阶段 | REQ-010 移出 P1 必过 | 05 RG-003、09 §6 | TC-P1-010 |
+| DEV-003 | 未接入 `bge-small-zh`；`lumen_chunks` 无向量落地 | 切块 → bge-small-zh 512 维 → embedding/ts_vector | Mock/降级 | 当前仅内存切块文本；真实化移 Phase2 | 06 lumen_chunks、05 RG-001/002 | TC-P1-009 |
+
+## 7. 验收追溯
+
+| 设计点 | 关联 REQ | 关联 Sprint | 关联 TC | 验证方式 | 状态 |
+|---|---|---|---|---|---|
+| 文本导入可检索 | REQ-009 | Sprint-3 | TC-P1-009 | `tests/backend/test_imports.py` | 条件通过（仅 `.md`/`.txt`） |
+| 图片 OCR 导入 | REQ-010 | Sprint-3 | TC-P1-010 | — | 后续阶段（OCR 未实现） |
+| Flow-D-001 导入主流水线 | REQ-009/010 | Sprint-3 | TC-P1-009/010 | 见上 | 降级实现 |
