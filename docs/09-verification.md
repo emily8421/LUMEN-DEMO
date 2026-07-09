@@ -98,6 +98,7 @@
 | 2026-07-03~07 | 后端单元 / 集成测试 | 通过（53 tests） | `.venv\Scripts\python.exe -m unittest discover -s tests/backend -v` 全通过；`compileall backend tests/backend` 通过 |
 | 2026-07-06 | Sprint-6 桌面端集成 smoke（Edge Headless + FastAPI + Vite） | 部分通过（降级口径） | 已通过登录、空间切换、文档新建 / 编辑 / 版本恢复、`.md` 降级导入、搜索、RAG 问答、术语创建与术语来源、跨空间搜索隔离；Chrome 人工点击、真实 PDF 解析、图片 OCR 未验证。 |
 | 2026-07-06 | Sprint-6 Chrome 人工 smoke | 通过（降级口径） | 用户反馈已通过 Chrome 桌面端 14 步 smoke：登录、空间切换、文档 CRUD / 版本恢复、`.md` 降级导入、标题 / 正文搜索、RAG 问答、术语创建与术语来源、跨空间搜索隔离；真实 PDF 解析、图片 OCR 未验证。 |
+| 2026-07-09 | Sprint-7 LLM adapter（RG-004） | 单测通过（待真实验证） | `llm_adapter.py` 多 provider（GLM/GPT/ollama/mock）+ rag 接入；55 tests 通过；真实 LLM 调用待本机配 `.env` 验证 |
 | 待实现后填写 | Phase1 Sprint / 全量验收 | 待记录 | 每个 Sprint 完成后追加验收结果，不删除历史记录 |
 
 ### 5.1 缺陷与回归记录
@@ -114,7 +115,7 @@
 | 真实 Embedding（bge-small-zh）未接入 | REQ-007/008 向量检索 | 评估报告 No-Go（torch）；移至 Phase2/MVP（RG-002） |
 | Docker Desktop Linux engine 阻塞 | 起库 / 真实 PostgreSQL | 当前后端直连内存仓储；Docker daemon 未起，待解锁后接 pgvector |
 | OCR 质量与资源占用 | REQ-010、内容导入 | OCR 未实现，REQ-010 移至后续阶段（RG-003）；当前降级为已提取文本 |
-| LLM 外部调用可用性 | REQ-008、REQ-036 | 当前 Mock（RAG 不调 LLM）；可走公司内网中转，移至 Phase2/MVP（RG-004） |
+| LLM 外部调用可用性 | REQ-008、REQ-036 | adapter 已接入（默认 Mock 降级）；真实调用待本机配 `.env` 验证（Sprint-7，RG-004） |
 | P2 / 愿景高风险 AI 能力 | REQ-020 / 021 / 030 / 032 / 033 等 | 不进入 Phase1 必过项，技术验证通过后再补用例 |
 
 ## 7. 待人工确认项

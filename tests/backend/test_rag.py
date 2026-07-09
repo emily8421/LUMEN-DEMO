@@ -145,6 +145,27 @@ class RagServiceTest(unittest.TestCase):
         self.assertIn("空间术语定义", answer.answer)
         self.assertEqual([source.source_type for source in answer.sources], ["term"])
 
+    def test_build_answer_uses_llm_when_chat_fn_provided(self) -> None:
+        from backend.service.rag import RagSource, _build_answer
+
+        sources = [RagSource(doc_id=1, title="延迟笔记", snippet="场景联动触发延迟是 280ms。")]
+        answer = _build_answer(
+            sources, [], "触发延迟是多少？", lambda system, user: "根据来源，触发延迟为 280ms。"
+        )
+        self.assertEqual(answer, "根据来源，触发延迟为 280ms。")
+
+    def test_build_answer_falls_back_to_degraded_on_llm_error(self) -> None:
+        from backend.service.rag import RagSource, _build_answer
+
+        sources = [RagSource(doc_id=1, title="延迟笔记", snippet="场景联动触发延迟是 280ms。")]
+
+        def raising(system, user):
+            raise RuntimeError("LLM down")
+
+        answer = _build_answer(sources, [], "触发延迟是多少？", raising)
+        self.assertIn("降级模式", answer)
+        self.assertIn("280ms", answer)
+
 
 if __name__ == "__main__":
     unittest.main()

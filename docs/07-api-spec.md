@@ -35,7 +35,7 @@
 | API-007 | GET | /api/documents/{id}/versions | 版本列表 | [P1] | P1-已设计 | 降级实现（内存；可用） | REQ-006 |
 | API-008 | POST | /api/documents/{id}/versions/{v}/restore | 恢复版本 | [P1] | P1-已设计 | 降级实现（内存；可用） | REQ-006 |
 | API-009 | GET | /api/search?q= | 全文搜索 | [P1] | P1-已设计 | **降级实现（内存关键词匹配；无向量检索）** | REQ-007 |
-| API-010 | POST | /api/query | RAG 问答 | [P1] | P1-已设计 | **降级实现（内存检索；不调 LLM，返回检索结果 + 模板）** | REQ-008 |
+| API-010 | POST | /api/query | RAG 问答 | [P1] | P1-已设计 | **LLM adapter 已接入（默认 mock 降级；配 .env 真实问答，待本机验证；Sprint-7）** | REQ-008 |
 | API-011 | POST | /api/import | 导入文件 | [P1] | P1-已设计 | **降级实现（仅 `.md`/`.txt` 已提取文本；无 PDF/OCR）** | REQ-009/010 |
 | API-012 | GET/POST | /api/terms | 术语列表 / 创建术语 | [P1] | P1-已设计 | 降级实现（内存；可用） | REQ-036 |
 | API-013 | GET/PUT/DELETE | /api/terms/{id} | 术语详情 / 更新 / 删除 | [P1] | P1-已设计 | 降级实现（内存；可用） | REQ-036 |
@@ -72,7 +72,7 @@
 | API-007 | 目标设计（降级） | §3.7 示例 | 4001/4004 | 空间+权限 | TC-P1-006 | 是 |
 | API-008 | 目标设计（降级） | §3.7 示例 | 4001/4004 | 空间+权限 | TC-P1-006 | 是 |
 | API-009 | 目标设计（降级） | §3.7 示例 | 4001/4220 | 空间过滤 | TC-P1-007 | 是 |
-| API-010 | 目标设计（降级） | §3.2 / §3.3 | 4001/4220 | 空间过滤 | TC-P1-008 | 是 |
+| API-010 | 目标设计（adapter 就绪·默认降级） | §3.2 / §3.3 | 4001/4220 | 空间过滤 | TC-P1-008 | 是 |
 | API-011 | 目标设计（降级） | §3.2 / §3.3 | 4001/4003/4220 | 空间过滤 | TC-P1-009/010 | 是 |
 | API-012 | 目标设计（降级） | §3.2 / §3.3 | 4001/4003/4220 | 空间成员 | TC-P1-012 | 是 |
 | API-013 | 目标设计（降级） | §3.7 示例 | 4001/4003/4004 | 空间+权限 | TC-P1-012 | 是 |
@@ -106,7 +106,7 @@
 |---|---|---|---|---|---|---|
 | API-001 | token | string | 是 | HMAC 签名生成 | 高 | 仅返回一次，前端内存保存 |
 | API-001 | current_space_id | string | 是 | token 载荷 | 中 | — |
-| API-010 | answer | string | 是 | 目标：LLM 生成；当前：检索结果模板 | 中 | 库外返回「未找到」，不编造 |
+| API-010 | answer | string | 是 | adapter（配 .env → LLM 生成；默认降级模板） | 中 | 库外返回「未找到」，不编造 |
 | API-010 | sources[].doc_id | string | 是 | lumen_documents.id | 低 | 权限过滤后返回 |
 | API-010 | sources[].snippet | string | 是 | lumen_chunks.text（目标）/ content_md 切片 | 中 | 仅当前空间、权限可见文档 |
 | API-011 | import_id | string | 是 | lumen_imports.id | 低 | — |
@@ -235,7 +235,7 @@ sequenceDiagram
 | API-007 | document.list_versions | lumen_document_versions | space + permission | 4001/4004 | TC-P1-006 | 降级实现 |
 | API-008 | document.restore_version | lumen_document_versions | space + permission | 4001/4004 | TC-P1-006 | 降级实现 |
 | API-009 | search.search_documents | lumen_chunks.ts_vector（目标）/ lumen_documents | space + permission 过滤 | 4001/4220 | TC-P1-007 | 降级实现（内存关键词） |
-| API-010 | rag.answer_question | lumen_chunks / lumen_documents / lumen_terms | space + permission 过滤 | 4001/4220 | TC-P1-008 | 降级实现（不调 LLM） |
+| API-010 | rag.answer_question | lumen_chunks / lumen_documents / lumen_terms | space + permission 过滤 | 4001/4220 | TC-P1-008 | adapter 接入（默认降级；配 .env 真实 LLM） |
 | API-011 | imports.import_extracted_text | lumen_imports, lumen_documents | space 过滤 | 4001/4003/4220 | TC-P1-009/010 | 降级实现（仅 .md/.txt） |
 | API-012 | term.list_visible_terms / create_term | lumen_terms | space 成员 | 4001/4003/4220 | TC-P1-012 | 降级实现 |
 | API-013 | term.get/update/delete_term | lumen_terms | space + owner | 4001/4003/4004 | TC-P1-012 | 降级实现 |

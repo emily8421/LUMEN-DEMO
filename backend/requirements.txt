@@ -1,4 +1,6 @@
 ﻿fastapi==0.115.14
 uvicorn==0.34.3
 pydantic==2.10.6
+# LLM adapter（RG-004）：OpenAI 兼容封装，支持 GLM/GPT 中转 + 本机 ollama；详见 backend/service/llm_adapter.py
+openai>=1.0
 
