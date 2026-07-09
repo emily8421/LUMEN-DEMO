@@ -157,7 +157,7 @@ if APIRouter is not None:
             "space_id": document.space_id,
             "title": document.title,
             "permission": document.permission.value,
-            "type": document.document_type,
+            "type": document.type,
             "current_version": document.current_version,
             "owner_id": document.owner_id,
         }
