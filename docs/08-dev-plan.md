@@ -26,7 +26,7 @@
 | Sprint-4 | 检索与 RAG | 007/008 | design/rag-retrieval、06、07 | backend search/rag + frontend | / TC-P1-007/008 | 已完成（降级） | — |
 | Sprint-5 | 术语管理 | 036 | design/term-management、06、07 | backend term/rag + frontend | / TC-P1-012 | 已完成（降级） | — |
 | Sprint-6 | 桌面端集成与验收 | 011 | 09 + 前置 Sprint | frontend 桌面端集成 | / TC-P1-011 | 已完成（降级） | — |
-| Sprint-7 | LLM 真实化 adapter | 008 | design/rag-retrieval、05（RG-004） | backend llm_adapter.py + rag.py + .env | / TC-P1-008 | adapter 就绪（默认降级；真实调用待本机验证） | — |
+| Sprint-7 | LLM 真实化 adapter | 008 | design/rag-retrieval、05（RG-004） | backend llm_adapter.py + rag.py + .env | / TC-P1-008 | 已完成（GLM-5.2 真实验证） | — |
 
 ## 依赖关系与里程碑
 
@@ -192,7 +192,7 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 | Sprint-4 | 2026-07-04 | 007/008 | 内存搜索 + 降级 RAG（不调 LLM）+ 前端 UI | `da9f6e5`/`5144f2a`/`bc03839`/`c5c177e`(fix) | 通过（降级口径） | pgvector/Embedding/LLM 未接（RG-001/002/004）→ Phase2 | §5 / §5.1 |
 | Sprint-5 | 2026-07-05 | 036 | 空间术语 CRUD + 问答口径注入 | `5b78f0a` | 通过（降级口径） | — | §5 |
 | Sprint-6 | 2026-07-06 | 011 | 桌面端集成 + Edge Headless / Chrome smoke | `cb6fb8a`（PR #28） | 部分通过 → 通过（降级口径） | 真实 PDF / OCR 未验证 → Phase2 | §5 |
-| Sprint-7 | 2026-07-09 | 008 | LLM adapter（`llm_adapter.py`）+ rag 接入 + `.env` 模板 | （本 PR） | 55 后端 tests 通过（含 LLM 路径 / 回落） | 真实 LLM 调用待本机配 `.env` 验证（RG-004） | §5 / §6 |
+| Sprint-7 | 2026-07-09 | 008 | LLM adapter（`llm_adapter.py`）+ rag 接入 + `.env` 模板 | （本 PR） | 55 tests + GLM-5.2 真实问答验证 | GPT/ollama 待验证；向量检索仍缺（RG-002） | §5 / §6 |
 
 > 未完成 / 移出 P1：真实 PDF 解析、图片 OCR（REQ-010 移至后续阶段）、pgvector 向量检索、真实 Embedding、真实 LLM——均移至 Phase2 / MVP（见 `docs/05-tech-spec.md §5.1` Readiness Gate）。
 

@@ -35,7 +35,7 @@
 | API-007 | GET | /api/documents/{id}/versions | 版本列表 | [P1] | P1-已设计 | 降级实现（内存；可用） | REQ-006 |
 | API-008 | POST | /api/documents/{id}/versions/{v}/restore | 恢复版本 | [P1] | P1-已设计 | 降级实现（内存；可用） | REQ-006 |
 | API-009 | GET | /api/search?q= | 全文搜索 | [P1] | P1-已设计 | **降级实现（内存关键词匹配；无向量检索）** | REQ-007 |
-| API-010 | POST | /api/query | RAG 问答 | [P1] | P1-已设计 | **LLM adapter 已接入（默认 mock 降级；配 .env 真实问答，待本机验证；Sprint-7）** | REQ-008 |
+| API-010 | POST | /api/query | RAG 问答 | [P1] | P1-已设计 | **LLM 已验证（GLM `glm-5.2` 真实问答；默认 mock 降级可切；Sprint-7）** | REQ-008 |
 | API-011 | POST | /api/import | 导入文件 | [P1] | P1-已设计 | **降级实现（仅 `.md`/`.txt` 已提取文本；无 PDF/OCR）** | REQ-009/010 |
 | API-012 | GET/POST | /api/terms | 术语列表 / 创建术语 | [P1] | P1-已设计 | 降级实现（内存；可用） | REQ-036 |
 | API-013 | GET/PUT/DELETE | /api/terms/{id} | 术语详情 / 更新 / 删除 | [P1] | P1-已设计 | 降级实现（内存；可用） | REQ-036 |

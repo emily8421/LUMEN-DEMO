@@ -21,7 +21,7 @@
 | 后端 | Python + FastAPI | Python 3.12.x；FastAPI 0.115.x；Uvicorn 0.34.x；Pydantic 2.10.x | **已接入**（api/service/model 三层运行；`requirements.txt` 仅 fastapi/uvicorn/pydantic） |
 | 数据库 | PostgreSQL + pgvector | PostgreSQL 16.x；pgvector 0.7.x；SQLAlchemy 2.0.x；Alembic 1.14.x；psycopg 3.2.x | **未接入（候选）**：当前为内存 `demo_repository`；无 SQLAlchemy/Alembic/psycopg 依赖 |
 | 向量索引 | pgvector hnsw | Embedding 维度 512；HNSW `m=16`、`ef_construction=64`、查询 `ef_search=40`；Demo 数据 < 1k chunks 可先用精确扫描 | **未接入（候选）**：当前内存关键词匹配，无向量检索 |
-| AI | LLM：OpenAI 兼容接口；Embedding：本机 `BAAI/bge-small-zh-v1.5` | Embedding 512 维；`sentence-transformers` 3.0.x；LLM Demo 默认走公司内网 OpenAI 兼容中转，未配置时显式 Mock | **LLM=adapter 已接入（默认 Mock 降级；配 .env 真实问答，待本机验证，Sprint-7）；Embedding=未接入（评估报告 No-Go，torch 导入失败）** |
+| AI | LLM：OpenAI 兼容接口；Embedding：本机 `BAAI/bge-small-zh-v1.5` | Embedding 512 维；`sentence-transformers` 3.0.x；LLM Demo 默认走公司内网 OpenAI 兼容中转，未配置时显式 Mock | **LLM=已验证（GLM `glm-5.2` 中转站真实问答，Sprint-7）；默认 Mock 降级可切；Embedding=未接入（评估报告 No-Go，torch 导入失败）** |
 | 前端 | React | React 18.2.x；Vite 5.4.x；TypeScript 5.5.x；Node.js 22.17.1；npm 11.11.0 | **已接入**（文档编辑 / 搜索问答 / 术语管理 UI） |
 | 文档解析 | python-docx / pdfplumber | python-docx 1.1.x；pdfplumber 0.11.x | **未接入（候选）**：当前仅支持 `.md`/`.txt` 已提取文本，无 Word/PDF 解析 |
 | OCR | PaddleOCR（可降级） | PaddleOCR 2.8.x；Phase1 允许关闭 OCR 并降级为已提取文本 | **未实现（降级）**：当前无 OCR；REQ-010 移至后续阶段 |
@@ -85,7 +85,7 @@ flowchart TB
 | RG-001 | PostgreSQL + pgvector | **No-Go** | 评估报告 §10.1 Docker daemon 未起；无 compose；当前内存 DemoRepository | 起 Docker Linux engine + 补 `docker-compose.yml` + 接线 SQLAlchemy/Alembic | REQ-007/008（检索问答真实化） |
 | RG-002 | Embedding（bge-small-zh，本机） | **No-Go** | 评估报告 §9.2 torch 导入失败（Python 3.14 环境） | 修 torch 兼容 / 换 Embedding 通道（公司内网 `/v1/embeddings`） | REQ-007/008 |
 | RG-003 | OCR（PaddleOCR） | **No-Go（降级）** | PaddleOCR 2.8.x 与运行环境不兼容；当前无 OCR | OCR 引擎定版 + 环境兼容验证 | REQ-010（移至后续阶段） |
-| RG-004 | LLM（OpenAI 兼容） | **adapter 就绪（默认 Mock）** | `llm_adapter.py` 已接入（Sprint-7，55 tests 通过）；真实调用待本机配 `.env`（LLM_PROVIDER/key）验证 | 配 `.env` 跑通真实问答（GLM/GPT/ollama） | REQ-008（问答真实化） |
+| RG-004 | LLM（OpenAI 兼容） | **Go（GLM-5.2 已验证）** | `llm_adapter.py` 已接入 + 本机中转站 GLM `glm-5.2` 真实问答验证通过（Sprint-7，2026-07-09）；GPT/ollama 配置位就绪未验证 | — | REQ-008（问答真实化） |
 | RG-005 | Web / ORM 基础栈（FastAPI/Pydantic/React） | **Conditional Go** | 已接入并跑通 53 后端 tests + 前端 build + 浏览器 smoke | — | REQ-001..006/011/036 |
 
 > 风险与验证映射：本表 RG-ID 与 `docs/09-verification.md §6` 风险项对齐（待 09 补 Risk-ID 列后双向链接）。

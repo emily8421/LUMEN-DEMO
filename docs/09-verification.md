@@ -35,7 +35,7 @@
 | TC-P1-005 | REQ-005 行内编辑 | 编辑保存后内容持久、再打开一致 | [P1] | 条件通过（降级口径·内存） |
 | TC-P1-006 | REQ-006 版本 | 3 次修改 → 3 版本 → 能恢复指定版本 | [P1] | 条件通过（降级口径·内存） |
 | TC-P1-007 | REQ-007 搜索 | 已知关键词返回正确文档 | [P1] | 条件通过（降级口径·内存关键词匹配） |
-| TC-P1-008 | REQ-008 RAG | 库内问答正确 + 标来源；库外回复"未找到" | [P1] | 条件通过（降级口径·不调 LLM） |
+| TC-P1-008 | REQ-008 RAG | 库内问答正确 + 标来源；库外回复"未找到" | [P1] | 通过（真实 LLM·glm-5.2；向量检索仍缺 RG-002） |
 | TC-P1-009 | REQ-009 导入 | 导入 .pdf 后可搜、可问答引用 | [P1] | 条件通过（仅 `.md`/`.txt`；真实 PDF 未验证） |
 | TC-P1-010 | REQ-010 OCR | 中文白板照片 OCR 后可搜 | [P1] | 后续阶段（OCR 未实现，降级移出 P1 必过） |
 | TC-P1-011 | REQ-011 桌面端 | Chrome / Edge 完成上述全部 | [P1] | 条件通过（降级口径·Edge Headless + Chrome 人工 smoke） |
@@ -56,7 +56,7 @@
 | TC-P1-005 | REQ-005 | 已有文档 | 行内编辑保存后重开 | 内容持久、一致 | `tests/backend/test_document.py` | 条件通过 |
 | TC-P1-006 | REQ-006 | 已有文档 | 改 3 次 → 查版本 → 恢复 | 3 版本可见、能恢复指定版本 | `tests/backend/test_document.py` | 条件通过 |
 | TC-P1-007 | REQ-007 | 已索引文档 | 关键词搜索 | 返回正确文档 + 摘要 | `tests/backend/test_search.py` | 条件通过（内存关键词） |
-| TC-P1-008 | REQ-008 | 已索引文档 | 库内问答 / 库外问答 | 库内正确 + 来源；库外「未找到」 | `tests/backend/test_rag.py` | 条件通过（不调 LLM） |
+| TC-P1-008 | REQ-008 | 已索引文档 | 库内问答 / 库外问答 | 库内正确 + 来源；库外「未找到」 | `tests/backend/test_rag.py` + GLM-5.2 真实验证 | 通过（真实 LLM；向量检索缺） |
 | TC-P1-009 | REQ-009 | `.md`/`.txt` 文件 | 导入后搜索 / 问答 | 可命中 | `tests/backend/test_imports.py` | 条件通过（仅 .md/.txt） |
 | TC-P1-010 | REQ-010 | 中文白板照片 | OCR 后搜索 | 可搜 | — | 后续阶段（OCR 未实现） |
 | TC-P1-011 | REQ-011 | 桌面端浏览器 | 走查全部 P1 功能 | 全部可用 | Edge Headless + Chrome 人工 smoke（§5） | 条件通过 |
@@ -98,7 +98,7 @@
 | 2026-07-03~07 | 后端单元 / 集成测试 | 通过（53 tests） | `.venv\Scripts\python.exe -m unittest discover -s tests/backend -v` 全通过；`compileall backend tests/backend` 通过 |
 | 2026-07-06 | Sprint-6 桌面端集成 smoke（Edge Headless + FastAPI + Vite） | 部分通过（降级口径） | 已通过登录、空间切换、文档新建 / 编辑 / 版本恢复、`.md` 降级导入、搜索、RAG 问答、术语创建与术语来源、跨空间搜索隔离；Chrome 人工点击、真实 PDF 解析、图片 OCR 未验证。 |
 | 2026-07-06 | Sprint-6 Chrome 人工 smoke | 通过（降级口径） | 用户反馈已通过 Chrome 桌面端 14 步 smoke：登录、空间切换、文档 CRUD / 版本恢复、`.md` 降级导入、标题 / 正文搜索、RAG 问答、术语创建与术语来源、跨空间搜索隔离；真实 PDF 解析、图片 OCR 未验证。 |
-| 2026-07-09 | Sprint-7 LLM adapter（RG-004） | 单测通过（待真实验证） | `llm_adapter.py` 多 provider（GLM/GPT/ollama/mock）+ rag 接入；55 tests 通过；真实 LLM 调用待本机配 `.env` 验证 |
+| 2026-07-09 | Sprint-7 LLM adapter（RG-004） | 通过（GLM-5.2 真实验证） | `llm_adapter.py` 多 provider + rag 接入；55 tests + 本机 GLM `glm-5.2` 真实问答验证通过（answer 带来源标注） |
 | 待实现后填写 | Phase1 Sprint / 全量验收 | 待记录 | 每个 Sprint 完成后追加验收结果，不删除历史记录 |
 
 ### 5.1 缺陷与回归记录
@@ -115,7 +115,7 @@
 | 真实 Embedding（bge-small-zh）未接入 | REQ-007/008 向量检索 | 评估报告 No-Go（torch）；移至 Phase2/MVP（RG-002） |
 | Docker Desktop Linux engine 阻塞 | 起库 / 真实 PostgreSQL | 当前后端直连内存仓储；Docker daemon 未起，待解锁后接 pgvector |
 | OCR 质量与资源占用 | REQ-010、内容导入 | OCR 未实现，REQ-010 移至后续阶段（RG-003）；当前降级为已提取文本 |
-| LLM 外部调用可用性 | REQ-008、REQ-036 | adapter 已接入（默认 Mock 降级）；真实调用待本机配 `.env` 验证（Sprint-7，RG-004） |
+| LLM 外部调用可用性 | REQ-008、REQ-036 | GLM `glm-5.2` 真实问答已验证（Sprint-7，RG-004→Go）；GPT/ollama 待验证 |
 | P2 / 愿景高风险 AI 能力 | REQ-020 / 021 / 030 / 032 / 033 等 | 不进入 Phase1 必过项，技术验证通过后再补用例 |
 
 ## 7. 待人工确认项
