@@ -1,0 +1,24 @@
+# LUMEN 本地 PostgreSQL + pgvector（Sprint-8 / task-008 T1）。
+# 用法：docker compose -f docker/compose.yml up -d
+# 镜像 pgvector/pgvector:pg16 = PostgreSQL 16 + 预装 pgvector 扩展（创建扩展由 backend/service/db.py init_db 完成）。
+# 端口 15432 避让本机原生 PostgreSQL 5432；数据持久化到 named volume。
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: lumen-pg
+    environment:
+      POSTGRES_USER: lumen
+      POSTGRES_PASSWORD: lumen
+      POSTGRES_DB: lumen
+    ports:
+      - "15432:5432"
+    volumes:
+      - lumen_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lumen -d lumen"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  lumen_pgdata:
