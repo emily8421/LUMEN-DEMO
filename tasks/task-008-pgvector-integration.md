@@ -14,6 +14,7 @@
 - `docs/06-db-design.md`（`lumen_*` 表 + 字段契约）
 - `docs/design/rag-retrieval.md`（向量+全文召回）、`docs/design/ingestion.md`（切块→Embedding）
 - `docs/research/2026-07-09-tech-env-evaluation-phase1-reeval.md` §5.3（RG-002 验证 + `HF_HUB_DISABLE_XET=1` 约束）
+- **`docs/research/2026-07-09-pgvector-impact-assessment.md`（T2–T7 执行依据）**：entity↔表对照 + 字段分歧、demo_repository 方法清单、service 依赖图、12 条硬编码风险点。**T3（最大工作量）必备**。
 - 现状：`backend/service/demo_repository.py`（内存单例）、`backend/model/entities.py`、`backend/migrations/001-002`
 
 ## 架构决策（降低牵连面）
