@@ -1,4 +1,4 @@
-﻿"""Core data models for Phase1 space, permission, and document logic."""
+"""Core data models for Phase1 space, permission, and document logic."""
 
 from __future__ import annotations
 
@@ -33,6 +33,7 @@ class User:
     id: int
     external_id: str
     name: str
+    created_at: str = ""
 
 
 @dataclass(frozen=True)
@@ -40,6 +41,7 @@ class Space:
     id: int
     code: str
     name: str
+    created_at: str = ""
 
 
 @dataclass(frozen=True)
@@ -57,8 +59,10 @@ class Document:
     content_md: str
     owner_id: int
     permission: DocumentPermission
-    document_type: str = "markdown"
+    type: str = "markdown"
     current_version: int = 1
+    created_at: str = ""
+    updated_at: str = ""
 
 
 @dataclass(frozen=True)
@@ -81,6 +85,7 @@ class ImportJob:
     parsed_doc_id: int | None = None
     chunk_count: int = 0
     error: str | None = None
+    mime: str | None = None
     created_at: str = ""
 
 
@@ -90,6 +95,8 @@ class DocumentChunk:
     document_id: int
     ordinal: int
     text: str
+    embedding: list[float] | None = None
+    ts_vector: str | None = None
 
 
 @dataclass(frozen=True)
@@ -102,3 +109,5 @@ class Term:
     owner_id: int
     status: TermStatus
     source_document_id: int | None = None
+    created_at: str = ""
+    updated_at: str = ""

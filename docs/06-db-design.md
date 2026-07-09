@@ -110,9 +110,12 @@
 | id | bigint PK | |
 | space_id | bigint FK→spaces | |
 | source_filename | varchar | |
-| mime | varchar | docx / pdf / image |
+| mime | varchar | docx / pdf / image / txt / md（目标态；当前降级导入仅 .txt/.md，可空） |
 | status | varchar | processing / done / failed |
 | parsed_doc_id | bigint FK→documents | 解析生成/关联的文档 |
+| created_by | bigint FK→users | 发起导入的用户（导入状态机审计） |
+| chunk_count | int | 成功切块数（complete_import_job 写入） |
+| error | text | 失败原因（fail_import_job 写入，可空） |
 | created_at | timestamptz | |
 
 ### lumen_terms
@@ -170,9 +173,12 @@
 | lumen_imports | id | bigint PK | 是 | — | PK | REQ-009 | 低 | 随导入任务删除 |
 | lumen_imports | space_id | bigint FK | 是 | — | FK→spaces | REQ-009 | 低 | 随导入任务删除 |
 | lumen_imports | source_filename | varchar | 是 | — | — | REQ-009 | 低 | 随导入任务删除 |
-| lumen_imports | mime | varchar | 是 | — | docx / pdf / image | REQ-009 | 低 | 随导入任务删除 |
+| lumen_imports | mime | varchar | 否 | — | docx / pdf / image / txt / md（目标态；当前降级不用） | REQ-009 | 低 | 随导入任务删除 |
 | lumen_imports | status | varchar | 是 | processing | processing / done / failed（见 07 §3.6） | REQ-009 | 低 | 随导入任务删除 |
 | lumen_imports | parsed_doc_id | bigint FK | 否 | — | FK→documents | REQ-009 | 低 | 随导入任务删除 |
+| lumen_imports | created_by | bigint FK | 是 | — | FK→users | REQ-009 | 低 | 随导入任务删除 |
+| lumen_imports | chunk_count | int | 是 | 0 | — | REQ-009 | 低 | 随导入任务删除 |
+| lumen_imports | error | text | 否 | — | — | REQ-009 | 低 | 随导入任务删除 |
 | lumen_imports | created_at | timestamptz | 是 | now() | — | REQ-009 | 低 | 随导入任务删除 |
 | lumen_terms | id | bigint PK | 是 | — | PK | REQ-036 | 低 | 随术语删除 |
 | lumen_terms | space_id | bigint FK | 否 | — | FK→spaces, nullable（空=全局术语） | REQ-036 | 低 | 随术语删除 |
