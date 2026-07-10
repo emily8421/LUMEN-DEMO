@@ -66,7 +66,7 @@ flowchart LR
 
 | 偏差 ID | 代码 / 配置事实 | 原设计 | 偏差类型 | 处理结论 | 回写目标 | 验证 / 证据 |
 |---|---|---|---|---|---|---|
-| DEV-001 | 权限过滤在内存 `demo_repository` 实现（`backend/service/permission.py`：is_space_member / can_view_document / filter_visible_documents） | SQL where 子句过滤（`visible_document_where_clause` 目标设计） | Mock/降级 | 过滤逻辑等价已验证；存储层未落地 PostgreSQL，真实化移 Phase2 | 06、05 RG-001 | TC-P1-001/003 |
+| DEV-001 | 权限过滤逻辑在 Python service 层（`backend/service/permission.py`：is_space_member / can_view_document / filter_visible_documents）；存储已切 PG（`PgRepository`，Sprint-8） | SQL where 子句过滤（`visible_document_where_clause` 目标设计） | 部分实现 | 过滤逻辑等价已验证；存储已落地 PostgreSQL，可见文档集在 recall 时以 `document_id IN (...)` 下推 SQL。`visible_document_where_clause` 的纯 SQL 下推留作未来优化（正确性等价） | 06、05 RG-001 | TC-P1-001/003 |
 
 ## 7. 验收追溯
 

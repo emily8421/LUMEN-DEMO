@@ -74,8 +74,8 @@ flowchart TB
 
 | 偏差 ID | 代码 / 配置事实 | 原设计 | 偏差类型 | 处理结论 | 回写目标 | 验证 / 证据 |
 |---|---|---|---|---|---|---|
-| DEV-001 | 术语存储在内存 `demo_repository`（`backend/service/term.py`） | `lumen_terms` 表（PostgreSQL） | Mock/降级 | 术语 CRUD 逻辑已实现；存储未落地，真实化移 Phase2 | 06 lumen_terms、05 RG-001 | TC-P1-012 |
-| DEV-002 | 问答口径注入不调 LLM（与 rag-retrieval DEV-002 同源） | 术语定义注入 Prompt → LLM | Mock/降级 | 当前注入术语但 RAG 不调 LLM；真实化移 Phase2 | 07 API-010、05 RG-004 | TC-P1-012 |
+| DEV-001 | ~~术语存储在内存 `demo_repository`~~ → **已实现（Sprint-8）**：术语落地 `lumen_terms` 表（PostgreSQL，`PgRepository`） | `lumen_terms` 表（PostgreSQL） | 已实现 | 术语 CRUD 已切 PG 存储；内存 `demo_repository` 仅作单测 fake | 06 lumen_terms、05 RG-001 | TC-P1-012 |
+| DEV-002 | ~~问答口径注入不调 LLM~~ → **已实现（Sprint-7）**：术语定义注入 Prompt → 调真实 LLM（GLM-5.2，RG-004 Go） | 术语定义注入 Prompt → LLM | 已实现 | 与 rag-retrieval DEV-002 同源；RAG 已调真实 LLM，术语定义正常注入 | 07 API-010、05 RG-004 | TC-P1-012 |
 
 ## 7. 验收追溯
 
