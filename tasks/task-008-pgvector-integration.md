@@ -114,13 +114,13 @@
 - [x] T3 ORM + PG 仓储（commit `12c9ba3` / PR #50）
 - [x] T4 Embedding service（commit `4ccefb7` / PR #51）
 - [x] T5 切单例 + seed（commit `a90d2a0` / PR #52）
-- [x] T6 向量检索 + embedding 写入联动（本 PR，聚焦版：RAG 向量召回）
-- [ ] T7 测试 + 文档回写（commit/PR：___）
+- [x] T6 向量检索 + embedding 写入联动（commit `f14b9d9` / PR #53，聚焦版：RAG 向量召回）
+- [x] T7 测试 + 文档回写（PR #54 / #55：`05/08/09/tech-env/requirements` 状态回写 + `04/06/07/design` 契约回写；main=`95298aa`）
 
 ## 待确认项
 
 | ID | 待确认 | AI 建议 | 阻塞 |
 |---|---|---|---|
-| PG-C-001 | requirements DB 依赖是否锁 3.12 基线版本（同 drift 口径） | T1 加依赖 + 注明 drift；T7 统一定基线 | 不阻塞 T1 |
+| PG-C-001 | requirements DB 依赖是否锁 3.12 基线版本（同 drift 口径） | ✅ 已闭合：T7 Batch A / PR #54 改为 Python 3.14.3 实测基线，并同步 pgvector / embedding 依赖声明 | 已闭合 |
 | PG-C-002 | 同步 psycopg vs async | 同步（降低牵连面） | 不阻塞 |
 | PG-C-003 | seed 数据来源 | ✅ 已确认：复用 demo_repository 种子，迁为 `migrations/005_sprint8_seed_demo.sql`（显式 ID + ON CONFLICT + setval） | 已闭合（T5） |
