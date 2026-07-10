@@ -94,8 +94,8 @@
 ## 完成记录
 
 - [x] T1 基建（commit `68453b0` / PR #47）
-- [x] T2 migrations + entities 对齐（本 PR）
-- [ ] T3 ORM + PG 仓储（commit/PR：___）
+- [x] T2 migrations + entities 对齐（commit `5e780fa` / PR #49）
+- [x] T3 ORM + PG 仓储（本 PR）
 - [ ] T4 Embedding service（commit/PR：___）
 - [ ] T5 切单例 + seed（commit/PR：___）
 - [ ] T6 向量检索（commit/PR：___）
