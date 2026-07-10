@@ -45,7 +45,28 @@ LUMEN 是面向中小企业（典型：帮客户做 AI Agent 落地的初创公�
 | SC-005 | R-001 / R-002 | 存量资料需要进入知识库 | Phase1 Demo 导入 `.md` / `.txt` 或已提取文本；真实 Word / PDF 解析与图片 OCR 作为后续真实化边界 | 导入内容可搜索、可被问答引用；真实解析 / OCR 不作为 Phase1 必过 | `docs/vision/product-vision.md` 场景5 |
 | SC-006 | R-001 / R-002 / R-003 | 用户使用桌面浏览器访问 | 在 Chrome / Edge 中完成导入、检索、问答、编辑、版本和术语流程 | 桌面端主流程无阻断 | `docs/vision/product-vision.md` 场景8 / 场景9 |
 
-## 3.1 下游影响
+## 3.1 场景边界与非目标
+
+| 边界 ID | 内容 | 适用阶段 | 原因 / 来源 | 下游约束 |
+|---|---|---|---|---|
+| SCB-001 | Phase1 Demo 只承诺桌面浏览器主流程，不承诺移动端适配 | Phase1 | `docs/03-prd.md` §3 / `ai/project-rules.md` §1 | `03` 非目标、`08/09` 不把移动端列为 P1 必过 |
+| SCB-002 | Phase1 内容导入按 `.md` / `.txt` 或已提取文本降级演示；真实 Word / PDF 解析和图片 OCR 留后续真实化 | Phase1 | `docs/03-prd.md` §3、`docs/09-verification.md` §2 / §6 | `02` REQ-009/010、`09` TC-P1-009/010 使用降级口径 |
+| SCB-003 | 私有文档不得进入非作者的检索、问答或共享视图 | 全阶段 | `docs/vision/product-vision.md` 场景4 / 场景8 | `02` REQ-003、`07` 权限错误、`09` TC-P1-003 |
+| SCB-004 | 库外问答必须明确“未找到”，不得编造答案 | 全阶段 | 产品红线，见 `docs/03-prd.md` Phase1 退出标准 | `02` REQ-008、`09` TC-P1-008 |
+| SCB-005 | 高级视图、跨空间推送、协作、移动端、情报分析能力不进入 Phase1 | Phase1 | `ai/project-rules.md` §1 禁止清单 | `03` Phase 路线图、`08` Sprint 禁止事项 |
+
+## 3.2 上游来源映射
+
+| 来源 ID | 来源位置 | 承接角色 / 场景 | 可信度 | 备注 |
+|---|---|---|---|---|
+| SRC-001 | `docs/vision/product-vision.md` 场景1 | R-001 / R-002、SC-001 | 已确认愿景锚点 | 双空间、空间切换、最近更新感知 |
+| SRC-002 | `docs/vision/product-vision.md` 场景2 | SC-003 | 已确认愿景锚点 | 文档编辑、保存和版本历史 |
+| SRC-003 | `docs/vision/product-vision.md` 场景4 | R-002 / R-003、SC-002 / SC-004 | 已确认愿景锚点 | 私有文档、搜索、问答和权限边界 |
+| SRC-004 | `docs/vision/product-vision.md` 场景5 | R-001 / R-002、SC-003 / SC-005 | 已确认愿景锚点 | 导入、整理、跨空间候选能力；Phase1 仅承接已提取文本导入 |
+| SRC-005 | `docs/vision/product-vision.md` 场景5b / 场景9 | R-003、SC-004 / SC-006 | 已确认愿景锚点 | 术语管理、新成员入职和桌面端 Demo 主路径 |
+| SRC-006 | `ai/project-rules.md` §1、`docs/03-prd.md` §3 | SCB-001..SCB-005 | 阶段边界权威源 | 约束 Phase1 / Phase2 / 愿景边界 |
+
+## 3.3 下游影响
 
 | 场景 ID | 影响 U-ID | 影响 REQ | 备注 |
 |---|---|---|---|
