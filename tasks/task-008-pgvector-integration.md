@@ -95,8 +95,8 @@
 
 - [x] T1 基建（commit `68453b0` / PR #47）
 - [x] T2 migrations + entities 对齐（commit `5e780fa` / PR #49）
-- [x] T3 ORM + PG 仓储（本 PR）
-- [ ] T4 Embedding service（commit/PR：___）
+- [x] T3 ORM + PG 仓储（commit `12c9ba3` / PR #50）
+- [x] T4 Embedding service（本 PR）
 - [ ] T5 切单例 + seed（commit/PR：___）
 - [ ] T6 向量检索（commit/PR：___）
 - [ ] T7 测试 + 文档回写（commit/PR：___）
