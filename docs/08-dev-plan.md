@@ -106,20 +106,20 @@
 ## Sprint-3：内容导入流水线
 
 ### 目标
-Word / PDF 解析 + OCR + 切块入库（REQ-009 / 010），为检索问答供数
+目标设计为 Word / PDF 解析 + OCR + 切块入库（REQ-009 / 010）；Phase1 Demo 实际按 `.md` / `.txt` 已提取文本降级导入，为检索问答供数
 
 ### 输入文档
 docs/design/ingestion.md、06（chunks / imports）、07（import）
 
 ### 修改范围
-- backend：service/import（解析 / OCR / 切块 / Embedding）
+- backend：service/import（Phase1 已实现 `.md` / `.txt` 文本导入 + 切块；真实解析 / OCR 留后续）
 - scripts：导入 / 索引脚本
 
 ### 验收标准
-- 导入 .pdf 与中文白板照片后，能被搜索与问答命中
+- Phase1 Demo：导入 `.md` / `.txt` 已提取文本后，能被搜索与问答命中；真实 .pdf / Word / 图片 OCR 不作为当前必过项
 
 ### 禁止事项
-- OCR 引擎待 05 确认（建议 PaddleOCR）
+- 不把真实 Word / PDF 解析或 OCR 作为 Phase1 Demo 必过项；RG-003 未解除前不得声称 OCR 已实现
 - 不做录音转写（愿景）
 
 ## Sprint-4：检索与 RAG 问答
@@ -185,14 +185,14 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 
 ## Sprint 完成包与进度记录
 
-> 对照 `ai/doc-standards/08-dev-plan.md` §4（完成包）+ §5（进度记录）。Sprint 计划为**目标**；实际执行为**降级内存实现**（无 pgvector / Embedding / OCR / 真实 LLM）。验收证据见 `docs/09-verification.md §5`。
+> 对照 `ai/doc-standards/08-dev-plan.md` §4（完成包）+ §5（进度记录）。Sprint-1~6 为早期降级实现；Sprint-7/8 已完成真实 LLM、PostgreSQL+pgvector、Embedding 与 RAG 向量召回接入。仍降级：真实 Word / PDF 解析、OCR、search 向量化。验收证据见 `docs/09-verification.md §5`。
 
 | Sprint | 日期 | 目标（REQ） | 实际交付 | 关联提交 / PR | 验证结果 | 残留风险 / 下一步 | 已回填 09 |
 |---|---|---|---|---|---|---|---|
-| Sprint-1 | 2026-07-03~ | 001/002/003 | 降级内存实现（权限过滤可用） | 含于 Sprint-2~4 提交基线 | 53 后端 tests 通过 | 真实 DB 未接（RG-001）→ Phase2 | §2 / §5 |
+| Sprint-1 | 2026-07-03~ | 001/002/003 | 降级内存实现（权限过滤可用；Sprint-8 后 PG 仓储已接入） | 含于 Sprint-2~4 提交基线；PG 真实化见 Sprint-8 | 53 后端 tests 通过；Sprint-8 后 74 tests 通过 | RG-001 已在 Sprint-8 解除 | §2 / §5 |
 | Sprint-2 | 2026-07-03 | 004/005/006 | 降级内存实现 + 前端编辑器 | `83fb782` | 通过（降级口径） | — | §5 |
 | Sprint-3 | 2026-07-03 | 009/010 | 降级文本导入（仅 `.md`/`.txt`，无 PDF/OCR） | `0fe169b` | 通过（降级口径） | PDF / OCR 未实现（RG-003）→ 后续阶段 | §5 |
-| Sprint-4 | 2026-07-04 | 007/008 | 内存搜索 + 降级 RAG（不调 LLM）+ 前端 UI | `da9f6e5`/`5144f2a`/`bc03839`/`c5c177e`(fix) | 通过（降级口径） | pgvector/Embedding/LLM 未接（RG-001/002/004）→ Phase2 | §5 / §5.1 |
+| Sprint-4 | 2026-07-04 | 007/008 | 内存搜索 + 降级 RAG（不调 LLM）+ 前端 UI；Sprint-7/8 后 RAG 已真实化 | `da9f6e5`/`5144f2a`/`bc03839`/`c5c177e`(fix)；真实化见 Sprint-7/8 | 通过（降级口径）；Sprint-7/8 后真实 LLM + 向量召回通过 | RG-001/002/004 已解除；search 向量化 + zhparser 留后续小 PR | §5 / §5.1 |
 | Sprint-5 | 2026-07-05 | 036 | 空间术语 CRUD + 问答口径注入 | `5b78f0a` | 通过（降级口径） | — | §5 |
 | Sprint-6 | 2026-07-06 | 011 | 桌面端集成 + Edge Headless / Chrome smoke | `cb6fb8a`（PR #28） | 部分通过 → 通过（降级口径） | 真实 PDF / OCR 未验证 → Phase2 | §5 |
 | Sprint-7 | 2026-07-09 | 008 | LLM adapter（`llm_adapter.py`）+ rag 接入 + `.env` 模板 | `754d5eb`/`78a8550`（PR #45） | 55 tests + GLM-5.2 真实问答验证 | GPT/ollama 待验证；向量检索仍缺（RG-002 已验证·待 pgvector） | §5 / §6 |

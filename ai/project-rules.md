@@ -27,7 +27,7 @@
 - 后端 Python + FastAPI；存储 PostgreSQL + pgvector；LLM 走 OpenAI 兼容 API；Embedding 本机运行 `bge-small-zh`（512 维）；前端 React
 - 双空间隔离 + 文档权限三级（私有 / 团队共享 / 外部只读）
 - Markdown 文档 CRUD + 全文搜索 + RAG 问答（带来源引用）+ 行内编辑 / 版本历史
-- 多格式导入：Word / PDF 文字提取、图片 / 白板照片 OCR
+- 内容导入：Phase1 Demo 支持 `.md` / `.txt` 已提取文本导入；真实 Word / PDF 解析与图片 / 白板照片 OCR 按 `docs/05-tech-spec.md` / `docs/09-verification.md` 降级边界留后续真实化
 - 空间级术语表 + 文档术语识别 + 问答口径对齐
 - 桌面端浏览器访问
 
@@ -63,8 +63,8 @@
 > 本节约束技术方案与本机 Demo 可行性；事实来源 `docs/env/local-env.md`（由 `scripts/collect-env.ps1` 采集）。未确认项保持「待确认」，不得虚构。
 
 - 本机环境：Windows 11 / i7-12650H（10C16T）/ 31.7GB 内存 / RTX 3050 6GB（详见 `docs/env/local-env.md`）
-- Demo 必须本机运行的部分：FastAPI 后端、PostgreSQL+pgvector、React 前端、Word / PDF 文字解析、Embedding（`bge-small-zh`，512 维）
-- 允许降级 / Mock / 远程运行的部分：LLM 可走公司内网中转或明确 Mock；OCR 可降级为已提取文本（具体边界待 05-tech-spec / 09-verification 细化）
+- Demo 必须本机运行的部分：FastAPI 后端、PostgreSQL+pgvector、React 前端、`.md` / `.txt` 已提取文本导入、Embedding（`bge-small-zh`，512 维）
+- 允许降级 / Mock / 远程运行的部分：LLM 可走公司内网中转或明确 Mock；Word / PDF 文字解析与 OCR 可降级为已提取文本（具体边界见 `docs/05-tech-spec.md` / `docs/09-verification.md`）
 - 禁止在本机运行的重资源部分：大参数本地 LLM、大型 Embedding / reranker；`bge-small-zh` 本机 Embedding 属 Phase1 例外
 - 是否允许联网（调用外部 OpenAI 兼容 LLM / Embedding API）：允许 LLM 经公司内网中转调用 OpenAI 兼容接口；Embedding 本机运行，不依赖外部 Embedding API
 - 是否允许安装新依赖 / Docker 镜像：允许本机 `pip install` / `npm install` / `docker pull` 项目所需依赖与镜像；新增依赖须写入依赖文件并说明用途，不得借机替换既定技术栈

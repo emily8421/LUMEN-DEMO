@@ -13,9 +13,9 @@
 | 覆盖 REQ | REQ-036 |
 | 所属 Phase | [P1] |
 | 交付物形态 | Demo |
-| 当前状态 | P1-已设计；实现为降级（内存术语；问答口径注入不调 LLM，见 §6） |
+| 当前状态 | P1-已实现（Sprint-5 降级实现，Sprint-7/8 后术语存储切 PostgreSQL 且问答口径注入真实 LLM；见 §6） |
 | 流程 ID | Flow-D-005（术语维护）/ Flow-D-006（文档术语识别）/ Flow-D-007（问答口径对齐），见 §2 |
-| 最后更新 | 2026-07-09 |
+| 最后更新 | 2026-07-10 |
 | 下游影响 | 08 Sprint-5、09 TC-P1-012 |
 
 ## 1. 职责
@@ -70,7 +70,7 @@ flowchart TB
 
 ## 6. 实现偏差 / 设计回写
 
-> 对照 `ai/doc-standards/design-doc.md` §4.10。仅记录已实现的降级事实。
+> 对照 `ai/doc-standards/design-doc.md` §4.10。记录 Sprint-5 降级实现与 Sprint-7/8 真实化后的偏差关闭事实。
 
 | 偏差 ID | 代码 / 配置事实 | 原设计 | 偏差类型 | 处理结论 | 回写目标 | 验证 / 证据 |
 |---|---|---|---|---|---|---|
@@ -81,6 +81,6 @@ flowchart TB
 
 | 设计点 | 关联 REQ | 关联 Sprint | 关联 TC | 验证方式 | 状态 |
 |---|---|---|---|---|---|
-| 术语 CRUD + 空间优先 | REQ-036 | Sprint-5 | TC-P1-012 | `tests/backend/test_term.py` | 条件通过（内存） |
-| 问答口径对齐 | REQ-036 | Sprint-5 | TC-P1-012 | `tests/backend/test_rag.py` | 条件通过（不调 LLM） |
-| Flow-D-005/006/007 | REQ-036 | Sprint-5 | TC-P1-012 | 见上 | 降级实现 |
+| 术语 CRUD + 空间优先 | REQ-036 | Sprint-5（+ Sprint-8 PG 存储） | TC-P1-012 | `tests/backend/test_term.py`（PG 真实化见 `test_api_routes.py` / Sprint-8 74 tests） | 条件通过（Demo）；存储已切 PostgreSQL |
+| 问答口径对齐 | REQ-036 | Sprint-5（+ Sprint-7 LLM） | TC-P1-012 | `tests/backend/test_rag.py` + GLM-5.2 真实问答验证 | 条件通过（Demo）；LLM 已真实化 |
+| Flow-D-005/006/007 | REQ-036 | Sprint-5 / Sprint-7 / Sprint-8 | TC-P1-012 | 见上 | P1-已实现（Demo 口径） |
