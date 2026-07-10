@@ -1,8 +1,9 @@
-"""PostgreSQL + pgvector 连接管理（Sprint-8 / task-008 T1 基建）。
+"""PostgreSQL + pgvector 连接管理（Sprint-8 / task-008）。
 
 T1 验证「后端能连上 PG + pgvector 扩展可用」。
 T2 起在 ``init_db`` 中按文件名顺序幂等执行 ``backend/migrations/*.sql``。
-连接池 / ORM 在 T3 接入 SQLAlchemy engine 时统一；本模块用 psycopg 同步直连。
+T3 接入 SQLAlchemy engine + 会话工厂（PgRepository 用）。
+低层仍保留 psycopg 同步直连（init_db / ping 自检）。
 
 DATABASE_URL 默认指向 docker/compose.yml 起的 lumen-pg 容器（localhost:15432）。
 """
@@ -13,6 +14,8 @@ import glob
 import os
 
 import psycopg
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session, sessionmaker
 
 _DATABASE_URL = os.environ.get(
     "DATABASE_URL", "postgresql://lumen:lumen@localhost:15432/lumen"
@@ -51,3 +54,17 @@ def ping() -> str:
     with psycopg.connect(_DATABASE_URL) as conn, conn.cursor() as cur:
         cur.execute("SELECT version()")
         return cur.fetchone()[0]
+
+
+# --- SQLAlchemy engine / sessions（T3：ORM + PgRepository）---
+
+# SQLAlchemy 默认 postgresql:// 走 psycopg2（未安装）；显式 +psycopg 用 psycopg3。
+# psycopg.connect 仍用原始 _DATABASE_URL（标准 scheme），互不影响。
+_sa_url = _DATABASE_URL.replace("postgresql://", "postgresql+psycopg://", 1)
+engine = create_engine(_sa_url, pool_pre_ping=True, future=True)
+SessionLocal = sessionmaker(bind=engine, expire_on_commit=True)
+
+
+def get_session() -> Session:
+    """返回一个新的 SQLAlchemy 同步会话；调用方负责关闭（推荐 `with`）。"""
+    return SessionLocal()
