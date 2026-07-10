@@ -1,23 +1,35 @@
-﻿# Phase1 后端运行依赖（降级基线：仅 Web 层，无 DB/Embedding/OCR/LLM 驱动）。
+# Phase1 后端运行依赖（Python 3.14 实测基线，task-008 T7 / PG-C-001 闭合）。
 #
-# ⚠️ 版本 drift（见 docs/research/2026-07-09-tech-env-evaluation-phase1-reeval.md §5.1）：
-# 本文件锁定 docs/05-tech-spec.md §1 的 Python 3.12 基线（0.115.x / 0.34.x / 2.10.x），
-# 该组合在 Python 3.14 下 pydantic-core 源码构建失败（缺 MSVC linker，首评 §9.2）。
-# 本机 .venv（Python 3.14.3）实际运行较新版本——fastapi 0.136.3 / uvicorn 0.49.0 /
-# pydantic 2.13.4（cp314 wheel 可用，53 后端 tests 通过）。
-# 锁定版本与实际版本的对齐待 Phase1 真实化（pgvector/Embedding/OCR/LLM）验证后统一定基线
-# （RG-001..004 仍 No-Go，见 05 §5.1）；在此之前不要按本文件锁定版本在 Python 3.14 重建 venv。
-fastapi==0.115.14
-uvicorn==0.34.3
-pydantic==2.10.6
-# LLM adapter（RG-004）：OpenAI 兼容封装，支持 GLM/GPT 中转 + 本机 ollama；详见 backend/service/llm_adapter.py
-openai>=1.0
+# 历史 drift 已解决：原锁 Python 3.12 版本（fastapi 0.115.x / pydantic 2.10.x 等）
+# 在本机 Python 3.14 下 pydantic-core 源码构建失败（缺 MSVC linker）；实测可跑的是
+# 较新版本（cp314 wheel 可用）。T7 起按 .venv(Python 3.14.3) 实测版本锁定，与
+# docs/05-tech-spec.md §1「Python 3.14 运行基线」一致。详见 tech-env 复核报告 §12。
+#
+# 安装：python3.14 -m venv .venv && .venv/Scripts/pip install -r backend/requirements.txt
+# Embedding 的 CPU 版 torch 需走 PyTorch CPU index（见下方 torch 注释）。
+fastapi==0.136.3
+uvicorn==0.49.0
+pydantic==2.13.4
 
-# pgvector 接入（RG-001，Sprint-8 / task-008 T1）：DB 驱动与 ORM。锁 05 §1 的 Python 3.12 基线；
-# .venv(3.14) 实际装较新版本（sqlalchemy 2.0.51 / alembic 1.18.5 / psycopg 3.3.4 / pgvector 0.5.0），
-# 同 drift（见顶部注释 + 复核报告 §5.1），T7 统一定基线。
-sqlalchemy==2.0.36
-alembic==1.14.0
-psycopg[binary]==3.2.3
-pgvector==0.3.6
+# LLM adapter（RG-004，Sprint-7）：OpenAI 兼容封装，支持 GLM/GPT 中转 + 本机 ollama；
+# 详见 backend/service/llm_adapter.py。未配置 LUMEN_LLM_* 时 rag.py 走降级（模板）回答。
+openai==2.44.0
 
+# pgvector 接入（RG-001，Sprint-8 / task-008 T1–T6）：DB 驱动与 ORM。
+sqlalchemy==2.0.51
+alembic==1.18.5
+psycopg[binary]==3.3.4
+pgvector==0.5.0
+
+# Embedding（RG-002，task-008 T4/T6 接入）：bge-small-zh-v1.5 生成 512 维 float32 向量，
+# 写入 lumen_chunks.embedding 供 RAG 向量召回。sentence-transformers 会拉 torch / transformers /
+# numpy / tokenizers / scipy / scikit-learn（传递依赖，不显式锁）。
+#
+# torch：本机验证用 CPU 版 2.13.0+cpu（pip 默认拉 CUDA 版体积大且本 Demo 用 CPU Embedding）。
+#   推荐 CPU 安装（不锁 +cpu 本地版本以免普通 pip install 失败）：
+#   .venv/Scripts/pip install torch==2.13.0+cpu --index-url https://download.pytorch.org/whl/cpu
+#   若已先装 sentence-transformers 拉了 CUDA torch，可 pip install --force-reinstall 上述 CPU 版覆盖。
+#
+# 关键环境约束（公司网络下必崩，须设）：HF_HUB_DISABLE_XET=1（huggingface_hub 默认走 Xet 协议
+# 绕过 HTTP 代理；backend/service/embedding.py 已在 import 前设此变量）。
+sentence-transformers==5.6.0
