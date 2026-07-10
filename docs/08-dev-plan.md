@@ -11,7 +11,7 @@
 | 当前 Phase | Phase1 |
 | 交付物形态 | Demo |
 | 输入基线 | `docs/03-prd.md` §3、`docs/04-architecture.md`、`docs/05-tech-spec.md`、`docs/09-verification.md` |
-| 当前状态 | Phase1 Sprint 计划已确认；Sprint-1~6 降级口径完成；Sprint-7（LLM）/ Sprint-8（pgvector 接入）真实化完成（RG-001/002/004 Go，见下方「Sprint 完成包与进度记录」） |
+| 当前状态 | Phase1 Demo 已完成并已记录全量验收（Conditional Go）；Sprint-1~6 降级口径完成；Sprint-7（LLM）/ Sprint-8（pgvector 接入）真实化完成（RG-001/002/004/005 Go，见下方「Sprint 完成包与进度记录」）；待人工确认是否正式进入 Phase2 |
 | 最后更新 | 2026-07-10 |
 
 ## Sprint 总览
@@ -197,8 +197,9 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 | Sprint-6 | 2026-07-06 | 011 | 桌面端集成 + Edge Headless / Chrome smoke | `cb6fb8a`（PR #28） | 部分通过 → 通过（降级口径） | 真实 PDF / OCR 未验证 → Phase2 | §5 |
 | Sprint-7 | 2026-07-09 | 008 | LLM adapter（`llm_adapter.py`）+ rag 接入 + `.env` 模板 | `754d5eb`/`78a8550`（PR #45） | 55 tests + GLM-5.2 真实问答验证 | GPT/ollama 待验证；向量检索仍缺（RG-002 已验证·待 pgvector） | §5 / §6 |
 | Sprint-8 | 2026-07-09~10 | 007/008 | pgvector 接入 task-008 T1–T7：基建（docker/compose + db.py）/ migrations 003-005 / ORM + PgRepository / 切单例 + demo seed / embedding 写入 / RAG 向量召回 / 测试 + 文档回写 | T1 `68453b0`(#47) · T2 `5e780fa`(#49) · T3 `12c9ba3`(#50) · T4 `4ccefb7`(#51) · T5 `a90d2a0`(#52) · T6 `f14b9d9`(#53) · T7 本批 | 74 tests（含 PG 集成 + embedding）+ uvicorn 冒烟全通 | RG-001/002→Go；search 向量化 + zhparser 留后续小 PR；真实 PDF/OCR 仍 No-Go（RG-003） | §5 / §6 |
+| Phase1 全量验收 | 2026-07-10 | 001..011/036 | Phase1 Demo closure 评估与全量验收记录；覆盖 Sprint-1~8、TC-P1-001~012、RG-001~005 | `24fc3c7` · `4f036cc`(#56) · `24ccfc8`(#57) · 本次文档收口 | Conditional Go（Demo closure）；详见 `docs/09-verification.md §5` | 需人工确认是否升 Phase2；search 向量化 + zhparser、真实 Word / PDF 解析、OCR 真实化留后续 | §5 / §6 |
 
-> Sprint-8 后：pgvector / Embedding / LLM 已接入（RG-001/002/004 Go）。仍移出 P1：真实 PDF 解析、图片 OCR（REQ-010，RG-003 No-Go，后续阶段）、search 向量化 + zhparser（后续小 PR）。Phase1 Demo 真实化主要目标达成；Phase 升级评估另起（见 `docs/05-tech-spec.md §5.1` Readiness Gate）。
+> Sprint-8 后：pgvector / Embedding / LLM 已接入（RG-001/002/004 Go），基础 Web / ORM 栈为 Go（RG-005）。Phase1 全量验收结论为 Conditional Go（Demo closure）；仍移出 P1：真实 PDF 解析、图片 OCR（REQ-010，RG-003 No-Go，后续阶段）、search 向量化 + zhparser（后续小 PR）。Phase2 启动前需人工确认范围、进入 / 退出标准，并另行更新阶段指针。
 
 ---
 
@@ -206,4 +207,4 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 
 ## 待人工确认项
 
-- 无新增确认项；Sprint 实际执行状态以任务单、PR 与本地续接记录为准。
+- 是否正式进入 Phase2：需人工确认范围、进入 / 退出标准后，再更新 `ai/project-rules.md` 当前阶段指针与相关设计 / 计划文档。

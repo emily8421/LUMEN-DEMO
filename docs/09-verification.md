@@ -12,7 +12,7 @@
 | 当前 Phase | Phase1 |
 | 交付物形态 | Demo |
 | 覆盖 REQ | Phase1：REQ-001..REQ-011、REQ-036；P2 / 愿景验证项待升阶段细化 |
-| 当前状态 | P1 验证计划已确认；Sprint-1~6 降级口径验收已执行，Sprint-7/8 已完成真实 LLM、PostgreSQL+pgvector、Embedding 与 RAG 向量召回验证；已引入稳定 TC-ID（见 §2 矩阵与 TC 用例详情、§5 验收记录、§6 未验证项） |
+| 当前状态 | Phase1 全量验收已记录，结论为 Conditional Go（Demo closure）；Sprint-1~6 降级口径验收已执行，Sprint-7/8 已完成真实 LLM、PostgreSQL+pgvector、Embedding 与 RAG 向量召回验证；已引入稳定 TC-ID（见 §2 矩阵与 TC 用例详情、§5 验收记录、§6 未验证项） |
 | 最后更新 | 2026-07-10 |
 
 ## 1. 测试策略
@@ -100,7 +100,7 @@
 | 2026-07-06 | Sprint-6 Chrome 人工 smoke | 通过（降级口径） | 用户反馈已通过 Chrome 桌面端 14 步 smoke：登录、空间切换、文档 CRUD / 版本恢复、`.md` 降级导入、标题 / 正文搜索、RAG 问答、术语创建与术语来源、跨空间搜索隔离；真实 PDF 解析、图片 OCR 未验证。 |
 | 2026-07-09 | Sprint-7 LLM adapter（RG-004） | 通过（GLM-5.2 真实验证） | `llm_adapter.py` 多 provider + rag 接入；55 tests + 本机 GLM `glm-5.2` 真实问答验证通过（answer 带来源标注） |
 | 2026-07-10 | Sprint-8 pgvector 接入（task-008 T1–T7） | 通过（RG-001/002 Go） | T1–T5 后端切 PostgreSQL（`docker/compose.yml` lumen-pg + ORM/PgRepository + 单例切换 + demo seed）；T6 RAG 向量召回（bge-small-zh 写 `lumen_chunks.embedding` + pgvector ANN，加法式叠加关键词，threshold 0.6）；74 后端 tests（含 PG 集成 + embedding）+ uvicorn 冒烟（相关问答 / 未找到红线 / 纯语义探针）；T7 文档回写 |
-| 待实现后填写 | Phase1 Sprint / 全量验收 | 待记录 | 每个 Sprint 完成后追加验收结果，不删除历史记录 |
+| 2026-07-10 | Phase1 Sprint / 全量验收 | Conditional Go（Demo closure） | TC-P1-001~012 均有验收口径与证据链：Sprint-1~6 按 Demo 降级口径通过；Sprint-7/8 真实 LLM、PostgreSQL+pgvector、Embedding 与 RAG 向量召回通过（RG-001/002/004/005 Go）；REQ-009 以 `.md` / `.txt` 已提取文本降级通过；REQ-010 OCR 明确移出 Phase1 必过（RG-003 No-Go，后续阶段）。遗留项：search 向量化 + zhparser、真实 Word / PDF 解析、OCR 真实化；不阻塞 Phase1 Demo closure，但阻塞无条件生产级 MVP 结论。 |
 
 ### 5.1 缺陷与回归记录
 
@@ -123,4 +123,4 @@
 
 ## 7. 待人工确认项
 
-- 无新增确认项；验收记录在 Sprint 完成后原位追加。
+- Phase1 全量验收已记录；是否正式进入 Phase2 仍需人工确认，并在确认后同步更新阶段指针与 Phase2 进入 / 退出标准。
