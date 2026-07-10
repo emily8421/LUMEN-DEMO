@@ -11,7 +11,7 @@
 | 保留 / 省略决策 | 保留 |
 | 决策来源 | `ai/project-rules.md` §3（项目有 PostgreSQL + pgvector 持久化存储） |
 | 覆盖 REQ / 模块 | Phase1：空间 / 权限、文档、版本、导入、检索向量、术语管理 |
-| 当前状态 | P1 表结构**已落地 PostgreSQL**（Sprint-8 / task-008 T1–T5：8 张 `lumen_*` 表由 `migrations/001-005` 建，后端切 `PgRepository`；`lumen_chunks.embedding vector(512)` + hnsw + ts_vector 由 T4/T6 启用）。内存 `demo_repository` 保留为单测 fake。真实 PDF/OCR 仍降级（RG-003） |
+| 当前状态 | P1 表结构**已落地 PostgreSQL**（Sprint-8 / task-008 T1–T5：8 张 `lumen_*` 表由 `migrations/001-005` 建，后端切 `PgRepository`；`lumen_chunks.embedding vector(512)` + hnsw + ts_vector 由 T4/T6 启用；migration 006 为 search 增加可选 zhparser / `simple` 回退配置）。内存 `demo_repository` 保留为单测 fake。真实 PDF/OCR 仍降级（RG-003） |
 | 最后更新 | 2026-07-10 |
 
 ## 1. 表清单（完整）
@@ -100,9 +100,9 @@
 | document_id | bigint FK→documents | |
 | ordinal | int | 块序号 |
 | text | text | 块原文 |
-| embedding | vector(512) | pgvector 向量，对应本机 `bge-small-zh` Embedding（512 维，T6 起写入并用于 RAG 向量召回；RG-001/002 Go） |
-| ts_vector | tsvector | 全文检索向量 |
-- 索引：hnsw `vector_cosine_ops`（参数见 05）+ `ts_vector` GIN
+| embedding | vector(512) | pgvector 向量，对应本机 `bge-small-zh` Embedding（512 维，T6 起写入；用于 RAG 向量召回，task-009 起也用于 `/api/search` 语义召回；RG-001/002 Go） |
+| ts_vector | tsvector | 全文检索向量；migration 006 通过 `lumen_search_regconfig()` 选择可选 `lumen_zh` / 默认 `simple` 配置 |
+- 索引：hnsw `vector_cosine_ops`（参数见 05）+ `ts_vector` GIN；`zhparser` 当前不是硬依赖
 
 ### lumen_imports
 | 字段 | 类型 | 说明 |

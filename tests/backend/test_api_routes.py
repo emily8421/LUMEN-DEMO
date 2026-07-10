@@ -1,4 +1,4 @@
-﻿import importlib.util
+import importlib.util
 import unittest
 
 
@@ -260,6 +260,36 @@ class ApiRouteTest(unittest.TestCase):
         self.assertEqual(search_response["data"]["items"][0]["doc_id"], import_response["data"]["parsed_doc_id"])
         self.assertEqual(search_response["data"]["items"][0]["title"], "Searchable Import")
         self.assertIn("degraded search", search_response["data"]["items"][0]["snippet"])
+
+    def test_search_api_returns_vector_semantic_hits(self) -> None:
+        try:
+            from backend.service.embedding import embed_texts
+
+            embed_texts(["响应速度和时延"])
+        except Exception as exc:  # pragma: no cover - env-dependent
+            self.skipTest(f"embedding model unavailable: {exc}")
+
+        from backend.api.auth import LoginRequest, login
+        from backend.api.documents import DocumentWriteRequest, create_document_endpoint
+        from backend.api.search import search_endpoint
+
+        token = login(LoginRequest(external_id="alice", current_space_id=10))["data"]["token"]
+        authorization = f"Bearer {token}"
+        created_response = create_document_endpoint(
+            DocumentWriteRequest(
+                title="Semantic Timing Note",
+                content_md="场景联动触发延迟是 280ms。",
+                permission="team",
+            ),
+            authorization=authorization,
+        )
+
+        search_response = search_endpoint(q="响应速度和时延", authorization=authorization)
+
+        self.assertEqual(search_response["code"], 0)
+        self.assertGreaterEqual(search_response["data"]["total"], 1)
+        self.assertEqual(search_response["data"]["items"][0]["doc_id"], created_response["data"]["id"])
+        self.assertIn("触发延迟", search_response["data"]["items"][0]["snippet"])
 
     def test_search_api_rejects_blank_query(self) -> None:
         from fastapi import HTTPException

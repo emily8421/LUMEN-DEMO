@@ -1,4 +1,4 @@
-﻿"""In-memory demo repository used until PostgreSQL integration is wired."""
+"""In-memory demo repository used until PostgreSQL integration is wired."""
 
 from __future__ import annotations
 
@@ -245,6 +245,11 @@ class DemoRepository:
             self.document_chunks,
             key=lambda chunk: (chunk.document_id, chunk.ordinal),
         )
+
+    def search_chunks(self, document_ids: list[int], query: str, limit: int) -> list[DocumentChunk]:
+        """The in-memory fake has no tsvector index, so SQL full-text recall is skipped."""
+        del document_ids, query, limit
+        return []
 
     def recall_chunks(
         self,

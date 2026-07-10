@@ -11,7 +11,7 @@
 | 当前 Phase | Phase1 |
 | 交付物形态 | Demo |
 | 输入基线 | `docs/03-prd.md` §3、`docs/04-architecture.md`、`docs/05-tech-spec.md`、`docs/09-verification.md` |
-| 当前状态 | Phase1 Demo 已完成并已记录全量验收（Conditional Go）；Sprint-1~6 降级口径完成；Sprint-7（LLM）/ Sprint-8（pgvector 接入）真实化完成（RG-001/002/004/005 Go，见下方「Sprint 完成包与进度记录」）；待人工确认是否正式进入 Phase2 |
+| 当前状态 | Phase1 Demo 已完成并已记录全量验收（Conditional Go）；Sprint-1~6 降级口径完成；Sprint-7（LLM）/ Sprint-8（pgvector 接入）真实化完成（RG-001/002/004/005 Go），task-009 search hybrid 完成（见下方「Sprint 完成包与进度记录」）；待人工确认是否正式进入 Phase2 |
 | 最后更新 | 2026-07-10 |
 
 ## Sprint 总览
@@ -185,21 +185,22 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 
 ## Sprint 完成包与进度记录
 
-> 对照 `ai/doc-standards/08-dev-plan.md` §4（完成包）+ §5（进度记录）。Sprint-1~6 为早期降级实现；Sprint-7/8 已完成真实 LLM、PostgreSQL+pgvector、Embedding 与 RAG 向量召回接入。仍降级：真实 Word / PDF 解析、OCR、search 向量化。验收证据见 `docs/09-verification.md §5`。
+> 对照 `ai/doc-standards/08-dev-plan.md` §4（完成包）+ §5（进度记录）。Sprint-1~6 为早期降级实现；Sprint-7/8 已完成真实 LLM、PostgreSQL+pgvector、Embedding 与 RAG 向量召回接入；task-009 已完成 search 向量化 + 可选 zhparser 回退。仍降级：真实 Word / PDF 解析、OCR。验收证据见 `docs/09-verification.md §5`。
 
 | Sprint | 日期 | 目标（REQ） | 实际交付 | 关联提交 / PR | 验证结果 | 残留风险 / 下一步 | 已回填 09 |
 |---|---|---|---|---|---|---|---|
 | Sprint-1 | 2026-07-03~ | 001/002/003 | 降级内存实现（权限过滤可用；Sprint-8 后 PG 仓储已接入） | 含于 Sprint-2~4 提交基线；PG 真实化见 Sprint-8 | 53 后端 tests 通过；Sprint-8 后 74 tests 通过 | RG-001 已在 Sprint-8 解除 | §2 / §5 |
 | Sprint-2 | 2026-07-03 | 004/005/006 | 降级内存实现 + 前端编辑器 | `83fb782` | 通过（降级口径） | — | §5 |
 | Sprint-3 | 2026-07-03 | 009/010 | 降级文本导入（仅 `.md`/`.txt`，无 PDF/OCR） | `0fe169b` | 通过（降级口径） | PDF / OCR 未实现（RG-003）→ 后续阶段 | §5 |
-| Sprint-4 | 2026-07-04 | 007/008 | 内存搜索 + 降级 RAG（不调 LLM）+ 前端 UI；Sprint-7/8 后 RAG 已真实化 | `da9f6e5`/`5144f2a`/`bc03839`/`c5c177e`(fix)；真实化见 Sprint-7/8 | 通过（降级口径）；Sprint-7/8 后真实 LLM + 向量召回通过 | RG-001/002/004 已解除；search 向量化 + zhparser 留后续小 PR | §5 / §5.1 |
+| Sprint-4 | 2026-07-04 | 007/008 | 内存搜索 + 降级 RAG（不调 LLM）+ 前端 UI；Sprint-7/8 后 RAG 已真实化 | `da9f6e5`/`5144f2a`/`bc03839`/`c5c177e`(fix)；真实化见 Sprint-7/8 | 通过（降级口径）；Sprint-7/8 后真实 LLM + 向量召回通过 | RG-001/002/004 已解除；search 向量化 + 可选 zhparser 已由 task-009 补齐 | §5 / §5.1 |
 | Sprint-5 | 2026-07-05 | 036 | 空间术语 CRUD + 问答口径注入 | `5b78f0a` | 通过（降级口径） | — | §5 |
 | Sprint-6 | 2026-07-06 | 011 | 桌面端集成 + Edge Headless / Chrome smoke | `cb6fb8a`（PR #28） | 部分通过 → 通过（降级口径） | 真实 PDF / OCR 未验证 → Phase2 | §5 |
 | Sprint-7 | 2026-07-09 | 008 | LLM adapter（`llm_adapter.py`）+ rag 接入 + `.env` 模板 | `754d5eb`/`78a8550`（PR #45） | 55 tests + GLM-5.2 真实问答验证 | GPT/ollama 待验证；向量检索仍缺（RG-002 已验证·待 pgvector） | §5 / §6 |
-| Sprint-8 | 2026-07-09~10 | 007/008 | pgvector 接入 task-008 T1–T7：基建（docker/compose + db.py）/ migrations 003-005 / ORM + PgRepository / 切单例 + demo seed / embedding 写入 / RAG 向量召回 / 测试 + 文档回写 | T1 `68453b0`(#47) · T2 `5e780fa`(#49) · T3 `12c9ba3`(#50) · T4 `4ccefb7`(#51) · T5 `a90d2a0`(#52) · T6 `f14b9d9`(#53) · T7 本批 | 74 tests（含 PG 集成 + embedding）+ uvicorn 冒烟全通 | RG-001/002→Go；search 向量化 + zhparser 留后续小 PR；真实 PDF/OCR 仍 No-Go（RG-003） | §5 / §6 |
-| Phase1 全量验收 | 2026-07-10 | 001..011/036 | Phase1 Demo closure 评估与全量验收记录；覆盖 Sprint-1~8、TC-P1-001~012、RG-001~005 | `24fc3c7` · `4f036cc`(#56) · `24ccfc8`(#57) · 本次文档收口 | Conditional Go（Demo closure）；详见 `docs/09-verification.md §5` | 需人工确认是否升 Phase2；search 向量化 + zhparser、真实 Word / PDF 解析、OCR 真实化留后续 | §5 / §6 |
+| Sprint-8 | 2026-07-09~10 | 007/008 | pgvector 接入 task-008 T1–T7：基建（docker/compose + db.py）/ migrations 003-005 / ORM + PgRepository / 切单例 + demo seed / embedding 写入 / RAG 向量召回 / 测试 + 文档回写 | T1 `68453b0`(#47) · T2 `5e780fa`(#49) · T3 `12c9ba3`(#50) · T4 `4ccefb7`(#51) · T5 `a90d2a0`(#52) · T6 `f14b9d9`(#53) · T7 本批 | 74 tests（含 PG 集成 + embedding）+ uvicorn 冒烟全通 | RG-001/002→Go；search 向量化 + 可选 zhparser 已由 task-009 补齐；真实 PDF/OCR 仍 No-Go（RG-003） | §5 / §6 |
+| Phase1 全量验收 | 2026-07-10 | 001..011/036 | Phase1 Demo closure 评估与全量验收记录；覆盖 Sprint-1~8、TC-P1-001~012、RG-001~005 | `24fc3c7` · `4f036cc`(#56) · `24ccfc8`(#57) · `d8d0f8f` | Conditional Go（Demo closure）；详见 `docs/09-verification.md §5` | 需人工确认是否升 Phase2；真实 Word / PDF 解析、OCR 真实化留后续 | §5 / §6 |
+| task-009 search 向量化 + 可选 zhparser | 2026-07-10 | 007 | `/api/search` hybrid：substring + `ts_vector` SQL 候选 + pgvector 语义召回；migration 006 可选 zhparser / simple 回退 | 本 PR | `init_db()` 两次通过；76 后端 tests 通过（含 `tests.backend.test_search` 与真实 PG 语义搜索集成测试） | 当前 pgvector 镜像无 zhparser，中文分词回退 `simple`；不影响向量语义召回 | §5 / §6 |
 
-> Sprint-8 后：pgvector / Embedding / LLM 已接入（RG-001/002/004 Go），基础 Web / ORM 栈为 Go（RG-005）。Phase1 全量验收结论为 Conditional Go（Demo closure）；仍移出 P1：真实 PDF 解析、图片 OCR（REQ-010，RG-003 No-Go，后续阶段）、search 向量化 + zhparser（后续小 PR）。Phase2 启动前需人工确认范围、进入 / 退出标准，并另行更新阶段指针。
+> Sprint-8 后：pgvector / Embedding / LLM 已接入（RG-001/002/004 Go），基础 Web / ORM 栈为 Go（RG-005）。Phase1 全量验收结论为 Conditional Go（Demo closure）；仍移出 P1：真实 PDF 解析、图片 OCR（REQ-010，RG-003 No-Go，后续阶段）。Phase2 启动前需人工确认范围、进入 / 退出标准，并另行更新阶段指针。
 
 ---
 

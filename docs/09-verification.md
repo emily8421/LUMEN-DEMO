@@ -12,7 +12,7 @@
 | 当前 Phase | Phase1 |
 | 交付物形态 | Demo |
 | 覆盖 REQ | Phase1：REQ-001..REQ-011、REQ-036；P2 / 愿景验证项待升阶段细化 |
-| 当前状态 | Phase1 全量验收已记录，结论为 Conditional Go（Demo closure）；Sprint-1~6 降级口径验收已执行，Sprint-7/8 已完成真实 LLM、PostgreSQL+pgvector、Embedding 与 RAG 向量召回验证；已引入稳定 TC-ID（见 §2 矩阵与 TC 用例详情、§5 验收记录、§6 未验证项） |
+| 当前状态 | Phase1 全量验收已记录，结论为 Conditional Go（Demo closure）；Sprint-1~6 降级口径验收已执行，Sprint-7/8 已完成真实 LLM、PostgreSQL+pgvector、Embedding 与 RAG 向量召回验证；task-009 已完成 search hybrid（关键词 / ts_vector / pgvector 语义召回）验证；已引入稳定 TC-ID（见 §2 矩阵与 TC 用例详情、§5 验收记录、§6 未验证项） |
 | 最后更新 | 2026-07-10 |
 
 ## 1. 测试策略
@@ -34,14 +34,14 @@
 | TC-P1-004 | REQ-004 CRUD | 创建 / 读 / 改 / 删均成功，删后不可检索 | [P1] | 条件通过（降级口径·内存） |
 | TC-P1-005 | REQ-005 行内编辑 | 编辑保存后内容持久、再打开一致 | [P1] | 条件通过（降级口径·内存） |
 | TC-P1-006 | REQ-006 版本 | 3 次修改 → 3 版本 → 能恢复指定版本 | [P1] | 条件通过（降级口径·内存） |
-| TC-P1-007 | REQ-007 搜索 | 已知关键词返回正确文档 | [P1] | 条件通过（关键词检索·PG 落地；向量搜索留后续小 PR） |
+| TC-P1-007 | REQ-007 搜索 | 已知关键词 / 语义相近问题返回正确文档 | [P1] | 条件通过（hybrid：关键词 + `ts_vector` SQL 候选 + pgvector 语义召回；zhparser 可选回退 `simple`） |
 | TC-P1-008 | REQ-008 RAG | 库内问答正确 + 标来源；库外回复"未找到" | [P1] | 通过（真实 LLM·glm-5.2 + 向量召回·bge-small-zh pgvector ANN threshold 0.6；RG-001/002 Go） |
 | TC-P1-009 | REQ-009 导入 | 导入 `.md` / `.txt` 已提取文本后可搜、可问答引用 | [P1] | 条件通过（真实 Word / PDF 解析未验证，留后续） |
 | TC-P1-010 | REQ-010 OCR | 中文白板照片 OCR 后可搜 | [P1] | 后续阶段（OCR 未实现，降级移出 P1 必过） |
 | TC-P1-011 | REQ-011 桌面端 | Chrome / Edge 完成上述全部 | [P1] | 条件通过（降级口径·Edge Headless + Chrome 人工 smoke） |
 | TC-P1-012 | REQ-036 术语管理 | 新建空间术语后，文档识别该词，问答优先使用空间定义且不被同名全局术语覆盖 | [P1] | 条件通过（降级口径·内存） |
 
-> 状态说明：Sprint-2~6 按**降级口径**验收（原内存 `demo_repository`）；Sprint-7/8 真实化后 RAG 已走真实 LLM（GLM-5.2）+ 向量召回（pgvector），存储切到 PostgreSQL（见 §5 Sprint-7/8 记录）。仍降级的：search 关键词（未向量化，留后续）、真实 PDF/Word 解析、OCR（RG-003，后续阶段）。「条件通过」= 当前实现满足 Demo 级别验收；详见 §6 与 `docs/05-tech-spec.md §5.1`。
+> 状态说明：Sprint-2~6 按**降级口径**验收（原内存 `demo_repository`）；Sprint-7/8 真实化后 RAG 已走真实 LLM（GLM-5.2）+ 向量召回（pgvector），存储切到 PostgreSQL（见 §5 Sprint-7/8 记录）。仍降级的：真实 PDF/Word 解析、OCR（RG-003，后续阶段）。search 已在 task-009 升级为 hybrid（关键词 / ts_vector / pgvector 语义召回），zhparser 为可选回退。「条件通过」= 当前实现满足 Demo 级别验收；详见 §6 与 `docs/05-tech-spec.md §5.1`。
 
 #### Phase1 TC 用例详情
 
@@ -55,7 +55,7 @@
 | TC-P1-004 | REQ-004 | 已登录 + 当前空间 | 创建 / 读 / 改 / 删文档 | 四项成功，删后不可检索 | `tests/backend/test_document.py` | 条件通过 |
 | TC-P1-005 | REQ-005 | 已有文档 | 行内编辑保存后重开 | 内容持久、一致 | `tests/backend/test_document.py` | 条件通过 |
 | TC-P1-006 | REQ-006 | 已有文档 | 改 3 次 → 查版本 → 恢复 | 3 版本可见、能恢复指定版本 | `tests/backend/test_document.py` | 条件通过 |
-| TC-P1-007 | REQ-007 | 已索引文档 | 关键词搜索 | 返回正确文档 + 摘要 | `tests/backend/test_search.py`（+ `test_api_routes.py` PG 集成） | 条件通过（关键词·PG 落地；向量搜索留后续） |
+| TC-P1-007 | REQ-007 | 已索引文档 | 关键词搜索 / 语义搜索 | 返回正确文档 + 摘要；无直接关键词重叠时可通过向量召回 | `tests/backend/test_search.py`（+ `test_api_routes.py::test_search_api_returns_vector_semantic_hits` PG 集成） | 条件通过（hybrid search） |
 | TC-P1-008 | REQ-008 | 已索引文档 | 库内问答 / 库外问答 | 库内正确 + 来源；库外「未找到」 | `tests/backend/test_rag.py`（+ `test_api_routes.py` PG 集成）+ GLM-5.2 真实问答 | 通过（真实 LLM + 向量召回） |
 | TC-P1-009 | REQ-009 | `.md`/`.txt` 文件 | 导入后搜索 / 问答 | 可命中 | `tests/backend/test_imports.py` | 条件通过（仅 .md/.txt） |
 | TC-P1-010 | REQ-010 | 中文白板照片 | OCR 后搜索 | 可搜 | — | 后续阶段（OCR 未实现） |
@@ -100,7 +100,8 @@
 | 2026-07-06 | Sprint-6 Chrome 人工 smoke | 通过（降级口径） | 用户反馈已通过 Chrome 桌面端 14 步 smoke：登录、空间切换、文档 CRUD / 版本恢复、`.md` 降级导入、标题 / 正文搜索、RAG 问答、术语创建与术语来源、跨空间搜索隔离；真实 PDF 解析、图片 OCR 未验证。 |
 | 2026-07-09 | Sprint-7 LLM adapter（RG-004） | 通过（GLM-5.2 真实验证） | `llm_adapter.py` 多 provider + rag 接入；55 tests + 本机 GLM `glm-5.2` 真实问答验证通过（answer 带来源标注） |
 | 2026-07-10 | Sprint-8 pgvector 接入（task-008 T1–T7） | 通过（RG-001/002 Go） | T1–T5 后端切 PostgreSQL（`docker/compose.yml` lumen-pg + ORM/PgRepository + 单例切换 + demo seed）；T6 RAG 向量召回（bge-small-zh 写 `lumen_chunks.embedding` + pgvector ANN，加法式叠加关键词，threshold 0.6）；74 后端 tests（含 PG 集成 + embedding）+ uvicorn 冒烟（相关问答 / 未找到红线 / 纯语义探针）；T7 文档回写 |
-| 2026-07-10 | Phase1 Sprint / 全量验收 | Conditional Go（Demo closure） | TC-P1-001~012 均有验收口径与证据链：Sprint-1~6 按 Demo 降级口径通过；Sprint-7/8 真实 LLM、PostgreSQL+pgvector、Embedding 与 RAG 向量召回通过（RG-001/002/004/005 Go）；REQ-009 以 `.md` / `.txt` 已提取文本降级通过；REQ-010 OCR 明确移出 Phase1 必过（RG-003 No-Go，后续阶段）。遗留项：search 向量化 + zhparser、真实 Word / PDF 解析、OCR 真实化；不阻塞 Phase1 Demo closure，但阻塞无条件生产级 MVP 结论。 |
+| 2026-07-10 | Phase1 Sprint / 全量验收 | Conditional Go（Demo closure） | TC-P1-001~012 均有验收口径与证据链：Sprint-1~6 按 Demo 降级口径通过；Sprint-7/8 真实 LLM、PostgreSQL+pgvector、Embedding 与 RAG 向量召回通过（RG-001/002/004/005 Go）；REQ-009 以 `.md` / `.txt` 已提取文本降级通过；REQ-010 OCR 明确移出 Phase1 必过（RG-003 No-Go，后续阶段）。遗留项：真实 Word / PDF 解析、OCR 真实化；不阻塞 Phase1 Demo closure，但阻塞无条件生产级 MVP 结论。 |
+| 2026-07-10 | task-009 search 向量化 + 可选 zhparser | 通过 | `/api/search` 升级为 substring + `ts_vector` SQL 候选 + pgvector 语义召回；`init_db()` 两次验证通过；当前 `pgvector/pgvector:pg16` 无 zhparser 时回退 `simple`；76 后端 tests 通过（含 `tests.backend.test_search` 与 `test_search_api_returns_vector_semantic_hits`）。 |
 
 ### 5.1 缺陷与回归记录
 
@@ -115,7 +116,7 @@
 | ~~PostgreSQL+pgvector 未接入~~ | ~~REQ-007/008 真实化~~ | ✅ **已解决**（Sprint-8 / task-008 T1–T6：lumen-pg + PgRepository + RAG 向量召回；RG-001→Go，见 `05 §5.1`） |
 | ~~真实 Embedding（bge-small-zh）未接入后端~~ | ~~REQ-007/008 向量检索~~ | ✅ **已解决**（T6 写 `lumen_chunks.embedding` 512 维；RG-002→已启用；约束 `HF_HUB_DISABLE_XET=1`） |
 | ~~Docker Desktop Linux engine 阻塞~~ | ~~起库 / 真实 PostgreSQL~~ | ✅ **已解决**（daemon live，TE-C-003 闭合；`docker/compose.yml` 起 lumen-pg healthy） |
-| search 仍关键词检索（未向量化） | REQ-007 语义搜索 | T6 聚焦 RAG 向量召回；search 向量化 + zhparser 中文全文留后续小 PR（不影响 P1 验收） |
+| ~~search 仍关键词检索（未向量化）~~ | ~~REQ-007 语义搜索~~ | ✅ **已解决**（task-009：substring + `ts_vector` SQL 候选 + pgvector 语义召回；zhparser 可选，当前镜像无扩展时回退 `simple`） |
 | 真实 PDF / Word 解析 | REQ-009 | 仅 `.md`/`.txt` 已提取文本；python-docx/pdfplumber 未接入（留后续阶段） |
 | OCR 质量与资源占用 | REQ-010、内容导入 | OCR 未实现，REQ-010 移至后续阶段（RG-003 No-Go）；当前降级为已提取文本 |
 | LLM 外部调用可用性 | REQ-008、REQ-036 | GLM `glm-5.2` 真实问答已验证（Sprint-7，RG-004→Go）；GPT/ollama 待验证 |

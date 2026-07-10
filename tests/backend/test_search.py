@@ -1,6 +1,6 @@
 import unittest
 
-from backend.model.entities import DocumentPermission
+from backend.model.entities import DocumentChunk, DocumentPermission
 from backend.service.demo_repository import DemoRepository
 from backend.service.document import DocumentCreate, create_document
 from backend.service.search import SearchValidationError, search_documents
@@ -116,6 +116,41 @@ class SearchServiceTest(unittest.TestCase):
 
         self.assertEqual(result_page.total, 1)
         self.assertEqual(result_page.items[0].doc_id, nova_document.id)
+
+    def test_search_includes_vector_recall_without_keyword_overlap(self) -> None:
+        class VectorRecallRepository(DemoRepository):
+            def recall_chunks(
+                self,
+                document_ids: list[int],
+                query: str,
+                limit: int,
+                threshold: float = 0.6,
+            ) -> list[DocumentChunk]:
+                del query, threshold
+                return [
+                    chunk
+                    for chunk in self.list_all_document_chunks()
+                    if chunk.document_id in document_ids
+                ][:limit]
+
+        repository = VectorRecallRepository()
+        document = create_document(
+            repository,
+            user_id=1,
+            current_space_id=10,
+            request=DocumentCreate(
+                title="Semantic Search Note",
+                content_md="交付延期通常来自排期风险和资源冲突。",
+                permission=DocumentPermission.TEAM,
+            ),
+        )
+        repository.replace_document_chunks(document.id, ["交付延期通常来自排期风险和资源冲突。"])
+
+        result_page = search_documents(repository, user_id=1, current_space_id=10, query="项目进度原因")
+
+        self.assertEqual(result_page.total, 1)
+        self.assertEqual(result_page.items[0].doc_id, document.id)
+        self.assertIn("交付延期", result_page.items[0].snippet)
 
     def test_search_rejects_blank_query(self) -> None:
         with self.assertRaises(SearchValidationError) as context:

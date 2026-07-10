@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, func, select, text as sql_text
 
 from backend.model.entities import (
     Document,
@@ -382,6 +382,34 @@ class PgRepository:
         with SessionLocal() as session:
             rows = session.scalars(
                 select(DocumentChunkORM).order_by(DocumentChunkORM.document_id, DocumentChunkORM.ordinal)
+            ).all()
+            return [_to_chunk(r) for r in rows]
+
+    def search_chunks(self, document_ids: list[int], query: str, limit: int) -> list[DocumentChunk]:
+        """Search visible chunks with PostgreSQL full-text indexes.
+
+        Uses the optional zhparser-backed config when migration 006 can create
+        it; otherwise it falls back to the existing ``simple`` config. The
+        service layer still adds substring and vector matches, so this method is
+        a ranked SQL-side candidate path rather than the only search source.
+        """
+        if not document_ids or not query.strip() or limit < 1:
+            return []
+        ts_query = "websearch_to_tsquery(lumen_search_regconfig(), :query)"
+        with SessionLocal() as session:
+            rows = session.scalars(
+                select(DocumentChunkORM)
+                .where(
+                    DocumentChunkORM.document_id.in_(document_ids),
+                    sql_text(f"lumen_chunks.ts_vector @@ {ts_query}"),
+                )
+                .order_by(
+                    sql_text(f"ts_rank(lumen_chunks.ts_vector, {ts_query}) DESC"),
+                    DocumentChunkORM.document_id,
+                    DocumentChunkORM.ordinal,
+                )
+                .limit(limit)
+                .params(query=query)
             ).all()
             return [_to_chunk(r) for r in rows]
 
