@@ -14,6 +14,13 @@ from backend.service.term import find_matching_terms
 NOT_FOUND_ANSWER = "未在当前空间知识库找到相关内容"
 MAX_CANDIDATES = 3
 MAX_SNIPPET_CHARS = 180
+# task-008 T6: cosine-similarity gate for vector recall. Empirically tuned
+# (bge-small-zh): true hits ~0.87, unrelated Chinese ~0.51 max, so 0.6 cleanly
+# separates them and preserves the "库外不编造" not-found path.
+VECTOR_SIMILARITY_THRESHOLD = 0.6
+# Rank vector-recalled chunks below strong keyword hits (which score by term
+# count); just needs to be > 0 so they are not dropped by the score filter.
+_VECTOR_CANDIDATE_SCORE = 1
 
 
 class RagValidationError(Exception):
@@ -47,7 +54,7 @@ def answer_question(repository, user_id: int, current_space_id: int, question: s
     normalized_question = _normalize_question(question)
     terms = _extract_terms(normalized_question)
     question_term_sources = _find_term_sources(repository, current_space_id, normalized_question)
-    candidates = _find_candidate_chunks(repository, user_id, current_space_id, terms)
+    candidates = _find_candidate_chunks(repository, user_id, current_space_id, terms, normalized_question)
     if not candidates:
         if question_term_sources:
             return RagAnswer(answer=_build_term_only_answer(question_term_sources), sources=question_term_sources)
@@ -105,6 +112,7 @@ def _find_candidate_chunks(
     user_id: int,
     current_space_id: int,
     terms: list[str],
+    question: str,
 ) -> list[_CandidateChunk]:
     visible_documents = filter_visible_documents(
         user_id=user_id,
@@ -128,6 +136,32 @@ def _find_candidate_chunks(
                 document=document,
                 chunk=chunk,
                 score=score,
+                snippet=_build_snippet(chunk.text, terms),
+            )
+        )
+    # task-008 T6: additive vector recall (semantic). The in-memory fake returns
+    # [] (no embeddings) so in-memory tests keep hitting the keyword path above;
+    # PgRepository returns pgvector ANN matches above VECTOR_SIMILARITY_THRESHOLD.
+    # Merged in, deduped by chunk id — never replaces a keyword hit. "not found"
+    # still triggers when both keyword and vector paths come up empty.
+    existing_chunk_ids = {candidate.chunk.id for candidate in candidates if candidate.chunk is not None}
+    for chunk in repository.recall_chunks(
+        [document.id for document in visible_documents],
+        question,
+        MAX_CANDIDATES,
+        VECTOR_SIMILARITY_THRESHOLD,
+    ):
+        if chunk.id in existing_chunk_ids:
+            continue
+        document = documents_by_id.get(chunk.document_id)
+        if document is None:
+            continue
+        matched_document_ids.add(document.id)
+        candidates.append(
+            _CandidateChunk(
+                document=document,
+                chunk=chunk,
+                score=_VECTOR_CANDIDATE_SCORE,
                 snippet=_build_snippet(chunk.text, terms),
             )
         )

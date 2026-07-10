@@ -71,6 +71,14 @@
 - **范围**：`service/search.py`、`service/rag.py`（向量召回 topK + 权限下推）；启用 `permission.visible_document_where_clause`。
 - **验收**：检索按语义相似度召回；权限过滤正确；RAG 问答质量提升。
 - **依赖**：T5、T4。
+- **完成备注（本 PR，聚焦版）**：
+  - **范围裁决（用户已确认）**：聚焦 RAG 向量召回；**search.py 不改**（关键词搜索经 `list_all_document_chunks` 仍工作，向量搜索留后续小 PR）；**不做 zhparser**（tsvector 'simple' 不分词 CJK，关键词 ILIKE/substring + 向量已覆盖中文；ts_vector 列+GIN 保留供未来 zhparser 全文路）。理由见会话讨论。
+  - **embedding 写入**：`pg_repository.replace_document_chunks` 内懒加载 `embed_texts` 写 `lumen_chunks.embedding`；`_safe_embed` 守护（模型/网络不可用→embedding NULL + 日志，chunk 仍存，检索降级到关键词）。
+  - **新方法 `recall_chunks(document_ids, query, limit, threshold)`**：`pg_repository` 用 pgvector `cosine_distance` ANN（`WHERE document_id IN 可见集 AND embedding IS NOT NULL AND 1-(emb<=>q)>=threshold ORDER BY emb<=>q LIMIT`，走 hnsw `vector_cosine_ops` 索引）；`demo_repository` 返回 **[]**（内存无向量，内存测试零变化）。
+  - **rag.py 加法式叠加**：`_find_candidate_chunks` 关键词路**保留不变**，追加 `recall_chunks` 向量召回合并去重（向量 chunk 给 `_VECTOR_CANDIDATE_SCORE=1` 不被 `score<=0` 丢弃）；**阈值 `VECTOR_SIMILARITY_THRESHOLD=0.6`**（实测：真命中 0.875、不命中最高 0.512，0.6 干净分开）；"未找到"= 关键词空 + 向量空（threshold 门控）→ 库外不编造红线保住。
+  - **权限**：可见文档集由 service 层 `filter_visible_documents` 算（permission.py 单一来源），传 doc_ids 给 recall_chunks 在 SQL 内 `IN` 过滤（§7.4 全表+Python 过滤已消除；`visible_document_where_clause` 留作未来 SQL 下推优化，未强接入）。
+  - **验证**：74 tests OK（内存零变化；PG `完全不存在的问题`→NOT_FOUND 经 threshold 保住）；直验 embedding 存 512 维 + recall_chunks 相关命中/不命中/@0.3 阈值门控；uvicorn HTTP 冒烟：相关问答(answer 280ms) + 未找到(sources=[]) + **纯语义探针**（"响应速度和时延"与 chunk 零关键词重叠→向量召回到，证明价值）。
+  - **遗留**：search 向量化 + zhparser 中文全文分词（后续小 PR）；`design/rag-retrieval.md` DEV-001/DEV-003 状态回写留 T7。
 
 ### T7 测试 + 文档回写
 - **目标**：保证改造不破坏现有功能 + 文档据实回写。
@@ -105,8 +113,8 @@
 - [x] T2 migrations + entities 对齐（commit `5e780fa` / PR #49）
 - [x] T3 ORM + PG 仓储（commit `12c9ba3` / PR #50）
 - [x] T4 Embedding service（commit `4ccefb7` / PR #51）
-- [x] T5 切单例 + seed（本 PR）
-- [ ] T6 向量检索 + embedding 写入联动（commit/PR：___）
+- [x] T5 切单例 + seed（commit `a90d2a0` / PR #52）
+- [x] T6 向量检索 + embedding 写入联动（本 PR，聚焦版：RAG 向量召回）
 - [ ] T7 测试 + 文档回写（commit/PR：___）
 
 ## 待确认项

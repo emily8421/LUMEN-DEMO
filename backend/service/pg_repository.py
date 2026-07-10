@@ -126,6 +126,26 @@ def _to_term(r: TermORM) -> Term:
     )
 
 
+def _safe_embed(texts: list[str]) -> list[list[float]]:
+    """Embed texts via bge-small-zh, returning [] on any failure.
+
+    Lazy-imports the embedding service so importing this module does not pull
+    sentence-transformers into every caller (e.g. test_pg_repository, which only
+    needs the SQL path). Empty input → [] without loading the model. On any
+    error (model not downloaded / network) returns [] so callers degrade: chunk
+    writes store text-only (embedding NULL) and recall falls back to keyword.
+    """
+    if not texts:
+        return []
+    try:
+        from backend.service.embedding import embed_texts
+
+        return embed_texts(texts)
+    except Exception as exc:  # pragma: no cover - env-dependent
+        print(f"[embedding] embed failed (text-only / vector recall skipped): {exc}")
+        return []
+
+
 class PgRepository:
     """PostgreSQL-backed implementation of the DemoRepository interface."""
 
@@ -339,6 +359,12 @@ class PgRepository:
                 DocumentChunkORM(document_id=document_id, ordinal=ordinal, text=text)
                 for ordinal, text in enumerate(chunk_texts, start=1)
             ]
+            # task-008 T6: embed chunk texts so vector recall (rag.py) has vectors
+            # to search. Guarded — if the model is unavailable the chunks are still
+            # stored (embedding NULL) and recall degrades to keyword/title match.
+            vectors = _safe_embed(chunk_texts)
+            for chunk, vector in zip(created, vectors):
+                chunk.embedding = vector
             session.add_all(created)
             session.commit()
             return [_to_chunk(c) for c in created]
@@ -356,6 +382,43 @@ class PgRepository:
         with SessionLocal() as session:
             rows = session.scalars(
                 select(DocumentChunkORM).order_by(DocumentChunkORM.document_id, DocumentChunkORM.ordinal)
+            ).all()
+            return [_to_chunk(r) for r in rows]
+
+    def recall_chunks(
+        self,
+        document_ids: list[int],
+        query: str,
+        limit: int,
+        threshold: float = 0.6,
+    ) -> list[DocumentChunk]:
+        """task-008 T6: semantic vector recall over the visible documents.
+
+        Embeds ``query`` (bge-small-zh, 512-dim) and returns up to ``limit``
+        chunks whose cosine similarity to the query is >= ``threshold``, scoped
+        to ``document_ids`` (the service layer's permission-filtered doc set),
+        nearest first (uses the hnsw ``vector_cosine_ops`` index). Returns [] when
+        the query is empty, no documents are visible, or embedding is unavailable
+        (rag.py then falls back to its keyword path).
+        """
+        if not document_ids or not query.strip():
+            return []
+        vectors = _safe_embed([query])
+        if not vectors:
+            return []
+        query_vector = vectors[0]
+        max_distance = 1.0 - threshold  # similarity >= threshold  <=>  distance <= 1 - threshold
+        with SessionLocal() as session:
+            distance = DocumentChunkORM.embedding.cosine_distance(query_vector)
+            rows = session.scalars(
+                select(DocumentChunkORM)
+                .where(
+                    DocumentChunkORM.document_id.in_(document_ids),
+                    DocumentChunkORM.embedding.is_not(None),
+                    distance <= max_distance,
+                )
+                .order_by(distance)
+                .limit(limit)
             ).all()
             return [_to_chunk(r) for r in rows]
 

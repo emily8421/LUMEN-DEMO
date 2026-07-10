@@ -246,6 +246,20 @@ class DemoRepository:
             key=lambda chunk: (chunk.document_id, chunk.ordinal),
         )
 
+    def recall_chunks(
+        self,
+        document_ids: list[int],
+        query: str,
+        limit: int,
+        threshold: float = 0.6,
+    ) -> list[DocumentChunk]:
+        """task-008 T6: the in-memory fake has no embeddings, so vector recall
+        returns []. This keeps the in-memory service tests exercising rag.py's
+        keyword path unchanged; PgRepository overrides this with real pgvector
+        ANN. ``query`` / ``threshold`` are accepted for interface parity only."""
+        del document_ids, query, limit, threshold  # interface parity only
+        return []
+
     def list_terms(self) -> list[Term]:
         return sorted(
             self.terms,
