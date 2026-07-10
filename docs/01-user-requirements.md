@@ -101,7 +101,65 @@
 
 > 注：`[P2]` / `[愿景]` 项本期不入 02-srs 的可验证规格，待升阶段时细化（global-rules §8.2）。
 
-## 4. 待人工确认项
+## 4. 优先级与阶段建议
+
+| U-ID | 优先级 | 建议阶段 | 理由 | 待确认项 |
+|---|---|---|---|---|
+| U-01..U-12 / U-42 | Must / Should | Phase1（Demo） | 跑通空间隔离、文档、检索、问答、导入、版本和术语核心闭环 | 无新增；Phase1 已按 Demo closure 验收 |
+| U-13..U-20 / U-30..U-33 | Could | Phase2（MVP） | 补导航视图、协作、移动端和知识编辑增强，从“能用”到“好用” | Phase2 启动前需重新确认范围、进入标准与退出标准 |
+| U-21..U-29 / U-34..U-41 | 待验证 | 愿景（产品） | 涉及外部知识源、录音转写、情报分析、对外交付或高风险 AI | 需技术验证与阶段评审后再纳入某 Phase |
+
+## 5. 非目标与排除需求
+
+| 编号 | 内容 | 处理方式 | 原因 / 来源 |
+|---|---|---|---|
+| NOGO-U-001 | Phase1 不做高级视图、跨空间推送、多人协作、移动端 | 保留为 P2 / 愿景骨架，不进入 P1 验收 | `ai/project-rules.md` §1、`docs/03-prd.md` §5 |
+| NOGO-U-002 | Phase1 不做真实 Word / PDF 解析与图片 OCR | 以 `.md` / `.txt` 已提取文本降级演示 | `docs/03-prd.md` §3、`docs/09-verification.md` §6 |
+| NOGO-U-003 | 未经技术验证不承诺跨文档因果推理、热力矩阵、矛盾检测、假设检验 | 保留为愿景 / 待技术验证 | `docs/03-prd.md` §5、`docs/05-tech-spec.md` 风险门禁 |
+| NOGO-U-004 | 前端隐藏入口或按钮禁用不作为唯一权限边界 | 权限必须由后端 API / service / DB 查询过滤执行 | `ai/document-lifecycle-rules.md` §5.2、`docs/07-api-spec.md` 权限契约 |
+
+## 6. 追溯矩阵
+
+| U-ID | 来源场景 / 输入 | 来源锚点 | 下游 REQ | 状态 |
+|---|---|---|---|---|
+| U-01 | SC-001 | `docs/00-scenario.md` SC-001 | REQ-001 | P1-已设计 |
+| U-02 | SC-001 | `docs/00-scenario.md` SC-001 | REQ-002 | P1-已设计 |
+| U-03 / U-12 | SC-002 | `docs/00-scenario.md` SC-002 | REQ-003 | P1-已设计 |
+| U-04 | SC-003 | `docs/00-scenario.md` SC-003 | REQ-004 | P1-已设计 |
+| U-05 | SC-003 | `docs/00-scenario.md` SC-003 | REQ-005 | P1-已设计 |
+| U-06 | SC-003 | `docs/00-scenario.md` SC-003 | REQ-006 | P1-已设计 |
+| U-07 | SC-004 | `docs/00-scenario.md` SC-004 | REQ-007 | P1-已设计 |
+| U-08 | SC-004 | `docs/00-scenario.md` SC-004 | REQ-008 | P1-已设计 |
+| U-09 | SC-005 | `docs/00-scenario.md` SC-005 | REQ-009 | P1-已设计（降级口径） |
+| U-10 | SC-005 | `docs/00-scenario.md` SC-005 | REQ-010 | P1-已设计（降级口径） |
+| U-11 | SC-006 | `docs/00-scenario.md` SC-006 | REQ-011 | P1-已设计 |
+| U-42 | SC-004 / SC-006 | `docs/00-scenario.md` SC-004 / SC-006 | REQ-036 | P1-已设计 |
+| U-13 | 愿景场景9 | `docs/vision/product-vision.md` 场景9 | REQ-012 | 骨架 |
+| U-14 / U-15 | 愿景场景1 / 场景5 | `docs/vision/product-vision.md` 场景1 / 场景5 | REQ-013 | 骨架 |
+| U-16 / U-17 | 愿景场景2 | `docs/vision/product-vision.md` 场景2 | REQ-014 | 骨架 |
+| U-18 | 愿景场景5 | `docs/vision/product-vision.md` 场景5 | REQ-015 | 骨架 |
+| U-19 | 愿景场景3 | `docs/vision/product-vision.md` 场景3 | REQ-016 | 骨架 |
+| U-20 | 愿景场景8 | `docs/vision/product-vision.md` 场景8 | REQ-017 | 骨架 |
+| U-21 | 愿景场景1 | `docs/vision/product-vision.md` 场景1 | REQ-018 | 骨架 |
+| U-22 | 愿景场景1 | `docs/vision/product-vision.md` 场景1 | REQ-019 | 骨架 |
+| U-23 | 愿景场景5 | `docs/vision/product-vision.md` 场景5 | REQ-020 | 骨架 |
+| U-24 | 愿景场景5 | `docs/vision/product-vision.md` 场景5 | REQ-021 | 骨架 |
+| U-25 | 愿景场景7 | `docs/vision/product-vision.md` 场景7 | REQ-022 | 骨架 |
+| U-26 / U-27 / U-28 / U-29 | 愿景场景6 / 1 / 5 | `docs/vision/product-vision.md` 场景1 / 5 / 6 | REQ-023 | 骨架 |
+| U-30 | 愿景 v18 场景1 | `docs/vision/product-vision.md` v18 场景1 | REQ-024 | 骨架 |
+| U-31 | 愿景 v18 场景5 | `docs/vision/product-vision.md` v18 场景5 | REQ-025 | 骨架 |
+| U-32 | 愿景 v18 场景2 | `docs/vision/product-vision.md` v18 场景2 | REQ-026 | 骨架 |
+| U-33 | 愿景 v18 场景6 | `docs/vision/product-vision.md` v18 场景6 | REQ-027 | 骨架 |
+| U-34 | 愿景 v18 场景1 | `docs/vision/product-vision.md` v18 场景1 | REQ-028 | 骨架 |
+| U-35 | 愿景 v18 场景5 | `docs/vision/product-vision.md` v18 场景5 | REQ-029 | 骨架 |
+| U-36 | 愿景 v18 场景5 | `docs/vision/product-vision.md` v18 场景5 | REQ-030 | 骨架 |
+| U-37 | 愿景 v18 场景5 | `docs/vision/product-vision.md` v18 场景5 | REQ-031 | 骨架 |
+| U-38 | 愿景 v18 场景3 | `docs/vision/product-vision.md` v18 场景3 | REQ-032 | 骨架 |
+| U-39 | 愿景 v18 场景4 | `docs/vision/product-vision.md` v18 场景4 | REQ-033 | 骨架 |
+| U-40 | 愿景 v18 场景8 | `docs/vision/product-vision.md` v18 场景8 | REQ-034 | 骨架 |
+| U-41 | 愿景 v18 场景7 | `docs/vision/product-vision.md` v18 场景7 | REQ-035 | 骨架 |
+
+## 7. 待人工确认项
 
 | ID | 待确认项 | AI 建议 | 建议依据 | 备选方案 | 取舍影响 / 阻塞关系 |
 |---|---|---|---|---|---|
