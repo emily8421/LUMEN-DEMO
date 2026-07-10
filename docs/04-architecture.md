@@ -10,8 +10,8 @@
 |---|---|
 | 输入来源 | `docs/02-srs.md`、`docs/03-prd.md`、`docs/env/local-env.md`、`ai/project-rules.md` |
 | 覆盖功能 / REQ | Phase1：REQ-001..REQ-011、REQ-036；P2 / 愿景保留架构骨架 |
-| 当前状态 | 目标架构基线已定；运行时为**降级内存实现**（DB=内存 `demo_repository`，无 pgvector；Embedding/OCR/真实PDF/LLM 未接入，LLM 为 Mock）。Phase1 接受降级基线，真实化移至 Phase2/MVP；逐模块实现状态见 §2 |
-| 最后更新 | 2026-07-09 |
+| 当前状态 | 目标架构基线已定；Sprint-7/8 后运行时已接入 PostgreSQL+pgvector、`PgRepository`、本机 Embedding 与 GLM LLM。仍降级：真实 Word/PDF 解析、OCR、search 向量化；逐模块实现状态见 §2 |
+| 最后更新 | 2026-07-10 |
 
 ## 1. 整体架构图
 
@@ -35,7 +35,7 @@ flowchart TB
   vision[Vault / 录音转写 / 情报交付 愿景] -.技术验证后追加.-> api
 ```
 
-> 注：上图为**目标架构**。当前 Phase1 Demo 运行时为**降级内存实现**——`db` 节点实为内存 `demo_repository`（无 PostgreSQL/pgvector），`ai`（LLM/Embedding）与 `ingestion` 的 OCR/真实 PDF 解析均未接入（LLM 为 Mock）。逐模块实现状态见 §2，技术门禁见 `docs/05-tech-spec.md §5.1`。
+> 注：上图为**当前 Phase1 Demo 架构**。Sprint-8 后 `db` 节点已由 PostgreSQL+pgvector / `PgRepository` 承载，`ai` 节点已接入 GLM LLM 与本机 `bge-small-zh` Embedding；`ingestion` 的真实 Word/PDF 解析与 OCR 仍降级（仅 `.md`/`.txt` 已提取文本）。逐模块实现状态见 §2，技术门禁见 `docs/05-tech-spec.md §5.1`。
 
 ### 1.1 系统上下文图（信任边界）
 
@@ -47,23 +47,23 @@ flowchart LR
     user((知识工作者<br/>桌面浏览器))
   end
   subgraph LUMEN受信域
-    system[LUMEN KnowledgeBase<br/>FastAPI + 内存 demo_repository]
+    system[LUMEN KnowledgeBase<br/>FastAPI + PgRepository]
   end
   subgraph 外部
     llm[公司内网 LLM 中转<br/>OpenAI 兼容]
   end
   user -->|REST / JSON / Bearer token| system
-  system -.->|目标：RAG prompt<br/>当前 Mock，不外发| llm
+  system -->|RAG prompt<br/>可配置 Mock 降级| llm
 ```
 
-- **外部系统状态**：公司内网 LLM 中转 = **目标设计**（当前 Mock，不外发，见 RG-004）；飞书同步 / Vault 挂载 = 愿景候选（未实现）。
-- **数据外发边界**：跨 LUMEN 受信域 → 外部 LLM 为唯一数据外发点。Phase1 降级基线不外发；目标态接入前须过滤敏感片段、优先避免发送真实团队文档（见 `ai/project-rules.md §2.5`、`docs/06-db-design.md §5`）。
+- **外部系统状态**：公司内网 LLM 中转 = **已接入**（GLM `glm-5.2`，RG-004 Go；可配置 Mock 降级）；飞书同步 / Vault 挂载 = 愿景候选（未实现）。
+- **数据外发边界**：跨 LUMEN 受信域 → 外部 LLM 为唯一数据外发点。Sprint-7 起召回片段 / 术语定义可能发往 LLM；发往模型前须过滤敏感片段、优先避免发送真实团队文档（见 `ai/project-rules.md §2.5`、`docs/06-db-design.md §5`）。Embedding 本机运行，不外发。
 
 ### 1.2 容器 / 组件视图
 
 | COMP-ID | 组件 / 进程 | 职责 | 部署位置 | 通信方式 | 阶段 | 状态 | 关联 REQ |
 |---|---|---|---|---|---|---|---|
-| COMP-001 | React 前端 SPA | 桌面浏览器 UI（文档 / 搜索 / 问答 / 术语） | 浏览器 | REST / JSON | [P1] | 降级实现（可用） | REQ-011、004~008、036 |
+| COMP-001 | React 前端 SPA | 桌面浏览器 UI（文档 / 搜索 / 问答 / 术语） | 浏览器 | REST / JSON | [P1] | P1-已实现（代码原型 + smoke） | REQ-011、004~008、036 |
 | COMP-002 | FastAPI 后端（api / service / model 三层） | REST API、权限校验、业务逻辑 | 本机单进程 | HTTP | [P1] | 已实现（PG 仓储 `PgRepository`，Sprint-8） | 全 P1 |
 | COMP-003 | 数据存储 | PostgreSQL + pgvector | Docker Compose（lumen-pg:pg16） | SQL + pgvector | [P1] | 已接入（Sprint-8；RG-001 Go） | REQ-003~010、036 |
 | COMP-004 | AI 服务 | LLM 中转（GLM）+ 本机 Embedding（bge-small-zh） | 本机 + 内网 | OpenAI 兼容 API | [P1] | 已接入（Sprint-7/8；RG-002/004 Go） | REQ-008、036 |
@@ -72,11 +72,11 @@ flowchart LR
 
 | MOD-ID | 子系统 | 职责 | 输入 → 输出 | 边界（不负责） | 阶段 | 设计状态 | 实现状态（Phase1 Demo） | 详细设计 |
 |---|---|---|---|---|---|---|---|---|
-| MOD-001 | 空间与权限 | 多空间隔离、权限分级、查询时过滤 | 用户 / 空间成员关系 → 过滤后可见数据 | 不负责文档内容解析 | [P1] | P1-已设计 | 降级实现（内存；空间隔离 + 权限过滤可用） | docs/design/permissions.md |
-| MOD-002 | 文档管理 | CRUD、行内编辑、版本历史 | 文档字段 → 持久化文档 / 版本 | 不负责检索 / 导入 | [P1] | P1-已设计 | 降级实现（内存；CRUD/编辑/版本可用） | （逻辑简单，见 06/07） |
-| MOD-003 | 内容导入 | Word/PDF 解析、OCR、切块入库 | 文件 → 切块 + 文档 | 不负责检索 / 问答 | [P1] | P1-已设计 | 降级实现（仅 `.md`/`.txt` 已提取文本；无 PDF/OCR/切块向量） | docs/design/ingestion.md |
-| MOD-004 | 检索问答 | 全文搜索、RAG（向量+全文+引用） | 查询 → 结果 + 来源 | 不负责导入解析 | [P1] | P1-已设计 | 降级实现（内存关键词匹配；RAG 不调 LLM，返回检索+模板） | docs/design/rag-retrieval.md |
-| MOD-005 | 术语管理 | 空间级术语表、文档术语识别、问答口径对齐 | 术语 → 口径注入 | 不负责问答生成 | [P1] | P1-已设计 | 降级实现（内存；术语 CRUD + 问答口径注入可用） | docs/design/term-management.md |
+| MOD-001 | 空间与权限 | 多空间隔离、权限分级、查询时过滤 | 用户 / 空间成员关系 → 过滤后可见数据 | 不负责文档内容解析 | [P1] | P1-已实现 | PostgreSQL 成员 / 文档权限过滤已接入；内存 `DemoRepository` 仅作单测 fake | docs/design/permissions.md |
+| MOD-002 | 文档管理 | CRUD、行内编辑、版本历史 | 文档字段 → 持久化文档 / 版本 | 不负责检索 / 导入 | [P1] | P1-已实现 | PostgreSQL 文档 / 版本持久化已接入 | （逻辑简单，见 06/07） |
+| MOD-003 | 内容导入 | Word/PDF 解析、OCR、切块入库 | 文件 → 切块 + 文档 | 不负责检索 / 问答 | [P1] | P1-部分实现 | `.md`/`.txt` 已提取文本导入 + 切块入 PG；真实 Word/PDF/OCR 仍降级（RG-003） | docs/design/ingestion.md |
+| MOD-004 | 检索问答 | 全文搜索、RAG（向量+全文+引用） | 查询 → 结果 + 来源 | 不负责导入解析 | [P1] | P1-部分实现 | search=关键词检索·PG；RAG=关键词 + pgvector 向量召回 + GLM LLM；向量搜索留后续 | docs/design/rag-retrieval.md |
+| MOD-005 | 术语管理 | 空间级术语表、文档术语识别、问答口径对齐 | 术语 → 口径注入 | 不负责问答生成 | [P1] | P1-已实现 | PostgreSQL 术语存储已接入；术语定义已注入真实 LLM Prompt | docs/design/term-management.md |
 | MOD-006 | 标签与视图 | 标签 / 时间轴 / 关联图导航 | — | — | [P2] | 骨架 | — | 待 P2 建 docs/design/ |
 | MOD-007 | 协作与推送 | 多人编辑、跨空间只读推送 | — | — | [P2] | 骨架 | — | 待 P2 |
 | MOD-008 | 存量接入 | Vault 挂载、录音转写、飞书同步 | — | — | [愿景] | 骨架 | — | 待技术验证 |
@@ -107,7 +107,7 @@ flowchart LR
 
 > 受 `ai/project-rules.md` §2.5 与 `docs/env/local-env.md` 约束。Demo 本机优先；资源不足再上公司服务器。
 
-- 本机单机（Demo 默认）：React 前端 + FastAPI（api/service/model 三层）。**当前运行时为降级内存实现**：后端直连内存 `demo_repository`，未起 PostgreSQL/pgvector（`docker/` 仅 `.gitkeep`，无 compose；Docker daemon No-Go，见 `docs/05-tech-spec.md §5.1` RG-001）；Embedding 未接入（RG-002 已验证·待 pgvector 接入）；LLM 已验证可切（RG-004 Go）。目标拓扑为 Docker Compose 起 PostgreSQL+pgvector + Embedding 本机 + LLM 中转，真实化移至 Phase2/MVP。
+- 本机单机（Demo 默认）：React 前端 + FastAPI（api/service/model 三层）+ Docker Compose PostgreSQL+pgvector（lumen-pg）+ 本机 `bge-small-zh` Embedding + 公司内网 GLM LLM 中转。内存 `demo_repository` 保留为单测 fake；真实 Word/PDF 解析、OCR 与 search 向量化仍降级 / 后续。
 - 数据边界：默认使用已标注的虚构 Demo 数据；允许按需导入部分真实团队文档，真实文档必须显式标注来源 / 敏感级别，并优先避免发送到外部模型。
 - 资源边界：Demo 峰值内存 < 8GB、显存 < 4GB、磁盘 < 20GB；允许本机安装项目所需依赖与镜像。
 - 远程 / 公司服务器边界：Phase1 Demo 暂不使用公司服务器；若本机 Embedding 在导入规模、响应时间或检索质量上不够用，再申请内网 Embedding / reranker 服务。
@@ -144,7 +144,7 @@ sequenceDiagram
 
 ### 5.2 文档访问、搜索与 RAG 统一过滤（Flow-002）
 
-> **Flow-002 文档访问 / 搜索 / RAG 统一过滤**：成功（成员校验 → 过滤 → 可见结果）｜异常（token 无效 → 4001）｜权限拒绝（非成员 → 403 / 空；私有文档对他人 → 空）｜降级（内存关键词检索；RAG 不调 LLM，返回检索 + 模板）｜外部不可用（LLM Mock，不外发）｜关联 API-004~010、TC-P1-003~008。
+> **Flow-002 文档访问 / 搜索 / RAG 统一过滤**：成功（成员校验 → 过滤 → 可见结果；RAG 走关键词 + pgvector 向量召回 + GLM LLM）｜异常（token 无效 → 4001）｜权限拒绝（非成员 → 403 / 空；私有文档对他人 → 空）｜降级（LLM 可切 Mock；search 向量化未启用）｜外部不可用（明确 Mock，不编造）｜关联 API-004~010、TC-P1-003~008。
 
 ```mermaid
 flowchart TB
@@ -184,12 +184,12 @@ flowchart TB
 
 | REQ | Phase | MOD-ID | Flow-ID | 下游设计 | 覆盖状态 |
 |---|---|---|---|---|---|
-| REQ-001 / 002 / 003 | [P1] | MOD-001（+ MOD-002 / 004） | Flow-001 / 002 | `docs/design/permissions.md`、`docs/06-db-design.md`、`docs/07-api-spec.md` | 已设计（降级实现） |
-| REQ-004 / 005 / 006 | [P1] | MOD-002 | Flow-002 | `docs/06-db-design.md`、`docs/07-api-spec.md` | 已设计（降级实现） |
-| REQ-007 / 008 | [P1] | MOD-004 | Flow-002 | `docs/design/rag-retrieval.md`、`docs/06-db-design.md`、`docs/07-api-spec.md` | 已设计（降级实现） |
-| REQ-009 / 010 | [P1] | MOD-003（+ MOD-004） | Flow-002 | `docs/design/ingestion.md`、`docs/06-db-design.md`、`docs/07-api-spec.md` | 已设计（降级实现） |
-| REQ-011 | [P1] | COMP-001 / 002（全 P1） | Flow-001 / 002 | `docs/08-dev-plan.md` Sprint-6、`docs/09-verification.md` | 已设计（降级实现） |
-| REQ-036 | [P1] | MOD-005（+ MOD-004 / 002） | Flow-002 | `docs/design/term-management.md`、`docs/06-db-design.md`、`docs/07-api-spec.md` | 已设计（降级实现） |
+| REQ-001 / 002 / 003 | [P1] | MOD-001（+ MOD-002 / 004） | Flow-001 / 002 | `docs/design/permissions.md`、`docs/06-db-design.md`、`docs/07-api-spec.md` | P1-已实现（PG 权限过滤） |
+| REQ-004 / 005 / 006 | [P1] | MOD-002 | Flow-002 | `docs/06-db-design.md`、`docs/07-api-spec.md` | P1-已实现（PG 文档 / 版本） |
+| REQ-007 / 008 | [P1] | MOD-004 | Flow-002 | `docs/design/rag-retrieval.md`、`docs/06-db-design.md`、`docs/07-api-spec.md` | P1-部分实现（search 关键词·PG；RAG 向量 + LLM） |
+| REQ-009 / 010 | [P1] | MOD-003（+ MOD-004） | Flow-002 | `docs/design/ingestion.md`、`docs/06-db-design.md`、`docs/07-api-spec.md` | P1-部分实现（`.md`/`.txt`；真实 PDF/OCR 后续） |
+| REQ-011 | [P1] | COMP-001 / 002（全 P1） | Flow-001 / 002 | `docs/08-dev-plan.md` Sprint-6、`docs/09-verification.md` | P1-已实现（桌面 smoke） |
+| REQ-036 | [P1] | MOD-005（+ MOD-004 / 002） | Flow-002 | `docs/design/term-management.md`、`docs/06-db-design.md`、`docs/07-api-spec.md` | P1-已实现（PG 术语 + LLM 注入） |
 | REQ-012..017 / 024..027 | [P2] | MOD-006 / 007（+ MOD-002） | — | 升 Phase2 时细化 | 骨架 |
 | REQ-018..023 / 028..035 | [愿景] | MOD-008 / 009 / 010 | — | 技术验证通过后细化 | 骨架 |
 
