@@ -61,6 +61,11 @@ class PgRepositoryTest(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls) -> None:
+        # Leave the DB empty so the next process (e.g. uvicorn lifespan init_db)
+        # can re-apply the demo seed (migration 005) without natural-key
+        # collisions — test rows use BIGSERIAL ids that clash with the demo's
+        # fixed ids on UNIQUE columns (users.external_id, spaces.code).
+        _truncate_all()
         engine.dispose()
 
     def setUp(self) -> None:

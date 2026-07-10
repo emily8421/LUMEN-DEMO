@@ -57,6 +57,14 @@
 - **范围**：单例指针切 pg_repository + seed SQL（复用现有种子：3 用户/2 空间/4 成员/2 文档/术语）。
 - **验收**：后端用 PG 跑通现有 API；登录/CRUD/术语可用。
 - **依赖**：T3、T4。
+- **完成备注（本 PR）**：
+  - **范围裁决**：embedding 写入联动（chunk 写入时调 bge 生成向量）**推迟到 T6**——随向量召回（读）一起做。理由：task-008 正式 T5 范围只有切单例+seed；在 T5 写 embedding 会连带让 `test_pg_repository`（3 chunk 测试）+ `test_api_routes`（文档测试）每次加载 ~7s bge 模型、强耦合 torch。T5 期间 chunks 只存 text、embedding 为 NULL（T6 回填）。
+  - **切单例**：`demo_repository.py:354` `repository = DemoRepository()` → `PgRepository()`；DemoRepository 类保留（5 个 service 单测仍直接 `new` 它）。API 层 7 文件零改动（`from ... import repository` 捕获点不变）。
+  - **seed**：`migrations/005_sprint8_seed_demo.sql`——显式 ID（匹配 demo token/login 契约与 `current_space_id=10`）+ `ON CONFLICT DO NOTHING`（幂等）+ `setval` 重置序列（运行时 BIGSERIAL 插入得 id=201，不撞 seed 固定 ID）。由 `init_db` 自动跑（生产/demo 启动即有数据）。
+  - **test_api_routes 转 PG 集成测试**：切单例后它经 `login()→API→全局单例`会打 PG；加 `setUpClass`（判 schema 存在则先 truncate 清残留再 seed，保证跨运行确定性）+ PG 不可用 skip。其余 5 个 service 测试直接 `new DemoRepository()`，不受影响。
+  - **test 隔离修复**：`test_pg_repository.tearDownClass` 加 truncate——清掉 BIGSERIAL 自增 ID 的测试残留（其自然键 alice/nova-internal 与 demo seed 固定 ID 在 UNIQUE 列冲突，会让 init_db seed 失败）。
+  - **降级口径**：T5 切换后 PG 为必需运行时；init 失败仅记录不崩溃，不再降级到内存 demo（`main.py` lifespan 注释已更新）。
+  - **验证**：74 tests OK（含 test_api_routes PG 集成）；uvicorn 起后端 urllib 冒烟：登录(alice)/空间/建文档(id=201)/术语/搜索/RAG(answer 含 280ms) 全通。
 
 ### T6 向量检索
 - **目标**：search/rag 关键词全表扫描 → pgvector ANN + tsvector。
@@ -96,9 +104,9 @@
 - [x] T1 基建（commit `68453b0` / PR #47）
 - [x] T2 migrations + entities 对齐（commit `5e780fa` / PR #49）
 - [x] T3 ORM + PG 仓储（commit `12c9ba3` / PR #50）
-- [x] T4 Embedding service（本 PR）
-- [ ] T5 切单例 + seed（commit/PR：___）
-- [ ] T6 向量检索（commit/PR：___）
+- [x] T4 Embedding service（commit `4ccefb7` / PR #51）
+- [x] T5 切单例 + seed（本 PR）
+- [ ] T6 向量检索 + embedding 写入联动（commit/PR：___）
 - [ ] T7 测试 + 文档回写（commit/PR：___）
 
 ## 待确认项
@@ -107,4 +115,4 @@
 |---|---|---|---|
 | PG-C-001 | requirements DB 依赖是否锁 3.12 基线版本（同 drift 口径） | T1 加依赖 + 注明 drift；T7 统一定基线 | 不阻塞 T1 |
 | PG-C-002 | 同步 psycopg vs async | 同步（降低牵连面） | 不阻塞 |
-| PG-C-003 | seed 数据来源 | 复用现有 demo_repository 种子，迁为 seed SQL | 不阻塞 T1 |
+| PG-C-003 | seed 数据来源 | ✅ 已确认：复用 demo_repository 种子，迁为 `migrations/005_sprint8_seed_demo.sql`（显式 ID + ON CONFLICT + setval） | 已闭合（T5） |

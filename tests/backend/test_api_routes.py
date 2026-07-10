@@ -4,6 +4,57 @@ import unittest
 
 @unittest.skipIf(importlib.util.find_spec("fastapi") is None, "FastAPI is not installed")
 class ApiRouteTest(unittest.TestCase):
+    """Full API-stack integration test (task-008 T5).
+
+    Route handlers use the module-level singleton ``repository`` (demo_repository
+    re-exports it), which is now ``PgRepository`` — so these tests run against a
+    real PostgreSQL + pgvector and are skipped when the lumen-pg container is
+    unreachable. setUpClass resets the DB to the demo seed (migration 005) so each
+    run is deterministic regardless of leftover data from prior runs. Within the
+    class, methods share state (as they did against the in-memory singleton) and
+    run in alphabetical order; PG accumulates the same mutations, so assertions
+    written against the seeded in-memory repository carry over unchanged.
+    """
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        try:
+            from sqlalchemy import text
+
+            from backend.service.db import engine, init_db
+
+            # The demo seed (005) uses fixed surrogate ids (alice=1,
+            # nova-internal=10, ...) and cannot coexist with leftover rows that
+            # share its natural keys (users.external_id, spaces.code) under
+            # different BIGSERIAL ids — a UNIQUE violation. So when the schema
+            # already exists, truncate any leftover data (prior run /
+            # test_pg_repository) before seeding; on a fresh DB, init_db creates
+            # the schema + seed together.
+            with engine.connect() as conn:
+                schema_present = conn.execute(text("SELECT to_regclass('lumen_users')")).scalar()
+            if schema_present is None:
+                init_db()
+            else:
+                with engine.connect() as conn:
+                    conn.execute(
+                        text(
+                            "TRUNCATE TABLE lumen_users, lumen_spaces, lumen_space_members, "
+                            "lumen_documents, lumen_document_versions, lumen_chunks, "
+                            "lumen_imports, lumen_terms RESTART IDENTITY CASCADE"
+                        )
+                    )
+                    conn.commit()
+                init_db()  # re-run 005 seed onto the clean slate
+            cls._engine = engine
+        except Exception as exc:  # pragma: no cover - env-dependent
+            raise unittest.SkipTest(f"PostgreSQL not available: {exc}") from exc
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        engine = getattr(cls, "_engine", None)
+        if engine is not None:
+            engine.dispose()
+
     def test_login_list_spaces_and_switch_space(self) -> None:
         from backend.api.auth import LoginRequest, login
         from backend.api.spaces import SwitchSpaceRequest, list_spaces, switch_space_endpoint

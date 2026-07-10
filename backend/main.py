@@ -17,13 +17,18 @@ from contextlib import asynccontextmanager
 
 @asynccontextmanager
 async def lifespan(_app):
-    """启动时初始化 PG + pgvector（task-008 T1）。连不上则降级，内存 demo 仍可用（T5 切换前）。"""
+    """启动时初始化 PG + pgvector（task-008 T1）。
+
+    task-008 T5 起，单例 ``repository`` 切到 PgRepository，后端运行时强依赖
+    PostgreSQL（不再降级到内存 demo）。init 失败时仅记录、不崩溃启动；此时 API
+    查询会在连接时报错，而非走内存兜底。生产/demo 均需 lumen-pg 容器 healthy。
+    """
     try:
         from backend.service.db import init_db
 
         init_db()
     except Exception as exc:  # pragma: no cover - 依赖外部 PG 容器
-        print(f"[db] init skipped (degraded mode): {exc}")
+        print(f"[db] init skipped: {exc} (PG required since T5; queries will error)")
     yield
 
 
