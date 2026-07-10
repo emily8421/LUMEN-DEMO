@@ -120,3 +120,14 @@
 - 本文件已落盘至 `docs/research/2026-07-09-tech-env-evaluation-phase1-reeval.md`（用户确认）。
 - 不替代 `docs/env/local-env.md`（环境事实）、`docs/05-tech-spec.md`（技术方案 / RG）、`docs/09-verification.md`（验证）。
 - 解锁落实后（如 LLM Spike 成功、Docker 起来），应更新 `05 §5.1` 对应 RG 状态 + `09 §6` 风险项 + 本报告追加验证记录。
+
+## 12. 后续更新（2026-07-10，task-008 T1–T7 落地后）
+
+> 本节为 point-in-time 留痕的后续追加（不改 §1–§11 的 2026-07-09 复核结论，保审计链）。Sprint-7（LLM）+ Sprint-8（pgvector 接入 task-008 T1–T7）后，原阻塞已大面积解除。
+
+- **RG-001（pgvector）→ Go**：Docker daemon 已 live（TE-C-003 闭合）；`docker/compose.yml` 起 `lumen-pg`（pgvector/pgvector:pg16，:15432）；task-008 T1–T6 完成基建 / migrations（8 张 `lumen_*` 表 + hnsw + GIN）/ ORM + PgRepository / 切单例 / embedding 写入 / RAG 向量召回（bge 余弦 topK，threshold 0.6，加法式叠加关键词路）。74 后端 tests 通过（含 PG 集成 + embedding）。
+- **RG-002（Embedding）→ 已启用**：T6 起 `pg_repository.replace_document_chunks` 写 `lumen_chunks.embedding`（512 维 float32）；RG-002 从「已验证」升级为「已启用」。须设 `HF_HUB_DISABLE_XET=1`（公司网络，§5.3 约束保留）。
+- **TE-C-002 / PG-C-001（requirements drift）→ 闭合**：T7 起 `backend/requirements.txt` 锁 Python 3.14 实测版本（fastapi 0.136.3 / uvicorn 0.49.0 / pydantic 2.13.4 / sqlalchemy 2.0.51 / psycopg 3.3.4 / pgvector 0.5.0 / openai 2.44.0 / sentence-transformers 5.6.0）；`05 §1` 声明 Python 3.14 为运行基线。原 3.12 锁定版在 3.14 下构建失败问题消除。
+- **TE-C-003（Docker 解锁）→ 闭合**：用户本机启动 Docker Desktop 后，AI 补 compose + 接线完成（task-008 T1）。
+- **仍未解除**：RG-003（OCR / PaddleOCR，REQ-010，后续阶段）；真实 Word/PDF 解析（python-docx/pdfplumber，REQ-009 真实化）；GPT/ollama LLM provider（配置位就绪未验证）。完整闭环仍 No-Go（卡 OCR / 真实文档解析）。
+- **下游回写**：本节结论已同步 `05 §5.1`（RG-001/002/005 行）、`09 §6`、`06` / `07` / `04` / `design/*`（task-008 T7 分批 PR）。

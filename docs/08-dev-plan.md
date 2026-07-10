@@ -11,12 +11,12 @@
 | 当前 Phase | Phase1 |
 | 交付物形态 | Demo |
 | 输入基线 | `docs/03-prd.md` §3、`docs/04-architecture.md`、`docs/05-tech-spec.md`、`docs/09-verification.md` |
-| 当前状态 | Phase1 Sprint 计划已确认；Sprint-1~6 已按降级口径执行完成（见下方「当前进度记录」） |
-| 最后更新 | 2026-07-09 |
+| 当前状态 | Phase1 Sprint 计划已确认；Sprint-1~6 降级口径完成；Sprint-7（LLM）/ Sprint-8（pgvector 接入）真实化完成（RG-001/002/004 Go，见下方「Sprint 完成包与进度记录」） |
+| 最后更新 | 2026-07-10 |
 
 ## Sprint 总览
 
-> 对照 `ai/doc-standards/08-dev-plan.md` §2。状态用 §7.1 横切状态词典；Sprint 均为**降级实现**（无 pgvector / Embedding / OCR / 真实 LLM）。
+> 对照 `ai/doc-standards/08-dev-plan.md` §2。状态用 §7.1 横切状态词典。Sprint-1~6 为**降级实现**（原内存 `demo_repository`）；Sprint-7/8 真实化（LLM / pgvector / Embedding 接入）；OCR / 真实 PDF 解析仍降级（后续阶段）。
 
 | Sprint | 目标 | 覆盖 REQ | 输入设计 / 契约 | 修改范围 | 验证包 | 状态 | 任务单 |
 |---|---|---|---|---|---|---|---|
@@ -27,6 +27,7 @@
 | Sprint-5 | 术语管理 | 036 | design/term-management、06、07 | backend term/rag + frontend | / TC-P1-012 | 已完成（降级） | — |
 | Sprint-6 | 桌面端集成与验收 | 011 | 09 + 前置 Sprint | frontend 桌面端集成 | / TC-P1-011 | 已完成（降级） | — |
 | Sprint-7 | LLM 真实化 adapter | 008 | design/rag-retrieval、05（RG-004） | backend llm_adapter.py + rag.py + .env | / TC-P1-008 | 已完成（GLM-5.2 真实验证） | — |
+| Sprint-8 | pgvector 接入（内存→PG+向量召回） | 007/008 | design/rag-retrieval、06、05（RG-001/002）、task-008 | docker + db.py + orm + pg_repository + embedding + rag + migrations 003-005 | / TC-P1-007/008 | 已完成（RG-001/002 Go；T1–T7，task-008） | `tasks/task-008-pgvector-integration.md` |
 
 ## 依赖关系与里程碑
 
@@ -58,8 +59,10 @@
 | Sprint-4 | TC-P1-007/008 | 单元 + 集成 | 同上（test_search / test_rag） | 前端搜索 / 问答 smoke | 内存关键词检索；RAG 不调 LLM |
 | Sprint-5 | TC-P1-012 | 单元 + 集成 | 同上（test_term / test_rag） | 前端术语管理 smoke | 内存术语；问答口径注入（不调 LLM） |
 | Sprint-6 | TC-P1-011 | 系统 / E2E | — | Edge Headless + Chrome 人工 smoke（09 §5） | 桌面端全 P1 功能（降级口径） |
+| Sprint-7 | TC-P1-008 | 单元 + 集成 | 同上（test_rag） | 本机 GLM-5.2 真实问答 | LLM 默认 Mock 可切；GLM 真实验证 |
+| Sprint-8 | TC-P1-007/008 | 单元 + 集成（PG） | 同上（test_pg_repository / test_api_routes / test_embedding） | uvicorn 起后端冒烟（登录/CRUD/术语/导入/搜索/RAG） | PG 必需运行时（lumen-pg 容器）；Embedding 模型 ~7s 首加载 |
 
-> 资源 / 环境验证（Docker / pgvector / Embedding）当前 No-Go（见 05 RG-001/002），不在 P1 验证范围。
+> 资源 / 环境验证：Sprint-8 起 Docker / pgvector / Embedding **已 Go**（RG-001/002 Go，见 05 §5.1；TE-C-003 闭合）；OCR / 真实 PDF 解析仍 No-Go（RG-003，后续阶段，不在 P1 必过范围）。
 
 ## Sprint-1：空间与权限底座
 
@@ -193,8 +196,9 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 | Sprint-5 | 2026-07-05 | 036 | 空间术语 CRUD + 问答口径注入 | `5b78f0a` | 通过（降级口径） | — | §5 |
 | Sprint-6 | 2026-07-06 | 011 | 桌面端集成 + Edge Headless / Chrome smoke | `cb6fb8a`（PR #28） | 部分通过 → 通过（降级口径） | 真实 PDF / OCR 未验证 → Phase2 | §5 |
 | Sprint-7 | 2026-07-09 | 008 | LLM adapter（`llm_adapter.py`）+ rag 接入 + `.env` 模板 | `754d5eb`/`78a8550`（PR #45） | 55 tests + GLM-5.2 真实问答验证 | GPT/ollama 待验证；向量检索仍缺（RG-002 已验证·待 pgvector） | §5 / §6 |
+| Sprint-8 | 2026-07-09~10 | 007/008 | pgvector 接入 task-008 T1–T7：基建（docker/compose + db.py）/ migrations 003-005 / ORM + PgRepository / 切单例 + demo seed / embedding 写入 / RAG 向量召回 / 测试 + 文档回写 | T1 `68453b0`(#47) · T2 `5e780fa`(#49) · T3 `12c9ba3`(#50) · T4 `4ccefb7`(#51) · T5 `a90d2a0`(#52) · T6 `f14b9d9`(#53) · T7 本批 | 74 tests（含 PG 集成 + embedding）+ uvicorn 冒烟全通 | RG-001/002→Go；search 向量化 + zhparser 留后续小 PR；真实 PDF/OCR 仍 No-Go（RG-003） | §5 / §6 |
 
-> 未完成 / 移出 P1：真实 PDF 解析、图片 OCR（REQ-010 移至后续阶段）、pgvector 向量检索接入。**RG-002（Embedding）、RG-004（LLM）已验证**（待 pgvector 接入生成真实向量）；OCR + pgvector 接入移至 Phase2 / MVP（见 `docs/05-tech-spec.md §5.1` Readiness Gate）。
+> Sprint-8 后：pgvector / Embedding / LLM 已接入（RG-001/002/004 Go）。仍移出 P1：真实 PDF 解析、图片 OCR（REQ-010，RG-003 No-Go，后续阶段）、search 向量化 + zhparser（后续小 PR）。Phase1 Demo 真实化主要目标达成；Phase 升级评估另起（见 `docs/05-tech-spec.md §5.1` Readiness Gate）。
 
 ---
 
