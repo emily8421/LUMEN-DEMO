@@ -1,6 +1,6 @@
 # LUMEN · 团队知识库 Demo
 
-> 面向中小企业的团队知识库 demo：把分散在聊天 / 邮件 / 旧文件 / 笔记里的团队知识，沉淀到一个**支持空间隔离与三级文档权限**、可被 **AI 检索与问答（带来源引用）**、支持**多格式导入（Word / PDF / OCR）**的知识库。
+> 面向中小企业的团队知识库 demo：把分散在聊天 / 邮件 / 旧文件 / 笔记里的团队知识，沉淀到一个**支持空间隔离与三级文档权限**、可被 **AI 检索与问答（带来源引用）**、支持**降级文本导入（`.md` / `.txt`，Word / PDF / OCR 真实化留后续）**的知识库。
 >
 > 本项目派生自 [`ai-project-template`](https://github.com/emily8421/ai-project-template)，采用其「文档驱动开发」方法论——**先文档、后代码**；当前已下行同步至模板 **v1.43.0**。
 
@@ -10,12 +10,12 @@
 - **双维度分阶段交付**：每个阶段同时声明「功能范围 `[P1]/[P2]/[愿景]`」与「交付物形态 Demo/MVP/产品」，不把 Demo 声称为 MVP（见 `docs/03-prd.md §3`）。
 - **空间隔离 + 三级文档权限**：私有 / 团队共享 / 外部只读，多空间既协作又隔离。
 - **RAG 问答带来源引用**：文档切块 + 向量检索 + LLM 生成，答案附带出处；库外问答回复「未找到」、不编造（产品红线）。
-- **多格式导入**：Word / PDF 文字提取 + 图片 / 白板照片 OCR 入库。
+- **内容导入**：Phase1 Demo 支持 `.md` / `.txt` 已提取文本入库；Word / PDF 文字解析与图片 / 白板 OCR 真实化留后续阶段。
 - **文档 CRUD + 版本历史 + 全文搜索**：行内编辑留版本，全文 + 语义检索定位历史约束。
 
 ## 快速开始
 
-> 当前已进入 Phase1 编码：Sprint-2 ~ Sprint-6 主功能已完成（含桌面端集成与验收）。后端运行说明见 `backend/README.md`。
+> 当前 Phase1 Demo 的 Sprint-1 ~ Sprint-8 已完成：核心 UI 闭环、LLM adapter、PostgreSQL+pgvector、Embedding 与 RAG 向量召回均已落地；真实 Word / PDF 解析与 OCR 仍为后续阶段。后端运行说明见 `backend/README.md`。
 
 1. **读懂项目**：`docs/00-scenario.md`（背景 / 用户 / 场景）→ `docs/03-prd.md §3`（阶段路线图）→ 本 README「文档导航」。
 2. **确认运行环境**：见 `docs/env/local-env.md`（本机 Win11 / i7 / 31.7GB / RTX 3050）与 `ai/project-rules.md §2.5` 资源约束。
@@ -24,7 +24,7 @@
 
 ## 当前状态
 
-- **阶段**：Phase1（功能范围 `[P1]` · 交付物形态 **Demo**）——Sprint-2 ~ Sprint-6 主功能已完成并推送，包含前端文档编辑器、降级文本导入、全文搜索、降级 RAG 问答、前端搜索 / 问答 UI、术语管理与问答口径对齐，以及 Sprint-6 桌面端集成与降级口径验收。
+- **阶段**：Phase1（功能范围 `[P1]` · 交付物形态 **Demo**）——Sprint-1 ~ Sprint-8 已完成并推送，包含权限 / 文档 / 版本 / 降级文本导入 / 搜索 / RAG / 术语 / 桌面端闭环；Sprint-7/8 已完成真实 LLM、PostgreSQL+pgvector、Embedding 与 RAG 向量召回接入。
 - **演进路线**：Phase1 **Demo**（当前）→ Phase2 **MVP** → 远期愿景 **产品**；双维度（功能范围 + 交付物形态）总览见 `docs/03-prd.md` §3。
 - **基准**：需求 / 架构 / 数据 / 接口 / 验证均已落在 `docs/`，是开发的唯一事实来源；阶段归属以 `docs/03-prd.md` §3 路线图为准。
 
@@ -48,7 +48,7 @@
 | 存储 | PostgreSQL + pgvector（关系 + 向量一体） |
 | AI | LLM：OpenAI 兼容 API；Embedding：本机 `bge-small-zh`（512 维） |
 | 前端 | React |
-| 解析 / OCR | Word / PDF 文字提取 + OCR（建议 PaddleOCR） |
+| 解析 / OCR | Phase1 当前为 `.md` / `.txt` 已提取文本导入；Word / PDF 文字提取 + OCR 为后续真实化项 |
 
 > 技术约束与禁区见 `ai/project-rules.md` §1（Phase 边界）、§2（技术栈）、§2.5（运行环境与资源约束）、§5（编码约定）。
 
@@ -66,7 +66,7 @@
 
 > 验证计划与 REQ→用例追溯见 `docs/09-verification.md`；本机资源验证见其 §4。
 
-- 单元 / 集成 / 验收测试覆盖 REQ-001..011（Phase1）；数据夹具：`nova-internal` / `brightlite-team` 双空间 + 三级权限。
+- 单元 / 集成 / 验收测试覆盖 REQ-001..011、REQ-036（Phase1）；数据夹具：`nova-internal` / `brightlite-team` 双空间 + 三级权限。
 - 当前自动验证：`.venv\Scripts\python.exe -m unittest discover -s tests/backend -v`、`.venv\Scripts\python.exe -m compileall backend tests/backend`、`npm.cmd --prefix frontend run build`。
 - 本机资源验证：Docker Compose 起库后确认 Demo 在内存 / 显存 / 磁盘软上限内运行。
 

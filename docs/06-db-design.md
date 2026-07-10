@@ -18,14 +18,14 @@
 
 | 表 | 用途 | 阶段 | 设计状态 | 当前实现状态 | 追溯 |
 |---|---|---|---|---|---|
-| lumen_users | 账号 | [P1] | P1-已设计 | 目标设计（迁移 001 已写未接线；当前内存） | REQ-001 基础 |
-| lumen_spaces | 空间 | [P1] | P1-已设计 | 目标设计（迁移 001 已写未接线；当前内存） | REQ-001 |
-| lumen_space_members | 成员-空间-角色 | [P1] | P1-已设计 | 目标设计（迁移 001 已写未接线；当前内存） | REQ-001/002 |
-| lumen_documents | 文档 | [P1] | P1-已设计 | 目标设计（迁移 001 已写未接线；当前内存） | REQ-003/004 |
-| lumen_document_versions | 版本历史 | [P1] | P1-已设计 | 目标设计（迁移 002 已写未接线；当前内存） | REQ-006 |
-| lumen_chunks | 切块 + Embedding 向量 + 全文向量 | [P1] | P1-已设计 | **目标设计（未迁移；依赖 pgvector + Embedding，当前无向量检索）** | REQ-007/008 |
-| lumen_imports | 导入任务 | [P1] | P1-已设计 | **目标设计（未迁移；当前导入仅 `.md`/`.txt` 已提取文本）** | REQ-009/010 |
-| lumen_terms | 空间级术语表 | [P1] | P1-已设计 | 目标设计（未迁移；当前内存） | REQ-036 |
+| lumen_users | 账号 | [P1] | P1-已实现 | 已落地 PostgreSQL（migration 001；PgRepository 接入） | REQ-001 基础 |
+| lumen_spaces | 空间 | [P1] | P1-已实现 | 已落地 PostgreSQL（migration 001；PgRepository 接入） | REQ-001 |
+| lumen_space_members | 成员-空间-角色 | [P1] | P1-已实现 | 已落地 PostgreSQL（migration 001；PgRepository 接入） | REQ-001/002 |
+| lumen_documents | 文档 | [P1] | P1-已实现 | 已落地 PostgreSQL（migration 001；PgRepository 接入） | REQ-003/004 |
+| lumen_document_versions | 版本历史 | [P1] | P1-已实现 | 已落地 PostgreSQL（migration 002；PgRepository 接入） | REQ-006 |
+| lumen_chunks | 切块 + Embedding 向量 + 全文向量 | [P1] | P1-已实现 | 已落地 PostgreSQL（migration 003；T6 起写入 embedding 并用于 RAG 向量召回） | REQ-007/008 |
+| lumen_imports | 导入任务 | [P1] | P1-已实现 | 已落地 PostgreSQL（migration 004；当前导入仅 `.md`/`.txt` 已提取文本） | REQ-009/010 |
+| lumen_terms | 空间级术语表 | [P1] | P1-已实现 | 已落地 PostgreSQL（migration 004；PgRepository 接入） | REQ-036 |
 | lumen_tags | 标签 | [P2] | 骨架 | — | REQ-012 |
 | lumen_tag_links | 标签-文档关联 | [P2] | 骨架 | — | REQ-012 |
 | lumen_push_copies | 跨空间推送只读副本 | [P2] | 骨架 | — | REQ-015 |
@@ -93,16 +93,16 @@
 | created_at | timestamptz | |
 - 约束：`UNIQUE(document_id, version_no)`
 
-### lumen_chunks（pgvector，检索核心 · 目标设计，当前未落地）
+### lumen_chunks（pgvector，检索核心 · P1-已实现）
 | 字段 | 类型 | 说明 |
 |---|---|---|
 | id | bigint PK | |
 | document_id | bigint FK→documents | |
 | ordinal | int | 块序号 |
 | text | text | 块原文 |
-| embedding | vector(512) | pgvector 向量，对应本机 `bge-small-zh` Embedding（512 维，RG-002 已验证 float32，待 pgvector 接入） |
+| embedding | vector(512) | pgvector 向量，对应本机 `bge-small-zh` Embedding（512 维，T6 起写入并用于 RAG 向量召回；RG-001/002 Go） |
 | ts_vector | tsvector | 全文检索向量 |
-- 索引：向量近邻（ivfflat / hnsw，参数待 05）+ `ts_vector` GIN
+- 索引：hnsw `vector_cosine_ops`（参数见 05）+ `ts_vector` GIN
 
 ### lumen_imports
 | 字段 | 类型 | 说明 |
@@ -134,7 +134,7 @@
 
 ### 字段级契约矩阵（[P1]）
 
-> 9 列字段级契约（对照 `ai/doc-standards/06-db-design.md §4.2`）。字段语义说明见上方各表简表。「目标」= pgvector / Embedding 依赖字段，当前未落地。
+> 9 列字段级契约（对照 `ai/doc-standards/06-db-design.md §4.2`）。字段语义说明见上方各表简表。Sprint-8 后 P1 表已由 `migrations/001-005` 落地 PostgreSQL；真实 Word / PDF 解析与 OCR 仍按 RG-003 降级。
 
 | 表 | 字段 | 类型 | 必填 | 默认值 | 约束 | 来源 REQ | 敏感性 | 留存 / 删除 |
 |---|---|---|---|---|---|---|---|---|
@@ -238,7 +238,7 @@ erDiagram
 | lumen_document_versions.content_md | 中 | space + permission | 明文 | 随版本 / 文档删除 | 同上（仅当前版本参与召回） | TC-P1-006 |
 | lumen_chunks.text | 中 | 经 document_id 间接受 space + permission 过滤 | 明文 | 随文档删除 | 召回片段发外部 LLM（RAG 向量 + 关键词召回，PG 存储） | TC-P1-007/008 |
 | lumen_chunks.embedding | 中 | 同 text | 向量（非原文） | 随文档删除 | 不外发（本机 bge-small-zh 生成，RG-002；T6 起写入此列） | TC-P1-008 |
-| lumen_terms.definition | 中 | space 成员可见 | 明文 | 随术语删除 | 目标：注入 RAG prompt 发外部 LLM；当前：不调 LLM | TC-P1-012 |
+| lumen_terms.definition | 中 | space 成员可见 | 明文 | 随术语删除 | 已注入 RAG prompt；Sprint-7 起可随召回上下文发往外部 LLM（RG-004；可配 Mock 不发） | TC-P1-012 |
 | lumen_terms.aliases | 低 | space 成员可见 | — | 随术语删除 | 同 definition | TC-P1-012 |
 | lumen_users.external_id | 中 | 仅本人 / 系统 | — | 账号删除时清理 | 不外发 | TC-P1-001 |
 
