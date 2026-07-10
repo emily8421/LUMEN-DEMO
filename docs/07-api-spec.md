@@ -71,8 +71,8 @@
 | API-006 | 目标设计（降级） | §3.7 示例 | 4001/4004 | 空间+权限 | TC-P1-004/005 | 是 |
 | API-007 | 目标设计（降级） | §3.7 示例 | 4001/4004 | 空间+权限 | TC-P1-006 | 是 |
 | API-008 | 目标设计（降级） | §3.7 示例 | 4001/4004 | 空间+权限 | TC-P1-006 | 是 |
-| API-009 | 目标设计（降级） | §3.7 示例 | 4001/4220 | 空间过滤 | TC-P1-007 | 是 |
-| API-010 | 目标设计（adapter 就绪·默认降级） | §3.2 / §3.3 | 4001/4220 | 空间过滤 | TC-P1-008 | 是 |
+| API-009 | 已实现（关键词检索·PG 落地；向量搜索留后续小 PR） | §3.7 示例 | 4001/4220 | 空间过滤 | TC-P1-007 | 是 |
+| API-010 | 已实现（向量召回 + GLM LLM；可配 Mock 降级） | §3.2 / §3.3 | 4001/4220 | 空间过滤 | TC-P1-008 | 是 |
 | API-011 | 目标设计（降级） | §3.2 / §3.3 | 4001/4003/4220 | 空间过滤 | TC-P1-009/010 | 是 |
 | API-012 | 目标设计（降级） | §3.2 / §3.3 | 4001/4003/4220 | 空间成员 | TC-P1-012 | 是 |
 | API-013 | 目标设计（降级） | §3.7 示例 | 4001/4003/4004 | 空间+权限 | TC-P1-012 | 是 |
@@ -234,8 +234,8 @@ sequenceDiagram
 | API-006 | document.get/update/delete_document | lumen_documents | space + permission（越权→空/404） | 4001/4004 | TC-P1-004/005 | 降级实现 |
 | API-007 | document.list_versions | lumen_document_versions | space + permission | 4001/4004 | TC-P1-006 | 降级实现 |
 | API-008 | document.restore_version | lumen_document_versions | space + permission | 4001/4004 | TC-P1-006 | 降级实现 |
-| API-009 | search.search_documents | lumen_chunks.ts_vector（目标）/ lumen_documents | space + permission 过滤 | 4001/4220 | TC-P1-007 | 降级实现（内存关键词） |
-| API-010 | rag.answer_question | lumen_chunks / lumen_documents / lumen_terms | space + permission 过滤 | 4001/4220 | TC-P1-008 | adapter 接入（默认降级；配 .env 真实 LLM） |
+| API-009 | search.search_documents | lumen_chunks（PG）/ lumen_documents | space + permission 过滤 | 4001/4220 | TC-P1-007 | 已实现（关键词检索·PG；向量搜索留后续） |
+| API-010 | rag.answer_question | lumen_chunks（向量+关键词召回）/ lumen_documents / lumen_terms | space + permission 过滤 | 4001/4220 | TC-P1-008 | 已实现（向量召回 + GLM LLM；可配 Mock） |
 | API-011 | imports.import_extracted_text | lumen_imports, lumen_documents | space 过滤 | 4001/4003/4220 | TC-P1-009/010 | 降级实现（仅 .md/.txt） |
 | API-012 | term.list_visible_terms / create_term | lumen_terms | space 成员 | 4001/4003/4220 | TC-P1-012 | 降级实现 |
 | API-013 | term.get/update/delete_term | lumen_terms | space + owner | 4001/4003/4004 | TC-P1-012 | 降级实现 |

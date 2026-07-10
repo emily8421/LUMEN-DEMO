@@ -69,7 +69,7 @@ flowchart LR
 |---|---|---|---|---|---|---|
 | DEV-001 | `backend/service/imports.py` 仅支持 `.md`/`.txt` 已提取文本 | .docx / .pdf / 图片三路解析 | Mock/降级 | Phase1 接受降级基线；PDF 解析移 Phase2 | 06 lumen_imports、05 RG-003 | TC-P1-009 |
 | DEV-002 | 未接入 PaddleOCR；无 OCR | 图片 → PaddleOCR 中文 OCR | 后续阶段 | REQ-010 移出 P1 必过 | 05 RG-003、09 §6 | TC-P1-010 |
-| DEV-003 | 未接入 `bge-small-zh`；`lumen_chunks` 无向量落地 | 切块 → bge-small-zh 512 维 → embedding/ts_vector | Mock/降级 | 当前仅内存切块文本；RG-002 已验证（512 维 float32），待 pgvector 接入 | 06 lumen_chunks、05 RG-001/002 | TC-P1-009 |
+| DEV-003 | ~~未接入 `bge-small-zh`；`lumen_chunks` 无向量落地~~ → **已实现（Sprint-8 T6）**：`pg_repository.replace_document_chunks` 写 `lumen_chunks.embedding`（bge-small-zh 512 维 float32） | 切块 → bge-small-zh 512 维 → embedding/ts_vector | 已实现 | 向量已落地 PG；ts_vector（zhparser 中文分词）留后续。DEV-001（真实 PDF/Word）/ DEV-002（OCR）仍降级 | 06 lumen_chunks、05 RG-001/002 | TC-P1-009 |
 
 ## 7. 验收追溯
 

@@ -14,9 +14,9 @@
 | 覆盖 REQ | REQ-007、REQ-008 |
 | 所属 Phase | [P1] |
 | 交付物形态 | Demo |
-| 当前状态 | P1-已设计；实现为降级（内存关键词检索；RAG 不调 LLM，见 §6） |
+| 当前状态 | P1-已实现（Sprint-7/8）：RAG 走真实 LLM（GLM-5.2）+ 向量召回（pgvector ANN，加法式叠加关键词，threshold 0.6）；search 仍关键词·PG 落地（向量搜索留后续小 PR）。见 §6/§7/§8 |
 | 流程 ID | Flow-D-003（全文搜索）/ Flow-D-004（RAG 问答），见 §2 |
-| 最后更新 | 2026-07-09 |
+| 最后更新 | 2026-07-10 |
 | 下游影响 | 08 Sprint-4、09 TC-P1-007/008 |
 
 ## 1. 职责与边界
@@ -87,15 +87,15 @@ flowchart TB
 
 | 偏差 ID | 代码 / 配置事实 | 原设计 | 偏差类型 | 处理结论 | 回写目标 | 验证 / 证据 |
 |---|---|---|---|---|---|---|
-| DEV-001 | `backend/service/search.py` 内存关键词匹配（`_chunk_matches` / `_title_matches`） | ts_vector 全文检索 + 向量近邻 | Mock/降级 | 内存关键词检索；pgvector/Embedding 真实化移 Phase2 | 06 lumen_chunks、05 RG-001/002 | TC-P1-007 |
-| DEV-002 | `backend/service/rag.py` 接入 `llm_adapter`（Sprint-7）；GLM-5.2 真实问答已验证 | 候选块 + 术语 → LLM 生成 | 已实现（GLM-5.2 验证） | 默认 mock 降级可切；GPT/ollama 待验证；向量召回仍缺（DEV-003） | 07 API-010、05 RG-004 | TC-P1-008 |
-| DEV-003 | 无向量检索（embedding 未生成） | 问题 → Embedding → `lumen_chunks.embedding` 近邻 topK | Mock/降级 | 向量召回未实现；RG-002 已验证（bge-small-zh 512 维 float32），待 pgvector 接入生成真实向量 | 06 lumen_chunks、05 RG-002 | TC-P1-008 |
+| DEV-001 | `backend/service/search.py` 关键词匹配（`_chunk_matches` / `_title_matches`），存储已切 PG（`PgRepository`） | ts_vector 全文检索 + 向量近邻 | 部分实现 | 关键词检索已切 PG 落地；ts_vector 全文 + search 向量化留后续小 PR（zhparser 中文分词） | 06 lumen_chunks、05 RG-001 | TC-P1-007 |
+| DEV-002 | `backend/service/rag.py` 接入 `llm_adapter`（Sprint-7）；GLM-5.2 真实问答已验证 | 候选块 + 术语 → LLM 生成 | 已实现（GLM-5.2 验证） | 默认 mock 降级可切；GPT/ollama 待验证 | 07 API-010、05 RG-004 | TC-P1-008 |
+| DEV-003 | ~~无向量检索（embedding 未生成）~~ → **已实现（Sprint-8 T6）**：`pg_repository.recall_chunks` pgvector ANN + `replace_document_chunks` 写 embedding | 问题 → Embedding → `lumen_chunks.embedding` 近邻 topK | 已实现 | 向量召回已上线（bge-small-zh 512 维 float32，加法式叠加关键词，threshold 0.6）；RG-001/002 Go | 06 lumen_chunks、05 RG-001/002 | TC-P1-008 |
 
 ## 8. 验收追溯
 
 | 设计点 | 关联 REQ | 关联 Sprint | 关联 TC | 验证方式 | 状态 |
 |---|---|---|---|---|---|
-| 全文搜索 | REQ-007 | Sprint-4 | TC-P1-007 | `tests/backend/test_search.py` | 条件通过（内存关键词） |
-| RAG 问答带来源 | REQ-008 | Sprint-4 | TC-P1-008 | `tests/backend/test_rag.py` | 条件通过（不调 LLM） |
-| 库外不编造 | REQ-008 | Sprint-4 | TC-P1-008 | `tests/backend/test_rag.py` | 条件通过 |
-| Flow-D-003 搜索 / Flow-D-004 RAG | REQ-007/008 | Sprint-4 | TC-P1-007/008 | 见上 | 降级实现 |
+| 全文搜索 | REQ-007 | Sprint-4（+ Sprint-8 PG 落地） | TC-P1-007 | `tests/backend/test_search.py`（+ `test_api_routes.py` PG） | 条件通过（关键词·PG；向量搜索留后续） |
+| RAG 问答带来源 | REQ-008 | Sprint-4（+ Sprint-7 LLM / Sprint-8 向量） | TC-P1-008 | `tests/backend/test_rag.py`（+ PG 集成）+ GLM-5.2 真实问答 | 通过（真实 LLM + 向量召回） |
+| 库外不编造 | REQ-008 | Sprint-4（+ Sprint-8 threshold 门控） | TC-P1-008 | `tests/backend/test_rag.py` | 通过（向量 threshold 0.6 保红线） |
+| Flow-D-003 搜索 / Flow-D-004 RAG | REQ-007/008 | Sprint-4 / 7 / 8 | TC-P1-007/008 | 见上 | RAG 已真实化；search 向量化留后续 |

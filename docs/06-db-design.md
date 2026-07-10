@@ -11,8 +11,8 @@
 | 保留 / 省略决策 | 保留 |
 | 决策来源 | `ai/project-rules.md` §3（项目有 PostgreSQL + pgvector 持久化存储） |
 | 覆盖 REQ / 模块 | Phase1：空间 / 权限、文档、版本、导入、检索向量、术语管理 |
-| 当前状态 | P1 表结构为**目标设计**；当前实现为内存 `demo_repository`，**全部 P1 表均未在 PostgreSQL 落地**（迁移 `001/002` 已写未接线，`lumen_chunks`/`lumen_imports`/`lumen_terms` 无迁移）。真实化见 `docs/05-tech-spec.md §5.1` RG-001/002，移至 Phase2/MVP |
-| 最后更新 | 2026-07-09 |
+| 当前状态 | P1 表结构**已落地 PostgreSQL**（Sprint-8 / task-008 T1–T5：8 张 `lumen_*` 表由 `migrations/001-005` 建，后端切 `PgRepository`；`lumen_chunks.embedding vector(512)` + hnsw + ts_vector 由 T4/T6 启用）。内存 `demo_repository` 保留为单测 fake。真实 PDF/OCR 仍降级（RG-003） |
+| 最后更新 | 2026-07-10 |
 
 ## 1. 表清单（完整）
 
@@ -40,7 +40,7 @@
 | lumen_signal_subscriptions | 信号追踪主题订阅 | [愿景] | 骨架 | — | REQ-034 |
 | lumen_analysis_kits | 分析包（A Kit）配置 | [愿景] | 骨架 | — | REQ-035 |
 
-> 当前实现说明：Phase1 Demo 后端为内存 `demo_repository`，**全部 P1 表均未在 PostgreSQL 落地**。`backend/migrations/001_sprint1_space_permissions.sql`、`002_sprint2_document_versions.sql` 已编写（users / spaces / members / documents、versions）但未接线（后端仍走内存仓储）；`lumen_chunks` / `lumen_imports` / `lumen_terms` 无迁移。pgvector + Embedding 真实化见 `docs/05-tech-spec.md §5.1` RG-001/002，移至 Phase2/MVP。
+> 当前实现说明（Sprint-8 / task-008 T1–T5 后）：Phase1 Demo 后端已切 `PgRepository`，**全部 P1 表（8 张）已落地 PostgreSQL**（lumen-pg 容器）。`migrations/001-005` 建表 + demo seed（`db.init_db` 幂等执行）；`lumen_chunks` 含 `embedding vector(512)` + hnsw + ts_vector（T4/T6 启用 embedding 写入与向量召回）。内存 `demo_repository` 保留为单测 fake（不落 PG）。真实 PDF/OCR 仍降级（RG-003）。
 
 ## 2. 表结构（[P1] 已设计）
 
@@ -230,14 +230,14 @@ erDiagram
 ## 5. 数据安全与留存
 
 > 对照 `ai/doc-standards/06-db-design.md §4.5`（吸收 `docs/05-tech-spec.md` 数据安全面）。
-> **外部传输限制总则**：Phase1 降级基线**不调用外部 LLM**（RAG 返回检索结果 + 模板，见 07 §3.6 / 09 §6），故下列字段当前均**不外发**；目标态接入外部 LLM 后，发往模型前须过滤敏感片段、优先避免发送真实团队文档（见 `ai/project-rules.md §2.5`、`docs/05-tech-spec.md`）。
+> **外部传输限制总则**：Sprint-7 起 RAG **已调用外部 LLM**（GLM 中转，RG-004 Go；可配置 Mock 降级），故召回片段（`lumen_chunks.text` / 术语定义）**会发往 LLM**。发往模型前须过滤敏感片段、优先避免发送真实团队文档（见 `ai/project-rules.md §2.5`、`docs/05-tech-spec.md`）。Embedding 为本机 `bge-small-zh`，**不外发**（RG-002）。
 
 | 数据 / 表 / 字段 | 敏感性 | 访问控制 | 脱敏 / 加密 | 留存 / 删除 | 外部传输限制 | 验证入口 |
 |---|---|---|---|---|---|---|
-| lumen_documents.content_md | 中 | space + permission 过滤 | 明文存储（不脱敏） | 随文档删除 | 目标：切块后发外部 LLM；当前：不调 LLM，不外发 | TC-P1-008 |
-| lumen_document_versions.content_md | 中 | space + permission | 明文 | 随版本 / 文档删除 | 同上 | TC-P1-006 |
-| lumen_chunks.text | 中 | 经 document_id 间接受 space + permission 过滤 | 明文 | 随文档删除 | 目标：召回片段发外部 LLM；当前：内存关键词，不外发 | TC-P1-007/008 |
-| lumen_chunks.embedding | 中 | 同 text | 向量（非原文） | 随文档删除 | 不外发（本机 Embedding，见 05 RG-002） | TC-P1-008 |
+| lumen_documents.content_md | 中 | space + permission 过滤 | 明文存储（不脱敏） | 随文档删除 | 切块后作为召回片段发外部 LLM（RG-004；可配 Mock 不发） | TC-P1-008 |
+| lumen_document_versions.content_md | 中 | space + permission | 明文 | 随版本 / 文档删除 | 同上（仅当前版本参与召回） | TC-P1-006 |
+| lumen_chunks.text | 中 | 经 document_id 间接受 space + permission 过滤 | 明文 | 随文档删除 | 召回片段发外部 LLM（RAG 向量 + 关键词召回，PG 存储） | TC-P1-007/008 |
+| lumen_chunks.embedding | 中 | 同 text | 向量（非原文） | 随文档删除 | 不外发（本机 bge-small-zh 生成，RG-002；T6 起写入此列） | TC-P1-008 |
 | lumen_terms.definition | 中 | space 成员可见 | 明文 | 随术语删除 | 目标：注入 RAG prompt 发外部 LLM；当前：不调 LLM | TC-P1-012 |
 | lumen_terms.aliases | 低 | space 成员可见 | — | 随术语删除 | 同 definition | TC-P1-012 |
 | lumen_users.external_id | 中 | 仅本人 / 系统 | — | 账号删除时清理 | 不外发 | TC-P1-001 |
