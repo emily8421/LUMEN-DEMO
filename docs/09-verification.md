@@ -12,8 +12,8 @@
 | 当前 Phase | Phase1 |
 | 交付物形态 | Demo |
 | 覆盖 REQ | Phase1：REQ-001..REQ-011、REQ-036；P2 / 愿景验证项待升阶段细化 |
-| 当前状态 | Phase1 全量验收已记录，结论为 Conditional Go（Demo closure）；Sprint-1~6 降级口径验收已执行，Sprint-7/8 已完成真实 LLM、PostgreSQL+pgvector、Embedding 与 RAG 向量召回验证；task-009 已完成 search hybrid 验证；P1A 前端结构聚焦重构已实现并构建通过，Chrome / Edge 人工 smoke 待补 |
-| 最后更新 | 2026-07-11（P1A 验证口径回填） |
+| 当前状态 | Phase1 全量验收已记录，结论为 Conditional Go（Demo closure）；Sprint-1~6 降级口径验收已执行，Sprint-7/8 已完成真实 LLM、PostgreSQL+pgvector、Embedding 与 RAG 向量召回验证；task-009 已完成 search hybrid 验证；P1A 前端结构聚焦重构已实现，构建与 Chrome / Edge 900px smoke 均通过 |
+| 最后更新 | 2026-07-11（P1A smoke 验收回填） |
 
 ## 1. 测试策略
 
@@ -40,7 +40,7 @@
 | TC-P1-010 | REQ-010 OCR | 中文白板照片 OCR 后可搜 | [P1] | 后续阶段（OCR 未实现，降级移出 P1 必过） |
 | TC-P1-011 | REQ-011 桌面端 | Chrome / Edge 完成上述全部 | [P1] | 条件通过（降级口径·Edge Headless + Chrome 人工 smoke） |
 | TC-P1-012 | REQ-036 术语管理 | 新建空间术语后，文档识别该词，问答优先使用空间定义且不被同名全局术语覆盖 | [P1] | 条件通过（降级口径·内存） |
-| TC-P1-013 | REQ-011 P1A 结构聚焦 | 文档 / 搜索 / 问答 / 术语一级视图切换；900px 桌面宽度不横向破版；P0 能力不回退 | [P1] | 部分通过（构建通过；人工 smoke 待补） |
+| TC-P1-013 | REQ-011 P1A 结构聚焦 | 文档 / 搜索 / 问答 / 术语一级视图切换；900px 桌面宽度不横向破版；P0 能力不回退 | [P1] | 通过（构建 + Chrome / Edge 900px smoke） |
 
 > 状态说明：Sprint-2~6 按**降级口径**验收（原内存 `demo_repository`）；Sprint-7/8 真实化后 RAG 已走真实 LLM（GLM-5.2）+ 向量召回（pgvector），存储切到 PostgreSQL（见 §5 Sprint-7/8 记录）。仍降级的：真实 PDF/Word 解析、OCR（RG-003，后续阶段）。search 已在 task-009 升级为 hybrid（关键词 / ts_vector / pgvector 语义召回），zhparser 为可选回退。「条件通过」= 当前实现满足 Demo 级别验收；详见 §6 与 `docs/05-tech-spec.md §5.1`。 TC-P1-013 为 P1A 体验收口新增验证项，不改变 Phase1 Demo closure 结论。
 
@@ -62,9 +62,9 @@
 | TC-P1-010 | REQ-010 | 中文白板照片 | OCR 后搜索 | 可搜 | — | 后续阶段（OCR 未实现） |
 | TC-P1-011 | REQ-011 | 桌面端浏览器 | 走查全部 P1 功能 | 全部可用 | Edge Headless + Chrome 人工 smoke（§5） | 条件通过 |
 | TC-P1-012 | REQ-036 | brightlite 空间 | 新建术语 → 文档识别 → 问答 | 识别 + 空间术语优先于全局 | `tests/backend/test_term.py`、`test_rag.py` | 条件通过 |
-| TC-P1-013 | REQ-011 | P1A 前端实现 + Chrome / Edge 桌面 | ① 登录并切换文档 / 搜索 / 问答 / 术语视图；② 在 900px 宽度完成文档、搜索、问答、术语主流程；③ 回归 Markdown 渲染、来源点击、删除 / 恢复二次确认 | 视图切换保持当前空间上下文；各视图主区不被无关面板挤压；900px 无全局横向滚动；P0 能力不回退 | `npm.cmd run build` 通过；Chrome / Edge 人工 smoke 待执行 | 部分通过 |
+| TC-P1-013 | REQ-011 | P1A 前端实现 + Chrome / Edge 桌面 | ① 登录并切换文档 / 搜索 / 问答 / 术语视图；② 在 900px 宽度完成文档、搜索、问答、术语主流程；③ 回归 Markdown 渲染、来源点击、删除 / 恢复二次确认 | 视图切换保持当前空间上下文；各视图主区不被无关面板挤压；900px 无全局横向滚动；P0 能力不回退 | `npm.cmd run build` 通过；Chrome / Edge headless smoke（900px）通过，覆盖登录、四视图切换、文档新建 / 编辑 / 版本恢复 / 删除、Markdown 预览、搜索来源打开、问答、术语新建 / 删除确认 | 通过 |
 
-> TC-P1-010 暂为「后续阶段」，待 OCR 落地后补步骤与证据；TC-P1-013 待 P1A 代码 PR 执行前端构建与浏览器 smoke；其余 TC 自动化均含于后端测试与既有 smoke 证据（见 §5）。
+> TC-P1-010 暂为「后续阶段」，待 OCR 落地后补步骤与证据；TC-P1-013 已随 PR #76 合并后完成前端构建与 Chrome / Edge 900px smoke；其余 TC 自动化均含于后端测试与既有 smoke 证据（见 §5）。
 
 ### Phase2（功能范围 `[P2]` · 交付物形态 **MVP**，升阶段时追加）
 - REQ-012..017、REQ-024..027 用例（标签 / 视图 / 润色 / 推送 / 协作 / 移动端 / v18 追加项）——待该阶段细化
@@ -105,7 +105,7 @@
 | 2026-07-10 | Phase1 Sprint / 全量验收 | Conditional Go（Demo closure） | TC-P1-001~012 均有验收口径与证据链：Sprint-1~6 按 Demo 降级口径通过；Sprint-7/8 真实 LLM、PostgreSQL+pgvector、Embedding 与 RAG 向量召回通过（RG-001/002/004/005 Go）；REQ-009 以 `.md` / `.txt` 已提取文本降级通过；REQ-010 OCR 明确移出 Phase1 必过（RG-003 No-Go，后续阶段）。遗留项：真实 Word / PDF 解析、OCR 真实化；不阻塞 Phase1 Demo closure，但阻塞无条件生产级 MVP 结论。 |
 | 2026-07-10 | task-009 search 向量化 + 可选 zhparser | 通过 | `/api/search` 升级为 substring + `ts_vector` SQL 候选 + pgvector 语义召回；`init_db()` 两次验证通过；当前 `pgvector/pgvector:pg16` 无 zhparser 时回退 `simple`；76 后端 tests 通过（含 `tests.backend.test_search` 与 `test_search_api_returns_vector_semantic_hits`）。 |
 | 2026-07-11 | RG-004 LLM 中转迁移复测 | 通过 | 旧中转 `47.107.134.2:7777` 的 key 被停用 → `.env` 迁至 `192.168.15.190:7777/v1`（`glm-5.2`）；`llm_adapter.chat()` + RAG 真实问答复测通过（答案带来源），RG-004 维持 Go。 |
-| 2026-07-11 | Sprint-9（P1A）前端结构聚焦实现 | 部分通过 | 已实现本地 `activeView` 四视图切换、右栏拆分与桌面响应式 CSS；`npm.cmd run build` 通过；Chrome / Edge 人工 smoke 待补。 |
+| 2026-07-11 | Sprint-9（P1A）前端结构聚焦实现 | 通过 | PR #76 合并提交 `9ede5b6`；已实现本地 `activeView` 四视图切换、右栏拆分与桌面响应式 CSS；`npm.cmd run build` 通过；Chrome / Edge headless smoke（900px）通过，覆盖登录、四视图切换、文档新建 / 编辑 / 版本恢复 / 删除、Markdown 预览、搜索来源打开、问答、术语新建 / 删除确认；无全局横向滚动。 |
 
 ### 5.1 缺陷与回归记录
 
@@ -125,9 +125,7 @@
 | OCR 质量与资源占用 | REQ-010、内容导入 | OCR 未实现，REQ-010 移至后续阶段（RG-003 No-Go）；当前降级为已提取文本 |
 | LLM 外部调用可用性 | REQ-008、REQ-036 | GLM `glm-5.2` 真实问答已验证（Sprint-7 首验 + 2026-07-11 新中转 `192.168.15.190:7777/v1` 复测，RG-004→Go；旧 `47.107.134.2` key 已停用）；GPT/ollama 待验证 |
 | P2 / 愿景高风险 AI 能力 | REQ-020 / 021 / 030 / 032 / 033 等 | 不进入 Phase1 必过项，技术验证通过后再补用例 |
-| P1A 前端结构聚焦浏览器 smoke 未补 | REQ-011 桌面端体验 | 代码已实现且构建通过；仍需 Chrome / Edge 人工 smoke 后关闭 TC-P1-013 |
 
 ## 7. 待人工确认项
 
 - Phase1 全量验收已记录；是否正式进入 Phase2 仍需人工确认，并在确认后同步更新阶段指针与 Phase2 进入 / 退出标准。
-- P1A 代码实现已完成构建验证；仍需人工 Chrome / Edge smoke，并在通过后把 TC-P1-013 改为通过。
