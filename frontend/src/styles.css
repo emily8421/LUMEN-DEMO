@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   color: #192230;
   background: #edf2f7;
   font-family:
@@ -15,7 +15,6 @@
 
 body {
   margin: 0;
-  min-width: 1180px;
   min-height: 100vh;
 }
 
@@ -136,7 +135,7 @@ p {
 .login-panel {
   align-self: start;
   justify-self: center;
-  width: 460px;
+  width: min(460px, 100%);
   display: grid;
   gap: 18px;
 }
@@ -145,18 +144,61 @@ p {
 .editor-form,
 .sidebar,
 .versions-panel,
-.insight-panel,
 .compact-form,
 .answer-box {
   display: grid;
   gap: 16px;
 }
 
-.workspace-grid {
+.workspace-layout {
   display: grid;
-  grid-template-columns: 300px minmax(520px, 1fr) 300px;
+  grid-template-columns: minmax(240px, 280px) minmax(0, 1fr);
   gap: 18px;
   align-items: start;
+}
+
+.workspace-main {
+  min-width: 0;
+  display: grid;
+  gap: 18px;
+}
+
+.sidebar {
+  position: sticky;
+  top: 24px;
+  align-content: start;
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+}
+
+.view-nav {
+  display: grid;
+  gap: 8px;
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 14px 0;
+}
+
+.view-nav button {
+  display: grid;
+  width: 100%;
+  gap: 4px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #1e293b;
+  text-align: left;
+}
+
+.view-nav button:hover:not(:disabled),
+.view-nav button:focus-visible:not(:disabled),
+.view-nav button.active {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+}
+
+.view-nav small {
+  color: #64748b;
+  font-weight: 600;
 }
 
 .section-title {
@@ -196,6 +238,13 @@ p {
   white-space: nowrap;
 }
 
+.document-view-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
+  gap: 18px;
+  align-items: start;
+}
+
 .editor-panel {
   min-height: 660px;
 }
@@ -204,15 +253,17 @@ p {
   min-height: 320px;
 }
 
-.insight-panel {
-  align-content: start;
-}
-
 .search-panel,
 .query-panel,
-.import-panel {
+.import-panel,
+.focus-panel {
   display: grid;
   gap: 14px;
+}
+
+.focus-panel {
+  align-content: start;
+  min-height: 620px;
 }
 
 .import-panel {
@@ -231,6 +282,11 @@ p {
 
 .compact-form button {
   justify-self: start;
+}
+
+.focus-form {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
 }
 
 .question-input {
@@ -426,6 +482,20 @@ p {
   gap: 14px;
 }
 
+.term-view-grid {
+  display: grid;
+  grid-template-columns: minmax(220px, 320px) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.term-list-pane,
+.term-edit-pane {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
 .term-list {
   display: grid;
   gap: 10px;
@@ -481,4 +551,50 @@ p {
 
 .status-bar strong {
   color: #dc2626;
+}
+
+@media (max-width: 1199px) {
+  .workspace-layout {
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+
+  .document-view-grid,
+  .term-view-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+    max-height: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .app-shell {
+    padding: 16px;
+  }
+
+  .topbar,
+  .status-bar {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .session-card {
+    min-width: 0;
+    text-align: left;
+  }
+
+  .workspace-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .view-nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .focus-form {
+    grid-template-columns: 1fr;
+  }
 }

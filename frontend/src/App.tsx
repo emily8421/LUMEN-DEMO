@@ -65,6 +65,15 @@ type Session = {
   currentSpaceId: number;
 };
 
+type ActiveView = 'documents' | 'search' | 'query' | 'terms';
+
+const workspaceViews: Array<{ id: ActiveView; label: string; description: string }> = [
+  { id: 'documents', label: '文档', description: '编辑、预览、版本' },
+  { id: 'search', label: '搜索', description: '全文 / 语义检索' },
+  { id: 'query', label: '问答', description: 'RAG 答案与来源' },
+  { id: 'terms', label: '术语', description: '空间术语维护' },
+];
+
 type MarkdownBlockProps = {
   content: string;
   emptyText?: string;
@@ -93,6 +102,45 @@ function markdownExcerpt(content: string, maxLength = 140) {
   return `${trimmedContent.slice(0, maxLength)}…`;
 }
 
+type WorkspaceViewNavProps = {
+  activeView: ActiveView;
+  disabled: boolean;
+  onChange: (view: ActiveView) => void;
+};
+
+function WorkspaceViewNav({ activeView, disabled, onChange }: WorkspaceViewNavProps) {
+  return (
+    <nav className="view-nav" aria-label="工作台视图">
+      {workspaceViews.map((view) => (
+        <button
+          key={view.id}
+          type="button"
+          className={activeView === view.id ? 'active' : ''}
+          onClick={() => onChange(view.id)}
+          disabled={disabled}
+        >
+          <span>{view.label}</span>
+          <small>{view.description}</small>
+        </button>
+      ))}
+    </nav>
+  );
+}
+
+type StatusBarProps = {
+  notice: string;
+  error: string;
+};
+
+function StatusBar({ notice, error }: StatusBarProps) {
+  return (
+    <footer className="status-bar">
+      <span>{notice}</span>
+      {error ? <strong>{error}</strong> : null}
+    </footer>
+  );
+}
+
 function App() {
   const [username, setUsername] = useState('alice');
   const [session, setSession] = useState<Session | null>(null);
@@ -116,6 +164,7 @@ function App() {
   const [importFile, setImportFile] = useState<File | null>(null);
   const [importInputKey, setImportInputKey] = useState(0);
   const [lastImportSummary, setLastImportSummary] = useState('');
+  const [activeView, setActiveView] = useState<ActiveView>('documents');
 
   const selectedDocument = useMemo(
     () => documents.find((document) => document.id === selectedId) ?? null,
@@ -230,6 +279,7 @@ function App() {
         currentSpaceId: result.current_space_id,
       });
       setSelectedId(null);
+      setActiveView('documents');
       setSearchResult(null);
       setQueryResult(null);
       setSelectedTermId(null);
@@ -278,6 +328,7 @@ function App() {
       });
       await refreshWorkspace(session.token);
       setSelectedId(result.parsed_doc_id);
+      setActiveView('documents');
       setIsCreating(false);
       setSearchResult(null);
       setQueryResult(null);
@@ -349,6 +400,17 @@ function App() {
     });
   }
 
+  function handleCreateDocument() {
+    setActiveView('documents');
+    setIsCreating(true);
+  }
+
+  function handleSelectDocument(documentId: number) {
+    setActiveView('documents');
+    setSelectedId(documentId);
+    setIsCreating(false);
+  }
+
   async function handleDelete() {
     if (!session || !selectedDocument) {
       return;
@@ -395,6 +457,7 @@ function App() {
       return;
     }
 
+    setActiveView('documents');
     setIsCreating(false);
     setSelectedId(documentId);
 
@@ -455,7 +518,7 @@ function App() {
           </form>
         </section>
       ) : (
-        <div className="workspace-grid">
+        <div className="workspace-layout">
           <aside className="sidebar card">
             <section>
               <h2>空间</h2>
@@ -470,10 +533,12 @@ function App() {
               </select>
             </section>
 
+            <WorkspaceViewNav activeView={activeView} disabled={isBusy} onChange={setActiveView} />
+
             <section>
               <div className="section-title">
                 <h2>文档</h2>
-                <button type="button" onClick={() => setIsCreating(true)} disabled={isBusy}>新建</button>
+                <button type="button" onClick={handleCreateDocument} disabled={isBusy}>新建</button>
               </div>
               {documents.length === 0 ? (
                 <p className="empty-state">当前空间暂无可见文档。</p>
@@ -484,10 +549,7 @@ function App() {
                       <button
                         type="button"
                         className={document.id === selectedId && !isCreating ? 'active' : ''}
-                        onClick={() => {
-                          setSelectedId(document.id);
-                          setIsCreating(false);
-                        }}
+                        onClick={() => handleSelectDocument(document.id)}
                       >
                         <span>{document.title}</span>
                         <small>{permissionLabels[document.permission]} · v{document.current_version}</small>
@@ -537,273 +599,287 @@ function App() {
             </section>
           </aside>
 
-          <section className="editor-panel card">
-            <div className="section-title">
-              <div>
-                <p className="eyebrow">REQ-004 / REQ-005</p>
-                <h2>{isCreating ? '新建文档' : selectedDocument?.title ?? '选择文档'}</h2>
-              </div>
-              {selectedDocument && !isCreating ? (
-                <button type="button" className="danger" onClick={() => void handleDelete()} disabled={isBusy}>删除</button>
-              ) : null}
-            </div>
+          <section className="workspace-main">
+            {activeView === 'documents' ? (
+              <div className="document-view-grid">
+                <section className="editor-panel card">
+                  <div className="section-title">
+                    <div>
+                      <p className="eyebrow">REQ-004 / REQ-005</p>
+                      <h2>{isCreating ? '新建文档' : selectedDocument?.title ?? '选择文档'}</h2>
+                    </div>
+                    {selectedDocument && !isCreating ? (
+                      <button type="button" className="danger" onClick={() => void handleDelete()} disabled={isBusy}>删除</button>
+                    ) : null}
+                  </div>
 
-            <form className="editor-form" onSubmit={handleSave}>
-              <label>
-                标题
-                <input
-                  value={draft.title}
-                  onChange={(event) => setDraft({ ...draft, title: event.target.value })}
-                  placeholder="输入 Markdown 文档标题"
-                />
-              </label>
-              <label>
-                权限
-                <select
-                  value={draft.permission}
-                  onChange={(event) => setDraft({ ...draft, permission: event.target.value as DocumentPermission })}
-                >
-                  {Object.entries(permissionLabels).map(([value, label]) => (
-                    <option key={value} value={value}>{label}</option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Markdown 内容
-                <textarea
-                  value={draft.content_md}
-                  onChange={(event) => setDraft({ ...draft, content_md: event.target.value })}
-                  placeholder="输入或编辑 Markdown 内容"
-                  rows={15}
-                />
-              </label>
-              <section className="markdown-preview" aria-label="Markdown 预览">
-                <div className="subsection-heading">
-                  <strong>Markdown 预览</strong>
-                  <span>保存前可检查标题、列表、强调与段落排版</span>
-                </div>
-                <MarkdownBlock content={draft.content_md} emptyText="暂无可预览内容。" />
-              </section>
-              <button type="submit" disabled={isBusy || draft.title.trim().length === 0}>保存</button>
-            </form>
-          </section>
-
-          <aside className="insight-panel">
-            <section className="versions-panel card">
-              <p className="eyebrow">REQ-006</p>
-              <h2>版本历史</h2>
-              {!selectedDocument || isCreating ? (
-                <p className="empty-state">保存文档后可查看版本历史。</p>
-              ) : versions.length === 0 ? (
-                <p className="empty-state">暂无版本记录。</p>
-              ) : (
-                <ol className="version-list">
-                  {versions.map((version) => (
-                    <li key={version.version_no}>
-                      <div>
-                        <strong>版本 {version.version_no}</strong>
-                        <small>编辑者 #{version.editor_id}</small>
+                  <form className="editor-form" onSubmit={handleSave}>
+                    <label>
+                      标题
+                      <input
+                        value={draft.title}
+                        onChange={(event) => setDraft({ ...draft, title: event.target.value })}
+                        placeholder="输入 Markdown 文档标题"
+                      />
+                    </label>
+                    <label>
+                      权限
+                      <select
+                        value={draft.permission}
+                        onChange={(event) => setDraft({ ...draft, permission: event.target.value as DocumentPermission })}
+                      >
+                        {Object.entries(permissionLabels).map(([value, label]) => (
+                          <option key={value} value={value}>{label}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label>
+                      Markdown 内容
+                      <textarea
+                        value={draft.content_md}
+                        onChange={(event) => setDraft({ ...draft, content_md: event.target.value })}
+                        placeholder="输入或编辑 Markdown 内容"
+                        rows={15}
+                      />
+                    </label>
+                    <section className="markdown-preview" aria-label="Markdown 预览">
+                      <div className="subsection-heading">
+                        <strong>Markdown 预览</strong>
+                        <span>保存前可检查标题、列表、强调与段落排版</span>
                       </div>
-                      <MarkdownBlock content={markdownExcerpt(version.content_md)} emptyText="空内容" className="compact-markdown" />
-                      <button type="button" onClick={() => void handleRestore(version.version_no)} disabled={isBusy}>
-                        恢复
-                      </button>
-                    </li>
-                  ))}
-                </ol>
-              )}
-            </section>
+                      <MarkdownBlock content={draft.content_md} emptyText="暂无可预览内容。" />
+                    </section>
+                    <button type="submit" disabled={isBusy || draft.title.trim().length === 0}>保存</button>
+                  </form>
+                </section>
 
-            <section className="search-panel card">
-              <p className="eyebrow">REQ-007</p>
-              <h2>全文搜索</h2>
-              <form className="compact-form" onSubmit={handleSearch}>
-                <label>
-                  关键词
-                  <input
-                    value={searchQuery}
-                    onChange={(event) => setSearchQuery(event.target.value)}
-                    placeholder="例如：触发延迟"
-                  />
-                </label>
-                <button type="submit" disabled={isBusy || searchQuery.trim().length === 0}>搜索</button>
-              </form>
-              {!searchResult ? (
-                <p className="empty-state">输入关键词检索当前空间可见文档。</p>
-              ) : searchResult.items.length === 0 ? (
-                <p className="empty-state">未找到匹配文档。</p>
-              ) : (
-                <ul className="result-list">
-                  {searchResult.items.map((item) => (
-                    <li key={`${item.doc_id}-${item.chunk_id}`}>
-                      <article className="result-card">
-                        <button
-                          type="button"
-                          className="result-open-button"
-                          onClick={() => void handleOpenDocument(item.doc_id, item.title)}
-                          disabled={isBusy}
-                        >
-                          {item.title}
-                        </button>
-                        <small>文档 #{item.doc_id} · chunk {item.ordinal} · 点击标题打开</small>
-                        <MarkdownBlock content={item.snippet} className="compact-markdown" />
-                      </article>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-
-            <section className="query-panel card">
-              <p className="eyebrow">REQ-008</p>
-              <h2>RAG 问答</h2>
-              <form className="compact-form" onSubmit={handleQuery}>
-                <label>
-                  问题
-                  <textarea
-                    className="question-input"
-                    value={question}
-                    onChange={(event) => setQuestion(event.target.value)}
-                    placeholder="例如：场景联动触发延迟是多少？"
-                    rows={3}
-                  />
-                </label>
-                <button type="submit" disabled={isBusy || question.trim().length === 0}>提问</button>
-              </form>
-              {!queryResult ? (
-                <p className="empty-state">输入问题后，会基于当前空间可见文档返回降级答案。</p>
-              ) : (
-                <div className="answer-box">
-                  <strong>答案</strong>
-                  <MarkdownBlock content={queryResult.answer} />
-                  {queryResult.sources.length === 0 ? (
-                    <p className="empty-state">暂无来源。</p>
+                <section className="versions-panel card">
+                  <p className="eyebrow">REQ-006</p>
+                  <h2>版本历史</h2>
+                  {!selectedDocument || isCreating ? (
+                    <p className="empty-state">保存文档后可查看版本历史。</p>
+                  ) : versions.length === 0 ? (
+                    <p className="empty-state">暂无版本记录。</p>
                   ) : (
-                    <ul className="result-list">
-                      {queryResult.sources.map((source) => (
-                        <li key={`${source.doc_id}-${source.snippet}`}>
-                          <article className={`result-card ${source.doc_id ? '' : 'muted'}`.trim()}>
-                            {source.doc_id ? (
-                              <button
-                                type="button"
-                                className="result-open-button"
-                                onClick={() => void handleOpenDocument(source.doc_id, source.title)}
-                                disabled={isBusy}
-                              >
-                                {source.title}
-                              </button>
-                            ) : (
-                              <strong>{source.title}</strong>
-                            )}
-                            <small>{source.source_type === 'term' ? '术语表来源' : `文档 #${source.doc_id} · 点击标题打开`}</small>
-                            <MarkdownBlock content={source.snippet} className="compact-markdown" />
-                          </article>
+                    <ol className="version-list">
+                      {versions.map((version) => (
+                        <li key={version.version_no}>
+                          <div>
+                            <strong>版本 {version.version_no}</strong>
+                            <small>编辑者 #{version.editor_id}</small>
+                          </div>
+                          <MarkdownBlock content={markdownExcerpt(version.content_md)} emptyText="空内容" className="compact-markdown" />
+                          <button type="button" onClick={() => void handleRestore(version.version_no)} disabled={isBusy}>
+                            恢复
+                          </button>
                         </li>
                       ))}
-                    </ul>
+                    </ol>
                   )}
-                </div>
-              )}
-            </section>
+                </section>
+              </div>
+            ) : null}
 
-            <section className="term-panel card">
-              <p className="eyebrow">REQ-036</p>
-              <div className="section-title">
-                <h2>术语管理</h2>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedTermId(null);
-                    setTermDraft(emptyTermDraft);
-                  }}
-                  disabled={isBusy}
-                >
-                  新建
-                </button>
-              </div>
-              <div className="subsection-heading">
-                <strong>术语编辑</strong>
-                <span>{selectedTermId ? '正在编辑已选术语' : '填写后创建当前空间术语'}</span>
-              </div>
-              <form className="compact-form" onSubmit={handleSaveTerm}>
-                <label>
-                  标准名称
-                  <input
-                    value={termDraft.term}
-                    onChange={(event) => setTermDraft({ ...termDraft, term: event.target.value })}
-                    placeholder="例如：触发延迟"
-                  />
-                </label>
-                <label>
-                  定义
-                  <textarea
-                    className="question-input"
-                    value={termDraft.definition}
-                    onChange={(event) => setTermDraft({ ...termDraft, definition: event.target.value })}
-                    placeholder="例如：从条件满足到指令发出"
-                    rows={3}
-                  />
-                </label>
-                <label>
-                  别名（逗号分隔）
-                  <input
-                    value={termDraft.aliases}
-                    onChange={(event) => setTermDraft({ ...termDraft, aliases: event.target.value })}
-                    placeholder="例如：开关延迟, 联动延迟"
-                  />
-                </label>
-                <label>
-                  状态
-                  <select
-                    value={termDraft.status}
-                    onChange={(event) => setTermDraft({ ...termDraft, status: event.target.value as TermStatus })}
+            {activeView === 'search' ? (
+              <section className="search-panel card focus-panel">
+                <p className="eyebrow">REQ-007</p>
+                <h2>全文搜索</h2>
+                <form className="compact-form focus-form" onSubmit={handleSearch}>
+                  <label>
+                    关键词
+                    <input
+                      value={searchQuery}
+                      onChange={(event) => setSearchQuery(event.target.value)}
+                      placeholder="例如：触发延迟"
+                    />
+                  </label>
+                  <button type="submit" disabled={isBusy || searchQuery.trim().length === 0}>搜索</button>
+                </form>
+                {!searchResult ? (
+                  <p className="empty-state">输入关键词检索当前空间可见文档。</p>
+                ) : searchResult.items.length === 0 ? (
+                  <p className="empty-state">未找到匹配文档。</p>
+                ) : (
+                  <ul className="result-list">
+                    {searchResult.items.map((item) => (
+                      <li key={`${item.doc_id}-${item.chunk_id}`}>
+                        <article className="result-card">
+                          <button
+                            type="button"
+                            className="result-open-button"
+                            onClick={() => void handleOpenDocument(item.doc_id, item.title)}
+                            disabled={isBusy}
+                          >
+                            {item.title}
+                          </button>
+                          <small>文档 #{item.doc_id} · chunk {item.ordinal} · 点击标题打开</small>
+                          <MarkdownBlock content={item.snippet} className="compact-markdown" />
+                        </article>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+            ) : null}
+
+            {activeView === 'query' ? (
+              <section className="query-panel card focus-panel">
+                <p className="eyebrow">REQ-008</p>
+                <h2>RAG 问答</h2>
+                <form className="compact-form focus-form" onSubmit={handleQuery}>
+                  <label>
+                    问题
+                    <textarea
+                      className="question-input"
+                      value={question}
+                      onChange={(event) => setQuestion(event.target.value)}
+                      placeholder="例如：场景联动触发延迟是多少？"
+                      rows={3}
+                    />
+                  </label>
+                  <button type="submit" disabled={isBusy || question.trim().length === 0}>提问</button>
+                </form>
+                {!queryResult ? (
+                  <p className="empty-state">输入问题后，会基于当前空间可见文档返回降级答案。</p>
+                ) : (
+                  <div className="answer-box">
+                    <strong>答案</strong>
+                    <MarkdownBlock content={queryResult.answer} />
+                    {queryResult.sources.length === 0 ? (
+                      <p className="empty-state">暂无来源。</p>
+                    ) : (
+                      <ul className="result-list">
+                        {queryResult.sources.map((source) => (
+                          <li key={`${source.doc_id}-${source.snippet}`}>
+                            <article className={`result-card ${source.doc_id ? '' : 'muted'}`.trim()}>
+                              {source.doc_id ? (
+                                <button
+                                  type="button"
+                                  className="result-open-button"
+                                  onClick={() => void handleOpenDocument(source.doc_id, source.title)}
+                                  disabled={isBusy}
+                                >
+                                  {source.title}
+                                </button>
+                              ) : (
+                                <strong>{source.title}</strong>
+                              )}
+                              <small>{source.source_type === 'term' ? '术语表来源' : `文档 #${source.doc_id} · 点击标题打开`}</small>
+                              <MarkdownBlock content={source.snippet} className="compact-markdown" />
+                            </article>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
+              </section>
+            ) : null}
+
+            {activeView === 'terms' ? (
+              <section className="term-panel card focus-panel">
+                <p className="eyebrow">REQ-036</p>
+                <div className="section-title">
+                  <h2>术语管理</h2>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedTermId(null);
+                      setTermDraft(emptyTermDraft);
+                    }}
+                    disabled={isBusy}
                   >
-                    <option value="confirmed">已确认</option>
-                    <option value="pending">待确认</option>
-                  </select>
-                </label>
-                <div className="button-row">
-                  <button type="submit" disabled={isBusy || termDraft.term.trim().length === 0 || termDraft.definition.trim().length === 0}>保存术语</button>
-                  {selectedTermId ? (
-                    <button type="button" className="danger" onClick={() => void handleDeleteTerm()} disabled={isBusy}>删除</button>
-                  ) : null}
+                    新建
+                  </button>
                 </div>
-              </form>
-              <div className="subsection-heading">
-                <strong>当前空间术语</strong>
-                <span>点击条目可载入到上方编辑区</span>
-              </div>
-              {terms.length === 0 ? (
-                <p className="empty-state">当前空间暂无术语。</p>
-              ) : (
-                <ul className="term-list">
-                  {terms.map((term) => (
-                    <li key={term.id}>
-                      <button
-                        type="button"
-                        className={term.id === selectedTermId ? 'active' : ''}
-                        onClick={() => {
-                          setSelectedTermId(term.id);
-                          setTermDraft(termToDraft(term));
-                        }}
-                      >
-                        <strong>{term.term}</strong>
-                        <small>{term.space_id ? '当前空间' : '全局'} · {term.status === 'confirmed' ? '已确认' : '待确认'}</small>
-                        <span>{term.definition}</span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-          </aside>
+                <div className="term-view-grid">
+                  <div className="term-list-pane">
+                    <div className="subsection-heading">
+                      <strong>当前空间术语</strong>
+                      <span>点击条目可载入到右侧编辑区</span>
+                    </div>
+                    {terms.length === 0 ? (
+                      <p className="empty-state">当前空间暂无术语。</p>
+                    ) : (
+                      <ul className="term-list">
+                        {terms.map((term) => (
+                          <li key={term.id}>
+                            <button
+                              type="button"
+                              className={term.id === selectedTermId ? 'active' : ''}
+                              onClick={() => {
+                                setSelectedTermId(term.id);
+                                setTermDraft(termToDraft(term));
+                              }}
+                            >
+                              <strong>{term.term}</strong>
+                              <small>{term.space_id ? '当前空间' : '全局'} · {term.status === 'confirmed' ? '已确认' : '待确认'}</small>
+                              <span>{term.definition}</span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+
+                  <div className="term-edit-pane">
+                    <div className="subsection-heading">
+                      <strong>术语编辑</strong>
+                      <span>{selectedTermId ? '正在编辑已选术语' : '填写后创建当前空间术语'}</span>
+                    </div>
+                    <form className="compact-form" onSubmit={handleSaveTerm}>
+                      <label>
+                        标准名称
+                        <input
+                          value={termDraft.term}
+                          onChange={(event) => setTermDraft({ ...termDraft, term: event.target.value })}
+                          placeholder="例如：触发延迟"
+                        />
+                      </label>
+                      <label>
+                        定义
+                        <textarea
+                          className="question-input"
+                          value={termDraft.definition}
+                          onChange={(event) => setTermDraft({ ...termDraft, definition: event.target.value })}
+                          placeholder="例如：从条件满足到指令发出"
+                          rows={3}
+                        />
+                      </label>
+                      <label>
+                        别名（逗号分隔）
+                        <input
+                          value={termDraft.aliases}
+                          onChange={(event) => setTermDraft({ ...termDraft, aliases: event.target.value })}
+                          placeholder="例如：开关延迟, 联动延迟"
+                        />
+                      </label>
+                      <label>
+                        状态
+                        <select
+                          value={termDraft.status}
+                          onChange={(event) => setTermDraft({ ...termDraft, status: event.target.value as TermStatus })}
+                        >
+                          <option value="confirmed">已确认</option>
+                          <option value="pending">待确认</option>
+                        </select>
+                      </label>
+                      <div className="button-row">
+                        <button type="submit" disabled={isBusy || termDraft.term.trim().length === 0 || termDraft.definition.trim().length === 0}>保存术语</button>
+                        {selectedTermId ? (
+                          <button type="button" className="danger" onClick={() => void handleDeleteTerm()} disabled={isBusy}>删除</button>
+                        ) : null}
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </section>
+            ) : null}
+          </section>
         </div>
       )}
 
-      <footer className="status-bar">
-        <span>{notice}</span>
-        {error ? <strong>{error}</strong> : null}
-      </footer>
+      <StatusBar notice={notice} error={error} />
     </main>
   );
 }
