@@ -10,7 +10,7 @@
 | 输入来源 | `docs/03-prd.md`、`docs/04-architecture.md`、`docs/env/local-env.md`、`ai/project-rules.md` |
 | 覆盖架构组件 | FastAPI 后端、React 前端、PostgreSQL + pgvector、Embedding / LLM 适配、导入解析 |
 | 当前状态 | 目标基线已定（Phase1 技术选型已钉死）。Sprint-7/8 + task-009 真实化后：**PostgreSQL+pgvector / Embedding / LLM 已接入，RAG 与 search 均可走向量召回**（RG-001/002/004 Go，见 §1「当前实现状态」列与 §5.1）；OCR / 真实 PDF 解析仍降级（RG-003，后续阶段）。实现期变更需先修订本文 |
-| 最后更新 | 2026-07-11（doc-standards 结构合规对齐） |
+| 最后更新 | 2026-07-11（Phase2 核心项设计骨架补强） |
 
 ## 1. 技术栈与版本
 
@@ -56,6 +56,8 @@ flowchart TB
 > 关联详细设计：`docs/design/rag-retrieval.md`、`ingestion.md`、`term-management.md`、`permissions.md`。
 > **错误码**：HTTP 状态码 + `{ code, msg, data }` 双层；`code=0` 成功，业务错误 4 位数字码（详见 `docs/07-api-spec.md` §1）。
 > **切块 / Embedding 参数**：导入侧与检索侧共用同一套；按标题 / 段落优先切分，目标块长 512 tokens、重叠 64 tokens、单块最小 80 字符；模型 `BAAI/bge-small-zh-v1.5`（512 维，pgvector `vector(512)`，写入前归一化）；批量 batch size 32。
+>
+> **Phase2 候选技术决策**（待 `04` ADR-006/007 + tech-env-eval 定）：PDF 导出库（REQ-027，RG-006 待评估）、标签 + 反向链接索引模型（REQ-012 / 026，候选 PG 关系表 + `[[wikilink]]` 解析）、AI 润色复用 ADR-002 LLM adapter（REQ-014，无新门禁）。
 
 ### 2.1 依赖与配置矩阵
 
@@ -78,6 +80,7 @@ flowchart TB
 - **P1 禁止**：独立向量库、闭源 SDK 绑定、移动端、实时协作。
 - **高风险项不进 P1**：跨文档因果推理、问题热力矩阵——需本文先验证可行（对应 REQ-020/021）。
 - **前端交互设计边界**：UI 型项目，前端交互设计与 UI 原型策略见 `ai/project-rules.md` §2.7 与 `docs/design/frontend-interaction.md`（代码原型 + mock，Sprint-6 Edge/Chrome smoke 已通过）。
+- **Phase2（MVP，范围已确认）**：允许核心 5 项（REQ-012 / 014 / 025 / 026 / 027；详见 `03 §3`）；新真实依赖仅 PDF 导出库（RG-006 待评估）；REQ-015 / 016 / 017（协作 / 推送 / 移动端）不进 MVP，留后续 Phase。
 
 ## 4. 编码约定
 
@@ -109,6 +112,7 @@ flowchart TB
 | RG-003 | OCR（PaddleOCR） | **No-Go（降级）** | PaddleOCR 2.8.x 与运行环境不兼容；当前无 OCR | OCR 引擎定版 + 环境兼容验证 | —（未验证） | REQ-010（移至后续阶段） |
 | RG-004 | LLM（OpenAI 兼容） | **Go（GLM-5.2 已验证）** | `llm_adapter.py` 已接入 + 本机中转站 GLM `glm-5.2` 真实问答验证通过（Sprint-7，2026-07-09）；GPT/ollama 配置位就绪未验证 | — | GLM-5.2 真实问答；TC-P1-008 | REQ-008（问答真实化） |
 | RG-005 | Web / ORM 基础栈（FastAPI/Pydantic/React） | **Go** | 已接入并跑通 74 后端 tests（含 PG 集成 + embedding）+ 前端 build + 浏览器 smoke；requirements.txt drift 已解决（T7 PG-C-001） | — | 74 后端 tests + 前端 build + smoke；TC-P1-001..012 | REQ-001..006/011/036 |
+| RG-006 | Phase2 PDF 导出库（候选 weasyprint / reportlab） | **待评估** | Phase2 MVP 新依赖（REQ-027）；中文排版、字体、资源占用未验证 | 选型 + tech-env-eval（中文排版 / 字体 / 内存） | 待 tech-env-eval | REQ-027 |
 
 > 风险与验证映射：本表 RG-ID 与 `docs/09-verification.md §6` 风险项对齐（待 09 补 Risk-ID 列后双向链接）。
 
