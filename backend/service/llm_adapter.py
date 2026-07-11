@@ -9,8 +9,8 @@ the project keeps working without any LLM configured.
 Provider defaults — base_url/model are non-secret and live in code; the API key
 MUST come from the environment (never hardcoded):
 
-- ``glm``  : http://47.107.134.2:7777/v1  model ``glm-5.2``
-- ``gpt``  : http://47.107.134.2:7777/v1  model ``gpt5.5``
+- ``glm``  : http://192.168.15.190:7777/v1  model ``glm-5.2``
+- ``gpt``  : http://192.168.15.190:7777/v1  model ``gpt5.5``
 - ``local``: http://localhost:11434/v1     model ``qwen2.5:3b``  (ollama)
 - ``mock`` : no LLM call (degraded)
 
@@ -28,8 +28,8 @@ from dataclasses import dataclass
 
 
 _PROVIDER_DEFAULTS: dict[str, dict[str, str]] = {
-    "glm": {"base_url": "http://47.107.134.2:7777/v1", "model": "glm-5.2"},
-    "gpt": {"base_url": "http://47.107.134.2:7777/v1", "model": "gpt5.5"},
+    "glm": {"base_url": "http://192.168.15.190:7777/v1", "model": "glm-5.2"},
+    "gpt": {"base_url": "http://192.168.15.190:7777/v1", "model": "gpt5.5"},
     "local": {"base_url": "http://localhost:11434/v1", "model": "qwen2.5:3b"},
 }
 

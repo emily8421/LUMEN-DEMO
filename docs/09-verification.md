@@ -102,6 +102,7 @@
 | 2026-07-10 | Sprint-8 pgvector 接入（task-008 T1–T7） | 通过（RG-001/002 Go） | T1–T5 后端切 PostgreSQL（`docker/compose.yml` lumen-pg + ORM/PgRepository + 单例切换 + demo seed）；T6 RAG 向量召回（bge-small-zh 写 `lumen_chunks.embedding` + pgvector ANN，加法式叠加关键词，threshold 0.6）；74 后端 tests（含 PG 集成 + embedding）+ uvicorn 冒烟（相关问答 / 未找到红线 / 纯语义探针）；T7 文档回写 |
 | 2026-07-10 | Phase1 Sprint / 全量验收 | Conditional Go（Demo closure） | TC-P1-001~012 均有验收口径与证据链：Sprint-1~6 按 Demo 降级口径通过；Sprint-7/8 真实 LLM、PostgreSQL+pgvector、Embedding 与 RAG 向量召回通过（RG-001/002/004/005 Go）；REQ-009 以 `.md` / `.txt` 已提取文本降级通过；REQ-010 OCR 明确移出 Phase1 必过（RG-003 No-Go，后续阶段）。遗留项：真实 Word / PDF 解析、OCR 真实化；不阻塞 Phase1 Demo closure，但阻塞无条件生产级 MVP 结论。 |
 | 2026-07-10 | task-009 search 向量化 + 可选 zhparser | 通过 | `/api/search` 升级为 substring + `ts_vector` SQL 候选 + pgvector 语义召回；`init_db()` 两次验证通过；当前 `pgvector/pgvector:pg16` 无 zhparser 时回退 `simple`；76 后端 tests 通过（含 `tests.backend.test_search` 与 `test_search_api_returns_vector_semantic_hits`）。 |
+| 2026-07-11 | RG-004 LLM 中转迁移复测 | 通过 | 旧中转 `47.107.134.2:7777` 的 key 被停用 → `.env` 迁至 `192.168.15.190:7777/v1`（`glm-5.2`）；`llm_adapter.chat()` + RAG 真实问答复测通过（答案带来源），RG-004 维持 Go。 |
 
 ### 5.1 缺陷与回归记录
 
@@ -119,7 +120,7 @@
 | ~~search 仍关键词检索（未向量化）~~ | ~~REQ-007 语义搜索~~ | ✅ **已解决**（task-009：substring + `ts_vector` SQL 候选 + pgvector 语义召回；zhparser 可选，当前镜像无扩展时回退 `simple`） |
 | 真实 PDF / Word 解析 | REQ-009 | 仅 `.md`/`.txt` 已提取文本；python-docx/pdfplumber 未接入（留后续阶段） |
 | OCR 质量与资源占用 | REQ-010、内容导入 | OCR 未实现，REQ-010 移至后续阶段（RG-003 No-Go）；当前降级为已提取文本 |
-| LLM 外部调用可用性 | REQ-008、REQ-036 | GLM `glm-5.2` 真实问答已验证（Sprint-7，RG-004→Go）；GPT/ollama 待验证 |
+| LLM 外部调用可用性 | REQ-008、REQ-036 | GLM `glm-5.2` 真实问答已验证（Sprint-7 首验 + 2026-07-11 新中转 `192.168.15.190:7777/v1` 复测，RG-004→Go；旧 `47.107.134.2` key 已停用）；GPT/ollama 待验证 |
 | P2 / 愿景高风险 AI 能力 | REQ-020 / 021 / 030 / 032 / 033 等 | 不进入 Phase1 必过项，技术验证通过后再补用例 |
 
 ## 7. 待人工确认项
