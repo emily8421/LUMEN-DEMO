@@ -246,22 +246,150 @@ p {
 }
 
 .result-list li {
+  display: block;
+}
+
+.result-card {
   display: grid;
+  width: 100%;
   gap: 6px;
   border: 1px solid #e0e7ff;
   border-radius: 14px;
   background: #f8fafc;
+  color: #1e293b;
   padding: 12px;
+  text-align: left;
+}
+
+.result-card:hover,
+.result-card:focus-within {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.result-card.muted {
+  background: #f1f5f9;
+}
+
+.result-open-button {
+  justify-self: start;
+  border-radius: 8px;
+  background: transparent;
+  color: #1d4ed8;
+  padding: 0;
+  text-align: left;
+}
+
+.result-open-button:hover:not(:disabled),
+.result-open-button:focus-visible:not(:disabled) {
+  text-decoration: underline;
 }
 
 .result-list small {
   color: #64748b;
 }
 
-.result-list p,
-.answer-box p {
+.markdown-preview {
+  display: grid;
+  gap: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #f8fafc;
+  padding: 14px;
+}
+
+.markdown-body {
   color: #334155;
   line-height: 1.55;
+}
+
+.markdown-body > * + * {
+  margin-top: 0.75em;
+}
+
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3 {
+  color: #0f172a;
+  line-height: 1.25;
+}
+
+.markdown-body h1 {
+  font-size: 24px;
+}
+
+.markdown-body h2 {
+  font-size: 20px;
+}
+
+.markdown-body h3 {
+  font-size: 16px;
+}
+
+.markdown-body ul,
+.markdown-body ol {
+  margin-bottom: 0;
+  padding-left: 1.25rem;
+}
+
+.markdown-body li + li {
+  margin-top: 0.3em;
+}
+
+.markdown-body code {
+  border-radius: 6px;
+  background: #e2e8f0;
+  color: #0f172a;
+  font-family: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+  font-size: 0.92em;
+  padding: 2px 5px;
+}
+
+.markdown-body pre {
+  overflow: auto;
+  border-radius: 10px;
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 12px;
+}
+
+.markdown-body pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+}
+
+.markdown-body blockquote {
+  margin: 0;
+  border-left: 4px solid #93c5fd;
+  color: #475569;
+  padding-left: 12px;
+}
+
+.markdown-body table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.markdown-body th,
+.markdown-body td {
+  border: 1px solid #cbd5e1;
+  padding: 6px 8px;
+}
+
+.markdown-body a {
+  color: #2563eb;
+}
+
+.compact-markdown {
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.compact-markdown h1,
+.compact-markdown h2,
+.compact-markdown h3 {
+  font-size: 14px;
 }
 
 .answer-box {

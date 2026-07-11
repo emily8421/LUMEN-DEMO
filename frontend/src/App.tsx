@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 import {
   createDocument,
   createTerm,
@@ -63,6 +64,34 @@ type Session = {
   userId: number;
   currentSpaceId: number;
 };
+
+type MarkdownBlockProps = {
+  content: string;
+  emptyText?: string;
+  className?: string;
+};
+
+function MarkdownBlock({ content, emptyText = '暂无内容。', className = '' }: MarkdownBlockProps) {
+  const trimmedContent = content.trim();
+
+  if (!trimmedContent) {
+    return <p className="empty-state">{emptyText}</p>;
+  }
+
+  return (
+    <div className={`markdown-body ${className}`.trim()}>
+      <ReactMarkdown>{trimmedContent}</ReactMarkdown>
+    </div>
+  );
+}
+
+function markdownExcerpt(content: string, maxLength = 140) {
+  const trimmedContent = content.trim();
+  if (trimmedContent.length <= maxLength) {
+    return trimmedContent;
+  }
+  return `${trimmedContent.slice(0, maxLength)}…`;
+}
 
 function App() {
   const [username, setUsername] = useState('alice');
@@ -175,9 +204,13 @@ function App() {
   async function loadDocumentDetail(token: string, documentId: number) {
     try {
       const detail = await getDocument(token, documentId);
-      setDocuments((currentDocuments) => currentDocuments.map((document) => (
-        document.id === detail.id ? detail : document
-      )));
+      setDocuments((currentDocuments) => {
+        const hasDocument = currentDocuments.some((document) => document.id === detail.id);
+        if (!hasDocument) {
+          return [detail, ...currentDocuments];
+        }
+        return currentDocuments.map((document) => (document.id === detail.id ? detail : document));
+      });
     } catch (caughtError) {
       const message = caughtError instanceof Error ? caughtError.message : '文档详情加载失败';
       setError(message);
@@ -281,6 +314,12 @@ function App() {
       return;
     }
 
+    const selectedTerm = terms.find((term) => term.id === selectedTermId);
+    const termLabel = selectedTerm?.term ?? `#${selectedTermId}`;
+    if (!window.confirm(`确认删除术语「${termLabel}」？此操作不可撤销。`)) {
+      return;
+    }
+
     await runAction('正在删除术语...', async () => {
       await deleteTerm(session.token, selectedTermId);
       const result = await listTerms(session.token);
@@ -315,6 +354,10 @@ function App() {
       return;
     }
 
+    if (!window.confirm(`确认删除文档「${selectedDocument.title}」？此操作不可撤销。`)) {
+      return;
+    }
+
     await runAction('正在删除文档...', async () => {
       await deleteDocument(session.token, selectedDocument.id);
       setSelectedId(null);
@@ -329,6 +372,10 @@ function App() {
       return;
     }
 
+    if (!window.confirm(`确认将「${selectedDocument.title}」恢复到版本 ${versionNo}？`)) {
+      return;
+    }
+
     await runAction(`正在恢复版本 ${versionNo}...`, async () => {
       const restored = await restoreVersion(session.token, selectedDocument.id, versionNo);
       await refreshWorkspace(session.token);
@@ -336,6 +383,33 @@ function App() {
       await loadVersions(session.token, restored.id);
       setNotice(`已恢复到版本 ${versionNo}。`);
     });
+  }
+
+  async function handleOpenDocument(documentId: number | null, title: string) {
+    if (!documentId) {
+      setNotice('该来源为术语表记录，暂无可打开文档。');
+      return;
+    }
+
+    if (!session) {
+      return;
+    }
+
+    setIsCreating(false);
+    setSelectedId(documentId);
+
+    const documentRecord = documents.find((document) => document.id === documentId);
+    if (!documentRecord || documentRecord.content_md === undefined) {
+      await runAction('正在打开来源文档...', async () => {
+        await loadDocumentDetail(session.token, documentId);
+        await loadVersions(session.token, documentId);
+        setNotice(`已打开来源文档：${title}`);
+      });
+      return;
+    }
+
+    await loadVersions(session.token, documentId);
+    setNotice(`已打开来源文档：${title}`);
   }
 
   async function runAction(progressMessage: string, action: () => Promise<void>) {
@@ -357,8 +431,8 @@ function App() {
     <main className="app-shell">
       <header className="topbar">
         <div>
-          <p className="eyebrow">LUMEN Demo · Sprint-6</p>
-          <h1>桌面端知识库集成验收</h1>
+          <p className="eyebrow">LUMEN Demo</p>
+          <h1>LUMEN 团队知识库工作台</h1>
         </div>
         {session ? (
           <div className="session-card">
@@ -503,6 +577,13 @@ function App() {
                   rows={15}
                 />
               </label>
+              <section className="markdown-preview" aria-label="Markdown 预览">
+                <div className="subsection-heading">
+                  <strong>Markdown 预览</strong>
+                  <span>保存前可检查标题、列表、强调与段落排版</span>
+                </div>
+                <MarkdownBlock content={draft.content_md} emptyText="暂无可预览内容。" />
+              </section>
               <button type="submit" disabled={isBusy || draft.title.trim().length === 0}>保存</button>
             </form>
           </section>
@@ -523,7 +604,7 @@ function App() {
                         <strong>版本 {version.version_no}</strong>
                         <small>编辑者 #{version.editor_id}</small>
                       </div>
-                      <p>{version.content_md.slice(0, 48) || '空内容'}</p>
+                      <MarkdownBlock content={markdownExcerpt(version.content_md)} emptyText="空内容" className="compact-markdown" />
                       <button type="button" onClick={() => void handleRestore(version.version_no)} disabled={isBusy}>
                         恢复
                       </button>
@@ -555,9 +636,18 @@ function App() {
                 <ul className="result-list">
                   {searchResult.items.map((item) => (
                     <li key={`${item.doc_id}-${item.chunk_id}`}>
-                      <strong>{item.title}</strong>
-                      <small>文档 #{item.doc_id} · chunk {item.ordinal}</small>
-                      <p>{item.snippet}</p>
+                      <article className="result-card">
+                        <button
+                          type="button"
+                          className="result-open-button"
+                          onClick={() => void handleOpenDocument(item.doc_id, item.title)}
+                          disabled={isBusy}
+                        >
+                          {item.title}
+                        </button>
+                        <small>文档 #{item.doc_id} · chunk {item.ordinal} · 点击标题打开</small>
+                        <MarkdownBlock content={item.snippet} className="compact-markdown" />
+                      </article>
                     </li>
                   ))}
                 </ul>
@@ -585,16 +675,29 @@ function App() {
               ) : (
                 <div className="answer-box">
                   <strong>答案</strong>
-                  <p>{queryResult.answer}</p>
+                  <MarkdownBlock content={queryResult.answer} />
                   {queryResult.sources.length === 0 ? (
                     <p className="empty-state">暂无来源。</p>
                   ) : (
                     <ul className="result-list">
                       {queryResult.sources.map((source) => (
                         <li key={`${source.doc_id}-${source.snippet}`}>
-                          <strong>{source.title}</strong>
-                          <small>{source.source_type === 'term' ? '术语表来源' : `文档 #${source.doc_id}`}</small>
-                          <p>{source.snippet}</p>
+                          <article className={`result-card ${source.doc_id ? '' : 'muted'}`.trim()}>
+                            {source.doc_id ? (
+                              <button
+                                type="button"
+                                className="result-open-button"
+                                onClick={() => void handleOpenDocument(source.doc_id, source.title)}
+                                disabled={isBusy}
+                              >
+                                {source.title}
+                              </button>
+                            ) : (
+                              <strong>{source.title}</strong>
+                            )}
+                            <small>{source.source_type === 'term' ? '术语表来源' : `文档 #${source.doc_id} · 点击标题打开`}</small>
+                            <MarkdownBlock content={source.snippet} className="compact-markdown" />
+                          </article>
                         </li>
                       ))}
                     </ul>
