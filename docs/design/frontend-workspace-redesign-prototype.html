@@ -1,0 +1,863 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LUMEN 工作台重设计原型</title>
+  <style>
+    :root {
+      --bg: #f4f6f9;
+      --panel: #ffffff;
+      --panel-soft: #f8fafc;
+      --line: #dbe3ee;
+      --line-soft: #e8edf4;
+      --text: #172033;
+      --muted: #64748b;
+      --muted-2: #94a3b8;
+      --blue: #2563eb;
+      --blue-soft: #eaf2ff;
+      --green: #047857;
+      --green-soft: #ecfdf5;
+      --red: #dc2626;
+      --red-soft: #fef2f2;
+      --amber: #b45309;
+      --amber-soft: #fff7ed;
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --radius-control: 6px;
+      --radius-panel: 8px;
+      --font-body: 13px;
+      --font-main: 14px;
+      --font-title: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      font-size: var(--font-body);
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      border: 1px solid transparent;
+      border-radius: var(--radius-control);
+      background: var(--blue);
+      color: #fff;
+      cursor: pointer;
+      font-weight: 650;
+      padding: 7px 10px;
+    }
+
+    button.secondary {
+      border-color: var(--line);
+      background: #fff;
+      color: var(--text);
+    }
+
+    button.danger {
+      border-color: #fecaca;
+      background: var(--red-soft);
+      color: var(--red);
+    }
+
+    button.ghost {
+      border-color: transparent;
+      background: transparent;
+      color: var(--muted);
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-control);
+      background: #fff;
+      color: var(--text);
+      padding: 7px 9px;
+    }
+
+    textarea {
+      min-height: 180px;
+      resize: vertical;
+    }
+
+    .prototype-note {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-3);
+      border-bottom: 1px solid var(--line);
+      background: #0f172a;
+      color: #dbeafe;
+      padding: 8px 14px;
+    }
+
+    .prototype-note strong {
+      color: #fff;
+    }
+
+    .shell {
+      display: grid;
+      grid-template-rows: 48px minmax(0, calc(100vh - 82px));
+      min-height: calc(100vh - 34px);
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: 240px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: var(--space-3);
+      border-bottom: 1px solid var(--line);
+      background: var(--panel);
+      padding: 0 var(--space-4);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: var(--blue);
+      color: #fff;
+      font-weight: 800;
+    }
+
+    .brand-title {
+      display: grid;
+      line-height: 1.1;
+    }
+
+    .brand-title strong {
+      font-size: 15px;
+    }
+
+    .brand-title span,
+    .top-meta span,
+    .muted {
+      color: var(--muted);
+    }
+
+    .top-meta {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      min-width: 0;
+    }
+
+    .top-meta select {
+      width: 220px;
+    }
+
+    .top-status {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      white-space: nowrap;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #22c55e;
+    }
+
+    .workspace-shell {
+      display: grid;
+      grid-template-columns: 56px 260px minmax(0, 1fr);
+      min-height: 0;
+    }
+
+    .nav-rail {
+      display: grid;
+      grid-auto-rows: 54px;
+      align-content: start;
+      border-right: 1px solid var(--line);
+      background: #fbfdff;
+      padding-top: var(--space-2);
+    }
+
+    .nav-item {
+      display: grid;
+      place-items: center;
+      gap: 2px;
+      border: 0;
+      border-left: 3px solid transparent;
+      border-radius: 0;
+      background: transparent;
+      color: var(--muted);
+      padding: 0;
+    }
+
+    .nav-item span:first-child {
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .nav-item span:last-child {
+      font-size: 11px;
+    }
+
+    .nav-item.active {
+      border-left-color: var(--blue);
+      background: var(--blue-soft);
+      color: var(--blue);
+    }
+
+    .context-pane {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      min-width: 0;
+      min-height: 0;
+      border-right: 1px solid var(--line);
+      background: var(--panel);
+    }
+
+    .pane-header,
+    .pane-footer,
+    .workspace-toolbar,
+    .inspector-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-2);
+      min-height: 42px;
+      border-bottom: 1px solid var(--line-soft);
+      padding: 8px 10px;
+    }
+
+    .pane-footer {
+      border-top: 1px solid var(--line-soft);
+      border-bottom: 0;
+    }
+
+    .pane-title,
+    .view-title {
+      display: grid;
+      gap: 1px;
+      min-width: 0;
+    }
+
+    .pane-title strong,
+    .view-title strong {
+      overflow: hidden;
+      font-size: 14px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .pane-title span,
+    .view-title span,
+    .row-meta,
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .list {
+      min-height: 0;
+      overflow: auto;
+      padding: var(--space-2);
+    }
+
+    .list-row {
+      display: grid;
+      gap: 3px;
+      width: 100%;
+      border: 1px solid transparent;
+      border-radius: var(--radius-panel);
+      background: transparent;
+      color: var(--text);
+      padding: 8px;
+      text-align: left;
+    }
+
+    .list-row + .list-row {
+      margin-top: 3px;
+    }
+
+    .list-row.active {
+      border-color: #bfdbfe;
+      background: var(--blue-soft);
+    }
+
+    .list-row strong,
+    .result-row strong {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .badges {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--panel-soft);
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1;
+      padding: 3px 6px;
+    }
+
+    .badge.green {
+      border-color: #bbf7d0;
+      background: var(--green-soft);
+      color: var(--green);
+    }
+
+    .badge.amber {
+      border-color: #fed7aa;
+      background: var(--amber-soft);
+      color: var(--amber);
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      min-width: 0;
+      min-height: 0;
+      background: var(--panel-soft);
+    }
+
+    .workspace-toolbar {
+      min-height: 50px;
+      border-bottom-color: var(--line);
+      background: var(--panel);
+      padding: 8px 12px;
+    }
+
+    .toolbar-actions {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .workspace-body {
+      min-height: 0;
+      overflow: hidden;
+      padding: var(--space-3);
+    }
+
+    .documents-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 260px;
+      gap: var(--space-3);
+      height: 100%;
+      min-height: 0;
+    }
+
+    .editor-pane,
+    .inspector,
+    .task-pane {
+      min-width: 0;
+      min-height: 0;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-panel);
+      background: var(--panel);
+    }
+
+    .editor-pane {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+
+    .editor-toolbar {
+      display: grid;
+      grid-template-columns: minmax(180px, 1fr) 150px auto;
+      gap: var(--space-2);
+      border-bottom: 1px solid var(--line-soft);
+      padding: var(--space-2);
+    }
+
+    .tabbar {
+      display: flex;
+      gap: var(--space-1);
+      border-bottom: 1px solid var(--line-soft);
+      padding: 6px 8px 0;
+    }
+
+    .tabbar button {
+      border-bottom-right-radius: 0;
+      border-bottom-left-radius: 0;
+      background: transparent;
+      color: var(--muted);
+      padding: 6px 10px;
+    }
+
+    .tabbar button.active {
+      border-color: var(--line);
+      border-bottom-color: #fff;
+      background: #fff;
+      color: var(--blue);
+    }
+
+    .editor-content {
+      min-height: 0;
+      overflow: auto;
+      padding: var(--space-2);
+    }
+
+    .editor-content textarea {
+      min-height: 430px;
+      border: 0;
+      border-radius: 0;
+      background: #fff;
+      font-family: "Cascadia Code", Consolas, monospace;
+      line-height: 1.55;
+      outline: 0;
+    }
+
+    .inspector {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      overflow: hidden;
+    }
+
+    .inspector-list {
+      overflow: auto;
+      padding: var(--space-2);
+    }
+
+    .version-row,
+    .source-row {
+      display: grid;
+      gap: 4px;
+      border-bottom: 1px solid var(--line-soft);
+      padding: 8px 2px;
+    }
+
+    .version-row:first-child,
+    .source-row:first-child {
+      padding-top: 0;
+    }
+
+    .task-pane {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .task-input {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: var(--space-2);
+      border-bottom: 1px solid var(--line-soft);
+      padding: var(--space-3);
+    }
+
+    .result-list {
+      overflow: auto;
+      padding: var(--space-2) var(--space-3);
+    }
+
+    .result-row {
+      display: grid;
+      gap: 5px;
+      border-bottom: 1px solid var(--line-soft);
+      color: var(--text);
+      padding: 10px 2px;
+      text-decoration: none;
+    }
+
+    .result-row p {
+      margin: 0;
+      color: #334155;
+      line-height: 1.45;
+    }
+
+    .query-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 280px;
+      gap: var(--space-3);
+      height: 100%;
+      min-height: 0;
+    }
+
+    .answer-pane {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      min-height: 0;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-panel);
+      background: var(--panel);
+      overflow: hidden;
+    }
+
+    .answer-input {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: var(--space-2);
+      border-bottom: 1px solid var(--line-soft);
+      padding: var(--space-3);
+    }
+
+    .answer-input textarea {
+      min-height: 64px;
+    }
+
+    .answer-body {
+      overflow: auto;
+      padding: 18px 22px;
+      font-size: 14px;
+      line-height: 1.65;
+    }
+
+    .answer-body h3 {
+      margin: 0 0 8px;
+      font-size: 17px;
+    }
+
+    .answer-body p,
+    .answer-body ol {
+      margin: 0 0 12px;
+    }
+
+    .terms-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      height: 100%;
+    }
+
+    .term-form {
+      display: grid;
+      align-content: start;
+      gap: var(--space-3);
+      max-width: 760px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-panel);
+      background: var(--panel);
+      padding: var(--space-4);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 160px;
+      gap: var(--space-3);
+    }
+
+    .field {
+      display: grid;
+      gap: 5px;
+    }
+
+    .field label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .field.full {
+      grid-column: 1 / -1;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 1199px) {
+      .workspace-shell {
+        grid-template-columns: 56px 220px minmax(0, 1fr);
+      }
+
+      .documents-grid,
+      .query-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .inspector {
+        max-height: 230px;
+      }
+    }
+
+    @media (max-width: 899px) {
+      .topbar {
+        grid-template-columns: minmax(0, 1fr) auto;
+      }
+
+      .top-meta {
+        display: none;
+      }
+
+      .workspace-shell {
+        grid-template-columns: 56px minmax(0, 1fr);
+      }
+
+      .context-pane {
+        display: none;
+      }
+
+      .editor-toolbar,
+      .task-input,
+      .answer-input,
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="prototype-note">
+    <span><strong>LUMEN 工作台重设计原型</strong> · 静态可视化稿，不连接后端；用于确认布局、密度和任务聚焦。</span>
+    <span>点击左侧 文档 / 搜索 / 问答 / 术语 切换视图</span>
+  </div>
+
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">L</div>
+        <div class="brand-title">
+          <strong>LUMEN</strong>
+          <span>团队知识库工作台</span>
+        </div>
+      </div>
+      <div class="top-meta">
+        <span>当前空间</span>
+        <select aria-label="当前空间">
+          <option>nova-internal</option>
+          <option>external-readonly</option>
+        </select>
+        <span class="badge green">Demo 已连接</span>
+      </div>
+      <div class="top-status">
+        <span class="status-dot"></span>
+        <span>alice · 用户 #1</span>
+      </div>
+    </header>
+
+    <section class="workspace-shell">
+      <nav class="nav-rail" aria-label="主导航">
+        <button class="nav-item active" data-view="documents"><span>📄</span><span>文档</span></button>
+        <button class="nav-item" data-view="search"><span>🔍</span><span>搜索</span></button>
+        <button class="nav-item" data-view="query"><span>💬</span><span>问答</span></button>
+        <button class="nav-item" data-view="terms"><span>📚</span><span>术语</span></button>
+      </nav>
+
+      <aside class="context-pane" id="context-documents">
+        <div class="pane-header">
+          <div class="pane-title"><strong>文档</strong><span>当前空间 12 篇</span></div>
+          <button>新建</button>
+        </div>
+        <div class="list">
+          <button class="list-row active"><strong>场景联动延迟约束</strong><span class="row-meta">团队共享 · v3 · 2 分钟前</span></button>
+          <button class="list-row"><strong>Nova Sprint Notes</strong><span class="row-meta">私有 · v8 · 今天</span></button>
+          <button class="list-row"><strong>导入规范与降级口径</strong><span class="row-meta">团队共享 · v2 · 昨天</span></button>
+          <button class="list-row"><strong>外部只读演示材料</strong><span class="row-meta">外部只读 · v1 · 07-10</span></button>
+          <button class="list-row"><strong>RAG 问答红线</strong><span class="row-meta">团队共享 · v4 · 07-09</span></button>
+          <button class="list-row"><strong>术语表维护 SOP</strong><span class="row-meta">团队共享 · v5 · 07-08</span></button>
+          <button class="list-row"><strong>权限隔离验收记录</strong><span class="row-meta">私有 · v2 · 07-07</span></button>
+          <button class="list-row"><strong>Embedding 接入说明</strong><span class="row-meta">团队共享 · v6 · 07-06</span></button>
+        </div>
+        <div class="pane-footer">
+          <button class="secondary">导入 .md / .txt</button>
+          <span class="hint">PDF / OCR 后续阶段</span>
+        </div>
+      </aside>
+
+      <aside class="context-pane hidden" id="context-search">
+        <div class="pane-header">
+          <div class="pane-title"><strong>搜索上下文</strong><span>轻量筛选，不挤主区</span></div>
+        </div>
+        <div class="list">
+          <button class="list-row active"><strong>全部可见文档</strong><span class="row-meta">权限以后端返回为准</span></button>
+          <button class="list-row"><strong>团队共享</strong><span class="row-meta">仅筛选共享文档</span></button>
+          <button class="list-row"><strong>最近搜索</strong><span class="row-meta">触发延迟 / RAG 来源 / OCR</span></button>
+        </div>
+      </aside>
+
+      <aside class="context-pane hidden" id="context-query">
+        <div class="pane-header">
+          <div class="pane-title"><strong>问答上下文</strong><span>当前空间 nova-internal</span></div>
+        </div>
+        <div class="list">
+          <div class="list-row active"><strong>回答红线</strong><span class="row-meta">库外问题返回“未找到”，不编造。</span></div>
+          <div class="list-row"><strong>来源要求</strong><span class="row-meta">答案必须附文档或术语来源。</span></div>
+          <div class="list-row"><strong>术语注入</strong><span class="row-meta">触发延迟、场景联动等术语对齐。</span></div>
+        </div>
+      </aside>
+
+      <aside class="context-pane hidden" id="context-terms">
+        <div class="pane-header">
+          <div class="pane-title"><strong>术语</strong><span>当前空间 9 条</span></div>
+          <button>新建</button>
+        </div>
+        <div class="list">
+          <button class="list-row active"><strong>触发延迟</strong><span class="badges"><span class="badge green">已确认</span><span class="badge">当前空间</span></span></button>
+          <button class="list-row"><strong>开关延迟</strong><span class="badges"><span class="badge amber">待确认</span><span class="badge">别名</span></span></button>
+          <button class="list-row"><strong>场景联动</strong><span class="badges"><span class="badge green">已确认</span></span></button>
+          <button class="list-row"><strong>库外问题</strong><span class="badges"><span class="badge green">已确认</span></span></button>
+          <button class="list-row"><strong>向量召回</strong><span class="badges"><span class="badge green">已确认</span></span></button>
+          <button class="list-row"><strong>权限过滤</strong><span class="badges"><span class="badge green">已确认</span></span></button>
+          <button class="list-row"><strong>外部只读</strong><span class="badges"><span class="badge amber">待确认</span></span></button>
+          <button class="list-row"><strong>降级导入</strong><span class="badges"><span class="badge green">已确认</span></span></button>
+          <button class="list-row"><strong>版本恢复</strong><span class="badges"><span class="badge green">已确认</span></span></button>
+        </div>
+      </aside>
+
+      <section class="workspace" id="view-documents">
+        <div class="workspace-toolbar">
+          <div class="view-title"><strong>文档工作区</strong><span>编辑、预览、版本恢复在一个任务上下文内完成</span></div>
+          <div class="toolbar-actions"><button class="secondary">版本</button><button>保存</button><button class="danger">删除</button></div>
+        </div>
+        <div class="workspace-body">
+          <div class="documents-grid">
+            <section class="editor-pane">
+              <div class="editor-toolbar">
+                <input value="场景联动延迟约束" aria-label="文档标题" />
+                <select aria-label="权限"><option>团队共享</option><option>私有</option><option>外部只读</option></select>
+                <div class="badges"><span class="badge green">v3 当前</span><span class="badge">Markdown</span></div>
+              </div>
+              <div class="tabbar"><button class="active">编辑</button><button>预览</button></div>
+              <div class="editor-content">
+                <textarea aria-label="Markdown 编辑区"># 场景联动延迟约束
+
+## 目标
+场景联动触发延迟不得超过 **200ms**，并在异常时给出可追溯来源。
+
+## 验收
+- 用户能够搜索“触发延迟”并打开来源文档。
+- RAG 问答需要返回答案与来源。
+- 删除和版本恢复必须二次确认。
+
+## 备注
+此处展示 900px 高度下可见 12 行以上正文，编辑器不再被预览大卡片挤压。</textarea>
+              </div>
+            </section>
+            <aside class="inspector">
+              <div class="inspector-header"><strong>版本历史</strong><button class="secondary">对比</button></div>
+              <div class="inspector-list">
+                <div class="version-row"><strong>v3 当前版本</strong><span class="row-meta">alice · 2 分钟前</span><span>更新验收条目与延迟说明。</span></div>
+                <div class="version-row"><strong>v2</strong><span class="row-meta">alice · 今天 09:18</span><button class="secondary">恢复</button></div>
+                <div class="version-row"><strong>v1</strong><span class="row-meta">bob · 昨天</span><button class="secondary">恢复</button></div>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="workspace hidden" id="view-search">
+        <div class="workspace-toolbar">
+          <div class="view-title"><strong>搜索</strong><span>结果整行可点击，打开文档并切回文档视图</span></div>
+          <div class="toolbar-actions"><span class="badge">Hybrid：关键词 + 语义</span></div>
+        </div>
+        <div class="workspace-body">
+          <section class="task-pane">
+            <div class="task-input"><input value="触发延迟" aria-label="搜索关键词" /><button>搜索</button></div>
+            <div class="result-list">
+              <a class="result-row" href="#"><strong>场景联动延迟约束</strong><span class="row-meta">团队共享 · v3 · 相关度 0.92</span><p>…场景联动 <mark>触发延迟</mark> 不得超过 <strong>200ms</strong>，并在异常时给出来源…</p></a>
+              <a class="result-row" href="#"><strong>Nova Sprint Notes</strong><span class="row-meta">私有 · v8 · 相关度 0.86</span><p>…P1A smoke 覆盖问答提交、来源打开与无全局横向滚动…</p></a>
+              <a class="result-row" href="#"><strong>RAG 问答红线</strong><span class="row-meta">团队共享 · v4 · 相关度 0.80</span><p>库外问题必须回答未找到，不能编造；答案需包含来源引用。</p></a>
+              <a class="result-row" href="#"><strong>术语表维护 SOP</strong><span class="row-meta">团队共享 · v5 · 相关度 0.78</span><p>“触发延迟”与“开关延迟”作为别名统一到标准术语。</p></a>
+              <a class="result-row" href="#"><strong>权限隔离验收记录</strong><span class="row-meta">私有 · v2 · 相关度 0.73</span><p>搜索结果只返回当前用户可见文档，前端不拼接跨空间数据。</p></a>
+              <a class="result-row" href="#"><strong>Embedding 接入说明</strong><span class="row-meta">团队共享 · v6 · 相关度 0.69</span><p>向量召回用于补足关键词缺失的语义相关文档。</p></a>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="workspace hidden" id="view-query">
+        <div class="workspace-toolbar">
+          <div class="view-title"><strong>RAG 问答</strong><span>问题、答案、来源在同一阅读路径中呈现</span></div>
+          <div class="toolbar-actions"><span class="badge green">GLM + pgvector</span></div>
+        </div>
+        <div class="workspace-body">
+          <div class="query-grid">
+            <section class="answer-pane">
+              <div class="answer-input"><textarea aria-label="问题">触发延迟不得超过多少毫秒？</textarea><button>提问</button></div>
+              <div class="answer-body">
+                <h3>答案</h3>
+                <p>根据当前知识库，场景联动的触发延迟不得超过 <strong>200ms</strong>。</p>
+                <ol>
+                  <li>该约束来自《场景联动延迟约束》。</li>
+                  <li>如果知识库没有相关来源，系统应返回“未在知识库找到”。</li>
+                  <li>术语“开关延迟”会对齐到标准术语“触发延迟”。</li>
+                </ol>
+                <p class="hint">此处取消大蓝底答案盒，改为阅读区正文，提高首屏可读性。</p>
+              </div>
+            </section>
+            <aside class="inspector">
+              <div class="inspector-header"><strong>来源</strong><span class="badge">2 条</span></div>
+              <div class="inspector-list">
+                <a class="source-row" href="#"><strong>场景联动延迟约束</strong><span class="row-meta">文档 · 团队共享 · v3</span><span>…触发延迟不得超过 200ms…</span></a>
+                <a class="source-row" href="#"><strong>触发延迟</strong><span class="row-meta">术语 · 已确认</span><span>从条件满足到指令发出的时间。</span></a>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="workspace hidden" id="view-terms">
+        <div class="workspace-toolbar">
+          <div class="view-title"><strong>术语管理</strong><span>术语列表在上下文栏，编辑表单在主工作区</span></div>
+          <div class="toolbar-actions"><button>保存术语</button><button class="danger">删除</button></div>
+        </div>
+        <div class="workspace-body">
+          <div class="terms-grid">
+            <form class="term-form">
+              <div class="badges"><span class="badge green">正在编辑</span><span class="badge">当前空间</span></div>
+              <div class="form-grid">
+                <div class="field"><label>标准名称</label><input value="触发延迟" /></div>
+                <div class="field"><label>状态</label><select><option>已确认</option><option>待确认</option></select></div>
+                <div class="field full"><label>定义</label><textarea>从条件满足到指令发出的时间。场景联动触发延迟不得超过 200ms。</textarea></div>
+                <div class="field full"><label>别名（逗号分隔）</label><input value="开关延迟, 联动延迟" /></div>
+              </div>
+              <p class="hint">表单字段保持紧凑；列表和编辑分离，避免同一大块里堆叠过多信息。</p>
+            </form>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    const navItems = Array.from(document.querySelectorAll('.nav-item'));
+    const views = ['documents', 'search', 'query', 'terms'];
+
+    function showView(view) {
+      for (const name of views) {
+        document.querySelector(`#view-${name}`).classList.toggle('hidden', name !== view);
+        document.querySelector(`#context-${name}`).classList.toggle('hidden', name !== view);
+      }
+      for (const item of navItems) {
+        item.classList.toggle('active', item.dataset.view === view);
+      }
+    }
+
+    navItems.forEach((item) => {
+      item.addEventListener('click', () => showView(item.dataset.view));
+    });
+  </script>
+</body>
+</html>

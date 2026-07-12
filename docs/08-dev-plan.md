@@ -11,8 +11,8 @@
 | 当前 Phase | Phase1 |
 | 交付物形态 | Demo |
 | 输入基线 | `docs/03-prd.md` §3、`docs/04-architecture.md`、`docs/05-tech-spec.md`、`docs/09-verification.md` |
-| 当前状态 | Phase1 Demo 已完成并已记录全量验收（Conditional Go）；Sprint-1~6 降级口径完成；Sprint-7（LLM）/ Sprint-8（pgvector 接入）真实化完成（RG-001/002/004/005 Go），task-009 search hybrid 完成；P1A 前端结构聚焦重构已实现，构建与 Chrome / Edge 900px smoke 均通过；待人工确认是否正式进入 Phase2 |
-| 最后更新 | 2026-07-11（P1A smoke 验收回填） |
+| 当前状态 | Phase1 Demo 已完成并已记录全量验收（Conditional Go）；Sprint-1~6 降级口径完成；Sprint-7（LLM）/ Sprint-8（pgvector 接入）真实化完成（RG-001/002/004/005 Go），task-009 search hybrid 完成；P1A 前端结构聚焦重构已实现，构建与 Chrome / Edge 900px smoke 均通过；P1B 前端工作台系统化重设计已实现，构建与 Chrome / Edge 900px smoke 均通过；待人工确认是否正式进入 Phase2 |
+| 最后更新 | 2026-07-12（P1B smoke 验收回填） |
 
 ## Sprint 总览
 
@@ -29,6 +29,7 @@
 | Sprint-7 | LLM 真实化 adapter | 008 | design/rag-retrieval、05（RG-004） | backend llm_adapter.py + rag.py + .env | / TC-P1-008 | 已完成（GLM-5.2 真实验证） | — |
 | Sprint-8 | pgvector 接入（内存→PG+向量召回） | 007/008 | design/rag-retrieval、06、05（RG-001/002）、task-008 | docker + db.py + orm + pg_repository + embedding + rag + migrations 003-005 | / TC-P1-007/008 | 已完成（RG-001/002 Go；T1–T7，task-008） | `tasks/task-008-pgvector-integration.md` |
 | Sprint-9（P1A） | 前端结构聚焦重构 | 011（既有 P1 页面体验修正） | design/frontend-interaction、research/frontend-p1-structure-exploration | frontend 组件拆分 + 视图切换 + CSS 响应式 | / TC-P1-013 | 已完成（构建 + Chrome / Edge 900px smoke 通过） | — |
+| Sprint-10（P1B） | 前端工作台系统化重设计 | 011（既有 P1 页面体验修正） | design/frontend-workspace-redesign、frontend-workspace-redesign-prototype | frontend 工作台骨架 + 密度 token + 四视图 Workspace | / TC-P1-014 | 已完成（构建 + Chrome / Edge 900px smoke 通过） | — |
 
 ## 依赖关系与里程碑
 
@@ -41,6 +42,7 @@
 | Sprint-5 术语 | Sprint-4（RAG 口径注入） | — | — | 顺序 | M5 术语对齐 |
 | Sprint-6 桌面端 | Sprint-1~5 全部 | — | 否（横切验收） | 最后执行 | M6 Phase1 Demo 验收 |
 | Sprint-9（P1A）前端结构聚焦 | Sprint-6 + #72 P0 UX + #74 探索 | 范围蔓延到 router / 组件库 / 移动端 | 可与 Phase2 tech-env-eval 并行 | 先纯 React state + CSS，不引新依赖 | M7 P1A 体验收口 |
+| Sprint-10（P1B）前端工作台重设计 | Sprint-9 + `frontend-workspace-redesign` 原型确认 | 继续局部样式微调导致返工；范围蔓延到组件库 / router | 可与 Phase2 tech-env-eval 并行 | 先按原型落地 Nav Rail + Context Pane + Workspace，不引新依赖 | M8 P1B 工作台体验收口 |
 
 ## 任务拆分规则
 
@@ -64,6 +66,7 @@
 | Sprint-7 | TC-P1-008 | 单元 + 集成 | 同上（test_rag） | 本机 GLM-5.2 真实问答 | LLM 默认 Mock 可切；GLM 真实验证 |
 | Sprint-8 | TC-P1-007/008 | 单元 + 集成（PG） | 同上（test_pg_repository / test_api_routes / test_embedding） | uvicorn 起后端冒烟（登录/CRUD/术语/导入/搜索/RAG） | PG 必需运行时（lumen-pg 容器）；Embedding 模型 ~7s 首加载 |
 | Sprint-9（P1A） | TC-P1-013 | 前端构建 + 浏览器 smoke | `npm.cmd run build`（frontend） | Chrome / Edge：登录、视图切换、文档、搜索、问答、术语、900px 宽度 | 不新增 API / 后端能力；不引 router / 组件库；移动端不验收 |
+| Sprint-10（P1B） | TC-P1-014 | 前端构建 + 浏览器 smoke | `npm.cmd run build`（frontend） | Chrome / Edge：工作台三层布局、Context Pane 随视图变化、文档 / 搜索 / 问答 / 术语主流程、900px 宽度 | 不新增 API / 后端能力；不引 router / 组件库；移动端不验收 |
 
 > 资源 / 环境验证：Sprint-8 起 Docker / pgvector / Embedding **已 Go**（RG-001/002 Go，见 05 §5.1；TE-C-003 闭合）；OCR / 真实 PDF 解析仍 No-Go（RG-003，后续阶段，不在 P1 必过范围）。
 
@@ -214,6 +217,36 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 - 不新增后端接口，不修改 API 契约，不改变权限边界。
 - 不做移动端适配，不新增 P2 / Phase2 功能入口。
 
+## Sprint-10（P1B）：前端工作台系统化重设计
+
+### 目标
+基于 `docs/design/frontend-workspace-redesign.md` 与 HTML 原型确认结果，将 P1A 后仍偏“卡片堆叠式 Demo UI”的前端改为生产力工具型知识库工作台：采用 TopBar + Nav Rail + Context Pane + Workspace 的三层结构，按文档 / 搜索 / 问答 / 术语任务切换上下文面板，统一视觉密度 token，减少大卡片和大块留白。该 Sprint 不新增业务 REQ，归属 REQ-011 桌面端体验收口。
+
+### 输入文档
+- `docs/design/frontend-workspace-redesign.md`
+- `docs/design/frontend-workspace-redesign-prototype.html`
+- `docs/design/frontend-interaction.md` §2.3 / §6 / §7 / DEV-002
+- `docs/09-verification.md` TC-P1-014
+
+### 修改范围
+- `frontend/src/App.tsx`：按原型重构工作台骨架，可在文件内拆出 `TopBar` / `PrimaryNav` / `ContextPane` / 各 Workspace 轻量组件；保持现有 API 调用与业务状态。
+- `frontend/src/styles.css`：重写为设计 token + shell / pane / toolbar / list-row / workspace / inspector 分层样式，弱化主布局 `.card` 堆叠。
+- 可新增 `frontend/src/components/*` 或同级轻量组件文件；本 Sprint 优先少文件落地，避免范围扩散。
+
+### 验收标准
+- `npm.cmd run build` 通过。
+- 登录后呈现 TopBar + Nav Rail + Context Pane + Workspace 三层工作台；文档 / 搜索 / 问答 / 术语四视图可切换，当前空间上下文不丢失。
+- Context Pane 随视图变化：文档视图显示文档列表 / 导入入口，术语视图显示术语列表，搜索 / 问答不常驻无关文档编辑或版本面板。
+- 文档视图主区保留标题 / 权限 / Markdown 编辑 / 预览 / 版本恢复 / 删除二次确认；搜索结果与问答来源仍可打开文档。
+- 900px 桌面宽度下无全局横向滚动；搜索首屏可见至少 5 条结果，术语列表首屏可见至少 8 条，文档编辑区至少 12 行可见。
+- #72 / P1A 能力不回退：Markdown 渲染、来源点击、删除 / 恢复二次确认、四视图切换仍可用。
+
+### 禁止事项
+- 不引入 `react-router`、组件库或全局状态管理；若后续需要 URL 深链，另开 P1.5 评估。
+- 不新增后端接口，不修改 API 契约，不改变权限边界。
+- 不做移动端适配，不新增 P2 / Phase2 功能入口。
+- 不把静态 HTML 原型作为生产代码引入；只按其布局、密度和交互结构实现 React 版本。
+
 ## Sprint 完成包与进度记录
 
 > 对照 `ai/doc-standards/08-dev-plan.md` §4（完成包）+ §5（进度记录）。Sprint-1~6 为早期降级实现；Sprint-7/8 已完成真实 LLM、PostgreSQL+pgvector、Embedding 与 RAG 向量召回接入；task-009 已完成 search 向量化 + 可选 zhparser 回退。仍降级：真实 Word / PDF 解析、OCR。验收证据见 `docs/09-verification.md §5`。
@@ -231,8 +264,9 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 | Phase1 全量验收 | 2026-07-10 | 001..011/036 | Phase1 Demo closure 评估与全量验收记录；覆盖 Sprint-1~8、TC-P1-001~012、RG-001~005 | `24fc3c7` · `4f036cc`(#56) · `24ccfc8`(#57) · `d8d0f8f` | Conditional Go（Demo closure）；详见 `docs/09-verification.md §5` | 需人工确认是否升 Phase2；真实 Word / PDF 解析、OCR 真实化留后续 | §5 / §6 |
 | task-009 search 向量化 + 可选 zhparser | 2026-07-10 | 007 | `/api/search` hybrid：substring + `ts_vector` SQL 候选 + pgvector 语义召回；migration 006 可选 zhparser / simple 回退 | 本 PR | `init_db()` 两次通过；76 后端 tests 通过（含 `tests.backend.test_search` 与真实 PG 语义搜索集成测试） | 当前 pgvector 镜像无 zhparser，中文分词回退 `simple`；不影响向量语义召回 | §5 / §6 |
 | Sprint-9（P1A）实现 | 2026-07-11 | 011 | 前端结构聚焦重构：本地 `activeView` 四视图切换、右栏拆回文档 / 搜索 / 问答 / 术语主视图、桌面响应式 CSS | `9ede5b6`（PR #76） | `git diff --check`；`npm.cmd run build`；Chrome / Edge 900px headless smoke 通过 | 不阻塞 Phase1 Demo closure；P1A 仅作为既有 Demo 的前端结构体验收口 | §2 / §5（TC-P1-013 通过） |
+| Sprint-10（P1B）实现 | 2026-07-12 | 011 | 前端工作台系统化重设计：TopBar + Nav Rail + Context Pane + Workspace 三层布局；Context Pane 随文档 / 搜索 / 问答 / 术语变化；CSS token + pane / toolbar / list-row / inspector 分层；新增正式设计文档与 HTML 原型 | 本批 | `git diff --check`；`npm.cmd run build`；Chrome / Edge 900px headless smoke 通过，覆盖登录、四视图切换、文档新建 / 编辑 / 版本恢复 / 删除、Markdown 预览、搜索来源打开、问答、术语新建 / 删除确认；无全局横向滚动 | 不阻塞 Phase1 Demo closure；P1B 仅作为既有 Demo 的前端工作台体验收口；不引 router / 组件库 / 新 API | §2 / §5（TC-P1-014 通过） |
 
-> Sprint-8 后：pgvector / Embedding / LLM 已接入（RG-001/002/004 Go），基础 Web / ORM 栈为 Go（RG-005）。Phase1 全量验收结论为 Conditional Go（Demo closure）；仍移出 P1：真实 PDF 解析、图片 OCR（REQ-010，RG-003 No-Go，后续阶段）。Sprint-9（P1A）是已完成 Demo 之上的前端结构体验收口，不改变 Phase1 closure 结论。Phase2 启动前需人工确认范围、进入 / 退出标准，并另行更新阶段指针。
+> Sprint-8 后：pgvector / Embedding / LLM 已接入（RG-001/002/004 Go），基础 Web / ORM 栈为 Go（RG-005）。Phase1 全量验收结论为 Conditional Go（Demo closure）；仍移出 P1：真实 PDF 解析、图片 OCR（REQ-010，RG-003 No-Go，后续阶段）。Sprint-9（P1A）与 Sprint-10（P1B）是已完成 Demo 之上的前端体验收口，不改变 Phase1 closure 结论。Phase2 启动前需人工确认范围、进入 / 退出标准，并另行更新阶段指针。
 
 ---
 

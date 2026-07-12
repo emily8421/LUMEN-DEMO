@@ -12,8 +12,8 @@
 | 当前 Phase | Phase1 |
 | 交付物形态 | Demo |
 | 覆盖 REQ | Phase1：REQ-001..REQ-011、REQ-036；P2 / 愿景验证项待升阶段细化 |
-| 当前状态 | Phase1 全量验收已记录，结论为 Conditional Go（Demo closure）；Sprint-1~6 降级口径验收已执行，Sprint-7/8 已完成真实 LLM、PostgreSQL+pgvector、Embedding 与 RAG 向量召回验证；task-009 已完成 search hybrid 验证；P1A 前端结构聚焦重构已实现，构建与 Chrome / Edge 900px smoke 均通过 |
-| 最后更新 | 2026-07-11（P1A smoke 验收回填） |
+| 当前状态 | Phase1 全量验收已记录，结论为 Conditional Go（Demo closure）；Sprint-1~6 降级口径验收已执行，Sprint-7/8 已完成真实 LLM、PostgreSQL+pgvector、Embedding 与 RAG 向量召回验证；task-009 已完成 search hybrid 验证；P1A / P1B 前端体验收口均已实现，构建与 Chrome / Edge 900px smoke 均通过 |
+| 最后更新 | 2026-07-12（P1B smoke 验收回填） |
 
 ## 1. 测试策略
 
@@ -41,8 +41,9 @@
 | TC-P1-011 | REQ-011 桌面端 | Chrome / Edge 完成上述全部 | [P1] | 条件通过（降级口径·Edge Headless + Chrome 人工 smoke） |
 | TC-P1-012 | REQ-036 术语管理 | 新建空间术语后，文档识别该词，问答优先使用空间定义且不被同名全局术语覆盖 | [P1] | 条件通过（降级口径·内存） |
 | TC-P1-013 | REQ-011 P1A 结构聚焦 | 文档 / 搜索 / 问答 / 术语一级视图切换；900px 桌面宽度不横向破版；P0 能力不回退 | [P1] | 通过（构建 + Chrome / Edge 900px smoke） |
+| TC-P1-014 | REQ-011 P1B 工作台重设计 | TopBar + Nav Rail + Context Pane + Workspace 三层布局；Context Pane 随视图变化；900px 桌面宽度不横向破版；信息密度达标；P0/P1A 能力不回退 | [P1] | 通过（构建 + Chrome / Edge 900px smoke） |
 
-> 状态说明：Sprint-2~6 按**降级口径**验收（原内存 `demo_repository`）；Sprint-7/8 真实化后 RAG 已走真实 LLM（GLM-5.2）+ 向量召回（pgvector），存储切到 PostgreSQL（见 §5 Sprint-7/8 记录）。仍降级的：真实 PDF/Word 解析、OCR（RG-003，后续阶段）。search 已在 task-009 升级为 hybrid（关键词 / ts_vector / pgvector 语义召回），zhparser 为可选回退。「条件通过」= 当前实现满足 Demo 级别验收；详见 §6 与 `docs/05-tech-spec.md §5.1`。 TC-P1-013 为 P1A 体验收口新增验证项，不改变 Phase1 Demo closure 结论。
+> 状态说明：Sprint-2~6 按**降级口径**验收（原内存 `demo_repository`）；Sprint-7/8 真实化后 RAG 已走真实 LLM（GLM-5.2）+ 向量召回（pgvector），存储切到 PostgreSQL（见 §5 Sprint-7/8 记录）。仍降级的：真实 PDF/Word 解析、OCR（RG-003，后续阶段）。search 已在 task-009 升级为 hybrid（关键词 / ts_vector / pgvector 语义召回），zhparser 为可选回退。「条件通过」= 当前实现满足 Demo 级别验收；详见 §6 与 `docs/05-tech-spec.md §5.1`。 TC-P1-013 / TC-P1-014 为 REQ-011 体验收口增量，不改变 Phase1 Demo closure 结论。
 
 #### Phase1 TC 用例详情
 
@@ -63,8 +64,9 @@
 | TC-P1-011 | REQ-011 | 桌面端浏览器 | 走查全部 P1 功能 | 全部可用 | Edge Headless + Chrome 人工 smoke（§5） | 条件通过 |
 | TC-P1-012 | REQ-036 | brightlite 空间 | 新建术语 → 文档识别 → 问答 | 识别 + 空间术语优先于全局 | `tests/backend/test_term.py`、`test_rag.py` | 条件通过 |
 | TC-P1-013 | REQ-011 | P1A 前端实现 + Chrome / Edge 桌面 | ① 登录并切换文档 / 搜索 / 问答 / 术语视图；② 在 900px 宽度完成文档、搜索、问答、术语主流程；③ 回归 Markdown 渲染、来源点击、删除 / 恢复二次确认 | 视图切换保持当前空间上下文；各视图主区不被无关面板挤压；900px 无全局横向滚动；P0 能力不回退 | `npm.cmd run build` 通过；Chrome / Edge headless smoke（900px）通过，覆盖登录、四视图切换、文档新建 / 编辑 / 版本恢复 / 删除、Markdown 预览、搜索来源打开、问答、术语新建 / 删除确认 | 通过 |
+| TC-P1-014 | REQ-011 | P1B 工作台重设计实现 + Chrome / Edge 桌面 | ① 登录后检查 TopBar + Nav Rail + Context Pane + Workspace 三层布局；② 切换文档 / 搜索 / 问答 / 术语并确认 Context Pane 随视图变化；③ 在 900px 宽度完成文档、搜索、问答、术语主流程；④ 检查搜索首屏 ≥5 条结果、术语首屏 ≥8 条、编辑区 ≥12 行；⑤ 回归 Markdown 渲染、来源点击、删除 / 恢复二次确认 | 工作台布局与 `frontend-workspace-redesign` 原型一致；任务聚焦，不显示无关大卡片；900px 无全局横向滚动；P0/P1A 能力不回退 | `npm.cmd run build` 通过；Chrome / Edge headless smoke（900px）通过，覆盖登录、四视图切换、文档新建 / 编辑 / 版本恢复 / 删除、Markdown 预览、搜索来源打开、问答、术语新建 / 删除确认 | 通过 |
 
-> TC-P1-010 暂为「后续阶段」，待 OCR 落地后补步骤与证据；TC-P1-013 已随 PR #76 合并后完成前端构建与 Chrome / Edge 900px smoke；其余 TC 自动化均含于后端测试与既有 smoke 证据（见 §5）。
+> TC-P1-010 暂为「后续阶段」，待 OCR 落地后补步骤与证据；TC-P1-013 已随 PR #76 合并后完成前端构建与 Chrome / Edge 900px smoke；TC-P1-014 已随 Sprint-10（P1B）完成前端构建与 Chrome / Edge 900px smoke；其余 TC 自动化均含于后端测试与既有 smoke 证据（见 §5）。
 
 ### Phase2（功能范围 `[P2]` · 交付物形态 **MVP**，升阶段时追加）
 - REQ-012..017、REQ-024..027 用例（标签 / 视图 / 润色 / 推送 / 协作 / 移动端 / v18 追加项）——待该阶段细化
@@ -106,6 +108,7 @@
 | 2026-07-10 | task-009 search 向量化 + 可选 zhparser | 通过 | `/api/search` 升级为 substring + `ts_vector` SQL 候选 + pgvector 语义召回；`init_db()` 两次验证通过；当前 `pgvector/pgvector:pg16` 无 zhparser 时回退 `simple`；76 后端 tests 通过（含 `tests.backend.test_search` 与 `test_search_api_returns_vector_semantic_hits`）。 |
 | 2026-07-11 | RG-004 LLM 中转迁移复测 | 通过 | 旧中转 `47.107.134.2:7777` 的 key 被停用 → `.env` 迁至 `192.168.15.190:7777/v1`（`glm-5.2`）；`llm_adapter.chat()` + RAG 真实问答复测通过（答案带来源），RG-004 维持 Go。 |
 | 2026-07-11 | Sprint-9（P1A）前端结构聚焦实现 | 通过 | PR #76 合并提交 `9ede5b6`；已实现本地 `activeView` 四视图切换、右栏拆分与桌面响应式 CSS；`npm.cmd run build` 通过；Chrome / Edge headless smoke（900px）通过，覆盖登录、四视图切换、文档新建 / 编辑 / 版本恢复 / 删除、Markdown 预览、搜索来源打开、问答、术语新建 / 删除确认；无全局横向滚动。 |
+| 2026-07-12 | Sprint-10（P1B）前端工作台系统化重设计 | 通过 | 已实现 TopBar + Nav Rail + Context Pane + Workspace 三层工作台；Context Pane 随文档 / 搜索 / 问答 / 术语视图变化；CSS token + pane / toolbar / list-row / inspector 分层；新增 `frontend-workspace-redesign` 设计文档与 HTML 原型；`npm.cmd run build` 通过；Chrome / Edge headless smoke（900px）通过，覆盖登录、四视图切换、文档新建 / 编辑 / 版本恢复 / 删除、Markdown 预览、搜索来源打开、问答、术语新建 / 删除确认；无全局横向滚动。 |
 
 ### 5.1 缺陷与回归记录
 
