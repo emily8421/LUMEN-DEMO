@@ -21,7 +21,7 @@
 | 本地有模板仓库或派生项目 | ✅ 完整可用——AI 能读本文件，按场景剧本引导 | 直接说场景意图或 `/run scenario` |
 | 只有仓库链接、本地零资产 | ⚠️ AI 读不到本文件——A0 冷启动需先手动获取资产 | 手动 `git clone https://github.com/emily8421/ai-project-template.git`（拿模板与脚本），再 `bash scripts/new-project.sh <项目名>` 派生；或加入已有派生 `git clone <派生仓库>`；**拿到本地项目后才进入 AI 场景引导** |
 
-> 也就是说：**A0 冷启动是唯一「AI 无法读本文件就要起步」的场景**，靠手动或 AI 通用引导完成资产获取；一旦本地有了项目（含本文件），M0/M1、A1–A16、C1–C8 才进入 AI 场景引导。
+> 也就是说：**A0 冷启动是唯一「AI 无法读本文件就要起步」的场景**，靠手动或 AI 通用引导完成资产获取；一旦本地有了项目（含本文件），M0/M1、A1–A20、C1–C8 才进入 AI 场景引导。
 
 ## 1. 角色
 
@@ -90,7 +90,7 @@ AI 识别场景后，**先输出引导计划给用户看（用人话 + 为什么
 
 **场景速查索引**（按角色；完整剧本见下方各场景条目）
 
-**A 使用者**（A0–A19）
+**A 使用者**（A0–A21）
 
 | 场景 | 触发说法 | 一句话 |
 |---|---|---|
@@ -105,6 +105,7 @@ AI 识别场景后，**先输出引导计划给用户看（用人话 + 为什么
 | A7 PLM 文档精修 | 「打磨文档」「精修 02-srs」「补 ER 图」 | 按 PLM 阶段精修（见 §6） |
 | A7.5 UI 原型策略 / 实现前原型 | 「选择原型策略」「实现前先看 UI」「补 UI 原型策略」 | 已有需求链后、前端实现前确认可视化原型门禁 |
 | A8 文档评估 / 审计 / 检查 | 「评估文档」「审计文档」「PLM 链路检查」「开发前检查」 | docs-evaluation 判阶段，docs-system-audit 找问题，docs-checklist 拦编码 |
+| A8.5 技术路线与环境支撑评估 | 「评估依赖能不能装」「本机能不能跑」「技术环境评估」 | 真实运行依赖进入 Sprint 前评估本机环境支撑 |
 | A9 阶段规划与路线图 | 「规划阶段」「Demo 做什么」「排路线图」 | 分阶段 + 路线图 |
 | A10 执行 Sprint / 任务 | 「执行 Sprint」「做这个任务」「开始编码」 | 编码 + 合规审查 + 提交 |
 | A11 修 Bug | 「修 Bug」「修复缺陷」「这个报错」 | 定位根因 + 小范围修复 |
@@ -116,6 +117,8 @@ AI 识别场景后，**先输出引导计划给用户看（用人话 + 为什么
 | A17 待确认事项总览 | 「汇总待确认事项」「生成 open items」「编码前自检未决项」 | 汇总 open items，检查阶段 / 编码 / 升级门禁 |
 | A18 专题方案讨论 | 「讨论人机交互」「讨论技术选型」「讨论交互设计方案」 | 先多方案讨论与人工确认，再回填正式文档 |
 | A19 文档定稿门禁 | 「文档可以定稿吗」「生成后评估」「定稿前检查」 | 完整生成后做评估 / 审计和 open items 收口 |
+| A20 领域模板派生 | 「创建 agent 系统模板」「从母模板派生领域模板」「做一个专用模板」 | 先判定是否应独立仓库，再生成领域模板初始化方案 |
+| A21 查看演示效果 | 「查看演示效果」「启动 Demo」「给我二维码」「检查 Demo」 | 路由到项目演示 SOP（`/run show-demo`），不替代 09 验收 |
 
 **C 维护者**（C1–C8）
 
@@ -134,7 +137,7 @@ AI 识别场景后，**先输出引导计划给用户看（用人话 + 为什么
 
 ---
 
-### A 使用者（A0–A19）
+### A 使用者（A0–A21）
 
 #### A0 冷启动（只有仓库链接）
 - **说明**：你只有模板或项目的仓库链接、本地还没任何文件夹时，从这里起步。⚠️ 此时本地还没有本文件，AI 无法按场景剧本引导——需先手动 `git clone` / `bash new-project.sh`（或让 AI 凭通用知识指导），拿到本地项目后才进入 AI 场景引导。
@@ -177,7 +180,7 @@ AI 识别场景后，**先输出引导计划给用户看（用人话 + 为什么
 | 2 | 从模板派生新项目并建远端 | 从 GitHub main 派生拿最新模板；脚本自动 git init/首提交/建仓 | `scripts/new-project.sh` + `new-project`(14) |
 | 3 | 给采集环境的入口 | 新项目第一件事是记录本机能跑什么 | `collect-env`(13) |
 
-- **完成判据**：新项目 git 干净 · 远端可见性正确 · `VERSION` 与模板一致
+- **完成判据**：新项目 git 干净 · 远端可见性正确 · `VERSION` 作为项目自身版本存在 · `TEMPLATE-BASE.md` 记录继承模板版本
 - **下一步**：A3
 - **cmd 指针**：`README` §5 分钟最小路径 + `git-guide.md` §2
 
@@ -385,26 +388,26 @@ AI 识别场景后，**先输出引导计划给用户看（用人话 + 为什么
 | 3 | 出 Sprint 验收总结并留痕 | 留痕才能追溯阶段完成度 | `sprint-summary`(09) → 写入 09 的 Sprint 验收包 / 验收记录 |
 
 - **完成判据**：当前阶段 REQ 全部可验证通过 · Sprint 验收包完整 · 风险 / 未验证项留痕
-- **下一步**：A13（同步）/ A14（Phase 升级）
+- **下一步**：A13（同步）/ A14（Phase 升级）/ A21（查看演示效果，有可运行交付物时）
 - **cmd 指针**：`ai/prompts/dev/09-sprint-summary.md`
 
 #### A13 同步模板到派生项目
 - **说明**：把模板方法论的更新拉到你的派生项目（不回传），并完成同步后的边界验证、整理、文档审计、项目验证建议和同步报告留痕；若已完成同步提交但旧流程未跑后续，则进入“同步后续接模式”，跳过 dry-run / commit，从边界验证开始补完闭环。
 - **触发**：「同步模板」「更新方法论」「sync template」「已同步但没做后续」「补完同步后流程」「同步后续接」
 - **完整闭环说法**：「模板新版已发布，请按 A13 执行完整闭环：sync-methodology → post-sync-cleanup → docs-system-audit → 提案回流收口 → 同步报告留痕。」
-- **cwd·前置**：在派生项目；若缺少 `scripts/sync-template.ps1`、`template-sync.json`，或 `VERSION` 低于 `v1.6.8` / 无法判断脚本是否为新版，仍属于本场景，先按 `git-guide.md` §5.2 走旧派生项目首次同步 bootstrap，再继续完整 A13 闭环。
+- **cwd·前置**：在派生项目；若缺少 `scripts/sync-template.ps1`、`template-sync.json`，或（无 `TEMPLATE-BASE.md` 且 `VERSION` 低于 `v1.6.8` / 无法判断脚本是否为新版），仍属于本场景，先按 `git-guide.md` §5.2 走旧派生项目首次同步 bootstrap，再继续完整 A13 闭环。
 
 | # | 做什么 | 为什么 | 机器执行 |
 |---|---|---|---|
 | 1 | 先输出标准闭环计划 | 用户知道同步不只是拉文件，还要整理、审计、验证、留痕；旧派生项目 bootstrap 拿到新版流程后，也不能停在同步提交 | `sync-methodology`(12)；旧项目先按 `git-guide.md` §5.2 bootstrap，再读取新版 `ai/prompts/maintainers/12-sync-template.md` 继续 |
 | 2 | 预览模板有哪些更新、会不会动项目文件 | 先确认安全再改，避免误覆盖 | `--dry-run` |
-| 3 | 确认安全后应用更新并做边界验证 | 拿到模板方法论更新，确认没误覆盖项目件 | `--commit` + `scripts/check-derived-sync.ps1` |
+| 3 | 确认安全后应用更新并做边界验证 | 拿到模板方法论更新，确认没误覆盖项目件；普通派生项目用 `--preserve-project-version` 保留自身版本，领域模板用 `--domain-template` 保留领域版本 | `--commit --preserve-project-version`（普通派生）/ `--domain-template`（领域模板）+ `scripts/check-derived-sync.ps1` |
 | 4 | 同步后整理项目 | README、`project-rules`、docs 分区等项目事实不会被同步脚本自动迁移 | `post-sync-cleanup`(15)，先出迁移计划 |
 | 5 | 文档体系同步后审计 | 检查旧方法生成的 `docs/00-09` 是否需按新规范回梳 | `docs-system-audit`(16)，同步后审计模式 |
 | 6 | 做提案回流收口检查 | 派生提案可能已通过模板 issue / PR 被采纳，同步后应判断本地草稿和 issue 记录是否可归档 | 扫描 `_proposals/`、`.ai/session-handoff.md`、`sync-records/template-sync/`、issue 链接；必要时 `gh issue view` |
 | 7 | 给项目验证建议并形成同步报告 | 留下命令、结果、风险、未验证项、提案收口结论和后续任务 | `template-docs/derived-sync-report-template.md` → `sync-records/template-sync/` |
 
-> **同步后续接模式**：若 Git 显示已存在最近的 `sync template vX.Y.Z from ai-project-template` 同步提交，或 `VERSION` 已是目标版本且用户明确说“已同步，只补后续”，不要重新执行 dry-run / commit；先核对最新同步提交和工作区，再从第 3 步的边界验证开始补跑 workflow 检查、`post-sync-cleanup`、`docs-system-audit`、项目验证建议和同步运行记录。
+> **同步后续接模式**：若 Git 显示已存在最近的 `sync template vX.Y.Z from ai-project-template` 同步提交，或 `TEMPLATE-BASE.md` 已记录目标模板版本且用户明确说“已同步，只补后续”（旧项目可兼容 `VERSION` 已是目标版本），不要重新执行 dry-run / commit；先核对最新同步提交和工作区，再从第 3 步的边界验证开始补跑 workflow 检查、`post-sync-cleanup`、`docs-system-audit`、项目验证建议和同步运行记录。
 
 - **完成判据**：同步清单文件更新 · 项目专属文件未被覆盖 · `check-derived-sync` 通过 · 已输出整理 / 审计摘要 · 已完成提案回流收口判断 · 已给项目验证建议 · 已形成或更新同步报告
 - **下一步**：A14 / 回 A10 继续
@@ -505,6 +508,32 @@ AI 识别场景后，**先输出引导计划给用户看（用人话 + 为什么
 - **完成判据**：评估 / 审计结论明确 · open items 阻塞项已关闭或被风险接受 · 下一步命令明确
 - **下一步**：A10 / A14 / A7
 - **cmd 指针**：`ai/prompts/review/19-docs-evaluation.md` + `ai/prompts/review/16-docs-system-audit.md` + `ai/prompts/docs/21-docs-open-items.md`
+
+#### A20 领域模板派生（母模板 → 领域模板）
+- **说明**：当用户想从 `ai-project-template` 派生一个面向某类系统的“领域模板”（如 `agent-system-template`、`data-pipeline-template`、`web-app-template`），先做继承边界与创建方案，不把领域 scaffold 直接塞进母模板。
+- **触发**：「创建 agent 系统模板」「从母模板派生领域模板」「做一个专用模板」「agent-system-template」「领域模板继承」
+- **cwd·前置**：优先在 `ai-project-template` 母模板仓库或其父目录；若在普通派生项目中提出，先说明这是模板治理 / 新仓库创建任务，不是当前业务项目开发任务。
+
+| # | 做什么 | 为什么 | 机器执行 |
+|---|---|---|---|
+| 1 | 判定是否为领域模板 | 区分普通业务项目与可复用领域模板，避免把领域规则误写进母模板或业务项目 | 检查目标是否服务多个同类项目、是否需要自己的版本 / scaffold / 自检 |
+| 2 | 选择内置还是独立仓库 | 领域模板若需要独立生命周期，应优先独立仓库 | 对比母模板内置 scaffold vs 独立 `*-template` 仓库，列边界和维护成本 |
+| 3 | 做 Phase 0 预检 | 避免创建到错误目录、远端重名或工具不可用 | 只读检查 `new-project.*`、目标目录、远端仓库名、`git` / `gh` / Bash / 权限 |
+| 4 | 输出创建方案 | 创建新仓库前先明确命名、可见性、base version 和初始化范围 | 给出命令、预计修改文件、验证方式和是否需要人工确认 |
+| 5 | 执行创建（需确认） | 新目录 / 新仓库是状态变更，必须确认后再执行 | 从母模板父目录运行 `new-project.sh --local` 或受控复制；创建后写领域版 `TEMPLATE-BASE.md`（`Lineage type: domain template` + `Domain standards scope`），后续从母模板 sync 用 `--domain-template` |
+
+- **完成判据**：已明确三层关系（母模板 → 领域模板 → 具体项目）· 已决定独立仓库或不执行 · 已给出可审计创建命令和初始化待办 · 未向母模板新增领域 scaffold
+- **下一步**：执行领域模板创建 / 回 C1 记录模板提案 / 暂停等待人工确认
+- **cmd 指针**：无专用命令；方法论定位见 `template-docs/domain-templates.md`；参考 `scripts/new-project.sh`、`_proposals/TEMPLATE-UPGRADE-domain-template-inheritance.md` 和 `CONTRIBUTING.md` §4 版本影响判断
+
+#### A21 查看演示效果（查看 / 启动 Demo）
+- **说明**：项目有可运行交付物（Demo / MVP / 产品）时，把交付物跑起来并查看效果。执行边界与禁止项见 `ai/commands/show-demo.md`，演示 SOP 模板见 `template-docs/demo-runbook-template.md`，**不替代 `docs/09-verification.md` 验收**。
+- **触发**：「查看演示效果」「启动 Demo」「给我二维码」「检查 Demo 是否起来」「怎么看当前项目效果」
+- **cwd·前置**：在派生项目 · 已有可运行交付物
+- **机器执行**：`/run show-demo`（路由到项目演示 SOP `docs/env/local-demo-runbook.md`；无则按模板生成草案待确认）
+- **完成判据**：演示入口与访问方式已输出 · 启动 / 生成产物等写入动作已确认 · 未把演示检查误称 09 验收通过
+- **下一步**：A12（验证与验收）/ A10（继续 Sprint）
+- **cmd 指针**：`ai/commands/show-demo.md`、`template-docs/demo-runbook-template.md`
 
 ### C 维护者（C1–C8）
 

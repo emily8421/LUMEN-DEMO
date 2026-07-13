@@ -2,8 +2,15 @@
 sync-template.ps1 - Windows PowerShell entrypoint for template sync.
 
 Usage:
-  powershell -ExecutionPolicy Bypass -File scripts/sync-template.ps1 --dry-run
+  powershell -ExecutionPolicy Bypass -File scripts/sync-template.ps1 --dry-run [--no-stat]
+  powershell -ExecutionPolicy Bypass -File scripts/sync-template.ps1 --summary
   powershell -ExecutionPolicy Bypass -File scripts/sync-template.ps1 --commit
+  powershell -ExecutionPolicy Bypass -File scripts/sync-template.ps1 --commit --preserve-project-version
+  powershell -ExecutionPolicy Bypass -File scripts/sync-template.ps1 --commit --domain-template
+
+If TEMPLATE-BASE.md already exists, --preserve-project-version (ordinary derived project) or
+--domain-template (domain template) is enabled automatically based on lineage type.
+--preserve-project-version and --domain-template are mutually exclusive.
 
 It prefers Git Bash so Windows behavior stays aligned with sync-template.sh.
 If Git Bash cannot be started from PowerShell, it falls back to a native
@@ -194,6 +201,12 @@ function Get-SyncFilesFromRef {
   return @()
 }
 
+function Remove-ProjectVersionFiles {
+  param([string[]]$SyncFiles)
+
+  return @($SyncFiles | Where-Object { $_ -ne "VERSION" -and $_ -ne "CHANGELOG.md" })
+}
+
 function Get-TemplateVersion {
   param([string]$Ref)
 
@@ -210,6 +223,156 @@ function Get-TemplateVersion {
   }
 
   return "unknown"
+}
+
+function Get-TemplateSourceLabel {
+  param([string]$TemplateRemote)
+
+  if ($TemplateRemote -eq "https://github.com/emily8421/ai-project-template.git" -or $TemplateRemote -eq "git@github.com:emily8421/ai-project-template.git") {
+    return "github.com/emily8421/ai-project-template"
+  }
+
+  return $TemplateRemote
+}
+
+function Get-TemplateBaseVersionFromFile {
+  if (-not (Test-Path -LiteralPath "TEMPLATE-BASE.md" -PathType Leaf)) { return "" }
+
+  foreach ($line in (Get-Content -Encoding UTF8 TEMPLATE-BASE.md)) {
+    if ($line -match '^\s*-\s*(\*\*)?(Base template version|base version)') {
+      $match = [regex]::Match($line, 'v[0-9]+\.[0-9]+\.[0-9]+')
+      if ($match.Success) { return $match.Value }
+    }
+  }
+  return ""
+}
+
+function Get-LegacyDomainStandardsScope {
+  if (-not (Test-Path -LiteralPath "TEMPLATE-BASE.md" -PathType Leaf)) { return "" }
+
+  $items = New-Object System.Collections.Generic.List[string]
+  $inScope = $false
+  foreach ($line in (Get-Content -Encoding UTF8 TEMPLATE-BASE.md)) {
+    if ($line -match '^##\s+(叠加的标准件范围|Domain Standards Scope)\s*$') {
+      $inScope = $true
+      continue
+    }
+    if ($inScope -and $line -match '^##\s+') { break }
+    if ($inScope -and $line -match '^\s*-\s+(.+)$') {
+      $item = ($Matches[1] -replace '\s+', ' ').Trim()
+      if ($item) { [void]$items.Add($item) }
+    }
+  }
+  return ($items -join "；")
+}
+
+function Write-TemplateBase {
+  param(
+    [string]$TemplateVersion,
+    [string]$TemplateRemote
+  )
+
+  $syncedAt = Get-Date -Format "yyyy-MM-dd"
+  $projectVersion = if (Test-Path -LiteralPath "VERSION" -PathType Leaf) { (Get-Content -Raw -Encoding UTF8 VERSION).Trim([char]0xFEFF, [char]0x20, [char]0x09, [char]0x0A, [char]0x0D) } else { "unknown" }
+  $baseVersion = $TemplateVersion
+  if (Test-Path -LiteralPath "TEMPLATE-BASE.md" -PathType Leaf) {
+    $existingBaseVersion = Get-TemplateBaseVersionFromFile
+    if ($existingBaseVersion) { $baseVersion = $existingBaseVersion }
+  }
+
+  $sourceLabel = Get-TemplateSourceLabel -TemplateRemote $TemplateRemote
+  $content = @"
+# Template Base
+
+> Records the upstream template lineage for this ordinary derived project. Do not use this file for domain-template inheritance metadata.
+
+- Lineage type: ordinary derived project
+- Template repository: $sourceLabel
+- Base template version: $baseVersion
+- Current synced template version: $TemplateVersion
+- Synced at: $syncedAt
+- Project version file: VERSION
+- Project version at sync time: $projectVersion
+
+## Version Semantics
+
+- ``VERSION`` is owned by this derived project and records the project version.
+- ``TEMPLATE-BASE.md`` records the inherited ai-project-template version used for methodology sync audit.
+- Template sync commits keep the message format ``sync template $TemplateVersion from ai-project-template``.
+"@
+  $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+  [System.IO.File]::WriteAllText((Join-Path (Get-Location) "TEMPLATE-BASE.md"), $content, $utf8NoBom)
+}
+
+function Write-DomainTemplateBase {
+  param(
+    [string]$TemplateVersion,
+    [string]$TemplateRemote
+  )
+
+  $syncedAt = Get-Date -Format "yyyy-MM-dd"
+  $domainVersion = if (Test-Path -LiteralPath "VERSION" -PathType Leaf) { (Get-Content -Raw -Encoding UTF8 VERSION).Trim([char]0xFEFF, [char]0x20, [char]0x09, [char]0x0A, [char]0x0D) } else { "unknown" }
+  $baseVersion = $TemplateVersion
+  $standardsScope = "(TODO: 领域模板维护者填写叠加的领域标准件范围，例如 agent-system 的 planner/executor、tool permission、memory/state、eval、trace/replay、HITL)"
+  if (Test-Path -LiteralPath "TEMPLATE-BASE.md" -PathType Leaf) {
+    $existingBaseVersion = Get-TemplateBaseVersionFromFile
+    if ($existingBaseVersion) { $baseVersion = $existingBaseVersion }
+    foreach ($line in (Get-Content -Encoding UTF8 TEMPLATE-BASE.md)) {
+      if ($line -match '^\-\s*Domain standards scope:\s*(.*)$') {
+        $existingScope = $Matches[1].Trim()
+        if ($existingScope -and ($existingScope -notmatch 'TODO')) { $standardsScope = $existingScope }
+        break
+      }
+    }
+    $legacyScope = Get-LegacyDomainStandardsScope
+    if (($standardsScope -match 'TODO') -and $legacyScope) { $standardsScope = $legacyScope }
+  }
+
+  $sourceLabel = Get-TemplateSourceLabel -TemplateRemote $TemplateRemote
+  $content = @"
+# Template Base
+
+> Records the upstream template lineage for this domain template (inherits ai-project-template methodology, adds domain-specific standards). Do not use this file for ordinary derived project metadata.
+
+- Lineage type: domain template
+- Template repository: $sourceLabel
+- Base template version: $baseVersion
+- Current synced template version: $TemplateVersion
+- Synced at: $syncedAt
+- Domain template version file: VERSION
+- Domain template version at sync time: $domainVersion
+- Domain standards scope: $standardsScope
+
+## Version Semantics
+
+- ``VERSION`` is owned by this domain template and records the domain template version.
+- ``CHANGELOG.md`` is owned by this domain template and records domain template evolution; template sync does not overwrite it.
+- ``TEMPLATE-BASE.md`` records the inherited ai-project-template version used for methodology sync audit.
+- Template sync commits keep the message format ``sync template $TemplateVersion from ai-project-template``.
+"@
+  $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+  [System.IO.File]::WriteAllText((Join-Path (Get-Location) "TEMPLATE-BASE.md"), $content, $utf8NoBom)
+}
+
+function Get-LineageRole {
+  if (-not (Test-Path -LiteralPath "TEMPLATE-BASE.md" -PathType Leaf)) {
+    return ""
+  }
+
+  $headerText = ""
+  foreach ($line in (Get-Content -Encoding UTF8 TEMPLATE-BASE.md)) {
+    $headerText += $line + "`n"
+    if ($line -match '^\-\s*Lineage type:\s*(.+)$') {
+      $val = $Matches[1].Trim()
+      if ($val -eq "ordinary derived project") { return "ordinary" }
+      if ($val -eq "domain template") { return "domain" }
+    }
+  }
+
+  # v1.46.0 旧普通版无 Lineage type 字段，fallback 嗅探 header
+  if ($headerText -match 'ordinary derived project') { return "ordinary" }
+  if ($headerText -match 'domain template') { return "domain" }
+  return ""
 }
 
 function Test-RemoteMatchesLocal {
@@ -273,16 +436,151 @@ function Show-TemplateDiffStat {
   }
 }
 
+function Get-SummaryBucket {
+  param([string]$Path)
+
+  if ($Path -match '/') {
+    return (($Path -split '/', 2)[0] + '/')
+  }
+
+  return './'
+}
+
+function Test-RiskPath {
+  param([string]$Path)
+
+  return ($Path -eq 'README.md' `
+    -or $Path -eq 'ai/project-rules.md' `
+    -or $Path -match '^docs/0[0-9]-[^/]+\.md$' `
+    -or $Path -match '^(frontend|backend|tests|docker)/')
+}
+
+function Add-SummaryEntry {
+  param(
+    [hashtable]$Summary,
+    [System.Collections.Generic.List[string]]$RiskHits,
+    [string]$Path,
+    [string]$Status
+  )
+
+  $bucket = Get-SummaryBucket -Path $Path
+  if (-not $Summary.Buckets.ContainsKey($bucket)) {
+    $Summary.Buckets[$bucket] = @{ added = 0; modified = 0; deleted = 0; skipped = 0 }
+  }
+
+  if ($Summary.Buckets[$bucket].ContainsKey($Status)) {
+    $Summary.Buckets[$bucket][$Status]++
+  }
+
+  if ($Summary.Total.ContainsKey($Status)) {
+    $Summary.Total[$Status]++
+  }
+
+  if ((Test-RiskPath -Path $Path) -and $Status -ne 'unchanged') {
+    $RiskHits.Add(("{0} {1}" -f $Status, $Path)) | Out-Null
+  }
+}
+
+function Write-Summary {
+  param(
+    [hashtable]$Summary,
+    [System.Collections.Generic.List[string]]$RiskHits
+  )
+
+  Write-Host "==> dry-run summary (per-file diff stat omitted)"
+  Write-Host ("   Change counts: added={0}, modified={1}, deleted={2}, skipped={3}" -f $Summary.Total.added, $Summary.Total.modified, $Summary.Total.deleted, $Summary.Total.skipped)
+  Write-Host "   By top-level directory:"
+  if ($Summary.Buckets.Count -eq 0) {
+    Write-Host "    = no changes"
+  } else {
+    foreach ($bucket in @($Summary.Buckets.Keys | Sort-Object)) {
+      $entry = $Summary.Buckets[$bucket]
+      Write-Host ("    - {0} added={1}, modified={2}, deleted={3}, skipped={4}" -f $bucket, $entry.added, $entry.modified, $entry.deleted, $entry.skipped)
+    }
+  }
+
+  Write-Host "   Risk path hits:"
+  if ($RiskHits.Count -eq 0) {
+    Write-Host "    = none"
+  } else {
+    foreach ($hit in $RiskHits) {
+      Write-Host ("    ! " + $hit)
+    }
+  }
+}
+
 function Invoke-NativeTemplateSync {
-  param([string[]]$Args)
+  param([string[]]$NativeSyncArgs)
 
   $mode = "--dry-run"
-  if ($Args -and $Args.Count -gt 0) {
-    if ($Args.Count -ne 1 -or ($Args[0] -notin @("--dry-run", "--commit"))) {
-      Write-Error "Usage: powershell -ExecutionPolicy Bypass -File scripts/sync-template.ps1 [--dry-run|--commit]"
+  $modeExplicit = $false
+  $skipStat = $false
+  $summaryExplicit = $false
+  $preserveProjectVersion = $false
+  $domainTemplateMode = $false
+  if ($NativeSyncArgs -and $NativeSyncArgs.Count -gt 0) {
+    foreach ($arg in $NativeSyncArgs) {
+      switch ($arg) {
+        "--dry-run" {
+          if ($modeExplicit -and $mode -ne "--dry-run") {
+            Write-Error "Usage: powershell -ExecutionPolicy Bypass -File scripts/sync-template.ps1 [--dry-run [--no-stat]|--summary|--commit]"
+            return 1
+          }
+          $mode = "--dry-run"
+          $modeExplicit = $true
+        }
+        "--commit" {
+          if ($modeExplicit -and $mode -ne "--commit") {
+            Write-Error "Usage: powershell -ExecutionPolicy Bypass -File scripts/sync-template.ps1 [--dry-run [--no-stat]|--summary|--commit]"
+            return 1
+          }
+          $mode = "--commit"
+          $modeExplicit = $true
+        }
+        "--summary" {
+          if ($modeExplicit -and $mode -eq "--commit") {
+            Write-Error "Usage: powershell -ExecutionPolicy Bypass -File scripts/sync-template.ps1 [--dry-run [--no-stat]|--summary|--commit]"
+            return 1
+          }
+          $mode = "--dry-run"
+          $modeExplicit = $true
+          $skipStat = $true
+          $summaryExplicit = $true
+        }
+        "--no-stat" {
+          $skipStat = $true
+        }
+        "--preserve-project-version" {
+          $preserveProjectVersion = $true
+        }
+        "--domain-template" {
+          $domainTemplateMode = $true
+        }
+        default {
+          Write-Error "Usage: powershell -ExecutionPolicy Bypass -File scripts/sync-template.ps1 [--dry-run [--no-stat]|--summary|--commit] [--preserve-project-version|--domain-template]"
+          return 1
+        }
+      }
+    }
+
+    if ($mode -eq "--commit" -and $skipStat) {
+      Write-Error "Usage: powershell -ExecutionPolicy Bypass -File scripts/sync-template.ps1 [--dry-run [--no-stat]|--summary|--commit]"
       return 1
     }
-    $mode = $Args[0]
+
+    if ($preserveProjectVersion -and $domainTemplateMode) {
+      Write-Error "Usage: --preserve-project-version and --domain-template are mutually exclusive; pick one."
+      return 1
+    }
+  }
+
+  $displayMode = $mode
+  if ($mode -eq "--dry-run" -and $skipStat) {
+    if ($summaryExplicit) {
+      $displayMode = "--summary"
+    } else {
+      $displayMode = "--dry-run --no-stat"
+    }
   }
 
   $templateRemote = if ($env:TEMPLATE_REMOTE) { $env:TEMPLATE_REMOTE } else { "https://github.com/emily8421/ai-project-template.git" }
@@ -291,7 +589,7 @@ function Invoke-NativeTemplateSync {
 
   Write-Host "==> PowerShell fallback template sync"
   Write-Host "Git Bash could not be started from PowerShell on this machine."
-  Write-Host "Using native PowerShell fallback for $mode. Fix Git Bash/MSYS separately if you need Bash entrypoints."
+  Write-Host "Using native PowerShell fallback for $displayMode. Fix Git Bash/MSYS separately if you need Bash entrypoints."
   Write-Host ""
 
   Invoke-Git rev-parse --is-inside-work-tree | Out-Null
@@ -304,6 +602,24 @@ function Invoke-NativeTemplateSync {
   }
 
   $ref = "FETCH_HEAD"
+
+  $lineageRole = Get-LineageRole
+  if (-not $preserveProjectVersion -and -not $domainTemplateMode) {
+    if ($lineageRole -eq "ordinary") {
+      $preserveProjectVersion = $true
+    } elseif ($lineageRole -eq "domain") {
+      $domainTemplateMode = $true
+    }
+  } else {
+    if ($lineageRole -eq "domain" -and $preserveProjectVersion) {
+      Write-Error "Explicit --preserve-project-version conflicts with existing domain TEMPLATE-BASE.md (Lineage type: domain template). Use --domain-template instead."
+      return 1
+    }
+    if ($lineageRole -eq "ordinary" -and $domainTemplateMode) {
+      Write-Error "Explicit --domain-template conflicts with existing ordinary derived TEMPLATE-BASE.md (Lineage type: ordinary derived project). Use --preserve-project-version instead."
+      return 1
+    }
+  }
 
   if (Test-GitObject -Ref $ref -Path "scripts/sync-template.sh") {
     $remoteScriptHash = Get-RemoteHash -Ref $ref -Path "scripts/sync-template.sh"
@@ -318,6 +634,9 @@ function Invoke-NativeTemplateSync {
   }
 
   $syncFiles = @(Get-SyncFilesFromRef -Ref $ref)
+  if ($preserveProjectVersion -or $domainTemplateMode) {
+    $syncFiles = @(Remove-ProjectVersionFiles -SyncFiles $syncFiles)
+  }
   if ($syncFiles.Count -eq 0) {
     Write-Error "Could not parse template-sync.json sync file list."
     return 1
@@ -325,6 +644,11 @@ function Invoke-NativeTemplateSync {
 
   $version = Get-TemplateVersion -Ref $ref
   Write-Host "==> Template version: $version"
+  if ($preserveProjectVersion) {
+    Write-Host "==> Ordinary derived project version mode: preserve local VERSION/CHANGELOG and update TEMPLATE-BASE.md"
+  } elseif ($domainTemplateMode) {
+    Write-Host "==> Domain template version mode: preserve domain VERSION/CHANGELOG and update TEMPLATE-BASE.md (domain lineage)"
+  }
   if (Test-Path -LiteralPath ".github/workflows/template-check.yml" -PathType Leaf) {
     Write-Warning "Detected .github/workflows/template-check.yml. This workflow is for template repository self-checks; derived project PRs should not run scripts/check-template.sh. Migrate to .github/workflows/project-check.yml with git diff --check for normal PRs and scripts/check-derived-sync.sh HEAD only for template sync commits."
     Write-Host ""
@@ -332,24 +656,52 @@ function Invoke-NativeTemplateSync {
   Write-Host "==> Sync files:"
 
   if ($mode -eq "--dry-run") {
+    $summary = @{
+      Buckets = @{}
+      Total   = @{ added = 0; modified = 0; deleted = 0; skipped = 0 }
+    }
+    $riskHits = New-Object System.Collections.Generic.List[string]
+
     foreach ($file in $syncFiles) {
       if (Test-GitObject -Ref $ref -Path $file) {
         if (Test-RemoteMatchesLocal -Ref $ref -RemotePath $file) {
           Write-Host "    = $file (no diff)"
         } else {
           Write-Host "    delta $file"
+          if (Test-Path -LiteralPath $file -PathType Leaf) {
+            Add-SummaryEntry -Summary $summary -RiskHits $riskHits -Path $file -Status "modified"
+          } else {
+            Add-SummaryEntry -Summary $summary -RiskHits $riskHits -Path $file -Status "added"
+          }
         }
       } else {
         Write-Host "    skip $file (not in template)"
+        Add-SummaryEntry -Summary $summary -RiskHits $riskHits -Path $file -Status "skipped"
       }
     }
 
     Write-Host ""
-    Write-Host "INFO dry-run: preview only; workspace and index unchanged. Diff stats:"
+    Write-Host "INFO dry-run: preview only; workspace and index unchanged."
     Write-Host "   Direction: local current files -> template $version (changes that --commit would apply)"
-    foreach ($file in $syncFiles) {
-      if ((Test-GitObject -Ref $ref -Path $file) -and -not (Test-RemoteMatchesLocal -Ref $ref -RemotePath $file)) {
-        Show-TemplateDiffStat -Ref $ref -RemotePath $file -LocalPath $file
+    if ($preserveProjectVersion -or $domainTemplateMode) {
+      $lineageModeLabel = "ordinary derived project"
+      if ($domainTemplateMode) { $lineageModeLabel = "domain template" }
+      if (Test-Path -LiteralPath "TEMPLATE-BASE.md" -PathType Leaf) {
+        Write-Host "    delta TEMPLATE-BASE.md (template lineage, $lineageModeLabel)"
+        Add-SummaryEntry -Summary $summary -RiskHits $riskHits -Path "TEMPLATE-BASE.md" -Status "modified"
+      } else {
+        Write-Host "    delta TEMPLATE-BASE.md (new template lineage, $lineageModeLabel)"
+        Add-SummaryEntry -Summary $summary -RiskHits $riskHits -Path "TEMPLATE-BASE.md" -Status "added"
+      }
+    }
+    if ($skipStat) {
+      Write-Summary -Summary $summary -RiskHits $riskHits
+    } else {
+      Write-Host "   Diff stats:"
+      foreach ($file in $syncFiles) {
+        if ((Test-GitObject -Ref $ref -Path $file) -and -not (Test-RemoteMatchesLocal -Ref $ref -RemotePath $file)) {
+          Show-TemplateDiffStat -Ref $ref -RemotePath $file -LocalPath $file
+        }
       }
     }
 
@@ -381,6 +733,17 @@ function Invoke-NativeTemplateSync {
   }
 
   $updatedFiles = New-Object System.Collections.Generic.List[string]
+  if ($domainTemplateMode) {
+    Write-DomainTemplateBase -TemplateVersion $version -TemplateRemote $templateRemote
+    Invoke-Git add TEMPLATE-BASE.md
+    $updatedFiles.Add("TEMPLATE-BASE.md")
+    Write-Host "    ok TEMPLATE-BASE.md (domain template lineage)"
+  } elseif ($preserveProjectVersion) {
+    Write-TemplateBase -TemplateVersion $version -TemplateRemote $templateRemote
+    Invoke-Git add TEMPLATE-BASE.md
+    $updatedFiles.Add("TEMPLATE-BASE.md")
+    Write-Host "    ok TEMPLATE-BASE.md (template lineage)"
+  }
   foreach ($file in $syncFiles) {
     if (Test-GitObject -Ref $ref -Path $file) {
       Invoke-Git checkout $ref -- $file
@@ -423,6 +786,11 @@ function Invoke-NativeTemplateSync {
   Write-Host "  4. Run project tests / lint / build as applicable; record unavailable checks as unverified"
   Write-Host "  5. Create or update: sync-records/template-sync/YYYY-MM-DD-sync-template-$version.md"
   Write-Host "     Use: template-docs/derived-sync-report-template.md"
+  if ($preserveProjectVersion) {
+    Write-Host "  6. Confirm project VERSION is still project-owned; inherited template version is in TEMPLATE-BASE.md"
+  } elseif ($domainTemplateMode) {
+    Write-Host "  6. Confirm domain template VERSION and CHANGELOG are still domain-owned; inherited base template version is in TEMPLATE-BASE.md (domain lineage)"
+  }
   return 0
 }
 
@@ -444,7 +812,7 @@ try {
       Write-Warning ("Bash probe exit code: " + $probe.ExitCode)
     }
 
-    $fallbackExit = Invoke-NativeTemplateSync -Args $SyncArgs
+    $fallbackExit = Invoke-NativeTemplateSync -NativeSyncArgs $SyncArgs
     exit $fallbackExit
   }
 

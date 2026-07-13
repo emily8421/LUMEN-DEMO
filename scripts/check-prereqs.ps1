@@ -65,6 +65,19 @@ function Find-GitBash {
   return $null
 }
 
+function Test-BashCallable {
+  if (-not (Test-CommandExists "bash")) {
+    return $false
+  }
+
+  try {
+    $null = & bash -lc "exit 0" 2>$null
+    return $LASTEXITCODE -eq 0
+  } catch {
+    return $false
+  }
+}
+
 function Add-Result {
   param(
     [System.Collections.Generic.List[object]]$List,
@@ -88,6 +101,7 @@ $wingetInstalled = Test-CommandExists "winget"
 $gitInstalled = Test-CommandExists "git"
 $gitBashPath = Find-GitBash
 $bashCommandInstalled = Test-CommandExists "bash"
+$bashCommandCallable = Test-BashCallable
 $ghInstalled = Test-CommandExists "gh"
 $nodeInstalled = Test-CommandExists "node"
 $npmInstalled = Test-CommandExists "npm"
@@ -104,7 +118,7 @@ if ($powerShellEdition -eq "Desktop" -and $PSVersionTable.PSVersion.Major -le 5)
 Add-Result $results "winget" "Required" $wingetInstalled $(if ($wingetInstalled) { Get-CommandVersion "winget" } else { "Not installed or unavailable; the bootstrap script depends on it" })
 Add-Result $results "Git" "Required" $gitInstalled (Get-CommandVersion "git")
 Add-Result $results "Git Bash" "Required" ($null -ne $gitBashPath) $(if ($gitBashPath) { $gitBashPath } else { "bash.exe not found; template Bash scripts will not run" })
-Add-Result $results "bash command in PATH" "Conditional" $bashCommandInstalled $(if ($bashCommandInstalled) { (Get-Command bash).Source } else { "Git Bash is installed, but 'bash' is not directly callable from PowerShell PATH" })
+Add-Result $results "bash command in PATH" "Conditional" ($bashCommandInstalled -and $bashCommandCallable) $(if ($bashCommandInstalled -and $bashCommandCallable) { (Get-Command bash).Source } elseif ($bashCommandInstalled) { "bash exists but cannot be started from PowerShell; use Git Bash full path" } else { "Git Bash is installed, but 'bash' is not directly callable from PowerShell PATH" })
 Add-Result $results "PowerShell" "Required" $true $powerShellDetails
 Add-Result $results "GitHub CLI (gh)" "Conditional" $ghInstalled $(if ($ghInstalled) { Get-CommandVersion "gh" } else { "Required for remote repo creation and some sync flows; not required for local smoke tests" })
 Add-Result $results "Node.js" "Recommended" $nodeInstalled (Get-CommandVersion "node")
@@ -145,14 +159,19 @@ if ($optionalMissing.Count -gt 0) {
 
 Write-Host ""
 Write-Host "==> Suggested next steps"
-if ($wingetInstalled) {
-  Write-Host "- Run: powershell -ExecutionPolicy Bypass -File scripts/bootstrap-dev-env.ps1"
+if ($requiredMissing.Count -gt 0 -and $wingetInstalled) {
+  Write-Host "- Install missing required tools: powershell -ExecutionPolicy Bypass -File scripts/bootstrap-dev-env.ps1"
+} elseif ($requiredMissing.Count -gt 0) {
+  Write-Host "- Install missing required tools manually; one-click install is unavailable until winget is installed and usable"
 } else {
-  Write-Host "- One-click install is unavailable until winget is installed and usable"
+  Write-Host "- Required tools are present; continue with local project setup or smoke-test steps"
+  if ($recommendedMissing.Count -gt 0 -and $wingetInstalled) {
+    Write-Host "- Optional convenience: run scripts/bootstrap-dev-env.ps1 only if you want to install missing recommended tools"
+  }
 }
 Write-Host "- If you need remote repo creation or template sync, install gh and then run: gh auth login"
 Write-Host "- If you only need a local smoke test, you can continue without gh"
-if (-not $bashCommandInstalled -and $gitBashPath) {
-  Write-Host ("- If PowerShell cannot find 'bash', run Bash scripts with the full path: & `"" + $gitBashPath + "`" <script>")
+if ((-not $bashCommandCallable) -and $gitBashPath) {
+  Write-Host ("- If 'bash' is missing or starts the Windows/WSL stub, run Bash scripts with the full path: & `"" + $gitBashPath + "`" <script>")
 }
 Write-Host "- In a project repo, then run: powershell -ExecutionPolicy Bypass -File scripts/collect-env.ps1"

@@ -30,15 +30,16 @@
 
 目标：将当前派生项目同步到 ai-project-template 最新模板方法论版本。目标版本必须以模板仓库根目录 `VERSION` 为准，不要使用本 Prompt 文本中的示例版本号。
 
-先说明本次标准闭环计划：同步预检 → dry-run → 同步提交 → `check-derived-sync` 边界验证 → `post-sync-cleanup` 整理计划 → `docs-system-audit` 同步后审计 → 项目验证建议 → `sync-records/template-sync/` 同步报告。每一步说明是否只读、是否会写文件；写入前等待确认。若用户明确说已同步但只需补后续，或 Git 显示最近已有 `sync template vX.Y.Z from ai-project-template` 同步提交，则进入“同步后续接模式”：不要重新执行 dry-run / commit，先核对同步提交、`VERSION`、工作区和既有同步记录，再从 `check-derived-sync` 边界验证开始补完后续闭环。
+先说明本次标准闭环计划：同步预检 → dry-run → 同步提交 → `check-derived-sync` 边界验证 → `post-sync-cleanup` 整理计划 → `docs-system-audit` 同步后审计 → 项目验证建议 → `sync-records/template-sync/` 同步报告。每一步说明是否只读、是否会写文件；写入前等待确认。若用户明确说已同步但只需补后续，或 Git 显示最近已有 `sync template vX.Y.Z from ai-project-template` 同步提交，则进入“同步后续接模式”：不要重新执行 dry-run / commit，先核对同步提交、`VERSION`、`TEMPLATE-BASE.md`（若存在）、工作区和既有同步记录，再从 `check-derived-sync` 边界验证开始补完后续闭环。
 
 执行要求：
 1. 先阅读 ai/index.md 及其列出的全部规则文件。
 2. 检查 git status；若有未提交改动，立即停止并说明，不要覆盖。
 3. 判断是否为同步后续接模式：
-   - 读取：git log --oneline -8、git status --short --branch、Get-Content VERSION、最近一次 `sync-records/template-sync/` 记录（若存在；旧路径 `docs/archive/template-sync/` 兼容读取）。
+   - 读取：git log --oneline -8、git status --short --branch、Get-Content VERSION、Get-Content TEMPLATE-BASE.md（若存在）、最近一次 `sync-records/template-sync/` 记录（若存在；旧路径 `docs/archive/template-sync/` 兼容读取）。
    - 若最近提交或用户说明表明已经完成 `sync template vX.Y.Z from ai-project-template`，且本轮目标只是补完后续，不要重新 dry-run / commit；记录已同步版本和缺失环节，直接跳到第 11 步继续。
-   - 若无法确认同步提交是否可信，或 `VERSION` 与最近同步提交 / 目标版本冲突，停止并向用户说明冲突，不得覆盖文件。
+   - 若存在 `TEMPLATE-BASE.md`，`VERSION` 视为项目自身版本，继承模板版本以 `TEMPLATE-BASE.md` / 同步提交为准；若二者与目标版本冲突，停止并说明冲突，不得覆盖文件。
+   - 若不存在 `TEMPLATE-BASE.md`，兼容旧语义：`VERSION` 可能仍是继承模板版本；若 `VERSION` 与最近同步提交 / 目标版本冲突，停止并向用户说明冲突，不得覆盖文件。
 4. 判断当前派生项目同步路径：
    - 如果缺少 `scripts/sync-template.ps1`，或缺少 `template-sync.json`，或 `VERSION` 低于 `v1.6.8`，或不确定当前同步脚本是否为新版，则按“旧派生项目首次同步”路径执行。
    - 如果已有新版 `scripts/sync-template.ps1` 与 `template-sync.json`，则按“v1.6.8+ 后续同步”路径执行。
@@ -58,10 +59,13 @@
    - 如果 Git for Windows 安装位置不同，用本机实际 `bash.exe` 路径替换示例路径。
 8. 如果是 v1.6.8+ 后续同步：
    - 运行：powershell -ExecutionPolicy Bypass -File scripts/sync-template.ps1 --dry-run
-9. 检查 dry-run 输出，确认只涉及模板方法论同步文件；不应出现 README.md、ai/project-rules.md、docs/00-09、frontend/、backend/、tests/、docker/ 或业务代码。
+9. 检查 dry-run 输出，确认只涉及模板方法论同步文件；普通派生项目双版本模式允许出现 `TEMPLATE-BASE.md`，但不应出现 README.md、ai/project-rules.md、docs/00-09、frontend/、backend/、tests/、docker/ 或业务代码。
 10. 如果 dry-run 合理，执行同步：
-   - 旧派生项目首次同步：运行 & "C:\Program Files\Git\bin\bash.exe" scripts/sync-template.sh --commit
-   - v1.6.8+ 后续同步：运行 powershell -ExecutionPolicy Bypass -File scripts/sync-template.ps1 --commit
+   - 普通派生项目若已有或准备采用 `TEMPLATE-BASE.md` 双版本模式，优先追加 `--preserve-project-version`，使 `VERSION` / `CHANGELOG.md` 保持项目自身版本，继承模板版本写入 `TEMPLATE-BASE.md`；若仓库已存在 `TEMPLATE-BASE.md`，新版脚本会自动启用该模式。
+   - 领域模板（如 `agent-system-template`，仓库存在领域版 `TEMPLATE-BASE.md`：`Lineage type: domain template`）从母模板 sync 时改用 `--domain-template`（与 `--preserve-project-version` 互斥），保留领域模板自身 `VERSION` / `CHANGELOG.md`，并把继承母模板版本写入领域版 `TEMPLATE-BASE.md`（含 `Domain standards scope`）；仓库已存在领域版 `TEMPLATE-BASE.md` 时自动启用。普通派生项目不要用 `--domain-template`，反之领域模板不要用 `--preserve-project-version`，二者冲突时脚本会停止并提示。
+   - 旧派生项目首次同步：运行 & "C:\Program Files\Git\bin\bash.exe" scripts/sync-template.sh --commit --preserve-project-version
+   - v1.6.8+ 后续同步：运行 powershell -ExecutionPolicy Bypass -File scripts/sync-template.ps1 --commit --preserve-project-version
+   - 若维护者明确要求继续沿用旧语义（`VERSION` = 继承模板版本），才不加 `--preserve-project-version`；需在同步报告说明。
 11. 只做派生同步边界检查：
    - 运行：git status --short --branch
    - 运行：git log --oneline -8，定位实际 `sync template vX.Y.Z from ai-project-template` 同步提交。
@@ -106,6 +110,12 @@
 22. 推送当前分支：git push -u origin chore/sync-template-vX.Y.Z。
 23. 创建 PR：gh pr create --fill。
 24. 最后汇总：同步到的模板版本、同步提交、采用的同步路径、同步边界检查结果、workflow 迁移建议、同步后整理状态、文档体系审计状态、提案回流收口结论、项目验证建议、同步运行记录路径、是否需要人工迁移 project-rules、是否需要运行 collect-env、提案归档情况、是否生成回流提案和 PR 链接。
+
+收尾门禁：最终回答前必须输出 A13 完成判据矩阵，字段为 `A13 步骤 / 证据 / 状态 / 若非完成，原因 / 下一步`，覆盖标准闭环计划、dry-run 预览、commit + 边界验证、post-sync-cleanup、docs-system-audit、提案回流收口和同步报告留痕。状态必须区分 `完成`、`等价替代`、`失败`、`完整执行`、`轻量执行`、`未执行`、`部分完成`。如果 `post-sync-cleanup` 或 `docs-system-audit` 只是只读抽查 / 摘要，必须标为 `轻量执行`，不得写成 `完整执行`。
+
+提案回流收口必须输出决策矩阵，字段为 `本地提案 / 模板 issue 或 PR / 远端状态 / 关闭原因或处理结果 / 本地动作建议`。仅有 issue `closed` 不得自动归档；只有能从 VERSION、CHANGELOG、PR 或 issue 说明判断“已采纳 / 已拒绝 / 已替代处理 / 延后”时，才建议归档，否则建议保留、follow-up 或等待。
+
+若 A13 完成判据矩阵仍存在 `轻量执行`、`未执行`、`失败`、`部分完成` 或无法判断项，最终回答不得称“A13 完整闭环完成”，只能称“同步主链完成，A13 闭环尚有剩余项”，并列出补完路径。
 
 遇到以下情况必须停止并说明原因：
 - 工作区不干净。

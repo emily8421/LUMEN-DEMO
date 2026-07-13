@@ -6,6 +6,178 @@
 
 模板版本采用三段式 `vMAJOR.MINOR.PATCH`，以根目录 `VERSION` 为单一审计入口。版本是发布边界，不是提案数量边界；提案收件箱增长不触发版本递增，只有合并到同步范围内并改变模板行为或下游同步判断的 PR 才判断 `PATCH / MINOR / MAJOR`。`ai/global-rules.md` 顶部仅记录全局规则自身版本。
 
+## v1.47.1（2026-07-12）
+
+领域模板 `TEMPLATE-BASE.md` 迁移兼容小修：基于 `agent-system-template` 真实 sync 验证，补齐旧领域溯源格式到新 `Domain standards scope` 字段的迁移，避免旧文件的“叠加的标准件范围”在首次 `--domain-template` 同步后退化为 TODO。
+
+- `scripts/sync-template.sh` 与 PowerShell fallback 现在会识别旧版 `TEMPLATE-BASE.md` 的 `## 叠加的标准件范围` / `## Domain Standards Scope` 小节，把其中 bullet 合并迁移到新字段；若新字段已有非 TODO 内容，则优先保留新字段。
+- 旧版 `base version` 也会迁移为 `Base template version`，继续保持初始母模板溯源锚点。
+- `scripts/check-template.sh` 与 `scripts/check-template.ps1` 增加旧领域范围迁移关键词断言，防止兼容逻辑回退。
+
+## v1.47.0（2026-07-12）
+
+领域模板版本治理（inheritance Batch 3 / C-004）：把普通派生项目的双版本保留机制扩展到领域模板线，让领域模板（如 `agent-system-template`）从母模板 sync 时保留自身 `VERSION` / `CHANGELOG.md`，并用领域版 `TEMPLATE-BASE.md` 记录继承的母模板版本与领域标准件范围，解决 2026-07-11 试跑中"每次 sync 覆盖领域版本需手动恢复"的问题。与普通派生项目版本治理（v1.46.0）是两条独立线，互不混用。
+
+- **同步脚本**：`scripts/sync-template.sh` 与 PowerShell fallback 新增 `--domain-template`（与 `--preserve-project-version` 互斥）；启用后跳过 `VERSION` / `CHANGELOG.md`，并新增 / 更新领域版 `TEMPLATE-BASE.md`（`Lineage type: domain template` + `Domain standards scope`，首次生成留 TODO 占位，后续 sync 保留）；仓库存在领域版 `TEMPLATE-BASE.md` 时自动启用，与显式标志冲突时停止并提示。
+- **角色判定**：新增 `detect_lineage_role` / `Get-LineageRole`，按 `TEMPLATE-BASE.md` 的 `Lineage type` 字段判定普通版 / 领域版（兼容 v1.46.0 旧普通版 header 嗅探）；普通派生 `--preserve-project-version` 行为不变。
+- **边界验证**：`scripts/check-derived-sync.*` 按 `Lineage type` 识别角色，领域版额外校验 `Domain standards scope` 字段，仍跳过 README ↔ `VERSION` 一致性检查。
+- **自检防漂移**：`scripts/check-template.sh` 与 `scripts/check-template.ps1` 把旧的 `TEMPLATE-BASE.md` 自动检测断言更新为 `detect_lineage_role` / `Get-LineageRole`，并新增 `--domain-template`、`write_domain_template_base` / `Write-DomainTemplateBase` 与领域版字段断言。
+- **文档与提案**：`template-docs/domain-templates.md` §0 / §4 / §5 / §7 更新 C-004 落地状态；`_proposals/TEMPLATE-UPGRADE-domain-template-inheritance.md` C-004 标 ✅、Batch 3 标部分落地；`ai/prompts/maintainers/12-sync-template.md`、`ai/commands/sync-methodology.md`、`git-guide.md` §5.5、`template-docs/scenario-guides.md` A13 / A20 与 `template-docs/derived-sync-report-template.md` 均补充领域模板角色口径。
+- 回流自 `_proposals/TEMPLATE-UPGRADE-domain-template-inheritance.md` Batch 3 / C-004；多级同步自动化（领域模板作为领域派生项目上游）仍待后续。
+
+## v1.46.0（2026-07-11）
+
+普通派生项目双版本治理：新增可选的路线 A 同步模式，让普通派生项目用 `VERSION` 记录项目自身版本，用 `TEMPLATE-BASE.md` 记录继承的母模板版本，避免每次模板同步覆盖项目版本。
+
+- **同步脚本**：`scripts/sync-template.sh` 与 PowerShell fallback 增加 `--preserve-project-version`；启用后跳过 `VERSION` / `CHANGELOG.md`，并新增 / 更新 `TEMPLATE-BASE.md` 作为继承版本记录，提交信息仍为 `sync template vX.Y.Z from ai-project-template`。
+- **新项目默认**：`scripts/new-project.sh` 为普通派生项目生成精简版 `TEMPLATE-BASE.md`，README 模板关系改为“`VERSION` = 项目自身版本，`TEMPLATE-BASE.md` = 继承模板版本”。
+- **边界验证**：`scripts/check-derived-sync.*` 允许同步提交修改 `TEMPLATE-BASE.md`，并在双版本模式下跳过 README ↔ `VERSION` 的模板版本一致性检查，改查 `TEMPLATE-BASE.md` 的当前同步模板版本。
+- **A13 同步流程**：`ai/prompts/maintainers/12-sync-template.md`、`ai/commands/sync-methodology.md`、`git-guide.md`、`template-docs/scenario-guides.md` 与同步报告模板均补充 `--preserve-project-version`、`VERSION` / `TEMPLATE-BASE.md` 双字段和同步后续接判定。
+- **边界说明**：`template-docs/domain-templates.md` 明确普通派生项目的精简 `TEMPLATE-BASE.md` 不等同于领域模板线的 `TEMPLATE-BASE.md`；领域模板版本治理仍走 inheritance / domain-template-lab 独立线。
+- 回流自 `_proposals/TEMPLATE-UPGRADE-derived-project-version-governance.md`（DV-001 / DV-003 / DV-004 部分落地，试点反馈后再决定归档）。
+
+## v1.45.7（2026-07-11）
+
+Token 热点候选规则小落地：把首批 token hotspot 记录反复出现的 H-001 / H-003 升级为受限会话规则，减少同一任务链内重复规则读取和成功长日志回灌，同时保留首次完整规则门禁、规则变更重读和失败日志证据。
+
+- **同会话规则复用**：`ai/session-rules.md` 新增 §3.2，明确完整规则读取仍是任务执行前门禁；仅当同一未中断会话、规则文件未变、任务链未切换且上下文可追溯时，后续 edit / amend / push / PR checks / merge closure / handoff 可复用已加载规则。
+- **重读边界**：规则 / 入口文件变更、切换命令或仓库角色、长时间中断、上下文压缩、handoff 与 Git 冲突或动作不在已加载规则覆盖范围内时，必须重读相关规则；无法判断时回到完整规则读取。
+- **验证摘要**：`ai/session-rules.md` §4.1 增加成功长检查的证据摘要约定，默认记录命令名、退出码 / check 结论和关键摘要，不把完整成功日志重复带入 handoff / hotspot / 回复上下文；失败、警告或人工审计场景仍保留可定位日志。
+- **提案状态**：`_proposals/TEMPLATE-UPGRADE-token-hotspot-records.md` 标记 H-001 / H-003 已作为小规则落地，记录模板、正式目录规范、H-002 与后续 sync 体验优化仍保留候选。
+- **自检防回归**：`scripts/check-template.sh` 与 `scripts/check-template.ps1` 增加同会话复用边界和验证摘要关键词断言。
+
+## v1.45.6（2026-07-11）
+
+领域模板独立实验入口：新增 `domain-template-lab` 命令与维护者 Prompt，让 AI 能自动识别并规划 `母模板 → 派生领域模板 → 领域派生项目` 的独立试验线，同时保持普通 `母模板 → 直接派生项目` 主同步路径不变。
+
+- **新增命令**：`ai/commands/domain-template-lab.md`，用于“初始化领域模板实验线 / 创建派生领域模板 / 创建 agent-system-template / 试跑领域模板同步”等场景。
+- **新增 Prompt**：`ai/prompts/maintainers/23-domain-template-lab.md`，定义仓库角色判定、只相邻同步、不跨层操作、两级回流和实验资产计划。
+- **独立边界**：`template-docs/domain-templates.md` 明确该入口不接入 `git-guide.md` §5 主同步路径，不修改母模板 `sync-template` 语义，不让领域派生项目直接同步母模板。
+- **提案状态**：`_proposals/TEMPLATE-UPGRADE-domain-template-inheritance.md` 标记 Batch 3 的母模板侧 AI 实验入口部分落地；领域 scaffold、领域同步清单和领域自检仍待独立仓库试验。
+- **同步与自检**：`template-sync.json` 纳入新命令 / Prompt；`scripts/check-template.sh` 与 `scripts/check-template.ps1` 加入口断言。
+
+## v1.45.5（2026-07-10）
+
+Token 热点记录最小自动提醒：把候选机制中的 B+「最小同步可发现入口」落到 `ai/session-rules.md`，让 AI 在长任务收尾时自动识别并询问是否记录 token hotspot，同时保留写入确认和隐私边界。
+
+- **自动提醒触发**：新增 `ai/session-rules.md` §4.1，覆盖完整规则读取后的长任务、模板维护 / 提案 / 文档审计 / PR / CI 闭环、大文件或长日志重复读取、用户询问 token 热点等场景。
+- **写入边界**：默认只自动识别并询问，不静默创建文件；首次创建 `ai-records/token-hotspots/` 或写入记录仍需遵守 `ai/project-rules.md` §6 的确认规则。
+- **隐私边界**：记录只写任务类型、文件路径、命令类别、热点判断、质量影响和优化建议；不得写入密钥、账号密码、客户敏感数据或完整对话正文。
+- **提案状态**：`_proposals/TEMPLATE-UPGRADE-token-hotspot-records.md` 标记 B+ 部分落地，记录模板 / summary / 正式目录规范仍待 3–5 份记录后评估。
+- **自检防回归**：`scripts/check-template.sh` 与 `scripts/check-template.ps1` 增加 token hotspot 触发规则和记录路径断言。
+
+## v1.45.4（2026-07-10）
+
+Windows 新手 smoke-test 真实体验小修：基于 2026-07-10 本地烟测结果，修正 Git Bash / WSL stub 提示、前置检查 next steps 与新建项目完成提示，避免新手在本地最小链路中误判下一步。
+
+- **Git Bash fallback**：`template-docs/smoke-test.md` 补充 `bash` 指向 Windows / WSL stub 并报 `E_ACCESSDENIED`、`/bin/bash` 不存在时改用 `C:\Program Files\Git\bin\bash.exe` 全路径。
+- **前置检查提示**：`scripts/check-prereqs.ps1` 检测 `bash` 是否真的可从 PowerShell 启动；Required 全通过时不再默认建议运行 `bootstrap-dev-env.ps1`，而是提示可继续本地项目 / smoke-test。
+- **新建项目完成提示**：`scripts/new-project.sh` 完成后指向 `collect-env`、`docs/inputs/`、`ai/project-rules.md`、`/run review-inputs` 与 `/run generate-docs` 链路，与派生项目 README 保持一致。
+- **提案留痕**：新增 `_proposals/TEMPLATE-UPGRADE-smoke-test-followups.md` 记录本次 smoke-test 发现、非目标、验证方式和待确认项。
+
+## v1.45.3（2026-07-10）
+
+SOP 去三写（减负）：使用原则 / 文档入口表 / 常见选择三段重复同一组路由（新手 / 环境 / CLI / 烟测 / 方法论）×3，措辞略不同，用户扫三遍、维护改三处。合并去重。
+
+- **使用原则**（12→5 条）：只留原则（scenario 兜底 / Git Bash 排障 / git-guide 与 Prompt 权威 / 治理），路由指向文档入口表 + 场景索引。
+- **文档入口表**：补 env-setup（成为唯一权威路由表）。
+- **常见选择**（15→8 条）：只留带分支判断的决策（同步后续接 / push 预检 / 改模板 / 续接等），删纯文档路由。
+- `SOP.md` 净减 11 行；`check-template.sh` 断言仍过（关键词在文档入口表 + 场景表）。
+
+## v1.45.2（2026-07-10）
+
+模板易填性增强与防漂移断言（UX 审核 C+D）：可填模板补范例行降低填写门槛；check-template 加回写一致性断言防未来漂移。
+
+- **批次 C（模板范例）**：`ui-prototype-strategy-template` 各表补 `<示例>` 行 + doc-standards 权威指针；`derived-sync-report-template` 命令真实性表 + A13 判据矩阵补填写范例 + `_proposals/`↔`_archive/proposals/` 归档关系说明。
+- **批次 D（防漂移断言）**：`check-template.sh` 加 7 条断言——验证 show-demo 回写到 scenario A21 / beginner §7、domain-templates 进 beginner §7、implementation-lifecycle / session-rules 进 methodology §2、glossary 含演示 SOP、scenario 索引含 A8.5（防漏场景）。
+
+## v1.45.1（2026-07-10）
+
+文档体验对齐与正确性修复（UX 审核 A+B）：把 v1.44.3 / v1.45.0 新能力回写到所有核心文档，修正场景码漂移与锚点 / 命令 bug，不新增能力。
+
+- **新能力回写**：`show-demo` 回写到 scenario-guides（新增 A21 场景，引用命令不双写）、beginner-guide（§3 / §7 入口）、glossary（演示 SOP 条目，演示≠09 验收）；`domain-templates` 进 template-methodology §2 权威源表 + beginner §7 导航。
+- **场景码一致性**：全仓统一「A0–A21（含 .5）/ C1–C8 / M0–M1」，删 "23 场景" 硬编码；scenario 速查索引补 A8.5；SOP 场景表对齐（补 16 漏码 + 修 A5/A6、A8/A10 共享码歧义 + 去三写冗余留待后续）。
+- **正确性 bug**：git-guide 3 处锚点（§7→§8、§1.2 / §1.3→§1 第 2/3 条）+ 场景码桥接列；e2e-regression-checklist 建仓命令重复触发修复 + "bootstrap sync 脚本"改真实命令；ai-cli-setup §8 重号→§9；smoke-test / report 旧根名→template-docs/ + 步骤对齐；INIT-PROMPT 删 v1.22.2 + 补 ai/index.md 自动读取说明。
+- **权威源**：template-methodology §2 补 `implementation-lifecycle-rules` / `session-rules` / `domain-templates`。
+- **README**：术语表入口 + A0–A21 范围。
+
+## v1.45.0（2026-07-10）
+
+项目演示 SOP 与 AI 触发规则：新增 `show-demo` 命令和 `demo-runbook-template`，约定项目级演示 SOP 默认路径 `docs/env/local-demo-runbook.md`，让「查看演示效果 / 启动 Demo / 二维码 / 检查 Demo」成为一等入口。
+
+- **新增命令**：`ai/commands/show-demo.md`——路由到项目演示 SOP，含 AI 执行边界表（只读说明 vs 启动脚本 vs 健康检查 vs 二维码 vs 安装依赖 / 外部服务）和禁止项。
+- **新增模板**：`template-docs/demo-runbook-template.md`——八节演示 SOP 结构（适用范围 / AI 场景 / 启动前提 / 启动方式 / 访问入口 / 检查验证 / 推荐演示路径 / 安全与边界），明确不替代 `docs/09-verification.md`。
+- **入口与定位**：`ai/commands/README.md` 命令表 + 触发词；`docs/README.md` §5 `docs/env/` 加 `local-demo-runbook.md` 命名。
+- **同步与自检**：`template-sync.json` 纳入两新文件；`scripts/check-template.sh` 加 8 条断言。
+- 回流自 GitHub issue #160（zhiyan-digital-cs-platform）。
+
+## v1.44.3（2026-07-10）
+
+领域模板可选中间层方法论独立文档：新增 `template-docs/domain-templates.md` 作为「领域模板（domain template）可选中间层」的单一权威源，主线文件零内容改动、仅加引用指针，明确「两层为默认主路径、三层为可选增强」，消除现有使用者的理解歧义。
+
+- **新增方法论文件**：`template-docs/domain-templates.md` 固化三层模型、何时该用领域模板、三层职责边界（引用 inheritance 提案结论）、同步 / 继承关系、`TEMPLATE-BASE.md` 约定（标注未落地）和演进状态；纳入下行同步清单。
+- **主线仅加引用指针**：`template-methodology.md` §5、`glossary.md` §7（新增「领域模板」术语条目）、`scenario-guides.md` A20（反向引用）、`README.md` 目录速览各加一处指针，不重写两层叙述。
+- **演进中定位**：文档顶部明确领域模板层尚候选 / 演进中（inheritance 提案 Batch 2-4 未落地）、主线治理仍两层、现有派生项目无需迁移、非强制。
+- **自检防回归**：`scripts/check-template.sh` 增加 `domain-templates.md` 存在、可选中间层定位、三层继承模型、主线仍两层与术语表条目断言。
+
+## v1.44.2（2026-07-09）
+
+领域模板派生场景引导：在 `template-docs/scenario-guides.md` 中新增 A20，用于从母模板派生独立领域模板（如 `agent-system-template`）时的路由、预检和边界判断。
+
+- **新增 A20 场景**：明确“母模板 → 领域模板 → 具体项目”的三层关系，区分领域模板派生与普通业务项目创建。
+- **创建前预检**：要求先检查 `new-project.*`、目标目录、远端仓库名、工具链和权限，再输出创建方案。
+- **母模板边界**：强调不把领域 scaffold 直接塞进母模板；agent scaffold 后续应在独立 `agent-system-template` 仓库内维护。
+- **自检防回归**：`scripts/check-template.sh` 增加 A20 场景和关键边界断言。
+
+## v1.44.1（2026-07-09）
+
+版本影响门槛收敛：将兼容、可选、默认行为不变的模板增强明确归入默认 `PATCH` 判断，避免 `MINOR` 变成功能次数计数器。
+
+- **PATCH 默认口径**：`CONTRIBUTING.md` 明确可选脚本参数、默认关闭能力、额外自检和治理说明补强，在不改变默认行为、不要求迁移、不新增强制采用面时优先判为 patch。
+- **MINOR 门槛收紧**：`MINOR` 仅用于新增能力层级或新的下游采用面，例如新增同步范围结构、必填入口、用户场景或推荐工作流变化。
+- **维护 checklist**：`MAINTAINERS.md` 同步发布判断口径，PATCH 可包含兼容性脚本参数 / 默认关闭能力 / 文档与治理小修。
+- **提案口径同步**：`_proposals/README.md` 和 A13 提案补充说明，`v1.44.0` 保留为旧口径历史发布；后续同类可选参数增强默认按 patch 论证。
+- **自检防回归**：`scripts/check-template.sh` 增加版本影响门槛关键断言。
+
+## v1.44.0（2026-07-09）
+
+同步 dry-run 轻量预览增强：为 `scripts/sync-template.sh` 与 PowerShell fallback 增加 `--summary` / `--no-stat`，让大版本模板同步可跳过逐文件 diff stat，同时保留可审计边界。
+
+- **轻量摘要参数**：`--summary` 等价于 dry-run 轻量预览；`--dry-run --no-stat` 保持兼容修饰符语义，均不修改工作区、不 stage、不提交。
+- **可审计输出**：轻量摘要保留同步文件状态、目标版本、变更计数、按顶层目录聚合的新增 / 修改 / 删除 / 跳过数量，以及风险路径命中。
+- **完整 dry-run 保留**：默认 `--dry-run` 仍输出逐文件 `git diff --no-index --stat`，满足需要完整 diff stat 的人工复核场景。
+- **双入口一致**：Bash 入口与 PowerShell native fallback 均支持 `--summary` 和 `--no-stat`；PowerShell 正常路径继续转发到 Bash。
+- **自检防回归**：`scripts/check-template.sh` 增加 summary/no-stat 烟测和关键断言，确保轻量模式不输出逐文件 diff stat。
+- 回流自 GitHub issue #148 Batch 3；`--list-only` 与 `--max-stat-files N` 继续延后。
+
+## v1.43.3（2026-07-09）
+
+PowerShell fallback 同步参数修复：修正 `scripts/sync-template.ps1 --commit` 在 Git Bash 不可用 fallback 路径中可能误回默认 dry-run 的问题。
+
+- **参数绑定修复**：`Invoke-NativeTemplateSync` 不再使用易与 PowerShell 自动变量 / 调用语义混淆的 `$Args` 参数名，改为 `$NativeSyncArgs`。
+- **commit 路径保护**：fallback 调用显式传递 `-NativeSyncArgs $SyncArgs`，确保 `--commit` 进入 commit 分支而不是静默回到 `--dry-run`。
+- **自检防回归**：`scripts/check-template.sh` / `.ps1` 增加 sync-template fallback 参数名与传参断言。
+- 回流自 GitHub issue #148；dry-run 轻量预览模式仍保留为后续候选。
+
+## v1.43.2（2026-07-09）
+
+A13 同步闭环门禁增强：补齐派生项目模板同步的完成判据矩阵、同步报告真实性记录和提案回流收口矩阵，避免把轻量抽查误写成完整闭环。
+
+- **A13 收尾门禁**：`ai/commands/sync-methodology.md` 与 `ai/prompts/maintainers/12-sync-template.md` 要求最终输出 A13 完成判据矩阵；若存在轻量执行 / 未执行 / 失败项，不得称“A13 完整闭环完成”。
+- **同步报告真实性**：`template-docs/derived-sync-report-template.md` 增加命令真实性记录、A13 完成判据矩阵和提案回流收口矩阵。
+- **提案收口规则**：同步报告模板明确仅有 issue `closed` 不得自动归档，必须结合 VERSION / CHANGELOG / PR / issue 说明判断“归档 / 保留 / follow-up / 等待”。
+- **自检防回归**：`scripts/check-template.sh` / `.ps1` 增加 A13 收尾门禁和报告真实性关键断言。
+- 回流自 GitHub issue #148；本批不包含 `sync-template.ps1 --commit` fallback 修复和 dry-run 轻量预览模式。
+
+## v1.43.1（2026-07-08）
+
+Docs scaffold P2 Task 模板落位评估：明确 Task 文件模板若后续落地，应作为独立 `template-docs/task-template.md` 入口，而不是放入 `template-docs/docs-scaffold/`。
+
+- **信息架构边界**：`template-docs/docs-scaffold/README.md` 明确 `tasks/` 是执行任务单目录，不属于 `docs/` 项目事实链；禁止新增 `template-docs/docs-scaffold/tasks/`。
+- **提案更新**：`_proposals/TEMPLATE-UPGRADE-docs-scaffold-followups.md` 记录 Task 模板推荐落位、同步策略和后续落地前置条件。
+- **自检防回归**：`scripts/check-template.sh` / `.ps1` 增加 docs scaffold README 的 Task 模板边界断言。
+- **版本影响**：本轮仅做同步范围内的边界说明和自检增强，不新增同步文件，按 PATCH 发布。
+
 ## v1.43.0（2026-07-08）
 
 Docs scaffold P1 后续模板补强：补齐输入评审、产品愿景、待确认事项总览和 ADR 结构模板，让 `template-docs/docs-scaffold/` 覆盖主文档链路的上游输入、愿景、决策与 open items 常用入口。

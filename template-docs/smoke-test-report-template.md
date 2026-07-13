@@ -35,24 +35,18 @@
 
 ## 三、逐步记录
 
-### 步骤 1：环境检查
+### 步骤 1：检查基础环境
 
 - 执行命令：
   `powershell -ExecutionPolicy Bypass -File scripts/check-prereqs.ps1`
 - 结果：通过 / 失败
 - 看到的关键输出：
 - 是否知道下一步该做什么：是 / 否
-- 问题描述：
-
-### 步骤 2：环境安装（如执行）
-
-- 执行命令：
-  `powershell -ExecutionPolicy Bypass -File scripts/bootstrap-dev-env.ps1`
-- 结果：通过 / 跳过 / 失败
+- 若缺基础工具，是否运行 `scripts/bootstrap-dev-env.ps1`：是（通过 / 失败）/ 否（跳过）
 - 安装后是否需要重开终端：是 / 否
 - 问题描述：
 
-### 步骤 3：创建本地烟测项目
+### 步骤 2：创建本地烟测项目
 
 - 执行命令：
   `bash scripts/new-project.sh smoke-demo --local --no-remote`
@@ -60,20 +54,25 @@
 - 是否成功生成 `smoke-demo/`：是 / 否
 - 问题描述：
 
-### 步骤 4：采集本机环境
+### 步骤 3：进入新项目并采集环境
 
 - 执行命令：
-  `powershell -ExecutionPolicy Bypass -File scripts/collect-env.ps1`
+  先 `cd smoke-demo`，再 `powershell -ExecutionPolicy Bypass -File scripts/collect-env.ps1`
 - 结果：通过 / 失败
 - 是否成功生成 `docs/env/local-env.md`：是 / 否
 - 问题描述：
 
-### 步骤 5：检查新项目入口
+### 步骤 4：验证文档入口是否连通
 
 - 是否在新项目 `README.md` 里找到环境准备入口：是 / 否
 - 是否在新项目 `README.md` 里找到输入材料入口：是 / 否
 - 是否在新项目 `README.md` 里找到文档生成入口：是 / 否
 - 是否知道下一步该打开哪个文件：是 / 否
+- 问题描述：
+
+### 步骤 5：最小清理
+
+- 是否成功删除本地烟测项目 `smoke-demo/`：是 / 否
 - 问题描述：
 
 ## 四、问题归因初判
@@ -87,9 +86,9 @@
 ## 五、建议修改面
 
 - 需要改 `README.md`：是 / 否
-- 需要改 `BEGINNER-GUIDE.md`：是 / 否
-- 需要改 `ENV-SETUP.md`：是 / 否
-- 需要改 `SMOKE-TEST.md`：是 / 否
+- 需要改 `template-docs/beginner-guide.md`：是 / 否
+- 需要改 `template-docs/env-setup.md`：是 / 否
+- 需要改 `template-docs/smoke-test.md`：是 / 否
 - 需要改脚本提示：是 / 否
 - 需要改脚本逻辑：是 / 否
 

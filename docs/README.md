@@ -64,7 +64,7 @@
 | `docs/design/` | 子系统 / 模块 / 前端交互详细设计 | `<subsystem>.md`、`auth.md`、`workflow-engine.md`、`frontend-interaction.md` |
 | `docs/decisions/` | 架构决策记录（ADR）和重要取舍 | `ADR-0001-title.md` |
 | `docs/research/` | 技术调研、竞品分析、实验结论、技术环境评估报告、需求探索原型记录 | `topic-summary.md`、`YYYY-MM-DD-tech-env-evaluation-<scope>.md`、`YYYY-MM-DD-ui-prototype-exploration.md` |
-| `docs/env/` | 本机环境、资源约束、服务器预案 | `local-env.md`、`server-plan.md` |
+| `docs/env/` | 本机环境、资源约束、服务器预案、演示 SOP | `local-env.md`、`server-plan.md`、`local-demo-runbook.md` |
 | `docs/meetings/` | 会议纪要、访谈记录、评审记录 | `YYYY-MM-DD-topic.md` |
 | `docs/archive/` | 已废弃但需留痕的项目文档 | 保留原名或加日期前缀 |
 | `template-docs/docs-scaffold/` | 模板 `docs/inputs/*`、`docs/vision/*`、`docs/00-09`、`docs/design/*`、`docs/decisions/*`、`docs/research/*` 长期结构副本，保留原始大纲、占位表格和 `【撰写提要：...】`；**人读参考、非项目事实、不自动覆盖 `docs/` 项目事实** | 随模板同步；旧项目可能残留 `docs/_scaffold/` |

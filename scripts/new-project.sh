@@ -109,8 +109,29 @@ else
   echo "==> 模板（远端）: $TEMPLATE_REMOTE (main)"
   git clone --depth 1 -q "$TEMPLATE_REMOTE" "$TARGET"
   rm -rf "$TARGET/.git"
-  SOURCE="remote"
+SOURCE="remote"
 fi
+
+TEMPLATE_VERSION="$(tr -d '[:space:]' < "$TARGET/VERSION" 2>/dev/null || true)"
+[[ -n "$TEMPLATE_VERSION" ]] || TEMPLATE_VERSION="unknown"
+cat > "$TARGET/TEMPLATE-BASE.md" <<EOF
+# Template Base
+
+> Records the upstream template lineage for this ordinary derived project. Do not use this file for domain-template inheritance metadata.
+
+- Template repository: github.com/emily8421/ai-project-template
+- Base template version: $TEMPLATE_VERSION
+- Current synced template version: $TEMPLATE_VERSION
+- Synced at: $(date +%Y-%m-%d)
+- Project version file: VERSION
+- Project version at sync time: $TEMPLATE_VERSION
+
+## Version Semantics
+
+- \`VERSION\` is owned by this derived project and records the project version.
+- \`TEMPLATE-BASE.md\` records the inherited ai-project-template version used for methodology sync audit.
+- Template sync commits keep the message format \`sync template $TEMPLATE_VERSION from ai-project-template\`.
+EOF
 
 rm -rf "$TARGET/_proposals"
 mkdir -p "$TARGET/_proposals"
@@ -215,7 +236,7 @@ cat > "$TARGET/README.md" <<EOF
 ## 模板关系
 
 - 通用方法论来自 \`ai-project-template\`。
-- 当前同步到的模板版本记录在 \`VERSION\`。
+- 项目自身版本记录在 \`VERSION\`；继承 / 当前同步到的模板版本记录在 \`TEMPLATE-BASE.md\`。
 - 文档生成、追溯链、变更传播与多入口规则见 \`ai/document-lifecycle-rules.md\`；可复制 Prompt 见 \`INIT-PROMPT.md\` 索引与 \`ai/prompts/\`。
 - 根 \`README.md\` 是项目专属文档，不参与模板下行同步。
 - 模板方法论文件由 \`template-sync.json\` 定义，执行 \`scripts/sync-template.*\` 时可能被覆盖。
@@ -274,5 +295,5 @@ else
 fi
 echo "后续："
 echo "  cd \"$TARGET\""
-echo "  填写 docs/00-scenario.md ~ 02-srs.md，运行 scripts/collect-env.ps1，再按 README 快速开始推进"
+echo "  先运行 scripts/collect-env.ps1，再按 README 准备 docs/inputs/、初填 ai/project-rules.md，并通过 /run review-inputs -> /run generate-docs 进入文档链路"
 echo "  GitHub Actions 已使用派生项目版 .github/workflows/project-check.yml；普通 PR 不运行模板仓 check-template"
