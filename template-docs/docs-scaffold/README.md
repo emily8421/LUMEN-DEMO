@@ -18,6 +18,8 @@
 | `template-docs/docs-scaffold/research/*` | 人读研究 / 探索 / 技术评估记录模板 | 否 | 否 |
 | `ai/doc-standards/00-09` | AI 规则 / 审计基线：每类文档必须满足的标准 | 否 | 是 |
 
+> 边界：`tasks/` 是执行任务单目录，不属于 `docs/` 项目事实链；若后续新增 Task 文件模板，应落位 `template-docs/task-template.md`，复制目标为 `tasks/task-00X-*.md`，不新增 `template-docs/docs-scaffold/tasks/`。
+
 ## 使用方式
 
 - 新建或补齐项目文档时，优先让 AI 按 `ai/index.md`、`ai/document-lifecycle-rules.md` 与 `ai/doc-standards/` 执行；本目录只做结构参考。

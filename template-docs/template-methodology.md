@@ -21,11 +21,14 @@
 | `template-docs/beginner-guide.md` | 面向第一次使用者的操作手册 |
 | `template-docs/glossary.md` | 人读术语索引，不替代规则权威源 |
 | `template-docs/docs-scaffold/` | `docs/inputs` / `docs/vision` / `docs/00-09` / `docs/design` / `docs/decisions` / `docs/research` 结构模板副本，不替代项目事实文档 |
+| `template-docs/domain-templates.md` | 领域模板可选中间层方法论（演进中） |
 | `SOP.md` | 场景索引与流程入口 |
 | `ai/index.md` | AI 规则入口 |
 | `ai/global-rules.md` | 跨项目通用规则 |
 | `ai/document-lifecycle-rules.md` | 文档生命周期、追溯、裁剪与传播 |
 | `ai/project-rules.md` | 项目专属边界与禁区模板 |
+| `ai/implementation-lifecycle-rules.md` | 阶段规划、Sprint / Task、编码、验证与验收留痕 |
+| `ai/session-rules.md` | 会话续接与断点恢复 |
 | `docs/README.md` | 派生项目文档分区规则 |
 | `INIT-PROMPT.md`、`ai/prompts/` | 可复制给 AI 的 Prompt Library |
 | `CONTRIBUTING.md`、`MAINTAINERS.md` | 模板治理与维护规则 |
@@ -166,6 +169,8 @@ Prompt Library 设计：
 - `template-sync.json` 只同步跨项目复用的方法论文件，不同步派生项目根 `README.md` 或业务文档。
 - 模板改动必须走提案、版本、PR、归档流程，避免派生项目各自演化成不同流派。
 - 版本是发布边界，不是提案数量边界；提案收件箱增长不触发版本递增，只有合并到同步范围内并改变模板行为或下游同步判断的 PR 才判断 `PATCH / MINOR / MAJOR`。
+
+> 领域模板可选中间层：若需在母模板与具体项目之间插入面向某类系统的「领域模板」（如 agent 系统领域模板），见 `template-docs/domain-templates.md`。该层为可选增强、尚在演进中，主线治理仍为母模板 ↔ 派生项目两层，现有派生项目无需迁移。
 
 ## 6. 演进策略 + 历史来源
 

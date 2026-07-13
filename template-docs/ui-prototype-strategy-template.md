@@ -4,6 +4,7 @@
 > Do not edit it directly in derived projects; propose reusable changes in `_proposals/` and upstream them to the template repository.
 
 > 定位：实现前 UI 原型策略记录；用于已有需求链和基本设计后、进入前端实现前确认原型形式、覆盖范围和验收映射。它不是需求权威源，不替代 `00-09`、`docs/design/frontend-interaction.md` 或 `09` 验收记录。
+> 字段标准见 `ai/doc-standards/ui-prototype-strategy.md` §4；本模板为可填副本，各表给 `<示例>` 行供参考（填写时替换或删除）。
 
 ## 0. 元信息
 
@@ -30,16 +31,19 @@
 
 | Page-ID / Flow-ID | 页面 / 流程 | 覆盖状态 | 覆盖角色 | 覆盖设备 / 浏览器 | 原型证据 | 关联 REQ / TC |
 |---|---|---|---|---|---|---|
+| <示例 P-001> | <登录页> | <已覆盖> | <终端用户> | <Chrome / Safari> | <Figma 链接> | <REQ-001 / TC-01> |
 
 ## 3. 关键状态覆盖
 
 | Page / Component | 加载 | 空态 | 错误 | 禁用 | 成功 | 无权限 | 降级 / Mock | 风险提示 |
 |---|---|---|---|---|---|---|---|---|
+| <示例 登录页> | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | ✓ |
 
 ## 4. Mock / Demo / 降级口径
 
 | 能力 | 当前状态 | 用户可见提示 | 与真实能力差异 | 替换 / 启用条件 | 后续任务 |
 |---|---|---|---|---|---|
+| <示例 登录鉴权> | <Mock（Demo）> | <「演示账号 demo / demo」> | <不连真实后端> | <MVP 前接真实鉴权> | <Sprint-3> |
 
 ## 5. 未覆盖项与风险
 
@@ -55,6 +59,7 @@
 
 | 原型发现 / 确认项 | 回填文档 | 关联 ID | 是否已回填 | 验收入口 / 证据 |
 |---|---|---|---|---|
+| <示例 登录需短信验证码> | <docs/02-srs.md> | <REQ-012> | <是> | <TC-12> |
 
 ## 8. 禁止事项确认
 

@@ -377,6 +377,6 @@ powershell -ExecutionPolicy Bypass -File scripts/collect-env.ps1
 | 第一次整体上手 | `template-docs/beginner-guide.md` + `README.md` |
 | 知道为什么模板这样分层 | `template-docs/template-methodology.md` |
 | 装 AI CLI | `template-docs/ai-cli-setup.md` |
-| 具体场景怎么操作 | `template-docs/scenario-guides.md`（23 场景） |
-| 找命令速查 | `SOP.md`、`ai/commands/README.md` |
+| 具体场景怎么操作 | `template-docs/scenario-guides.md`（A0–A21 / C1–C8 / 元场景） |
+| 找命令速查 | `SOP.md`（仓库根）、`ai/commands/README.md` |
 | 采集本机资源 | `docs/env/README.md`、`scripts/collect-env.ps1` |

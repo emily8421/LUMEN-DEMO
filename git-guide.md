@@ -44,12 +44,12 @@ powershell -ExecutionPolicy Bypass -File scripts/check-github-context.ps1 -Expec
 
 ## 2. 场景速查（你要做哪件事？）
 
-| 你想做 | 你是 | 去哪节 |
-|---|---|---|
-| 在派生项目里日常提交代码 | 使用者 | §3 场景 A |
-| 维护模板仓库（改方法论 / 脚本 / 治理） | 维护者 | §4 场景 B |
-| 把模板更新同步到派生项目 | 使用者 | §5 场景 C |
-| 从模板新建一个派生项目 | 使用者 / 维护者 | §6 场景 D |
+| 你想做 | 你是 | 去哪节 | 对应 scenario 码 |
+|---|---|---|---|
+| 在派生项目里日常提交代码 | 使用者 | §3 场景 A | A10 |
+| 维护模板仓库（改方法论 / 脚本 / 治理） | 维护者 | §4 场景 B | C4/C7 |
+| 把模板更新同步到派生项目 | 使用者 | §5 场景 C | A13 |
+| 从模板新建一个派生项目 | 使用者 / 维护者 | §6 场景 D | A2 |
 
 找不到场景 → 看 §7 踩坑 / §8 命令速查。
 
@@ -57,9 +57,9 @@ powershell -ExecutionPolicy Bypass -File scripts/check-github-context.ps1 -Expec
 
 你在派生项目里写代码、提交、提 PR。
 
-- **一功能 = 一任务 = 一提交**（见 `ai/global-rules.md` §1.2），禁止一次提交整个系统。
+- **一功能 = 一任务 = 一提交**（见 `ai/global-rules.md` §1 第 2 条），禁止一次提交整个系统。
 - Commit message 用「完成 XX」式，避免「修改 / update / test」等模糊词；跨模块改动拆成多条（见 `ai/prompts/git/06-commit-message.md`）。
-- 任何模块开发前先有设计说明再写代码（`global-rules.md` §1.3）。
+- 任何模块开发前先有设计说明再写代码（`global-rules.md` §1 第 3 条）。
 
 ### 3.1 代码修改完成后的标准流程
 
@@ -73,7 +73,7 @@ powershell -ExecutionPolicy Bypass -File scripts/check-github-context.ps1  # pus
 git add <文件路径>
 git commit -m "类型: 简短说明"
 git push -u origin <当前分支名>   # 首次推送该分支
-gh pr create --fill              # 模板仓库必须走 PR
+gh pr create --fill              # 如项目要求走 PR；模板仓强制
 ```
 
 后续同一分支已有 upstream 时，推送可简化为：
@@ -122,7 +122,7 @@ cd ../ai-tpl-wt2          # B 在这里改 / 提交 / 推送，完全不碰 A �
 cd /path/ai-project-template && git worktree remove ../ai-tpl-wt2
 ```
 
-> 详见 `ai/session-rules.md` §7（AI 行为约定）。
+> 详见 `ai/session-rules.md` §8（多会话并发操作）。
 
 ## 5. 场景 C：派生项目同步模板（使用者）
 
@@ -243,12 +243,12 @@ powershell -ExecutionPolicy Bypass -File scripts/check-template.ps1       # 仅�
 - 同步前先 bootstrap 模板远端最新版 `scripts/sync-template.sh`；不要无条件信任派生项目本地旧脚本。
 - 新版 `sync-template.sh` 会在 fetch 后对比远端自身版本；若本地脚本不是最新版，会停止并提示先更新脚本。
 - `--dry-run` 只预览差异，不修改工作区、不 stage。
-- `--commit` 会覆盖同步清单中的文件并自动提交；提交信息通常由脚本生成。
+- `--commit` 会覆盖同步清单中的文件并自动提交；普通派生项目建议追加 `--preserve-project-version`，保留项目自身 `VERSION` / `CHANGELOG.md`，并用 `TEMPLATE-BASE.md` 记录继承模板版本；领域模板（如 `agent-system-template`）改用 `--domain-template`（与 `--preserve-project-version` 互斥），保留领域模板自身 `VERSION` / `CHANGELOG.md`，并用领域版 `TEMPLATE-BASE.md` 记录继承母模板版本；若仓库已存在对应角色的 `TEMPLATE-BASE.md`，新版脚本会自动启用相应模式；提交信息仍由脚本生成。
 - 根 `README.md` 是项目件，`ai/project-rules.md` 是项目专属规则，均不在 `template-sync.json` 中，不参与模板下行同步。
 - 被 `template-sync.json` 列入的 Markdown 方法论文档会在同步时被覆盖；派生项目不要直接修改这些文件，如需改进请在 `_proposals/` 起草提案并回流模板。
 - 同步文件清单以 `template-sync.json` 为准；`scripts/sync-template.sh` 会优先读取模板远端清单。
 - 同步后若 `check-derived-sync` 失败，先修复同步边界问题，再 push / PR。
-- 若已经完成同步提交但不确定后续是否执行，使用 `/run sync-methodology` 的“同步后续接模式”：不要重新 dry-run / commit，先核对 `git log --oneline -8`、`VERSION`、最近同步记录和工作区，再从 `check-derived-sync` 开始补完后续闭环。
+- 若已经完成同步提交但不确定后续是否执行，使用 `/run sync-methodology` 的“同步后续接模式”：不要重新 dry-run / commit，先核对 `git log --oneline -8`、`VERSION`、`TEMPLATE-BASE.md`（若存在）、最近同步记录和工作区，再从 `check-derived-sync` 开始补完后续闭环。
 - 同步后进入标准闭环：`check-derived-sync` 边界验证 → `post-sync-cleanup` 整理计划 → `docs-system-audit` 同步后审计 → 项目验证建议 → 同步报告留痕。
 - 同步后整理项目内容时，另开分支执行 `ai/prompts/maintainers/15-post-sync-cleanup.md` 第一段，先只审计并输出迁移计划，不要混入同步提交；整理摘要应回写同步报告。
 - 项目文档成型后，再用 `ai/prompts/review/16-docs-system-audit.md` 对照本次同步产出的 `ai/doc-standards` 规范基线，回溯审计整条 PLM 链路（先出报告不改文件；旧项目可 fallback 到 `docs/_scaffold`）。同步后审计模式应区分规范基线缺口、兼容差异和项目事实问题。

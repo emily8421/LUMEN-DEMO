@@ -196,6 +196,8 @@ require_sync_dry_run_direction() {
   local template_dir
   local derived_dir
   local output
+  local summary_output
+  local no_stat_output
 
   test_root="$(mktemp -d)"
   template_dir="$test_root/template"
@@ -213,6 +215,8 @@ require_sync_dry_run_direction() {
     cp "$ROOT/scripts/collect-env.ps1" scripts/collect-env.ps1
     printf 'v9.9.9\n' > VERSION
     cp "$ROOT/template-sync.json" template-sync.json
+    sed -i '0,/"VERSION"/s//"README.md",\n    "VERSION"/' template-sync.json
+    printf '# template readme\n' > README.md
     printf '# index\n' > ai/index.md
     printf '# global\n' > ai/global-rules.md
     printf '# lifecycle\n' > ai/document-lifecycle-rules.md
@@ -238,6 +242,7 @@ require_sync_dry_run_direction() {
     git init -b main >/dev/null
     cp "$ROOT/scripts/sync-template.sh" scripts/sync-template.sh
     printf 'v0.0.1\n' > VERSION
+    printf '# derived readme\n' > README.md
     printf '# index\n' > ai/index.md
     printf '# old global\n' > ai/global-rules.md
     mkdir -p docs
@@ -252,17 +257,32 @@ require_sync_dry_run_direction() {
     git add -A
     git -c user.name=test -c user.email=test@example.com commit -m init >/dev/null
     output="$(TEMPLATE_REMOTE="$template_dir" bash scripts/sync-template.sh --dry-run 2>&1)"
+    summary_output=""
+    no_stat_output=""
     if grep -Eq 'scripts/(check-template\.sh|collect-env\.ps1).*\|' <<<"$output" \
       && grep -Eq 'insertions?\(\+\)' <<<"$output" \
       && ! grep -Eq 'scripts/(check-template\.sh|collect-env\.ps1).*deletions?\(-\)' <<<"$output"; then
-      exit 0
+      summary_output="$(TEMPLATE_REMOTE="$template_dir" bash scripts/sync-template.sh --summary 2>&1)"
+      no_stat_output="$(TEMPLATE_REMOTE="$template_dir" bash scripts/sync-template.sh --dry-run --no-stat 2>&1)"
+      if grep -Eq 'dry-run 轻量摘要|dry-run summary' <<<"$summary_output" \
+        && grep -Eq '变更计数|Change counts' <<<"$summary_output" \
+        && grep -Eq '风险路径命中|Risk path hits' <<<"$summary_output" \
+        && grep -Eq 'scripts/.*added=' <<<"$summary_output" \
+        && grep -Eq '! modified README\.md' <<<"$summary_output" \
+        && ! grep -Eq '\|' <<<"$summary_output" \
+        && grep -Eq 'dry-run 轻量摘要|dry-run summary' <<<"$no_stat_output" \
+        && ! grep -Eq '\|' <<<"$no_stat_output"; then
+        exit 0
+      fi
     fi
     printf '%s\n' "$output" >&2
+    printf '%s\n' "$summary_output" >&2
+    printf '%s\n' "$no_stat_output" >&2
     exit 1
   ); then
-    pass "sync-template dry-run 对模板新增文件显示为新增"
+    pass "sync-template dry-run/summary 对模板新增文件输出正确"
   else
-    fail "sync-template dry-run 对模板新增文件的方向错误"
+    fail "sync-template dry-run/summary 输出不符合预期"
   fi
 
   rm -rf "$test_root"
@@ -432,6 +452,8 @@ require_doc_standards_mirror() {
 check_script_entrypoints() {
   require_contains "scripts/sync-template.ps1" 'sync-template\.sh' "sync-template PowerShell 入口调用 Bash 脚本"
   require_contains "scripts/sync-template.ps1" 'Invoke-NativeTemplateSync' "sync-template PowerShell 入口含原生 fallback"
+  require_contains "scripts/sync-template.ps1" 'param\(\[string\[\]\]\$NativeSyncArgs\)' "sync-template fallback 不使用易混淆 Args 参数名"
+  require_contains "scripts/sync-template.ps1" 'Invoke-NativeTemplateSync -NativeSyncArgs \$SyncArgs' "sync-template fallback 显式传递同步参数"
   require_contains "scripts/sync-template.ps1" 'PowerShell fallback template sync' "sync-template fallback 输出明确标识"
   require_contains "scripts/sync-template.ps1" 'doc-standards compatibility mirror' "sync-template fallback 同步 doc-standards 兼容镜像"
   require_contains "scripts/check-template.ps1" 'check-template\.sh' "check-template PowerShell 入口调用 Bash 脚本"
@@ -663,6 +685,7 @@ for command_file in \
   ai/commands/docs-system-audit.md \
   ai/commands/docs-evaluation.md \
   ai/commands/template-proposal-summary.md \
+  ai/commands/domain-template-lab.md \
   ai/commands/generate-docs.md \
   ai/commands/review-inputs.md \
   ai/commands/project-review.md \
@@ -712,9 +735,15 @@ require_contains "_proposals/README.md" 'TEMPLATE-UPGRADE-vX\.Y\.Z' "_proposals 
 require_contains "_proposals/README.md" '任何需要修改项目模板' "_proposals README 说明提案先行"
 require_contains "_proposals/README.md" 'Release impact' "_proposals README 说明 release impact 字段"
 require_contains "_proposals/README.md" 'Release strategy' "_proposals README 说明 release strategy 字段"
+require_contains "_proposals/README.md" '可选脚本参数.*默认按 `patch` 判断|默认按 `patch` 判断.*可选脚本参数' "_proposals README 说明兼容参数默认 patch"
 require_contains "_archive/proposals/README.md" 'VERSION' "归档 README 以 VERSION 为事实来源"
+require_contains "_archive/proposals/README.md" 'TEMPLATE-UPGRADE-version-impact-threshold\.md' "归档 README 记录版本影响门槛收敛提案"
 require_contains "CONTRIBUTING.md" '提案 → 分支 → PR → 评审 → 合并 → 归档' "CONTRIBUTING 含提案先行流程"
 require_contains "CONTRIBUTING.md" 'vMAJOR\.MINOR\.PATCH' "CONTRIBUTING 含三段式版本规则"
+require_contains "CONTRIBUTING.md" '默认发布级别.*兼容增强' "CONTRIBUTING 说明 patch 是兼容增强默认级别"
+require_contains "CONTRIBUTING.md" 'minor.*不是功能次数计数器|`minor` 的门槛是' "CONTRIBUTING 防止 minor 作为功能次数计数器"
+require_contains "CONTRIBUTING.md" '可选脚本参数.*优先判为 `patch`|优先判为 `patch`.*可选脚本参数' "CONTRIBUTING 说明可选脚本参数优先 patch"
+require_contains "MAINTAINERS.md" '默认行为不变.*patch' "MAINTAINERS checklist 收敛兼容增强为 patch"
 require_contains "README.md" 'SOP\.md' "README 包含 SOP 索引入口"
 require_contains "README.md" 'ai/commands/README\.md' "README 包含 AI 快捷命令入口"
 require_contains "README.md" 'ai/session-rules\.md' "README 包含会话续接规则入口"
@@ -878,11 +907,28 @@ require_contains "scripts/sync-template.sh" '"docs/inputs/README\.md"' "sync-tem
 check_script_entrypoints
 require_contains "scripts/check-derived-sync.sh" '同步清单外变更' "check-derived-sync 检查同步清单外变更"
 require_contains "scripts/check-derived-sync.sh" 'README 模板版本' "check-derived-sync 含 README 模板版本一致性告警（非阻断）"
+require_contains "scripts/check-derived-sync.sh" 'TEMPLATE-BASE\.md' "check-derived-sync 支持普通派生项目继承版本记录"
+require_contains "scripts/check-derived-sync.ps1" 'TEMPLATE-BASE\.md' "check-derived-sync PowerShell fallback 支持继承版本记录"
+require_contains "scripts/check-derived-sync.sh" 'Domain standards scope' "check-derived-sync 校验领域版 TEMPLATE-BASE.md 领域标准件字段"
+require_contains "scripts/check-derived-sync.ps1" 'Domain standards scope' "check-derived-sync PowerShell fallback 校验领域版 TEMPLATE-BASE.md"
 require_contains "scripts/check-derived-sync.sh" 'README\.md\|ai/project-rules\.md\|docs/0\[0-9\]-\*' "check-derived-sync 保护项目专属文件"
 require_contains "scripts/check-derived-sync.sh" 'git show --name-only --stat' "check-derived-sync 输出最近同步提交文件"
 require_contains "scripts/check-derived-sync.sh" 'git rev-list --parents -n 1' "check-derived-sync 识别 HEAD merge commit 并提示传入实际同步提交"
 require_contains "scripts/check-derived-sync.sh" 'ai/prompts/maintainers/15-post-sync-cleanup\.md' "check-derived-sync 指向同步后整理 Prompt"
 require_contains "scripts/sync-template.sh" 'ai/doc-standards' "sync-template 含 doc-standards 规范镜像步骤"
+require_contains "scripts/sync-template.sh" '--preserve-project-version' "sync-template 支持普通派生项目保留自身 VERSION"
+require_contains "scripts/sync-template.sh" 'detect_lineage_role' "sync-template 自动判定 TEMPLATE-BASE 普通版/领域版角色"
+require_contains "scripts/sync-template.sh" 'TEMPLATE-BASE\.md' "sync-template 维护普通派生项目继承版本记录"
+require_contains "scripts/sync-template.sh" '--domain-template' "sync-template 支持领域模板角色保留自身 VERSION/CHANGELOG"
+require_contains "scripts/sync-template.sh" 'write_domain_template_base' "sync-template 维护领域版 TEMPLATE-BASE.md"
+require_contains "scripts/sync-template.sh" 'extract_legacy_domain_standards_scope' "sync-template 迁移旧领域版 TEMPLATE-BASE.md 标准件范围"
+require_contains "scripts/sync-template.sh" '叠加的标准件范围' "sync-template 兼容旧领域版 TEMPLATE-BASE.md 中文范围标题"
+require_contains "scripts/sync-template.ps1" '--preserve-project-version' "sync-template PowerShell fallback 支持保留自身 VERSION"
+require_contains "scripts/sync-template.ps1" 'Get-LineageRole' "sync-template PowerShell fallback 自动判定 TEMPLATE-BASE 角色"
+require_contains "scripts/sync-template.ps1" '--domain-template' "sync-template PowerShell fallback 支持领域模板角色"
+require_contains "scripts/sync-template.ps1" 'Write-DomainTemplateBase' "sync-template PowerShell fallback 维护领域版 TEMPLATE-BASE.md"
+require_contains "scripts/sync-template.ps1" 'Get-LegacyDomainStandardsScope' "sync-template PowerShell fallback 迁移旧领域版 TEMPLATE-BASE.md 标准件范围"
+require_contains "scripts/sync-template.ps1" '叠加的标准件范围' "sync-template PowerShell fallback 兼容旧领域版 TEMPLATE-BASE.md 中文范围标题"
 require_contains "scripts/check-derived-sync.sh" 'ai/doc-standards/\*' "check-derived-sync 放行 doc-standards 规范镜像"
 require_contains "scripts/check-derived-sync.sh" 'docs/_scaffold/\*' "check-derived-sync 迁移期兼容旧 _scaffold 规范镜像"
 require_contains "ai/doc-standards/README.md" 'Document Standards' "doc-standards README 说明规范镜像定位"
@@ -935,6 +981,12 @@ require_contains "ai/prompts/planning/19-plan-phases-and-sprints.md" 'docs/08-de
 require_contains "ai/prompts/planning/19-plan-phases-and-sprints.md" 'docs/09-verification\.md' "A9 规划 Prompt 输出 09 草稿"
 require_contains "ai/session-rules.md" '\.ai/session-handoff\.md' "session-rules 定义新续接文件"
 require_contains "ai/session-rules.md" 'NEXT-STEPS\.md' "session-rules 兼容 NEXT-STEPS"
+require_contains "ai/session-rules.md" 'Token 热点观察触发' "session-rules 定义 token hotspot 主动提醒"
+require_contains "ai/session-rules.md" 'ai-records/token-hotspots/' "session-rules 定义 token hotspot 记录目录"
+require_contains "ai/session-rules.md" '同会话规则复用边界' "session-rules 定义同会话规则复用边界"
+require_contains "ai/session-rules.md" '后续顺序治理步骤可复用已加载规则' "session-rules 限定同会话复用规则"
+require_contains "ai/session-rules.md" '验证证据摘要约定' "session-rules 定义成功验证摘要约定"
+require_contains "ai/session-rules.md" '命令名、退出码 / check 结论' "session-rules 要求成功长检查只保留摘要证据"
 require_contains ".gitignore" '\.ai/session-handoff\.md' ".gitignore 排除新续接文件"
 require_contains ".gitignore" 'NEXT-STEPS\.md' ".gitignore 排除旧续接文件"
 require_contains "ai/commands/README.md" '/run sync-methodology' "commands README 包含同步方法论命令"
@@ -944,6 +996,14 @@ require_contains "ai/commands/docs-system-audit.md" 'ai/prompts/review/16-docs-s
 require_contains "ai/commands/template-proposal-summary.md" 'ai/prompts/maintainers/11-template-proposal-summary\.md' "template-proposal-summary 路由到提案汇总 Prompt"
 require_contains "ai/commands/template-proposal-summary.md" 'TEMPLATE-UPGRADE:' "template-proposal-summary 覆盖标题型 issue 提案"
 require_contains "ai/commands/template-proposal-summary.md" 'proposal.*/ feedback|proposal.*feedback|feedback.*proposal' "template-proposal-summary 覆盖 proposal / feedback issue 标签"
+require_contains "ai/commands/README.md" 'domain-template-lab' "commands README 包含领域模板实验入口"
+require_contains "ai/commands/domain-template-lab.md" 'ai/prompts/maintainers/23-domain-template-lab\.md' "domain-template-lab 路由到维护者 Prompt"
+require_contains "ai/prompts/maintainers/23-domain-template-lab.md" '只相邻同步，不跨层操作' "domain-template-lab Prompt 定义相邻层同步原则"
+require_contains "template-docs/domain-templates.md" 'domain-template-lab' "domain-templates 指向 AI 可执行实验入口"
+require_contains "template-sync.json" 'ai/commands/domain-template-lab\.md' "template-sync 同步 domain-template-lab 命令"
+require_contains "template-sync.json" 'ai/prompts/maintainers/23-domain-template-lab\.md' "template-sync 同步 domain-template-lab Prompt"
+require_contains "scripts/sync-template.sh" 'ai/commands/domain-template-lab\.md' "sync-template 兜底清单含 domain-template-lab 命令"
+require_contains "scripts/sync-template.sh" 'ai/prompts/maintainers/23-domain-template-lab\.md' "sync-template 兜底清单含 domain-template-lab Prompt"
 require_contains "template-docs/scenario-guides.md" '处理 issue 提案' "scenario C1 包含 issue 提案入口"
 require_contains "template-docs/scenario-guides.md" 'TEMPLATE-UPGRADE:' "scenario C1 覆盖标题型 issue 提案"
 require_contains "CONTRIBUTING.md" 'submit-proposal.*/ submit-feedback|submit-proposal.*submit-feedback|submit-feedback.*submit-proposal' "CONTRIBUTING 说明 issue 回流入口"
@@ -1078,6 +1138,10 @@ require_contains "_proposals/README.md" "PSObject\.Properties\['pull_request'\]"
 require_contains "_proposals/README.md" '列表 \+ 单项状态复核' "提案 README 要求列表与单项状态复核"
 require_contains "ai/prompts/maintainers/11-template-proposal-summary.md" '单项状态复核' "提案汇总 Prompt 要求单项状态复核"
 require_contains "template-docs/scenario-guides.md" '项目验证建议 · 已形成或更新同步报告' "A13 完成判据包含验证建议和同步报告"
+require_contains "ai/commands/sync-methodology.md" 'A13 完成判据矩阵' "sync-methodology 要求 A13 完成判据矩阵"
+require_contains "ai/prompts/maintainers/12-sync-template.md" '收尾门禁' "12-sync-template Prompt 包含 A13 收尾门禁"
+require_contains "template-docs/derived-sync-report-template.md" '命令真实性记录' "同步报告模板包含命令真实性记录"
+require_contains "template-docs/derived-sync-report-template.md" '不得自动归档' "同步报告模板约束提案收口不得仅凭 closed"
 require_contains "template-docs/derived-sync-report-template.md" '同步后整理摘要' "同步报告模板包含整理摘要"
 require_contains "template-docs/derived-sync-report-template.md" '文档体系审计摘要' "同步报告模板包含文档审计摘要"
 require_contains "template-docs/derived-sync-report-template.md" '项目验证建议' "同步报告模板包含项目验证建议"
@@ -1101,7 +1165,13 @@ require_contains "scripts/sync-template.sh" 'REMOTE_SCRIPT_HASH' "sync-template 
 require_contains "scripts/sync-template.sh" 'bootstrap latest sync script' "sync-template 提示 bootstrap 同步脚本"
 require_contains "scripts/sync-template.sh" 'remote_file_matches_local' "sync-template dry-run 使用 hash 判断差异"
 require_contains "scripts/sync-template.sh" 'show_local_to_template_stat' "sync-template dry-run 按本地到模板方向统计"
+require_contains "scripts/sync-template.sh" '--summary' "sync-template 支持 dry-run 轻量摘要参数"
+require_contains "scripts/sync-template.sh" '--no-stat' "sync-template 支持跳过 diff stat 参数"
+require_contains "scripts/sync-template.sh" '风险路径命中|Risk path hits' "sync-template summary 输出风险路径命中"
 require_contains "scripts/sync-template.sh" '本地当前文件 -> 模板' "sync-template dry-run 明确统计方向"
+require_contains "scripts/sync-template.ps1" '--summary' "sync-template.ps1 支持 dry-run 轻量摘要参数"
+require_contains "scripts/sync-template.ps1" '--no-stat' "sync-template.ps1 支持跳过 diff stat 参数"
+require_contains "scripts/sync-template.ps1" 'Risk path hits' "sync-template.ps1 summary 输出风险路径命中"
 require_contains "template-sync.json" 'scripts/check-github-context\.ps1' "template-sync 同步 GitHub 上下文预检脚本"
 require_contains "scripts/check-github-context.ps1" 'gh auth status' "GitHub 上下文预检检查 gh auth status"
 require_contains "git-guide.md" 'scripts/check-github-context\.ps1' "git-guide 记录 GitHub 上下文预检"
@@ -1172,6 +1242,7 @@ require_contains "template-docs/docs-scaffold/README.md" 'decisions/ADR-template
 require_contains "template-docs/docs-scaffold/README.md" 'research/docs-open-items\.md' "docs scaffold README 索引 open items 模板"
 require_contains "template-docs/docs-scaffold/README.md" 'design/subsystem-design\.md' "docs scaffold README 索引子系统设计模板"
 require_contains "template-docs/docs-scaffold/README.md" 'research/tech-env-evaluation\.md' "docs scaffold README 索引技术环境评估模板"
+require_contains "template-docs/docs-scaffold/README.md" 'template-docs/task-template\.md.*tasks/task-00X' "docs scaffold README 声明 Task 模板边界"
 for scaffold_file in \
   00-scenario.md \
   01-user-requirements.md \
@@ -1241,6 +1312,32 @@ require_contains "docs/README.md" 'YYYY-MM-DD-ui-prototype-exploration\.md' "doc
 require_contains "template-docs/scenario-guides.md" 'A17 待确认事项总览' "场景引导包含 A17 open items"
 require_contains "template-docs/scenario-guides.md" 'A18 专题方案讨论' "场景引导包含 A18 专题讨论"
 require_contains "template-docs/scenario-guides.md" 'A19 文档定稿门禁' "场景引导包含 A19 定稿门禁"
+require_contains "template-docs/scenario-guides.md" 'A20 领域模板派生' "场景引导包含 A20 领域模板派生"
+require_contains "template-docs/scenario-guides.md" '母模板 → 领域模板 → 具体项目' "A20 明确领域模板三层继承关系"
+require_contains "template-docs/scenario-guides.md" 'Phase 0 预检' "A20 要求领域模板创建前预检"
+require_contains "template-docs/scenario-guides.md" '未向母模板新增领域 scaffold|不把领域 scaffold 直接塞进母模板' "A20 禁止领域 scaffold 污染母模板"
+require_contains "template-sync.json" 'template-docs/domain-templates\.md' "同步清单包含领域模板方法论文档"
+require_file "template-docs/domain-templates.md"
+require_contains "template-docs/domain-templates.md" '可选中间层' "领域模板文档定位为可选中间层"
+require_contains "template-docs/domain-templates.md" '母模板 → 领域模板 → 项目' "领域模板文档定义三层继承模型"
+require_contains "template-docs/domain-templates.md" '主线治理仍为两层' "领域模板文档声明主线仍为两层（防回退为强制三层）"
+require_contains "template-docs/glossary.md" '领域模板（domain template）' "术语表收录领域模板条目"
+require_file "ai/commands/show-demo.md"
+require_contains "ai/commands/show-demo.md" '查看演示效果' "show-demo 命令定位查看演示效果"
+require_contains "ai/commands/show-demo.md" 'AI 执行边界' "show-demo 命令含 AI 执行边界表"
+require_file "template-docs/demo-runbook-template.md"
+require_contains "template-docs/demo-runbook-template.md" '不替代' "demo-runbook 模板声明不替代 09 验收"
+require_contains "ai/commands/README.md" 'show-demo' "命令索引收录 show-demo"
+require_contains "docs/README.md" 'local-demo-runbook' "docs README 记录 demo runbook 默认路径"
+require_contains "template-sync.json" 'ai/commands/show-demo\.md' "同步清单包含 show-demo 命令"
+require_contains "template-sync.json" 'template-docs/demo-runbook-template\.md' "同步清单包含 demo runbook 模板"
+require_contains "template-docs/scenario-guides.md" 'A21 查看演示效果' "场景引导回写 show-demo 为 A21 场景（防漂移）"
+require_contains "template-docs/scenario-guides.md" 'A8.5 技术路线与环境支撑评估' "场景速查索引含 A8.5（防漏场景）"
+require_contains "template-docs/beginner-guide.md" 'domain-templates' "新手指南导航含领域模板（防漂移）"
+require_contains "template-docs/beginner-guide.md" 'demo-runbook-template' "新手指南导航含演示 SOP 模板（防漂移）"
+require_contains "template-docs/template-methodology.md" 'implementation-lifecycle-rules' "方法论权威源表含实现生命周期规则（防漂移）"
+require_contains "template-docs/template-methodology.md" 'session-rules' "方法论权威源表含会话续接规则（防漂移）"
+require_contains "template-docs/glossary.md" '演示 SOP' "术语表含演示 SOP 条目（防漂移）"
 require_contains "ai/prompts/docs/00-generate-or-complete-docs.md" '专题讨论优先' "文档生成 Prompt 要求专题讨论先确认"
 require_contains "ai/document-lifecycle-rules.md" '## 10\.3 专题方案讨论边界' "文档生命周期定义专题方案讨论边界"
 require_contains "ai/document-lifecycle-rules.md" 'docs/research/YYYY-MM-DD-docs-open-items\.md' "文档生命周期定义 open items 默认路径"

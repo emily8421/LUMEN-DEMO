@@ -64,7 +64,7 @@ powershell -ExecutionPolicy Bypass -File scripts/bootstrap-dev-env.ps1
 bash scripts/new-project.sh smoke-demo --local --no-remote
 ```
 
-如果 PowerShell 里找不到 `bash` 命令，但 `scripts/check-prereqs.ps1` 已显示 Git Bash 已安装，可改用：
+如果 PowerShell 里找不到 `bash` 命令，或 `bash` 实际指向 Windows / WSL stub 并报 `E_ACCESSDENIED`、`/bin/bash` 不存在等启动错误，但 `scripts/check-prereqs.ps1` 已显示 Git Bash 已安装，可改用：
 
 ```powershell
 & "C:\Program Files\Git\bin\bash.exe" scripts/new-project.sh smoke-demo --local --no-remote
@@ -128,7 +128,7 @@ Remove-Item -Recurse -Force .\smoke-demo
 
 ## 6. 常见失败点
 
-- `bash` 不可用，通常说明 Git for Windows / Git Bash 未装好。
+- `bash` 不可用，或 PowerShell 中的 `bash` 指向 Windows / WSL stub 并报 `E_ACCESSDENIED`、`/bin/bash` 不存在等启动错误；若 Git Bash 已安装，改用 `C:\Program Files\Git\bin\bash.exe` 全路径。
 - `scripts/check-prereqs.ps1` 能运行，但输出让新手看不懂下一步该做什么。
 - `scripts/new-project.sh` 能创建项目，但生成的 README 没有环境准备入口。
 - `scripts/collect-env.ps1` 运行后没有生成 `docs/env/local-env.md`。
@@ -156,6 +156,6 @@ Remove-Item -Recurse -Force .\smoke-demo
 - Windows 版本
 - 是否需要运行 `bootstrap-dev-env.ps1`
 - 哪一步失败
-- 是否需要补 README / SOP / ENV-SETUP / BEGINNER-GUIDE
+- 是否需要补 README / SOP / template-docs/env-setup.md / template-docs/beginner-guide.md
 
 若希望统一记录格式，直接使用 `template-docs/smoke-test-report-template.md`。

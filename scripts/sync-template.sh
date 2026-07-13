@@ -2,20 +2,86 @@
 # sync-template.sh — 在派生项目里下行同步 ai-project-template 的方法论文件
 #
 # 用法（在派生项目根目录执行）:
-#   bash scripts/sync-template.sh [--dry-run|--commit]
+#   bash scripts/sync-template.sh [--dry-run [--no-stat]|--summary|--commit] [--preserve-project-version|--domain-template]
 #     --dry-run  仅抓取并预览差异，不修改工作区、不 stage（默认）
+#     --no-stat  与 --dry-run 搭配，跳过逐文件 diff stat，仅输出轻量摘要
+#     --summary  等价于 --dry-run --no-stat
 #     --commit   抓取、覆盖、stage 并提交 "sync template vX.Y.Z"
+#     --preserve-project-version
+#                普通派生项目路线 A：保留项目自己的 VERSION/CHANGELOG，改写 TEMPLATE-BASE.md 记录继承的模板版本
+#                若仓库已存在 TEMPLATE-BASE.md，本模式会自动启用
+#     --domain-template
+#                领域模板角色（如 agent-system-template）：保留领域模板自己的 VERSION/CHANGELOG，
+#                改写 TEMPLATE-BASE.md 为领域版（Lineage type: domain template，含领域标准件范围字段）
+#                若仓库已存在领域版 TEMPLATE-BASE.md，本模式会自动启用；与 --preserve-project-version 互斥
 #   环境变量:
 #     TEMPLATE_REMOTE  模板远端（默认 https://github.com/emily8421/ai-project-template.git）
 # 依赖: git（网络可达模板远端；模板私有，活跃 gh 账号须有访问权限）
 set -euo pipefail
 
+usage() {
+  echo "用法: bash scripts/sync-template.sh [--dry-run [--no-stat]|--summary|--commit] [--preserve-project-version|--domain-template]" >&2
+  echo "  --preserve-project-version（普通派生项目）与 --domain-template（领域模板）互斥，二选一" >&2
+}
+
 MODE="--dry-run"
-if [[ $# -gt 0 ]]; then
+MODE_EXPLICIT=0
+SKIP_STAT=0
+PRESERVE_PROJECT_VERSION=0
+DOMAIN_TEMPLATE_MODE=0
+while [[ $# -gt 0 ]]; do
   case "$1" in
-    --dry-run|--commit) MODE="$1";;
-    *) echo "用法: bash scripts/sync-template.sh [--dry-run|--commit]" >&2; exit 1;;
+    --dry-run)
+      if [[ "$MODE_EXPLICIT" -eq 1 && "$MODE" != "--dry-run" ]]; then
+        usage
+        exit 1
+      fi
+      MODE="--dry-run"
+      MODE_EXPLICIT=1
+      ;;
+    --commit)
+      if [[ "$MODE_EXPLICIT" -eq 1 && "$MODE" != "--commit" ]]; then
+        usage
+        exit 1
+      fi
+      MODE="--commit"
+      MODE_EXPLICIT=1
+      ;;
+    --summary)
+      if [[ "$MODE_EXPLICIT" -eq 1 && "$MODE" == "--commit" ]]; then
+        usage
+        exit 1
+      fi
+      MODE="--dry-run"
+      MODE_EXPLICIT=1
+      SKIP_STAT=1
+      ;;
+    --no-stat)
+      SKIP_STAT=1
+      ;;
+    --preserve-project-version)
+      PRESERVE_PROJECT_VERSION=1
+      ;;
+    --domain-template)
+      DOMAIN_TEMPLATE_MODE=1
+      ;;
+    *)
+      usage
+      exit 1
+      ;;
   esac
+  shift
+done
+
+if [[ "$PRESERVE_PROJECT_VERSION" -eq 1 && "$DOMAIN_TEMPLATE_MODE" -eq 1 ]]; then
+  echo "✗ --preserve-project-version 与 --domain-template 互斥，请二选一" >&2
+  usage
+  exit 1
+fi
+
+if [[ "$MODE" == "--commit" && "$SKIP_STAT" -eq 1 ]]; then
+  usage
+  exit 1
 fi
 
 TEMPLATE_REMOTE="${TEMPLATE_REMOTE:-https://github.com/emily8421/ai-project-template.git}"
@@ -80,6 +146,7 @@ DEFAULT_SYNC_FILES=(
   "ai/commands/post-sync-cleanup.md"
   "ai/commands/docs-system-audit.md"
   "ai/commands/template-proposal-summary.md"
+  "ai/commands/domain-template-lab.md"
   "ai/commands/generate-docs.md"
   "ai/commands/review-inputs.md"
   "ai/commands/project-review.md"
@@ -140,6 +207,7 @@ DEFAULT_SYNC_FILES=(
   "ai/commands/submit-feedback.md"
   "ai/prompts/maintainers/17-submit-proposal.md"
   "ai/prompts/maintainers/18-submit-feedback.md"
+  "ai/prompts/maintainers/23-domain-template-lab.md"
 )
 
 # doc-standards 兼容镜像：历史保留入口；当前 00-09 均已升级为独立标准文件。
@@ -180,6 +248,169 @@ load_sync_files() {
     echo "✗ 无法解析模板同步清单 template-sync.json" >&2
     exit 1
   fi
+
+  if [[ "$PRESERVE_PROJECT_VERSION" -eq 1 || "$DOMAIN_TEMPLATE_MODE" -eq 1 ]]; then
+    local filtered=()
+    local file
+    for file in "${SYNC_FILES[@]}"; do
+      case "$file" in
+        VERSION|CHANGELOG.md)
+          ;;
+        *)
+          filtered+=("$file")
+          ;;
+      esac
+    done
+    SYNC_FILES=("${filtered[@]}")
+  fi
+}
+
+template_source_label() {
+  case "$TEMPLATE_REMOTE" in
+    https://github.com/emily8421/ai-project-template.git|git@github.com:emily8421/ai-project-template.git)
+      echo "github.com/emily8421/ai-project-template"
+      ;;
+    *)
+      echo "$TEMPLATE_REMOTE"
+      ;;
+  esac
+}
+
+extract_template_base_version() {
+  [[ -f TEMPLATE-BASE.md ]] || return 0
+  grep -Ei '^[[:space:]]*-[[:space:]]*(\*\*)?(base template version|base version)' TEMPLATE-BASE.md \
+    | head -1 \
+    | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' \
+    | head -1 || true
+}
+
+extract_legacy_domain_standards_scope() {
+  [[ -f TEMPLATE-BASE.md ]] || return 0
+  awk '
+    /^##[[:space:]]+(叠加的标准件范围|Domain Standards Scope)[[:space:]]*$/ { in_scope=1; next }
+    /^##[[:space:]]+/ && in_scope { exit }
+    in_scope && /^[[:space:]]*-[[:space:]]+/ {
+      line=$0
+      sub(/^[[:space:]]*-[[:space:]]+/, "", line)
+      gsub(/[[:space:]]+/, " ", line)
+      if (line != "") {
+        items[++count]=line
+      }
+    }
+    END {
+      for (i=1; i<=count; i++) {
+        printf "%s%s", (i == 1 ? "" : "；"), items[i]
+      }
+    }
+  ' TEMPLATE-BASE.md
+}
+
+write_template_base() {
+  local template_version="$1"
+  local synced_at
+  local project_version
+  local base_version
+  local source_label
+  local existing_base_version
+
+  synced_at="$(date +%Y-%m-%d)"
+  project_version="$(sed '1s/^\xEF\xBB\xBF//' VERSION 2>/dev/null | tr -d '[:space:]' || true)"
+  base_version="$template_version"
+  if [[ -f TEMPLATE-BASE.md ]]; then
+    existing_base_version="$(extract_template_base_version)"
+    [[ -n "$existing_base_version" ]] && base_version="$existing_base_version"
+  fi
+  source_label="$(template_source_label)"
+
+  cat > TEMPLATE-BASE.md <<EOF
+# Template Base
+
+> Records the upstream template lineage for this ordinary derived project. Do not use this file for domain-template inheritance metadata.
+
+- Lineage type: ordinary derived project
+- Template repository: $source_label
+- Base template version: $base_version
+- Current synced template version: $template_version
+- Synced at: $synced_at
+- Project version file: VERSION
+- Project version at sync time: ${project_version:-unknown}
+
+## Version Semantics
+
+- \`VERSION\` is owned by this derived project and records the project version.
+- \`TEMPLATE-BASE.md\` records the inherited ai-project-template version used for methodology sync audit.
+- Template sync commits keep the message format \`sync template $template_version from ai-project-template\`.
+EOF
+}
+
+write_domain_template_base() {
+  local template_version="$1"
+  local synced_at
+  local domain_version
+  local base_version
+  local source_label
+  local standards_scope
+  local existing_scope
+  local existing_base_version
+  local legacy_scope
+
+  synced_at="$(date +%Y-%m-%d)"
+  domain_version="$(sed '1s/^\xEF\xBB\xBF//' VERSION 2>/dev/null | tr -d '[:space:]' || true)"
+  base_version="$template_version"
+  standards_scope="(TODO: 领域模板维护者填写叠加的领域标准件范围，例如 agent-system 的 planner/executor、tool permission、memory/state、eval、trace/replay、HITL)"
+  if [[ -f TEMPLATE-BASE.md ]]; then
+    existing_base_version="$(extract_template_base_version)"
+    [[ -n "$existing_base_version" ]] && base_version="$existing_base_version"
+    existing_scope="$(grep -E '^\- Domain standards scope:' TEMPLATE-BASE.md | head -1 | sed -E 's/^\- Domain standards scope:[[:space:]]*//' || true)"
+    legacy_scope="$(extract_legacy_domain_standards_scope)"
+    if [[ -n "$existing_scope" && "$existing_scope" != *TODO* ]]; then
+      standards_scope="$existing_scope"
+    elif [[ -n "$legacy_scope" ]]; then
+      standards_scope="$legacy_scope"
+    fi
+  fi
+  source_label="$(template_source_label)"
+
+  cat > TEMPLATE-BASE.md <<EOF
+# Template Base
+
+> Records the upstream template lineage for this domain template (inherits ai-project-template methodology, adds domain-specific standards). Do not use this file for ordinary derived project metadata.
+
+- Lineage type: domain template
+- Template repository: $source_label
+- Base template version: $base_version
+- Current synced template version: $template_version
+- Synced at: $synced_at
+- Domain template version file: VERSION
+- Domain template version at sync time: ${domain_version:-unknown}
+- Domain standards scope: $standards_scope
+
+## Version Semantics
+
+- \`VERSION\` is owned by this domain template and records the domain template version.
+- \`CHANGELOG.md\` is owned by this domain template and records domain template evolution; template sync does not overwrite it.
+- \`TEMPLATE-BASE.md\` records the inherited ai-project-template version used for methodology sync audit.
+- Template sync commits keep the message format \`sync template $template_version from ai-project-template\`.
+EOF
+}
+
+detect_lineage_role() {
+  # 返回 ordinary / domain / 空（无 TEMPLATE-BASE.md 或无法判定）
+  [[ -f TEMPLATE-BASE.md ]] || return 0
+  local lineage
+  lineage="$(grep -E '^\- Lineage type:' TEMPLATE-BASE.md | head -1 | sed -E 's/^\- Lineage type:[[:space:]]*//' | sed -E 's/[[:space:]]*$//' || true)"
+  case "$lineage" in
+    "ordinary derived project") echo "ordinary" ;;
+    "domain template") echo "domain" ;;
+    "")
+      # v1.46.0 旧普通版无 Lineage type 字段，fallback 嗅探 header
+      if grep -qi 'ordinary derived project' TEMPLATE-BASE.md; then
+        echo "ordinary"
+      elif grep -qi 'domain template' TEMPLATE-BASE.md; then
+        echo "domain"
+      fi
+      ;;
+  esac
 }
 
 git rev-parse --is-inside-work-tree >/dev/null
@@ -192,6 +423,29 @@ if ! git fetch --no-tags --depth=1 "$TEMPLATE_REMOTE" main; then
   exit 1
 fi
 REF="FETCH_HEAD"
+
+LINEAGE_ROLE="$(detect_lineage_role)"
+if [[ "$PRESERVE_PROJECT_VERSION" -eq 0 && "$DOMAIN_TEMPLATE_MODE" -eq 0 ]]; then
+  # 用户未显式指定角色：按 TEMPLATE-BASE.md 自动判定
+  case "$LINEAGE_ROLE" in
+    ordinary) PRESERVE_PROJECT_VERSION=1 ;;
+    domain) DOMAIN_TEMPLATE_MODE=1 ;;
+  esac
+else
+  # 用户显式指定角色：校验与现有文件不冲突
+  if [[ "$LINEAGE_ROLE" == "domain" && "$PRESERVE_PROJECT_VERSION" -eq 1 ]]; then
+    echo "✗ 显式 --preserve-project-version 与现有领域版 TEMPLATE-BASE.md 冲突" >&2
+    echo "  该仓库 TEMPLATE-BASE.md 是领域模板（Lineage type: domain template）" >&2
+    echo "  请改用 --domain-template，或先确认仓库角色" >&2
+    exit 1
+  fi
+  if [[ "$LINEAGE_ROLE" == "ordinary" && "$DOMAIN_TEMPLATE_MODE" -eq 1 ]]; then
+    echo "✗ 显式 --domain-template 与现有普通派生 TEMPLATE-BASE.md 冲突" >&2
+    echo "  该仓库 TEMPLATE-BASE.md 是普通派生项目（Lineage type: ordinary derived project）" >&2
+    echo "  请改用 --preserve-project-version，或先确认仓库角色" >&2
+    exit 1
+  fi
+fi
 
 # 自身更新保护：派生项目里的旧脚本可能漏同步新文件或不是真 dry-run。
 # 因此先确认本地脚本与模板远端最新版一致；不一致时停止，让用户先 bootstrap 脚本。
@@ -219,6 +473,11 @@ fi
 [[ -n "$VERSION" ]] || VERSION="unknown"
 
 echo "==> 模板版本: $VERSION"
+if [[ "$PRESERVE_PROJECT_VERSION" -eq 1 ]]; then
+  echo "==> 普通派生项目版本治理: 保留本地 VERSION/CHANGELOG，更新 TEMPLATE-BASE.md 为继承版本记录"
+elif [[ "$DOMAIN_TEMPLATE_MODE" -eq 1 ]]; then
+  echo "==> 领域模板版本治理: 保留领域模板 VERSION/CHANGELOG，更新 TEMPLATE-BASE.md 为领域版继承版本记录"
+fi
 warn_derived_workflow_migration
 echo "==> 同步文件:"
 
@@ -255,29 +514,121 @@ show_local_to_template_stat() {
   rm -rf "$tmp_dir"
 }
 
+summary_bucket_for() {
+  local file="$1"
+  if [[ "$file" == */* ]]; then
+    echo "${file%%/*}/"
+  else
+    echo "./"
+  fi
+}
+
+matches_risk_path() {
+  local file="$1"
+  case "$file" in
+    README.md|ai/project-rules.md|docs/0[0-9]-*.md|frontend/*|backend/*|tests/*|docker/*)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+record_summary() {
+  local file="$1"
+  local status="$2"
+  local bucket
+
+  bucket="$(summary_bucket_for "$file")"
+  SUMMARY_BUCKETS["$bucket"]=1
+  case "$status" in
+    added) SUMMARY_ADDED["$bucket"]=$(( ${SUMMARY_ADDED["$bucket"]:-0} + 1 )) ;;
+    modified) SUMMARY_MODIFIED["$bucket"]=$(( ${SUMMARY_MODIFIED["$bucket"]:-0} + 1 )) ;;
+    skipped) SUMMARY_SKIPPED["$bucket"]=$(( ${SUMMARY_SKIPPED["$bucket"]:-0} + 1 )) ;;
+  esac
+  SUMMARY_TOTAL["$status"]=$(( ${SUMMARY_TOTAL["$status"]:-0} + 1 ))
+
+  if matches_risk_path "$file" && [[ "$status" != "unchanged" ]]; then
+    RISK_HITS+=("$status $file")
+  fi
+}
+
+print_summary() {
+  local bucket
+
+  echo "==> dry-run 轻量摘要（未输出逐文件 diff stat）"
+  echo "   变更计数: added=${SUMMARY_TOTAL[added]:-0}, modified=${SUMMARY_TOTAL[modified]:-0}, deleted=${SUMMARY_TOTAL[deleted]:-0}, skipped=${SUMMARY_TOTAL[skipped]:-0}"
+  echo "   按顶层目录聚合:"
+  if [[ "${#SUMMARY_BUCKETS[@]}" -eq 0 ]]; then
+    echo "    = 无变更"
+  else
+    for bucket in $(printf '%s\n' "${!SUMMARY_BUCKETS[@]}" | sort); do
+      echo "    - $bucket added=${SUMMARY_ADDED["$bucket"]:-0}, modified=${SUMMARY_MODIFIED["$bucket"]:-0}, deleted=${SUMMARY_DELETED["$bucket"]:-0}, skipped=${SUMMARY_SKIPPED["$bucket"]:-0}"
+    done
+  fi
+
+  echo "   风险路径命中:"
+  if [[ "${#RISK_HITS[@]}" -eq 0 ]]; then
+    echo "    = 无"
+  else
+    printf '    ! %s\n' "${RISK_HITS[@]}"
+  fi
+}
+
 if [[ "$MODE" == "--dry-run" ]]; then
+  declare -A SUMMARY_BUCKETS=()
+  declare -A SUMMARY_ADDED=()
+  declare -A SUMMARY_MODIFIED=()
+  declare -A SUMMARY_DELETED=()
+  declare -A SUMMARY_SKIPPED=()
+  declare -A SUMMARY_TOTAL=()
+  RISK_HITS=()
+
   for f in "${SYNC_FILES[@]}"; do
     if git cat-file -e "$REF:$f" 2>/dev/null; then
       if remote_file_matches_local "$f"; then
         echo "    = $f（无差异）"
       else
         echo "    Δ $f"
+        if [[ -f "$f" ]]; then
+          record_summary "$f" "modified"
+        else
+          record_summary "$f" "added"
+        fi
       fi
     else
       echo "    · $f （模板无此文件，跳过）"
+      record_summary "$f" "skipped"
     fi
   done
 
   echo
-  echo "ℹ️  dry-run：仅预览，未修改工作区、未 stage。差异统计："
+  echo "ℹ️  dry-run：仅预览，未修改工作区、未 stage。"
   echo "   方向：本地当前文件 -> 模板 $VERSION（即执行 --commit 后的变化）"
-  for f in "${SYNC_FILES[@]}"; do
-    if git cat-file -e "$REF:$f" 2>/dev/null; then
-      if ! remote_file_matches_local "$f"; then
-        show_local_to_template_stat "$f"
-      fi
+  if [[ "$PRESERVE_PROJECT_VERSION" -eq 1 || "$DOMAIN_TEMPLATE_MODE" -eq 1 ]]; then
+    LINEAGE_MODE_LABEL="普通派生项目"
+    [[ "$DOMAIN_TEMPLATE_MODE" -eq 1 ]] && LINEAGE_MODE_LABEL="领域模板"
+    if [[ -f TEMPLATE-BASE.md ]]; then
+      echo "    Δ TEMPLATE-BASE.md（继承版本记录，$LINEAGE_MODE_LABEL）"
+      record_summary "TEMPLATE-BASE.md" "modified"
+    else
+      echo "    Δ TEMPLATE-BASE.md（新增继承版本记录，$LINEAGE_MODE_LABEL）"
+      record_summary "TEMPLATE-BASE.md" "added"
     fi
-  done
+  fi
+  if [[ "$SKIP_STAT" -eq 1 ]]; then
+    print_summary
+  else
+    echo "   差异统计："
+    for f in "${SYNC_FILES[@]}"; do
+      if git cat-file -e "$REF:$f" 2>/dev/null; then
+        if ! remote_file_matches_local "$f"; then
+          show_local_to_template_stat "$f"
+        fi
+      fi
+    done
+  fi
 
   echo
   echo "==> doc-standards 兼容镜像（当前无 docs/* 镜像；00-09 用独立标准文件）:"
@@ -302,6 +653,17 @@ if [[ "$MODE" == "--dry-run" ]]; then
   echo "   确认后执行: bash scripts/sync-template.sh --commit"
 else
   UPDATED_FILES=()
+  if [[ "$DOMAIN_TEMPLATE_MODE" -eq 1 ]]; then
+    write_domain_template_base "$VERSION"
+    git add TEMPLATE-BASE.md
+    UPDATED_FILES+=("TEMPLATE-BASE.md")
+    echo "    ✓ TEMPLATE-BASE.md（领域版继承版本记录）"
+  elif [[ "$PRESERVE_PROJECT_VERSION" -eq 1 ]]; then
+    write_template_base "$VERSION"
+    git add TEMPLATE-BASE.md
+    UPDATED_FILES+=("TEMPLATE-BASE.md")
+    echo "    ✓ TEMPLATE-BASE.md（继承版本记录）"
+  fi
   for f in "${SYNC_FILES[@]}"; do
     if git cat-file -e "$REF:$f" 2>/dev/null; then
       git checkout "$REF" -- "$f"
@@ -344,4 +706,9 @@ else
   echo "  4. 按项目技术栈运行测试 / lint / build；无法运行的记录为未验证项"
   echo "  5. 生成或更新同步运行记录: sync-records/template-sync/YYYY-MM-DD-sync-template-$VERSION.md"
   echo "     可参考: template-docs/derived-sync-report-template.md"
+  if [[ "$PRESERVE_PROJECT_VERSION" -eq 1 ]]; then
+    echo "  6. 核对项目自身版本仍记录在 VERSION；继承模板版本见 TEMPLATE-BASE.md"
+  elif [[ "$DOMAIN_TEMPLATE_MODE" -eq 1 ]]; then
+    echo "  6. 核对领域模板版本仍记录在 VERSION、领域演进在 CHANGELOG；继承母模板版本见 TEMPLATE-BASE.md（领域版）"
+  fi
 fi

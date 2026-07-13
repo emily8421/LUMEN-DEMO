@@ -8,22 +8,15 @@
 > **与 `scenario-guides` 的分工（场景码对齐，互补不重复）**：
 > - 本文件 = **命令速查**（找快捷命令 / 权威文档 / Prompt）。
 > - `template-docs/scenario-guides.md` = **场景剧本**（「AI 带我做」：引导计划 + 做什么 / 为什么 / 机器执行）。
-> - 两边用**同一套场景码**：A0–A14（使用者）/ C1–C7（维护者）/ M1（元场景）。找命令看本文件；看完整剧本看 scenario-guides 对应码。
+> - 两边用**同一套场景码**：A0–A21（使用者）/ C1–C8（维护者）/ M0–M1（元场景）。找命令看本文件；看完整剧本看 scenario-guides 对应码。
 
 ## 使用原则
 
 - 不确定该走哪个场景、或想让 AI 先给引导计划再执行：用 `/run scenario`（见 `template-docs/scenario-guides.md` M1）。
-- 新手第一次使用模板：先看 `README.md` 与 `template-docs/beginner-guide.md`。
-- 新手第一次准备开发环境：看 `template-docs/env-setup.md`，先检测再安装。
-- 要单独安装 `Claude CLI` / `Codex CLI`：看 `template-docs/ai-cli-setup.md`。
-- 要验证新手最小链路：看 `template-docs/smoke-test.md`。
-- 要留痕一轮烟测结果：看 `template-docs/smoke-test-report-template.md`。
-- 需要理解模板方法论与设计边界：看 `template-docs/template-methodology.md`。
 - 若 PowerShell 下的 Git Bash 入口报错：先看 `template-docs/env-setup.md` 的脚本边界说明，不要默认判断为模板规则缺失。
-- 操作步骤权威来源：`git-guide.md`。
-- 可复制给 AI 执行的 Prompt：`INIT-PROMPT.md` 索引与 `ai/prompts/`。
-- 模板治理规则：`CONTRIBUTING.md`。
-- 项目快速入口：`README.md`；完整版本记录：`CHANGELOG.md`。
+- 操作步骤权威来源：`git-guide.md`；可复制给 AI 的 Prompt：`ai/prompts/README.md`；首次启动入口：`INIT-PROMPT.md`。
+- 模板治理（提案 / PR / 版本）：`CONTRIBUTING.md`；版本记录：`CHANGELOG.md`；项目入口：`README.md`。
+- 「要看什么 → 看哪」见下方**文档入口**表；「我做 X 该用什么命令」见**场景索引**，口语化决策见**常见选择**。
 
 ## 场景索引
 
@@ -31,49 +24,64 @@
 
 | 场景码 | 场景 | 快捷命令 | 权威操作文档 | 详细 Prompt | 备注 |
 |---|---|---|---|---|---|
-| M1 | 任意场景意图 / 新手首次打开 AI CLI | `/run scenario` | `template-docs/scenario-guides.md` | 无 | 先产出「做什么+为什么」引导计划，确认后再路由到具体 command |
-| A1 | 第一次准备开发环境 | 无 | `template-docs/env-setup.md` | 无 | 先运行 `scripts/check-prereqs.ps1`，再决定是否运行 `scripts/bootstrap-dev-env.ps1` |
+| M0 | 帮助 / 能力索引 / 角色选择 | `/run scenario` | `template-docs/scenario-guides.md` M0 | 无 | 不知道怎么问、想看能力列表时入口 |
+| M1 | 任意场景意图 / 新手首次打开 AI CLI | `/run scenario` | `template-docs/scenario-guides.md` M1 | 无 | 先产出「做什么+为什么」引导计划，确认后再路由到具体 command |
+| A0 | 冷启动（只有仓库链接） | 无 | `template-docs/scenario-guides.md` A0 | 无 | 零本地资产先 clone / new-project 拿到项目 |
+| A1 | 第一次准备开发环境 | 无 | `template-docs/env-setup.md` | 无 | 先 `scripts/check-prereqs.ps1`，再决定 `scripts/bootstrap-dev-env.ps1` |
 | A2 | 新建派生项目 | `/run new-project` | `git-guide.md` §6 | `ai/prompts/setup/14-new-project.md` | 推荐 `scripts/new-project.sh` 从 GitHub `main` 派生；不要手工复制模板目录 |
 | A3 | 采集本机环境 | `/run collect-env` | `docs/env/README.md` | `ai/prompts/setup/13-collect-env.md` | 生成 `docs/env/local-env.md`，人工补齐确认项 |
-| A5/A6 | 新项目初始化 docs | `/run review-inputs` / `/run generate-docs` | `README.md` 快速开始 | `ai/prompts/docs/01-review-inputs.md` / `ai/prompts/docs/00-generate-or-complete-docs.md` | 输入不确定先评审，再生成 / 补齐文档体系 |
-| A7 | 单文档修订 | `/run edit-single-doc` | `ai/global-rules.md` §8 | `ai/prompts/docs/04-edit-single-doc.md` | 只改目标文档，不顺手扩需求 |
+| A4 | 准备输入材料 | `/run review-inputs` | `ai/document-lifecycle-rules.md` §3 | `ai/prompts/docs/01-review-inputs.md` | 原始材料统一放 `docs/inputs/` |
+| A5 | 评审输入材料 | `/run review-inputs` | `ai/prompts/docs/01-review-inputs.md` | 同左 | Product Vision 就绪评估；不足先补齐复评 |
+| A5.5 | 需求探索原型 | `/run ui-prototype-exploration` | `ai/prompts/docs/22-ui-prototype-exploration.md` | 同左 | 正式 `00-03` 定稿前用低保真原型澄清需求 |
+| A6 | 生成文档骨架 | `/run generate-docs` | `README.md` 快速开始 | `ai/prompts/docs/00-generate-or-complete-docs.md` | 先说明阶段路线，再铺 `00-09` 骨架 |
+| A7 | PLM 文档精修（含 A7.1–A7.7） | `/run edit-single-doc` | `ai/document-lifecycle-rules.md` §5 | `ai/prompts/docs/04-edit-single-doc.md` | 按 PLM 阶段精修；只改目标文档，不顺手扩需求 |
+| A7.5 | UI 原型策略 / 实现前原型 | `/run edit-single-doc` | `ai/doc-standards/ui-prototype-strategy.md` | `ai/prompts/docs/04-edit-single-doc.md` | 已有需求链后、前端实现前确认可视化原型门禁 |
 | A7.7 | 文档反向同步 | `/run sync-docs-from-code` | `ai/global-rules.md` §1 / §8 | `ai/prompts/docs/07-sync-docs-from-code.md` | 代码事实与 docs 不一致时，先补文档事实 |
-| A8 | 项目文档成型后回溯审计 | `/run docs-system-audit` | `ai/document-lifecycle-rules.md`、`ai/doc-standards/` | `ai/prompts/review/16-docs-system-audit.md` | 回溯审视 PLM 链路合理性、可行性与一致性，先出报告不改文件；旧项目可 fallback 到 `docs/_scaffold/` |
-| A8/A10 | 项目 / 实现审查 | `/run project-review` / `/run docs-checklist` | `ai/global-rules.md` §4 | `ai/prompts/review/03-project-review.md` / `ai/prompts/review/10-docs-checklist.md` | 前者用于通用审查；后者用于 docs/03-09 生成后验收 |
-| A10 | 执行单个 Sprint / 任务 | `/run run-dev-task` | `ai/global-rules.md` §3、`docs/08-dev-plan.md` | `ai/prompts/dev/02-run-task.md` | 一个任务只做一个功能，避免跨范围改动 |
+| A8 | 文档评估 / 审计 / 检查 | `/run docs-evaluation` / `docs-system-audit` / `docs-checklist` | `ai/document-lifecycle-rules.md`、`ai/doc-standards/` | `ai/prompts/review/19-docs-evaluation.md` / `16-docs-system-audit.md` / `10-docs-checklist.md` | 评估判阶段、审计找断点、checklist 拦编码；旧项目可 fallback 到 `docs/_scaffold/` |
+| A8.5 | 技术路线与环境支撑评估 | `/run tech-env-evaluation` | `ai/prompts/review/20-tech-env-evaluation.md` | 同左 | 真实运行依赖进入 Sprint 前评估本机环境 |
+| A9 | 阶段规划与路线图 | 无 | `ai/implementation-lifecycle-rules.md` §3 | `ai/prompts/planning/19-plan-phases-and-sprints.md` | 分阶段 + 路线图（Demo → MVP → 产品） |
+| A10 | 执行 Sprint / 任务 | `/run run-dev-task` | `ai/global-rules.md` §3、`docs/08-dev-plan.md` | `ai/prompts/dev/02-run-task.md` | 一个任务只做一个功能；编码后可做实现合规审查（`/run project-review`） |
 | A10/C4 | 生成提交信息 | `/run commit-message` | `git-guide.md` §3 | `ai/prompts/git/06-commit-message.md` | 基于实际 diff 生成清晰 commit message |
-| A10/C4 | GitHub 远端操作前预检 | 无 | `git-guide.md` §1.1 | 无 | push / PR / merge 前运行 `scripts/check-github-context.ps1`，确认 cwd、remote、分支、`gh` 账号和仓库权限 |
+| A10/C4 | GitHub 远端操作前预检 | 无 | `git-guide.md` §1.1 | 无 | push / PR / merge 前运行 `scripts/check-github-context.ps1` |
 | A11 | Bug 修复 | `/run fix-bug` | `docs/08-dev-plan.md`、对应任务说明 | `ai/prompts/dev/05-fix-bug.md` | 先定位原因，再做最小修复 |
 | A12 | Sprint 验收总结 | `/run sprint-summary` | `docs/08-dev-plan.md`、`docs/09-verification.md` | `ai/prompts/dev/09-sprint-summary.md` | 对照验收标准总结是否完成 |
-| A13 | 派生项目同步模板 | `/run sync-methodology` | `git-guide.md` §5 | `ai/prompts/maintainers/12-sync-template.md` | 旧派生项目首次同步也走本场景：先 bootstrap 最新同步脚本，再继续标准闭环；若已同步但没跑后续，进入同步后续接模式，跳过 dry-run / commit，从边界验证开始；根 `README.md` 不参与下行同步；同步后只做派生边界检查，不跑模板自检；派生项目普通 PR 使用 `project-check.yml`，不用模板仓 `template-check.yml`；并用 `template-docs/derived-sync-report-template.md` 留运行记录 |
+| A13 | 派生项目同步模板 | `/run sync-methodology` | `git-guide.md` §5 | `ai/prompts/maintainers/12-sync-template.md` | 旧派生项目首次同步先 bootstrap 同步脚本；已同步没跑后续走同步后续接模式；根 `README.md` 不参与下行同步；同步后只做派生边界检查，不跑模板自检，用 `derived-sync-report-template.md` 留记录 |
 | A13 | 同步后项目整理 | `/run post-sync-cleanup` | `docs/README.md`、`ai/project-rules.md`、`docs/env/local-env.md` | `ai/prompts/maintainers/15-post-sync-cleanup.md` | 同步方法论后，先出迁移计划，确认后再执行 |
-| A13/C6 | 派生同步运行记录 | 无 | `template-docs/derived-sync-report-template.md` | `ai/prompts/maintainers/12-sync-template.md` | 真实同步后记录命令、结果、问题、提案回流收口和可回流优化点；项目事实留在派生项目，回流提案必须去项目化；长期记录保存到 `sync-records/template-sync/`，与 `docs/` 项目文档分离 |
+| A13/C6 | 派生同步运行记录 | 无 | `template-docs/derived-sync-report-template.md` | `ai/prompts/maintainers/12-sync-template.md` | 记录命令、结果、问题、提案回流收口；长期记录存 `sync-records/template-sync/` |
 | A14 | Phase 升级评估 | `/run phase-upgrade` | `docs/03-prd.md`、`ai/project-rules.md` §1 | `ai/prompts/planning/08-phase-upgrade.md` | 评估当前完成度，再草拟下一 Phase 边界 |
 | A15 | 回流提案/反馈到模板 | `/run submit-proposal` / `/run submit-feedback` | `scenario-guides.md` A15 | `ai/prompts/maintainers/17-submit-proposal.md` / `18-submit-feedback.md` | 派生→模板开 issue（免 fork）；先去项目化+标来源 |
+| A16 | 会话续接 / 中断恢复 | `/run resume` | `ai/session-rules.md` | 无 | 先读 `.ai/session-handoff.md` + Git 状态恢复；跨 CLI 一致 |
+| A17 | 待确认事项总览 | `/run docs-open-items` | `ai/prompts/docs/21-docs-open-items.md` | 同左 | 汇总 open items；检查阶段 / 编码 / 升级门禁 |
+| A18 | 专题方案讨论 | 无 | `ai/document-lifecycle-rules.md` §10.3 | `ai/prompts/docs/21` / `04` | 需求交互 / 技术选型 / 交互设计先多方案确认再回填 |
+| A19 | 文档定稿门禁 | `/run docs-evaluation` / `docs-system-audit` / `docs-open-items` | `ai/prompts/review/19` / `16`、`ai/prompts/docs/21` | 同左 | 完整生成后做评估 + 审计 + open items 收口再编码 |
+| A20 | 领域模板派生 | 无 | `template-docs/scenario-guides.md` A20、`template-docs/domain-templates.md` | 无 | 母模板 → 领域模板（可选中间层） |
+| A21 | 查看演示效果 | `/run show-demo` | `ai/commands/show-demo.md`、`template-docs/demo-runbook-template.md` | 无 | 路由到项目演示 SOP；不替代 `09` 验收 |
 | C1 | 模板优化提案汇总 | `/run template-proposal-summary` | `CONTRIBUTING.md` §4、`_proposals/README.md` | `ai/prompts/maintainers/11-template-proposal-summary.md` | 先提案，后改模板；完成后归档到 `_archive/proposals/` |
-| C4/C7 | 直接修改模板 | `/run template-proposal-summary` | `CONTRIBUTING.md` §3 / §7 | `ai/prompts/maintainers/11-template-proposal-summary.md` | 必须判断版本影响并更新 `VERSION` / README 版本记录 |
-| C8 | 批量同步所有派生项目 | `bash scripts/sync-all-derived.sh` | `scenario-guides.md` C8 | 无 | 发版后一条指令更新父目录下所有派生（先 `--dry-run` 预览） |
-| M1 | 新窗口续接任务 | 无 | `ai/session-rules.md` | 无 | 先读 `.ai/session-handoff.md`，兼容 `NEXT-STEPS.md`，再结合 Git 状态恢复 |
+| C2 | 版本 bump 与发布 | 无 | `MAINTAINERS.md` §3、`CONTRIBUTING.md` §4 | 无 | VERSION / CHANGELOG + check + tag / Release |
+| C3 | 模板自检 | 无 | `scripts/check-template.sh` | 无 | `check-template` 全过 |
+| C4 | 维护分支→PR→合并→归档 | 无 | `git-guide.md` §3-4、`CONTRIBUTING.md` | 无 | 模板改动走分支 PR；合并后归档提案 |
+| C4/C7 | 直接修改模板 | `/run template-proposal-summary` | `CONTRIBUTING.md` §3 / §7 | `ai/prompts/maintainers/11-template-proposal-summary.md` | 必须判断版本影响并更新 `VERSION` / CHANGELOG |
+| C5 | 维护下行同步机制 | 无 | `git-guide.md` §5、`template-sync.json` | 无 | 改同步清单 / 脚本 + 加自检断言 |
+| C6 | 派生同步验收（跨仓） | 无 | `scripts/check-derived-sync.sh`、`template-docs/derived-sync-report-template.md` | 无 | 跨仓验收派生同步；留运行记录 |
+| C8 | 批量同步所有派生项目 | `bash scripts/sync-all-derived.sh` | `template-docs/scenario-guides.md` C8 | 无 | 发版后一条指令更新父目录下所有派生（先 `--dry-run`） |
+| M1 | 新窗口续接任务 | `/run resume` | `ai/session-rules.md` | 无 | 先读 `.ai/session-handoff.md`，兼容 `NEXT-STEPS.md`，再结合 Git 状态恢复 |
 
 ### 文档入口（要看什么 → 看哪；非操作场景）
 
 | 要做什么 | 看哪 |
 |---|---|
 | 第一次使用模板 | `README.md`、`template-docs/beginner-guide.md`（先建立最小路径、文件边界和初始化顺序） |
+| 第一次准备开发环境（A1） | `template-docs/env-setup.md`（先 check-prereqs 再 bootstrap） |
 | 安装 AI CLI 工具（A1 的一部分） | `template-docs/ai-cli-setup.md`（`Claude CLI` / `Codex CLI` 安装 + 公司中转站衔接顺序） |
 | 运行新手烟测 | `template-docs/smoke-test.md`（验证 Windows 下新手最小链路） |
 | 记录新手烟测结果 | `template-docs/smoke-test-report-template.md`（统一格式记录结果与归因） |
 | 想理解模板为什么这样设计 | `template-docs/template-methodology.md`（设计原则与边界） |
+| 查术语什么意思 | `template-docs/glossary.md`（核心术语短定义 + 权威源指针） |
 
 ## 常见选择
 
-- “我不确定该用哪个命令 / 我想让 AI 带我一步步做” → 用 `/run scenario`，AI 按 `template-docs/scenario-guides.md` 先给引导计划再执行。
-- “我是第一次用这套模板” → 先看 `README.md` 与 `template-docs/beginner-guide.md`，再用 `/run new-project`。
-- “我的机器还没装好开发环境” → 先看 `template-docs/env-setup.md`，再运行 `scripts/check-prereqs.ps1`。
-- “我要单独安装 Claude CLI 或 Codex CLI” → 看 `template-docs/ai-cli-setup.md`。
-- “我要验证一个新手能不能从零跑通这套模板” → 看 `template-docs/smoke-test.md`。
-- “我要把烟测结果记下来，方便后续修模板” → 看 `template-docs/smoke-test-report-template.md`。
-- “我想知道这套模板为什么这么分层” → 看 `template-docs/template-methodology.md`。
+> 纯文档路由（看什么）见上方**文档入口**表；本节只列带分支判断的常见决策。
+
 - “我要开一个新项目” → 用 `/run new-project`。
 - “我要把已有项目同步到最新模板” → 用 `/run sync-methodology`；旧派生项目先按 `git-guide.md` §5.2 bootstrap，拿到新版同步流程后继续完整 A13 闭环，不要停在同步提交；同步后用 `/run post-sync-cleanup`。
 - “我已经同步了模板，只想补完后续闭环” → 用 `/run sync-methodology` 的同步后续接模式；不要重新 dry-run / commit，从 `check-derived-sync`、workflow 检查、`post-sync-cleanup`、`docs-system-audit`、项目验证建议和同步运行记录开始。

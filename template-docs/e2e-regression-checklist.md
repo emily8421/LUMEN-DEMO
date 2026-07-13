@@ -12,7 +12,7 @@
 专用测试派生项目（private，回归专用）只需建一次：
 
 ```bash
-gh repo create emily8421/ai-project-template-e2e --private
+# new-project.sh 在非 --no-remote 时会自动建仓并推送，无需先单独 gh repo create
 bash scripts/new-project.sh ai-project-template-e2e --account <你的账号> --visibility private
 # 或本地-only：bash scripts/new-project.sh ai-project-template-e2e --local --no-remote
 ```
@@ -23,7 +23,7 @@ bash scripts/new-project.sh ai-project-template-e2e --account <你的账号> --v
 
 | # | 项 | 步骤 | 预期 | 通过判据 | 自动 |
 |---|---|---|---|---|---|
-| R1 | 同步链路 | bootstrap sync 脚本 → `sync-template --dry-run` → `--commit` | 只动同步清单文件，不覆盖项目专属 | dry-run 无项目专属文件；commit 成功 | ✅ `e2e-sync-check.sh`（经 check-template 的 doc-standards 镜像自检） |
+| R1 | 同步链路 | `bash scripts/sync-template.sh --dry-run` → `bash scripts/sync-template.sh --commit` | 只动同步清单文件，不覆盖项目专属 | dry-run 无项目专属文件；commit 成功 | ✅ `e2e-sync-check.sh`（经 check-template 的 doc-standards 镜像自检） |
 | R2 | check-derived-sync | 同步后跑 `check-derived-sync` | 通过 | 退出 0 | ✅ `e2e-sync-check.sh` |
 | R3 | sync-all-derived 批量 | `sync-all-derived.sh <含 e2e 的父目录> --dry-run` | 识别 e2e 并预览同步 | 汇总无失败 | ✅ `e2e-sync-check.sh` 烟测 |
 | R4 | 场景引导路由 | `/run scenario` 在 零资产 / 模板仓 / 派生项目 三种 cwd | 分别路由到 A0 / A2 或 C / A3–A16 | 路由正确 | ❌ 人工 |
