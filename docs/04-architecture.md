@@ -10,8 +10,8 @@
 |---|---|
 | 输入来源 | `docs/02-srs.md`、`docs/03-prd.md`、`docs/env/local-env.md`、`ai/project-rules.md` |
 | 覆盖功能 / REQ | Phase1：REQ-001..REQ-011、REQ-036；P2 / 愿景保留架构骨架 |
-| 当前状态 | 目标架构基线已定；Sprint-7/8 后运行时已接入 PostgreSQL+pgvector、`PgRepository`、本机 Embedding 与 GLM LLM。仍降级：真实 Word/PDF 解析、OCR；逐模块实现状态见 §2。Phase2 MVP（核心 5 项）模块 / Flow / ADR 已补 P2-已设计骨架（见 §2 MOD-006/007、§3.1 ADR-006/007、§5.4） |
-| 最后更新 | 2026-07-11（Phase2 核心项设计骨架补强） |
+| 当前状态 | 目标架构基线已定；Sprint-7/8 后运行时已接入 PostgreSQL+pgvector、`PgRepository`、本机 Embedding 与 GLM LLM。仍降级：真实 Word/PDF 解析、OCR；逐模块实现状态见 §2。Phase2 MVP（核心 5 项）模块 / Flow / ADR 已补 P2-已设计骨架（见 §2 MOD-006/007、§3.1 ADR-006/007、§5.4）。Web App Structure Profile / WSG 已补轻量矩阵，作为 Phase2 UI 实现前门禁草案 |
+| 最后更新 | 2026-07-14（Batch A：WSG + UI-G 门禁回填） |
 
 ### 0.1 架构目标与约束
 
@@ -80,6 +80,19 @@ flowchart LR
 | COMP-002 | FastAPI 后端（api / service / model 三层） | REST API、权限校验、业务逻辑 | 本机单进程 | HTTP | [P1] | 已实现（PG 仓储 `PgRepository`，Sprint-8） | 全 P1 |
 | COMP-003 | 数据存储 | PostgreSQL + pgvector | Docker Compose（lumen-pg:pg16） | SQL + pgvector | [P1] | 已接入（Sprint-8；RG-001 Go） | REQ-003~010、036 |
 | COMP-004 | AI 服务 | LLM 中转（GLM）+ 本机 Embedding（bge-small-zh） | 本机 + 内网 | OpenAI 兼容 API | [P1] | 已接入（Sprint-7/8；RG-002/004 Go） | REQ-008、036 |
+
+### 1.3 Web App Structure Profile / Walking Skeleton Gate（Batch A 回填）
+
+> 对照 `template-docs/web-fullstack-profile.md`。本项目同时启用 `frontend/` 与 `backend/`，存在前端调用后端 API，且交付物需要浏览器点击演示；因此采用轻量 WSG 矩阵，不记录豁免。当前回填只定义 Phase2 UI 实现前门禁，不代表 Phase2 已启动。
+
+| WSG-ID | Gate | 当前架构事实 | 证据 / 锚点 | Phase2 实现前缺口 |
+|---|---|---|---|---|
+| WSG-001 | App Shell | P1B 已形成 TopBar + Nav Rail + Context Pane + Workspace 三层工作台；P2 默认沿用该 Shell，不新增一级导航泛滥 | `docs/design/frontend-workspace-redesign.md`、`docs/design/frontend-interaction.md` §9.3 | 用户确认 P2 页面布局与信息密度；若调整 Shell，先回填 `frontend-interaction` |
+| WSG-002 | 目录边界 | 当前前端仍以轻量 React/Vite 结构承载；后端已分 `api / service / model`，P2 如扩展页面 / API client / state hooks 需先拆分边界 | `docs/05-tech-spec.md` §4.1 | 在首个 P2 Web Sprint 前确认目录 / 文件拆分方案与阈值 |
+| WSG-003 | Vertical Slice | P1 已有登录、文档、搜索、问答、术语多条前端 → API → service → PG / LLM → smoke 纵切；P2 需选首个最小纵切 | Sprint-9/10 smoke、`docs/09-verification.md` §5 | 确认首个 P2 vertical slice，例如标签 / 内链 / AI 润色之一，不一次实现全部 UI |
+| WSG-004 | 文件膨胀阈值 | P1B 已做轻量组件与 CSS token 分层；P2 继续堆 `App.tsx` / 全局 CSS 前需先拆分 | `docs/05-tech-spec.md` §4.1 | 确认主应用、页面、CSS、service、测试文件阈值与拆分触发条件 |
+| WSG-005 | 验证入口 | P1A/P1B 已有 `npm.cmd run build` + Chrome / Edge 900px smoke；P2 UI smoke 仍为草案 | `docs/08-dev-plan.md`、`docs/09-verification.md` | 执行 TC-P2-WSG-001 与 TC-P2-UI-001..005 后才可标记通过 |
+| WSG-006 | UI 链路对齐 | UI inputs → reference analysis → prototype → experience brief → frontend-interaction → 08/09 草案已闭合为候选链 | `docs/design/frontend-experience-brief.md`、`docs/design/frontend-interaction.md` | 用户确认候选体验方向与 P2-UI-G-001..006；未确认前不编码 |
 
 ## 2. 子系统 / 模块划分（完整框架）
 

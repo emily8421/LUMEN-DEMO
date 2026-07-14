@@ -9,8 +9,8 @@
 |---|---|
 | 输入来源 | `docs/03-prd.md`、`docs/04-architecture.md`、`docs/env/local-env.md`、`ai/project-rules.md` |
 | 覆盖架构组件 | FastAPI 后端、React 前端、PostgreSQL + pgvector、Embedding / LLM 适配、导入解析 |
-| 当前状态 | 目标基线已定（Phase1 技术选型已钉死）。Sprint-7/8 + task-009 真实化后：**PostgreSQL+pgvector / Embedding / LLM 已接入，RAG 与 search 均可走向量召回**（RG-001/002/004 Go，见 §1「当前实现状态」列与 §5.1）；OCR / 真实 PDF 解析仍降级（RG-003，后续阶段）。实现期变更需先修订本文 |
-| 最后更新 | 2026-07-11（Phase2 核心项设计骨架补强） |
+| 当前状态 | 目标基线已定（Phase1 技术选型已钉死）。Sprint-7/8 + task-009 真实化后：**PostgreSQL+pgvector / Embedding / LLM 已接入，RAG 与 search 均可走向量召回**（RG-001/002/004 Go，见 §1「当前实现状态」列与 §5.1）；OCR / 真实 PDF 解析仍降级（RG-003，后续阶段）。Batch A 已补 WSG 目录边界与文件膨胀阈值；Phase2 实现期变更需先修订本文 |
+| 最后更新 | 2026-07-14（Batch A：WSG 目录边界与文件阈值回填） |
 
 ## 1. 技术栈与版本
 
@@ -88,6 +88,29 @@ flowchart TB
 - 前端使用 JS/TS `camelCase`，React 组件使用 `PascalCase`。
 - AI 调用统一走 OpenAI 兼容 adapter；不得在业务层直接绑定单一闭源 SDK。
 - 新增依赖必须写入依赖文件，并说明用途；Sprint 内不得引入本节基线之外的依赖。
+
+### 4.1 Web App Structure Profile：目录边界与文件膨胀阈值
+
+> 对照 `template-docs/web-fullstack-profile.md` WSG-002 / WSG-004。当前只作为 Phase2 UI / Web 实现前治理门禁，不改既有 P1 代码结构，不新增依赖。
+
+| 边界项 | 当前基线 | Phase2 实现前要求 |
+|---|---|---|
+| App Shell / 视图入口 | P1B 已有 TopBar + Nav Rail + Context Pane + Workspace；P2 默认沿用 | 若新增标签 / 内链 / 写作等视图，先在 `frontend-interaction` 冻结 Page-ID / Flow-ID，再决定是否拆 `app/` / `pages/` / `features/` |
+| API client | 现有前端调用应继续对齐 `docs/07-api-spec.md` API-ID | 新增 P2 endpoint 前先补 `07` endpoint contract；不得在页面中散落未登记 URL |
+| 前端状态 / hooks | 当前以轻量 React state 支撑 Demo | 若 P2 状态跨页面复用，先抽 state / hooks；未经确认不引入路由库、全局状态库或组件库 |
+| 样式 token | P1B 已有密度 / pane / toolbar / list-row / inspector 分层 | 新 P2 样式优先复用 token；超过阈值先拆 layout / component / page styles |
+| 后端分层 | `backend/api` / `service` / `model` 已形成基本边界 | 新 P2 API 只进 api 层；业务逻辑进 service；字段 / DTO / ORM 进 model；持久化策略需与 06/07 对齐 |
+| 测试 / smoke | P1 已有后端 tests、前端 build、Chrome / Edge smoke | P2 首个 vertical slice 必须补自动化命令或人工 smoke 步骤，并写入 `09` 证据要求 |
+
+| 文件类型 | 提醒阈值 | 超阈值处理 |
+|---|---:|---|
+| `frontend/src/App.*` / 主应用入口 | 300 行 | 先拆 App Shell、视图入口、providers 或 feature 容器，不继续堆 P2 功能 |
+| 前端页面 / 视图文件 | 250 行 | 拆 panel、form、list、state hook 或 feature 子组件 |
+| 全局 CSS / 样式文件 | 300 行 | 拆 tokens、layout、components、page styles；保留少容器清爽稿的密度约束 |
+| 后端 service / controller | 250 行 | 拆 service、repository / gateway、schema、error handling |
+| 单个测试 / smoke 文件 | 300 行 | 拆 contract、smoke、edge cases，避免单文件覆盖过多业务路径 |
+
+> 若确需引入 router、组件库、全局状态库、PDF 库或新图形库，必须先回到本文 §2 / §5.1、`06/07`、`08/09` 和 open items 记录依赖、风险与验证方式。
 
 ## 5. 运行环境与资源评估
 

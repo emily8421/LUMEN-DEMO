@@ -12,8 +12,8 @@
 | 当前 Phase | Phase1 |
 | 交付物形态 | Demo |
 | 覆盖 REQ | Phase1：REQ-001..REQ-011、REQ-036；P2 UI 门禁草案：REQ-012/013/014/025/026 相关页面 / 交互候选；其余 P2 / 愿景验证项待升阶段细化 |
-| 当前状态 | Phase1 全量验收已记录，结论为 Conditional Go（Demo closure）；Sprint-1~6 降级口径验收已执行，Sprint-7/8 已完成真实 LLM、PostgreSQL+pgvector、Embedding 与 RAG 向量召回验证；task-009 已完成 search hybrid 验证；P1A / P1B 前端体验收口均已实现，构建与 Chrome / Edge 900px smoke 均通过；P2 UI 实现前门禁 TC-P2-UI-001~005 已补草案，当前未执行、不代表可编码 |
-| 最后更新 | 2026-07-14（P2 UI 实现前门禁草案回填） |
+| 当前状态 | Phase1 全量验收已记录，结论为 Conditional Go（Demo closure）；Sprint-1~6 降级口径验收已执行，Sprint-7/8 已完成真实 LLM、PostgreSQL+pgvector、Embedding 与 RAG 向量召回验证；task-009 已完成 search hybrid 验证；P1A / P1B 前端体验收口均已实现，构建与 Chrome / Edge 900px smoke 均通过；P2 UI / WSG 实现前门禁 TC-P2-WSG-001 + TC-P2-UI-001~005 已补草案，当前未执行、不代表可编码 |
+| 最后更新 | 2026-07-14（Batch A：WSG + UI-G 验证门禁回填） |
 
 ## 1. 测试策略
 
@@ -74,6 +74,7 @@
 
 | TC ID | 覆盖对象 | 前置条件 | 验证步骤 | 预期结果 | 证据要求 | 状态 |
 |---|---|---|---|---|---|---|
+| TC-P2-WSG-001 | WSG-001..006；P2-UI-G-001..006；首个 P2 Web vertical slice | `04` WSG 矩阵、`05 §4.1`、`08` Sprint-11 草案、`frontend-interaction §9.3` 均已回填；Phase2 范围仍待人工确认 | 逐项检查 App Shell、目录边界、vertical slice、文件膨胀阈值、验证入口、UI 链路是否有文档锚点；确认首个 P2 vertical slice 是否已选定 | WSG-001..006 均有明确证据位置；未选 vertical slice 时保持 No Go；不得跳过 WSG 直接改 `frontend/` | `04/05/08/09/frontend-interaction` 锚点 + 后续评审记录 | 草案·未执行 |
 | TC-P2-UI-001 | PG-P2-001/002/003、P2-UI-G-001/006；REQ-012/025/026 页面入口候选 | 少容器清爽稿暂定按当前稿继续 | 打开 `docs/research/prototypes/2026-07-14-frontend-ui-reference-absorbed-prototype.html`，检查首页、经典目录、文档工作区的信息层级、首屏入口和视觉密度 | 首屏 2-3 个主信息区；少圆角、少边框、少胶囊、少阴影；层级主要靠留白、细分隔线、文字标签和左侧选中线表达；无卡片墙回退 | 原型路径 + 后续截图 / smoke 记录 | 草案·未执行 |
 | TC-P2-UI-002 | PG-P2-008、CMP-P2-BREADCRUMB、CMP-P2-LAYER-SEARCH；REQ-012/026 候选 | 使用当前空间 mock 数据 | 点击可点击面包屑返回空间 / 项目层级；在当前层级搜索框输入关键词过滤目录 / 列表 | 路径定位清楚；搜索只过滤当前空间 / 当前层级可见内容；无结果不泄露跨空间或无权限内容 | 原型点击记录 + 后续 UI smoke | 草案·未执行 |
 | TC-P2-UI-003 | PG-P2-003、CMP-P2-DOC-MODE；REQ-014/026 候选 | 打开示例文档 | 切换预览、编辑、编辑+预览并排、版本来源；拖拽目录区、文档列表、编辑 / 预览比例和右侧状态区 | 阅读与预览合并；编辑不破坏阅读；并排预览可用；主要区域可调宽；来源 / 版本可追溯 | 原型点击记录 + 后续 Chrome / Edge smoke | 草案·未执行 |
@@ -131,18 +132,19 @@
 
 ## 6. 风险与未验证项
 
-| 风险 / 未验证项 | 影响范围 | 当前处理 |
-|---|---|---|
-| ~~PostgreSQL+pgvector 未接入~~ | ~~REQ-007/008 真实化~~ | ✅ **已解决**（Sprint-8 / task-008 T1–T6：lumen-pg + PgRepository + RAG 向量召回；RG-001→Go，见 `05 §5.1`） |
-| ~~真实 Embedding（bge-small-zh）未接入后端~~ | ~~REQ-007/008 向量检索~~ | ✅ **已解决**（T6 写 `lumen_chunks.embedding` 512 维；RG-002→已启用；约束 `HF_HUB_DISABLE_XET=1`） |
-| ~~Docker Desktop Linux engine 阻塞~~ | ~~起库 / 真实 PostgreSQL~~ | ✅ **已解决**（daemon live，TE-C-003 闭合；`docker/compose.yml` 起 lumen-pg healthy） |
-| ~~search 仍关键词检索（未向量化）~~ | ~~REQ-007 语义搜索~~ | ✅ **已解决**（task-009：substring + `ts_vector` SQL 候选 + pgvector 语义召回；zhparser 可选，当前镜像无扩展时回退 `simple`） |
-| 真实 PDF / Word 解析 | REQ-009 | 仅 `.md`/`.txt` 已提取文本；python-docx/pdfplumber 未接入（留后续阶段） |
-| OCR 质量与资源占用 | REQ-010、内容导入 | OCR 未实现，REQ-010 移至后续阶段（RG-003 No-Go）；当前降级为已提取文本 |
-| LLM 外部调用可用性 | REQ-008、REQ-036 | GLM `glm-5.2` 真实问答已验证（Sprint-7 首验 + 2026-07-11 新中转 `192.168.15.190:7777/v1` 复测，RG-004→Go；旧 `47.107.134.2` key 已停用）；GPT/ollama 待验证 |
-| P2 / 愿景高风险 AI 能力 | REQ-020 / 021 / 030 / 032 / 033 等 | 不进入 Phase1 必过项，技术验证通过后再补用例 |
-| P2 UI 少容器清爽稿尚未实现 / smoke | Sprint-11、TC-P2-UI-001~005 | 当前仅 HTML 原型与验证草案，需人工确认 Phase2 范围并开实现任务后，再执行 Chrome / Edge smoke；未执行前不得标记通过。 |
+| Risk-ID | RG / Gate | 风险 / 未验证项 | 影响范围 | 当前处理 | 关闭依据 |
+|---|---|---|---|---|---|
+| RISK-P1-001 | RG-001 | ~~PostgreSQL+pgvector 未接入~~ | ~~REQ-007/008 真实化~~ | ✅ **已解决**（Sprint-8 / task-008 T1–T6：lumen-pg + PgRepository + RAG 向量召回；RG-001→Go，见 `05 §5.1`） | Sprint-8 验收记录、TC-P1-007/008 |
+| RISK-P1-002 | RG-002 | ~~真实 Embedding（bge-small-zh）未接入后端~~ | ~~REQ-007/008 向量检索~~ | ✅ **已解决**（T6 写 `lumen_chunks.embedding` 512 维；RG-002→已启用；约束 `HF_HUB_DISABLE_XET=1`） | embedding tests、TC-P1-007/008 |
+| RISK-P1-003 | TE-C-003 / RG-001 | ~~Docker Desktop Linux engine 阻塞~~ | ~~起库 / 真实 PostgreSQL~~ | ✅ **已解决**（daemon live，TE-C-003 闭合；`docker/compose.yml` 起 lumen-pg healthy） | Sprint-8 T1 验证 |
+| RISK-P1-004 | RG-001 / RG-002 | ~~search 仍关键词检索（未向量化）~~ | ~~REQ-007 语义搜索~~ | ✅ **已解决**（task-009：substring + `ts_vector` SQL 候选 + pgvector 语义召回；zhparser 可选，当前镜像无扩展时回退 `simple`） | task-009 tests |
+| RISK-P2-001 | RG-006 候选 | 真实 PDF / Word 解析 | REQ-009、REQ-027 相关交付 | 仅 `.md`/`.txt` 已提取文本；python-docx/pdfplumber 未接入；Phase2 MVP 前需 tech-env-eval | 待 Phase2 tech-env-eval 与 TC |
+| RISK-P2-002 | RG-003 | OCR 质量与资源占用 | REQ-010、内容导入 | OCR 未实现，REQ-010 移至后续阶段（RG-003 No-Go）；当前降级为已提取文本 | 待 OCR 引擎定版与资源验证 |
+| RISK-P1-005 | RG-004 | LLM 外部调用可用性 | REQ-008、REQ-036 | GLM `glm-5.2` 真实问答已验证（Sprint-7 首验 + 2026-07-11 新中转 `192.168.15.190:7777/v1` 复测，RG-004→Go；旧 `47.107.134.2` key 已停用）；GPT/ollama 待验证 | GLM 复测记录；GPT/ollama 非 P1 必过 |
+| RISK-VISION-001 | 后续 AI Gate | P2 / 愿景高风险 AI 能力 | REQ-020 / 021 / 030 / 032 / 033 等 | 不进入 Phase1 必过项，技术验证通过后再补用例 | 待愿景技术验证 |
+| RISK-P2-003 | WSG-001..006 / P2-UI-G-001..006 | P2 UI 少容器清爽稿尚未实现 / smoke | Sprint-11、TC-P2-WSG-001、TC-P2-UI-001~005 | 当前仅 HTML 原型与验证草案，需人工确认 Phase2 范围并开实现任务后，再执行 Chrome / Edge smoke；未执行前不得标记通过 | 待用户确认 + 后续 smoke 证据 |
 
 ## 7. 待人工确认项
 
-- Phase1 全量验收已记录；是否正式进入 Phase2 仍需人工确认，并在确认后同步更新阶段指针与 Phase2 进入 / 退出标准。TC-P2-UI-001~005 已回填为实现前门禁草案，但未执行、未通过、不可直接编码。
+- Phase1 全量验收已记录；是否正式进入 Phase2 仍需人工确认，并在确认后同步更新阶段指针与 Phase2 进入 / 退出标准。TC-P2-WSG-001 与 TC-P2-UI-001~005 已回填为实现前门禁草案，但未执行、未通过、不可直接编码。
+- 首个 Phase2 vertical slice 仍需人工确认；未确认前不得一次性实现全部 P2 UI 或跳过 WSG / UI-G 修改 `frontend/`。
