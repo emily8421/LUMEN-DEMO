@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>LUMEN 分层空间总览与探索体验低保真原型</title>
+  <title>LUMEN 实现前 UI 原型确认版 · 参考原型吸收版</title>
   <style>
     :root {
       --bg: #f7fbff;
@@ -95,6 +95,10 @@
       background: var(--bg);
       color: var(--text);
       min-width: 1120px;
+      --pane-width: 300px;
+      --inspector-width: 330px;
+      --doc-sidebar-width: 260px;
+      --split-editor-width: 50%;
     }
 
     .prototype-note {
@@ -156,6 +160,45 @@
     }
 
     .crumbs b { color: var(--text); }
+
+    .crumb-link {
+      border: 0;
+      padding: 4px 8px;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .crumb-link:hover {
+      color: var(--primary);
+      background: var(--primary-soft);
+    }
+
+    .mode-switch {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--panel-soft);
+    }
+
+    .mode-button {
+      padding: 5px 10px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .mode-button.active {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: var(--primary-soft);
+      font-weight: 700;
+    }
 
     .top-actions {
       display: flex;
@@ -220,7 +263,7 @@
 
     .workspace {
       display: grid;
-      grid-template-columns: 72px 300px minmax(560px, 1fr) 330px;
+      grid-template-columns: 72px var(--pane-width) minmax(560px, 1fr) var(--inspector-width);
       gap: 0;
       min-height: 0;
     }
@@ -273,6 +316,7 @@
     }
 
     .pane {
+      position: relative;
       background: var(--panel);
       border-right: 1px solid var(--line);
       padding: 18px 16px;
@@ -284,10 +328,49 @@
     }
 
     .inspector {
+      position: relative;
       background: var(--panel);
       border-left: 1px solid var(--line);
       padding: 18px 16px;
     }
+
+    .resize-handle {
+      position: absolute;
+      z-index: 10;
+      width: 9px;
+      top: 0;
+      bottom: 0;
+      background: transparent;
+      cursor: col-resize;
+    }
+
+    .resize-handle::after {
+      content: "";
+      position: absolute;
+      top: 12px;
+      bottom: 12px;
+      left: 4px;
+      width: 1px;
+      background: var(--line);
+    }
+
+    .resize-handle:hover::after,
+    .resize-handle.active::after { background: var(--primary); }
+
+    .resize-handle.right { right: -5px; }
+    .resize-handle.left { left: -5px; }
+
+    .split-handle {
+      width: 10px;
+      border: 0;
+      border-radius: 8px;
+      background: linear-gradient(90deg, transparent 0, var(--line) 45%, var(--line) 55%, transparent 100%);
+      cursor: col-resize;
+      min-height: 360px;
+    }
+
+    .split-handle:hover,
+    .split-handle.active { background: linear-gradient(90deg, transparent 0, var(--primary) 45%, var(--primary) 55%, transparent 100%); }
 
     .section-title {
       display: flex;
@@ -318,6 +401,69 @@
       color: var(--muted);
       background: var(--panel-soft);
       font-size: 13px;
+    }
+
+    .searchbox input {
+      width: 100%;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: var(--text);
+      font: inherit;
+    }
+
+    .searchbox input::placeholder { color: var(--faint); }
+
+    .search-status {
+      display: block;
+      margin-top: -6px;
+      color: var(--faint);
+      font-size: 12px;
+    }
+
+    .absorb-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin: -4px 0 18px;
+      padding: 12px 14px;
+      border: 1px solid var(--line-soft);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.72);
+      color: var(--muted);
+    }
+
+    .absorb-strip h2 {
+      margin: 0;
+      font-size: 14px;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .absorb-chips {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .absorb-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border: 1px solid var(--line-soft);
+      border-radius: 999px;
+      background: var(--panel-soft);
+      color: #526174;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .absorb-chip strong {
+      color: var(--text);
+      font-size: 12px;
     }
 
     .tree {
@@ -359,6 +505,7 @@
     }
 
     .is-hidden { display: none !important; }
+    .search-hidden { display: none !important; }
 
     .tree-label {
       display: inline-flex;
@@ -547,6 +694,13 @@
       gap: 14px;
     }
 
+    .featured-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 12px;
+    }
+
     .project-card {
       padding: 16px;
       border: 1px solid var(--line);
@@ -617,6 +771,37 @@
     }
 
     .list-row:last-child { border-bottom: 0; }
+
+    .source-list {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      overflow: hidden;
+      background: var(--panel-soft);
+    }
+
+    .source-row {
+      display: grid;
+      grid-template-columns: 1.1fr 1.3fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line-soft);
+      font-size: 13px;
+    }
+
+    .source-row:last-child { border-bottom: 0; }
+
+    .source-row p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .source-row strong {
+      display: block;
+      margin-bottom: 2px;
+    }
 
     .degrade-box {
       padding: 16px;
@@ -714,12 +899,13 @@
 
     .doc-workspace {
       display: grid;
-      grid-template-columns: 260px minmax(0, 1fr);
+      grid-template-columns: var(--doc-sidebar-width) minmax(0, 1fr);
       min-height: 520px;
       overflow: hidden;
     }
 
     .doc-sidebar {
+      position: relative;
       border-right: 1px solid var(--line);
       background: var(--panel-soft);
       padding: 16px;
@@ -776,8 +962,27 @@
       line-height: 1.65;
     }
 
-    .doc-preview,
-    .doc-read {
+    .split-editor {
+      display: grid;
+      grid-template-columns: minmax(260px, var(--split-editor-width)) 10px minmax(260px, 1fr);
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .split-editor .doc-editor,
+    .split-editor .doc-preview {
+      min-height: 360px;
+      height: 100%;
+    }
+
+    .mode-hint {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .doc-preview {
       min-height: 285px;
       padding: 16px;
       border: 1px solid var(--line);
@@ -787,23 +992,19 @@
       font-size: 13px;
     }
 
-    .doc-preview h1,
-    .doc-read h1 {
+    .doc-preview h1 {
       margin: 0 0 10px;
       font-size: 20px;
     }
 
-    .doc-preview h2,
-    .doc-read h2 {
+    .doc-preview h2 {
       margin: 16px 0 8px;
       font-size: 15px;
     }
 
-    .doc-preview p,
-    .doc-read p { margin: 0 0 10px; }
+    .doc-preview p { margin: 0 0 10px; }
 
-    .doc-preview ul,
-    .doc-read ul { margin: 0 0 10px 20px; padding: 0; }
+    .doc-preview ul { margin: 0 0 10px 20px; padding: 0; }
 
     .doc-meta-grid {
       display: grid;
@@ -895,12 +1096,319 @@
       font-size: 12px;
       line-height: 1.6;
     }
+
+    body {
+      background: #f8fbff;
+    }
+
+    .prototype-note {
+      background: #fff;
+      border-bottom: 1px solid #edf2f7;
+      color: #667085;
+    }
+
+    .prototype-note strong { color: #1d4ed8; }
+
+    .topbar {
+      border-bottom-color: #edf2f7;
+      box-shadow: none;
+    }
+
+    .brand-mark {
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      box-shadow: none;
+    }
+
+    .mode-switch,
+    .theme-switch,
+    .pill,
+    .mode-card,
+    .card,
+    .project-card,
+    .list-view,
+    .source-list,
+    .hint-card,
+    .doc-meta,
+    .review-question {
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    .card,
+    .project-card,
+    .hint-card,
+    .mode-card,
+    .source-list,
+    .list-view {
+      border: 0;
+      background: transparent;
+    }
+
+    .card-body {
+      padding: 0;
+    }
+
+    .hero {
+      gap: 36px;
+      padding: 4px 0 26px;
+      margin-bottom: 26px;
+      border-bottom: 1px solid #edf2f7;
+    }
+
+    .headline h1 {
+      letter-spacing: -0.02em;
+    }
+
+    .headline p {
+      max-width: 720px;
+    }
+
+    .badge {
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent !important;
+      font-weight: 700;
+    }
+
+    .pill {
+      border: 0;
+      background: transparent;
+      padding: 0;
+      color: var(--muted);
+    }
+
+    .mode-switch,
+    .theme-switch {
+      border: 0;
+      background: transparent;
+      padding: 0;
+      gap: 10px;
+    }
+
+    .mode-button,
+    .theme-button,
+    .tab {
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      padding: 7px 2px;
+      color: var(--muted);
+    }
+
+    .mode-button.active,
+    .theme-button.active,
+    .tab.active {
+      color: var(--primary);
+      background: transparent;
+      border-bottom: 2px solid var(--primary);
+      font-weight: 700;
+    }
+
+    .primary {
+      border-radius: 8px;
+      box-shadow: none;
+    }
+
+    .searchbox,
+    .absorb-strip,
+    .degrade-box,
+    .doc-editor,
+    .doc-preview,
+    .answer-box {
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    .searchbox {
+      border-width: 0 0 1px;
+      background: transparent;
+      padding: 10px 0;
+    }
+
+    .absorb-strip {
+      align-items: flex-start;
+      margin: 0 0 24px;
+      padding: 0 0 16px;
+      border-width: 0 0 1px;
+      background: transparent;
+    }
+
+    .absorb-chip {
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+    }
+
+    .absorb-chip::after {
+      content: "";
+      width: 1px;
+      height: 12px;
+      margin-left: 8px;
+      background: var(--line);
+    }
+
+    .absorb-chip:last-child::after { display: none; }
+
+    .metrics {
+      display: flex;
+      gap: 24px;
+      border-top: 1px solid #edf2f7;
+      padding-top: 18px;
+    }
+
+    .metric {
+      padding: 0 24px 0 0;
+      border: 0;
+      border-right: 1px solid #edf2f7;
+      border-radius: 0;
+      background: transparent;
+      min-width: 92px;
+    }
+
+    .metric:last-child { border-right: 0; }
+
+    .map-preview {
+      border-radius: 12px;
+      box-shadow: none;
+    }
+
+    .featured-grid {
+      gap: 28px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid #edf2f7;
+    }
+
+    .project-card {
+      min-height: 0;
+      padding: 0;
+    }
+
+    .project-card h3 {
+      margin-top: 8px;
+    }
+
+    .project-card p {
+      max-width: 420px;
+    }
+
+    .progress {
+      height: 4px;
+      border-radius: 0;
+      margin: 12px 0;
+    }
+
+    .progress > span {
+      border-radius: 0;
+    }
+
+    .list-view,
+    .source-list {
+      border-top: 1px solid #edf2f7;
+    }
+
+    .list-row,
+    .source-row {
+      padding: 12px 0;
+      border-bottom-color: #edf2f7;
+    }
+
+    .list-row.header {
+      background: transparent;
+      color: #7a8a9d;
+    }
+
+    .hint-card {
+      padding: 0 0 0 12px;
+      border-left: 2px solid var(--line);
+    }
+
+    .mode-card {
+      margin: 18px 0;
+      padding: 0 0 0 12px;
+      border-left: 2px solid var(--line);
+    }
+
+    .review {
+      padding-top: 24px;
+      border-top: 1px solid #edf2f7;
+    }
+
+    .review-grid {
+      gap: 22px;
+    }
+
+    .review-question {
+      padding: 0;
+      border: 0;
+      background: transparent;
+    }
+
+    .rail {
+      background: #fff;
+      box-shadow: inset -1px 0 0 #edf2f7;
+    }
+
+    .rail-item,
+    .tree-row,
+    .doc-list-item,
+    .search-result,
+    .term-row,
+    .question-chip,
+    .review-question button {
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    .rail-item,
+    .tree-row,
+    .doc-list-item,
+    .search-result {
+      border-color: transparent;
+      background: transparent;
+    }
+
+    .rail-item.active,
+    .tree-row.active,
+    .doc-list-item.active {
+      border-color: transparent;
+      border-left: 3px solid var(--primary);
+      background: transparent;
+      color: var(--primary);
+    }
+
+    .tree-row,
+    .doc-list-item {
+      border-bottom: 1px solid #edf2f7;
+    }
+
+    .doc-list-item {
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    .doc-meta,
+    .answer-box,
+    .term-editor,
+    .degrade-box {
+      border: 0;
+      border-left: 2px solid var(--line);
+      background: transparent;
+    }
+
+    .r-node {
+      border-radius: 10px;
+      box-shadow: none;
+    }
   </style>
 </head>
 <body>
   <div class="prototype-note">
-    <div><strong>需求探索原型 / 待确认：</strong>本页面只用于确认 LUMEN 前端方向，不连接后端，不新增需求、接口、权限规则、任务或验收目标。</div>
-    <div>建议评审口径：看第一眼、层级、双模式、局部关系图、配色密度是否符合预期。</div>
+    <div><strong>参考原型吸收版 · 少容器清爽稿 / 待评审：</strong>本页面在不覆盖现有确认版的前提下，吸收 `docs/inputs/参考原型.html` 的面包屑、经典/探索切换、分层搜索、图谱阈值降级和统一文档入口。</div>
+    <div>建议评审口径：重点看是否更接近主流清爽知识库风格，少圆角矩形、少边框、少胶囊，只保留必要分隔和重点入口。</div>
   </div>
 
   <div class="app">
@@ -909,10 +1417,14 @@
         <div class="brand-mark">L</div>
         <div>LUMEN</div>
       </div>
-      <div class="crumbs">
-        <span>当前空间</span><span>›</span><b>华东客户知识库</b><span>›</span><span id="currentPageLabel">空间总览</span>
+      <div class="crumbs" id="breadcrumbs">
+        <button class="crumb-link" data-page-jump="spacePage">华东客户知识库</button><span>›</span><b id="currentPageLabel">空间总览</b>
       </div>
       <div class="top-actions">
+        <div class="mode-switch" aria-label="经典 / 探索模式切换">
+          <button class="mode-button active" id="globalClassicButton" data-global-mode="classic">📋 经典</button>
+          <button class="mode-button" id="globalExploreButton" data-global-mode="explore">🧭 探索</button>
+        </div>
         <div class="theme-switch" aria-label="视觉主题切换">
           <button class="theme-button active" data-theme="light">蓝白</button>
           <button class="theme-button" data-theme="warm">米白</button>
@@ -936,12 +1448,14 @@
       </nav>
 
       <aside class="pane">
+        <div class="resize-handle right" data-resize="pane" title="拖拽调整目录区宽度"></div>
         <div class="section-title">
           <h2>经典目录</h2>
           <small>逃生舱</small>
         </div>
-        <p class="subtle">不管探索模式如何变化，传统目录 / 列表始终可达。</p>
-        <div class="searchbox">搜索当前空间文档 / 项目 / 术语</div>
+        <p class="subtle">不管探索模式如何变化，传统目录 / 列表始终可达；搜索默认只过滤当前空间 / 当前层级可见内容。</p>
+        <div class="searchbox"><input id="layerSearchInput" type="search" placeholder="搜索当前层级：文档 / 项目 / 术语 / 待核实" /></div>
+        <span class="search-status" id="layerSearchStatus">当前筛选：全部可见内容</span>
 
         <div class="tree" aria-label="可折叠经典目录">
           <button class="tree-row active tree-leaf" data-page-target="spacePage">
@@ -1030,8 +1544,8 @@
           <div class="card">
             <div class="card-body">
               <div class="section-title">
-                <h3>知识图谱可视化</h3>
-                <span class="badge gray">首页核心参考</span>
+              <h3>知识图谱摘要入口</h3>
+              <span class="badge gray">辅助入口</span>
               </div>
               <div class="map-preview" aria-label="局部关系图预览">
                 <div class="line l1"></div><div class="line l2"></div><div class="line l3"></div>
@@ -1044,6 +1558,16 @@
           </div>
         </section>
 
+        <section class="absorb-strip" aria-label="参考原型吸收点">
+          <h2>参考原型吸收点</h2>
+          <div class="absorb-chips">
+            <span class="absorb-chip"><strong>面包屑</strong>可点击返回</span>
+            <span class="absorb-chip"><strong>双模式</strong>经典兜底</span>
+            <span class="absorb-chip"><strong>分层搜索</strong>当前层级过滤</span>
+            <span class="absorb-chip"><strong>图谱阈值</strong>大集合降级</span>
+          </div>
+        </section>
+
         <section class="card">
           <div class="card-body">
             <div class="section-title">
@@ -1052,14 +1576,13 @@
             </div>
             <div class="tabs">
               <button class="tab active" data-page-jump="docsPage" data-doc-id="delivery">上传 / 导入文档</button>
-              <button class="tab" data-page-jump="docsPage" data-doc-id="terms">新建知识条目</button>
               <button class="tab" data-page-jump="searchPage">搜索当前空间</button>
               <button class="tab" data-page-jump="qaPage">基于知识库提问</button>
-              <button class="tab" data-page-jump="searchPage">查看待核实问题</button>
+              <button class="tab" data-page-jump="docsPage" data-doc-id="meeting">最近文档</button>
             </div>
             <div class="hint-card">
               <h4>AI 助手：需要高频可见，但不抢主画面</h4>
-              <p>建议首页保留一个清晰的 AI 助手入口，例如“基于当前空间提问”。它可以位于快捷操作区或右下角浮层，但必须显示回答范围和来源要求，避免变成通用聊天。</p>
+              <p>推荐默认：首页只保留轻量提问入口和推荐问题，提交后进入独立问答页；完整答案、来源卡和上下文在问答页承载，避免首页变成复杂工作台。</p>
             </div>
           </div>
         </section>
@@ -1072,7 +1595,7 @@
         </div>
 
         <section id="overviewView" class="view active">
-          <div class="grid">
+          <div class="featured-grid">
             <article class="project-card">
               <span class="badge primary">项目</span>
               <h3>A 客户交付知识包</h3>
@@ -1090,42 +1613,14 @@
               <div class="mini-row"><span>57 文档</span><span>3 待核实</span></div>
               <div class="mini-row"><span>推荐默认：列表优先</span><span>30–80</span></div>
             </article>
+          </div>
 
-            <article class="project-card">
-              <span class="badge warn">竞品</span>
-              <h3>C 竞品分析集合</h3>
-              <p>竞品截图、前端模式、交互参考和差异化记录。</p>
-              <div class="progress"><span style="width: 56%"></span></div>
-              <div class="mini-row"><span>31 文档</span><span>8 标签</span></div>
-              <div class="mini-row"><span>推荐默认：探索可用</span><span>≤ 50</span></div>
-            </article>
-
-            <article class="project-card">
-              <span class="badge green">术语</span>
-              <h3>团队术语与口径</h3>
-              <p>用于问答、文档编辑和来源解释的统一语义上下文。</p>
-              <div class="progress"><span style="width: 74%"></span></div>
-              <div class="mini-row"><span>56 术语</span><span>12 别名</span></div>
-              <div class="mini-row"><span>推荐默认：经典列表</span><span>结构化</span></div>
-            </article>
-
-            <article class="project-card">
-              <span class="badge danger">风险</span>
-              <h3>待核实问题池</h3>
-              <p>不直接叫“矛盾”，先用待核实口径，避免系统过度断言。</p>
-              <div class="progress"><span style="width: 36%"></span></div>
-              <div class="mini-row"><span>12 问题</span><span>4 已处理</span></div>
-              <div class="mini-row"><span>推荐默认：人工确认</span><span>高风险</span></div>
-            </article>
-
-            <article class="project-card">
-              <span class="badge gray">大集合</span>
-              <h3>归档资料库</h3>
-              <p>超过 80 份文档时不默认图谱，必须先筛选或聚类。</p>
-              <div class="progress"><span style="width: 88%"></span></div>
-              <div class="mini-row"><span>214 文档</span><span>80+</span></div>
-              <div class="mini-row"><span>推荐默认：列表 / 筛选</span><span>降级</span></div>
-            </article>
+          <div class="list-view">
+            <div class="list-row header"><span>其他集合</span><span>规模</span><span>状态</span><span>推荐默认</span><span>动作</span></div>
+            <div class="list-row"><strong>C 竞品分析集合</strong><span>31 文档</span><span><span class="badge warn">参考</span></span><span>探索可用</span><span>打开</span></div>
+            <div class="list-row"><strong>团队术语与口径</strong><span>56 术语</span><span><span class="badge green">结构化</span></span><span>经典列表</span><span>筛选</span></div>
+            <div class="list-row"><strong>待核实问题池</strong><span>12 问题</span><span><span class="badge danger">人工确认</span></span><span>列表优先</span><span>处理</span></div>
+            <div class="list-row"><strong>归档资料库</strong><span>214 文档</span><span><span class="badge gray">大集合</span></span><span>先筛选</span><span>降级</span></div>
           </div>
         </section>
 
@@ -1154,15 +1649,15 @@
             <div class="stack">
               <div class="hint-card">
                 <h4>为什么是局部图？</h4>
-                <p>只展示当前项目 / 文件夹 / 筛选结果内的少量节点，避免全空间文档全部铺开。</p>
+                <p>只展示当前项目 / 文件夹 / 筛选结果内的少量节点，避免全空间文档全部铺开；参考原型的经验是把图谱入口和文档数量阈值绑定。</p>
               </div>
               <div class="hint-card">
                 <h4>为什么不用“矛盾检测”大字？</h4>
                 <p>高风险 AI 能力未验证前，前端只展示“待核实问题”，由人确认。</p>
               </div>
               <div class="hint-card">
-                <h4>确认点</h4>
-                <p>这个局部图是有帮助，还是让你感觉像炫技？是否应该只作为可选视图？</p>
+                <h4>推荐阈值默认稿</h4>
+                <p>≤18 份：关系图可用；19-80 份：聚合次要节点；>80 份：关闭图谱入口，提示先筛选。数值仅作原型默认稿，真实阈值需样本验证。</p>
               </div>
             </div>
           </div>
@@ -1170,8 +1665,8 @@
 
         <section id="degradeView" class="view">
           <div class="degrade-box">
-            <span class="badge warn">80+ 文档：探索视图自动降级</span>
-            <p class="subtle">当前集合有 214 份文档。系统不默认生成全量关系图，建议先按项目、标签、时间窗口或关键词缩小范围。</p>
+            <span class="badge warn">>80 文档：探索视图自动降级</span>
+            <p class="subtle">当前集合有 214 份文档。系统不默认生成全量关系图，建议先按项目、标签、时间窗口或关键词缩小范围；19-80 份时只展示聚合图。</p>
           </div>
           <div class="list-view">
             <div class="list-row header"><span>筛选方式</span><span>目的</span><span>建议默认</span><span>用户动作</span><span>状态</span></div>
@@ -1207,8 +1702,8 @@
               <div class="card-body">
                 <div class="headline">
                   <div>
-                    <h1>文档页：经典列表 + 阅读 / 编辑 / 预览</h1>
-                    <p>用于确认：从目录、搜索、问答来源或关系图进入后，单篇文档都回到稳定的阅读、编辑、预览、版本与来源体验。</p>
+                    <h1>文档页：经典列表 + 预览 / 编辑 / 并排</h1>
+                    <p>用于确认：从目录、搜索、问答来源进入后，单篇文档都回到稳定的预览阅读、编辑、并排预览、版本与来源体验；阅读与预览展示效果合并，避免重复入口。</p>
                   </div>
                   <span class="badge green">经典模式保留</span>
                 </div>
@@ -1225,7 +1720,7 @@
                 <div class="section-title"><h3>文档状态</h3><span class="badge gray">P1 底座</span></div>
                 <div class="stack">
                   <div class="hint-card"><h4>阅读</h4><p>左侧选文档，主区读内容，右侧显示来源、术语和版本入口。</p></div>
-                  <div class="hint-card"><h4>编辑 / 预览</h4><p>Markdown 编辑仍是稳定路径，支持编辑和预览切换，Phase2 不破坏 P1 文档闭环。</p></div>
+                  <div class="hint-card"><h4>预览 / 编辑</h4><p>推荐默认：阅读与预览合并为“预览”；编辑态提供“编辑 + 预览并排”。目录列、文档编辑区和右侧状态区均可拖拽调宽。</p></div>
                 </div>
               </div>
             </div>
@@ -1234,6 +1729,7 @@
           <section class="card">
             <div class="doc-workspace">
               <aside class="doc-sidebar">
+                <div class="resize-handle right" data-resize="docSidebar" title="拖拽调整文档列表宽度"></div>
                 <div class="section-title"><h3>当前文件夹</h3><small>A 客户 / 方案</small></div>
                 <button class="doc-list-item active" data-doc-id="delivery">
                   <strong>交付方案 v0.3</strong><span>待核实 · 刚刚编辑</span>
@@ -1259,23 +1755,28 @@
                   <span id="docStatus" class="badge warn">待核实</span>
                 </div>
                 <div class="tabs">
-                  <button class="tab doc-mode-button active" data-doc-mode="readMode">阅读</button>
+                  <button class="tab doc-mode-button active" data-doc-mode="previewMode">预览</button>
                   <button class="tab doc-mode-button" data-doc-mode="editMode">编辑</button>
-                  <button class="tab doc-mode-button" data-doc-mode="previewMode">预览</button>
+                  <button class="tab doc-mode-button" data-doc-mode="splitMode">编辑 + 预览并排</button>
                   <button class="tab doc-mode-button" data-doc-mode="versionMode">版本 / 来源</button>
                 </div>
 
-                <section id="readMode" class="doc-mode active">
-                  <div id="docRead" class="doc-read"></div>
-                </section>
-
                 <section id="editMode" class="doc-mode">
                   <textarea id="docEditor" class="doc-editor" aria-label="Markdown 编辑器"></textarea>
-                  <p class="footer-note">演示点：这里仅模拟 Markdown 编辑，不保存、不连接后端；切到“预览”可看到当前文本渲染效果。</p>
+                  <p class="footer-note">演示点：这里仅模拟 Markdown 编辑，不保存、不连接后端；可切到“预览”或“编辑 + 预览并排”查看渲染效果。</p>
                 </section>
 
-                <section id="previewMode" class="doc-mode">
+                <section id="previewMode" class="doc-mode active">
                   <div id="docPreview" class="doc-preview"></div>
+                </section>
+
+                <section id="splitMode" class="doc-mode">
+                  <p class="mode-hint">推荐默认：成熟知识库 / Markdown 工具通常同时提供 tab 切换和并排预览；窄屏可回退到 tab 切换。</p>
+                  <div class="split-editor">
+                    <textarea id="docSplitEditor" class="doc-editor" aria-label="Markdown 并排编辑器"></textarea>
+                    <button class="split-handle" data-resize="splitEditor" title="拖拽调整编辑区 / 预览区比例" aria-label="拖拽调整编辑区和预览区比例"></button>
+                    <div id="docSplitPreview" class="doc-preview"></div>
+                  </div>
                 </section>
 
                 <section id="versionMode" class="doc-mode">
@@ -1294,7 +1795,7 @@
               </div>
             </div>
           </section>
-          <p class="footer-note">确认点：文档页是否应该继续保持“目录 / 列表 + 阅读 / 编辑 / 预览 + 版本 / 来源”的经典稳定体验？</p>
+          <p class="footer-note">确认点：默认阅读 + tab 切换 + 编辑并排预览是否符合知识库工作台预期？版本和来源入口是否足够明显？</p>
         </section>
 
         <section id="searchPage" class="prototype-page">
@@ -1323,7 +1824,7 @@
               </div>
             </div>
           </section>
-          <p class="footer-note">确认点：搜索页是否足够像生产力工具？筛选、打开来源、加入问答的路径是否清楚？</p>
+          <p class="footer-note">确认点：默认“全部 / 文档 / 术语 / 待核实”筛选、2-3 行摘要、打开来源主操作、加入问答次操作是否清楚？</p>
         </section>
 
         <section id="qaPage" class="prototype-page">
@@ -1348,15 +1849,15 @@
             <div class="card">
               <div class="card-body">
                 <div class="section-title"><h3>来源引用</h3><span class="badge green">必须可追溯</span></div>
-                <div class="stack">
-                  <div class="hint-card"><h4><button class="text-button" data-page-jump="docsPage" data-doc-id="delivery">交付方案 v0.3</button></h4><p>命中：预算调整、风险分级、客户确认。</p></div>
-                  <div class="hint-card"><h4><button class="text-button" data-page-jump="docsPage" data-doc-id="meeting">访谈纪要 07-12</button></h4><p>命中：SLA 口径、客户反馈。</p></div>
-                  <div class="hint-card"><h4><button class="text-button" data-page-jump="termsPage">术语：SLA</button></h4><p>命中：术语解释与别名。</p></div>
+                <div class="source-list">
+                  <div class="source-row"><div><strong><button class="text-button" data-page-jump="docsPage" data-doc-id="delivery">交付方案 v0.3</button></strong><p>预算调整、风险分级、客户确认</p></div><span>当前空间 / 文档</span><span class="badge primary">1</span></div>
+                  <div class="source-row"><div><strong><button class="text-button" data-page-jump="docsPage" data-doc-id="meeting">访谈纪要 07-12</button></strong><p>SLA 口径、客户反馈</p></div><span>当前空间 / 会议</span><span class="badge info">2</span></div>
+                  <div class="source-row"><div><strong><button class="text-button" data-page-jump="termsPage">术语：SLA</button></strong><p>术语解释与别名</p></div><span>术语库 / 已确认</span><span class="badge green">3</span></div>
                 </div>
               </div>
             </div>
           </section>
-          <p class="footer-note">确认点：推荐问题是否应该进入 Phase2？问答页是否要保持独立 Workspace？</p>
+          <p class="footer-note">确认点：默认首页轻量提问、提交后进入独立问答页；来源卡默认展示 3 条，其余折叠，这个路径是否清楚？</p>
         </section>
 
         <section id="termsPage" class="prototype-page">
@@ -1379,7 +1880,7 @@
               </div>
             </div>
           </section>
-          <p class="footer-note">确认点：术语页是否需要和问答、局部关系图形成联动？</p>
+          <p class="footer-note">确认点：术语默认集中在术语页管理；文档 / 问答内仅用轻量徽标或 popover 提示，是否足够不打扰？</p>
         </section>
 
         <section id="reviewPage" class="prototype-page">
@@ -1387,10 +1888,10 @@
             <div class="card-body">
               <div class="section-title"><h2>原型评审页：请直接用白话确认</h2><span class="badge warn">下一步依据</span></div>
               <div class="review-grid">
-                <div class="review-question"><strong>1. 页面切换是否完整？</strong><span>总览 / 文档 / 搜索 / 问答 / 术语 / 评审能否覆盖主要演示路径？</span></div>
-                <div class="review-question"><strong>2. 经典目录是否够用？</strong><span>多层目录折叠 / 展开是否清楚？是否能作为“逃生舱”？</span></div>
-                <div class="review-question"><strong>3. 文档编辑体验是否稳定？</strong><span>阅读 / 编辑 / 预览 / 版本来源是否符合知识库工作台预期？</span></div>
-                <div class="review-question"><strong>4. 是否可进入正式设计？</strong><span>确认后我会回填体验 brief 和 frontend-interaction，不直接写代码。</span></div>
+                <div class="review-question"><strong>1. 默认稿是否可接受？</strong><span>如果没有明显不舒服，默认按 §9.3 推荐稿继续，不需要你逐项做 UI 专业判断。</span></div>
+                <div class="review-question"><strong>2. 页面切换是否完整？</strong><span>总览 / 文档 / 搜索 / 问答 / 术语 / 评审能否覆盖主要演示路径？</span></div>
+                <div class="review-question"><strong>3. 文档编辑体验是否稳定？</strong><span>预览 / 编辑 / 编辑+预览并排、主要区域可调宽，是否符合知识库工作台预期？</span></div>
+                <div class="review-question"><strong>4. 是否进入 08 / 09 回填？</strong><span>确认后只回填计划与验证草案，不直接进入编码。</span></div>
               </div>
               <div class="tabs" style="margin-top: 14px;">
                 <button class="tab" data-page-jump="spacePage">回到总览</button>
@@ -1405,21 +1906,22 @@
       </main>
 
       <aside class="inspector">
+        <div class="resize-handle left" data-resize="inspector" title="拖拽调整右侧状态区宽度"></div>
         <div class="inspector-block">
           <h3>当前页面判断</h3>
           <div class="checklist">
-            <div class="check-item"><span class="checkbox"></span><span>是否接受“空间总览”作为 Phase2 候选入口？</span></div>
-            <div class="check-item"><span class="checkbox"></span><span>是否保留经典目录 / 列表作为默认逃生舱？</span></div>
-            <div class="check-item"><span class="checkbox"></span><span>是否同意局部关系图只在小集合启用？</span></div>
-            <div class="check-item"><span class="checkbox"></span><span>是否接受数字原生配色，不再走牛皮纸公告板风格？</span></div>
+            <div class="check-item"><span class="checkbox"></span><span>默认蓝白主题和 3-4 个首页主入口是否舒服？</span></div>
+            <div class="check-item"><span class="checkbox"></span><span>经典目录 / 列表是否能作为稳定默认路径？</span></div>
+            <div class="check-item"><span class="checkbox"></span><span>目录区、文档列表、编辑预览区、右侧状态区可调宽是否更安心？</span></div>
+            <div class="check-item"><span class="checkbox"></span><span>局部关系图保持候选、不近期实现是否合理？</span></div>
           </div>
         </div>
 
         <div class="inspector-block">
           <h3>候选状态</h3>
-          <p class="subtle">当前不是实现设计。确认后才会回填为正式体验方向，再继续补 Page-ID、Flow-ID、状态、权限、接口依赖和 TC。</p>
+          <p class="subtle">当前是实现前 UI 原型确认版。确认后才回填 `08/09` 的计划和验证草案；若原型暴露新需求、接口或算法变化，必须先回到正式文档链路。</p>
           <div class="stack">
-            <span class="badge primary">UI-G-003：Conditional Go</span>
+            <span class="badge primary">P2-UI-G-006：默认稿一致性</span>
             <span class="badge warn">未进入 08 / 09</span>
             <span class="badge gray">不连接后端</span>
           </div>
@@ -1443,16 +1945,22 @@
     const views = document.querySelectorAll('.view');
     const pageButtons = document.querySelectorAll('.rail-item[data-page]');
     const pages = document.querySelectorAll('.prototype-page');
+    const breadcrumbs = document.getElementById('breadcrumbs');
     const pageLabel = document.getElementById('currentPageLabel');
     const themeButtons = document.querySelectorAll('.theme-button[data-theme]');
+    const globalClassicButton = document.getElementById('globalClassicButton');
+    const globalExploreButton = document.getElementById('globalExploreButton');
+    const layerSearchInput = document.getElementById('layerSearchInput');
+    const layerSearchStatus = document.getElementById('layerSearchStatus');
     const classicButton = document.getElementById('classicButton');
     const exploreButton = document.getElementById('exploreButton');
     const docButtons = document.querySelectorAll('.doc-list-item[data-doc-id]');
     const docModeButtons = document.querySelectorAll('.doc-mode-button[data-doc-mode]');
     const docModes = document.querySelectorAll('.doc-mode');
     const docEditor = document.getElementById('docEditor');
-    const docRead = document.getElementById('docRead');
+    const docSplitEditor = document.getElementById('docSplitEditor');
     const docPreview = document.getElementById('docPreview');
+    const docSplitPreview = document.getElementById('docSplitPreview');
     const docTitle = document.getElementById('docTitle');
     const docPath = document.getElementById('docPath');
     const docStatus = document.getElementById('docStatus');
@@ -1547,11 +2055,59 @@ SLA 指服务等级协议，用于约束响应时间、修复时限和升级路�
       pages.forEach(page => page.classList.toggle('active', page.id === id));
       pageButtons.forEach(button => button.classList.toggle('active', button.dataset.page === id));
       pageLabel.textContent = pageLabels[id] || '??';
+      updateBreadcrumbs(id);
+      applyLayerSearch();
+    }
+
+    function updateBreadcrumbs(id) {
+      const label = pageLabels[id] || '当前页面';
+      const segments = ['<button class="crumb-link" data-page-jump="spacePage">华东客户知识库</button>'];
+      if (id === 'docsPage') {
+        segments.push('<span>›</span><button class="crumb-link" data-page-jump="docsPage" data-doc-id="delivery">A 客户交付</button>');
+        segments.push('<span>›</span><b>文档工作区</b>');
+      } else if (id === 'searchPage') {
+        segments.push('<span>›</span><b>分层搜索</b>');
+      } else if (id === 'qaPage') {
+        segments.push('<span>›</span><b>问答来源</b>');
+      } else if (id === 'termsPage') {
+        segments.push('<span>›</span><b>团队术语</b>');
+      } else if (id === 'reviewPage') {
+        segments.push('<span>›</span><b>原型评审</b>');
+      } else {
+        segments.push('<span>›</span><b>' + label + '</b>');
+      }
+      breadcrumbs.innerHTML = segments.join('');
+      breadcrumbs.querySelectorAll('[data-page-jump]').forEach(button => {
+        button.addEventListener('click', () => {
+          activatePage(button.dataset.pageJump);
+          if (button.dataset.docId) selectDoc(button.dataset.docId);
+        });
+      });
     }
 
     pageButtons.forEach(button => {
       button.addEventListener('click', () => activatePage(button.dataset.page));
     });
+
+    function setGlobalMode(mode) {
+      const isClassic = mode === 'classic';
+      globalClassicButton.classList.toggle('active', isClassic);
+      globalExploreButton.classList.toggle('active', !isClassic);
+      if (isClassic) {
+        classicButton.classList.add('active');
+        exploreButton.classList.remove('active');
+        activatePage('spacePage');
+        activateView('classicView');
+      } else {
+        exploreButton.classList.add('active');
+        classicButton.classList.remove('active');
+        activatePage('spacePage');
+        activateView('overviewView');
+      }
+    }
+
+    globalClassicButton.addEventListener('click', () => setGlobalMode('classic'));
+    globalExploreButton.addEventListener('click', () => setGlobalMode('explore'));
 
     function activateTheme(theme) {
       if (theme === 'light') {
@@ -1595,6 +2151,10 @@ SLA 指服务等级协议，用于约束响应时间、修复时限和升级路�
       if (id === 'previewMode') {
         docPreview.innerHTML = renderMarkdown(docEditor.value);
       }
+      if (id === 'splitMode') {
+        docSplitEditor.value = docEditor.value;
+        docSplitPreview.innerHTML = renderMarkdown(docSplitEditor.value);
+      }
     }
 
     function selectDoc(id) {
@@ -1606,10 +2166,59 @@ SLA 指服务等级协议，用于约束响应时间、修复时限和升级路�
       docVersion.textContent = doc.version;
       docSource.textContent = doc.source;
       docEditor.value = doc.markdown;
-      docRead.innerHTML = renderMarkdown(doc.markdown);
+      docSplitEditor.value = doc.markdown;
       docPreview.innerHTML = renderMarkdown(doc.markdown);
+      docSplitPreview.innerHTML = renderMarkdown(doc.markdown);
       docButtons.forEach(button => button.classList.toggle('active', button.dataset.docId === id));
     }
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function setupResize(handle) {
+      handle.addEventListener('pointerdown', event => {
+        event.preventDefault();
+        handle.classList.add('active');
+        const resizeType = handle.dataset.resize;
+        const startX = event.clientX;
+        const bodyStyle = document.body.style;
+        const current = getComputedStyle(document.body);
+        const startValues = {
+          pane: parseFloat(current.getPropertyValue('--pane-width')) || 300,
+          inspector: parseFloat(current.getPropertyValue('--inspector-width')) || 330,
+          docSidebar: parseFloat(current.getPropertyValue('--doc-sidebar-width')) || 260,
+          splitEditor: parseFloat(current.getPropertyValue('--split-editor-width')) || 50
+        };
+
+        function onMove(moveEvent) {
+          const delta = moveEvent.clientX - startX;
+          if (resizeType === 'pane') {
+            bodyStyle.setProperty('--pane-width', clamp(startValues.pane + delta, 220, 420) + 'px');
+          }
+          if (resizeType === 'inspector') {
+            bodyStyle.setProperty('--inspector-width', clamp(startValues.inspector - delta, 260, 460) + 'px');
+          }
+          if (resizeType === 'docSidebar') {
+            bodyStyle.setProperty('--doc-sidebar-width', clamp(startValues.docSidebar + delta, 210, 420) + 'px');
+          }
+          if (resizeType === 'splitEditor') {
+            bodyStyle.setProperty('--split-editor-width', clamp(startValues.splitEditor + delta / 8, 35, 65) + '%');
+          }
+        }
+
+        function onUp() {
+          handle.classList.remove('active');
+          window.removeEventListener('pointermove', onMove);
+          window.removeEventListener('pointerup', onUp);
+        }
+
+        window.addEventListener('pointermove', onMove);
+        window.addEventListener('pointerup', onUp);
+      });
+    }
+
+    document.querySelectorAll('[data-resize]').forEach(setupResize);
 
     docButtons.forEach(button => {
       button.addEventListener('click', () => selectDoc(button.dataset.docId));
@@ -1621,6 +2230,14 @@ SLA 指服务等级协议，用于约束响应时间、修复时限和升级路�
 
     docEditor.addEventListener('input', () => {
       docPreview.innerHTML = renderMarkdown(docEditor.value);
+      docSplitEditor.value = docEditor.value;
+      docSplitPreview.innerHTML = renderMarkdown(docEditor.value);
+    });
+
+    docSplitEditor.addEventListener('input', () => {
+      docEditor.value = docSplitEditor.value;
+      docPreview.innerHTML = renderMarkdown(docSplitEditor.value);
+      docSplitPreview.innerHTML = renderMarkdown(docSplitEditor.value);
     });
 
     function setTreeDescendantsHidden(id, hidden) {
@@ -1672,6 +2289,21 @@ SLA 指服务等级协议，用于约束响应时间、修复时限和升级路�
       });
     });
 
+    function applyLayerSearch() {
+      const query = (layerSearchInput.value || '').trim().toLowerCase();
+      const searchable = document.querySelectorAll('.tree-row, .project-card, .doc-list-item, .search-result, .term-row');
+      let visible = 0;
+      searchable.forEach(item => {
+        const text = item.textContent.toLowerCase();
+        const match = !query || text.includes(query);
+        item.classList.toggle('search-hidden', !match);
+        if (match) visible += 1;
+      });
+      layerSearchStatus.textContent = query ? '当前层级筛选：' + query + ' · 命中 ' + visible + ' 项' : '当前筛选：全部可见内容';
+    }
+
+    layerSearchInput.addEventListener('input', applyLayerSearch);
+
     document.querySelectorAll('.search-filter').forEach(button => {
       button.addEventListener('click', () => {
         const filter = button.dataset.searchFilter;
@@ -1704,15 +2336,20 @@ SLA 指服务等级协议，用于约束响应时间、修复时限和升级路�
     classicButton.addEventListener('click', () => {
       classicButton.classList.add('active');
       exploreButton.classList.remove('active');
+      globalClassicButton.classList.add('active');
+      globalExploreButton.classList.remove('active');
       activateView('classicView');
     });
 
     exploreButton.addEventListener('click', () => {
       exploreButton.classList.add('active');
       classicButton.classList.remove('active');
+      globalExploreButton.classList.add('active');
+      globalClassicButton.classList.remove('active');
       activateView('overviewView');
     });
 
+    updateBreadcrumbs('spacePage');
     selectDoc('delivery');
   </script>
 </body>

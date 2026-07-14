@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LUMEN v0.2 · 分层信息架构原型</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F6F7F9;--bg-card:#FFFFFF;--bg-sidebar:#F0F1F5;--bg-topbar:#FFFFFF;
+  --text:#1B1F27;--text2:#5F6775;--text3:#9CA3AF;
+  --brand:#4F46E5;--brand-light:#EEF0FF;--brand-dim:#C7C9FA;
+  --danger:#E5484D;--danger-light:#FEF0F0;
+  --warning:#F5A623;--warning-light:#FFF8EB;
+  --info:#2F80ED;--info-light:#EEF5FD;
+  --border:#E5E7EB;--border-focus:#C7CCD6;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.04);--shadow-md:0 2px 8px rgba(0,0,0,.06);
+  --radius-sm:6px;--radius-md:10px;
+  --font-display:'Space Grotesk',system-ui,sans-serif;
+  --font-body:Inter,system-ui,sans-serif;
+  --font-mono:'JetBrains Mono',Consolas,monospace;
+}
+html,body{height:100%;overflow:hidden;font-family:var(--font-body);color:var(--text);background:var(--bg);font-size:14px;line-height:1.5}
+.app{display:flex;flex-direction:column;height:100vh}
+/* Topbar */
+.topbar{display:flex;align-items:center;gap:8px;padding:8px 16px;background:var(--bg-topbar);border-bottom:1px solid var(--border);z-index:200;flex-shrink:0;height:52px}
+.topbar-brand{font-family:var(--font-display);font-weight:700;font-size:16px;color:var(--brand);letter-spacing:-.01em}
+.topbar-sep{width:1px;height:20px;background:var(--border);margin:0 4px}
+.breadcrumbs{display:flex;align-items:center;gap:0;font-size:13px;margin-right:auto;overflow:hidden}
+.bc-item{color:var(--text2);cursor:pointer;padding:4px 8px;border-radius:4px;white-space:nowrap}
+.bc-item:hover{color:var(--brand);background:var(--brand-light)}
+.bc-item.active{color:var(--text);font-weight:600;cursor:default}
+.bc-item.active:hover{background:transparent;color:var(--text)}
+.bc-arrow{color:var(--text3);flex-shrink:0;margin:0 1px;font-size:10px}
+.topbar-actions{display:flex;align-items:center;gap:6px;margin-left:auto}
+.mode-switch{display:flex;background:var(--bg-sidebar);border-radius:20px;padding:2px;border:1px solid var(--border)}
+.mode-opt{padding:5px 14px;border-radius:18px;font-size:12px;cursor:pointer;color:var(--text2);font-weight:500;white-space:nowrap}
+.mode-opt.active{background:var(--bg-card);color:var(--brand);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.btn{padding:6px 12px;border:1px solid var(--border);border-radius:18px;background:var(--bg-card);color:var(--text2);font-size:12px;cursor:pointer;display:flex;align-items:center;gap:4px;font-family:var(--font-body)}
+.btn:hover{background:var(--bg-sidebar);color:var(--text);border-color:var(--border-focus)}
+.btn-icon{width:32px;height:32px;padding:0;justify-content:center;border-radius:50%;font-size:15px}
+.search-box{display:flex;align-items:center;background:var(--bg-sidebar);border:1px solid var(--border);border-radius:18px;padding:4px 4px 4px 12px}
+.search-box:focus-within{border-color:var(--brand)}
+.search-box input{border:none;outline:none;background:transparent;font-size:12px;width:160px;color:var(--text)}
+.search-box input::placeholder{color:var(--text3)}
+/* Main */
+.main{display:flex;flex:1;overflow:hidden}
+.sidebar{width:260px;background:var(--bg-sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;transition:width .25s}
+.sidebar.collapsed{width:0;border-right-color:transparent;overflow:hidden}
+.sidebar-header{padding:12px 16px;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
+.sidebar-tree{flex:1;padding:4px 8px}
+.tree-item{display:flex;align-items:center;gap:6px;padding:7px 10px;border-radius:5px;cursor:pointer;font-size:13px;color:var(--text2);white-space:nowrap}
+.tree-item:hover{background:var(--brand-light);color:var(--brand)}
+.tree-item.active{background:var(--brand-light);color:var(--brand);font-weight:600}
+.tree-item .icon{font-size:14px;width:20px;text-align:center;flex-shrink:0}
+.tree-item .badge{margin-left:auto;font-size:10px;color:var(--text3)}
+.tree-item.nested{margin-left:20px;width:calc(100% - 20px)}
+.tree-section{display:flex;align-items:center;gap:6px;padding:7px 10px;border-radius:5px;cursor:pointer;font-size:13px;color:var(--text2);white-space:nowrap}
+.tree-section:hover{background:var(--brand-light);color:var(--brand)}
+.tree-section .icon{font-size:12px;width:16px;transition:transform .2s}
+.tree-section.open .icon{transform:rotate(90deg)}
+.tree-sub{display:none}
+.tree-sub.open{display:block}
+/* Content */
+.content{flex:1;overflow-y:auto;padding:24px}
+.section-title{font-size:14px;font-weight:600;color:var(--text);padding:0 0 12px;border-bottom:1px solid var(--border);margin-bottom:12px}
+/* Classic list */
+.classic-item{display:flex;align-items:center;gap:10px;padding:12px;border-radius:var(--radius-sm);cursor:pointer;font-size:13px;border-bottom:1px solid transparent}
+.classic-item:hover{background:var(--bg-sidebar);border-bottom-color:var(--border)}
+.classic-item .item-icon{font-size:18px;flex-shrink:0}
+.classic-item .item-name{flex:1;font-weight:500;color:var(--text)}
+.classic-item .item-meta{display:flex;align-items:center;gap:16px;flex-shrink:0}
+.classic-item .item-stat{font-size:11px;color:var(--text3);font-family:var(--font-mono)}
+.classic-item .item-stat.danger{color:var(--danger);font-weight:500}
+/* Tiles */
+.tiles-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.tile{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:20px;cursor:pointer;box-shadow:var(--shadow-sm);position:relative;transition:all .15s}
+.tile:hover{box-shadow:var(--shadow-md);border-color:var(--brand-dim);transform:translateY(-1px)}
+.tile .tile-icon{font-size:24px;margin-bottom:8px}
+.tile .tile-name{font-family:var(--font-display);font-size:15px;font-weight:600;margin-bottom:8px}
+.tile .tile-stats{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px}
+.tile .tile-stat{font-size:11px;color:var(--text3);font-family:var(--font-mono)}
+.tile .tile-stat.warn{color:var(--danger)}
+.tile .tile-activity{display:flex;align-items:center;gap:8px}
+.tile .tile-activity-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
+.tile .tile-activity-bar{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.tile .tile-activity-fill{height:100%;background:var(--brand);border-radius:2px;transition:width .4s}
+.tile .tile-conflict{position:absolute;top:14px;right:14px;width:20px;height:20px;border-radius:50%;background:var(--danger);color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;font-weight:700}
+/* Mini-graph in tile */
+.tile-minigraph{position:absolute;top:16px;right:40px;opacity:.08;pointer-events:none}
+/* Doc table */
+.doc-table{width:100%;border-collapse:collapse;font-size:13px}
+.doc-table th{padding:10px 12px;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--border);text-align:left;cursor:pointer;user-select:none}
+.doc-table th:hover{color:var(--brand)}
+.doc-table th.sorted{color:var(--brand)}
+.doc-table td{padding:10px 12px;border-bottom:1px solid var(--border)}
+.doc-table tr{cursor:pointer}
+.doc-table tr:hover{background:var(--bg-sidebar)}
+.doc-name{font-weight:500}
+.doc-type-label{font-size:11px;padding:2px 8px;border-radius:10px;background:var(--bg-sidebar);color:var(--text2)}
+.doc-tag{font-size:10px;padding:1px 6px;border-radius:8px;display:inline-block;margin-right:3px}
+.doc-tag.warn{background:var(--danger-light);color:var(--danger)}
+.doc-tag.info{background:var(--info-light);color:var(--info)}
+.conflict-dot{width:7px;height:7px;border-radius:50%;background:var(--danger);display:inline-block;margin-right:4px;vertical-align:middle}
+/* Graph toggle */
+.graph-toggle{border:1px solid var(--brand-dim);border-radius:18px;background:var(--brand-light);color:var(--brand);font-size:12px;cursor:pointer;font-weight:500;padding:6px 14px;margin-bottom:12px;font-family:var(--font-body)}
+.graph-toggle:hover{background:var(--brand-dim)}
+/* Degradation banner */
+.degradation-banner{display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--warning-light);border:1px solid var(--warning);border-radius:var(--radius-sm);font-size:12px;color:var(--warning);margin-bottom:12px}
+/* Graph */
+.graph-container{position:relative;width:100%;height:420px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;margin:8px 0;display:none}
+.graph-container.open{display:block}
+.graph-canvas{position:absolute;inset:0}
+.graph-node{position:absolute;cursor:pointer}
+.graph-node-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;font-size:12px;box-shadow:var(--shadow-sm);white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis}
+.graph-node-card:hover{box-shadow:var(--shadow-md);border-color:var(--brand-dim)}
+.graph-node-card.conflict{border-color:var(--danger);border-width:2px}
+.graph-node-card .gn-title{font-weight:600;font-size:11px}
+.graph-node-card .gn-meta{font-size:10px;color:var(--text3);margin-top:2px}
+.graph-legend{position:absolute;bottom:12px;right:12px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 12px;font-size:10px;color:var(--text3);display:flex;gap:12px}
+/* Reader */
+.reader-overlay{position:fixed;inset:0;background:var(--bg);z-index:300;transform:translateY(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column}
+.reader-overlay.open{transform:translateY(0)}
+.reader-toolbar{padding:8px 16px;border-bottom:1px solid var(--border);background:var(--bg-topbar);display:flex;align-items:center;gap:12px}
+.reader-toolbar .back-btn{padding:5px 12px;border:1px solid var(--border);border-radius:16px;background:var(--bg-card);font-size:12px;cursor:pointer;color:var(--text2)}
+.reader-toolbar .back-btn:hover{background:var(--bg-sidebar)}
+.reader-toolbar .reader-title{font-family:var(--font-display);font-weight:600;font-size:15px;flex:1}
+.reader-body{flex:1;overflow-y:auto;padding:40px;max-width:760px;margin:0 auto;width:100%}
+.reader-body h1{font-family:var(--font-display);font-size:22px;margin-bottom:16px}
+.reader-body .reader-meta{display:flex;gap:16px;margin-bottom:24px;font-size:12px;color:var(--text3);font-family:var(--font-mono)}
+.reader-body p{line-height:1.8;margin-bottom:14px;color:var(--text2)}
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;padding:10px 22px;border-radius:20px;font-size:13px;z-index:500;opacity:0;transition:opacity .25s;pointer-events:none}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="topbar">
+    <span class="topbar-brand">LUMEN</span>
+    <span class="topbar-sep"></span>
+    <nav class="breadcrumbs" id="breadcrumbs"></nav>
+    <div class="topbar-actions">
+      <div class="mode-switch" id="modeSwitch">
+        <div class="mode-opt active" data-mode="classic">📋 经典</div>
+        <div class="mode-opt" data-mode="explore">🧭 探索</div>
+      </div>
+      <button class="btn btn-icon" id="btnSidebar" title="目录树">📂</button>
+      <div class="search-box">
+        <span>🔍</span>
+        <input type="text" id="searchInput" placeholder="搜索文档...">
+      </div>
+    </div>
+  </header>
+
+  <div class="main">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">📁 目录树 <span style="font-size:10px;font-weight:400;text-transform:none">· 逃生舱</span></div>
+      <div class="sidebar-tree" id="sidebarTree"></div>
+    </aside>
+    <div class="content" id="content"></div>
+  </div>
+
+  <div class="reader-overlay" id="readerOverlay">
+    <div class="reader-toolbar">
+      <button class="back-btn" id="readerBack">← 回到列表</button>
+      <span class="reader-title" id="readerTitle"></span>
+    </div>
+    <div class="reader-body" id="readerBody"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+// ─── DATA ──────────────────────────────────────────
+const D = {
+  'brightlite-team': {
+    label: 'BrightLite 团队空间',
+    projects: [
+      { id:'p1',name:'智慧园区照明',icon:'🏗️',docs:86,conflicts:3,updated:'今天',activity:0.85,subs:[
+        { id:'p1s1',name:'接口与协议方案',icon:'🔌',docs:18,conflicts:1,updated:'上周',activity:0.6,docsList:[
+          {id:'d1',name:'DALI 2.0 接口协议规格书',type:'规格书',author:'Mark',date:'2026-07-10',tags:['接口','协议'],conflict:'LED驱动芯片交期分析'},
+          {id:'d2',name:'MQTT 物联网接入方案 v3',type:'方案',author:'Alice',date:'2026-07-09',tags:['IoT','MQTT']},
+          {id:'d3',name:'Zigbee vs BLE Mesh 对比测试',type:'报告',author:'Mark',date:'2026-07-08',tags:['通信','对比']},
+          {id:'d4',name:'网关设备选型评估',type:'评估',author:'Alice',date:'2026-07-07',tags:['硬件','网关']},
+          {id:'d5',name:'API 接口文档 v1.6',type:'文档',author:'Mark',date:'2026-07-06',tags:['API','开发']},
+          {id:'d6',name:'第三方集成交付清单',type:'清单',author:'Lily',date:'2026-07-05',tags:['交付','集成']},
+          {id:'d7',name:'DMX512 调光协议兼容性笔记',type:'笔记',author:'Mark',date:'2026-07-04',tags:['调光','兼容']},
+          {id:'d8',name:'传感器数据采集接口定义',type:'规格书',author:'Alice',date:'2026-07-03',tags:['传感器','数据']},
+          {id:'d9',name:'协议层安全审计报告',type:'报告',author:'Kira',date:'2026-07-02',tags:['安全','审计'],conflict:'客诉处理·接口不稳定'},
+          {id:'d10',name:'固件 OTA 升级方案',type:'方案',author:'Mark',date:'2026-07-01',tags:['固件','OTA']},
+          {id:'d11',name:'现场部署接口调试纪要',type:'纪要',author:'Lily',date:'2026-06-30',tags:['部署','调试']},
+          {id:'d12',name:'协议版本兼容矩阵 v2',type:'矩阵',author:'Alice',date:'2026-06-29',tags:['版本','兼容']},
+          {id:'d13',name:'Wi-Fi 6 接入层方案初稿',type:'初稿',author:'Mark',date:'2026-06-28',tags:['WiFi','接入']},
+          {id:'d14',name:'客户 POC 环境接口适配记录',type:'记录',author:'Lily',date:'2026-06-27',tags:['POC','适配']},
+          {id:'d15',name:'接口性能基准测试报告',type:'报告',author:'Mark',date:'2026-06-26',tags:['性能','测试']},
+          {id:'d16',name:'RS-485 老旧设备兼容方案',type:'方案',author:'Alice',date:'2026-06-25',tags:['兼容','老旧']},
+          {id:'d17',name:'软网关 SDK 开发环境搭建',type:'文档',author:'Mark',date:'2026-06-24',tags:['SDK','环境']},
+          {id:'d18',name:'边缘计算节点通信规范',type:'规范',author:'Alice',date:'2026-06-23',tags:['边缘计算','规范']}
+        ]},
+        { id:'p1s2',name:'现场勘察',icon:'🏗️',docs:12,conflicts:0,updated:'上周',activity:0.4,docsList:[
+          {id:'d19',name:'A区1号楼勘察报告',type:'报告',author:'Lily',date:'2026-07-08',tags:['勘察','A区']},
+          {id:'d20',name:'C区地下车库信号覆盖评估',type:'评估',author:'Mark',date:'2026-07-05',tags:['信号','车库']},
+          {id:'d21',name:'二期预留点位清单',type:'清单',author:'Alice',date:'2026-07-01',tags:['二期','预留']}
+        ]},
+        { id:'p1s3',name:'客户沟通',icon:'💬',docs:8,conflicts:1,updated:'昨天',activity:0.7,docsList:[
+          {id:'d22',name:'张总·合同条款反馈',type:'纪要',author:'Lily',date:'2026-07-11',tags:['客户','合同']},
+          {id:'d23',name:'客诉处理·接口不稳定',type:'客诉',author:'Lily',date:'2026-07-10',tags:['客诉','接口'],conflict:'协议层安全审计报告'},
+          {id:'d24',name:'二期需求变更沟通记录',type:'纪要',author:'Lily',date:'2026-07-08',tags:['二期','需求']}
+        ]},
+        { id:'p1s4',name:'测试报告',icon:'🧪',docs:15,conflicts:0,updated:'3天前',activity:0.5,docsList:(function(){
+          var a=[];for(var i=0;i<15;i++)a.push({id:'d100'+i,name:'阶段性测试报告·'+(i+1)+'号',type:'报告',author:'Mark',date:'2026-07-'+(12-i).toString().padStart(2,'0'),tags:['测试','阶段']});return a;
+        })()}
+      ]},
+      { id:'p2',name:'竞品与市场',icon:'🔍',docs:12,conflicts:0,updated:'上周',activity:0.3,subs:[
+        { id:'p2s1',name:'竞品跟踪',icon:'🔍',docs:8,conflicts:0,updated:'上周',activity:0.35,docsList:[
+          {id:'d30',name:'竞品 BrightLED 价格变动分析',type:'情报',author:'Kira',date:'2026-07-08',tags:['竞品','价格']},
+          {id:'d31',name:'Philips 智慧照明方案拆解',type:'拆解',author:'Kira',date:'2026-07-05',tags:['竞品','方案']},
+          {id:'d32',name:'竞品功能对比矩阵 v4',type:'矩阵',author:'Kira',date:'2026-07-01',tags:['竞品','功能']}
+        ]},
+        { id:'p2s2',name:'市场调研',icon:'📊',docs:4,conflicts:0,updated:'2周前',activity:0.2,docsList:[
+          {id:'d33',name:'2026 H1 智慧园区市场报告',type:'报告',author:'Kira',date:'2026-06-28',tags:['市场','H1']},
+          {id:'d34',name:'园区照明招标信息汇总',type:'汇总',author:'Kira',date:'2026-06-20',tags:['招标','信息']}
+        ]}
+      ]},
+      { id:'p3',name:'二期工程预研',icon:'🚀',docs:41,conflicts:2,updated:'今天',activity:0.9,subs:[
+        { id:'p3s1',name:'硬件方案',icon:'🔧',docs:20,conflicts:1,updated:'今天',activity:0.8,docsList:(function(){
+          var names=['LED驱动','散热','电源','传感器模组','控制板','外壳设计','光学透镜','接线端子','防护等级','EMC测试','可靠性','老化测试','BOM成本','供应商评估','PCB Layout','热仿真','振动测试','防水测试','认证清单','量产可行性'];
+          var a=[];for(var i=0;i<20;i++)a.push({id:'d200'+i,name:'预研·硬件·'+names[i],type:'文档',author:(i%3===0?'Mark':'Alice'),date:'2026-07-'+(10-i%7).toString().padStart(2,'0'),tags:['硬件','预研'],conflict:i===2?'散热测试不达标':null});return a;
+        })()},
+        { id:'p3s2',name:'软件架构',icon:'💻',docs:15,conflicts:1,updated:'昨天',activity:0.7,docsList:(function(){
+          var names=['系统架构','微服务划分','数据流设计','API 网关','消息队列','缓存策略','数据库选型','容器化方案','CI/CD','监控告警','日志方案','权限模型','多租户','灰度发布','灾备方案'];
+          var a=[];for(var i=0;i<15;i++)a.push({id:'d300'+i,name:'预研·软件·'+names[i],type:'文档',author:'Mark',date:'2026-07-'+(9-i%5).toString().padStart(2,'0'),tags:['软件','预研'],conflict:i===0?'API网关性能瓶颈':null});return a;
+        })()}
+      ]},
+      { id:'p4',name:'客户沟通存档',icon:'💬',docs:23,conflicts:1,updated:'今天',activity:0.7,subs:[
+        { id:'p4s1',name:'张总公司',icon:'💬',docs:15,conflicts:1,updated:'今天',activity:0.75,docsList:(function(){
+          var names=['需求评审','方案汇报','进度同步','问题反馈','付款确认','现场协调','验收标准','变更申请','培训安排','售后约定','二期洽谈','合同修改','增补协议','联络函','拜访记录'];
+          var a=[];for(var i=0;i<15;i++)a.push({id:'d400'+i,name:names[i]+'·张总',type:'纪要',author:'Lily',date:'2026-07-'+(12-i%8).toString().padStart(2,'0'),tags:['张总','沟通'],conflict:i===3?'合同条款不一致':null});return a;
+        })()}
+      ]},
+      { id:'p5',name:'归档/其他',icon:'📦',docs:9,conflicts:0,updated:'2周前',activity:0.1,subs:[]}
+    ]
+  },
+  'nova-internal': {
+    label: 'Nova 内部空间',
+    projects: [
+      { id:'np1',name:'知识图谱引擎',icon:'🧠',docs:54,conflicts:2,updated:'今天',activity:0.85,subs:[
+        { id:'np1s1',name:'核心架构',icon:'🧠',docs:20,conflicts:1,updated:'今天',activity:0.8,docsList:(function(){
+          var names=['架构设计','数据模型','索引方案','查询引擎','推理规则','实体链接','关系抽取','本体定义','图算法','缓存层','分布式','一致性','容错','监控','Schema','导入导出','API设计','SDK','性能优化','安全机制'];
+          var a=[];for(var i=0;i<20;i++)a.push({id:'n100'+i,name:'图谱·'+names[i],type:'文档',author:'Mark',date:'2026-07-'+(10-i%6).toString().padStart(2,'0'),tags:['图谱','架构'],conflict:i===0?'索引性能下降':null});return a;
+        })()}
+      ]}
+    ]
+  }
+};
+
+// ─── STATE ────────────────────────────────────────
+var currentSpace = 'brightlite-team';
+var currentMode = 'classic';
+var navPath = [];
+var showGraph = false;
+var sortField = 'date';
+var sortDesc = true;
+var searchQuery = '';
+
+// ─── DOM REFS ─────────────────────────────────────
+var $ = function(id){ return document.getElementById(id); };
+var content = $('content');
+var breadcrumbs = $('breadcrumbs');
+var sidebar = $('sidebar');
+var sidebarTree = $('sidebarTree');
+var searchInput = $('searchInput');
+var toast = $('toast');
+var readerOverlay = $('readerOverlay');
+var readerTitle = $('readerTitle');
+var readerBody = $('readerBody');
+var modeSwitch = $('modeSwitch');
+
+// ─── NAVIGATION ───────────────────────────────────
+function go(target) {
+  var parts = target.split('.');
+  navPath = [];
+  var space = D[currentSpace];
+
+  if (parts[0] === 'space') {
+    if (parts.length === 1) {
+      // space root
+      renderBreadcrumbs();
+      renderSidebarTree();
+      renderContent();
+      return;
+    }
+    var pi = parseInt(parts[1]);
+    var proj = space.projects[pi];
+    if (!proj) { renderContent(); return; }
+    navPath.push({type:'project', data:proj, idx:pi});
+    if (parts.length === 2) {
+      renderBreadcrumbs();
+      renderSidebarTree();
+      renderContent();
+      return;
+    }
+    var si = parseInt(parts[2]);
+    var sub = proj.subs[si];
+    if (!sub) { renderContent(); return; }
+    navPath.push({type:'subdir', data:sub, idx:si, parentIdx:pi});
+    if (parts.length === 3) {
+      renderBreadcrumbs();
+      renderSidebarTree();
+      renderContent();
+      return;
+    }
+  }
+  renderBreadcrumbs();
+  renderSidebarTree();
+  renderContent();
+}
+
+function getLeafDocs() {
+  if (navPath.length === 0) return null;
+  var last = navPath[navPath.length - 1];
+  return (last.data && last.data.docsList) ? last.data.docsList : null;
+}
+
+function getLevel() {
+  if (navPath.length === 0) return 'space';
+  return navPath[navPath.length - 1].type;
+}
+
+// ─── BREADCRUMBS ──────────────────────────────────
+function renderBreadcrumbs() {
+  var h = '<span class="bc-item active" onclick="APP.go(\'space\')">'+currentSpace+'</span>';
+  for (var i = 0; i < navPath.length; i++) {
+    var n = navPath[i];
+    var label = n.data.name;
+    h += '<span class="bc-arrow">›</span>';
+    if (i === navPath.length - 1) {
+      h += '<span class="bc-item active">'+label+'</span>';
+    } else {
+      var pathTo = 'space';
+      for (var j = 0; j <= i; j++) {
+        pathTo += '.' + navPath[j].idx;
+      }
+      h += '<span class="bc-item" onclick="APP.go(\''+pathTo+'\')">'+label+'</span>';
+    }
+  }
+  breadcrumbs.innerHTML = h;
+}
+
+// ─── SIDEBAR TREE ─────────────────────────────────
+function renderSidebarTree() {
+  var space = D[currentSpace];
+  var h = buildTreeHTML(space.projects, 0);
+  sidebarTree.innerHTML = h;
+}
+
+function buildTreeHTML(items, depth) {
+  var h = '';
+  for (var i = 0; i < items.length; i++) {
+    var item = items[i];
+    var hasKids = item.subs && item.subs.length > 0;
+    var hasDocs = item.docsList && item.docsList.length > 0;
+    if (hasKids) {
+      h += '<div class="tree-section" style="margin-left:'+(depth*20)+'px" onclick="APP._toggleSection(this)">';
+      h += '<span class="icon">▶</span><span>'+item.icon+' '+item.name+'</span>';
+      h += '<span class="badge">'+item.docs+'</span></div>';
+      h += '<div class="tree-sub">';
+      h += buildTreeHTML(item.subs, depth + 1);
+      h += '</div>';
+    } else {
+      h += '<div class="tree-item" style="margin-left:'+(depth*20)+'px" onclick="APP._onTreeItem(\''+item.id+'\','+(depth)+')">';
+      h += '<span class="icon">'+(item.icon||'📁')+'</span><span>'+item.name+'</span>';
+      h += '<span class="badge">'+item.docs+'</span></div>';
+    }
+  }
+  return h;
+}
+
+function _toggleSection(el) {
+  el.classList.toggle('open');
+  el.nextElementSibling.classList.toggle('open');
+}
+
+function _onTreeItem(id, depth) {
+  // Find which project/subdir this ID maps to
+  var space = D[currentSpace];
+  for (var i = 0; i < space.projects.length; i++) {
+    var p = space.projects[i];
+    if (p.subs && p.subs.length) {
+      for (var j = 0; j < p.subs.length; j++) {
+        if (p.subs[j].id === id) {
+          go('space.'+i+'.'+j);
+          return;
+        }
+      }
+    }
+    if (p.id === id) {
+      go('space.'+i);
+      return;
+    }
+  }
+}
+
+// ─── CONTENT RENDER ───────────────────────────────
+function renderContent() {
+  var docs = getLeafDocs();
+  if (docs) {
+    renderDocTable(docs);
+    return;
+  }
+  if (currentMode === 'explore') {
+    renderExplore();
+  } else {
+    renderClassic();
+  }
+}
+
+// ─── CLASSIC MODE ─────────────────────────────────
+function renderClassic() {
+  var level = getLevel();
+  var space = D[currentSpace];
+
+  if (level === 'space') {
+    var h = '<div class="section-title">📁 '+space.label+' · 项目列表</div>';
+    for (var i = 0; i < space.projects.length; i++) {
+      var p = space.projects[i];
+      h += '<div class="classic-item" onclick="APP.go(\'space.'+i+'\')">';
+      h += '<span class="item-icon">'+p.icon+'</span>';
+      h += '<span class="item-name">'+p.name+'</span>';
+      h += '<div class="item-meta">';
+      h += '<span class="item-stat">'+p.docs+' 文档</span>';
+      if (p.conflicts > 0) h += '<span class="item-stat danger">⚠ '+p.conflicts+' 冲突</span>';
+      h += '<span class="item-stat">'+p.updated+'</span></div></div>';
+    }
+    content.innerHTML = h;
+  } else {
+    var node = navPath[navPath.length - 1].data;
+    if (node.subs && node.subs.length > 0) {
+      var pi = navPath[0].idx;
+      var h = '<div class="section-title">📁 '+node.name+' · 子目录</div>';
+      for (var j = 0; j < node.subs.length; j++) {
+        var s = node.subs[j];
+        h += '<div class="classic-item" onclick="APP.go(\'space.'+pi+'.'+j+'\')">';
+        h += '<span class="item-icon">'+(s.icon||'📁')+'</span>';
+        h += '<span class="item-name">'+s.name+'</span>';
+        h += '<div class="item-meta">';
+        h += '<span class="item-stat">'+s.docs+' 文档</span>';
+        if (s.conflicts > 0) h += '<span class="item-stat danger">⚠ '+s.conflicts+' 冲突</span>';
+        h += '<span class="item-stat">'+s.updated+'</span></div></div>';
+      }
+      content.innerHTML = h;
+    }
+  }
+}
+
+// ─── EXPLORE MODE ─────────────────────────────────
+function renderExplore() {
+  var level = getLevel();
+  var space = D[currentSpace];
+
+  if (level === 'space') {
+    var h = '<div class="tiles-grid">';
+    for (var i = 0; i < space.projects.length; i++) {
+      h += tileHTML(space.projects[i], i, null);
+    }
+    h += '</div>';
+    content.innerHTML = h;
+  } else {
+    var node = navPath[navPath.length - 1].data;
+    var pi = navPath[0].idx;
+    if (node.subs && node.subs.length > 0) {
+      var h = '<div class="tiles-grid">';
+      for (var j = 0; j < node.subs.length; j++) {
+        h += tileHTML(node.subs[j], j, pi);
+      }
+      h += '</div>';
+      content.innerHTML = h;
+    }
+  }
+}
+
+function tileHTML(item, idx, parentIdx) {
+  var ap = Math.round((item.activity || 0.5) * 100);
+  var path = parentIdx !== null ? ('space.' + parentIdx + '.' + idx) : ('space.' + idx);
+  var hasChildren = item.subs && item.subs.length > 0;
+  return '<div class="tile" onclick="'+(hasChildren?'APP.go(\''+path+'\')':'')+'">' +
+    (item.conflicts > 0 ? '<div class="tile-conflict">!</div>' : '') +
+    '<div class="tile-icon">'+(item.icon||'📁')+'</div>' +
+    '<div class="tile-name">'+item.name+'</div>' +
+    '<div class="tile-stats">' +
+      '<span class="tile-stat">📄 '+item.docs+' 份文档</span>' +
+      (item.conflicts > 0 ? '<span class="tile-stat warn">⚠ '+item.conflicts+' 处待核实冲突</span>' : '') +
+      '<span class="tile-stat">🕐 '+item.updated+'</span>' +
+    '</div>' +
+    '<div class="tile-activity">' +
+      '<span class="tile-activity-label">活跃度</span>' +
+      '<div class="tile-activity-bar"><div class="tile-activity-fill" style="width:'+ap+'%"></div></div>' +
+    '</div>' +
+    '<svg class="tile-minigraph" viewBox="0 0 40 40" width="40" height="40">' +
+      '<circle cx="10" cy="20" r="3" fill="#4F46E5"/><circle cx="22" cy="12" r="2.5" fill="#2F80ED"/>' +
+      '<circle cx="32" cy="24" r="3.5" fill="#4F46E5"/><circle cx="16" cy="34" r="2" fill="#2F80ED"/>' +
+      '<line x1="10" y1="20" x2="22" y2="12" stroke="#4F46E5" stroke-width="1"/>' +
+      '<line x1="10" y1="20" x2="32" y2="24" stroke="#4F46E5" stroke-width="1"/>' +
+      '<line x1="32" y1="24" x2="16" y2="34" stroke="#4F46E5" stroke-width="1"/>' +
+    '</svg></div>';
+}
+
+// ─── DOCUMENT TABLE ───────────────────────────────
+function renderDocTable(docs) {
+  var total = docs.length;
+  var filtered = docs;
+  if (searchQuery) {
+    var q = searchQuery.toLowerCase();
+    filtered = docs.filter(function(d) {
+      return d.name.toLowerCase().indexOf(q) >= 0 ||
+        d.tags.some(function(t){ return t.toLowerCase().indexOf(q) >= 0; }) ||
+        d.type.indexOf(q) >= 0 ||
+        d.author.toLowerCase().indexOf(q) >= 0;
+    });
+  }
+  // Sort
+  filtered = filtered.slice().sort(function(a,b){
+    if (sortField === 'date') {
+      return sortDesc ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date);
+    }
+    return sortDesc ? b.name.localeCompare(a.name) : a.name.localeCompare(b.name);
+  });
+  var conflictCount = filtered.filter(function(d){ return d.conflict; }).length;
+
+  // Degradation
+  var degrad = total <= 18 ? 'fine' : total <= 80 ? 'warn' : 'blocked';
+
+  var graphHTML = '';
+  if (degrad === 'fine') {
+    graphHTML = '<button class="graph-toggle" onclick="APP._toggleGraph('+total+')">' +
+      (showGraph ? '✕ 关闭关系图' : '🔗 以关系图查看') + '（'+total+' 份文档，关系图可用）</button>' +
+      '<div class="graph-container'+(showGraph?' open':'')+'" id="graphContainer"></div>';
+  } else if (degrad === 'warn') {
+    graphHTML = '<div class="degradation-banner">⚠️ <strong>文档量较大（'+total+' 份）</strong>——关系图需要先聚类简化次要节点。</div>' +
+      '<button class="graph-toggle" onclick="APP._toggleGraphClustered('+total+')">' +
+      (showGraph ? '✕ 关闭关系图' : '🔗 以关系图查看（含聚合）') + '</button>' +
+      '<div class="graph-container'+(showGraph?' open':'')+'" id="graphContainer"></div>';
+  } else {
+    graphHTML = '<div class="degradation-banner">⚠️ <strong>文档量超过 80 份</strong>——关系图入口已关闭。请先按标签/时间窗口/关键词缩小范围。</div>';
+  }
+
+  var nodeName = (navPath.length > 0 && navPath[navPath.length-1].data) ? navPath[navPath.length-1].data.name : '文档列表';
+
+  var h = '<div class="section-title">📄 '+nodeName+' · 文档列表 <span style="font-size:11px;color:var(--text3);font-weight:400">（共 '+total+' 份，'+conflictCount+' 处冲突）</span></div>';
+  h += graphHTML;
+  h += '<table class="doc-table"><thead><tr>' +
+    '<th class="'+(sortField==='name'?'sorted':'')+'" onclick="APP._sortDocs(\'name\')">名称 '+(sortField==='name'?(sortDesc?'▾':'▴'):'')+'</th>' +
+    '<th>类型</th><th>作者</th><th>标签</th>' +
+    '<th class="'+(sortField==='date'?'sorted':'')+'" onclick="APP._sortDocs(\'date\')">更新时间 '+(sortField==='date'?(sortDesc?'▾':'▴'):'')+'</th>' +
+    '<th>状态</th></tr></thead><tbody>';
+
+  for (var i = 0; i < filtered.length; i++) {
+    var d = filtered[i];
+    var tagsHTML = '';
+    for (var j = 0; j < d.tags.length; j++) {
+      var tc = d.tags[j] === '⚠' ? 'warn' : (d.tags[j] === '竞品' || d.tags[j] === '安全' ? 'info' : '');
+      tagsHTML += '<span class="doc-tag '+tc+'">'+d.tags[j]+'</span>';
+    }
+    h += '<tr onclick="APP._openDoc(\''+d.id+'\')"><td class="doc-name">'+d.name+'</td>' +
+      '<td><span class="doc-type-label">'+d.type+'</span></td>' +
+      '<td>'+d.author+'</td>' +
+      '<td>'+tagsHTML+'</td>' +
+      '<td style="font-family:var(--font-mono);font-size:11px">'+d.date+'</td>' +
+      '<td>'+(d.conflict ? '<span style="color:var(--danger);font-size:12px"><span class="conflict-dot"></span>冲突: '+d.conflict+'</span>' : '<span style="color:var(--text3)">—</span>')+'</td></tr>';
+  }
+  h += '</tbody></table>';
+  content.innerHTML = h;
+
+  if (showGraph) {
+    setTimeout(function(){ _renderGraph(filtered, degrad); }, 50);
+  }
+}
+
+function _sortDocs(field) {
+  if (sortField === field) { sortDesc = !sortDesc; }
+  else { sortField = field; sortDesc = true; }
+  renderContent();
+}
+
+function _toggleGraph(count) {
+  showGraph = !showGraph;
+  renderContent();
+}
+function _toggleGraphClustered(count) {
+  showGraph = !showGraph;
+  renderContent();
+}
+
+// ─── RELATIONSHIP GRAPH ───────────────────────────
+function _renderGraph(docs, degrad) {
+  var container = $('graphContainer');
+  if (!container) return;
+
+  var displayDocs;
+  if (degrad === 'warn') {
+    var core = docs.filter(function(d){ return d.conflict; }).slice(0, 8);
+    var others = docs.filter(function(d){ return !d.conflict; });
+    var sampled = others.sort(function(){ return Math.random() - 0.5; }).slice(0, Math.min(12, 20 - core.length));
+    displayDocs = core.concat(sampled);
+    if (docs.length > displayDocs.length) {
+      displayDocs.push({id:'cluster',name:'其他 '+(docs.length-displayDocs.length)+' 份文档',author:'—',date:'—',tags:[],conflict:null,type:'聚合节点'});
+    }
+  } else {
+    displayDocs = docs.slice(0, 25);
+  }
+
+  var cols = Math.min(5, Math.ceil(Math.sqrt(displayDocs.length)));
+  var pad = 30, nw = 150, gapX = Math.max((container.clientWidth - pad*2 - nw*cols) / (cols - 1 + 0.5), 120);
+
+  var svg = '<svg width="100%" height="100%">';
+  for (var i = 0; i < displayDocs.length; i++) {
+    for (var j = i + 1; j < displayDocs.length; j++) {
+      if (Math.random() < 0.22) {
+        var x1 = (i % cols) * gapX + pad + nw/2;
+        var y1 = Math.floor(i / cols) * 90 + pad + 20;
+        var x2 = (j % cols) * gapX + pad + nw/2;
+        var y2 = Math.floor(j / cols) * 90 + pad + 20;
+        var contra = displayDocs[i].conflict && displayDocs[j].conflict;
+        svg += '<path d="M'+x1+','+y1+' Q'+(x1+x2)/2+','+(y1+y2)/2+' '+x2+','+y2+'" fill="none" stroke="'+(contra?'#E5484D':'#C7CCD6')+'" stroke-width="'+(contra?2.5:1.2)+'" stroke-dasharray="'+(contra?'6 3':'none')+'"/>';
+      }
+    }
+  }
+  svg += '</svg>';
+  container.innerHTML = svg;
+
+  for (var k = 0; k < displayDocs.length; k++) {
+    var doc = displayDocs[k];
+    var col = k % cols, row = Math.floor(k / cols);
+    var x = col * gapX + pad, y = row * 90 + pad;
+    var isCluster = doc.id === 'cluster';
+    var el = document.createElement('div');
+    el.className = 'graph-node';
+    el.style.cssText = 'left:'+x+'px;top:'+y+'px';
+    var name = doc.name.length > 18 ? doc.name.slice(0, 18)+'…' : doc.name;
+    el.innerHTML = '<div class="graph-node-card'+(doc.conflict?' conflict':'')+'"'+
+      (isCluster ? ' style="border:2px dashed var(--brand-dim)"' : ' onclick="APP._openDoc(\''+doc.id+'\')"')+'>' +
+      '<div class="gn-title">'+(isCluster?'📦 ':'')+name+'</div>' +
+      '<div class="gn-meta">'+doc.author+' · '+doc.date+'</div></div>';
+    container.appendChild(el);
+  }
+
+  var leg = document.createElement('div');
+  leg.className = 'graph-legend';
+  leg.innerHTML = '<span>—— 关联</span><span style="color:var(--danger)">- - 矛盾</span>'+(degrad==='warn'?'<span>··· 聚合</span>':'');
+  container.appendChild(leg);
+}
+
+// ─── DOCUMENT READER ──────────────────────────────
+function _openDoc(id) {
+  // Find doc in all data
+  var doc = null;
+  var space = D[currentSpace];
+  function findIn(arr) {
+    for (var i = 0; i < arr.length; i++) {
+      if (arr[i].id === id) return arr[i];
+      if (arr[i].docsList) {
+        var found = findIn(arr[i].docsList);
+        if (found) return found;
+      }
+      if (arr[i].subs) {
+        for (var j = 0; j < arr[i].subs.length; j++) {
+          if (arr[i].subs[j].docsList) {
+            var f2 = findIn(arr[i].subs[j].docsList);
+            if (f2) return f2;
+          }
+        }
+      }
+    }
+    return null;
+  }
+  doc = findIn(space.projects);
+  if (!doc) return;
+
+  readerTitle.textContent = doc.name;
+  readerBody.innerHTML =
+    '<h1>'+doc.name+'</h1>' +
+    '<div class="reader-meta"><span>👤 '+doc.author+'</span><span>📅 '+doc.date+'</span><span>📍 '+currentSpace+'</span></div>' +
+    '<p>这是 LUMEN 统一的传统阅读器 / 编辑器视图。<strong>无论用户是从经典模式的表格点进来、还是从探索模式的关系图节点点进来，看到的都是同一套阅读体验。</strong></p>' +
+    '<p>此视图支持：标题分级、行内编辑、版本历史、AI 润色、内部链接、评论批注等富文本能力。</p>' +
+    '<p>新颖的交互探索只发生在"如何找到这份文档"的过程中——瓦片聚合、关系图等——而不应该影响"打开之后怎么读/怎么写"。</p>' +
+    '<p style="margin-top:32px;color:var(--text3);font-style:italic">—— Layer 4 传统阅读器 · v0.2 占位演示</p>';
+  readerOverlay.classList.add('open');
+}
+
+// ─── UTILS ────────────────────────────────────────
+function _showToast(msg) {
+  toast.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(function(){ toast.classList.remove('show'); }, 2200);
+}
+
+// ─── EVENTS ───────────────────────────────────────
+modeSwitch.addEventListener('click', function(e){
+  var opt = e.target.closest('.mode-opt');
+  if (!opt) return;
+  var mode = opt.dataset.mode;
+  if (mode === currentMode) return;
+  currentMode = mode;
+  document.querySelectorAll('.mode-opt').forEach(function(o){ o.classList.toggle('active', o.dataset.mode === mode); });
+  renderContent();
+  _showToast('切换至 ' + (mode === 'classic' ? '📋 经典模式' : '🧭 探索模式'));
+});
+
+$('btnSidebar').addEventListener('click', function(){
+  sidebar.classList.toggle('collapsed');
+});
+
+searchInput.addEventListener('input', function(){
+  searchQuery = searchInput.value.trim().toLowerCase();
+  var docs = getLeafDocs();
+  if (docs) renderContent();
+});
+
+$('readerBack').addEventListener('click', function(){
+  readerOverlay.classList.remove('open');
+});
+
+document.addEventListener('keydown', function(e){
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if (e.key === 'Escape') { readerOverlay.classList.remove('open'); }
+  if (e.key === 'b' || e.key === 'B') { e.preventDefault(); sidebar.classList.toggle('collapsed'); }
+});
+
+// ─── INIT ─────────────────────────────────────────
+function init() {
+  go('space');
+  // Expand sidebar tree sections by default
+  setTimeout(function(){
+    var sections = sidebarTree.querySelectorAll('.tree-section');
+    for (var i = 0; i < Math.min(sections.length, 3); i++) {
+      sections[i].classList.add('open');
+      if (sections[i].nextElementSibling) {
+        sections[i].nextElementSibling.classList.add('open');
+      }
+    }
+  }, 100);
+  console.log('🦞 LUMEN v0.2 就绪 · 经典/探索双模式 · 分层架构 · 自动降级');
+}
+
+// ─── EXPOSE ───────────────────────────────────────
+window.APP = {
+  go: go,
+  _toggleSection: _toggleSection,
+  _onTreeItem: _onTreeItem,
+  _sortDocs: _sortDocs,
+  _toggleGraph: _toggleGraph,
+  _toggleGraphClustered: _toggleGraphClustered,
+  _openDoc: _openDoc,
+  _showToast: _showToast
+};
+
+init();
+
+})();
+</script>
+</body>
+</html>

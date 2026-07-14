@@ -1,0 +1,1848 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LUMEN 实现前 UI 原型确认版</title>
+  <style>
+    :root {
+      --bg: #f7fbff;
+      --panel: #ffffff;
+      --panel-soft: #f8fbff;
+      --line: #d8e7f7;
+      --line-soft: #e8f2fb;
+      --text: #172033;
+      --muted: #5f7188;
+      --faint: #98abc0;
+      --primary: #2563eb;
+      --primary-soft: #eaf3ff;
+      --info: #0ea5e9;
+      --amber: #f5a623;
+      --danger: #e5484d;
+      --green: #12a150;
+      --shadow: 0 14px 40px rgba(37, 99, 235, 0.1);
+      --brand-gradient: linear-gradient(135deg, #38bdf8, #6366f1);
+      --brand-shadow: 0 8px 18px rgba(37, 99, 235, 0.22);
+      --main-bg: linear-gradient(180deg, #f7fbff 0%, #edf7ff 100%);
+      --rail-bg: linear-gradient(180deg, #ffffff 0%, #eef7ff 52%, #eaf3ff 100%);
+      --rail-shadow: inset -1px 0 0 rgba(37, 99, 235, 0.08);
+      --rail-item-color: #54708f;
+      --rail-item-border: #dbeafe;
+      --rail-item-bg: rgba(255, 255, 255, 0.74);
+      --rail-active-color: #0f4acf;
+      --rail-active-bg: linear-gradient(135deg, #dbeafe, #e0f2fe);
+      --rail-active-border: #93c5fd;
+      --rail-active-shadow: 0 10px 22px rgba(37, 99, 235, 0.18);
+      --radius: 16px;
+      font-family: "Microsoft YaHei", "PingFang SC", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body[data-theme="warm"] {
+      --bg: #fffaf2;
+      --panel-soft: #fffdf8;
+      --line: #eadfcd;
+      --line-soft: #f3eadc;
+      --text: #2b2118;
+      --muted: #765f48;
+      --faint: #ad9a84;
+      --primary: #b7791f;
+      --primary-soft: #fff4df;
+      --info: #d28b1f;
+      --shadow: 0 14px 40px rgba(183, 121, 31, 0.12);
+      --brand-gradient: linear-gradient(135deg, #f6c453, #f59e0b);
+      --brand-shadow: 0 8px 18px rgba(183, 121, 31, 0.18);
+      --main-bg: linear-gradient(180deg, #fffaf2 0%, #fff3df 100%);
+      --rail-bg: linear-gradient(180deg, #ffffff 0%, #fff8ea 54%, #fff1d6 100%);
+      --rail-shadow: inset -1px 0 0 rgba(183, 121, 31, 0.08);
+      --rail-item-color: #82664a;
+      --rail-item-border: #f2dfbe;
+      --rail-item-bg: rgba(255, 253, 248, 0.82);
+      --rail-active-color: #8a4b0f;
+      --rail-active-bg: linear-gradient(135deg, #fff0c7, #ffe7ac);
+      --rail-active-border: #f1c978;
+      --rail-active-shadow: 0 10px 22px rgba(183, 121, 31, 0.16);
+    }
+
+    body[data-theme="cyan"] {
+      --bg: #f3fffd;
+      --panel-soft: #f7fffd;
+      --line: #ccebe8;
+      --line-soft: #e0f5f2;
+      --text: #123333;
+      --muted: #527272;
+      --faint: #8cadad;
+      --primary: #0f766e;
+      --primary-soft: #e7fbf7;
+      --info: #0891b2;
+      --shadow: 0 14px 40px rgba(15, 118, 110, 0.1);
+      --brand-gradient: linear-gradient(135deg, #5eead4, #22d3ee);
+      --brand-shadow: 0 8px 18px rgba(15, 118, 110, 0.18);
+      --main-bg: linear-gradient(180deg, #f3fffd 0%, #e7fbf7 100%);
+      --rail-bg: linear-gradient(180deg, #ffffff 0%, #effdfa 52%, #defaf5 100%);
+      --rail-shadow: inset -1px 0 0 rgba(15, 118, 110, 0.08);
+      --rail-item-color: #4a7472;
+      --rail-item-border: #c5eee8;
+      --rail-item-bg: rgba(255, 255, 255, 0.78);
+      --rail-active-color: #0d5f59;
+      --rail-active-bg: linear-gradient(135deg, #ccfbf1, #cffafe);
+      --rail-active-border: #7dd3c7;
+      --rail-active-shadow: 0 10px 22px rgba(15, 118, 110, 0.16);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      min-width: 1120px;
+      --pane-width: 300px;
+      --inspector-width: 330px;
+      --doc-sidebar-width: 260px;
+      --split-editor-width: 50%;
+    }
+
+    .prototype-note {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 10px 20px;
+      color: #344054;
+      background: #fff7e6;
+      border-bottom: 1px solid #f4d39b;
+      font-size: 13px;
+    }
+
+    .prototype-note strong { color: #8a5a00; }
+
+    .app {
+      min-height: calc(100vh - 42px);
+      display: grid;
+      grid-template-rows: 56px 1fr;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: 220px 1fr 560px;
+      align-items: center;
+      gap: 16px;
+      padding: 0 20px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+    }
+
+    .brand-mark {
+      width: 30px;
+      height: 30px;
+      border-radius: 9px;
+      display: grid;
+      place-items: center;
+      color: white;
+      background: var(--brand-gradient);
+      box-shadow: var(--brand-shadow);
+    }
+
+    .crumbs {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .crumbs b { color: var(--text); }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .pill,
+    button {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 999px;
+      padding: 7px 12px;
+      color: #344054;
+      font-size: 13px;
+      cursor: default;
+    }
+
+    button {
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    button.primary {
+      border-color: var(--primary);
+      color: #fff;
+      background: var(--primary);
+    }
+
+    button.active {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: var(--primary-soft);
+      font-weight: 700;
+    }
+
+    .theme-switch {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--panel-soft);
+    }
+
+    .theme-button {
+      padding: 5px 9px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .theme-button.active {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: var(--primary-soft);
+      font-weight: 700;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: 72px var(--pane-width) minmax(560px, 1fr) var(--inspector-width);
+      gap: 0;
+      min-height: 0;
+    }
+
+    .rail {
+      background: var(--rail-bg);
+      color: var(--muted);
+      border-right: 1px solid var(--line);
+      box-shadow: var(--rail-shadow);
+      padding: 14px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .rail-item {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      font-size: 12px;
+      color: var(--rail-item-color);
+      border: 1px solid var(--rail-item-border);
+      background: var(--rail-item-bg);
+    }
+
+    .rail-item.active {
+      color: var(--rail-active-color);
+      background: var(--rail-active-bg);
+      border-color: var(--rail-active-border);
+      box-shadow: var(--rail-active-shadow);
+    }
+
+    .rail button {
+      padding: 0;
+      border: 1px solid transparent;
+      background: transparent;
+      font-family: inherit;
+    }
+
+    .rail-spacer { flex: 1; }
+
+    .pane,
+    .main,
+    .inspector {
+      min-height: calc(100vh - 98px);
+      overflow: auto;
+    }
+
+    .pane {
+      position: relative;
+      background: var(--panel);
+      border-right: 1px solid var(--line);
+      padding: 18px 16px;
+    }
+
+    .main {
+      padding: 22px;
+      background: var(--main-bg);
+    }
+
+    .inspector {
+      position: relative;
+      background: var(--panel);
+      border-left: 1px solid var(--line);
+      padding: 18px 16px;
+    }
+
+    .resize-handle {
+      position: absolute;
+      z-index: 10;
+      width: 9px;
+      top: 0;
+      bottom: 0;
+      background: transparent;
+      cursor: col-resize;
+    }
+
+    .resize-handle::after {
+      content: "";
+      position: absolute;
+      top: 12px;
+      bottom: 12px;
+      left: 4px;
+      width: 1px;
+      background: var(--line);
+    }
+
+    .resize-handle:hover::after,
+    .resize-handle.active::after { background: var(--primary); }
+
+    .resize-handle.right { right: -5px; }
+    .resize-handle.left { left: -5px; }
+
+    .split-handle {
+      width: 10px;
+      border: 0;
+      border-radius: 8px;
+      background: linear-gradient(90deg, transparent 0, var(--line) 45%, var(--line) 55%, transparent 100%);
+      cursor: col-resize;
+      min-height: 360px;
+    }
+
+    .split-handle:hover,
+    .split-handle.active { background: linear-gradient(90deg, transparent 0, var(--primary) 45%, var(--primary) 55%, transparent 100%); }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .section-title h2,
+    .section-title h3 {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    .section-title small { color: var(--muted); }
+
+    .subtle {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .searchbox {
+      margin: 14px 0;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      background: var(--panel-soft);
+      font-size: 13px;
+    }
+
+    .tree {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 10px;
+      font-size: 13px;
+    }
+
+    .tree-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      color: #344054;
+      width: 100%;
+      border: 1px solid transparent;
+      background: transparent;
+      text-align: left;
+    }
+
+    button.tree-row {
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .tree-row:hover {
+      border-color: var(--line-soft);
+      background: var(--panel-soft);
+    }
+
+    .tree-row.active {
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .is-hidden { display: none !important; }
+
+    .tree-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .tree-arrow {
+      width: 14px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .tree-leaf .tree-arrow { color: var(--faint); }
+
+    .level-1 { padding-left: 22px; }
+    .level-2 { padding-left: 36px; }
+    .level-3 { padding-left: 50px; }
+
+    .tree-row .count {
+      color: var(--faint);
+      font-size: 12px;
+    }
+
+    .mode-card {
+      margin: 16px 0;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel-soft);
+    }
+
+    .mode-toggle {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .card-body { padding: 18px; }
+
+    .headline {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .headline h1 {
+      margin: 0 0 8px;
+      font-size: 24px;
+      letter-spacing: -0.02em;
+    }
+
+    .headline p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 13px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 9px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+      border: 1px solid transparent;
+    }
+
+    .badge.primary { background: var(--primary-soft); color: var(--primary); border-color: #c7d2fe; }
+    .badge.info { background: #eaf4ff; color: var(--info); border-color: #b8dcff; }
+    .badge.warn { background: #fff5dc; color: #9a6400; border-color: #f7d58a; }
+    .badge.danger { background: #fff0f0; color: var(--danger); border-color: #ffc9c9; }
+    .badge.green { background: #eafaf0; color: var(--green); border-color: #bce8ca; }
+    .badge.gray { background: #f2f4f7; color: #475467; border-color: #d0d5dd; }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .metric {
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid var(--line-soft);
+      background: var(--panel-soft);
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 20px;
+      margin-bottom: 4px;
+    }
+
+    .metric span { color: var(--muted); font-size: 12px; }
+
+    .map-preview {
+      position: relative;
+      min-height: 172px;
+      overflow: hidden;
+      border-radius: 14px;
+      background:
+        radial-gradient(circle at 18% 28%, rgba(79, 70, 229, 0.18), transparent 26%),
+        radial-gradient(circle at 70% 42%, rgba(47, 128, 237, 0.16), transparent 24%),
+        linear-gradient(135deg, #f8faff, #ffffff);
+      border: 1px solid var(--line-soft);
+    }
+
+    .node {
+      position: absolute;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      border: 2px solid #fff;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 800;
+      box-shadow: 0 10px 20px rgba(20, 28, 45, 0.15);
+    }
+
+    .node.a { width: 62px; height: 62px; left: 30px; top: 40px; background: var(--primary); }
+    .node.b { width: 48px; height: 48px; left: 136px; top: 74px; background: var(--info); }
+    .node.c { width: 42px; height: 42px; right: 62px; top: 38px; background: var(--amber); }
+    .node.d { width: 34px; height: 34px; right: 112px; bottom: 28px; background: var(--green); }
+
+    .line {
+      position: absolute;
+      height: 2px;
+      background: #c7ccd6;
+      transform-origin: left center;
+      opacity: 0.9;
+    }
+
+    .line.l1 { width: 110px; left: 86px; top: 82px; transform: rotate(17deg); }
+    .line.l2 { width: 128px; left: 178px; top: 92px; transform: rotate(-20deg); }
+    .line.l3 { width: 90px; right: 92px; bottom: 60px; transform: rotate(-38deg); }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin: 18px 0;
+      flex-wrap: wrap;
+    }
+
+    .tab {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 8px 12px;
+      background: var(--panel);
+      font-size: 13px;
+      color: #475467;
+    }
+
+    .tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+    .view { display: none; }
+    .view.active { display: block; }
+
+    .prototype-page { display: none; }
+    .prototype-page.active { display: block; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .project-card {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      min-height: 162px;
+    }
+
+    .project-card h3 {
+      margin: 10px 0 8px;
+      font-size: 16px;
+    }
+
+    .project-card p {
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .progress {
+      height: 8px;
+      border-radius: 999px;
+      background: #eef2f7;
+      overflow: hidden;
+      margin: 12px 0 10px;
+    }
+
+    .progress > span {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--info));
+      border-radius: 999px;
+    }
+
+    .mini-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 8px;
+    }
+
+    .list-view {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: var(--panel);
+    }
+
+    .list-row {
+      display: grid;
+      grid-template-columns: 1.3fr 0.7fr 0.7fr 0.8fr 0.7fr;
+      gap: 12px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line-soft);
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .list-row.header {
+      background: #f9fafb;
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 12px;
+    }
+
+    .list-row:last-child { border-bottom: 0; }
+
+    .degrade-box {
+      padding: 16px;
+      border-radius: var(--radius);
+      border: 1px dashed #f0b84f;
+      background: #fffaf0;
+      margin-bottom: 14px;
+    }
+
+    .relation-panel {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .relation-canvas {
+      min-height: 310px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(#f7f9fc 1px, transparent 1px),
+        linear-gradient(90deg, #f7f9fc 1px, transparent 1px),
+        #fff;
+      background-size: 26px 26px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .r-node {
+      position: absolute;
+      border-radius: 18px;
+      padding: 10px 12px;
+      background: #fff;
+      border: 1px solid var(--line);
+      box-shadow: 0 8px 20px rgba(20, 28, 45, 0.08);
+      font-size: 12px;
+      font-weight: 700;
+      max-width: 135px;
+    }
+
+    .r-node.main { left: 42%; top: 42%; border-color: var(--primary); color: var(--primary); background: var(--primary-soft); }
+    .r-node.n1 { left: 8%; top: 16%; }
+    .r-node.n2 { right: 8%; top: 18%; }
+    .r-node.n3 { left: 14%; bottom: 18%; }
+    .r-node.n4 { right: 10%; bottom: 15%; }
+
+    .r-link {
+      position: absolute;
+      height: 2px;
+      background: #c7ccd6;
+      transform-origin: left center;
+    }
+
+    .r-link.a { width: 180px; left: 23%; top: 34%; transform: rotate(31deg); }
+    .r-link.b { width: 160px; right: 22%; top: 36%; transform: rotate(148deg); }
+    .r-link.c { width: 142px; left: 27%; bottom: 33%; transform: rotate(-28deg); }
+    .r-link.d { width: 132px; right: 25%; bottom: 31%; transform: rotate(210deg); }
+
+    .stack {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .hint-card {
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: var(--panel-soft);
+    }
+
+    .hint-card h4 {
+      margin: 0 0 6px;
+      font-size: 13px;
+    }
+
+    .hint-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .text-button {
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      color: var(--primary);
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .doc-workspace {
+      display: grid;
+      grid-template-columns: var(--doc-sidebar-width) minmax(0, 1fr);
+      min-height: 520px;
+      overflow: hidden;
+    }
+
+    .doc-sidebar {
+      position: relative;
+      border-right: 1px solid var(--line);
+      background: var(--panel-soft);
+      padding: 16px;
+    }
+
+    .doc-main { padding: 18px; }
+
+    .doc-list-item {
+      display: block;
+      width: 100%;
+      margin-bottom: 8px;
+      padding: 11px 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--panel);
+      color: var(--text);
+      text-align: left;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .doc-list-item strong {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 13px;
+    }
+
+    .doc-list-item span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .doc-list-item.active {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .doc-mode { display: none; }
+    .doc-mode.active { display: block; }
+
+    .doc-editor {
+      width: 100%;
+      min-height: 285px;
+      resize: vertical;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      color: var(--text);
+      font-family: Consolas, "Microsoft YaHei", monospace;
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    .split-editor {
+      display: grid;
+      grid-template-columns: minmax(260px, var(--split-editor-width)) 10px minmax(260px, 1fr);
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .split-editor .doc-editor,
+    .split-editor .doc-preview {
+      min-height: 360px;
+      height: 100%;
+    }
+
+    .mode-hint {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .doc-preview {
+      min-height: 285px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel-soft);
+      line-height: 1.7;
+      font-size: 13px;
+    }
+
+    .doc-preview h1 {
+      margin: 0 0 10px;
+      font-size: 20px;
+    }
+
+    .doc-preview h2 {
+      margin: 16px 0 8px;
+      font-size: 15px;
+    }
+
+    .doc-preview p { margin: 0 0 10px; }
+
+    .doc-preview ul { margin: 0 0 10px 20px; padding: 0; }
+
+    .doc-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin: 14px 0;
+    }
+
+    .doc-meta {
+      padding: 10px;
+      border: 1px solid var(--line-soft);
+      border-radius: 12px;
+      background: var(--panel-soft);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .inspector-block {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 14px;
+      background: var(--panel-soft);
+      margin-bottom: 14px;
+    }
+
+    .inspector-block h3 {
+      margin: 0 0 10px;
+      font-size: 15px;
+    }
+
+    .checklist {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 13px;
+    }
+
+    .check-item {
+      display: grid;
+      grid-template-columns: 18px 1fr;
+      gap: 8px;
+      align-items: start;
+      color: #344054;
+      line-height: 1.45;
+    }
+
+    .checkbox {
+      width: 14px;
+      height: 14px;
+      margin-top: 2px;
+      border-radius: 4px;
+      border: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .review {
+      margin-top: 18px;
+      border: 2px solid #d7ddff;
+      background: #fbfcff;
+    }
+
+    .review-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .review-question {
+      padding: 13px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+    }
+
+    .review-question strong {
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .review-question span {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .footer-note {
+      margin: 18px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="prototype-note">
+    <div><strong>实现前 UI 原型确认版 / 待评审：</strong>本页面用于确认 §9.3 的页面布局、内容呈现、点击路径与成熟默认交互；不连接后端，不新增需求、接口、权限规则、任务或验收目标。</div>
+    <div>建议评审口径：先按默认稿整体看实际效果；只反馈不舒服、不清楚、太复杂或需要改默认行为的地方。</div>
+  </div>
+
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">L</div>
+        <div>LUMEN</div>
+      </div>
+      <div class="crumbs">
+        <span>当前空间</span><span>›</span><b>华东客户知识库</b><span>›</span><span id="currentPageLabel">空间总览</span>
+      </div>
+      <div class="top-actions">
+        <div class="theme-switch" aria-label="视觉主题切换">
+          <button class="theme-button active" data-theme="light">蓝白</button>
+          <button class="theme-button" data-theme="warm">米白</button>
+          <button class="theme-button" data-theme="cyan">浅青</button>
+        </div>
+        <span class="pill">Demo Space</span>
+        <span class="pill">权限：团队共享</span>
+        <button class="primary">+ 快速录入候选</button>
+      </div>
+    </header>
+
+    <div class="workspace">
+      <nav class="rail" aria-label="主导航">
+        <button class="rail-item active" data-page="spacePage">总览</button>
+        <button class="rail-item" data-page="docsPage">文档</button>
+        <button class="rail-item" data-page="searchPage">搜索</button>
+        <button class="rail-item" data-page="qaPage">问答</button>
+        <button class="rail-item" data-page="termsPage">术语</button>
+        <div class="rail-spacer"></div>
+        <button class="rail-item" data-page="reviewPage">评审</button>
+      </nav>
+
+      <aside class="pane">
+        <div class="resize-handle right" data-resize="pane" title="拖拽调整目录区宽度"></div>
+        <div class="section-title">
+          <h2>经典目录</h2>
+          <small>逃生舱</small>
+        </div>
+        <p class="subtle">不管探索模式如何变化，传统目录 / 列表始终可达。</p>
+        <div class="searchbox">搜索当前空间文档 / 项目 / 术语</div>
+
+        <div class="tree" aria-label="可折叠经典目录">
+          <button class="tree-row active tree-leaf" data-page-target="spacePage">
+            <span class="tree-label"><span class="tree-arrow">·</span>全空间总览</span><span class="count">186</span>
+          </button>
+          <button class="tree-row tree-toggle" data-tree-id="clientA" data-page-target="docsPage">
+            <span class="tree-label"><span class="tree-arrow">-</span>A 客户交付</span><span class="count">42</span>
+          </button>
+          <button class="tree-row level-1 tree-toggle" data-parent="clientA" data-tree-id="interview" data-page-target="docsPage">
+            <span class="tree-label"><span class="tree-arrow">-</span>需求访谈</span><span class="count">12</span>
+          </button>
+          <button class="tree-row level-2 tree-leaf" data-parent="interview" data-page-target="docsPage" data-doc-id="meeting">
+            <span class="tree-label"><span class="tree-arrow">·</span>访谈纪要 07-12</span><span class="count">1</span>
+          </button>
+          <button class="tree-row level-1 tree-toggle" data-parent="clientA" data-tree-id="proposal" data-page-target="docsPage">
+            <span class="tree-label"><span class="tree-arrow">-</span>方案文档</span><span class="count">18</span>
+          </button>
+          <button class="tree-row level-2 tree-leaf" data-parent="proposal" data-page-target="docsPage" data-doc-id="delivery">
+            <span class="tree-label"><span class="tree-arrow">·</span>交付方案 v0.3</span><span class="count">1</span>
+          </button>
+          <button class="tree-row level-1 tree-leaf" data-parent="clientA" data-page-target="searchPage">
+            <span class="tree-label"><span class="tree-arrow">·</span>待核实问题</span><span class="count">12</span>
+          </button>
+          <button class="tree-row tree-toggle collapsed" data-tree-id="research" data-page-target="searchPage">
+            <span class="tree-label"><span class="tree-arrow">+</span>B 行业研究</span><span class="count">57</span>
+          </button>
+          <button class="tree-row level-1 tree-leaf is-hidden" data-parent="research" data-page-target="docsPage">
+            <span class="tree-label"><span class="tree-arrow">·</span>政策摘录</span><span class="count">24</span>
+          </button>
+          <button class="tree-row level-1 tree-leaf is-hidden" data-parent="research" data-page-target="docsPage">
+            <span class="tree-label"><span class="tree-arrow">·</span>行业术语</span><span class="count">33</span>
+          </button>
+          <button class="tree-row tree-toggle collapsed" data-tree-id="competitor" data-page-target="searchPage">
+            <span class="tree-label"><span class="tree-arrow">+</span>C 竞品分析</span><span class="count">31</span>
+          </button>
+          <button class="tree-row level-1 tree-leaf is-hidden" data-parent="competitor" data-page-target="docsPage">
+            <span class="tree-label"><span class="tree-arrow">·</span>产品对比表</span><span class="count">9</span>
+          </button>
+          <button class="tree-row tree-toggle collapsed" data-tree-id="terms" data-page-target="termsPage">
+            <span class="tree-label"><span class="tree-arrow">+</span>团队术语表</span><span class="count">56</span>
+          </button>
+          <button class="tree-row level-1 tree-leaf is-hidden" data-parent="terms" data-page-target="termsPage" data-doc-id="terms">
+            <span class="tree-label"><span class="tree-arrow">·</span>SLA 术语口径</span><span class="count">1</span>
+          </button>
+        </div>
+
+        <div class="mode-card">
+          <div class="section-title">
+            <h3>模式切换</h3>
+            <small>候选</small>
+          </div>
+          <p class="subtle">用于确认“经典模式”和“探索模式”是否需要并存。</p>
+          <div class="mode-toggle">
+            <button id="classicButton">经典</button>
+            <button id="exploreButton" class="active">探索</button>
+          </div>
+        </div>
+
+        <div class="mode-card">
+          <span class="badge warn">降级规则候选</span>
+          <p class="subtle">80+ 文档默认回到列表 / 表格；先筛选再生成局部图，避免全空间图谱失控。</p>
+        </div>
+      </aside>
+
+      <main class="main">
+        <section id="spacePage" class="prototype-page active">
+        <section class="hero">
+          <div class="card">
+            <div class="card-body">
+              <div class="headline">
+                <div>
+                  <h1>欢迎来到 LUMEN：从简洁知识库首页开始</h1>
+                  <p>第一眼参考 Wiki 的简洁布局：欢迎语、知识图谱、快捷操作和高频 AI 助手先出现；复杂项目瓦片和关系分析放到下方或可选视图。</p>
+                </div>
+                <span class="badge primary">Phase2 候选</span>
+              </div>
+              <div class="metrics">
+                <div class="metric"><strong>4</strong><span>项目 / 主题</span></div>
+                <div class="metric"><strong>186</strong><span>可见文档</span></div>
+                <div class="metric"><strong>12</strong><span>待核实问题</span></div>
+                <div class="metric"><strong>56</strong><span>术语条目</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-body">
+              <div class="section-title">
+              <h3>知识图谱摘要入口</h3>
+              <span class="badge gray">辅助入口</span>
+              </div>
+              <div class="map-preview" aria-label="局部关系图预览">
+                <div class="line l1"></div><div class="line l2"></div><div class="line l3"></div>
+                <div class="node a">项目</div>
+                <div class="node b">文档</div>
+                <div class="node c">术语</div>
+                <div class="node d">问题</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-body">
+            <div class="section-title">
+              <h2>快捷操作工具栏</h2>
+              <span class="badge primary">高频入口</span>
+            </div>
+            <div class="tabs">
+              <button class="tab active" data-page-jump="docsPage" data-doc-id="delivery">上传 / 导入文档</button>
+              <button class="tab" data-page-jump="searchPage">搜索当前空间</button>
+              <button class="tab" data-page-jump="qaPage">基于知识库提问</button>
+              <button class="tab" data-page-jump="docsPage" data-doc-id="meeting">最近文档</button>
+            </div>
+            <div class="hint-card">
+              <h4>AI 助手：需要高频可见，但不抢主画面</h4>
+              <p>推荐默认：首页只保留轻量提问入口和推荐问题，提交后进入独立问答页；完整答案、来源卡和上下文在问答页承载，避免首页变成复杂工作台。</p>
+            </div>
+          </div>
+        </section>
+
+        <div class="tabs">
+          <button class="tab active" data-view="overviewView">空间总览</button>
+          <button class="tab" data-view="classicView">经典列表</button>
+          <button class="tab" data-view="relationView">局部关系图</button>
+          <button class="tab" data-view="degradeView">大集合降级</button>
+        </div>
+
+        <section id="overviewView" class="view active">
+          <div class="grid">
+            <article class="project-card">
+              <span class="badge primary">项目</span>
+              <h3>A 客户交付知识包</h3>
+              <p>交付材料、需求访谈、会议纪要和待核实问题集中在此。</p>
+              <div class="progress"><span style="width: 68%"></span></div>
+              <div class="mini-row"><span>42 文档</span><span>6 待核实</span></div>
+              <div class="mini-row"><span>推荐默认：探索可用</span><span>≤ 50</span></div>
+            </article>
+
+            <article class="project-card">
+              <span class="badge info">主题</span>
+              <h3>B 行业研究与政策</h3>
+              <p>政策摘要、行业白皮书、访谈观点和引用来源。</p>
+              <div class="progress"><span style="width: 44%"></span></div>
+              <div class="mini-row"><span>57 文档</span><span>3 待核实</span></div>
+              <div class="mini-row"><span>推荐默认：列表优先</span><span>30–80</span></div>
+            </article>
+
+            <article class="project-card">
+              <span class="badge warn">竞品</span>
+              <h3>C 竞品分析集合</h3>
+              <p>竞品截图、前端模式、交互参考和差异化记录。</p>
+              <div class="progress"><span style="width: 56%"></span></div>
+              <div class="mini-row"><span>31 文档</span><span>8 标签</span></div>
+              <div class="mini-row"><span>推荐默认：探索可用</span><span>≤ 50</span></div>
+            </article>
+
+            <article class="project-card">
+              <span class="badge green">术语</span>
+              <h3>团队术语与口径</h3>
+              <p>用于问答、文档编辑和来源解释的统一语义上下文。</p>
+              <div class="progress"><span style="width: 74%"></span></div>
+              <div class="mini-row"><span>56 术语</span><span>12 别名</span></div>
+              <div class="mini-row"><span>推荐默认：经典列表</span><span>结构化</span></div>
+            </article>
+
+            <article class="project-card">
+              <span class="badge danger">风险</span>
+              <h3>待核实问题池</h3>
+              <p>不直接叫“矛盾”，先用待核实口径，避免系统过度断言。</p>
+              <div class="progress"><span style="width: 36%"></span></div>
+              <div class="mini-row"><span>12 问题</span><span>4 已处理</span></div>
+              <div class="mini-row"><span>推荐默认：人工确认</span><span>高风险</span></div>
+            </article>
+
+            <article class="project-card">
+              <span class="badge gray">大集合</span>
+              <h3>归档资料库</h3>
+              <p>超过 80 份文档时不默认图谱，必须先筛选或聚类。</p>
+              <div class="progress"><span style="width: 88%"></span></div>
+              <div class="mini-row"><span>214 文档</span><span>80+</span></div>
+              <div class="mini-row"><span>推荐默认：列表 / 筛选</span><span>降级</span></div>
+            </article>
+          </div>
+        </section>
+
+        <section id="classicView" class="view">
+          <div class="list-view">
+            <div class="list-row header"><span>文档</span><span>所属层级</span><span>状态</span><span>最后更新</span><span>来源</span></div>
+            <div class="list-row"><strong>A 客户访谈纪要 07-12</strong><span>A 客户 / 需求访谈</span><span><span class="badge green">已入库</span></span><span>今天</span><span>会议</span></div>
+            <div class="list-row"><strong>交付方案 v0.3</strong><span>A 客户 / 方案文档</span><span><span class="badge warn">待核实</span></span><span>昨天</span><span>文档</span></div>
+            <div class="list-row"><strong>政策摘要：行业补贴</strong><span>B 行业研究</span><span><span class="badge gray">普通</span></span><span>07-10</span><span>网页</span></div>
+            <div class="list-row"><strong>竞品 Wiki 首页截图</strong><span>C 竞品分析</span><span><span class="badge info">参考</span></span><span>07-09</span><span>截图</span></div>
+            <div class="list-row"><strong>术语：客户空间</strong><span>团队术语</span><span><span class="badge primary">口径</span></span><span>07-08</span><span>人工</span></div>
+          </div>
+          <p class="footer-note">确认点：如果你觉得探索模式太复杂，这个经典列表是否足够让你安心继续使用？</p>
+        </section>
+
+        <section id="relationView" class="view">
+          <div class="relation-panel">
+            <div class="relation-canvas">
+              <div class="r-link a"></div><div class="r-link b"></div><div class="r-link c"></div><div class="r-link d"></div>
+              <div class="r-node main">交付方案 v0.3</div>
+              <div class="r-node n1">访谈纪要</div>
+              <div class="r-node n2">术语：SLA</div>
+              <div class="r-node n3">待核实：预算</div>
+              <div class="r-node n4">来源引用</div>
+            </div>
+            <div class="stack">
+              <div class="hint-card">
+                <h4>为什么是局部图？</h4>
+                <p>只展示当前项目 / 文件夹 / 筛选结果内的少量节点，避免全空间文档全部铺开。</p>
+              </div>
+              <div class="hint-card">
+                <h4>为什么不用“矛盾检测”大字？</h4>
+                <p>高风险 AI 能力未验证前，前端只展示“待核实问题”，由人确认。</p>
+              </div>
+              <div class="hint-card">
+                <h4>确认点</h4>
+                <p>推荐默认：局部图只作为可选候选视图，不进入近期实现；如果看起来像炫技或干扰主流程，应继续回到列表 / 搜索 / 问答。</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="degradeView" class="view">
+          <div class="degrade-box">
+            <span class="badge warn">80+ 文档：探索视图自动降级</span>
+            <p class="subtle">当前集合有 214 份文档。系统不默认生成全量关系图，建议先按项目、标签、时间窗口或关键词缩小范围。</p>
+          </div>
+          <div class="list-view">
+            <div class="list-row header"><span>筛选方式</span><span>目的</span><span>建议默认</span><span>用户动作</span><span>状态</span></div>
+            <div class="list-row"><strong>按项目 / 主题</strong><span>先形成业务边界</span><span>优先</span><span>选择项目</span><span><span class="badge green">推荐</span></span></div>
+            <div class="list-row"><strong>按标签 / 术语</strong><span>缩小语义范围</span><span>可选</span><span>选择标签</span><span><span class="badge info">候选</span></span></div>
+            <div class="list-row"><strong>按时间窗口</strong><span>控制事件密度</span><span>可选</span><span>选择日期</span><span><span class="badge info">候选</span></span></div>
+            <div class="list-row"><strong>关键词搜索</strong><span>从问题反向定位</span><span>可选</span><span>输入问题</span><span><span class="badge gray">经典</span></span></div>
+          </div>
+        </section>
+
+        <section class="card review">
+          <div class="card-body">
+            <div class="section-title">
+              <h2>给用户看的确认问题</h2>
+              <span class="badge warn">请用白话反馈</span>
+            </div>
+            <div class="review-grid">
+              <div class="review-question"><strong>1. 第一眼像不像 LUMEN？</strong><span>是团队知识工作台，还是像普通笔记软件 / 炫技图谱？</span></div>
+              <div class="review-question"><strong>2. 分层空间总览好懂吗？</strong><span>空间 → 项目 / 主题 → 文件夹 → 文档的层级是否清楚？</span></div>
+              <div class="review-question"><strong>3. 经典模式够安全吗？</strong><span>目录树和列表是否始终可达，能不能作为“逃生舱”？</span></div>
+              <div class="review-question"><strong>4. 局部关系图有用吗？</strong><span>它应该是可选增强，还是应该更靠前？有没有太复杂？</span></div>
+              <div class="review-question"><strong>5. 配色和密度合适吗？</strong><span>默认蓝白、米白、浅青哪套更舒服？是否太冷、太轻或信息层级不够？</span></div>
+              <div class="review-question"><strong>6. 可以进入正式设计吗？</strong><span>如果方向对，我再回填文档；如果不对，就继续调原型。</span></div>
+            </div>
+            <p class="footer-note">你可以直接回复：方向对 / 太复杂 / 颜色不对 / 保留经典目录 / 关系图别放首页 / 希望更像工作台 / 希望更像情报分析工具。</p>
+          </div>
+        </section>
+        </section>
+
+        <section id="docsPage" class="prototype-page">
+          <section class="hero">
+            <div class="card">
+              <div class="card-body">
+                <div class="headline">
+                  <div>
+                    <h1>文档页：经典列表 + 预览 / 编辑 / 并排</h1>
+                    <p>用于确认：从目录、搜索、问答来源进入后，单篇文档都回到稳定的预览阅读、编辑、并排预览、版本与来源体验；阅读与预览展示效果合并，避免重复入口。</p>
+                  </div>
+                  <span class="badge green">经典模式保留</span>
+                </div>
+                <div class="metrics">
+                  <div class="metric"><strong>12</strong><span>当前文件夹文档</span></div>
+                  <div class="metric"><strong>3</strong><span>最近编辑</span></div>
+                  <div class="metric"><strong>5</strong><span>来源引用</span></div>
+                  <div class="metric"><strong>2</strong><span>版本记录</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-body">
+                <div class="section-title"><h3>文档状态</h3><span class="badge gray">P1 底座</span></div>
+                <div class="stack">
+                  <div class="hint-card"><h4>阅读</h4><p>左侧选文档，主区读内容，右侧显示来源、术语和版本入口。</p></div>
+                  <div class="hint-card"><h4>预览 / 编辑</h4><p>推荐默认：阅读与预览合并为“预览”；编辑态提供“编辑 + 预览并排”。目录列、文档编辑区和右侧状态区均可拖拽调宽。</p></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="card">
+            <div class="doc-workspace">
+              <aside class="doc-sidebar">
+                <div class="resize-handle right" data-resize="docSidebar" title="拖拽调整文档列表宽度"></div>
+                <div class="section-title"><h3>当前文件夹</h3><small>A 客户 / 方案</small></div>
+                <button class="doc-list-item active" data-doc-id="delivery">
+                  <strong>交付方案 v0.3</strong><span>待核实 · 刚刚编辑</span>
+                </button>
+                <button class="doc-list-item" data-doc-id="meeting">
+                  <strong>访谈纪要 07-12</strong><span>已入库 · 来源已索引</span>
+                </button>
+                <button class="doc-list-item" data-doc-id="terms">
+                  <strong>SLA 术语口径</strong><span>口径 · 问答可引用</span>
+                </button>
+                <div class="mode-card">
+                  <span class="badge info">目录联动</span>
+                  <p class="subtle">点击左侧经典目录中的叶子节点，会切到文档页并选中对应文档。</p>
+                </div>
+              </aside>
+
+              <div class="doc-main">
+                <div class="section-title">
+                  <div>
+                    <h2 id="docTitle">交付方案 v0.3</h2>
+                    <small id="docPath">A 客户交付 / 方案文档 / 交付方案 v0.3</small>
+                  </div>
+                  <span id="docStatus" class="badge warn">待核实</span>
+                </div>
+                <div class="tabs">
+                  <button class="tab doc-mode-button active" data-doc-mode="previewMode">预览</button>
+                  <button class="tab doc-mode-button" data-doc-mode="editMode">编辑</button>
+                  <button class="tab doc-mode-button" data-doc-mode="splitMode">编辑 + 预览并排</button>
+                  <button class="tab doc-mode-button" data-doc-mode="versionMode">版本 / 来源</button>
+                </div>
+
+                <section id="editMode" class="doc-mode">
+                  <textarea id="docEditor" class="doc-editor" aria-label="Markdown 编辑器"></textarea>
+                  <p class="footer-note">演示点：这里仅模拟 Markdown 编辑，不保存、不连接后端；可切到“预览”或“编辑 + 预览并排”查看渲染效果。</p>
+                </section>
+
+                <section id="previewMode" class="doc-mode active">
+                  <div id="docPreview" class="doc-preview"></div>
+                </section>
+
+                <section id="splitMode" class="doc-mode">
+                  <p class="mode-hint">推荐默认：成熟知识库 / Markdown 工具通常同时提供 tab 切换和并排预览；窄屏可回退到 tab 切换。</p>
+                  <div class="split-editor">
+                    <textarea id="docSplitEditor" class="doc-editor" aria-label="Markdown 并排编辑器"></textarea>
+                    <button class="split-handle" data-resize="splitEditor" title="拖拽调整编辑区 / 预览区比例" aria-label="拖拽调整编辑区和预览区比例"></button>
+                    <div id="docSplitPreview" class="doc-preview"></div>
+                  </div>
+                </section>
+
+                <section id="versionMode" class="doc-mode">
+                  <div class="doc-meta-grid">
+                    <div class="doc-meta"><strong>版本</strong><br /><span id="docVersion">v0.3 · 刚刚编辑</span></div>
+                    <div class="doc-meta"><strong>来源</strong><br /><span id="docSource">访谈纪要、预算表、SLA 口径</span></div>
+                    <div class="doc-meta"><strong>权限</strong><br /><span>团队共享 · 可编辑</span></div>
+                  </div>
+                  <div class="list-view">
+                    <div class="list-row header"><span>时间</span><span>动作</span><span>来源</span><span>状态</span><span>操作</span></div>
+                    <div class="list-row"><strong>刚刚</strong><span>补充风险段</span><span>人工编辑</span><span><span class="badge warn">待核实</span></span><span>对比</span></div>
+                    <div class="list-row"><strong>昨天</strong><span>导入访谈纪要</span><span>文件导入</span><span><span class="badge green">已索引</span></span><span>恢复</span></div>
+                    <div class="list-row"><strong>07-10</strong><span>创建初稿</span><span>手工录入</span><span><span class="badge gray">历史</span></span><span>查看</span></div>
+                  </div>
+                </section>
+              </div>
+            </div>
+          </section>
+          <p class="footer-note">确认点：默认阅读 + tab 切换 + 编辑并排预览是否符合知识库工作台预期？版本和来源入口是否足够明显？</p>
+        </section>
+
+        <section id="searchPage" class="prototype-page">
+          <section class="card">
+            <div class="card-body">
+              <div class="headline">
+                <div>
+                  <h1>搜索页：高密度结果 + 来源可追溯</h1>
+                  <p>用于确认：搜索是一级主任务，不应该挤在小右栏里；结果需要明确空间范围、匹配片段、权限与来源。</p>
+                </div>
+                <span class="badge primary">P1 已有主任务</span>
+              </div>
+              <div class="tabs">
+                <button class="tab search-filter active" data-search-filter="all">全部结果</button>
+                <button class="tab search-filter" data-search-filter="docs">只看文档</button>
+                <button class="tab search-filter" data-search-filter="terms">只看术语</button>
+                <button class="tab search-filter" data-search-filter="issues">待核实问题</button>
+              </div>
+              <div id="searchQuery" class="searchbox">搜索：预算 调整 交付风险</div>
+              <div class="list-view">
+                <div class="list-row header"><span>结果</span><span>范围</span><span>命中</span><span>权限</span><span>动作</span></div>
+                <div class="list-row search-result" data-search-type="docs issues"><strong>交付方案 v0.3</strong><span>当前空间</span><span>标题 + 正文</span><span><span class="badge green">可见</span></span><span><button class="text-button" data-page-jump="docsPage" data-doc-id="delivery">打开来源</button></span></div>
+                <div class="list-row search-result" data-search-type="docs"><strong>访谈纪要 07-12</strong><span>A 客户</span><span>正文片段</span><span><span class="badge green">可见</span></span><span><button class="text-button" data-page-jump="qaPage">加入问答</button></span></div>
+                <div class="list-row search-result" data-search-type="terms"><strong>SLA 术语口径</strong><span>团队术语</span><span>术语别名</span><span><span class="badge primary">口径</span></span><span><button class="text-button" data-page-jump="termsPage">查看术语</button></span></div>
+                <div class="list-row search-result" data-search-type="issues"><strong>预算调整待核实</strong><span>A 客户</span><span>风险标签</span><span><span class="badge warn">待确认</span></span><span><button class="text-button" data-page-jump="docsPage" data-doc-id="delivery">回到文档</button></span></div>
+              </div>
+            </div>
+          </section>
+          <p class="footer-note">确认点：默认“全部 / 文档 / 术语 / 待核实”筛选、2-3 行摘要、打开来源主操作、加入问答次操作是否清楚？</p>
+        </section>
+
+        <section id="qaPage" class="prototype-page">
+          <section class="hero">
+            <div class="card">
+              <div class="card-body">
+                <div class="headline">
+                  <div>
+                    <h1>问答页：推荐问题 + 来源回看</h1>
+                    <p>用于确认：推荐问题可以降低提问门槛，但答案必须限定当前空间并带来源；库外问题仍回复未找到。</p>
+                  </div>
+                  <span class="badge info">Phase2 增强候选</span>
+                </div>
+                <div class="tabs">
+                  <button class="tab question-chip active" data-question="risk">这个项目最大的交付风险是什么？</button>
+                  <button class="tab question-chip" data-question="budget">预算调整依据有哪些？</button>
+                  <button class="tab question-chip" data-question="terms">哪些术语需要统一口径？</button>
+                </div>
+                <div class="hint-card"><h4 id="answerTitle">示例回答：交付风险</h4><p id="answerBody">当前空间中可见材料显示，交付风险主要集中在预算调整、SLA 口径和客户确认周期。以下结论仅基于当前空间已入库文档，并附来源。</p></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-body">
+                <div class="section-title"><h3>来源引用</h3><span class="badge green">必须可追溯</span></div>
+                <div class="stack">
+                  <div class="hint-card"><h4><button class="text-button" data-page-jump="docsPage" data-doc-id="delivery">交付方案 v0.3</button></h4><p>命中：预算调整、风险分级、客户确认。</p></div>
+                  <div class="hint-card"><h4><button class="text-button" data-page-jump="docsPage" data-doc-id="meeting">访谈纪要 07-12</button></h4><p>命中：SLA 口径、客户反馈。</p></div>
+                  <div class="hint-card"><h4><button class="text-button" data-page-jump="termsPage">术语：SLA</button></h4><p>命中：术语解释与别名。</p></div>
+                </div>
+              </div>
+            </div>
+          </section>
+          <p class="footer-note">确认点：默认首页轻量提问、提交后进入独立问答页；来源卡默认展示 3 条，其余折叠，这个路径是否清楚？</p>
+        </section>
+
+        <section id="termsPage" class="prototype-page">
+          <section class="card">
+            <div class="card-body">
+              <div class="headline">
+                <div><h1>术语页：团队语义上下文</h1><p>用于确认：术语不是普通设置项，它会影响文档阅读、编辑提示和问答口径。</p></div>
+                <span class="badge primary">P1 底座</span>
+              </div>
+              <div class="tabs">
+                <button class="tab term-filter active" data-term-filter="all">全部术语</button>
+                <button class="tab term-filter" data-term-filter="confirmed">已确认</button>
+                <button class="tab term-filter" data-term-filter="pending">待确认</button>
+              </div>
+              <div class="list-view">
+                <div class="list-row header"><span>术语</span><span>别名</span><span>状态</span><span>使用位置</span><span>动作</span></div>
+                <div class="list-row term-row" data-term-status="confirmed"><strong>SLA</strong><span>服务等级</span><span><span class="badge primary">已确认</span></span><span>问答 / 文档</span><span><button class="text-button" data-page-jump="docsPage" data-doc-id="terms">编辑</button></span></div>
+                <div class="list-row term-row" data-term-status="confirmed"><strong>客户空间</strong><span>Space</span><span><span class="badge green">已确认</span></span><span>权限提示</span><span><button class="text-button" data-page-jump="searchPage">查引用</button></span></div>
+                <div class="list-row term-row" data-term-status="pending"><strong>待核实问题</strong><span>Issue</span><span><span class="badge warn">待确认</span></span><span>关系图 / 问答</span><span><button class="text-button" data-page-jump="qaPage">加入问答</button></span></div>
+              </div>
+            </div>
+          </section>
+          <p class="footer-note">确认点：术语默认集中在术语页管理；文档 / 问答内仅用轻量徽标或 popover 提示，是否足够不打扰？</p>
+        </section>
+
+        <section id="reviewPage" class="prototype-page">
+          <section class="card review">
+            <div class="card-body">
+              <div class="section-title"><h2>原型评审页：请直接用白话确认</h2><span class="badge warn">下一步依据</span></div>
+              <div class="review-grid">
+                <div class="review-question"><strong>1. 默认稿是否可接受？</strong><span>如果没有明显不舒服，默认按 §9.3 推荐稿继续，不需要你逐项做 UI 专业判断。</span></div>
+                <div class="review-question"><strong>2. 页面切换是否完整？</strong><span>总览 / 文档 / 搜索 / 问答 / 术语 / 评审能否覆盖主要演示路径？</span></div>
+                <div class="review-question"><strong>3. 文档编辑体验是否稳定？</strong><span>预览 / 编辑 / 编辑+预览并排、主要区域可调宽，是否符合知识库工作台预期？</span></div>
+                <div class="review-question"><strong>4. 是否进入 08 / 09 回填？</strong><span>确认后只回填计划与验证草案，不直接进入编码。</span></div>
+              </div>
+              <div class="tabs" style="margin-top: 14px;">
+                <button class="tab" data-page-jump="spacePage">回到总览</button>
+                <button class="tab" data-page-jump="docsPage" data-doc-id="delivery">看文档编辑</button>
+                <button class="tab" data-page-jump="searchPage">看搜索</button>
+                <button class="tab" data-page-jump="qaPage">看问答</button>
+                <button class="tab" data-page-jump="termsPage">看术语</button>
+              </div>
+            </div>
+          </section>
+        </section>
+      </main>
+
+      <aside class="inspector">
+        <div class="resize-handle left" data-resize="inspector" title="拖拽调整右侧状态区宽度"></div>
+        <div class="inspector-block">
+          <h3>当前页面判断</h3>
+          <div class="checklist">
+            <div class="check-item"><span class="checkbox"></span><span>默认蓝白主题和 3-4 个首页主入口是否舒服？</span></div>
+            <div class="check-item"><span class="checkbox"></span><span>经典目录 / 列表是否能作为稳定默认路径？</span></div>
+            <div class="check-item"><span class="checkbox"></span><span>目录区、文档列表、编辑预览区、右侧状态区可调宽是否更安心？</span></div>
+            <div class="check-item"><span class="checkbox"></span><span>局部关系图保持候选、不近期实现是否合理？</span></div>
+          </div>
+        </div>
+
+        <div class="inspector-block">
+          <h3>候选状态</h3>
+          <p class="subtle">当前是实现前 UI 原型确认版。确认后才回填 `08/09` 的计划和验证草案；若原型暴露新需求、接口或算法变化，必须先回到正式文档链路。</p>
+          <div class="stack">
+            <span class="badge primary">P2-UI-G-006：默认稿一致性</span>
+            <span class="badge warn">未进入 08 / 09</span>
+            <span class="badge gray">不连接后端</span>
+          </div>
+        </div>
+
+        <div class="inspector-block">
+          <h3>Demo 讲述路径</h3>
+          <div class="checklist">
+            <div class="check-item"><span class="checkbox"></span><span>打开空间总览，看项目和主题。</span></div>
+            <div class="check-item"><span class="checkbox"></span><span>进入 A 客户项目，看文档列表。</span></div>
+            <div class="check-item"><span class="checkbox"></span><span>切到局部关系图，看来源 / 术语 / 待核实问题。</span></div>
+            <div class="check-item"><span class="checkbox"></span><span>回到问答，要求答案带来源。</span></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    const viewTabs = document.querySelectorAll('.tab[data-view]');
+    const views = document.querySelectorAll('.view');
+    const pageButtons = document.querySelectorAll('.rail-item[data-page]');
+    const pages = document.querySelectorAll('.prototype-page');
+    const pageLabel = document.getElementById('currentPageLabel');
+    const themeButtons = document.querySelectorAll('.theme-button[data-theme]');
+    const classicButton = document.getElementById('classicButton');
+    const exploreButton = document.getElementById('exploreButton');
+    const docButtons = document.querySelectorAll('.doc-list-item[data-doc-id]');
+    const docModeButtons = document.querySelectorAll('.doc-mode-button[data-doc-mode]');
+    const docModes = document.querySelectorAll('.doc-mode');
+    const docEditor = document.getElementById('docEditor');
+    const docSplitEditor = document.getElementById('docSplitEditor');
+    const docPreview = document.getElementById('docPreview');
+    const docSplitPreview = document.getElementById('docSplitPreview');
+    const docTitle = document.getElementById('docTitle');
+    const docPath = document.getElementById('docPath');
+    const docStatus = document.getElementById('docStatus');
+    const docVersion = document.getElementById('docVersion');
+    const docSource = document.getElementById('docSource');
+    const pageLabels = {
+      spacePage: '空间总览',
+      docsPage: '文档页',
+      searchPage: '搜索页',
+      qaPage: '问答页',
+      termsPage: '术语页',
+      reviewPage: '原型评审'
+    };
+    const docData = {
+      delivery: {
+        title: '交付方案 v0.3',
+        path: 'A 客户交付 / 方案文档 / 交付方案 v0.3',
+        status: '待核实',
+        statusClass: 'badge warn',
+        version: 'v0.3 · 刚刚编辑',
+        source: '访谈纪要、预算表、SLA 口径',
+        markdown: `# 交付方案 v0.3
+
+## 当前判断
+A 客户交付风险主要来自预算调整、SLA 口径和确认周期。
+
+## 待核实事项
+- 预算调整是否已得到客户书面确认。
+- SLA 口径是否和合同附件一致。
+- 下周评审前需要补齐来源截图。`
+      },
+      meeting: {
+        title: '访谈纪要 07-12',
+        path: 'A 客户交付 / 需求访谈 / 访谈纪要 07-12',
+        status: '已入库',
+        statusClass: 'badge green',
+        version: 'v1.0 · 来源已索引',
+        source: '会议记录、客户访谈录音摘要',
+        markdown: `# 访谈纪要 07-12
+
+## 关键反馈
+客户希望交付方案能明确预算变化、上线窗口和服务等级。
+
+## 可追溯来源
+- 访谈问题 Q3：预算调整原因。
+- 访谈问题 Q5：SLA 口径解释。
+- 访谈问题 Q8：上线前确认流程。`
+      },
+      terms: {
+        title: 'SLA 术语口径',
+        path: '团队术语表 / SLA 术语口径',
+        status: '口径',
+        statusClass: 'badge primary',
+        version: 'v0.2 · 问答可引用',
+        source: '合同附件、交付方案、团队术语表',
+        markdown: `# SLA 术语口径
+
+## 定义
+SLA 指服务等级协议，用于约束响应时间、修复时限和升级路径。
+
+## 使用提醒
+- 文档中首次出现时展示解释。
+- 问答引用时必须标注来源。
+- 与客户合同不一致时标记为待核实。`
+      }
+    };
+    const answers = {
+      risk: {
+        title: '示例回答：交付风险',
+        body: '当前空间中可见材料显示，交付风险主要集中在预算调整、SLA 口径和客户确认周期。以下结论仅基于当前空间已入库文档，并附来源。'
+      },
+      budget: {
+        title: '示例回答：预算调整依据',
+        body: '预算调整依据来自交付方案 v0.3 的风险段、访谈纪要中的客户反馈，以及待核实问题列表。仍需客户书面确认后才能作为最终结论。'
+      },
+      terms: {
+        title: '示例回答：需统一术语',
+        body: '当前最需要统一的是 SLA、客户空间、待核实问题三个术语。建议先在术语页确认口径，再让问答和文档编辑复用同一解释。'
+      }
+    };
+
+    function activateView(id) {
+      views.forEach(view => view.classList.toggle('active', view.id === id));
+      viewTabs.forEach(tab => tab.classList.toggle('active', tab.dataset.view === id));
+    }
+
+    viewTabs.forEach(tab => {
+      tab.addEventListener('click', () => activateView(tab.dataset.view));
+    });
+
+    function activatePage(id) {
+      pages.forEach(page => page.classList.toggle('active', page.id === id));
+      pageButtons.forEach(button => button.classList.toggle('active', button.dataset.page === id));
+      pageLabel.textContent = pageLabels[id] || '??';
+    }
+
+    pageButtons.forEach(button => {
+      button.addEventListener('click', () => activatePage(button.dataset.page));
+    });
+
+    function activateTheme(theme) {
+      if (theme === 'light') {
+        document.body.removeAttribute('data-theme');
+      } else {
+        document.body.dataset.theme = theme;
+      }
+      themeButtons.forEach(button => button.classList.toggle('active', button.dataset.theme === theme));
+    }
+
+    themeButtons.forEach(button => {
+      button.addEventListener('click', () => activateTheme(button.dataset.theme));
+    });
+
+    function renderMarkdown(markdown) {
+      const lines = markdown.split('\n');
+      const html = [];
+      let inList = false;
+      lines.forEach(line => {
+        if (line.startsWith('# ')) {
+          if (inList) { html.push('</ul>'); inList = false; }
+          html.push('<h1>' + line.slice(2) + '</h1>');
+        } else if (line.startsWith('## ')) {
+          if (inList) { html.push('</ul>'); inList = false; }
+          html.push('<h2>' + line.slice(3) + '</h2>');
+        } else if (line.startsWith('- ')) {
+          if (!inList) { html.push('<ul>'); inList = true; }
+          html.push('<li>' + line.slice(2) + '</li>');
+        } else if (line.trim()) {
+          if (inList) { html.push('</ul>'); inList = false; }
+          html.push('<p>' + line + '</p>');
+        }
+      });
+      if (inList) html.push('</ul>');
+      return html.join('');
+    }
+
+    function setDocMode(id) {
+      docModes.forEach(mode => mode.classList.toggle('active', mode.id === id));
+      docModeButtons.forEach(button => button.classList.toggle('active', button.dataset.docMode === id));
+      if (id === 'previewMode') {
+        docPreview.innerHTML = renderMarkdown(docEditor.value);
+      }
+      if (id === 'splitMode') {
+        docSplitEditor.value = docEditor.value;
+        docSplitPreview.innerHTML = renderMarkdown(docSplitEditor.value);
+      }
+    }
+
+    function selectDoc(id) {
+      const doc = docData[id] || docData.delivery;
+      docTitle.textContent = doc.title;
+      docPath.textContent = doc.path;
+      docStatus.textContent = doc.status;
+      docStatus.className = doc.statusClass;
+      docVersion.textContent = doc.version;
+      docSource.textContent = doc.source;
+      docEditor.value = doc.markdown;
+      docSplitEditor.value = doc.markdown;
+      docPreview.innerHTML = renderMarkdown(doc.markdown);
+      docSplitPreview.innerHTML = renderMarkdown(doc.markdown);
+      docButtons.forEach(button => button.classList.toggle('active', button.dataset.docId === id));
+    }
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function setupResize(handle) {
+      handle.addEventListener('pointerdown', event => {
+        event.preventDefault();
+        handle.classList.add('active');
+        const resizeType = handle.dataset.resize;
+        const startX = event.clientX;
+        const bodyStyle = document.body.style;
+        const current = getComputedStyle(document.body);
+        const startValues = {
+          pane: parseFloat(current.getPropertyValue('--pane-width')) || 300,
+          inspector: parseFloat(current.getPropertyValue('--inspector-width')) || 330,
+          docSidebar: parseFloat(current.getPropertyValue('--doc-sidebar-width')) || 260,
+          splitEditor: parseFloat(current.getPropertyValue('--split-editor-width')) || 50
+        };
+
+        function onMove(moveEvent) {
+          const delta = moveEvent.clientX - startX;
+          if (resizeType === 'pane') {
+            bodyStyle.setProperty('--pane-width', clamp(startValues.pane + delta, 220, 420) + 'px');
+          }
+          if (resizeType === 'inspector') {
+            bodyStyle.setProperty('--inspector-width', clamp(startValues.inspector - delta, 260, 460) + 'px');
+          }
+          if (resizeType === 'docSidebar') {
+            bodyStyle.setProperty('--doc-sidebar-width', clamp(startValues.docSidebar + delta, 210, 420) + 'px');
+          }
+          if (resizeType === 'splitEditor') {
+            bodyStyle.setProperty('--split-editor-width', clamp(startValues.splitEditor + delta / 8, 35, 65) + '%');
+          }
+        }
+
+        function onUp() {
+          handle.classList.remove('active');
+          window.removeEventListener('pointermove', onMove);
+          window.removeEventListener('pointerup', onUp);
+        }
+
+        window.addEventListener('pointermove', onMove);
+        window.addEventListener('pointerup', onUp);
+      });
+    }
+
+    document.querySelectorAll('[data-resize]').forEach(setupResize);
+
+    docButtons.forEach(button => {
+      button.addEventListener('click', () => selectDoc(button.dataset.docId));
+    });
+
+    docModeButtons.forEach(button => {
+      button.addEventListener('click', () => setDocMode(button.dataset.docMode));
+    });
+
+    docEditor.addEventListener('input', () => {
+      docPreview.innerHTML = renderMarkdown(docEditor.value);
+      docSplitEditor.value = docEditor.value;
+      docSplitPreview.innerHTML = renderMarkdown(docEditor.value);
+    });
+
+    docSplitEditor.addEventListener('input', () => {
+      docEditor.value = docSplitEditor.value;
+      docPreview.innerHTML = renderMarkdown(docSplitEditor.value);
+      docSplitPreview.innerHTML = renderMarkdown(docSplitEditor.value);
+    });
+
+    function setTreeDescendantsHidden(id, hidden) {
+      const children = document.querySelectorAll('[data-parent="' + id + '"]');
+      children.forEach(child => {
+        child.classList.toggle('is-hidden', hidden);
+        if (hidden && child.dataset.treeId) {
+          setTreeDescendantsHidden(child.dataset.treeId, true);
+        }
+      });
+    }
+
+    function restoreTreeChildren(id) {
+      const children = document.querySelectorAll('[data-parent="' + id + '"]');
+      children.forEach(child => {
+        child.classList.remove('is-hidden');
+        if (child.dataset.treeId && !child.classList.contains('collapsed')) {
+          restoreTreeChildren(child.dataset.treeId);
+        }
+      });
+    }
+
+    function toggleTree(id) {
+      const button = document.querySelector('.tree-toggle[data-tree-id="' + id + '"]');
+      const willCollapse = !button.classList.contains('collapsed');
+      button.classList.toggle('collapsed', willCollapse);
+      button.querySelector('.tree-arrow').textContent = willCollapse ? '+' : '-';
+      if (willCollapse) {
+        setTreeDescendantsHidden(id, true);
+      } else {
+        restoreTreeChildren(id);
+      }
+    }
+
+    document.querySelectorAll('.tree-row').forEach(row => {
+      row.addEventListener('click', () => {
+        document.querySelectorAll('.tree-row').forEach(item => item.classList.remove('active'));
+        row.classList.add('active');
+        if (row.dataset.treeId) toggleTree(row.dataset.treeId);
+        if (row.dataset.pageTarget) activatePage(row.dataset.pageTarget);
+        if (row.dataset.docId) selectDoc(row.dataset.docId);
+      });
+    });
+
+    document.querySelectorAll('[data-page-jump]').forEach(button => {
+      button.addEventListener('click', () => {
+        activatePage(button.dataset.pageJump);
+        if (button.dataset.docId) selectDoc(button.dataset.docId);
+      });
+    });
+
+    document.querySelectorAll('.search-filter').forEach(button => {
+      button.addEventListener('click', () => {
+        const filter = button.dataset.searchFilter;
+        document.querySelectorAll('.search-filter').forEach(item => item.classList.toggle('active', item === button));
+        document.querySelectorAll('.search-result').forEach(row => {
+          row.classList.toggle('is-hidden', filter !== 'all' && !row.dataset.searchType.includes(filter));
+        });
+      });
+    });
+
+    document.querySelectorAll('.term-filter').forEach(button => {
+      button.addEventListener('click', () => {
+        const filter = button.dataset.termFilter;
+        document.querySelectorAll('.term-filter').forEach(item => item.classList.toggle('active', item === button));
+        document.querySelectorAll('.term-row').forEach(row => {
+          row.classList.toggle('is-hidden', filter !== 'all' && row.dataset.termStatus !== filter);
+        });
+      });
+    });
+
+    document.querySelectorAll('.question-chip').forEach(button => {
+      button.addEventListener('click', () => {
+        const answer = answers[button.dataset.question] || answers.risk;
+        document.querySelectorAll('.question-chip').forEach(item => item.classList.toggle('active', item === button));
+        document.getElementById('answerTitle').textContent = answer.title;
+        document.getElementById('answerBody').textContent = answer.body;
+      });
+    });
+
+    classicButton.addEventListener('click', () => {
+      classicButton.classList.add('active');
+      exploreButton.classList.remove('active');
+      activateView('classicView');
+    });
+
+    exploreButton.addEventListener('click', () => {
+      exploreButton.classList.add('active');
+      classicButton.classList.remove('active');
+      activateView('overviewView');
+    });
+
+    selectDoc('delivery');
+  </script>
+</body>
+</html>

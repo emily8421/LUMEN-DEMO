@@ -1,4 +1,4 @@
-﻿# 08 开发计划
+# 08 开发计划
 
 > 按阶段拆 Sprint。本文件当前承载 **Phase1（功能范围 `[P1]` · 交付物形态 Demo）**；
 > 升阶段时在**原位追加**新 Sprint（global-rules §8，不删旧 Sprint）。
@@ -11,8 +11,8 @@
 | 当前 Phase | Phase1 |
 | 交付物形态 | Demo |
 | 输入基线 | `docs/03-prd.md` §3、`docs/04-architecture.md`、`docs/05-tech-spec.md`、`docs/09-verification.md` |
-| 当前状态 | Phase1 Demo 已完成并已记录全量验收（Conditional Go）；Sprint-1~6 降级口径完成；Sprint-7（LLM）/ Sprint-8（pgvector 接入）真实化完成（RG-001/002/004/005 Go），task-009 search hybrid 完成；P1A 前端结构聚焦重构已实现，构建与 Chrome / Edge 900px smoke 均通过；P1B 前端工作台系统化重设计已实现，构建与 Chrome / Edge 900px smoke 均通过；待人工确认是否正式进入 Phase2 |
-| 最后更新 | 2026-07-12（P1B smoke 验收回填） |
+| 当前状态 | Phase1 Demo 已完成并已记录全量验收（Conditional Go）；Sprint-1~6 降级口径完成；Sprint-7（LLM）/ Sprint-8（pgvector 接入）真实化完成（RG-001/002/004/005 Go），task-009 search hybrid 完成；P1A 前端结构聚焦重构已实现，构建与 Chrome / Edge 900px smoke 均通过；P1B 前端工作台系统化重设计已实现，构建与 Chrome / Edge 900px smoke 均通过；P2 UI 实现前确认门禁（Sprint-11 草案）已回填，少容器清爽稿暂定为实现前 UI 确认版候选；待人工确认是否正式进入 Phase2，不直接编码 |
+| 最后更新 | 2026-07-14（P2 UI 实现前确认门禁草案回填） |
 
 ## Sprint 总览
 
@@ -30,6 +30,7 @@
 | Sprint-8 | pgvector 接入（内存→PG+向量召回） | 007/008 | design/rag-retrieval、06、05（RG-001/002）、task-008 | docker + db.py + orm + pg_repository + embedding + rag + migrations 003-005 | / TC-P1-007/008 | 已完成（RG-001/002 Go；T1–T7，task-008） | `tasks/task-008-pgvector-integration.md` |
 | Sprint-9（P1A） | 前端结构聚焦重构 | 011（既有 P1 页面体验修正） | design/frontend-interaction、research/frontend-p1-structure-exploration | frontend 组件拆分 + 视图切换 + CSS 响应式 | / TC-P1-013 | 已完成（构建 + Chrome / Edge 900px smoke 通过） | — |
 | Sprint-10（P1B） | 前端工作台系统化重设计 | 011（既有 P1 页面体验修正） | design/frontend-workspace-redesign、frontend-workspace-redesign-prototype | frontend 工作台骨架 + 密度 token + 四视图 Workspace | / TC-P1-014 | 已完成（构建 + Chrome / Edge 900px smoke 通过） | — |
+| Sprint-11（P2-UI-Gate 候选） | Phase2 前端 UI 实现前确认与计划冻结 | 012/013/014/025/026（P2 骨架候选，不新增 REQ） | design/frontend-interaction §9.3、research/prototypes/2026-07-14-frontend-ui-reference-absorbed-prototype、09 TC-P2-UI-001~005 | docs + 后续 frontend 实现范围冻结 | / TC-P2-UI-001~005 | 草案（少容器清爽稿暂定；待 Phase2 启动确认） | — |
 
 ## 依赖关系与里程碑
 
@@ -43,6 +44,7 @@
 | Sprint-6 桌面端 | Sprint-1~5 全部 | — | 否（横切验收） | 最后执行 | M6 Phase1 Demo 验收 |
 | Sprint-9（P1A）前端结构聚焦 | Sprint-6 + #72 P0 UX + #74 探索 | 范围蔓延到 router / 组件库 / 移动端 | 可与 Phase2 tech-env-eval 并行 | 先纯 React state + CSS，不引新依赖 | M7 P1A 体验收口 |
 | Sprint-10（P1B）前端工作台重设计 | Sprint-9 + `frontend-workspace-redesign` 原型确认 | 继续局部样式微调导致返工；范围蔓延到组件库 / router | 可与 Phase2 tech-env-eval 并行 | 先按原型落地 Nav Rail + Context Pane + Workspace，不引新依赖 | M8 P1B 工作台体验收口 |
+| Sprint-11（P2-UI-Gate 候选）实现前 UI 门禁 | Sprint-10 + `frontend-interaction` §9.3 + 少容器清爽稿暂定确认 | UI 方向继续返工；跳过门禁直接编码；范围蔓延到组件库 / router / 新 API / 图谱算法 | 可与 Phase2 tech-env-eval 并行 | 先冻结 Page-ID / Flow-ID / TC，再开实现任务；当前只回填计划与验证草案 | M9 P2 UI 实现前门禁 |
 
 ## 任务拆分规则
 
@@ -247,6 +249,37 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 - 不做移动端适配，不新增 P2 / Phase2 功能入口。
 - 不把静态 HTML 原型作为生产代码引入；只按其布局、密度和交互结构实现 React 版本。
 
+## Sprint-11（P2-UI-Gate 候选）：Phase2 前端 UI 实现前确认与计划冻结
+
+### 目标
+基于 `docs/design/frontend-interaction.md` §9.3 与 `docs/research/prototypes/2026-07-14-frontend-ui-reference-absorbed-prototype.html`，将当前少容器清爽稿作为 Phase2 前端实现前 UI 确认版候选，冻结页面结构、核心点击路径、信息密度、权限 / 降级口径和验证草案。该 Sprint 是实现前门禁，不直接编码，不新增 REQ / API / DB。
+
+### 输入文档
+- `docs/design/frontend-interaction.md` §8.1 / §9.3（PG-P2、CMP-P2、PATH-P2、P2-UI-G）。
+- `docs/research/prototypes/2026-07-14-frontend-ui-reference-absorbed-prototype.html`（少容器清爽稿，暂定按当前稿继续）。
+- `docs/research/2026-07-13-ui-prototype-exploration.md` §9.4 / §10（用户反馈与 PX-R-007）。
+- `docs/02-srs.md` REQ-012 / 013 / 014 / 025 / 026（P2 骨架候选，仅作追溯，不直接扩大实现范围）。
+- `docs/09-verification.md` TC-P2-UI-001~005。
+
+### 修改范围
+- `docs/design/frontend-interaction.md`：必要时补齐 PG-P2 / CMP-P2 / PATH-P2 与 P2-UI-G 的最终确认状态。
+- `docs/08-dev-plan.md`：保留本 Sprint-11 候选计划、依赖和禁止事项。
+- `docs/09-verification.md`：补 Phase2 UI 门禁 TC 草案与未验证项。
+- 后续如人工确认进入实现，再另开代码任务；预计实现范围优先限制在 `frontend/src/App.tsx`、`frontend/src/styles.css` 与少量轻量组件，不在本 Sprint 直接修改代码。
+
+### 验收标准
+- 用户确认少容器清爽稿可作为实现前 UI 确认版候选；若有局部意见，先回到 HTML 原型调整。
+- `docs/08-dev-plan.md` 已记录 Sprint-11 候选计划、依赖关系和禁止事项。
+- `docs/09-verification.md` 已记录 TC-P2-UI-001~005，能追溯到 PG-P2 / CMP-P2 / PATH-P2 和 P2-UI-G。
+- 页面布局、内容呈现、点击路径、权限 / 降级口径与默认稿一致，不新增真实图谱算法、推荐算法、接口契约或数据库字段。
+- 当前阶段只完成计划 / 验证草案回填；是否正式进入 Phase2 与是否开实现任务仍需人工确认。
+
+### 禁止事项
+- 未确认 Phase2 范围、进入 / 退出标准和实现任务前，不修改 `frontend/` 代码。
+- 不引入 `react-router`、组件库、图标库、全局状态管理或新依赖。
+- 不新增后端接口、数据库字段、权限模型或图谱 / 冲突检测算法。
+- 不把愿景级局部情报墙、随机关系图、强“矛盾检测”提前做成 Phase2 默认能力。
+- 不做移动端适配；桌面端宽度和现有 P1 能力不回退。
 ## Sprint 完成包与进度记录
 
 > 对照 `ai/doc-standards/08-dev-plan.md` §4（完成包）+ §5（进度记录）。Sprint-1~6 为早期降级实现；Sprint-7/8 已完成真实 LLM、PostgreSQL+pgvector、Embedding 与 RAG 向量召回接入；task-009 已完成 search 向量化 + 可选 zhparser 回退。仍降级：真实 Word / PDF 解析、OCR。验收证据见 `docs/09-verification.md §5`。
@@ -266,7 +299,7 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 | Sprint-9（P1A）实现 | 2026-07-11 | 011 | 前端结构聚焦重构：本地 `activeView` 四视图切换、右栏拆回文档 / 搜索 / 问答 / 术语主视图、桌面响应式 CSS | `9ede5b6`（PR #76） | `git diff --check`；`npm.cmd run build`；Chrome / Edge 900px headless smoke 通过 | 不阻塞 Phase1 Demo closure；P1A 仅作为既有 Demo 的前端结构体验收口 | §2 / §5（TC-P1-013 通过） |
 | Sprint-10（P1B）实现 | 2026-07-12 | 011 | 前端工作台系统化重设计：TopBar + Nav Rail + Context Pane + Workspace 三层布局；Context Pane 随文档 / 搜索 / 问答 / 术语变化；CSS token + pane / toolbar / list-row / inspector 分层；新增正式设计文档与 HTML 原型 | 本批 | `git diff --check`；`npm.cmd run build`；Chrome / Edge 900px headless smoke 通过，覆盖登录、四视图切换、文档新建 / 编辑 / 版本恢复 / 删除、Markdown 预览、搜索来源打开、问答、术语新建 / 删除确认；无全局横向滚动 | 不阻塞 Phase1 Demo closure；P1B 仅作为既有 Demo 的前端工作台体验收口；不引 router / 组件库 / 新 API | §2 / §5（TC-P1-014 通过） |
 
-> Sprint-8 后：pgvector / Embedding / LLM 已接入（RG-001/002/004 Go），基础 Web / ORM 栈为 Go（RG-005）。Phase1 全量验收结论为 Conditional Go（Demo closure）；仍移出 P1：真实 PDF 解析、图片 OCR（REQ-010，RG-003 No-Go，后续阶段）。Sprint-9（P1A）与 Sprint-10（P1B）是已完成 Demo 之上的前端体验收口，不改变 Phase1 closure 结论。Phase2 启动前需人工确认范围、进入 / 退出标准，并另行更新阶段指针。
+> Sprint-8 后：pgvector / Embedding / LLM 已接入（RG-001/002/004 Go），基础 Web / ORM 栈为 Go（RG-005）。Phase1 全量验收结论为 Conditional Go（Demo closure）；仍移出 P1：真实 PDF 解析、图片 OCR（REQ-010，RG-003 No-Go，后续阶段）。Sprint-9（P1A）与 Sprint-10（P1B）是已完成 Demo 之上的前端体验收口，不改变 Phase1 closure 结论。Phase2 启动前需人工确认范围、进入 / 退出标准，并另行更新阶段指针。Sprint-11 目前仅为 P2 UI 实现前门禁草案，不计入已完成 Sprint。
 
 ---
 
@@ -274,4 +307,4 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 
 ## 待人工确认项
 
-- 是否正式进入 Phase2：需人工确认范围、进入 / 退出标准后，再更新 `ai/project-rules.md` 当前阶段指针与相关设计 / 计划文档。
+- 是否正式进入 Phase2：需人工确认范围、进入 / 退出标准后，再更新 `ai/project-rules.md` 当前阶段指针与相关设计 / 计划文档。`Sprint-11（P2-UI-Gate 候选）` 已回填为实现前门禁草案，但不代表已批准编码。
