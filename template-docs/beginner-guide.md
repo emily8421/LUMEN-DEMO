@@ -154,7 +154,7 @@ docs/inputs/ 原始输入  ──→  docs/vision/product-vision.md  ──→  
 | 第一次整体上手 | 本手册 + `README.md` |
 | 装工具 / 装环境 | `template-docs/env-setup.md` |
 | 装 AI CLI | `template-docs/ai-cli-setup.md` |
-| 具体场景怎么操作 | `template-docs/scenario-guides.md`（A0–A21 / C1–C8 / 元场景） |
+| 具体场景怎么操作 | `template-docs/scenario-guides.md`（A0–A27 / C1–C8 / 元场景） |
 | 找命令速查 | `SOP.md`、`ai/commands/README.md` |
 | 理解模板为什么这么设计 | `template-docs/template-methodology.md` |
 | 查术语是什么意思 | `template-docs/glossary.md` |

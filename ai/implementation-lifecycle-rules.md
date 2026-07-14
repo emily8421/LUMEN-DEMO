@@ -33,6 +33,8 @@
 
 若项目包含真实运行依赖（如 `backend/`、`frontend/`、`docker/`、数据库、本机模型、外部 API、重型 SDK、LLM、真实数据或权限安全能力），进入首个会触发这些依赖的编码 Sprint 前，必须已有技术路线与环境支撑评估，并在 `docs/05-tech-spec.md` 记录 Risk-ID、依赖配置、readiness gate 和解锁条件；或记录用户明确跳过的原因、风险、影响范围和补做时点。评估结论为 `No-Go` 时不得进入相关 Sprint；`Conditional Go` 只能进入满足限制条件或不触发该风险的 Sprint。
 
+若项目触发 Web App Structure Profile + Walking Skeleton Gate（见 `template-docs/web-fullstack-profile.md`），进入首个 Web 业务功能 Sprint 前必须先完成或显式豁免 Sprint 0 / Walking Skeleton：App Shell、前后端目录边界、API client ↔ API-ID 追溯、至少一个 vertical slice、文件膨胀阈值和最小浏览器 / API smoke。未完成且无豁免时，不得把多页面 / 多状态功能继续堆入单个主应用文件、全局样式或后端 controller / service。
+
 1. 输入必须至少包括 `docs/03-prd.md`、`docs/04-architecture.md`、`docs/05-tech-spec.md`、`docs/08-dev-plan.md`、`docs/09-verification.md`。
 2. 若项目涉及持久化或对外接口，还必须读取 `docs/06-db-design.md`、`docs/07-api-spec.md` 的相关章节。
 3. Phase 划分必须同时说明功能范围与交付物形态（Demo / MVP / 产品），不得默认 Phase1 等于 MVP。

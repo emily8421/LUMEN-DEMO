@@ -68,6 +68,8 @@ powershell -ExecutionPolicy Bypass -File scripts/check-github-context.ps1 -Expec
 ```powershell
 git status
 git diff
+git diff --check
+powershell -ExecutionPolicy Bypass -File scripts/check-markdown-clean.ps1 _proposals ai-records  # 模板仓 Markdown 提案 / 记录预检
 # 运行项目对应验证命令，例如：bash scripts/check-template.sh / npm test / pytest
 powershell -ExecutionPolicy Bypass -File scripts/check-github-context.ps1  # push / PR 前只读预检
 git add <文件路径>

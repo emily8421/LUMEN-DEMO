@@ -22,7 +22,7 @@
 
 上游输入：docs/inputs/ 中已评审通过的输入摘要 + docs/vision/product-vision.md（可替换为 00 / 01 / 02 / 03 / task / 现有系统说明 / 外部接入文档）
 先阅读：ai/index.md 列出的全部规则文件（尤其 `ai/document-lifecycle-rules.md`）+ 该上游输入 + docs/env/local-env.md（如存在）。
-按范围读取标准：生成整个文档体系时读取已存在的 `ai/doc-standards/00-09` 与 `ai/doc-standards/design-doc.md`；只生成需求阶段时读取 `ai/doc-standards/00-scenario.md`、`01-user-requirements.md`、`02-srs.md`、`03-prd.md`；生成 DB / API 详细设计时读取 `ai/doc-standards/06-db-design.md`、`07-api-spec.md`；生成或补齐 `docs/design/*` 时读取 `ai/doc-standards/design-doc.md`；生成或补齐前端交互设计时还必须读取 `ai/doc-standards/frontend-interaction.md`；触发 UI 原型策略 / 实现前原型时还必须读取 `ai/doc-standards/ui-prototype-strategy.md`，必要时引用 `template-docs/ui-prototype-strategy-template.md`；生成计划 / 验证阶段时读取 `ai/doc-standards/08-dev-plan.md`、`09-verification.md`；精修单文档时读取对应 `ai/doc-standards/<doc>.md`。
+按范围读取标准：生成整个文档体系时读取已存在的 `ai/doc-standards/00-09` 与 `ai/doc-standards/design-doc.md`；只生成需求阶段时读取 `ai/doc-standards/00-scenario.md`、`01-user-requirements.md`、`02-srs.md`、`03-prd.md`；生成 DB / API 详细设计时读取 `ai/doc-standards/06-db-design.md`、`07-api-spec.md`；生成或补齐 `docs/design/*` 时读取 `ai/doc-standards/design-doc.md`；生成或补齐前端交互设计时还必须读取 `ai/doc-standards/frontend-interaction.md`，若上游已有 UI brief、需求探索原型、视觉效果探索或 experience brief，先检查用户确认依据和 open items；触发 UI 原型策略 / 实现前原型时还必须读取 `ai/doc-standards/ui-prototype-strategy.md`，必要时引用 `template-docs/ui-prototype-strategy-template.md`；触发复杂 Web / 全栈交互结构门禁时还必须引用 `template-docs/web-fullstack-profile.md`，并在 `04/05/08/09` 中补 App Shell、目录边界、vertical slice、文件膨胀阈值和 API / browser smoke；生成计划 / 验证阶段时读取 `ai/doc-standards/08-dev-plan.md`、`09-verification.md`；精修单文档时读取对应 `ai/doc-standards/<doc>.md`。
 
 【前置门槛】
 - 先说明文档体系生成阶段路线：输入材料评审 → 需求确认 → 需求分析 → 总体设计 → 技术选型 / 技术路线评估 → 详细设计 → 验证用例设计 → 执行计划 / Sprint 规划 → 完整文档体系评估与审计 → 待确认事项总览与编码前门禁。
@@ -72,7 +72,7 @@
 4) 详细设计（完整骨架 + 当前阶段细节）
    - 06-db-design：若保留，按模板结构和 `ai/doc-standards/06-db-design.md` 写保留/省略决策、数据需求、概念模型、目标结构与当前实现对照、字段级契约、索引关系、迁移 / seed / 回滚、数据安全留存、DB / API 交叉追溯和 REQ → 表 / 字段矩阵
    - 07-api-spec：若保留，按模板结构和 `ai/doc-standards/07-api-spec.md` 写保留/省略决策、接口形态、统一约定、API-ID、endpoint contract matrix、输入输出契约、错误码、权限安全、异步状态机、版本演进、API ↔ DB / Service / Test 追溯和 REQ → 接口矩阵
-   - docs/design/<子系统>.md：每个非平凡子系统一份（框架 + 当前阶段细节），按 `ai/doc-standards/design-doc.md` 写文档元信息、职责边界、上游追溯、流程 / 状态机、数据 / 接口 / 权限契约引用、失败 / 降级路径、readiness gate、验收追溯、实现偏差 / 设计回写和待确认项；UI 型项目前端交互设计还要按 `ai/document-lifecycle-rules.md §5.3` 判断是否需要 UI 原型策略，记录推荐原型形式、权威位置、覆盖范围与豁免理由；若因简单项目豁免，必须在 `ai/project-rules.md` §3 或 `docs/05-tech-spec.md` 说明原因
+   - docs/design/<子系统>.md：每个非平凡子系统一份（框架 + 当前阶段细节），按 `ai/doc-standards/design-doc.md` 写文档元信息、职责边界、上游追溯、流程 / 状态机、数据 / 接口 / 权限契约引用、失败 / 降级路径、readiness gate、验收追溯、实现偏差 / 设计回写和待确认项；UI 型项目前端交互设计还要按 `ai/document-lifecycle-rules.md §5.2.1 / §5.3` 判断是否存在 UI brief、参考分析、需求探索原型、视觉效果探索、experience brief 和 UI 原型策略，记录已确认体验原则、默认 UI 标准基线、推荐原型形式、权威位置、覆盖范围、UI / 后端 / 双轨顺序判断与豁免理由；若因简单项目豁免，必须在 `ai/project-rules.md` §3 或 `docs/05-tech-spec.md` 说明原因
    - 08-dev-plan：按模板结构和 `ai/doc-standards/08-dev-plan.md` 写当前 Phase 目标、Sprint 总览、Sprint 详情、验证包、完成包、依赖里程碑、任务拆分规则和进度记录
    - 09-verification：按模板结构和 `ai/doc-standards/09-verification.md` 写验证策略、REQ → TC 矩阵、TC 用例详情、TC 状态、分阶段验证范围、本机资源验证、验收记录、Sprint 验收包、缺陷 / 回归记录和未验证风险
 
@@ -98,7 +98,8 @@
 8. 产品红线永久有效：不编造事实；Demo 阶段也必须用检索原文 / 明确 Mock / 明确占位保护红线，不得因演示而输出无依据结论
 9. 高风险 AI 项（跨文档推理/矛盾检测/证据地图等）标"愿景·待技术验证"，不进当前阶段
 10. 演示形态：据 ai/project-rules.md §3「演示形态」推导 `frontend/` 是否启用、docs/04-05 是否体现前端；解析愿景文档，若含「页面 / 界面 / 点击 / 手机 / 打开」等界面交互词且 §3 标为无前端或不需演示，必须警告并提示人工复核
-11. 前端交互设计与 UI 原型策略：若交付形态包含独立 Web / 移动端 / 小程序 / 桌面端，或存在多页面、多角色、复杂表单、状态流、管理页、搜索 / 问答 UI、验收依赖点击路径，应生成或建议生成 `docs/design/frontend-interaction.md`（或按入口拆分 `docs/design/*interaction*.md`）；若不生成，必须在 `ai/project-rules.md` §3 或 `docs/05-tech-spec.md` 写明豁免理由。满足 UI 原型策略触发条件时，还必须在 `ai/project-rules.md` §2.7、`docs/05-tech-spec.md` 或前端交互设计中选择原型策略或写明豁免，说明原型形式、权威位置、主流程 / 状态 / 响应式 / 权限与降级覆盖范围，以及与 `08/09` 的追溯
+11. 前端交互设计与 UI 原型策略：若交付形态包含独立 Web / 移动端 / 小程序 / 桌面端，或存在多页面、多角色、复杂表单、状态流、管理页、搜索 / 问答 UI、验收依赖点击路径，应生成或建议生成 `docs/design/frontend-interaction.md`（或按入口拆分 `docs/design/*interaction*.md`）；若 UI brief、参考分析、需求探索原型、视觉效果探索已有用户确认，可先生成或建议生成 `docs/design/frontend-experience-brief.md` 承接已确认体验原则。若不生成前端交互设计或 experience brief，必须在 `ai/project-rules.md` §3 或 `docs/05-tech-spec.md` 写明豁免理由。满足 UI 原型策略触发条件时，还必须在 `ai/project-rules.md` §2.7、`docs/05-tech-spec.md` 或前端交互设计中选择原型策略或写明豁免，说明默认 UI 标准基线、原型形式、权威位置、主流程 / 状态 / 响应式 / 权限与降级覆盖范围、UI / 后端 / 双轨顺序判断，以及与 `08/09` 的追溯
+12. Web App Structure Profile：若项目同时启用 `frontend/` 与 `backend/`、需要浏览器演示、多页面 / 多状态 / 多角色 / 数据密集界面，或首个前端 Sprint 可能堆入单个主应用文件，应引用 `template-docs/web-fullstack-profile.md`，在 `04/05/08/09` 中补 App Shell、目录边界、API client ↔ API-ID、vertical slice、文件膨胀阈值、Sprint 0 / Walking Skeleton 和 API / browser smoke；若豁免，必须写明理由、风险和补做时点
 12. 技术方案必须受 `ai/project-rules.md` §2.5 与 `docs/env/local-env.md` 约束；Demo / MVP 优先本机可运行，若本机资源不足，必须明确所需公司服务器资源与触发条件；真实运行依赖项目在生成 / 修订 05 或进入首个编码 Sprint 前，应补技术路线与环境支撑评估或记录跳过理由，并在 `05` 建立 Risk-ID / readiness gate 与 `09`、`08` 的映射
 13. 声称据实：技术栈/实现状态必须区分「已启用 / 已验证 / 候选 / 默认关闭 / Mock / 降级 / 禁止」；不得把候选、预留、默认关闭、Mock 或降级写成已启用，无法核实时列为待确认
 14. 横切状态：按 `ai/document-lifecycle-rules.md` §7.1 使用「目标设计 / 草案 / 候选 / 待人工确认 / 待技术验证 / Mock / 降级 / 默认关闭 / 预留·未启用 / 已验证 / 已启用 / 禁止」等状态词；不得把低确定性状态写成已验证或已启用

@@ -49,6 +49,8 @@
 |---|---|---|---|---|---|---|---|
 | Sprint-1 |  | REQ-001 / F-001 | 04/05/06/07 章节 | 1-3 个模块 | TC-001 + 验收记录 | 待开始 / 进行中 / 已完成 / 条件完成 / 阻塞 | 不拆 / `tasks/task-001-xxx.md` |
 
+复杂 Web / 全栈交互项目若触发 `template-docs/web-fullstack-profile.md`，首个业务功能 Sprint 前应安排或显式豁免 Sprint 0 / Walking Skeleton：App Shell、目录边界、最小 API / mock / smoke、文件膨胀阈值；不得顺手实现完整业务。
+
 ## 3. Sprint 详情模板
 
 【撰写提要：以下格式必须用于每个 Sprint；“修改范围”要足够窄，“禁止事项”要明确。】

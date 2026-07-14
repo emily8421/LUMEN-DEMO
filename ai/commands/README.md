@@ -1,4 +1,4 @@
-﻿# AI Commands（快捷命令路由）
+# AI Commands（快捷命令路由）
 
 > Sync notice: This file is maintained by `ai-project-template` and may be overwritten when a derived project syncs template methodology.
 > Do not edit it directly in derived projects; propose reusable changes in `_proposals/` and upstream them to the template repository.
@@ -26,6 +26,9 @@
 汇总待确认事项 / 生成 open items
 讨论人机交互 / 讨论技术选型 / 讨论交互设计方案
 补前端交互设计 / 补 UI 设计
+界面应该长什么样 / 补 UI 输入材料 / 用户没给 UI 参考
+先确认交互原型 / 分析参考产品 / 做视觉效果探索
+实现前先看 UI / 选择原型策略 / 前端和后端先做哪个
 同步后整理项目
 执行当前 Sprint
 读取续接点 / 继续上次
@@ -36,8 +39,8 @@
 
 AI 识别到命令意图后，应先判断是否为 `resume` 快速续接；若用户只要求“读取续接点 / 继续上次 / 恢复上下文”，按 `ai/session-rules.md` §3.1 的最小只读流程执行，不展开完整规则审计。其他命令，或 `resume` 后继续执行具体任务时，应：
 
-1. 读取 `ai/index.md` 及其列出的规则文件。
-2. 读取本命令索引和对应 `ai/commands/*.md`。
+1. 读取 `ai/index.md` 与 `ai/rules-core.md`，按任务路由选择规则包；无法判断时读取完整规则回退包。
+2. 读取本命令索引和对应命令文件。
 3. 读取命令文件列出的权威文档、Prompt 和脚本说明。
 4. 说明将执行的命令、影响范围、是否只读、是否会写文件。
 5. 涉及写入、安装、提交、同步或状态改变时，先取得用户确认。
@@ -66,15 +69,15 @@ AI 识别到命令意图后，应先判断是否为 `resume` 快速续接；若�
 | `docs-system-audit` | 文档体系审核 / PLM 链路审计 | `ai/prompts/review/16-docs-system-audit.md` |
 | `docs-evaluation` | 文档评估 / 阶段转换评估 / 单文档评估 | `ai/prompts/review/19-docs-evaluation.md` |
 | `docs-open-items` | 汇总待确认事项 / 生成 open items / 编码前自检未决项 / 阶段任务前检查待确认项 | `ai/prompts/docs/21-docs-open-items.md` |
-| `ui-prototype-exploration` | 先看原型 / 先做页面原型确认需求 / Demo 前先确认交互 | `ai/prompts/docs/22-ui-prototype-exploration.md` |
+| `ui-prototype-exploration` | 先看原型 / 先做页面原型确认需求 / Demo 前先确认交互 / 做视觉效果探索 / 分层信息架构原型 | `ai/prompts/docs/22-ui-prototype-exploration.md` |
 | `resume` | 读取续接点 / 继续上次 / 恢复上下文 | `ai/session-rules.md` §3.1（快速续接模式） |
 | `tech-env-evaluation` | 技术环境评估 / 技术路线评估 / 依赖安装验证 / 本机能不能跑 | `ai/prompts/review/20-tech-env-evaluation.md` |
 | `template-proposal-summary` | 汇总模板优化提案 | `ai/prompts/maintainers/11-template-proposal-summary.md` |
 | `domain-template-lab`（领域实验·普通项目不用） | 初始化领域模板实验线 / 创建派生领域模板 / 创建 agent-system-template | `ai/prompts/maintainers/23-domain-template-lab.md` |
 | `generate-docs` | 生成文档体系 / 生成整个文档体系 / 补齐 00-09 | `ai/prompts/docs/00-generate-or-complete-docs.md` |
-| `review-inputs` | 评审输入材料 | `ai/prompts/docs/01-review-inputs.md` |
+| `review-inputs` | 评审输入材料 / 补 UI 输入材料 / 用户没给 UI 参考 / 前端交互怎么定 / 分析参考产品 | `ai/prompts/docs/01-review-inputs.md` |
 | `project-review` | 项目审查 / 实现合规审查 | `ai/prompts/review/03-project-review.md` |
-| `edit-single-doc` | 修订单个文档 / 补前端交互设计 / 补 UI 设计 / 选择原型策略 / 补实现前原型 | `ai/prompts/docs/04-edit-single-doc.md` |
+| `edit-single-doc` | 修订单个文档 / 补前端交互设计 / 补 UI 设计 / 选择原型策略 / 补实现前原型 / 回填 experience brief | `ai/prompts/docs/04-edit-single-doc.md` |
 | `sync-docs-from-code` | 代码反向同步文档 | `ai/prompts/docs/07-sync-docs-from-code.md` |
 | `phase-upgrade` | Phase 升级评估 | `ai/prompts/planning/08-phase-upgrade.md` |
 | `docs-checklist` | 开发前文档检查 | `ai/prompts/review/10-docs-checklist.md` |

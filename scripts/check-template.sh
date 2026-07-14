@@ -96,7 +96,7 @@ require_files() {
 }
 
 extract_index_rules() {
-  grep -E '^- ai/.+\.md$' ai/index.md | sed 's/^- //'
+  grep -Eo '`ai/[^`]+\.md`|^- ai/.+\.md$' ai/index.md | sed -E 's/^`//; s/`$//; s/^- //'
 }
 
 extract_sync_files() {
@@ -218,6 +218,7 @@ require_sync_dry_run_direction() {
     sed -i '0,/"VERSION"/s//"README.md",\n    "VERSION"/' template-sync.json
     printf '# template readme\n' > README.md
     printf '# index\n' > ai/index.md
+    printf '# rules core\n' > ai/rules-core.md
     printf '# global\n' > ai/global-rules.md
     printf '# lifecycle\n' > ai/document-lifecycle-rules.md
     mkdir -p ai/prompts ai/doc-standards
@@ -244,6 +245,7 @@ require_sync_dry_run_direction() {
     printf 'v0.0.1\n' > VERSION
     printf '# derived readme\n' > README.md
     printf '# index\n' > ai/index.md
+    printf '# old rules core\n' > ai/rules-core.md
     printf '# old global\n' > ai/global-rules.md
     mkdir -p docs
     printf '# old docs\n' > docs/README.md
@@ -350,6 +352,7 @@ require_doc_standards_mirror() {
     printf 'v9.9.9\n' > VERSION
     cp "$ROOT/template-sync.json" template-sync.json
     printf '# index\n' > ai/index.md
+    printf '# rules core\n' > ai/rules-core.md
     printf '# global\n' > ai/global-rules.md
     printf '# lifecycle\n' > ai/document-lifecycle-rules.md
     mkdir -p ai/prompts ai/doc-standards
@@ -382,6 +385,7 @@ require_doc_standards_mirror() {
     cp "$ROOT/scripts/check-derived-sync.ps1" scripts/check-derived-sync.ps1
     printf 'v0.0.1\n' > VERSION
     printf '# index\n' > ai/index.md
+    printf '# old rules core\n' > ai/rules-core.md
     printf '# old global\n' > ai/global-rules.md
     printf '# old docs\n' > docs/README.md
     for d in 00-scenario 01-user-requirements 02-srs 03-prd 04-architecture 05-tech-spec 06-db-design 07-api-spec 08-dev-plan 09-verification; do
@@ -643,6 +647,8 @@ require_contains "template-sync.json" '"MAINTAINERS\.md"' "template-sync 同步 
 require_contains "template-sync.json" '"ai/document-lifecycle-rules\.md"' "template-sync 同步文档生命周期规则"
 require_contains "template-sync.json" '"ai/implementation-lifecycle-rules\.md"' "template-sync 同步实现生命周期规则"
 require_contains "template-sync.json" '"ai/session-rules\.md"' "template-sync 同步会话续接规则"
+require_contains "template-sync.json" '"ai/rules-core\.md"' "template-sync 同步核心规则入口"
+require_contains "scripts/sync-template.sh" '"ai/rules-core\.md"' "sync-template fallback 同步核心规则入口"
 require_contains "template-sync.json" '"ai/doc-standards/README\.md"' "template-sync 同步 doc-standards README"
 require_contains "template-sync.json" '"ai/doc-standards/00-scenario\.md"' "template-sync 同步 00 场景标准"
 require_contains "template-sync.json" '"ai/doc-standards/01-user-requirements\.md"' "template-sync 同步 01 用户需求标准"
@@ -721,6 +727,7 @@ require_files \
   "scripts/sync-template.ps1" \
   "scripts/check-template.sh" \
   "scripts/check-template.ps1" \
+  "scripts/check-markdown-clean.ps1" \
   "scripts/check-derived-sync.sh" \
   "scripts/check-derived-sync.ps1" \
   "scripts/collect-env.ps1" \
@@ -796,6 +803,10 @@ require_contains "CHANGELOG.md" 'Claude CLI' "CHANGELOG 记录 AI CLI 工具说�
 require_contains "CHANGELOG.md" '中转站说明边界' "CHANGELOG 记录中转站边界修正"
 require_contains "CHANGELOG.md" 'AI-CLI-SETUP\.md' "CHANGELOG 记录 AI CLI 独立文档"
 require_contains "ai/index.md" 'ai/document-lifecycle-rules\.md' "ai/index 读取文档生命周期规则"
+require_contains "ai/index.md" '任务路由表' "ai/index 定义任务路由表"
+require_contains "ai/index.md" '完整规则回退包' "ai/index 定义完整规则回退包"
+require_contains "ai/index.md" 'ai/rules-core\.md' "ai/index 读取核心规则入口"
+require_contains "ai/rules-core.md" '不确定.*完整规则回退包|完整规则回退包.*不确定' "rules-core 定义不确定时回退完整规则"
 require_contains "ai/global-rules.md" 'docs/README\.md' "global-rules 引用 docs 分区规则"
 require_contains "ai/global-rules.md" 'ai/document-lifecycle-rules\.md' "global-rules 引用文档生命周期规则"
 require_contains "ai/global-rules.md" 'ai/prompts/docs/01-review-inputs\.md' "global-rules 指向输入评审 Prompt"
@@ -904,6 +915,11 @@ require_contains "scripts/sync-template.sh" '"ai/prompts/review/16-docs-system-a
 require_contains "scripts/sync-template.sh" '"ai/prompts/docs/00-generate-or-complete-docs\.md"' "sync-template 兜底清单含文档生成 Prompt"
 require_contains "scripts/sync-template.sh" '"ai/prompts/planning/19-plan-phases-and-sprints\.md"' "sync-template 兜底清单含 A9 阶段 Sprint 规划 Prompt"
 require_contains "scripts/sync-template.sh" '"docs/inputs/README\.md"' "sync-template 兜底清单含 docs inputs README"
+require_contains "template-sync.json" 'scripts/check-markdown-clean\.ps1' "template-sync 纳入 Markdown 清洁预检脚本"
+require_contains "scripts/sync-template.sh" 'scripts/check-markdown-clean\.ps1' "sync-template 兜底清单含 Markdown 清洁预检脚本"
+require_contains ".github/workflows/template-check.yml" 'check-markdown-clean\.ps1' "template-check CI 运行 Markdown 清洁预检"
+require_contains "MAINTAINERS.md" 'check-markdown-clean\.ps1' "MAINTAINERS 提醒 PR 前运行 Markdown 清洁预检"
+require_contains "git-guide.md" 'check-markdown-clean\.ps1' "git-guide 模板维护流程包含 Markdown 清洁预检"
 check_script_entrypoints
 require_contains "scripts/check-derived-sync.sh" '同步清单外变更' "check-derived-sync 检查同步清单外变更"
 require_contains "scripts/check-derived-sync.sh" 'README 模板版本' "check-derived-sync 含 README 模板版本一致性告警（非阻断）"
@@ -958,7 +974,7 @@ require_contains "ai/implementation-lifecycle-rules.md" '真实运行依赖' "im
 require_contains "ai/prompts/setup/13-collect-env.md" '不替代技术路线' "collect-env Prompt 区分采集与评估"
 require_contains "docs/05-tech-spec.md" '技术环境评估结论' "05 技术方案包含技术环境评估结论"
 require_contains "docs/09-verification.md" '技术环境评估验证' "09 验证计划包含技术环境评估验证"
-require_contains "template-docs/scenario-guides.md" 'A8\.5 技术路线与环境支撑评估' "scenario-guides 路由技术环境评估"
+require_contains "template-docs/scenario-guides.md" 'A24 技术路线与环境支撑评估' "scenario-guides 路由技术环境评估"
 require_contains "ai/global-rules.md" 'ai/commands/README\.md' "global-rules 指向快捷命令路由"
 require_contains "ai/global-rules.md" 'ai/session-rules\.md' "global-rules 指向会话续接规则"
 require_contains "ai/global-rules.md" 'ai/implementation-lifecycle-rules\.md' "global-rules 指向实现生命周期规则"
@@ -1215,7 +1231,7 @@ require_contains "ai/session-rules.md" '快速续接模式' "会话规则定义�
 require_contains "ai/session-rules.md" '场景化裁剪' "会话规则说明快速续接是场景化裁剪"
 require_contains "ai/index.md" '快速续接例外' "ai/index 声明快速续接例外"
 require_contains "ai/commands/README.md" '不展开完整规则审计' "命令索引说明 resume 不展开完整规则审计"
-require_contains "ai/commands/resume.md" '不展开读取全部规则' "resume 命令只确认快速续接例外"
+require_contains "ai/commands/resume.md" '不展开任务规则包' "resume 命令只确认快速续接例外"
 require_contains "AGENTS.md" '快速续接模式做最小只读恢复' "AGENTS 入口说明快速续接最小只读恢复"
 require_contains "CLAUDE.md" '快速续接模式做最小只读恢复' "CLAUDE 入口说明快速续接最小只读恢复"
 require_contains ".cursor/rules/project-rules.mdc" '快速续接模式做最小只读恢复' "Cursor 入口说明快速续接最小只读恢复"
@@ -1298,6 +1314,7 @@ require_contains "scripts/sync-template.sh" 'template-docs/docs-scaffold/09-veri
 require_contains "scripts/sync-template.sh" 'template-docs/docs-scaffold/inputs/input-review-report\.md' "sync-template fallback 包含输入评审 scaffold"
 require_contains "scripts/sync-template.sh" 'template-docs/docs-scaffold/vision/product-vision\.md' "sync-template fallback 包含产品愿景 scaffold"
 require_contains "scripts/sync-template.sh" 'template-docs/docs-scaffold/design/subsystem-design\.md' "sync-template fallback 包含子系统设计 scaffold"
+require_contains "scripts/sync-template.sh" 'template-docs/docs-scaffold/design/frontend-experience-brief\.md' "sync-template fallback 包含前端体验 brief scaffold"
 require_contains "scripts/sync-template.sh" 'template-docs/docs-scaffold/design/frontend-interaction\.md' "sync-template fallback 包含前端交互 scaffold"
 require_contains "scripts/sync-template.sh" 'template-docs/docs-scaffold/decisions/ADR-template\.md' "sync-template fallback 包含 ADR scaffold"
 require_contains "scripts/sync-template.sh" 'template-docs/docs-scaffold/research/docs-open-items\.md' "sync-template fallback 包含 open items scaffold"
@@ -1306,9 +1323,35 @@ require_contains "template-sync.json" 'ai/commands/ui-prototype-exploration\.md'
 require_contains "template-sync.json" 'ai/prompts/docs/22-ui-prototype-exploration\.md' "同步清单包含需求探索原型 Prompt"
 require_contains "template-sync.json" 'template-docs/ui-prototype-exploration-template\.md' "同步清单包含需求探索原型模板"
 require_contains "template-sync.json" 'template-docs/ui-prototype-strategy-template\.md' "同步清单包含 UI 原型策略模板"
-require_contains "template-docs/scenario-guides.md" 'A5\.5 需求探索原型' "场景引导包含 A5.5 需求探索原型"
-require_contains "template-docs/scenario-guides.md" 'A7\.5 UI 原型策略 / 实现前原型' "场景引导包含 A7.5 UI 原型策略"
+require_contains "template-sync.json" 'template-docs/ui-brief-intake-template\.md' "同步清单包含 UI Brief Intake 模板"
+require_contains "template-sync.json" 'template-docs/frontend-experience-brief-template\.md' "同步清单包含前端体验 brief 模板"
+require_contains "template-sync.json" 'template-docs/web-fullstack-profile\.md' "同步清单包含 Web fullstack profile"
+require_contains "scripts/sync-template.sh" 'template-docs/ui-brief-intake-template\.md' "sync-template fallback 包含 UI Brief Intake 模板"
+require_contains "scripts/sync-template.sh" 'template-docs/frontend-experience-brief-template\.md' "sync-template fallback 包含前端体验 brief 模板"
+require_contains "scripts/sync-template.sh" 'template-docs/web-fullstack-profile\.md' "sync-template fallback 包含 Web fullstack profile"
+require_file "template-docs/frontend-experience-brief-template.md"
+require_contains "template-docs/frontend-experience-brief-template.md" '已确认体验原则' "前端体验 brief 模板包含已确认体验原则"
+require_file "template-docs/ui-brief-intake-template.md"
+require_contains "template-docs/ui-brief-intake-template.md" '交互体验抽取表' "UI Brief Intake 模板包含交互体验抽取表"
+require_file "template-docs/web-fullstack-profile.md"
+require_contains "template-docs/web-fullstack-profile.md" 'WSG-001' "Web fullstack profile 定义 WSG gates"
+require_contains "template-docs/web-fullstack-profile.md" '文件膨胀阈值' "Web fullstack profile 定义文件膨胀阈值"
+require_contains "template-docs/scenario-guides.md" '场景编号规则' "场景引导定义编号规则"
+require_contains "template-docs/scenario-guides.md" 'A22 需求探索原型' "场景引导包含 A22 需求探索原型"
+require_contains "template-docs/scenario-guides.md" 'A23 UI 原型策略 / 实现前原型' "场景引导包含 A23 UI 原型策略"
+require_contains "template-docs/scenario-guides.md" 'A25 UI Brief Intake' "场景引导包含 A25 UI Brief Intake"
+require_contains "template-docs/scenario-guides.md" 'A26 UI Interaction Discovery' "场景引导包含 A26 UI Interaction Discovery"
+require_contains "template-docs/scenario-guides.md" 'A27 Web App Structure Profile' "场景引导包含 A27 Web App Structure Profile"
+require_contains "template-docs/scenario-guides.md" 'A7-REQ' "场景引导使用 A7 语义化子流程"
 require_contains "docs/README.md" 'YYYY-MM-DD-ui-prototype-exploration\.md' "docs README 记录需求探索原型路径"
+require_contains "docs/README.md" 'YYYY-MM-DD-ui-brief-intake\.md' "docs README 记录 UI brief intake 路径"
+require_contains "docs/README.md" 'docs/design/frontend-experience-brief\.md' "docs README 记录前端体验 brief 路径"
+require_contains "docs/README.md" 'template-docs/web-fullstack-profile\.md' "docs README 记录 Web fullstack profile 边界"
+require_contains "ai/prompts/docs/01-review-inputs.md" 'UI / UX 输入抽取' "输入评审 Prompt 包含 UI/UX 输入抽取"
+require_contains "ai/prompts/docs/22-ui-prototype-exploration.md" 'UI brief 缺失' "需求探索原型 Prompt 检查 UI brief 缺失"
+require_contains "ai/prompts/docs/22-ui-prototype-exploration.md" 'UI-G-004' "需求探索原型 Prompt 包含晋级 Gate"
+require_contains "ai/prompts/dev/02-run-task.md" 'A25 UI Brief Intake' "执行任务 Prompt 编码前检查 UI brief"
+require_contains "ai/prompts/dev/02-run-task.md" 'UI-G-006' "执行任务 Prompt 编码前检查 UI Gate"
 require_contains "template-docs/scenario-guides.md" 'A17 待确认事项总览' "场景引导包含 A17 open items"
 require_contains "template-docs/scenario-guides.md" 'A18 专题方案讨论' "场景引导包含 A18 专题讨论"
 require_contains "template-docs/scenario-guides.md" 'A19 文档定稿门禁' "场景引导包含 A19 定稿门禁"
@@ -1325,14 +1368,20 @@ require_contains "template-docs/glossary.md" '领域模板（domain template）'
 require_file "ai/commands/show-demo.md"
 require_contains "ai/commands/show-demo.md" '查看演示效果' "show-demo 命令定位查看演示效果"
 require_contains "ai/commands/show-demo.md" 'AI 执行边界' "show-demo 命令含 AI 执行边界表"
+require_contains "ai/commands/show-demo.md" 'identity marker' "show-demo 命令要求页面身份校验"
+require_contains "ai/commands/show-demo.md" '/api' "show-demo 命令要求检查前端代理链路"
+require_contains "ai/commands/show-demo.md" 'strict port' "show-demo 命令要求避免隐式端口漂移"
 require_file "template-docs/demo-runbook-template.md"
 require_contains "template-docs/demo-runbook-template.md" '不替代' "demo-runbook 模板声明不替代 09 验收"
+require_contains "template-docs/demo-runbook-template.md" 'identity marker' "demo-runbook 模板包含页面身份标记"
+require_contains "template-docs/demo-runbook-template.md" 'local-demo-runtime\.json' "demo-runbook 模板包含运行状态文件忽略口径"
+require_contains "template-docs/demo-runbook-template.md" '默认端口只是示例' "demo-runbook 模板区分默认端口和实际入口"
 require_contains "ai/commands/README.md" 'show-demo' "命令索引收录 show-demo"
 require_contains "docs/README.md" 'local-demo-runbook' "docs README 记录 demo runbook 默认路径"
 require_contains "template-sync.json" 'ai/commands/show-demo\.md' "同步清单包含 show-demo 命令"
 require_contains "template-sync.json" 'template-docs/demo-runbook-template\.md' "同步清单包含 demo runbook 模板"
 require_contains "template-docs/scenario-guides.md" 'A21 查看演示效果' "场景引导回写 show-demo 为 A21 场景（防漂移）"
-require_contains "template-docs/scenario-guides.md" 'A8.5 技术路线与环境支撑评估' "场景速查索引含 A8.5（防漏场景）"
+require_contains "template-docs/scenario-guides.md" 'A24 技术路线与环境支撑评估' "场景速查索引含 A24（防漏场景）"
 require_contains "template-docs/beginner-guide.md" 'domain-templates' "新手指南导航含领域模板（防漂移）"
 require_contains "template-docs/beginner-guide.md" 'demo-runbook-template' "新手指南导航含演示 SOP 模板（防漂移）"
 require_contains "template-docs/template-methodology.md" 'implementation-lifecycle-rules' "方法论权威源表含实现生命周期规则（防漂移）"
@@ -1437,6 +1486,10 @@ require_contains "ai/prompts/review/16-docs-system-audit.md" 'UI 原型策略缺
 require_contains "ai/prompts/review/19-docs-evaluation.md" 'docs/design/\* 通用详细设计' "文档评估检查通用详细设计"
 require_contains "ai/prompts/review/19-docs-evaluation.md" 'UI 原型策略' "文档评估检查 UI 原型策略"
 require_contains "template-docs/scenario-guides.md" '选择原型策略' "场景引导包含 UI 原型策略选择"
+require_contains "ai/prompts/dev/02-run-task.md" 'WSG-001' "开发任务 Prompt 检查 Web App Structure gates"
+require_contains "ai/prompts/review/10-docs-checklist.md" 'Web App Structure Profile' "编码前 checklist 检查 Web App Structure Profile"
+require_contains "ai/prompts/review/16-docs-system-audit.md" 'Web App Structure Profile 矩阵' "文档审计输出 Web App Structure 矩阵"
+require_contains "ai/prompts/review/19-docs-evaluation.md" 'Web App Structure Profile' "文档评估检查 Web App Structure Profile"
 require_contains "docs/08-dev-plan.md" '验证包 / TC' "08 开发计划模板包含验证包与 TC"
 require_contains "docs/08-dev-plan.md" 'Sprint 完成包' "08 开发计划模板包含 Sprint 完成包"
 require_contains "docs/09-verification.md" 'TC 状态' "09 验证模板包含 TC 状态"
@@ -1444,7 +1497,7 @@ require_contains "docs/09-verification.md" 'Sprint 验收包' "09 验证模板�
 require_contains "ai/implementation-lifecycle-rules.md" 'Sprint / Task 完成后必须形成最小完成包' "实现生命周期要求 Sprint/Task 完成包"
 require_contains "ai/session-rules.md" '不得替代 `docs/08-dev-plan.md` 的进度摘要或 `docs/09-verification.md` 的验证证据 / 验收记录' "会话规则区分 handoff 与 08/09 正式记录"
 require_contains "ai/session-rules.md" '不联网，不查询 GitHub issue / PR / Actions' "快速续接默认不做远端查询"
-require_contains "ai/session-rules.md" '不展开读取 `ai/index.md` 列出的全部规则文件' "快速续接默认不展开完整规则读取"
+require_contains "ai/session-rules.md" '默认不展开读取任务规则包' "快速续接默认不展开任务规则包"
 require_contains "ai/prompts/dev/09-sprint-summary.md" 'Sprint 验收包' "Sprint 总结 Prompt 输出 Sprint 验收包"
 require_contains "docs/04-architecture.md" '架构视图检查表' "04 架构模板包含视图检查表"
 require_contains "docs/05-tech-spec.md" 'Readiness Gate' "05 技术方案模板包含 readiness gate"
