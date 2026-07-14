@@ -74,13 +74,12 @@
 
 | TC ID | 覆盖对象 | 前置条件 | 验证步骤 | 预期结果 | 证据要求 | 状态 |
 |---|---|---|---|---|---|---|
-| TC-P2-WSG-001 | WSG-001..006；P2-UI-G-001..006；首个 P2 Web vertical slice | `04` WSG 矩阵、`05 §4.1`、`08` Sprint-11 草案、`frontend-interaction §9.3` 均已回填；Phase2 范围仍待人工确认 | 逐项检查 App Shell、目录边界、vertical slice、文件膨胀阈值、验证入口、UI 链路是否有文档锚点；确认首个 P2 vertical slice 是否已选定 | WSG-001..006 均有明确证据位置；未选 vertical slice 时保持 No Go；不得跳过 WSG 直接改 `frontend/` | `04/05/08/09/frontend-interaction` 锚点 + 后续评审记录 | 草案·未执行 |
-| TC-P2-UI-001 | PG-P2-001/002/003、P2-UI-G-001/006；REQ-012/025/026 页面入口候选 | 少容器清爽稿暂定按当前稿继续 | 打开 `docs/research/prototypes/2026-07-14-frontend-ui-reference-absorbed-prototype.html`，检查首页、经典目录、文档工作区的信息层级、首屏入口和视觉密度 | 首屏 2-3 个主信息区；少圆角、少边框、少胶囊、少阴影；层级主要靠留白、细分隔线、文字标签和左侧选中线表达；无卡片墙回退 | 原型路径 + 后续截图 / smoke 记录 | 草案·未执行 |
-| TC-P2-UI-002 | PG-P2-008、CMP-P2-BREADCRUMB、CMP-P2-LAYER-SEARCH；REQ-012/026 候选 | 使用当前空间 mock 数据 | 点击可点击面包屑返回空间 / 项目层级；在当前层级搜索框输入关键词过滤目录 / 列表 | 路径定位清楚；搜索只过滤当前空间 / 当前层级可见内容；无结果不泄露跨空间或无权限内容 | 原型点击记录 + 后续 UI smoke | 草案·未执行 |
-| TC-P2-UI-003 | PG-P2-003、CMP-P2-DOC-MODE；REQ-014/026 候选 | 打开示例文档 | 切换预览、编辑、编辑+预览并排、版本来源；拖拽目录区、文档列表、编辑 / 预览比例和右侧状态区 | 阅读与预览合并；编辑不破坏阅读；并排预览可用；主要区域可调宽；来源 / 版本可追溯 | 原型点击记录 + 后续 Chrome / Edge smoke | 草案·未执行 |
-| TC-P2-UI-004 | PG-P2-004/005、CMP-P2-QA-SOURCE；REQ-014 候选 | 当前空间已有搜索与问答 mock | 从首页进入搜索 / 问答；切换筛选；选择推荐问题；打开来源文档 / 术语 | 搜索结果高密度但可读；答案限定当前空间并带来源列表行；来源可回看；库外问题与 AI 降级不编造 | 原型点击记录 + 后续 UI smoke | 草案·未执行 |
-| TC-P2-UI-005 | PG-P2-007、P2-UI-G-003/004；REQ-013 候选 | 使用小 / 中 / 大集合 mock | 查看局部关系图候选与大集合降级；检查无权限、空结果、AI 降级、>80 文档先筛选等文案 | 局部关系图仍为候选 / 静态说明，不进入默认实现；大集合先筛选或聚合；不新增真实图谱算法、冲突检测或权限模型 | 原型说明 + 后续设计评审记录 | 草案·未执行 |
-
+| TC-P2-WSG-001 | WSG-001..006；P2-UI-G-001..006；首个 P2 Web vertical slice | `04` WSG 矩阵、`05 §4.1`、`08` Sprint-11 草案、`frontend-interaction §9.3` 均已回填；用户确认执行门禁评审 | 逐项检查 App Shell、目录边界、vertical slice、文件膨胀阈值、验证入口、UI 链路是否有文档锚点；确认首个 P2 vertical slice 是否已选定 | WSG-001..006 均有明确证据位置；首个 slice 静态评审建议为 `REQ-012 + REQ-026`；不得跳过 WSG 直接改 `frontend/` | `04/05/08/09/frontend-interaction` 锚点 + 2026-07-14 静态评审记录 | 静态评审条件通过·待实现 smoke |
+| TC-P2-UI-001 | PG-P2-001/002/003、P2-UI-G-001/006；REQ-012/025/026 页面入口候选 | 少容器清爽稿暂定按当前稿继续；首个 slice 聚焦 REQ-012/026 | 静态检查 `docs/research/prototypes/2026-07-14-frontend-ui-reference-absorbed-prototype.html` 首页、经典目录、文档工作区的信息层级、首屏入口和视觉密度 | 首屏 2-3 个主信息区；少圆角、少边框、少胶囊、少阴影；层级主要靠留白、细分隔线、文字标签和左侧选中线表达；无卡片墙回退 | 原型路径 + 后续截图 / smoke 记录 | 静态评审条件通过·待实现 smoke |
+| TC-P2-UI-002 | PG-P2-008、CMP-P2-BREADCRUMB、CMP-P2-LAYER-SEARCH；REQ-012/026 候选 | 使用当前空间 mock 数据；首个 slice 聚焦标签与内链 / 反链 | 静态检查面包屑、当前层级搜索、经典目录 / 列表过滤路径 | 路径定位清楚；搜索只过滤当前空间 / 当前层级可见内容；无结果不泄露跨空间或无权限内容 | 原型路径 + 后续 UI smoke | 静态评审条件通过·待实现 smoke |
+| TC-P2-UI-003 | PG-P2-003、CMP-P2-DOC-MODE；REQ-014/026 候选 | 打开示例文档；首个 slice 只用 REQ-026 相关文档工作区能力 | 静态检查预览、编辑、编辑+预览并排、版本 / 来源入口和可调宽说明 | 阅读与预览合并；编辑不破坏阅读；并排预览可用；主要区域可调宽；来源 / 版本可追溯 | 原型路径 + 后续 Chrome / Edge smoke | 静态评审条件通过·待实现 smoke |
+| TC-P2-UI-004 | PG-P2-004/005、CMP-P2-QA-SOURCE；REQ-014 候选 | 当前空间已有搜索与问答 mock；完整 AI 润色暂避 | 静态检查搜索 / 问答入口、推荐问题、来源文档 / 术语入口 | 搜索结果高密度但可读；答案限定当前空间并带来源列表行；来源可回看；库外问题与 AI 降级不编造 | 原型路径 + 后续 UI smoke | 静态评审条件通过·非首个 slice |
+| TC-P2-UI-005 | PG-P2-007、P2-UI-G-003/004；REQ-013 候选 | 使用小 / 中 / 大集合 mock；关系图不进首个 slice | 静态检查局部关系图候选与大集合降级、无权限、空结果、AI 降级、>80 文档先筛选文案 | 局部关系图仍为候选 / 静态说明，不进入默认实现；大集合先筛选或聚合；不新增真实图谱算法、冲突检测或权限模型 | 原型说明 + 后续设计评审记录 | 静态评审条件通过·后续候选 |
 | TC-P2-TAG-001 | REQ-012；`lumen_tags` / `lumen_tag_links`；API-014 / API-027 | Batch B 契约已回填；Phase2 范围和首个 slice 待确认 | 创建 / 更新 / 归档标签；给可见文档打标签；按标签筛选文档；跨空间 / 无权限文档不进入统计 | 标签只在当前空间可见；重名返回 4090；文档数量只统计当前用户可见内容；归档不破坏历史关联 | 后续后端 tests + 前端 smoke；DB / API 契约锚点 | 契约草案·未执行 |
 | TC-P2-LINK-001 | REQ-026；`lumen_doc_links`；API-018 | Batch B 契约已回填；首个 vertical slice 建议优先选择 | 在文档内容中登记 `[[wikilink]]`；查询出链 / 反链；target 缺失、无权限、跨空间分别验证 | resolved / unresolved / no_access 状态正确；无权限目标不泄露标题 / 摘要；反链仅返回当前用户可见文档 | 后续后端 tests + UI smoke；DB / API 契约锚点 | 契约草案·未执行 |
 | TC-P2-QUICK-001 | REQ-025；`lumen_quick_entries`；API-017 | Batch B 契约已回填 | 快速录入 draft；转为新文档；追加到已有文档；关联 tag_ids；丢弃 draft | draft 默认 owner 私有；转换后继承文档权限；非法 tag_ids / document_id 返回 4220；不绕过权限 | 后续后端 tests + UI smoke | 契约草案·未执行 |
@@ -129,6 +128,7 @@
 | 2026-07-12 | Sprint-10（P1B）前端工作台系统化重设计 | 通过 | 已实现 TopBar + Nav Rail + Context Pane + Workspace 三层工作台；Context Pane 随文档 / 搜索 / 问答 / 术语视图变化；CSS token + pane / toolbar / list-row / inspector 分层；新增 `frontend-workspace-redesign` 设计文档与 HTML 原型；`npm.cmd run build` 通过；Chrome / Edge headless smoke（900px）通过，覆盖登录、四视图切换、文档新建 / 编辑 / 版本恢复 / 删除、Markdown 预览、搜索来源打开、问答、术语新建 / 删除确认；无全局横向滚动。 |
 
 | 2026-07-14 | Sprint-11（P2-UI-Gate 候选）实现前 UI 门禁草案 | 草案·未执行 | 已根据少容器清爽稿回填 TC-P2-UI-001~005；当前仅作为进入编码前的验证草案，不代表 Phase2 已启动或可直接编码。 |
+| 2026-07-14 | UI / WSG 门禁静态评审 + 首个 vertical slice 确认 | Conditional Go（实现前） | WSG-001..006 与 P2-UI-G-001..006 均有文档锚点；静态检查少容器清爽稿原型关键入口、面包屑 / 层级搜索、文档预览 / 编辑并排、搜索 / 问答来源和关系图降级说明；首个 Phase2 vertical slice 静态评审建议为 `REQ-012 + REQ-026`（标签视图 + 内链 / 反向链接最小闭环）。仍未启动 Phase2、不改代码；进入实现前需补具体任务、迁移 / API / UI 实现计划和 smoke 证据。 |
 
 ### 5.1 缺陷与回归记录
 
