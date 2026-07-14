@@ -49,8 +49,9 @@
 7. 若新增 / 删除下行同步方法论文件，更新 `template-sync.json`；若改动 `docs/00-09` 撰写规范，确认 `check-template.sh` 的 doc-standards 镜像自检（`require_doc_standards_mirror`）通过。
 8. 若改变用户入口，保持 `README.md` 的「快速开始」三入口可读，不塞入维护者细节。
 9. 运行：`git diff --check`。
-10. 运行：`bash scripts/check-template.sh`（或 `powershell -ExecutionPolicy Bypass -File scripts/check-template.ps1`）。
-11. push 分支并创建 PR，等待 GitHub Actions `Template Check` 通过后再合并。
+10. 若新增 / 修改 `_proposals/`、`ai-records/` 等 Markdown 记录，运行：`powershell -ExecutionPolicy Bypass -File scripts/check-markdown-clean.ps1 _proposals ai-records`，避免行尾空格、BOM 或 EOF 多空行到 CI 后才失败。
+11. 运行：`bash scripts/check-template.sh`（或 `powershell -ExecutionPolicy Bypass -File scripts/check-template.ps1`）。
+12. push 分支并创建 PR，等待 GitHub Actions `Template Check` 通过后再合并。
 
 ## 4. 下行同步清单
 

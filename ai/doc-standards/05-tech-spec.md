@@ -62,10 +62,12 @@
 | Gate | 适用对象 | 进入标准 | 必需证据 | 状态 | 阻塞项 / 下一步 |
 |---|---|---|---|---|---|
 | RG-001 | 外部 API / 数据库 / LLM / Docker / 部署 |  | `docs/research/*tech-env-evaluation*.md` / 命令输出 / TC | Go / Conditional Go / No-Go / 待评估 |  |
+| WSG-001 | Web App Structure Profile + Walking Skeleton Gate | App Shell、目录边界、vertical slice、文件膨胀阈值、API / browser smoke 已定义 | `template-docs/web-fullstack-profile.md`、04/05/08/09、smoke 命令或人工步骤 | Go / Conditional Go / No-Go / 豁免 |  |
 
 触发条件：
 
 - 项目涉及真实运行依赖，如 `backend/`、`frontend/`、`docker/`、数据库、本机模型、外部 API、重型 SDK。
+- 项目同时启用 `frontend/` 与 `backend/`，需要浏览器演示、多页面 / 多状态 / 多角色 / 数据密集界面，或首个前端 Sprint 可能堆入单个主应用文件。
 - Phase 升级、Sprint 开始或用户要求从 Mock / 降级切换到真实能力。
 - 技术环境、密钥、网络、资源、合规、权限或部署条件尚未验证。
 
@@ -82,7 +84,21 @@
 - 给 `06` / `07`：数据库、接口、权限和外部服务实现约束。
 - 给 `docs/design/*`：组件技术选型、前端交互工程边界、UI 原型策略、状态管理和错误处理要求。
 - 给 `08`：Sprint 前置条件、禁止事项、依赖安装 / 配置任务、Spike / PoC 和前端 Sprint 所需原型前置条件。
-- 给 `09`：Risk-ID、TC、证据路径、回归边界、readiness gate 验证项，以及 UI 原型覆盖主流程转化出的浏览器 smoke / 人工验收路径。
+- 给 `09`：Risk-ID、TC、证据路径、回归边界、readiness gate 验证项、Walking Skeleton 的 API / browser smoke，以及 UI 原型覆盖主流程转化出的浏览器 smoke / 人工验收路径。
+
+## 6.1 Web App Structure Profile（如触发）
+
+复杂 Web / 全栈交互项目应在 `05` 记录或引用以下最小工程边界；若不触发，写明豁免理由：
+
+| 项 | 内容 |
+|---|---|
+| Profile 结论 | 触发 / 不触发 / 豁免 |
+| App Shell | 全局布局、导航 / 视图入口、加载 / 空态 / 错误态入口 |
+| 前端目录边界 | `app` / `pages` / `features` / `components` / `api` / `state` / `styles` 或项目等价结构 |
+| 后端目录边界 | `api` / `service` / `model` / `repository` / `tests` 或项目等价结构 |
+| API client 追溯 | 前端 client 如何映射 `docs/07-api-spec.md` 的 API-ID |
+| 文件膨胀阈值 | 主应用、页面、全局样式、service / controller、测试文件的提醒阈值 |
+| Walking Skeleton 验证 | 最小 vertical slice、API smoke、browser smoke、权限 / 降级可见口径 |
 
 ## 7. UI 原型策略记录位（如适用）
 

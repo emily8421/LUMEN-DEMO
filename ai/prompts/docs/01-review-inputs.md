@@ -1,4 +1,4 @@
-﻿# 01 输入材料评审与入口判定（生成前）
+# 01 输入材料评审与入口判定（生成前）
 
 > Sync notice: This file is maintained by `ai-project-template` and may be overwritten when a derived project syncs template methodology.
 > Do not edit it directly in derived projects; propose reusable changes in `_proposals/` and upstream them to the template repository.
@@ -73,28 +73,36 @@
    - 运行环境、技术、资源、合规和风险约束
    - 每项标注：已具备 / 部分具备 / 缺失；依据；AI 建议；是否必须人工确认
 
-4. 最小补充清单
+4. UI / UX 输入抽取（如项目涉及 Web / 移动端 / 小程序 / 桌面端 / 可点击 Demo）
+   - 从 `docs/inputs/*`、`docs/vision/product-vision.md`、场景文档、客户 brief 或会议纪要中抽取交互体验线索
+   - 抽取维度至少包括：参考产品、演示主线、页面 / 视图暗示、信息密度、首屏目标、设备范围、协作方式、权限可见性、反馈 / 错误提示、视觉禁区和风格词
+   - 将每条线索标为：已明确 / AI 推断 / 待确认 / 冲突 / 超范围，并给出建议落点（UI brief / `frontend-interaction` / UI 原型策略 / `08` / `09` / open items）
+   - 若 UI 输入不足，建议转 A25 UI Brief Intake；用户确认后可写入 `docs/inputs/ui-brief.md` 或 `docs/research/YYYY-MM-DD-ui-brief-intake.md`，模板见 `template-docs/ui-brief-intake-template.md`
+   - 未经用户确认的 AI 推断不得直接写入 `docs/design/frontend-interaction.md`、Sprint 验收标准或实现任务
+
+5. 最小补充清单
    - 若 `docs/inputs/` 为空，给出可直接逐项回答的最小输入内容清单
    - 若材料不足，只列生成 product-vision 必需的最少问题，按优先级排序
    - 每个问题给出 AI 推荐选项或建议答案（如可从材料推断），并说明依据；不能推断时明确“需人工确认”
    - 每个缺口项都应能转入 open items：补充需确认节点、阻塞关系、备选方案、取舍影响和确认后的回填位置
    - 明确补齐后仍需再次运行本评审，不得直接跳到生成文档
 
-5. 愿景输入摘要
+6. 愿景输入摘要
    - 用 5-10 条把当前输入整理成“待人工确认”的 product-vision brief
    - 标明来源是当前输入材料的摘要，不要伪装成原始需求来源
    - 对小工具 / 小系统，至少提炼：目标用户、要解决的问题、输入、输出、核心操作流、非目标、验收方式
 
-6. 推荐文档剖面
+7. 推荐文档剖面
    - Full / Standard / Lean / Existing-system
    - 哪些 docs 必须生成或保留
    - 哪些 docs 可以省略或极简化，省略依据是什么
    - 若 product-vision 尚未 Ready，只能给出暂定剖面，不得进入正式生成
 
-7. 评估报告与下一步建议
+8. 评估报告与下一步建议
    - 若 Not Ready 或 Conditionally Ready，建议将评估报告保存到 `docs/inputs/input-review-report.md` 或 `docs/inputs/<topic>/input-review-report.md`
    - 如果可生成 product-vision，给出应复制给 `ai/prompts/docs/00-generate-or-complete-docs.md` 的愿景输入摘要和约束
    - 如果不可生成，列出最少需要用户回答的问题
+   - 如果 UI / UX 输入不足，给出 A25 UI Brief Intake 下一步建议和推荐路径
    - 如涉及外部文档或横切事实，指出权威源建议和引用同步风险
    - 说明哪些原始材料应继续保留在 `docs/inputs/`，哪些可提炼到 `docs/vision/product-vision.md`，哪些应映射到 `00-09`、`docs/decisions/`、`docs/research/` 或 `docs/meetings/`
 ```

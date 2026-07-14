@@ -38,6 +38,7 @@
 | 关键流程 | 主流程、异常流程、降级流程、权限拒绝 | 流程能关联 API、服务、数据对象、TC 或验收口径 | 补流程图和映射 |
 | 运行拓扑 | 本机、服务器、Docker、外部服务 | 明确端口、资源、持久化、可选依赖和降级路径 | 补拓扑和资源约束 |
 | ADR / 决策 | 关键技术 / 交付 / 安全决策 | 有状态、理由、备选、取舍影响和验证方式 | 补 ADR 字段 |
+| Web App Structure Profile | 复杂 Web / 全栈交互项目的 App Shell、页面 / feature 边界、前后端组件关系 | 说明是否触发 `template-docs/web-fullstack-profile.md`，以及 WSG-001 / WSG-003 如何由架构承接 | 补 App Shell / vertical slice 架构边界或写明豁免 |
 
 ## 4. ID 与追溯规则
 
@@ -65,3 +66,4 @@
 - 给 `06` / `07`：数据边界、接口边界、组件与流程约束。
 - 给 `docs/design/*`：模块职责、前端交互触发条件、详细设计入口。
 - 给 `08` / `09`：Sprint 拆分边界、验收路径、异常 / 降级 / 权限拒绝验证入口。
+- 给 Web App Structure Profile：App Shell、组件边界、vertical slice 和前后端协作拓扑输入。

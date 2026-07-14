@@ -160,7 +160,61 @@ AI 生成、精修、审计或评估项目事实文档时，必须区分三层�
 
 详细设计必须保留元信息、职责边界、上游依据、流程 / 状态机、数据 / 接口 / 权限契约引用、失败 / 降级路径、readiness gate、验证与验收追溯、实现偏差 / 设计回写和结构化待确认项。它只能承接上游已批准需求、架构、技术方案和 `06/07` 契约；不得新增 `03` 未批准需求、`06` 未同步表字段、`07` 未同步接口、未批准验收目标或 Phase 外能力。实现后若代码事实与设计不一致，应回写 `docs/design/*` 的实现偏差 / 设计回写区，并按影响同步 `06/07/08/09`。
 
-### 5.2 前端交互设计触发规则
+### 5.2 UI Brief Intake / 前端交互输入补齐规则
+
+UI Brief Intake 用于在输入评审、需求探索原型、正式前端交互设计或前端实现前补齐 UI / UX 输入，不是正式设计或验收文档。若项目涉及 Web、移动端、小程序、桌面端、可点击 Demo 或复杂页面，但输入材料缺少参考产品、演示主线、页面结构、信息密度、首屏目标、设备范围、视觉禁区、状态反馈或权限可见性，应先补 UI brief，再进入需求探索原型、前端交互设计、UI 原型策略或编码。
+
+UI brief 推荐两类路径：用户原始输入补充放 `docs/inputs/ui-brief.md`；AI 与用户共同探索形成的研究记录放 `docs/research/YYYY-MM-DD-ui-brief-intake.md`。模板见 `template-docs/ui-brief-intake-template.md`。UI brief 中的 AI 推断必须标注为待确认，用户确认后才可回填到 `docs/design/frontend-interaction.md`、UI 原型策略、`docs/08-dev-plan.md` 和 `docs/09-verification.md`；未经确认不得直接写成已确认需求、接口、权限、Sprint 必过项或验收目标。
+
+### 5.2.1 UI Exploration to Delivery Pipeline / UI 探索到交付路径
+
+UI 型项目若存在输入发散、参考产品 / 截图 / 视觉偏好尚未评审、用户希望先看界面、Demo 体验影响验收、多页面 / 多状态 / 多角色、或实现前需要确认视觉与点击路径，应按“探索材料 → 用户确认 → 正式设计 → 实现与验收”的顺序推进，不得把研究、原型或视觉候选直接写成当前 Phase 的需求、接口、Sprint 必过项或验收通过证据。
+
+推荐链路如下；项目可按复杂度裁剪，但跳过环节必须说明理由、风险、影响范围和补做时点：
+
+```text
+docs/inputs/*
+  → 输入评审 / UI Brief Intake
+  → docs/research/YYYY-MM-DD-frontend-ui-reference-analysis.md
+  → docs/research/YYYY-MM-DD-ui-prototype-exploration.md
+  → docs/research/YYYY-MM-DD-ui-visual-exploration.md / prototype.html（可选）
+  → docs/design/frontend-experience-brief.md（可选，记录已确认体验原则）
+  → docs/design/frontend-interaction.md / docs/design/*interaction*.md
+  → UI 原型策略 / 实现前原型记录
+  → docs/08-dev-plan.md / tasks/*
+  → frontend/* / tests
+  → docs/09-verification.md
+```
+
+| 阶段 | 推荐产物 | 状态 | 主要职责 | 晋级条件 | 禁止项 |
+|---|---|---|---|---|---|
+| 原始输入 | `docs/inputs/*` | 原始 / 未评审 | 保存用户材料、会议、截图、竞品和发散想法 | 完成输入评审或 UI brief 补齐 | 不直接当作需求或设计事实 |
+| UI brief 补齐 | `docs/inputs/ui-brief.md` 或 `docs/research/*ui-brief*.md` | 待确认 / 已确认 | 补齐 UI 类型、参考产品、演示主线、信息密度、设备范围和视觉禁区 | 用户确认关键偏好或接受 AI 默认建议 | 不替代正式设计、原型策略或验收 |
+| 前端参考分析 | `docs/research/*frontend-ui-reference-analysis.md` | 候选 / 分析 | 抽取参考产品、截图和视觉偏好中的可借鉴点 | 输出 AI 建议、依据、备选方案、取舍影响和待确认项 | 不新增 REQ / API / 验收目标 |
+| 需求探索原型 | `docs/research/*ui-prototype-exploration.md` | 探索 / 待确认 | 用低保真线框、页面流和状态澄清需求、信息架构和体验方向 | 用户确认候选需求 / 体验原则，或要求继续视觉探索 | 不决定架构、技术栈、接口、数据库、任务排期或验收通过 |
+| 视觉效果探索 | `docs/research/*ui-visual-exploration.md`、`prototype.html`、截图 | 视觉候选 / 已确认视觉方向 / 视觉验证失败 | 验证配色、密度、布局模式、首屏观感和可读性 | 用户确认可进入 experience brief 或正式交互设计 | 不绑定组件库或把“好看”写成必过验收 |
+| 体验 Brief | `docs/design/frontend-experience-brief.md` | 已确认设计输入 | 沉淀已确认体验原则、信息架构方向、视觉 / 密度 / 文案方向和阶段边界 | 可回填 `frontend-interaction` | 不写未确认方案，不定义 API / DB |
+| 正式交互设计 | `docs/design/frontend-interaction.md` 或 `docs/design/*interaction*.md` | 设计事实 | 记录页面 / 路由、用户流、状态、权限可见性、接口依赖和验收路径 | 设计评审 Go / Conditional Go，可进入 UI 原型策略或实现计划 | 不新增未授权需求 / 接口 / 验收目标 |
+| 实现前 UI 原型 | 代码原型 / HTML / Storybook / Figma / 截图证据 | 实现前确认 | 验证正式设计的视觉、点击路径、组件密度和覆盖状态 | 用户确认 + `08/09` 就绪 | 不替代 `09`，不新增需求 |
+| 实现与验证 | `frontend/*`、`tests`、`08`、`09` | 实现 / 已验证 | 按任务实现并留存验证证据 | `09` 记录 TC / smoke / 截图 / 人工验收结论 | 不实现 research 未确认内容 |
+
+晋级 Gate 至少包含：
+
+| Gate | 从 | 到 | 必须满足 |
+|---|---|---|---|
+| UI-G-001 | inputs | reference analysis | 输入材料定位明确：竞品 / 用户发散 / 会议 / 截图 / 需求输入 |
+| UI-G-002 | reference analysis | exploration prototype | 已列出 AI 建议、建议依据、备选方案、取舍影响和待确认项 |
+| UI-G-003 | exploration prototype / visual exploration | experience brief | 用户确认哪些候选进入正式体验原则；未确认项进入 open items |
+| UI-G-004 | prototype confirmation | document-system update | 已确认的可视化原型方案已回填 UI 原型策略 / experience brief / open items；未确认项未进入正式设计 |
+| UI-G-005 | experience brief | frontend-interaction | 已确认阶段边界：P1 / P2 / 愿景，且不新增未授权 REQ；交互设计独立成文，便于评估与评审 |
+| UI-G-006 | frontend-interaction | implementation prototype / Sprint | 页面流、状态、权限、接口依赖、验收路径已闭合；设计评审结论为 Go / Conditional Go |
+| UI-G-007 | implementation | verification | 验证命令 / 人工步骤 / 截图 / smoke 证据已记录到 `09` |
+
+可视化原型确认后不得直接进入实现；必须先检查是否需要回填 `docs/research/*ui-prototype-exploration.md`、`docs/design/frontend-experience-brief.md`、`docs/design/frontend-interaction.md`、UI 原型策略、`docs/08-dev-plan.md` 和 `docs/09-verification.md`。未排期前不要把原型候选写入当前 Sprint；未进入实现或验收的 research 原型不得写成 `09` 已通过。
+
+当输入出现“大量文档 / 多项目 / 多层目录 / 图谱 / 关系图 / 时间轴 / 看板 / 数据密集”等信号时，AI 应默认提出分层信息架构、经典路径 / 逃生舱（目录树、列表、搜索）、探索视图节点规模限制、自动降级规则、候选 / 待确认 / 已确认关系状态，以及权限过滤和不可见节点 / 来源处理口径。
+
+### 5.3 前端交互设计触发规则
 
 前端交互设计是 `docs/design/*` 的页面 / 交互型子类型，不新增 `docs/00-09` 固定编号，推荐路径为 `docs/design/frontend-interaction.md`；多入口项目可拆成 `docs/design/*interaction*.md`。满足以下任一条件时，开发前应补充该文档，或在 `ai/project-rules.md` §3 / `docs/05-tech-spec.md` 说明豁免理由：
 
@@ -173,7 +227,7 @@ AI 生成、精修、审计或评估项目事实文档时，必须区分三层�
 
 前端交互设计应承接 `03/04/05/07/08/09`、`ai/doc-standards/design-doc.md` 和 `ai/doc-standards/frontend-interaction.md`，记录页面信息架构、页面 / 路由清单与 REQ 追溯、核心用户流、组件职责、加载 / 空态 / 错误 / 禁用 / 成功 / 风险状态、表单校验、文案与免责声明、权限可见性、接口依赖、响应式与可访问性、UI 原型与可视化证据、验收路径、阶段增量、readiness gate、实现偏差和待确认项。它不得新增上游未授权功能，不得定义未同步到 `docs/07-api-spec.md` 的接口契约，不得把前端隐藏入口、按钮禁用或路由守卫写成唯一权限边界；权限必须由后端接口和服务层执行。
 
-### 5.3 UI 原型策略触发与边界规则
+### 5.4 UI 原型策略触发与边界规则
 
 UI 原型策略是 UI 型项目进入前端实现前的可视化门禁，解决“是否需要先让用户看到、点击或评审界面效果”的问题。满足前端交互设计触发条件，且存在以下任一情况时，必须选择并记录 UI 原型策略；若不需要，必须在 `ai/project-rules.md` §2.7 / §3、`docs/05-tech-spec.md` 或 `docs/design/frontend-interaction.md` 写明豁免理由：
 
@@ -184,6 +238,10 @@ UI 原型策略是 UI 型项目进入前端实现前的可视化门禁，解决�
 - Mock / Demo / 降级能力需要在界面上明确用户可见口径，避免被误读为真实生产能力。
 
 UI 原型策略至少记录：是否需要开发前可视化原型、原型形式（Figma / Penpot / Balsamiq / Axure / Storybook / 代码原型 / 截图标注 / 其他）、原型权威位置、覆盖页面 / 主流程 / 状态 / 设备或浏览器范围、与 `docs/design/frontend-interaction.md` / `08` / `09` 的追溯、未覆盖项和豁免理由。生成、精修、审计或评估该策略时必须对照 `ai/doc-standards/ui-prototype-strategy.md`；需要独立记录时可使用 `template-docs/ui-prototype-strategy-template.md`。工程驱动且已有前端框架的项目可优先采用“代码原型 + Mock 数据 + 截图 / smoke 证据”；需要跨角色协作或沉淀设计系统的项目可优先 Figma / Penpot；早期只需确认布局与流程时可使用低保真草图或截图标注；组件库可组合 Storybook 与设计稿。
+
+若用户未给专业 UI 风格、字号、密度、导航模式或设计系统，AI 应先基于成熟产品惯例给出推荐基线，并说明理由和风险，不应把专业判断从零抛给用户。常见默认基线包括：管理后台 / 表单系统可参考 Ant Design、Fluent、Atlassian 类后台；知识库 / 文档工作台可参考 Notion、Obsidian、Linear、飞书文档类生产力工具；数据密集表格可参考 data grid、BI、issue tracker；聊天 / 问答界面可参考 ChatGPT、Slack、Copilot 类问答；营销落地页才使用大字号、大留白和强品牌视觉。若采用非默认风格，必须说明原因。
+
+实现顺序应按风险判断：体验、演示效果或点击路径是成败关键时，建议 UI / 原型优先；外部依赖、数据流、模型或性能是成败关键时，建议后端 / 技术验证优先并记录 UI 暂缓原因、确认时点和风险；UI 与后端都高风险时，建议双轨并行，用最小 vertical slice 与静态 / Mock 原型在接口契约处汇合；纯内部脚本、CLI 或无点击界面可豁免 UI 原型 Gate，但须记录豁免理由。
 
 原型不替代 `00-09`、不替代前端交互设计、不替代 `09` 验收记录，也不新增需求、接口、表字段、权限规则或验收目标。原型发现的新需求、接口、权限或验收变化必须回到 `02/03/06/07/08/09` 和相关 `docs/design/*` 修订流程；若原型与正式文档冲突，以正式文档为准，先修订文档再进入实现。
 

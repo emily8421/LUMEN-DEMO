@@ -183,6 +183,7 @@ function Invoke-NativeTemplateCheck {
       "template-docs/smoke-test.md",
       "template-docs/smoke-test-report-template.md",
       "template-docs/template-methodology.md",
+      "template-docs/web-fullstack-profile.md",
       "CHANGELOG.md",
       "VERSION",
       "template-sync.json",
@@ -190,6 +191,7 @@ function Invoke-NativeTemplateCheck {
       "CLAUDE.md",
       ".cursor/rules/project-rules.mdc",
       "ai/index.md",
+      "ai/rules-core.md",
       "ai/global-rules.md",
       "ai/document-lifecycle-rules.md",
       "ai/implementation-lifecycle-rules.md",
@@ -205,7 +207,8 @@ function Invoke-NativeTemplateCheck {
       "scripts/check-github-context.ps1",
       "scripts/new-project.sh",
       "scripts/sync-template.sh",
-      "scripts/check-template.sh"
+      "scripts/check-template.sh",
+      "scripts/check-markdown-clean.ps1"
     )) {
     Require-File $path
   }
@@ -299,6 +302,8 @@ function Invoke-NativeTemplateCheck {
   Require-Contains "ai/prompts/review/19-docs-evaluation.md" "E1" "docs-evaluation prompt defines phase evaluation codes"
   Require-Contains "template-sync.json" "ai/commands/docs-evaluation\.md" "template-sync includes docs-evaluation command"
   Require-Contains "template-sync.json" "ai/prompts/review/19-docs-evaluation\.md" "template-sync includes docs-evaluation prompt"
+  Require-Contains "template-sync.json" "ai/rules-core\.md" "template-sync includes core rules entry"
+  Require-Contains "scripts/sync-template.sh" "ai/rules-core\.md" "sync-template fallback includes core rules entry"
   Require-Contains "template-docs/scenario-guides.md" "docs-evaluation" "scenario guides include docs-evaluation"
   Require-Contains "ai/document-lifecycle-rules.md" "E1" "document lifecycle includes evaluation codes"
   Require-Contains "ai/implementation-lifecycle-rules.md" "Conditional Go" "implementation lifecycle references evaluation result"
@@ -325,8 +330,12 @@ function Invoke-NativeTemplateCheck {
   Require-Contains "ai/prompts/setup/13-collect-env.md" "不替代技术路线" "collect-env prompt distinguishes collection from evaluation"
   Require-Contains "docs/05-tech-spec.md" "技术环境评估结论" "05 tech spec includes tech env evaluation result section"
   Require-Contains "docs/09-verification.md" "技术环境评估验证" "09 verification includes tech env evaluation verification"
-  Require-Contains "template-docs/scenario-guides.md" "A8.5 技术路线与环境支撑评估" "scenario guides route tech env evaluation"
+  Require-Contains "template-docs/scenario-guides.md" "A24 技术路线与环境支撑评估" "scenario guides route tech env evaluation"
   Require-Contains "ai/index.md" "ai/implementation-lifecycle-rules\.md" "ai/index includes implementation lifecycle rules"
+  Require-Contains "ai/index.md" "任务路由表" "ai/index defines task routing table"
+  Require-Contains "ai/index.md" "完整规则回退包" "ai/index defines full fallback package"
+  Require-Contains "ai/index.md" "ai/rules-core\.md" "ai/index includes core rules entry"
+  Require-Contains "ai/rules-core.md" "不确定.*完整规则回退包|完整规则回退包.*不确定" "rules-core falls back to full package when uncertain"
   Require-Contains "ai/global-rules.md" "ai/implementation-lifecycle-rules\.md" "global-rules points to implementation lifecycle rules"
   Require-Contains "ai/implementation-lifecycle-rules.md" "Phase" "implementation lifecycle defines Phase layer"
   Require-Contains "ai/implementation-lifecycle-rules.md" "Test Case" "implementation lifecycle defines test case layer"
@@ -407,7 +416,7 @@ function Invoke-NativeTemplateCheck {
   Require-Contains "ai/session-rules.md" "命令名、退出码 / check 结论" "session rules summarize successful long checks"
   Require-Contains "ai/index.md" "快速续接例外" "ai/index declares fast resume exception"
   Require-Contains "ai/commands/README.md" "不展开完整规则审计" "commands README keeps resume from full rule audit"
-  Require-Contains "ai/commands/resume.md" "不展开读取全部规则" "resume command only confirms fast resume exception"
+  Require-Contains "ai/commands/resume.md" "不展开任务规则包" "resume command only confirms fast resume exception"
   Require-Contains "AGENTS.md" "快速续接模式做最小只读恢复" "AGENTS entry mentions fast resume minimal read-only recovery"
   Require-Contains "CLAUDE.md" "快速续接模式做最小只读恢复" "CLAUDE entry mentions fast resume minimal read-only recovery"
   Require-Contains ".cursor/rules/project-rules.mdc" "快速续接模式做最小只读恢复" "Cursor entry mentions fast resume minimal read-only recovery"
@@ -482,6 +491,11 @@ function Invoke-NativeTemplateCheck {
   Require-Contains "template-sync.json" "template-docs/docs-scaffold/decisions/ADR-template\.md" "template-sync includes ADR scaffold"
   Require-Contains "template-sync.json" "template-docs/docs-scaffold/research/docs-open-items\.md" "template-sync includes open items scaffold"
   Require-Contains "template-sync.json" "template-docs/docs-scaffold/research/tech-env-evaluation\.md" "template-sync includes tech env evaluation scaffold"
+  Require-Contains "template-sync.json" "scripts/check-markdown-clean\.ps1" "template-sync includes Markdown clean preflight"
+  Require-Contains "scripts/sync-template.sh" "scripts/check-markdown-clean\.ps1" "sync-template fallback includes Markdown clean preflight"
+  Require-Contains ".github/workflows/template-check.yml" "check-markdown-clean\.ps1" "template-check CI runs Markdown clean preflight"
+  Require-Contains "MAINTAINERS.md" "check-markdown-clean\.ps1" "MAINTAINERS reminds maintainers to run Markdown clean preflight"
+  Require-Contains "git-guide.md" "check-markdown-clean\.ps1" "git-guide includes Markdown clean preflight in template maintenance flow"
   Require-Contains "template-docs/docs-scaffold/README.md" "template-docs/task-template\.md.*tasks/task-00X" "docs scaffold README defines task template boundary"
   Require-Contains "scripts/sync-template.sh" "--preserve-project-version" "sync-template supports preserving derived project VERSION"
   Require-Contains "scripts/sync-template.sh" "detect_lineage_role" "sync-template auto-detects TEMPLATE-BASE lineage role (ordinary/domain)"
@@ -505,6 +519,7 @@ function Invoke-NativeTemplateCheck {
   Require-Contains "scripts/sync-template.sh" "template-docs/docs-scaffold/inputs/input-review-report\.md" "sync-template fallback includes input review scaffold"
   Require-Contains "scripts/sync-template.sh" "template-docs/docs-scaffold/vision/product-vision\.md" "sync-template fallback includes product vision scaffold"
   Require-Contains "scripts/sync-template.sh" "template-docs/docs-scaffold/design/subsystem-design\.md" "sync-template fallback includes subsystem design scaffold"
+  Require-Contains "scripts/sync-template.sh" "template-docs/docs-scaffold/design/frontend-experience-brief\.md" "sync-template fallback includes frontend experience brief scaffold"
   Require-Contains "scripts/sync-template.sh" "template-docs/docs-scaffold/design/frontend-interaction\.md" "sync-template fallback includes frontend interaction scaffold"
   Require-Contains "scripts/sync-template.sh" "template-docs/docs-scaffold/decisions/ADR-template\.md" "sync-template fallback includes ADR scaffold"
   Require-Contains "scripts/sync-template.sh" "template-docs/docs-scaffold/research/docs-open-items\.md" "sync-template fallback includes open items scaffold"
@@ -513,9 +528,35 @@ function Invoke-NativeTemplateCheck {
   Require-Contains "template-sync.json" "ai/prompts/docs/22-ui-prototype-exploration\.md" "template-sync includes UI prototype exploration prompt"
   Require-Contains "template-sync.json" "template-docs/ui-prototype-exploration-template\.md" "template-sync includes UI prototype exploration template"
   Require-Contains "template-sync.json" "template-docs/ui-prototype-strategy-template\.md" "template-sync includes UI prototype strategy template"
-  Require-Contains "template-docs/scenario-guides.md" "A5\.5 需求探索原型" "scenario guides include A5.5 UI prototype exploration"
-  Require-Contains "template-docs/scenario-guides.md" "A7\.5 UI 原型策略 / 实现前原型" "scenario guides include A7.5 UI prototype strategy"
+  Require-Contains "template-sync.json" "template-docs/ui-brief-intake-template\.md" "template-sync includes UI Brief Intake template"
+  Require-Contains "template-sync.json" "template-docs/frontend-experience-brief-template\.md" "template-sync includes frontend experience brief template"
+  Require-Contains "template-sync.json" "template-docs/web-fullstack-profile\.md" "template-sync includes Web fullstack profile"
+  Require-Contains "scripts/sync-template.sh" "template-docs/ui-brief-intake-template\.md" "sync-template fallback includes UI Brief Intake template"
+  Require-Contains "scripts/sync-template.sh" "template-docs/frontend-experience-brief-template\.md" "sync-template fallback includes frontend experience brief template"
+  Require-Contains "scripts/sync-template.sh" "template-docs/web-fullstack-profile\.md" "sync-template fallback includes Web fullstack profile"
+  Require-File "template-docs/frontend-experience-brief-template.md"
+  Require-Contains "template-docs/frontend-experience-brief-template.md" "已确认体验原则" "frontend experience brief template includes confirmed principles"
+  Require-File "template-docs/ui-brief-intake-template.md"
+  Require-Contains "template-docs/ui-brief-intake-template.md" "交互体验抽取表" "UI Brief Intake template includes interaction extraction table"
+  Require-File "template-docs/web-fullstack-profile.md"
+  Require-Contains "template-docs/web-fullstack-profile.md" "WSG-001" "Web fullstack profile defines WSG gates"
+  Require-Contains "template-docs/web-fullstack-profile.md" "文件膨胀阈值" "Web fullstack profile defines file growth threshold"
+  Require-Contains "template-docs/scenario-guides.md" "场景编号规则" "scenario guides define numbering rules"
+  Require-Contains "template-docs/scenario-guides.md" "A22 需求探索原型" "scenario guides include A22 UI prototype exploration"
+  Require-Contains "template-docs/scenario-guides.md" "A23 UI 原型策略 / 实现前原型" "scenario guides include A23 UI prototype strategy"
+  Require-Contains "template-docs/scenario-guides.md" "A25 UI Brief Intake" "scenario guides include A25 UI Brief Intake"
+  Require-Contains "template-docs/scenario-guides.md" "A26 UI Interaction Discovery" "scenario guides include A26 UI interaction discovery"
+  Require-Contains "template-docs/scenario-guides.md" "A27 Web App Structure Profile" "scenario guides include A27 Web App Structure Profile"
+  Require-Contains "template-docs/scenario-guides.md" "A7-REQ" "scenario guides use semantic A7 subflows"
   Require-Contains "docs/README.md" "YYYY-MM-DD-ui-prototype-exploration\.md" "docs README documents UI prototype exploration report path"
+  Require-Contains "docs/README.md" "YYYY-MM-DD-ui-brief-intake\.md" "docs README documents UI brief intake path"
+  Require-Contains "docs/README.md" "docs/design/frontend-experience-brief\.md" "docs README documents frontend experience brief path"
+  Require-Contains "docs/README.md" "template-docs/web-fullstack-profile\.md" "docs README documents Web fullstack profile boundary"
+  Require-Contains "ai/prompts/docs/01-review-inputs.md" "UI / UX 输入抽取" "review inputs prompt includes UI/UX extraction"
+  Require-Contains "ai/prompts/docs/22-ui-prototype-exploration.md" "UI brief 缺失" "UI prototype exploration prompt checks missing UI brief"
+  Require-Contains "ai/prompts/docs/22-ui-prototype-exploration.md" "UI-G-004" "UI prototype exploration prompt includes promotion gate"
+  Require-Contains "ai/prompts/dev/02-run-task.md" "A25 UI Brief Intake" "run task prompt checks UI brief before coding"
+  Require-Contains "ai/prompts/dev/02-run-task.md" "UI-G-006" "run task prompt checks UI gate before coding"
   Require-Contains "template-docs/scenario-guides.md" "A17 待确认事项总览" "scenario guides include A17 open items"
   Require-Contains "template-docs/scenario-guides.md" "A18 专题方案讨论" "scenario guides include A18 topic discussion"
   Require-Contains "template-docs/scenario-guides.md" "A19 文档定稿门禁" "scenario guides include A19 finalization gate"
@@ -626,6 +667,10 @@ function Invoke-NativeTemplateCheck {
   Require-Contains "ai/prompts/review/19-docs-evaluation.md" "docs/design/\*" "docs evaluation checks generic design docs"
   Require-Contains "ai/prompts/review/19-docs-evaluation.md" "UI 原型策略" "docs evaluation checks UI prototype strategy"
   Require-Contains "template-docs/scenario-guides.md" "选择原型策略" "scenario guides route UI prototype strategy selection"
+  Require-Contains "ai/prompts/dev/02-run-task.md" "WSG-001" "run task prompt checks Web App Structure gates"
+  Require-Contains "ai/prompts/review/10-docs-checklist.md" "Web App Structure Profile" "docs checklist checks Web App Structure Profile"
+  Require-Contains "ai/prompts/review/16-docs-system-audit.md" "Web App Structure Profile 矩阵" "docs audit reports Web App Structure matrix"
+  Require-Contains "ai/prompts/review/19-docs-evaluation.md" "Web App Structure Profile" "docs evaluation checks Web App Structure Profile"
   Require-Contains "docs/08-dev-plan.md" "验证包 / TC" "08 dev plan template includes verification package and TC"
   Require-Contains "docs/08-dev-plan.md" "Sprint 完成包" "08 dev plan template includes sprint completion package"
   Require-Contains "docs/09-verification.md" "TC 状态" "09 verification template includes TC status"
@@ -633,7 +678,7 @@ function Invoke-NativeTemplateCheck {
   Require-Contains "ai/implementation-lifecycle-rules.md" "Sprint / Task 完成后必须形成最小完成包" "implementation lifecycle requires sprint/task completion package"
   Require-Contains "ai/session-rules.md" "长期事实必须回写" "session rules keep handoff separate from 08/09 formal records"
   Require-Contains "ai/session-rules.md" "不联网，不查询 GitHub issue / PR / Actions" "fast resume avoids remote lookups by default"
-  Require-Contains "ai/session-rules.md" "默认不展开读取 .* 全部规则文件|默认不展开读取.*全部规则文件" "fast resume avoids full rule reading by default"
+  Require-Contains "ai/session-rules.md" "默认不展开读取任务规则包" "fast resume avoids task rule packages by default"
   Require-Contains "ai/prompts/dev/09-sprint-summary.md" "Sprint 验收包" "sprint summary prompt outputs sprint acceptance package"
   Require-Contains "docs/04-architecture.md" "架构视图检查表" "04 architecture template includes view checklist"
   Require-Contains "docs/05-tech-spec.md" "Readiness Gate" "05 tech spec template includes readiness gate"
@@ -646,6 +691,12 @@ function Invoke-NativeTemplateCheck {
   Require-Contains "ai/prompts/planning/08-phase-upgrade.md" "readiness gate 检查" "phase upgrade prompt checks readiness gate"
   Require-Contains "ai/commands/tech-env-evaluation.md" "Risk-ID" "tech-env command mentions Risk-ID"
   Require-Contains "ai/commands/docs-evaluation.md" "readiness gate" "docs-evaluation command mentions readiness gate"
+  Require-Contains "ai/commands/show-demo.md" "identity marker" "show-demo command requires page identity checks"
+  Require-Contains "ai/commands/show-demo.md" "/api" "show-demo command requires frontend proxy checks"
+  Require-Contains "ai/commands/show-demo.md" "strict port" "show-demo command avoids implicit port drift"
+  Require-Contains "template-docs/demo-runbook-template.md" "identity marker" "demo runbook template includes page identity marker"
+  Require-Contains "template-docs/demo-runbook-template.md" "local-demo-runtime\.json" "demo runbook template includes runtime state ignore guidance"
+  Require-Contains "template-docs/demo-runbook-template.md" "默认端口只是示例" "demo runbook template distinguishes default and actual ports"
 
   $syncFiles = Get-SyncFiles
   if ($syncFiles.Count -gt 0) {

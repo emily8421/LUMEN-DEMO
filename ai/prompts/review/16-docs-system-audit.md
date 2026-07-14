@@ -58,8 +58,9 @@
    - 08-09 执行闭环缺口：Sprint 缺少验证包、TC-ID、完成包、状态或任务拆分依据；`09` 缺少 TC 详情、证据记录、Sprint 验收包、缺陷 / 回归记录，或长期事实只留在 handoff / 聊天 / PR 中。
    - 通用详细设计缺口：触发 `docs/design/*` 但缺少文档 / 豁免理由；缺少元信息、职责边界、上游追溯、流程 / 状态机、数据 / 接口 / 权限契约引用、失败 / 降级、readiness gate、验收追溯或实现偏差 / 设计回写区。
    - 可行性 / 部署缺口：技术可行性、资源、调度、运行环境或验证入口未说明。
-   - 前端交互缺口：UI 型项目缺少 `docs/design/frontend-interaction.md` / `docs/design/*interaction*.md` 或豁免理由；页面流、状态、接口依赖、验收路径不可追溯，或把前端可见性误写为权限边界；前端交互文档也必须满足通用 design 标准。
-   - UI 原型策略缺口：UI 型项目触发原型策略但缺少原型形式、权威位置、覆盖页面 / 主流程 / 状态 / 权限与降级、设备 / 浏览器范围、未覆盖项或豁免理由；原型证据不可访问 / 不可复核；原型与 `03/07/08/09` 追溯不一致；只在最终实现后才首次看到界面，缺少开发前可视化证据。
+    - 前端交互缺口：UI 型项目缺少 `docs/design/frontend-interaction.md` / `docs/design/*interaction*.md` 或豁免理由；页面流、状态、接口依赖、验收路径不可追溯，或把前端可见性误写为权限边界；前端交互文档也必须满足通用 design 标准。
+    - UI 原型策略缺口：UI 型项目触发原型策略但缺少原型形式、权威位置、覆盖页面 / 主流程 / 状态 / 权限与降级、设备 / 浏览器范围、未覆盖项或豁免理由；原型证据不可访问 / 不可复核；原型与 `03/07/08/09` 追溯不一致；只在最终实现后才首次看到界面，缺少开发前可视化证据。
+    - Web App Structure Profile 缺口：复杂 Web / 全栈交互项目缺少 App Shell、前后端目录边界、API client ↔ API-ID、vertical slice、文件膨胀阈值、Sprint 0 / Walking Skeleton 或 API / browser smoke；无豁免理由时不得直接进入首个业务 Sprint。
    - 本地续接状态：若存在 `NEXT-STEPS.md`、`.ai/session-handoff.md` 等本地便签，列出需同步的状态项；该类文件不是模板正式文档。
 3. 每个问题给出：类型、严重度、文件:行、权威源、建议修复方式、是否改业务事实。
 4. 回梳计划（按横切事实、状态词典或高优先级断点分组）+ 审计新发现（可行性 / 部署缺口）+ 待人工确认事项总览。
@@ -75,7 +76,7 @@
 3. 专题讨论结果是否先经人工确认再回填正式文档；未确认的方案不得写成已确认事实。
 4. open items 中阻塞项是否已关闭、转任务或被明确风险接受。
 
-00-03 需求链健康度矩阵建议列：`SC-ID / U-ID / REQ-ID / Phase / 用户 AC / 验证入口 TC / 状态 / 断点 / 修复建议`。04-05 总体设计风险矩阵建议列：`REQ / NFR / COMP-ID / MOD-ID / Flow-ID / Risk-ID / readiness gate / TC / Sprint / 状态 / 断点 / 修复建议`。06-07 契约健康度矩阵建议列：`REQ / NFR / Table / Field / API-ID / Error / Permission / TC / 契约状态 / 当前实现 / Mock 差异 / 断点 / 修复建议`。docs/design/* 详细设计健康度矩阵建议列：`REQ / NFR / Phase / Design Point / Flow-D / UI 原型 / Table / Field / API-ID / Permission / readiness gate / Sprint / TC / 实现偏差 / 断点 / 修复建议`。UI 原型策略矩阵建议列：`REQ / 页面或流程 / 原型形式 / 原型位置 / 覆盖状态 / 权限与降级 / 设备范围 / 08 Sprint / 09 TC / 未覆盖项 / 豁免理由 / 断点 / 修复建议`。08-09 执行闭环矩阵建议列：`REQ / Sprint / Task / TC-ID / 验证包 / 完成包 / Commit / PR / 验收记录 / 回写状态 / 断点 / 修复建议`。旧项目使用 `F-*` 等自定义编号时，不强制重命名，优先建议新增兼容映射表闭合追溯。
+00-03 需求链健康度矩阵建议列：`SC-ID / U-ID / REQ-ID / Phase / 用户 AC / 验证入口 TC / 状态 / 断点 / 修复建议`。04-05 总体设计风险矩阵建议列：`REQ / NFR / COMP-ID / MOD-ID / Flow-ID / Risk-ID / readiness gate / TC / Sprint / 状态 / 断点 / 修复建议`。06-07 契约健康度矩阵建议列：`REQ / NFR / Table / Field / API-ID / Error / Permission / TC / 契约状态 / 当前实现 / Mock 差异 / 断点 / 修复建议`。docs/design/* 详细设计健康度矩阵建议列：`REQ / NFR / Phase / Design Point / Flow-D / UI 原型 / Table / Field / API-ID / Permission / readiness gate / Sprint / TC / 实现偏差 / 断点 / 修复建议`。UI 探索到交付矩阵建议列：`输入 / UI brief / 参考分析 / 需求探索原型 / 视觉探索 / experience brief / frontend-interaction / UI 原型策略 / 08 Sprint / 09 TC / 用户确认依据 / 未确认项 / Gate / 断点 / 修复建议`。UI 原型策略矩阵建议列：`REQ / 页面或流程 / 默认 UI 标准基线 / UI-后端顺序 / 原型形式 / 原型位置 / 覆盖状态 / 权限与降级 / 设备范围 / UI-G-004/006/007 / 08 Sprint / 09 TC / 未覆盖项 / 豁免理由 / 断点 / 修复建议`。Web App Structure Profile 矩阵建议列：`REQ / App Shell / 前端目录 / 后端目录 / API client ↔ API-ID / vertical slice / 文件阈值 / WSG-001..006 / Sprint 0 / API smoke / browser smoke / 豁免理由 / 断点`。08-09 执行闭环矩阵建议列：`REQ / Sprint / Task / TC-ID / 验证包 / 完成包 / Commit / PR / 验收记录 / 回写状态 / 断点 / 修复建议`。旧项目使用 `F-*` 等自定义编号时，不强制重命名，优先建议新增兼容映射表闭合追溯。
 
 旧派生文档兼容审计：不要求 `docs/00-09` 逐字重写成 `ai/doc-standards` 示例骨架，但必须检查并报告：同一文档内 H2/H3 标题编号风格是否统一、连续、无明显跳号或重复；是否存在必要但缺失的关键版块；若补充版块，必须保持原项目语义和历史事实，不得机械重写或删除旧内容。若历史项目使用 `F-*` 等自定义需求编号，不要强制全文重命名，优先建议新增 `U-ID ↔ 旧编号` 兼容矩阵以满足追溯闭合。
 

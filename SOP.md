@@ -8,7 +8,7 @@
 > **与 `scenario-guides` 的分工（场景码对齐，互补不重复）**：
 > - 本文件 = **命令速查**（找快捷命令 / 权威文档 / Prompt）。
 > - `template-docs/scenario-guides.md` = **场景剧本**（「AI 带我做」：引导计划 + 做什么 / 为什么 / 机器执行）。
-> - 两边用**同一套场景码**：A0–A21（使用者）/ C1–C8（维护者）/ M0–M1（元场景）。找命令看本文件；看完整剧本看 scenario-guides 对应码。
+> - 两边用**同一套场景码**：A0–A25（使用者）/ C1–C8（维护者）/ M0–M1（元场景）。找命令看本文件；看完整剧本看 scenario-guides 对应码。
 
 ## 使用原则
 
@@ -32,13 +32,14 @@
 | A3 | 采集本机环境 | `/run collect-env` | `docs/env/README.md` | `ai/prompts/setup/13-collect-env.md` | 生成 `docs/env/local-env.md`，人工补齐确认项 |
 | A4 | 准备输入材料 | `/run review-inputs` | `ai/document-lifecycle-rules.md` §3 | `ai/prompts/docs/01-review-inputs.md` | 原始材料统一放 `docs/inputs/` |
 | A5 | 评审输入材料 | `/run review-inputs` | `ai/prompts/docs/01-review-inputs.md` | 同左 | Product Vision 就绪评估；不足先补齐复评 |
-| A5.5 | 需求探索原型 | `/run ui-prototype-exploration` | `ai/prompts/docs/22-ui-prototype-exploration.md` | 同左 | 正式 `00-03` 定稿前用低保真原型澄清需求 |
+| A22 | 需求探索原型 | `/run ui-prototype-exploration` | `ai/prompts/docs/22-ui-prototype-exploration.md` | 同左 | 正式 `00-03` 定稿前用低保真原型澄清需求 |
 | A6 | 生成文档骨架 | `/run generate-docs` | `README.md` 快速开始 | `ai/prompts/docs/00-generate-or-complete-docs.md` | 先说明阶段路线，再铺 `00-09` 骨架 |
-| A7 | PLM 文档精修（含 A7.1–A7.7） | `/run edit-single-doc` | `ai/document-lifecycle-rules.md` §5 | `ai/prompts/docs/04-edit-single-doc.md` | 按 PLM 阶段精修；只改目标文档，不顺手扩需求 |
-| A7.5 | UI 原型策略 / 实现前原型 | `/run edit-single-doc` | `ai/doc-standards/ui-prototype-strategy.md` | `ai/prompts/docs/04-edit-single-doc.md` | 已有需求链后、前端实现前确认可视化原型门禁 |
-| A7.7 | 文档反向同步 | `/run sync-docs-from-code` | `ai/global-rules.md` §1 / §8 | `ai/prompts/docs/07-sync-docs-from-code.md` | 代码事实与 docs 不一致时，先补文档事实 |
+| A7 | PLM 文档精修（含 A7-REQ / A7-ARCH / A7-TC / A7-DETAIL / A7-PLAN / A7-VERIFY / A7-BACKFILL） | `/run edit-single-doc` | `ai/document-lifecycle-rules.md` §5 | `ai/prompts/docs/04-edit-single-doc.md` | 按 PLM 阶段精修；只改目标文档，不顺手扩需求 |
+| A23 | UI 原型策略 / 实现前原型 | `/run edit-single-doc` | `ai/doc-standards/ui-prototype-strategy.md` | `ai/prompts/docs/04-edit-single-doc.md` | 已有需求链后、前端实现前确认可视化原型门禁 |
+| A25 | UI Brief Intake / 前端交互输入补齐 | `/run review-inputs` | `ai/prompts/docs/01-review-inputs.md` | `template-docs/ui-brief-intake-template.md` | 输入评审、原型或编码前补齐 UI 交互输入 |
+| A7-BACKFILL | 文档反向同步 | `/run sync-docs-from-code` | `ai/global-rules.md` §1 / §8 | `ai/prompts/docs/07-sync-docs-from-code.md` | 代码事实与 docs 不一致时，先补文档事实 |
 | A8 | 文档评估 / 审计 / 检查 | `/run docs-evaluation` / `docs-system-audit` / `docs-checklist` | `ai/document-lifecycle-rules.md`、`ai/doc-standards/` | `ai/prompts/review/19-docs-evaluation.md` / `16-docs-system-audit.md` / `10-docs-checklist.md` | 评估判阶段、审计找断点、checklist 拦编码；旧项目可 fallback 到 `docs/_scaffold/` |
-| A8.5 | 技术路线与环境支撑评估 | `/run tech-env-evaluation` | `ai/prompts/review/20-tech-env-evaluation.md` | 同左 | 真实运行依赖进入 Sprint 前评估本机环境 |
+| A24 | 技术路线与环境支撑评估 | `/run tech-env-evaluation` | `ai/prompts/review/20-tech-env-evaluation.md` | 同左 | 真实运行依赖进入 Sprint 前评估本机环境 |
 | A9 | 阶段规划与路线图 | 无 | `ai/implementation-lifecycle-rules.md` §3 | `ai/prompts/planning/19-plan-phases-and-sprints.md` | 分阶段 + 路线图（Demo → MVP → 产品） |
 | A10 | 执行 Sprint / 任务 | `/run run-dev-task` | `ai/global-rules.md` §3、`docs/08-dev-plan.md` | `ai/prompts/dev/02-run-task.md` | 一个任务只做一个功能；编码后可做实现合规审查（`/run project-review`） |
 | A10/C4 | 生成提交信息 | `/run commit-message` | `git-guide.md` §3 | `ai/prompts/git/06-commit-message.md` | 基于实际 diff 生成清晰 commit message |
@@ -119,6 +120,7 @@ powershell -ExecutionPolicy Bypass -File scripts/check-derived-sync.ps1
 # 新建本地烟测项目（只用于验证模板链路，不是正式项目起步默认命令）
 bash scripts/new-project.sh smoke-demo --local --no-remote
 # 模板仓库完整性自检（仅在 ai-project-template 模板仓库运行）
+powershell -ExecutionPolicy Bypass -File scripts/check-markdown-clean.ps1 _proposals ai-records
 powershell -ExecutionPolicy Bypass -File scripts/check-template.ps1
 # Bash 完整自检入口（CI 使用同类路径）
 bash scripts/check-template.sh

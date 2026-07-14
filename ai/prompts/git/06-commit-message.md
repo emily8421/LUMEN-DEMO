@@ -1,4 +1,4 @@
-﻿# 06 Commit message生成
+# 06 Commit message生成
 
 > Sync notice: This file is maintained by `ai-project-template` and may be overwritten when a derived project syncs template methodology.
 > Do not edit it directly in derived projects; propose reusable changes in `_proposals/` and upstream them to the template repository.

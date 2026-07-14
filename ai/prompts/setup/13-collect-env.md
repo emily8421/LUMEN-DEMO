@@ -1,4 +1,4 @@
-﻿# 13 采集本机运行环境与资源约束
+# 13 采集本机运行环境与资源约束
 
 > Sync notice: This file is maintained by `ai-project-template` and may be overwritten when a derived project syncs template methodology.
 > Do not edit it directly in derived projects; propose reusable changes in `_proposals/` and upstream them to the template repository.

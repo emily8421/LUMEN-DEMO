@@ -56,6 +56,8 @@
 
 【撰写提要：每个模块职责要清晰，避免把无关能力塞入当前 Phase。非平凡模块应指向 `docs/design/<子系统>.md`；页面型系统应标出前端入口 / 页面模块，并指向 `docs/design/frontend-interaction.md` 或对应 `docs/design/*interaction*.md`。】
 
+复杂 Web / 全栈交互项目还应说明是否触发 `template-docs/web-fullstack-profile.md`，并标出 App Shell、页面 / feature 边界、前后端组件协作和最小 vertical slice；不触发时写明豁免理由。
+
 | MOD-ID | 模块 | 职责 | 输入 | 输出 | 边界 / 不负责 | 关联组件 | 关联设计 |
 |---|---|---|---|---|---|---|---|
 | MOD-001 |  |  |  |  |  | COMP-001 | `docs/design/...` |
