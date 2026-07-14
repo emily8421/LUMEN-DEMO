@@ -81,7 +81,13 @@
 | TC-P2-UI-004 | PG-P2-004/005、CMP-P2-QA-SOURCE；REQ-014 候选 | 当前空间已有搜索与问答 mock | 从首页进入搜索 / 问答；切换筛选；选择推荐问题；打开来源文档 / 术语 | 搜索结果高密度但可读；答案限定当前空间并带来源列表行；来源可回看；库外问题与 AI 降级不编造 | 原型点击记录 + 后续 UI smoke | 草案·未执行 |
 | TC-P2-UI-005 | PG-P2-007、P2-UI-G-003/004；REQ-013 候选 | 使用小 / 中 / 大集合 mock | 查看局部关系图候选与大集合降级；检查无权限、空结果、AI 降级、>80 文档先筛选等文案 | 局部关系图仍为候选 / 静态说明，不进入默认实现；大集合先筛选或聚合；不新增真实图谱算法、冲突检测或权限模型 | 原型说明 + 后续设计评审记录 | 草案·未执行 |
 
-- REQ-012..017、REQ-024..027 其余用例（标签 / 视图 / 润色 / 推送 / 协作 / 移动端 / v18 追加项）——待该阶段细化
+| TC-P2-TAG-001 | REQ-012；`lumen_tags` / `lumen_tag_links`；API-014 / API-027 | Batch B 契约已回填；Phase2 范围和首个 slice 待确认 | 创建 / 更新 / 归档标签；给可见文档打标签；按标签筛选文档；跨空间 / 无权限文档不进入统计 | 标签只在当前空间可见；重名返回 4090；文档数量只统计当前用户可见内容；归档不破坏历史关联 | 后续后端 tests + 前端 smoke；DB / API 契约锚点 | 契约草案·未执行 |
+| TC-P2-LINK-001 | REQ-026；`lumen_doc_links`；API-018 | Batch B 契约已回填；首个 vertical slice 建议优先选择 | 在文档内容中登记 `[[wikilink]]`；查询出链 / 反链；target 缺失、无权限、跨空间分别验证 | resolved / unresolved / no_access 状态正确；无权限目标不泄露标题 / 摘要；反链仅返回当前用户可见文档 | 后续后端 tests + UI smoke；DB / API 契约锚点 | 契约草案·未执行 |
+| TC-P2-QUICK-001 | REQ-025；`lumen_quick_entries`；API-017 | Batch B 契约已回填 | 快速录入 draft；转为新文档；追加到已有文档；关联 tag_ids；丢弃 draft | draft 默认 owner 私有；转换后继承文档权限；非法 tag_ids / document_id 返回 4220；不绕过权限 | 后续后端 tests + UI smoke | 契约草案·未执行 |
+| TC-P2-AI-001 | REQ-014；`lumen_ai_drafts`；API-028；RG-004 | LLM adapter 可用或 Mock 降级；真实文档外发边界需确认 | 对可写文档选中文本执行 polish / citation；验证 sources 仅来自可见 chunks；LLM 不可用时降级 | 输出保存为 draft；引用可追溯到 chunk / document；库外或无权限来源不进入 prompt；5030 / Mock 降级不编造 | 后续后端 tests + 人工审查 prompt 边界 + UI smoke | 契约草案·未执行 |
+| TC-P2-PDF-001 | REQ-027；`lumen_doc_exports`；API-019；RG-006 | PDF 导出库选型、安装、中文最小导出验证通过后 | 对可读文档指定版本发起 PDF 导出；轮询任务；验证失败态、权限态和产物访问 | 导出任务与版本绑定；产物继承源文档权限；导出库不可用返回 5030；未验证前不得进入实现 | 待 tech-env 依赖验证 + 后端 tests + 人工 PDF 样例 | 契约草案·待 RG-006 |
+
+- REQ-013 / 015 / 016 / 017 / 024 其余 P2 后续用例（时间轴 / 推送 / 协作 / 移动端 / 时间轴热条）——不进 Phase2 MVP 核心 5 项，待后续阶段细化。
 
 ### 远期愿景（不承诺）
 - REQ-018..023、REQ-028..035 用例——待 05 技术验证可行后补
@@ -143,8 +149,12 @@
 | RISK-P1-005 | RG-004 | LLM 外部调用可用性 | REQ-008、REQ-036 | GLM `glm-5.2` 真实问答已验证（Sprint-7 首验 + 2026-07-11 新中转 `192.168.15.190:7777/v1` 复测，RG-004→Go；旧 `47.107.134.2` key 已停用）；GPT/ollama 待验证 | GLM 复测记录；GPT/ollama 非 P1 必过 |
 | RISK-VISION-001 | 后续 AI Gate | P2 / 愿景高风险 AI 能力 | REQ-020 / 021 / 030 / 032 / 033 等 | 不进入 Phase1 必过项，技术验证通过后再补用例 | 待愿景技术验证 |
 | RISK-P2-003 | WSG-001..006 / P2-UI-G-001..006 | P2 UI 少容器清爽稿尚未实现 / smoke | Sprint-11、TC-P2-WSG-001、TC-P2-UI-001~005 | 当前仅 HTML 原型与验证草案，需人工确认 Phase2 范围并开实现任务后，再执行 Chrome / Edge smoke；未执行前不得标记通过 | 待用户确认 + 后续 smoke 证据 |
+| RISK-P2-004 | OI-005 / TC-P2-TAG-001..PDF-001 | P2 核心 5 项 DB / API / TC 契约未实现 | REQ-012 / 014 / 025 / 026 / 027 | Batch B 已补契约草案；尚未创建迁移、接口、前端或自动化测试；未执行前不得标记 Phase2 Go | 待首个 vertical slice 确认 + 实现任务 + 对应 TC 通过 |
+| RISK-P2-005 | RG-004 / 数据外发 | AI 润色 / 写作引用可能发送真实文档片段到外部 LLM | REQ-014 | 复用 LLM adapter；真实文档外发需风险接受，sources 必须权限过滤；可用 Mock 降级 | 待 prompt / source 过滤测试与人工审查 |
+| RISK-P2-006 | RG-006 | PDF 导出库未验证 | REQ-027 | tech-env 草案标记 `reportlab` / `weasyprint` 未安装；API / DB 仅为契约草案，不得编码导出能力 | 待 PDF 库选型、安装、中文样例和资源验证 |
 
 ## 7. 待人工确认项
 
 - Phase1 全量验收已记录；是否正式进入 Phase2 仍需人工确认，并在确认后同步更新阶段指针与 Phase2 进入 / 退出标准。TC-P2-WSG-001 与 TC-P2-UI-001~005 已回填为实现前门禁草案，但未执行、未通过、不可直接编码。
 - 首个 Phase2 vertical slice 仍需人工确认；未确认前不得一次性实现全部 P2 UI 或跳过 WSG / UI-G 修改 `frontend/`。
+- Batch B 已补 P2 核心 5 项 TC 草案；建议首个 vertical slice 优先 `REQ-012 + REQ-026`（标签 + 内链 / 反链），避开 PDF / OCR / 完整 AI 润色高风险依赖。

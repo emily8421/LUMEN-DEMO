@@ -26,8 +26,12 @@
 | lumen_chunks | 切块 + Embedding 向量 + 全文向量 | [P1] | P1-已实现 | 已落地 PostgreSQL（migration 003；T6 起写入 embedding 并用于 RAG 向量召回） | REQ-007/008 |
 | lumen_imports | 导入任务 | [P1] | P1-已实现 | 已落地 PostgreSQL（migration 004；当前导入仅 `.md`/`.txt` 已提取文本） | REQ-009/010 |
 | lumen_terms | 空间级术语表 | [P1] | P1-已实现 | 已落地 PostgreSQL（migration 004；PgRepository 接入） | REQ-036 |
-| lumen_tags | 标签 | [P2] | 骨架 | — | REQ-012 |
-| lumen_tag_links | 标签-文档关联 | [P2] | 骨架 | — | REQ-012 |
+| lumen_tags | 标签 | [P2] | 契约草案 | — | REQ-012 |
+| lumen_tag_links | 标签-文档关联 | [P2] | 契约草案 | — | REQ-012 |
+| lumen_doc_links | 内部链接与反向链接索引 | [P2] | 契约草案 | — | REQ-026 |
+| lumen_quick_entries | 快速录入索引条目 | [P2] | 契约草案 | — | REQ-025 |
+| lumen_ai_drafts | AI 润色 / 写作引用草稿 | [P2] | 契约草案 | — | REQ-014 |
+| lumen_doc_exports | 单文档导出 PDF 任务 | [P2] | 契约草案 | — | REQ-027 |
 | lumen_push_copies | 跨空间推送只读副本 | [P2] | 骨架 | — | REQ-015 |
 | lumen_vault_mounts | Vault 挂载配置 | [愿景] | 骨架 | — | REQ-018 |
 | lumen_audio_records | 录音转写记录 | [愿景] | 骨架 | — | REQ-019 |
@@ -190,18 +194,30 @@
 | lumen_terms | source_document_id | bigint FK | 否 | — | FK→documents, nullable | REQ-036 | 低 | 随术语删除 |
 | lumen_terms | created_at / updated_at | timestamptz | 是 | now() | — | REQ-036 | 低 | 随术语删除 |
 
-### [P2] / [愿景] 表（骨架·待该阶段细化）
-- `lumen_tags` / `lumen_tag_links`：标签模型与聚合规则待 P2 细化（REQ-012）
-- `lumen_push_copies`：跨空间只读副本与权限同步待 P2 细化（REQ-015）
-- `lumen_vault_mounts`：Vault 挂载（路径、账号绑定、只读索引）待愿景验证（REQ-018）
-- `lumen_audio_records`：录音转写记录待愿景验证（REQ-019）
-- `lumen_brief_links`：对外简报（token、有效期、AI 可问不可看原文）待愿景验证（REQ-022）
-- `lumen_doc_links`：内部链接 `[[文件名]]` 与反向链接索引（P2，REQ-026）
-- `lumen_external_sync`：外部源（飞书等）同步配置与摘要同步（愿景，REQ-028）
-- `lumen_doc_participants`：文档参与人物、共现统计（愿景，REQ-031）
-- `lumen_hypotheses` / `lumen_evidence`：假设检验与正反证据（愿景，REQ-033）
-- `lumen_signal_subscriptions`：信号追踪主题订阅（愿景，REQ-034）
-- `lumen_analysis_kits`：分析包 A Kit 配置（愿景，REQ-035）
+### [P2] MVP 核心 5 项表契约草案（Batch B 回填）
+
+> 本节只补 Phase2 MVP 进入前契约，不创建迁移、不代表已实现。正式编码前仍需确认首个 vertical slice、迁移 / seed / 回滚策略和 `docs/09-verification.md` 对应用例。
+
+| 表 | 字段草案 | 关键约束 | 权限 / 数据边界 | 追溯 |
+|---|---|---|---|---|
+| `lumen_tags` | `id`、`space_id`、`name`、`normalized_name`、`color`、`description`、`status`、`created_by`、`created_at`、`updated_at` | `UNIQUE(space_id, normalized_name)`；`status in ('active','archived')` | 标签属于单一空间；仅空间成员可见 / 编辑 | REQ-012、TC-P2-TAG-001 |
+| `lumen_tag_links` | `tag_id`、`document_id`、`link_source`、`created_by`、`created_at` | `PRIMARY KEY(tag_id, document_id)`；`link_source in ('manual','quick_entry','import','ai_suggested')` | 文档可见性仍由 `lumen_documents.permission` + `space_id` 过滤 | REQ-012、TC-P2-TAG-001 |
+| `lumen_doc_links` | `id`、`space_id`、`source_document_id`、`target_document_id`、`target_title`、`link_text`、`link_type`、`status`、`created_at`、`updated_at` | `link_type in ('wikilink','manual')`；`status in ('resolved','unresolved','no_access')`；`source_document_id != target_document_id` | 反向链接查询必须过滤当前空间与目标文档权限；无权限目标显示为 `no_access` 而不泄露标题 / 摘要 | REQ-026、TC-P2-LINK-001 |
+| `lumen_quick_entries` | `id`、`space_id`、`owner_id`、`title`、`content_md`、`source`、`target_document_id`、`created_document_id`、`status`、`created_at`、`updated_at` | `status in ('draft','converted','discarded')`；转换后写入 `created_document_id` 或追加到 `target_document_id` | 私有草稿默认仅 owner 可见；转成文档后继承目标文档权限 | REQ-025、TC-P2-QUICK-001 |
+| `lumen_ai_drafts` | `id`、`space_id`、`document_id`、`user_id`、`mode`、`input_excerpt_hash`、`prompt_summary`、`output_md`、`cited_chunk_ids`、`status`、`created_at` | `mode in ('polish','citation')`；`status in ('generated','applied','discarded','failed')`；`cited_chunk_ids` 为 JSONB 数组 | 不存真实 API key；真实文档外发需遵守 `docs/05-tech-spec.md` 数据外发限制；引用仅可来自有权限 chunks | REQ-014、TC-P2-AI-001 |
+| `lumen_doc_exports` | `id`、`space_id`、`document_id`、`requested_by`、`format`、`status`、`version_no`、`artifact_path`、`error_message`、`created_at`、`finished_at` | `format='pdf'`；`status in ('queued','running','done','failed')`；导出任务与文档版本绑定 | 导出前校验文档可见性；导出产物不得绕过文档权限长期公开 | REQ-027、TC-P2-PDF-001 |
+
+### [P2 后续] / [愿景] 表（骨架·待该阶段细化）
+
+- `lumen_push_copies`：跨空间只读副本与权限同步待 P2 后续细化（REQ-015，不进 Phase2 MVP 核心 5 项）。
+- `lumen_vault_mounts`：Vault 挂载（路径、账号绑定、只读索引）待愿景验证（REQ-018）。
+- `lumen_audio_records`：录音转写记录待愿景验证（REQ-019）。
+- `lumen_brief_links`：对外简报（token、有效期、AI 可问不可看原文）待愿景验证（REQ-022）。
+- `lumen_external_sync`：外部源（飞书等）同步配置与摘要同步（愿景，REQ-028）。
+- `lumen_doc_participants`：文档参与人物、共现统计（愿景，REQ-031）。
+- `lumen_hypotheses` / `lumen_evidence`：假设检验与正反证据（愿景，REQ-033）。
+- `lumen_signal_subscriptions`：信号追踪主题订阅（愿景，REQ-034）。
+- `lumen_analysis_kits`：分析包 A Kit 配置（愿景，REQ-035）。
 
 ## 3. 索引设计
 
@@ -209,6 +225,12 @@
 - `lumen_documents`：`(space_id, permission)` 复合——隔离 + 权限过滤
 - `lumen_document_versions`：`UNIQUE(document_id, version_no)`
 - `lumen_terms`：`UNIQUE(space_id, term)` + `term` 前缀 / trigram 索引（具体索引待 05 钉）——支撑文档术语识别
+- `lumen_tags`：`UNIQUE(space_id, normalized_name)`；`(space_id, status)` 用于标签视图过滤。
+- `lumen_tag_links`：`PRIMARY KEY(tag_id, document_id)`；`document_id` 单列索引用于文档详情展示标签。
+- `lumen_doc_links`：`(space_id, source_document_id)`、`(space_id, target_document_id)` 支撑出链 / 反链；`(space_id, target_title)` 支撑 unresolved wikilink 匹配。
+- `lumen_quick_entries`：`(space_id, owner_id, status, updated_at)` 支撑个人快速录入列表。
+- `lumen_ai_drafts`：`(space_id, document_id, created_at)` 支撑文档写作草稿历史；`cited_chunk_ids` 暂不建 GIN，待真实查询需求确认。
+- `lumen_doc_exports`：`(space_id, document_id, created_at)` 与 `(status, created_at)` 支撑文档导出历史和任务轮询。
 
 ## 4. 表间关系
 
@@ -223,6 +245,14 @@ erDiagram
   lumen_imports }o--|| lumen_documents : parsed_document
   lumen_spaces ||--o{ lumen_terms : terms
   lumen_users ||--o{ lumen_documents : owns_private_docs
+  lumen_spaces ||--o{ lumen_tags : tags
+  lumen_tags ||--o{ lumen_tag_links : labels
+  lumen_documents ||--o{ lumen_tag_links : tagged_by
+  lumen_documents ||--o{ lumen_doc_links : source_links
+  lumen_documents ||--o{ lumen_doc_links : target_links
+  lumen_users ||--o{ lumen_quick_entries : captures
+  lumen_documents ||--o{ lumen_ai_drafts : ai_drafts
+  lumen_documents ||--o{ lumen_doc_exports : exports
 ```
 
 `lumen_documents.permission` / `owner_id` 与 `lumen_space_members` 共同决定可见性（见 `docs/design/permissions.md`）；`lumen_terms` 中空间术语优先于全局术语。
@@ -241,6 +271,11 @@ erDiagram
 | lumen_terms.definition | 中 | space 成员可见 | 明文 | 随术语删除 | 已注入 RAG prompt；Sprint-7 起可随召回上下文发往外部 LLM（RG-004；可配 Mock 不发） | TC-P1-012 |
 | lumen_terms.aliases | 低 | space 成员可见 | — | 随术语删除 | 同 definition | TC-P1-012 |
 | lumen_users.external_id | 中 | 仅本人 / 系统 | — | 账号删除时清理 | 不外发 | TC-P1-001 |
+| lumen_tags / lumen_tag_links | 低-中 | space 成员；文档权限过滤优先 | — | 随标签或文档删除 | 不外发，除非作为用户问题上下文被召回 | TC-P2-TAG-001 |
+| lumen_doc_links | 中 | source / target 文档均需权限过滤 | 无权限 target 不显示标题 / 摘要 | 随文档删除 | 不外发，除非作为 RAG / AI 引用上下文且有权限 | TC-P2-LINK-001 |
+| lumen_quick_entries.content_md | 中 | 默认 owner 私有；转文档后按文档权限 | 明文 | discard / 转换后按策略清理 | 不外发，除非用户触发 AI 写作且确认风险 | TC-P2-QUICK-001 |
+| lumen_ai_drafts.output_md / prompt_summary | 中 | space + document 权限 + user | 不存 API key；可存 prompt 摘要，不存完整敏感 prompt（待确认） | 随文档或用户清理 | 可能来自外部 LLM 返回；真实文档外发需风险接受 | TC-P2-AI-001 |
+| lumen_doc_exports.artifact_path | 中 | 与源文档权限一致 | 不公开长期链接 | 任务产物过期清理（待确认） | 不外发；导出库本机执行优先 | TC-P2-PDF-001 |
 
 ## 6. REQ → 表 / TC / Sprint 追溯矩阵
 
@@ -256,9 +291,15 @@ erDiagram
 | REQ-009 / 010 | `lumen_imports`、`lumen_documents`、`lumen_chunks` | TC-P1-009 / 010 | Sprint-3 | 导入任务、解析产物与切块索引 |
 | REQ-011 | 全部 P1 表 | TC-P1-011 | Sprint-6 | 桌面端通过 API 覆盖全部 P1 功能 |
 | REQ-036 | `lumen_terms`、`lumen_documents`、`lumen_chunks` | TC-P1-012 | Sprint-5 | 空间术语维护、识别与问答口径对齐 |
-| REQ-012..017 / 024..027 | P2 表骨架 | — | — | 升 Phase2 时细化字段与索引 |
+| REQ-012 | `lumen_tags`、`lumen_tag_links`、`lumen_documents` | TC-P2-TAG-001 | Batch B / Sprint-11 后续 | 标签视图、标签筛选与标签-文档关联契约草案 |
+| REQ-014 | `lumen_ai_drafts`、`lumen_documents`、`lumen_chunks` | TC-P2-AI-001 | Batch B / Sprint-11 后续 | AI 润色草稿、写作引用和来源 chunk 追溯契约草案 |
+| REQ-025 | `lumen_quick_entries`、`lumen_documents`、`lumen_tag_links` | TC-P2-QUICK-001 | Batch B / Sprint-11 后续 | 快速录入条目转文档 / 追加文档 / 关联标签契约草案 |
+| REQ-026 | `lumen_doc_links`、`lumen_documents` | TC-P2-LINK-001 | Batch B / Sprint-11 后续 | `[[wikilink]]` 出链 / 反链索引与权限过滤契约草案 |
+| REQ-027 | `lumen_doc_exports`、`lumen_documents`、`lumen_document_versions` | TC-P2-PDF-001 | Batch B / Sprint-11 后续 | 单文档 PDF 导出任务、版本绑定和权限继承契约草案 |
+| REQ-013 / 015 / 016 / 017 / 024 | P2 后续骨架 | — | — | 不进 Phase2 MVP 核心 5 项；后续单独细化 |
 | REQ-018..023 / 028..035 | 愿景表骨架 | — | — | 技术验证通过后细化字段与索引 |
 
 ## 7. 待人工确认项
 
-- 无新增确认项；P2 / 愿景表仅保留骨架，不进入 Phase1 迁移实现。
+- Batch B 已补 P2 核心 5 项 DB 契约草案，但尚未创建迁移、seed、回滚脚本或实现代码；正式进入实现前需确认首个 vertical slice 与迁移策略。
+- PDF 导出（REQ-027）仍受 RG-006 约束；导出产物存储路径、过期清理和中文排版库选型需结合 tech-env 草案继续确认。

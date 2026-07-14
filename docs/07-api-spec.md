@@ -39,12 +39,12 @@
 | API-011 | POST | /api/import | 导入文件 | [P1] | P1-已设计 | **降级实现（仅 `.md`/`.txt` 已提取文本；无 PDF/OCR）** | REQ-009/010 |
 | API-012 | GET/POST | /api/terms | 术语列表 / 创建术语 | [P1] | P1-已实现 | 已实现（PG 术语存储） | REQ-036 |
 | API-013 | GET/PUT/DELETE | /api/terms/{id} | 术语详情 / 更新 / 删除 | [P1] | P1-已实现 | 已实现（PG 术语存储） | REQ-036 |
-| API-014 | GET | /api/tags | 标签视图 | [P2] | 骨架 | — | REQ-012 |
+| API-014 | GET/POST | /api/tags | 标签列表 / 创建标签 | [P2] | 契约草案 | — | REQ-012 |
 | API-015 | POST | /api/spaces/push | 跨空间推送 | [P2] | 骨架 | — | REQ-015 |
 | API-016 | GET | /api/briefs/{token} | 对外只读简报 | [愿景] | 骨架 | — | REQ-022 |
-| API-017 | POST | /api/quick-entry | 快速录入索引条目 | [P2] | 骨架 | — | REQ-025 |
-| API-018 | GET/POST | /api/doc-links | 内部链接 / 反向链接 | [P2] | 骨架 | — | REQ-026 |
-| API-019 | POST | /api/export-pdf | 单文档导出 PDF | [P2] | 骨架 | — | REQ-027 |
+| API-017 | POST | /api/quick-entry | 快速录入索引条目 | [P2] | 契约草案 | — | REQ-025 |
+| API-018 | GET/POST | /api/doc-links | 内部链接 / 反向链接 | [P2] | 契约草案 | — | REQ-026 |
+| API-019 | POST | /api/export-pdf | 单文档导出 PDF | [P2] | 契约草案 | — | REQ-027 |
 | API-020 | POST | /api/sync/feishu | 飞书同步（webhook/拉取） | [愿景] | 骨架 | — | REQ-028 |
 | API-021 | POST | /api/path | 路径推理（多跳） | [愿景] | 骨架 | — | REQ-030 |
 | API-022 | GET | /api/people/{name} | 人物关系网络 | [愿景] | 骨架 | — | REQ-031 |
@@ -52,6 +52,8 @@
 | API-024 | POST | /api/hypotheses | 假设检验 / 证据地图 | [愿景] | 骨架 | — | REQ-033 |
 | API-025 | GET/POST | /api/signal-tracks | 信号追踪 | [愿景] | 骨架 | — | REQ-034 |
 | API-026 | POST | /api/kits | 分析包 A Kit | [愿景] | 骨架 | — | REQ-035 |
+| API-027 | GET/PUT/DELETE | /api/tags/{id} | 标签详情 / 更新 / 归档 | [P2] | 契约草案 | — | REQ-012 |
+| API-028 | POST | /api/documents/{id}/polish | AI 润色 / 写作引用 | [P2] | 契约草案 | — | REQ-014 |
 
 ## 3. 请求 / 响应契约（[P1]）
 
@@ -76,6 +78,19 @@
 | API-011 | 降级实现（仅 `.md`/`.txt`） | §3.2 / §3.3 | 4001/4003/4220 | 空间过滤 | TC-P1-009/010 | 是 |
 | API-012 | P1-已实现 | §3.2 / §3.3 | 4001/4003/4220 | 空间成员 | TC-P1-012 | 是 |
 | API-013 | P1-已实现 | §3.7 示例 | 4001/4003/4004 | 空间+权限 | TC-P1-012 | 是 |
+
+### 3.1.1 Phase2 MVP endpoint contract matrix（Batch B 草案）
+
+> 本节只补 Phase2 MVP 核心 5 项契约草案，不代表已实现。正式编码前需与 `docs/06-db-design.md` 的 P2 表契约、`docs/09-verification.md` 的 TC-P2-* 用例和首个 vertical slice 选择对齐。
+
+| API-ID | 契约状态 | 请求 / 响应契约 | 错误契约 | 权限契约 | 验证项 (TC) | 是否可实现 |
+|---|---|---|---|---|---|---|
+| API-014 | P2-契约草案 | §3.9 | 4001/4003/4090/4220 | 空间成员；标签仅当前空间可见 | TC-P2-TAG-001 | 待阶段确认 |
+| API-027 | P2-契约草案 | §3.9 | 4001/4003/4004/4090/4220 | 空间成员；归档不删除历史关联 | TC-P2-TAG-001 | 待阶段确认 |
+| API-017 | P2-契约草案 | §3.9 | 4001/4003/4220 | 默认 owner 私有；转换后继承文档权限 | TC-P2-QUICK-001 | 待阶段确认 |
+| API-018 | P2-契约草案 | §3.9 | 4001/4003/4004/4220 | source / target 文档均需权限过滤；无权限反链不泄露 | TC-P2-LINK-001 | 待阶段确认 |
+| API-028 | P2-契约草案 | §3.9 | 4001/4003/4004/4220/5030 | 文档可写权限；引用 chunk 必须当前用户可见 | TC-P2-AI-001 | 待阶段确认 |
+| API-019 | P2-契约草案 | §3.9 | 4001/4003/4004/4220/5030 | 导出前校验源文档可见 / 可导出 | TC-P2-PDF-001 | 待 RG-006 |
 
 ### 3.2 请求 / 输入契约（字段级·核心接口）
 
@@ -199,8 +214,32 @@ sequenceDiagram
 
 > 注：上图为 P1 当前架构时序。Sprint-8 后 DB 节点为 PostgreSQL+pgvector；`POST /api/query` 已走向量召回 + GLM LLM（可配 Mock 降级）；`POST /api/import` 当前仅接受 `.md`/`.txt` 已提取文本。
 
+### 3.9 Phase2 MVP 请求 / 响应契约草案（Batch B）
+
+> 草案约束：P2 API 均沿用统一 `{ code, msg, data }`；列表响应使用 `{ items, total, page }`；所有查询默认以 token 中 `current_space_id` 为边界。以下字段名用于后续实现对齐，不代表当前接口已存在。
+
+| API-ID | 请求字段 | 响应字段 | 权限 / 降级 | 关联 DB | 备注 |
+|---|---|---|---|---|---|
+| API-014 `GET /api/tags` | `q?`、`status?=active`、`page?` | `items[{id,name,color,description,document_count,status}]`、`total` | 仅当前空间标签；`document_count` 只统计当前用户可见文档 | `lumen_tags`、`lumen_tag_links`、`lumen_documents` | 支撑标签视图与筛选 |
+| API-014 `POST /api/tags` | `name`、`color?`、`description?` | `{id,name,color,description,status}` | 空间成员可创建；同空间 `normalized_name` 冲突返回 4090 | `lumen_tags` | 不自动跨空间复制 |
+| API-027 `/api/tags/{id}` | `PUT`: `name?`、`color?`、`description?`、`status?`；`DELETE`: 归档 | `{id,name,color,description,status}` | 仅当前空间标签；删除采用 `archived`，不硬删历史 | `lumen_tags` | 避免破坏文档历史关联 |
+| API-017 `POST /api/quick-entry` | `title`、`content_md`、`target_document_id?`、`tag_ids?`、`mode=create_document / append_document / draft` | `{id,status,created_document_id?,target_document_id?}` | 草稿默认 owner 私有；转换为文档时继承目标文档权限或新文档默认 private | `lumen_quick_entries`、`lumen_documents`、`lumen_tag_links` | 不触发 AI；不绕过文档权限 |
+| API-018 `GET /api/doc-links` | `document_id`、`direction=outbound / backlink`、`status?` | `items[{id,source_document_id,target_document_id?,target_title?,link_text,status}]` | source / target 均按空间 + 权限过滤；无权限 target 返回 `status=no_access` 且不泄露标题 | `lumen_doc_links`、`lumen_documents` | 支撑内部链接与反向链接 |
+| API-018 `POST /api/doc-links` | `source_document_id`、`target_document_id?`、`target_title?`、`link_text`、`link_type=wikilink / manual` | `{id,status}` | 需可编辑 source；target 缺失时 `unresolved` | `lumen_doc_links` | 后续可由 Markdown 解析器批量维护 |
+| API-028 `POST /api/documents/{id}/polish` | `mode=polish / citation`、`selection_md?`、`instruction?`、`use_sources?=true` | `{draft_id,output_md,sources[{chunk_id,document_id,title,snippet}],status}` | 需文档可写；sources 必须来自当前用户可见 chunk；LLM 不可用返回 5030 或 Mock 降级 | `lumen_ai_drafts`、`lumen_chunks`、`lumen_documents` | 不存 API key；真实文档外发需风险接受 |
+| API-019 `POST /api/export-pdf` | `document_id`、`version_no?`、`options?{include_sources,theme}` | `{export_id,status,artifact_path?}` | 需可读 / 可导出文档；导出产物继承文档权限，不生成公开长期链接 | `lumen_doc_exports`、`lumen_documents`、`lumen_document_versions` | 受 RG-006；PDF 库未验证前不得实现 |
+
+**P2 错误码补充**：
+
+| code | 场景 | 适用 API |
+|---|---|---|
+| 4090 | 标签重名、快速录入重复转换、导出任务重复提交等业务冲突 | API-014/017/019/027 |
+| 4220 | 字段缺失、非法状态、无效 tag_ids / document_id / mode | 全部 P2 API |
+| 5030 | LLM / PDF 导出 / 外部依赖不可用 | API-019/028 |
+
 ### [P2] / [愿景] 接口（骨架·待该阶段细化）
-- `/api/tags`、`/api/spaces/push`：请求 / 响应待 P2 细化
+- `/api/tags`、`/api/tags/{id}`、`/api/quick-entry`、`/api/doc-links`、`/api/documents/{id}/polish`、`/api/export-pdf`：P2 MVP 核心 5 项契约草案见 §3.9，尚未实现。
+- `/api/spaces/push`：跨空间推送不进 Phase2 MVP 核心 5 项，请求 / 响应待 P2 后续细化。
 - `/api/briefs/{token}`：简报隔离与有效期待愿景验证（REQ-022）
 
 ## 4. REQ → 接口追溯矩阵
@@ -217,7 +256,12 @@ sequenceDiagram
 | REQ-009 / 010 | `POST /api/import` | Word / PDF / 图片导入与解析任务 |
 | REQ-011 | 全部 P1 接口 | 桌面端通过浏览器覆盖全部 P1 功能 |
 | REQ-036 | `GET/POST /api/terms`、`GET/PUT/DELETE /api/terms/{id}` | 术语列表、创建、更新、删除 |
-| REQ-012..017 / 024..027 | P2 接口骨架 | 升 Phase2 时细化契约 |
+| REQ-012 | `GET/POST /api/tags`、`GET/PUT/DELETE /api/tags/{id}` | 标签视图、标签创建 / 归档与标签-文档统计契约草案 |
+| REQ-014 | `POST /api/documents/{id}/polish` | AI 润色 / 写作引用，复用 RAG 来源与 LLM adapter，需权限过滤和降级 |
+| REQ-025 | `POST /api/quick-entry` | 快速录入索引条目，可转文档 / 追加文档 / 保留草稿 |
+| REQ-026 | `GET/POST /api/doc-links` | 内部链接与反向链接索引，需空间和文档权限过滤 |
+| REQ-027 | `POST /api/export-pdf` | 单文档导出 PDF，受 RG-006 与导出库验证约束 |
+| REQ-013 / 015 / 016 / 017 / 024 | P2 后续接口骨架 | 不进 Phase2 MVP 核心 5 项；后续单独细化 |
 | REQ-018..023 / 028..035 | 愿景接口骨架 | 技术验证通过后细化契约 |
 
 ## 5. API ↔ DB / Service / Test 交叉追溯
@@ -239,6 +283,11 @@ sequenceDiagram
 | API-011 | imports.import_extracted_text | lumen_imports, lumen_documents | space 过滤 | 4001/4003/4220 | TC-P1-009/010 | 降级实现（仅 .md/.txt） |
 | API-012 | term.list_visible_terms / create_term | lumen_terms | space 成员 | 4001/4003/4220 | TC-P1-012 | P1-已实现 |
 | API-013 | term.get/update/delete_term | lumen_terms | space + owner | 4001/4003/4004 | TC-P1-012 | P1-已实现 |
+| API-014 / API-027 | tag.list_tags / create_tag / update_tag / archive_tag | lumen_tags, lumen_tag_links | space 成员 + 文档权限统计 | 4001/4003/4004/4090/4220 | TC-P2-TAG-001 | P2-契约草案 |
+| API-017 | quick_entry.capture_quick_entry | lumen_quick_entries, lumen_documents, lumen_tag_links | owner 私有 + 转文档后继承权限 | 4001/4003/4220 | TC-P2-QUICK-001 | P2-契约草案 |
+| API-018 | doc_links.list_links / upsert_link | lumen_doc_links, lumen_documents | source / target 双向权限过滤 | 4001/4003/4004/4220 | TC-P2-LINK-001 | P2-契约草案 |
+| API-028 | writing.polish_document | lumen_ai_drafts, lumen_chunks, lumen_documents | 文档可写 + 来源 chunk 可见 | 4001/4003/4004/4220/5030 | TC-P2-AI-001 | P2-契约草案 |
+| API-019 | export.create_pdf_export | lumen_doc_exports, lumen_documents, lumen_document_versions | 文档可读 / 可导出 | 4001/4003/4004/4220/5030 | TC-P2-PDF-001 | P2-契约草案（待 RG-006） |
 
 **权限场景矩阵**（权限隔离由 DB 过滤 + service/查询层执行，不依赖前端）：
 
@@ -248,7 +297,12 @@ sequenceDiagram
 | 私有文档对他人不可见 | `permission='private' AND owner_id != user` → 排除 | 查询层过滤 | 空结果 / 404 | TC-P1-003 |
 | 团队共享对成员可见 | `permission='team'` 且为 space 成员 | 成员校验 | — | TC-P1-003 |
 | 外部只读 | `permission='external'` | 只读 | — | TC-P1-003 |
+| P2 标签统计 | `tag_links -> documents` join 后继续套用文档权限 | 仅统计可见文档 | 不泄露隐藏文档数量 | TC-P2-TAG-001 |
+| P2 反向链接 | target 文档不可见时不返回标题 / 摘要 | 查询层返回 `no_access` 或过滤 | 4003 / 空结果 | TC-P2-LINK-001 |
+| P2 AI 润色引用 | sources 仅来自当前用户可见 chunks | LLM 调用前过滤上下文 | 5030 可降级 Mock | TC-P2-AI-001 |
+| P2 PDF 导出 | 导出前复用文档可见性校验 | 导出产物继承源文档权限 | 5030 依赖不可用 | TC-P2-PDF-001 |
 
 ## 6. 待人工确认项
 
-- 无开发前阻塞项；若实现期调整鉴权、错误码或 token 载荷，必须同步修订 `docs/05-tech-spec.md` 与本文。
+- Batch B 已补 P2 核心 5 项 API 契约草案，但尚未实现接口、未新增依赖、未创建任务；正式编码前需确认首个 vertical slice 与 `docs/09-verification.md` TC-P2-* 用例。
+- `API-019` PDF 导出受 `docs/05-tech-spec.md` RG-006 与 tech-env 草案约束；导出库未安装 / 未验证前不得进入实现。
