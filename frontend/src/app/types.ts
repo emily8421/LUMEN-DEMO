@@ -10,3 +10,9 @@ export type ImportDraft = {
   title: string;
   permission: DocumentPermission;
 };
+
+export type Draft = {
+  title: string;
+  content_md: string;
+  permission: DocumentPermission;
+};
