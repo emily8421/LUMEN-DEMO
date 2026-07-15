@@ -55,6 +55,14 @@ function Assert-FrontendIdentity([string]$Uri) {
     }
 }
 
+function Get-BackendPython() {
+    $venvPython = Join-Path $repoRoot ".venv\Scripts\python.exe"
+    if (Test-Path $venvPython) {
+        return $venvPython
+    }
+    return "python"
+}
+
 function Start-DemoProcess([string]$Name, [string]$FilePath, [string[]]$ArgumentList, [string]$WorkingDirectory) {
     $stdout = Join-Path $tempRoot "$Name.out.log"
     $stderr = Join-Path $tempRoot "$Name.err.log"
@@ -95,14 +103,26 @@ try {
     $backendScript = Join-Path $tempRoot "sprint16_demo_backend.py"
     @"
 from contextlib import asynccontextmanager
+import importlib.util
 import sys
+import types
+from pathlib import Path
 
-sys.path.insert(0, r"$repoRoot")
+repo_root = Path(r"$repoRoot")
+sys.path.insert(0, str(repo_root))
 
-from backend.repository.demo_repository import DemoRepository
-import backend.repository as repository_module
+demo_repository_path = repo_root / "backend" / "repository" / "demo_repository.py"
+spec = importlib.util.spec_from_file_location("backend.repository.demo_repository", demo_repository_path)
+demo_repository_module = importlib.util.module_from_spec(spec)
+sys.modules["backend.repository.demo_repository"] = demo_repository_module
+spec.loader.exec_module(demo_repository_module)
 
-repository_module.repository = DemoRepository()
+repository_module = types.ModuleType("backend.repository")
+repository_module.__path__ = [str(repo_root / "backend" / "repository")]
+repository_module.DemoRepository = demo_repository_module.DemoRepository
+repository_module.demo_repository = demo_repository_module
+repository_module.repository = demo_repository_module.DemoRepository()
+sys.modules["backend.repository"] = repository_module
 
 import backend.main as main
 
@@ -119,8 +139,10 @@ if __name__ == "__main__":
 "@ | Set-Content -Path $backendScript -Encoding UTF8
 
     $env:VITE_API_BASE = "http://127.0.0.1:$BackendPort"
+    $backendPython = Get-BackendPython
+    Write-Host "Using backend Python: $backendPython"
 
-    Start-DemoProcess "backend" "python" @($backendScript) $repoRoot
+    Start-DemoProcess "backend" $backendPython @($backendScript) $repoRoot
     Start-DemoProcess "frontend" "npm.cmd" @("run", "dev", "--", "--host", "127.0.0.1", "--port", "$FrontendPort", "--strictPort") $frontendRoot
 
     Wait-HttpOk "http://127.0.0.1:$BackendPort/docs" 30
