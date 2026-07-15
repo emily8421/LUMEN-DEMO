@@ -1,5 +1,4 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
-import ReactMarkdown from 'react-markdown';
 import {
   createDocument,
   createTerm,
@@ -28,6 +27,9 @@ import {
   updateDocument,
   updateTerm,
 } from './api';
+import { MarkdownBlock } from './components/MarkdownBlock';
+import { StatusBar } from './components/StatusBar';
+import { WorkspaceViewNav, type ActiveView } from './app/WorkspaceViewNav';
 
 const permissionLabels: Record<DocumentPermission, string> = {
   private: '私有',
@@ -65,80 +67,12 @@ type Session = {
   currentSpaceId: number;
 };
 
-type ActiveView = 'documents' | 'search' | 'query' | 'terms';
-
-const workspaceViews: Array<{ id: ActiveView; label: string; description: string }> = [
-  { id: 'documents', label: '文档', description: '编辑、预览、版本' },
-  { id: 'search', label: '搜索', description: '全文 / 语义检索' },
-  { id: 'query', label: '问答', description: 'RAG 答案与来源' },
-  { id: 'terms', label: '术语', description: '空间术语维护' },
-];
-
-type MarkdownBlockProps = {
-  content: string;
-  emptyText?: string;
-  className?: string;
-};
-
-function MarkdownBlock({ content, emptyText = '暂无内容。', className = '' }: MarkdownBlockProps) {
-  const trimmedContent = content.trim();
-
-  if (!trimmedContent) {
-    return <p className="empty-state">{emptyText}</p>;
-  }
-
-  return (
-    <div className={`markdown-body ${className}`.trim()}>
-      <ReactMarkdown>{trimmedContent}</ReactMarkdown>
-    </div>
-  );
-}
-
 function markdownExcerpt(content: string, maxLength = 140) {
   const trimmedContent = content.trim();
   if (trimmedContent.length <= maxLength) {
     return trimmedContent;
   }
   return `${trimmedContent.slice(0, maxLength)}…`;
-}
-
-type WorkspaceViewNavProps = {
-  activeView: ActiveView;
-  disabled: boolean;
-  onChange: (view: ActiveView) => void;
-};
-
-function WorkspaceViewNav({ activeView, disabled, onChange }: WorkspaceViewNavProps) {
-  return (
-    <nav className="view-nav" aria-label="工作台视图">
-      {workspaceViews.map((view) => (
-        <button
-          key={view.id}
-          type="button"
-          className={activeView === view.id ? 'active' : ''}
-          onClick={() => onChange(view.id)}
-          disabled={disabled}
-        >
-          <span>{view.label}</span>
-          <small>{view.description}</small>
-        </button>
-      ))}
-    </nav>
-  );
-}
-
-type StatusBarProps = {
-  notice: string;
-  error: string;
-};
-
-function StatusBar({ notice, error }: StatusBarProps) {
-  return (
-    <footer className="status-bar">
-      <span>{notice}</span>
-      {error ? <strong>{error}</strong> : null}
-    </footer>
-  );
 }
 
 function App() {
