@@ -7,7 +7,8 @@ import {
   DocumentPermission,
   DocumentVersion,
   getDocument,
-  importDocument,
+  ImportBatchItem,
+  importBatchDocuments,
   KnowledgeDocument,
   listDocuments,
   listSpaces,
@@ -31,7 +32,7 @@ import { StatusBar } from './components/StatusBar';
 import { WorkspaceViewNav, type ActiveView } from './app/WorkspaceViewNav';
 import { TopBar } from './app/TopBar';
 import { ContextPane } from './app/ContextPane';
-import type { Session, ImportDraft, Draft, TermDraft } from './app/types';
+import type { Session, ImportDraft, Draft, ImportFileSelection, TermDraft } from './app/types';
 import { DocumentsFeature } from './features/DocumentsFeature';
 import { SearchFeature } from './features/SearchFeature';
 import { QueryFeature } from './features/QueryFeature';
@@ -51,7 +52,6 @@ const emptyTermDraft = {
 };
 
 const emptyImportDraft = {
-  title: '',
   permission: 'team' as DocumentPermission,
 };
 
@@ -75,9 +75,10 @@ function App() {
   const [selectedTermId, setSelectedTermId] = useState<number | null>(null);
   const [termDraft, setTermDraft] = useState<TermDraft>(emptyTermDraft);
   const [importDraft, setImportDraft] = useState<ImportDraft>(emptyImportDraft);
-  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importFiles, setImportFiles] = useState<ImportFileSelection[]>([]);
   const [importInputKey, setImportInputKey] = useState(0);
   const [lastImportSummary, setLastImportSummary] = useState('');
+  const [lastImportItems, setLastImportItems] = useState<ImportBatchItem[]>([]);
   const [activeView, setActiveView] = useState<ActiveView>('documents');
 
   const selectedDocument = useMemo(
@@ -230,26 +231,29 @@ function App() {
 
   async function handleImport(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!session || !importFile) {
+    if (!session || importFiles.length === 0) {
       return;
     }
 
-    await runAction('正在导入已提取文本...', async () => {
-      const result = await importDocument(session.token, {
-        file: importFile,
-        title: importDraft.title,
+    await runAction(`正在批量导入 ${importFiles.length} 个文本...`, async () => {
+      const result = await importBatchDocuments(session.token, {
+        files: importFiles,
         permission: importDraft.permission,
       });
       await refreshWorkspace(session.token);
-      setSelectedId(result.parsed_doc_id);
+      const firstImportedItem = result.items.find((item) => item.parsed_doc_id != null);
+      if (firstImportedItem?.parsed_doc_id) {
+        setSelectedId(firstImportedItem.parsed_doc_id);
+      }
       setActiveView('documents');
       setIsCreating(false);
       setSearchResult(null);
       setQueryResult(null);
       setImportDraft(emptyImportDraft);
-      setImportFile(null);
+      setImportFiles([]);
+      setLastImportItems(result.items);
       setImportInputKey((currentKey) => currentKey + 1);
-      const summary = `导入完成：文档 #${result.parsed_doc_id}，${result.chunk_count} 个 chunk（${result.mode}）`;
+      const summary = `批量导入完成：成功 ${result.success_count}，失败 ${result.failed_count}，跳过 ${result.skipped_count}`;
       setLastImportSummary(summary);
       setNotice(summary);
     });
@@ -435,10 +439,11 @@ function App() {
             onSelectDocument={handleSelectDocument}
             importDraft={importDraft}
             onImportDraftChange={setImportDraft}
-            importFile={importFile}
-            onImportFileChange={setImportFile}
+            importFiles={importFiles}
+            onImportFilesChange={setImportFiles}
             importInputKey={importInputKey}
             lastImportSummary={lastImportSummary}
+            lastImportItems={lastImportItems}
             onImport={handleImport}
             terms={terms}
             selectedTermId={selectedTermId}

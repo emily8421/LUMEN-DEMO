@@ -7,8 +7,12 @@ export type Session = {
 };
 
 export type ImportDraft = {
-  title: string;
   permission: DocumentPermission;
+};
+
+export type ImportFileSelection = {
+  file: File;
+  relativePath: string;
 };
 
 export type Draft = {

@@ -36,7 +36,7 @@
 | Sprint-13（P1C·权限·候选） | 外部只读权限真实化（EXTERNAL 写操作拦截） | 003（权限收口） | design/permissions、06、07 | backend `service/permission` + api | TC-P1-003 扩展 | 候选·待确认（未编码） | — |
 | Sprint-14（P1C·导入·候选·需 RG） | 真实 Word/PDF 文本提取（REQ-009 真实化） | 009（导入真实化） | design/ingestion、05（RG 待评估）、本次审计 §二 | backend `service/imports` + 依赖 | TC-P1-009 扩展 | 候选·待确认（需选型 + RG；未编码） | — |
 | Sprint-15（P1C·可选·分词·候选） | zhparser 中文分词接入 | 007（搜索质量收口） | 05、09 task-009 记录、docker | docker 镜像 + migration 006 | TC-P1-007 扩展 | 候选·可选·待确认（中成本；未编码） | — |
-| Sprint-16（P1.5·批量导入·候选） | 多文件 + 文件夹拖拽导入（drop zone + 批量进度 + 标题前缀 + 冲突跳过） | 037（新增）+ 009 扩展 | 02 REQ-037、07 API-029 | frontend ContextPane drop zone + backend api/imports 批量 + service | 待新增 TC-P1-015 | 候选·待确认（未编码） | — |
+| Sprint-16（P1.5·批量导入） | 多文件 + 文件夹拖拽导入（drop zone + 批量进度 + 标题前缀 + 冲突跳过） | 037（新增）+ 009 扩展 | 02 REQ-037、07 API-029 | frontend ContextPane drop zone + backend api/imports 批量 + service | TC-P1-015 | 已实现（自动化验证通过；Chrome smoke 待人工补验） | — |
 | Sprint-17（P1.5·导出·候选） | 单文档 .md 下载 + 空间 ZIP 打包 | 038（新增） | 02 REQ-038、07 API-030 | frontend 下载入口 + backend api/export（zipfile）+ service | 待新增 TC-P1-016 | 候选·待确认（未编码） | — |
 | Sprint-18（P1.5·PDF 导出·候选·需 RG） | 单文档 PDF 导出（Markdown → PDF，中文） | 027（从 Phase2 提前） | 02 REQ-027、07 API-019、05 RG-006 | backend api/export-pdf + PDF 库 + service | 待新增 TC-P1-017 | 候选·待 RG-006 选型（未编码） | — |
 
@@ -420,9 +420,9 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 ### 禁止事项
 - 不改 DB schema 既有表；不引入向量库替代品。
 
-## Sprint-16（P1.5·批量导入 · 候选）：多文件 + 文件夹拖拽导入
+## Sprint-16（P1.5·批量导入）：多文件 + 文件夹拖拽导入
 
-> **候选·待确认**：2026-07-15 用户新增需求（痛点：一个个导入太慢）。方案已确认【标题前缀模拟目录 / 多文件+文件夹拖拽+落区】。本 Sprint 只做 `.md`/`.txt` 批量导入，不碰 Word/PDF 解析（留 Sprint-14）、不碰 DB schema（标题前缀，非真 folder）。
+> **已实现（2026-07-15）**：用户新增需求（痛点：一个个导入太慢）。方案已确认并按最小范围落地【标题前缀模拟目录 / 多文件+文件夹拖拽+落区】。本 Sprint 只做 `.md`/`.txt` 批量导入，不碰 Word/PDF 解析（留 Sprint-14）、不碰 DB schema（标题前缀，非真 folder）。Chrome 拖拽 smoke 尚待人工补验。
 
 ### 目标
 把单文件导入升级为批量：拖拽落区（drop zone）+ 多文件选择 + 文件夹递归（`webkitdirectory`），一次导入多个 `.md`/`.txt`；标题用相对路径前缀（如 `docs/team/readme`）保留目录感；批量进度 + 逐条成功/失败反馈；同名默认跳过。属 REQ-037（新增）+ REQ-009 扩展。
@@ -444,6 +444,12 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 
 ### 禁止事项
 - 不做 Word/PDF 解析（留 Sprint-14）；不加真 folder 数据模型（留 Phase2）；不引 router / 组件库 / 新重依赖。
+
+### 完成记录（2026-07-15）
+- 后端新增 `POST /api/import/batch`，逐文件处理 `files[]` + `relative_paths[]`，返回 `success_count / failed_count / skipped_count` 与逐条结果；同名默认 `skipped`，失败项不回滚成功项。
+- 前端导入区升级为 drop zone + 多文件选择 + 文件夹选择（`webkitdirectory`）+ 批量摘要 / 逐条结果；相对路径用于标题前缀，不新增真实目录模型。
+- 验证：`python -m unittest tests.backend.test_imports tests.backend.test_import_api` 9 tests 通过；非 PG/embedding 后端业务测试 47 tests 通过；`npm.cmd run build` 通过；`git diff --check` 通过。
+- 未完成验证：Chrome 拖拽 / 文件夹人工 smoke 待补；`python -m unittest discover -s tests/backend` 因本地 PG 相关测试超时未完成，embedding 模块在沙箱内触发 `torch_python.dll` 权限错误，未作为本 Sprint 阻塞。
 
 ## Sprint-17（P1.5·导出 · 候选）：单文档 .md + 空间 ZIP
 
@@ -510,6 +516,7 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 | task-009 search 向量化 + 可选 zhparser | 2026-07-10 | 007 | `/api/search` hybrid：substring + `ts_vector` SQL 候选 + pgvector 语义召回；migration 006 可选 zhparser / simple 回退 | 本 PR | `init_db()` 两次通过；76 后端 tests 通过（含 `tests.backend.test_search` 与真实 PG 语义搜索集成测试） | 当前 pgvector 镜像无 zhparser，中文分词回退 `simple`；不影响向量语义召回 | §5 / §6 |
 | Sprint-9（P1A）实现 | 2026-07-11 | 011 | 前端结构聚焦重构：本地 `activeView` 四视图切换、右栏拆回文档 / 搜索 / 问答 / 术语主视图、桌面响应式 CSS | `9ede5b6`（PR #76） | `git diff --check`；`npm.cmd run build`；Chrome / Edge 900px headless smoke 通过 | 不阻塞 Phase1 Demo closure；P1A 仅作为既有 Demo 的前端结构体验收口 | §2 / §5（TC-P1-013 通过） |
 | Sprint-10（P1B）实现 | 2026-07-12 | 011 | 前端工作台系统化重设计：TopBar + Nav Rail + Context Pane + Workspace 三层布局；Context Pane 随文档 / 搜索 / 问答 / 术语变化；CSS token + pane / toolbar / list-row / inspector 分层；新增正式设计文档与 HTML 原型 | 本批 | `git diff --check`；`npm.cmd run build`；Chrome / Edge 900px headless smoke 通过，覆盖登录、四视图切换、文档新建 / 编辑 / 版本恢复 / 删除、Markdown 预览、搜索来源打开、问答、术语新建 / 删除确认；无全局横向滚动 | 不阻塞 Phase1 Demo closure；P1B 仅作为既有 Demo 的前端工作台体验收口；不引 router / 组件库 / 新 API | §2 / §5（TC-P1-014 通过） |
+| Sprint-16（P1.5A）实现 | 2026-07-15 | 037/009 | 批量 / 文件夹 `.md` / `.txt` 导入：`POST /api/import/batch`、逐文件结果、同名跳过、路径标题前缀；前端 drop zone、多文件 / 文件夹选择、批量摘要与逐条结果 | 本批 | `git diff --check`；`python -m unittest tests.backend.test_imports tests.backend.test_import_api`（9 tests）；非 PG/embedding 后端业务测试 47 tests；`npm.cmd run build` | Chrome 拖拽 / 文件夹 smoke 待人工补验；不改 DB schema、不引新依赖、不做 Word/PDF/PDF 导出 | §5（TC-P1-015 条件通过·待 Chrome smoke） |
 
 > Sprint-8 后：pgvector / Embedding / LLM 已接入（RG-001/002/004 Go），基础 Web / ORM 栈为 Go（RG-005）。Phase1 全量验收结论为 Conditional Go（Demo closure）；仍移出 P1：真实 PDF 解析、图片 OCR（REQ-010，RG-003 No-Go，后续阶段）。Sprint-9（P1A）与 Sprint-10（P1B）是已完成 Demo 之上的前端体验收口，不改变 Phase1 closure 结论。Phase2 启动前需人工确认范围、进入 / 退出标准，并另行更新阶段指针。Sprint-11 目前仅为 P2 UI / WSG 实现前门禁草案，不计入已完成 Sprint；TC-P2-WSG-001 与 TC-P2-UI-001~005 未执行、未通过。
 
@@ -519,7 +526,7 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 
 ## 待人工确认项
 
-- 是否确认 Phase1.5A 立即进入编码：AI 建议先做 Sprint-16 批量 / 文件夹导入，再做 Sprint-17 `.md` / ZIP 导出备份；这两项是个人可用 Alpha 的退出门槛。
+- Phase1.5A 下一步建议进入 Sprint-17 `.md` / ZIP 导出备份，并补做 Sprint-16 Chrome 拖拽 / 文件夹人工 smoke；Sprint-16 自动化验证已完成。
 - 是否正式进入 Phase2A / Phase2B：需在 Phase1.5A/B 后人工确认范围、进入 / 退出标准，再更新 `ai/project-rules.md` 当前阶段指针与相关设计 / 计划文档。`Sprint-11（P2-UI-Gate / WSG 候选）` 仅为实现前门禁草案，不代表已批准编码。
 - 首个 Phase2A vertical slice 选择：AI 建议优先 `REQ-026 内链 / 反链`，其次 `REQ-012 标签`，最后 `REQ-025 快速录入`；确认前不得一次性实现全部 P2 UI。
 - **Sprint-0′ 框架补课**：✅ 已完成（Step 1-5，commits ae51210/3d02bb2/2924df4/0a67cfc/2e34c28/a33c536）。剩 **4b handler→hooks（App ≤300）暂缓**——WSG-004 软阈值，App 542 已大幅改善，待功能稳定后再做（不阻塞 P1.5/Phase2）。
