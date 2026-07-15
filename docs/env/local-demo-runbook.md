@@ -47,7 +47,7 @@ powershell -ExecutionPolicy Bypass -File scripts/run-sprint16-demo.ps1 -BackendP
 ```
 
 - 端口策略：脚本预检端口，前端使用 `--strictPort`，最终入口以脚本输出为准。
-- 后端代理：脚本通过 `VITE_API_BASE=http://127.0.0.1:<BackendPort>` 注入前端运行时，避免后端换端口后前端仍请求默认端口。
+- 后端代理：脚本通过 `DEMO_BACKEND_PROXY_URL=http://127.0.0.1:<BackendPort>` 注入 Vite dev server 代理；浏览器仍同源请求 `/api`，避免 CORS 问题。
 - 关闭方式：在脚本窗口按 Enter，脚本会停止本次启动的前后端进程。
 
 ## 5. 访问入口
@@ -62,7 +62,7 @@ powershell -ExecutionPolicy Bypass -File scripts/run-sprint16-demo.ps1 -BackendP
 
 - 健康检查：脚本等待 `http://127.0.0.1:<BackendPort>/docs` 与前端 URL 可访问。
 - 页面身份校验：脚本检查 `lumen-demo-app=knowledge-base-workbench` marker；不匹配则停止并报错。
-- 前后端链路：前端通过 `VITE_API_BASE` 指向本次启动的内存后端；登录 `alice` 后可执行批量导入、搜索和问答。
+- 前后端链路：前端同源请求 `/api`，Vite dev server 通过 `DEMO_BACKEND_PROXY_URL` 代理到本次启动的内存后端；登录 `alice` 后可执行批量导入、搜索和问答。
 - 期望结果：页面身份匹配；登录成功；批量导入 `.md` / `.txt` 后文档列表出现路径标题，搜索和问答可命中。
 - 常见失败：端口占用、依赖未安装、浏览器未自动打开、端口被其他项目页面占用。
 

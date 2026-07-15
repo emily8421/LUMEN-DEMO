@@ -12,7 +12,10 @@ $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $frontendRoot = Join-Path $repoRoot "frontend"
 $tempRoot = Join-Path $env:TEMP "lumen-sprint16-demo"
 $processes = @()
+$hadViteApiBase = Test-Path Env:VITE_API_BASE
 $oldViteApiBase = $env:VITE_API_BASE
+$hadDemoBackendProxyUrl = Test-Path Env:DEMO_BACKEND_PROXY_URL
+$oldDemoBackendProxyUrl = $env:DEMO_BACKEND_PROXY_URL
 
 function Get-PortOwners([int]$Port) {
     @(Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue |
@@ -138,7 +141,8 @@ if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=$BackendPort, log_level="warning")
 "@ | Set-Content -Path $backendScript -Encoding UTF8
 
-    $env:VITE_API_BASE = "http://127.0.0.1:$BackendPort"
+    Remove-Item Env:VITE_API_BASE -ErrorAction SilentlyContinue
+    $env:DEMO_BACKEND_PROXY_URL = "http://127.0.0.1:$BackendPort"
     $backendPython = Get-BackendPython
     Write-Host "Using backend Python: $backendPython"
 
@@ -175,6 +179,15 @@ if __name__ == "__main__":
     }
     Stop-PortOwners $BackendPort
     Stop-PortOwners $FrontendPort
-    $env:VITE_API_BASE = $oldViteApiBase
+    if ($hadViteApiBase) {
+        $env:VITE_API_BASE = $oldViteApiBase
+    } else {
+        Remove-Item Env:VITE_API_BASE -ErrorAction SilentlyContinue
+    }
+    if ($hadDemoBackendProxyUrl) {
+        $env:DEMO_BACKEND_PROXY_URL = $oldDemoBackendProxyUrl
+    } else {
+        Remove-Item Env:DEMO_BACKEND_PROXY_URL -ErrorAction SilentlyContinue
+    }
     Write-Host "Demo services stopped."
 }
