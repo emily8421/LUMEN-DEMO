@@ -1,0 +1,187 @@
+.app-shell {
+  display: grid;
+  grid-template-rows: 52px minmax(0, 1fr) auto;
+  height: 100vh;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.topbar {
+  display: grid;
+  grid-template-columns: minmax(220px, 300px) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  padding: 0 var(--space-4);
+}
+
+.brand-block {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.brand-mark {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-panel);
+  background: var(--blue);
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.topbar h1 {
+  overflow: hidden;
+  font-size: 15px;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.eyebrow {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.top-context {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.top-context span,
+.session-card span,
+.empty-state,
+.version-list small,
+.document-list small,
+.result-list small,
+.term-list small,
+.subsection-heading span,
+.info-row span {
+  color: var(--muted);
+}
+
+.top-context select {
+  max-width: 240px;
+}
+
+.session-card {
+  display: grid;
+  gap: 2px;
+  max-width: 260px;
+  min-width: 150px;
+  border-radius: var(--radius-panel);
+  background: var(--panel-soft);
+  font-size: 12px;
+  padding: 5px 8px;
+  text-align: right;
+}
+
+.session-card strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  background: var(--panel);
+}
+
+.login-panel {
+  align-self: start;
+  justify-self: center;
+  width: min(460px, calc(100% - 32px));
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  padding: var(--space-3);
+}
+
+.login-panel form,
+.compact-form,
+.editor-form,
+.sidebar,
+.answer-box {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.workspace-layout {
+  display: grid;
+  grid-template-columns: 52px 240px minmax(0, 1fr);
+  min-height: 0;
+  overflow: hidden;
+}
+
+.view-nav,
+.nav-rail {
+  display: grid;
+  grid-auto-rows: 46px;
+  align-content: start;
+  gap: 0;
+  border-right: 1px solid var(--line);
+  background: #fbfdff;
+  padding-top: var(--space-2);
+}
+
+.view-nav button,
+.nav-item {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  gap: 2px;
+  border: 0;
+  border-left: 3px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--muted);
+  line-height: 1.15;
+  padding: 0;
+  text-align: center;
+}
+
+.view-nav button:hover:not(:disabled),
+.view-nav button:focus-visible:not(:disabled),
+.view-nav button.active,
+.nav-item.active {
+  border-left-color: var(--blue);
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+
+.view-nav span,
+.nav-item span:first-child {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.view-nav small {
+  display: none;
+  max-width: 52px;
+  overflow: hidden;
+  color: inherit;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.context-pane {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border-right: 1px solid var(--line);
+  background: var(--panel);
+}

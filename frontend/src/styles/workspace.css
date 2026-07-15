@@ -1,0 +1,247 @@
+.context-header,
+.context-footer,
+.workspace-toolbar,
+.inspector-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-height: 38px;
+  border-bottom: 1px solid var(--line-soft);
+  padding: 6px 8px;
+}
+
+.context-footer {
+  align-items: stretch;
+  flex-direction: column;
+  border-top: 1px solid var(--line-soft);
+  border-bottom: 0;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.section-title.stacked {
+  align-items: start;
+  flex-direction: column;
+}
+
+.section-title h2,
+.workspace-toolbar h2,
+.inspector-header h2 {
+  overflow: hidden;
+  font-size: 14px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.context-list,
+.document-list,
+.term-list,
+.result-list,
+.version-list,
+.inspector-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.context-list {
+  min-height: 0;
+  overflow: auto;
+  padding: var(--space-2);
+}
+
+.context-empty,
+.inspector-empty,
+.task-empty {
+  padding: var(--space-3);
+}
+
+.document-list button,
+.term-list button,
+.info-row {
+  display: grid;
+  width: 100%;
+  gap: 2px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-panel);
+  background: transparent;
+  color: var(--text);
+  padding: 6px;
+  text-align: left;
+}
+
+.document-list li + li,
+.term-list li + li,
+.info-row + .info-row {
+  margin-top: 3px;
+}
+
+.document-list button.active,
+.term-list button.active,
+.info-row.active {
+  border-color: #bfdbfe;
+  background: var(--blue-soft);
+}
+
+.document-list span,
+.term-list strong,
+.result-open-button strong,
+.result-card > strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.term-list span {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--muted);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.info-list {
+  display: block;
+}
+
+.info-row strong {
+  font-size: 13px;
+}
+
+.workspace-main,
+.workspace {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--panel-soft);
+}
+
+.documents-workspace,
+.task-workspace,
+.term-panel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.workspace-toolbar {
+  min-height: 44px;
+  border-bottom-color: var(--line);
+  background: var(--panel);
+  padding: 6px 10px;
+}
+
+.view-title {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.toolbar-actions,
+.button-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel-soft);
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1;
+  padding: 4px 7px;
+  white-space: nowrap;
+}
+
+.badge.success {
+  border-color: #bbf7d0;
+  background: var(--green-soft);
+  color: var(--green);
+}
+
+.workspace-body {
+  min-height: 0;
+  overflow: hidden;
+  padding: var(--space-3);
+}
+
+.document-view-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 240px;
+  gap: var(--space-3);
+  min-height: 0;
+}
+
+.editor-panel,
+.editor-pane,
+.inspector-pane,
+.task-workspace,
+.term-workspace-body {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  background: var(--panel);
+}
+
+.editor-form {
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100%;
+  min-height: 0;
+}
+
+.editor-toolbar {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) 150px auto;
+  gap: var(--space-2);
+  align-items: end;
+  border-bottom: 1px solid var(--line-soft);
+  padding: var(--space-2);
+}
+
+.editor-content-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(220px, 0.65fr);
+  gap: var(--space-2);
+  min-height: 0;
+  overflow: hidden;
+  padding: var(--space-2);
+}
+
+.editor-field {
+  min-height: 0;
+}
+
+.editor-field textarea {
+  min-height: 440px;
+  height: 100%;
+  font-family: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+  line-height: 1.48;
+}
+
+.markdown-preview {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+  overflow: auto;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-panel);
+  background: var(--panel-soft);
+  padding: var(--space-2);
+}

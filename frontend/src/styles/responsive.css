@@ -1,0 +1,61 @@
+@media (max-width: 1199px) {
+  .topbar {
+    grid-template-columns: minmax(190px, 1fr) minmax(0, 220px) auto;
+  }
+
+  .workspace-layout {
+    grid-template-columns: 52px 220px minmax(0, 1fr);
+  }
+
+  .document-view-grid,
+  .query-workspace-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .editor-content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .editor-field textarea {
+    min-height: 340px;
+  }
+
+  .markdown-preview {
+    max-height: 150px;
+  }
+
+  .inspector-pane {
+    max-height: 190px;
+  }
+}
+
+@media (max-width: 899px) {
+  .topbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding: 0 var(--space-3);
+  }
+
+  .top-context {
+    display: none;
+  }
+
+  .workspace-layout {
+    grid-template-columns: 52px minmax(0, 1fr);
+  }
+
+  .context-pane {
+    display: none;
+  }
+
+  .task-input,
+  .focus-form,
+  .editor-toolbar,
+  .term-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .task-workspace,
+  .term-workspace-body {
+    margin: var(--space-2);
+  }
+}
