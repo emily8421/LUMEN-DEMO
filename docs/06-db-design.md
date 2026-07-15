@@ -10,9 +10,9 @@
 |---|---|
 | 保留 / 省略决策 | 保留 |
 | 决策来源 | `ai/project-rules.md` §3（项目有 PostgreSQL + pgvector 持久化存储） |
-| 覆盖 REQ / 模块 | Phase1：空间 / 权限、文档、版本、导入、检索向量、术语管理 |
-| 当前状态 | P1 表结构**已落地 PostgreSQL**（Sprint-8 / task-008 T1–T5：8 张 `lumen_*` 表由 `migrations/001-005` 建，后端切 `PgRepository`；`lumen_chunks.embedding vector(512)` + hnsw + ts_vector 由 T4/T6 启用；migration 006 为 search 增加可选 zhparser / `simple` 回退配置）。内存 `demo_repository` 保留为单测 fake。真实 PDF/OCR 仍降级（RG-003） |
-| 最后更新 | 2026-07-10 |
+| 覆盖 REQ / 模块 | Phase1：空间 / 权限、文档、版本、导入、检索向量、术语管理；P1.5：导出任务契约 |
+| 当前状态 | P1 表结构**已落地 PostgreSQL**（Sprint-8 / task-008 T1–T5：8 张 `lumen_*` 表由 `migrations/001-005` 建，后端切 `PgRepository`；`lumen_chunks.embedding vector(512)` + hnsw + ts_vector 由 T4/T6 启用；migration 006 为 search 增加可选 zhparser / `simple` 回退配置）。内存 `demo_repository` 保留为单测 fake。真实 PDF/OCR 仍降级（RG-003）；P1.5 PDF 导出表仅为契约草案，待 RG-006 与 Sprint-18 |
+| 最后更新 | 2026-07-15（REQ-027 前移 P1.5；同步 PDF 导出契约指针） |
 
 ## 1. 表清单（完整）
 
@@ -31,7 +31,7 @@
 | lumen_doc_links | 内部链接与反向链接索引 | [P2] | 契约草案 | — | REQ-026 |
 | lumen_quick_entries | 快速录入索引条目 | [P2] | 契约草案 | — | REQ-025 |
 | lumen_ai_drafts | AI 润色 / 写作引用草稿 | [P2] | 契约草案 | — | REQ-014 |
-| lumen_doc_exports | 单文档导出 PDF 任务 | [P2] | 契约草案 | — | REQ-027 |
+| lumen_doc_exports | 单文档导出 PDF 任务 | [P1] | P1.5-契约草案 | — | REQ-027 |
 | lumen_push_copies | 跨空间推送只读副本 | [P2] | 骨架 | — | REQ-015 |
 | lumen_vault_mounts | Vault 挂载配置 | [愿景] | 骨架 | — | REQ-018 |
 | lumen_audio_records | 录音转写记录 | [愿景] | 骨架 | — | REQ-019 |
@@ -194,9 +194,9 @@
 | lumen_terms | source_document_id | bigint FK | 否 | — | FK→documents, nullable | REQ-036 | 低 | 随术语删除 |
 | lumen_terms | created_at / updated_at | timestamptz | 是 | now() | — | REQ-036 | 低 | 随术语删除 |
 
-### [P2] MVP 核心 5 项表契约草案（Batch B 回填）
+### [P1.5 / P2] 导出与 MVP 表契约草案（Batch B 回填）
 
-> 本节只补 Phase2 MVP 进入前契约，不创建迁移、不代表已实现。正式编码前仍需确认首个 vertical slice、迁移 / seed / 回滚策略和 `docs/09-verification.md` 对应用例。
+> 本节只补 P1.5 PDF 导出与 Phase2 MVP 进入前契约，不创建迁移、不代表已实现。正式编码前仍需确认对应 Sprint / vertical slice、迁移 / seed / 回滚策略和 `docs/09-verification.md` 对应用例。
 
 | 表 | 字段草案 | 关键约束 | 权限 / 数据边界 | 追溯 |
 |---|---|---|---|---|
@@ -205,11 +205,11 @@
 | `lumen_doc_links` | `id`、`space_id`、`source_document_id`、`target_document_id`、`target_title`、`link_text`、`link_type`、`status`、`created_at`、`updated_at` | `link_type in ('wikilink','manual')`；`status in ('resolved','unresolved','no_access')`；`source_document_id != target_document_id` | 反向链接查询必须过滤当前空间与目标文档权限；无权限目标显示为 `no_access` 而不泄露标题 / 摘要 | REQ-026、TC-P2-LINK-001 |
 | `lumen_quick_entries` | `id`、`space_id`、`owner_id`、`title`、`content_md`、`source`、`target_document_id`、`created_document_id`、`status`、`created_at`、`updated_at` | `status in ('draft','converted','discarded')`；转换后写入 `created_document_id` 或追加到 `target_document_id` | 私有草稿默认仅 owner 可见；转成文档后继承目标文档权限 | REQ-025、TC-P2-QUICK-001 |
 | `lumen_ai_drafts` | `id`、`space_id`、`document_id`、`user_id`、`mode`、`input_excerpt_hash`、`prompt_summary`、`output_md`、`cited_chunk_ids`、`status`、`created_at` | `mode in ('polish','citation')`；`status in ('generated','applied','discarded','failed')`；`cited_chunk_ids` 为 JSONB 数组 | 不存真实 API key；真实文档外发需遵守 `docs/05-tech-spec.md` 数据外发限制；引用仅可来自有权限 chunks | REQ-014、TC-P2-AI-001 |
-| `lumen_doc_exports` | `id`、`space_id`、`document_id`、`requested_by`、`format`、`status`、`version_no`、`artifact_path`、`error_message`、`created_at`、`finished_at` | `format='pdf'`；`status in ('queued','running','done','failed')`；导出任务与文档版本绑定 | 导出前校验文档可见性；导出产物不得绕过文档权限长期公开 | REQ-027、TC-P2-PDF-001 |
+| `lumen_doc_exports` | `id`、`space_id`、`document_id`、`requested_by`、`format`、`status`、`version_no`、`artifact_path`、`error_message`、`created_at`、`finished_at` | `format='pdf'`；`status in ('queued','running','done','failed')`；导出任务与文档版本绑定 | 导出前校验文档可见性；导出产物不得绕过文档权限长期公开 | REQ-027、TC-P1-017 |
 
 ### [P2 后续] / [愿景] 表（骨架·待该阶段细化）
 
-- `lumen_push_copies`：跨空间只读副本与权限同步待 P2 后续细化（REQ-015，不进 Phase2 MVP 核心 5 项）。
+- `lumen_push_copies`：跨空间只读副本与权限同步待 P2 后续细化（REQ-015，不进 Phase2 MVP 核心 4 项）。
 - `lumen_vault_mounts`：Vault 挂载（路径、账号绑定、只读索引）待愿景验证（REQ-018）。
 - `lumen_audio_records`：录音转写记录待愿景验证（REQ-019）。
 - `lumen_brief_links`：对外简报（token、有效期、AI 可问不可看原文）待愿景验证（REQ-022）。
@@ -275,7 +275,7 @@ erDiagram
 | lumen_doc_links | 中 | source / target 文档均需权限过滤 | 无权限 target 不显示标题 / 摘要 | 随文档删除 | 不外发，除非作为 RAG / AI 引用上下文且有权限 | TC-P2-LINK-001 |
 | lumen_quick_entries.content_md | 中 | 默认 owner 私有；转文档后按文档权限 | 明文 | discard / 转换后按策略清理 | 不外发，除非用户触发 AI 写作且确认风险 | TC-P2-QUICK-001 |
 | lumen_ai_drafts.output_md / prompt_summary | 中 | space + document 权限 + user | 不存 API key；可存 prompt 摘要，不存完整敏感 prompt（待确认） | 随文档或用户清理 | 可能来自外部 LLM 返回；真实文档外发需风险接受 | TC-P2-AI-001 |
-| lumen_doc_exports.artifact_path | 中 | 与源文档权限一致 | 不公开长期链接 | 任务产物过期清理（待确认） | 不外发；导出库本机执行优先 | TC-P2-PDF-001 |
+| lumen_doc_exports.artifact_path | 中 | 与源文档权限一致 | 不公开长期链接 | 任务产物过期清理（待确认） | 不外发；导出库本机执行优先 | TC-P1-017 |
 
 ## 6. REQ → 表 / TC / Sprint 追溯矩阵
 
@@ -295,11 +295,11 @@ erDiagram
 | REQ-014 | `lumen_ai_drafts`、`lumen_documents`、`lumen_chunks` | TC-P2-AI-001 | Batch B / Sprint-11 后续 | AI 润色草稿、写作引用和来源 chunk 追溯契约草案 |
 | REQ-025 | `lumen_quick_entries`、`lumen_documents`、`lumen_tag_links` | TC-P2-QUICK-001 | Batch B / Sprint-11 后续 | 快速录入条目转文档 / 追加文档 / 关联标签契约草案 |
 | REQ-026 | `lumen_doc_links`、`lumen_documents` | TC-P2-LINK-001 | Batch B / Sprint-11 后续 | `[[wikilink]]` 出链 / 反链索引与权限过滤契约草案 |
-| REQ-027 | `lumen_doc_exports`、`lumen_documents`、`lumen_document_versions` | TC-P2-PDF-001 | Batch B / Sprint-11 后续 | 单文档 PDF 导出任务、版本绑定和权限继承契约草案 |
-| REQ-013 / 015 / 016 / 017 / 024 | P2 后续骨架 | — | — | 不进 Phase2 MVP 核心 5 项；后续单独细化 |
+| REQ-027 | `lumen_doc_exports`、`lumen_documents`、`lumen_document_versions` | TC-P1-017 | Sprint-18（P1.5·待 RG-006） | 单文档 PDF 导出任务、版本绑定和权限继承契约草案 |
+| REQ-013 / 015 / 016 / 017 / 024 | P2 后续骨架 | — | — | 不进 Phase2 MVP 核心 4 项；后续单独细化 |
 | REQ-018..023 / 028..035 | 愿景表骨架 | — | — | 技术验证通过后细化字段与索引 |
 
 ## 7. 待人工确认项
 
-- Batch B 已补 P2 核心 5 项 DB 契约草案，但尚未创建迁移、seed、回滚脚本或实现代码；正式进入实现前需确认首个 vertical slice 与迁移策略。
+- Batch B 已补 P1.5 PDF 导出与 P2 核心 DB 契约草案，但尚未创建迁移、seed、回滚脚本或实现代码；正式进入实现前需确认对应 Sprint / vertical slice 与迁移策略。
 - PDF 导出（REQ-027）仍受 RG-006 约束；导出产物存储路径、过期清理和中文排版库选型需结合 tech-env 草案继续确认。

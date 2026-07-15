@@ -68,8 +68,11 @@
 | TC-P1-012 | REQ-036 | brightlite 空间 | 新建术语 → 文档识别 → 问答 | 识别 + 空间术语优先于全局 | `tests/backend/test_term.py`、`test_rag.py` | 条件通过 |
 | TC-P1-013 | REQ-011 | P1A 前端实现 + Chrome / Edge 桌面 | ① 登录并切换文档 / 搜索 / 问答 / 术语视图；② 在 900px 宽度完成文档、搜索、问答、术语主流程；③ 回归 Markdown 渲染、来源点击、删除 / 恢复二次确认 | 视图切换保持当前空间上下文；各视图主区不被无关面板挤压；900px 无全局横向滚动；P0 能力不回退 | `npm.cmd run build` 通过；Chrome / Edge headless smoke（900px）通过，覆盖登录、四视图切换、文档新建 / 编辑 / 版本恢复 / 删除、Markdown 预览、搜索来源打开、问答、术语新建 / 删除确认 | 通过 |
 | TC-P1-014 | REQ-011 | P1B 工作台重设计实现 + Chrome / Edge 桌面 | ① 登录后检查 TopBar + Nav Rail + Context Pane + Workspace 三层布局；② 切换文档 / 搜索 / 问答 / 术语并确认 Context Pane 随视图变化；③ 在 900px 宽度完成文档、搜索、问答、术语主流程；④ 检查搜索首屏 ≥5 条结果、术语首屏 ≥8 条、编辑区 ≥12 行；⑤ 回归 Markdown 渲染、来源点击、删除 / 恢复二次确认 | 工作台布局与 `frontend-workspace-redesign` 原型一致；任务聚焦，不显示无关大卡片；900px 无全局横向滚动；P0/P1A 能力不回退 | `npm.cmd run build` 通过；Chrome / Edge headless smoke（900px）通过，覆盖登录、四视图切换、文档新建 / 编辑 / 版本恢复 / 删除、Markdown 预览、搜索来源打开、问答、术语新建 / 删除确认 | 通过 |
+| TC-P1-015 | REQ-037 | 多个 `.md` / `.txt` 文件或文件夹 | 拖入文件夹 / 多文件后批量导入 | 全部入库可搜可问答；标题保留路径前缀；同名跳过 | 待 Sprint-16 后端 tests + Chrome smoke | 草案·待编码 |
+| TC-P1-016 | REQ-038 | 当前空间存在多篇可见 / 不可见文档 | 文档详情下载 `.md`；空间导出 ZIP | 单文档 `.md` 内容正确；ZIP 只含可见文档 | 待 Sprint-17 后端 tests + Chrome smoke | 草案·待编码 |
+| TC-P1-017 | REQ-027 | RG-006 已 Go / Conditional Go；当前用户可读文档 | 对可读文档指定版本发起 PDF 导出；验证中文、失败态、权限态和产物访问 | 导出任务与版本绑定；中文正常；产物继承源文档权限；导出库不可用返回 5030；未验证前不得进入实现 | 待 tech-env 依赖验证 + 后端 tests + 人工 PDF 样例 | 草案·待 RG-006 |
 
-> TC-P1-010 暂为「后续阶段」，待 OCR 落地后补步骤与证据；TC-P1-013 已随 PR #76 合并后完成前端构建与 Chrome / Edge 900px smoke；TC-P1-014 已随 Sprint-10（P1B）完成前端构建与 Chrome / Edge 900px smoke；其余 TC 自动化均含于后端测试与既有 smoke 证据（见 §5）。
+> TC-P1-010 暂为「后续阶段」，待 OCR 落地后补步骤与证据；TC-P1-013 已随 PR #76 合并后完成前端构建与 Chrome / Edge 900px smoke；TC-P1-014 已随 Sprint-10（P1B）完成前端构建与 Chrome / Edge 900px smoke；TC-P1-015~017 为 P1.5 候选草案，待 Sprint-16~18 编码后补证据；其余 TC 自动化均含于后端测试与既有 smoke 证据（见 §5）。
 
 ### Phase2（功能范围 `[P2]` · 交付物形态 **MVP**，升阶段时追加）
 
@@ -87,9 +90,7 @@
 | TC-P2-LINK-001 | REQ-026；`lumen_doc_links`；API-018 | Batch B 契约已回填；首个 vertical slice 建议优先选择 | 在文档内容中登记 `[[wikilink]]`；查询出链 / 反链；target 缺失、无权限、跨空间分别验证 | resolved / unresolved / no_access 状态正确；无权限目标不泄露标题 / 摘要；反链仅返回当前用户可见文档 | 后续后端 tests + UI smoke；DB / API 契约锚点 | 契约草案·未执行 |
 | TC-P2-QUICK-001 | REQ-025；`lumen_quick_entries`；API-017 | Batch B 契约已回填 | 快速录入 draft；转为新文档；追加到已有文档；关联 tag_ids；丢弃 draft | draft 默认 owner 私有；转换后继承文档权限；非法 tag_ids / document_id 返回 4220；不绕过权限 | 后续后端 tests + UI smoke | 契约草案·未执行 |
 | TC-P2-AI-001 | REQ-014；`lumen_ai_drafts`；API-028；RG-004 | LLM adapter 可用或 Mock 降级；真实文档外发边界需确认 | 对可写文档选中文本执行 polish / citation；验证 sources 仅来自可见 chunks；LLM 不可用时降级 | 输出保存为 draft；引用可追溯到 chunk / document；库外或无权限来源不进入 prompt；5030 / Mock 降级不编造 | 后续后端 tests + 人工审查 prompt 边界 + UI smoke | 契约草案·未执行 |
-| TC-P2-PDF-001 | REQ-027；`lumen_doc_exports`；API-019；RG-006 | PDF 导出库选型、安装、中文最小导出验证通过后 | 对可读文档指定版本发起 PDF 导出；轮询任务；验证失败态、权限态和产物访问 | 导出任务与版本绑定；产物继承源文档权限；导出库不可用返回 5030；未验证前不得进入实现 | 待 tech-env 依赖验证 + 后端 tests + 人工 PDF 样例 | 契约草案·待 RG-006 |
-
-- REQ-013 / 015 / 016 / 017 / 024 其余 P2 后续用例（时间轴 / 推送 / 协作 / 移动端 / 时间轴热条）——不进 Phase2 MVP 核心 5 项，待后续阶段细化。
+- REQ-027 PDF 导出已提前到 P1.5，验证口径见 TC-P1-017；REQ-013 / 015 / 016 / 017 / 024 其余 P2 后续用例（时间轴 / 推送 / 协作 / 移动端 / 时间轴热条）——不进 Phase2 MVP 核心 4 项，待后续阶段细化。
 
 ### 远期愿景（不承诺）
 - REQ-018..023、REQ-028..035 用例——待 05 技术验证可行后补
@@ -147,17 +148,17 @@
 | RISK-P1-002 | RG-002 | ~~真实 Embedding（bge-small-zh）未接入后端~~ | ~~REQ-007/008 向量检索~~ | ✅ **已解决**（T6 写 `lumen_chunks.embedding` 512 维；RG-002→已启用；约束 `HF_HUB_DISABLE_XET=1`） | embedding tests、TC-P1-007/008 |
 | RISK-P1-003 | TE-C-003 / RG-001 | ~~Docker Desktop Linux engine 阻塞~~ | ~~起库 / 真实 PostgreSQL~~ | ✅ **已解决**（daemon live，TE-C-003 闭合；`docker/compose.yml` 起 lumen-pg healthy） | Sprint-8 T1 验证 |
 | RISK-P1-004 | RG-001 / RG-002 | ~~search 仍关键词检索（未向量化）~~ | ~~REQ-007 语义搜索~~ | ✅ **已解决**（task-009：substring + `ts_vector` SQL 候选 + pgvector 语义召回；zhparser 可选，当前镜像无扩展时回退 `simple`） | task-009 tests |
-| RISK-P2-001 | RG-006 候选 | 真实 PDF / Word 解析 | REQ-009、REQ-027 相关交付 | 仅 `.md`/`.txt` 已提取文本；python-docx/pdfplumber 未接入；Phase2 MVP 前需 tech-env-eval | 待 Phase2 tech-env-eval 与 TC |
+| RISK-P2-001 | RG-006 候选 | 真实 PDF / Word 解析 | REQ-009 相关交付 | 仅 `.md`/`.txt` 已提取文本；python-docx/pdfplumber 未接入；后续真实化前需 tech-env-eval | 待后续 tech-env-eval 与 TC |
 | RISK-P2-002 | RG-003 | OCR 质量与资源占用 | REQ-010、内容导入 | OCR 未实现，REQ-010 移至后续阶段（RG-003 No-Go）；当前降级为已提取文本 | 待 OCR 引擎定版与资源验证 |
 | RISK-P1-005 | RG-004 | LLM 外部调用可用性 | REQ-008、REQ-036 | GLM `glm-5.2` 真实问答已验证（Sprint-7 首验 + 2026-07-11 新中转 `192.168.15.190:7777/v1` 复测，RG-004→Go；旧 `47.107.134.2` key 已停用）；GPT/ollama 待验证 | GLM 复测记录；GPT/ollama 非 P1 必过 |
 | RISK-VISION-001 | 后续 AI Gate | P2 / 愿景高风险 AI 能力 | REQ-020 / 021 / 030 / 032 / 033 等 | 不进入 Phase1 必过项，技术验证通过后再补用例 | 待愿景技术验证 |
 | RISK-P2-003 | WSG-001..006 / P2-UI-G-001..006 | P2 UI 少容器清爽稿尚未实现 / smoke | Sprint-11、TC-P2-WSG-001、TC-P2-UI-001~005 | 当前仅 HTML 原型与验证草案，需人工确认 Phase2 范围并开实现任务后，再执行 Chrome / Edge smoke；未执行前不得标记通过 | 待用户确认 + 后续 smoke 证据 |
-| RISK-P2-004 | OI-005 / TC-P2-TAG-001..PDF-001 | P2 核心 5 项 DB / API / TC 契约未实现 | REQ-012 / 014 / 025 / 026 / 027 | Batch B 已补契约草案；尚未创建迁移、接口、前端或自动化测试；未执行前不得标记 Phase2 Go | 待首个 vertical slice 确认 + 实现任务 + 对应 TC 通过 |
+| RISK-P2-004 | OI-005 / TC-P2-TAG-001..AI-001 | P2 核心 4 项 DB / API / TC 契约未实现 | REQ-012 / 014 / 025 / 026 | Batch B 已补契约草案；尚未创建迁移、接口、前端或自动化测试；未执行前不得标记 Phase2 Go | 待首个 vertical slice 确认 + 实现任务 + 对应 TC 通过 |
 | RISK-P2-005 | RG-004 / 数据外发 | AI 润色 / 写作引用可能发送真实文档片段到外部 LLM | REQ-014 | 复用 LLM adapter；真实文档外发需风险接受，sources 必须权限过滤；可用 Mock 降级 | 待 prompt / source 过滤测试与人工审查 |
-| RISK-P2-006 | RG-006 | PDF 导出库未验证 | REQ-027 | tech-env 草案标记 `reportlab` / `weasyprint` 未安装；API / DB 仅为契约草案，不得编码导出能力 | 待 PDF 库选型、安装、中文样例和资源验证 |
+| RISK-P1-006 | RG-006 | PDF 导出库未验证 | REQ-027 | tech-env 草案标记 `reportlab` / `weasyprint` 未安装；API / DB 仅为契约草案，不得编码导出能力 | 待 PDF 库选型、安装、中文样例和资源验证 |
 
 ## 7. 待人工确认项
 
 - Phase1 全量验收已记录；是否正式进入 Phase2 仍需人工确认，并在确认后同步更新阶段指针与 Phase2 进入 / 退出标准。TC-P2-WSG-001 与 TC-P2-UI-001~005 已回填为实现前门禁草案，但未执行、未通过、不可直接编码。
 - 首个 Phase2 vertical slice 仍需人工确认；未确认前不得一次性实现全部 P2 UI 或跳过 WSG / UI-G 修改 `frontend/`。
-- Batch B 已补 P2 核心 5 项 TC 草案；建议首个 vertical slice 优先 `REQ-012 + REQ-026`（标签 + 内链 / 反链），避开 PDF / OCR / 完整 AI 润色高风险依赖。
+- Batch B 已补 P1.5 PDF 与 P2 核心 4 项 TC 草案；建议首个 Phase2 vertical slice 优先 `REQ-012 + REQ-026`（标签 + 内链 / 反链），避开 OCR / 完整 AI 润色高风险依赖；REQ-027 PDF 另按 Sprint-18 + RG-006 推进。

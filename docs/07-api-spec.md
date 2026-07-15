@@ -81,9 +81,9 @@
 | API-012 | P1-已实现 | §3.2 / §3.3 | 4001/4003/4220 | 空间成员 | TC-P1-012 | 是 |
 | API-013 | P1-已实现 | §3.7 示例 | 4001/4003/4004 | 空间+权限 | TC-P1-012 | 是 |
 
-### 3.1.1 Phase2 MVP endpoint contract matrix（Batch B 草案）
+### 3.1.1 P1.5 / Phase2 endpoint contract matrix（Batch B 草案）
 
-> 本节只补 Phase2 MVP 核心 5 项契约草案，不代表已实现。正式编码前需与 `docs/06-db-design.md` 的 P2 表契约、`docs/09-verification.md` 的 TC-P2-* 用例和首个 vertical slice 选择对齐。
+> 本节补 P1.5 PDF 导出与 Phase2 MVP 契约草案，不代表已实现。正式编码前需与 `docs/06-db-design.md` 的表契约、`docs/09-verification.md` 的对应 TC 和首个 vertical slice 选择对齐。
 
 | API-ID | 契约状态 | 请求 / 响应契约 | 错误契约 | 权限契约 | 验证项 (TC) | 是否可实现 |
 |---|---|---|---|---|---|---|
@@ -92,7 +92,7 @@
 | API-017 | P2-契约草案 | §3.9 | 4001/4003/4220 | 默认 owner 私有；转换后继承文档权限 | TC-P2-QUICK-001 | 待阶段确认 |
 | API-018 | P2-契约草案 | §3.9 | 4001/4003/4004/4220 | source / target 文档均需权限过滤；无权限反链不泄露 | TC-P2-LINK-001 | 待阶段确认 |
 | API-028 | P2-契约草案 | §3.9 | 4001/4003/4004/4220/5030 | 文档可写权限；引用 chunk 必须当前用户可见 | TC-P2-AI-001 | 待阶段确认 |
-| API-019 | P2-契约草案 | §3.9 | 4001/4003/4004/4220/5030 | 导出前校验源文档可见 / 可导出 | TC-P2-PDF-001 | 待 RG-006 |
+| API-019 | P1.5-契约草案·待 RG-006 | §3.9 | 4001/4003/4004/4220/5030 | 导出前校验源文档可见 / 可导出 | TC-P1-017 | 待 RG-006 |
 
 ### 3.2 请求 / 输入契约（字段级·核心接口）
 
@@ -239,9 +239,10 @@ sequenceDiagram
 | 4220 | 字段缺失、非法状态、无效 tag_ids / document_id / mode | 全部 P2 API |
 | 5030 | LLM / PDF 导出 / 外部依赖不可用 | API-019/028 |
 
-### [P2] / [愿景] 接口（骨架·待该阶段细化）
-- `/api/tags`、`/api/tags/{id}`、`/api/quick-entry`、`/api/doc-links`、`/api/documents/{id}/polish`、`/api/export-pdf`：P2 MVP 核心 5 项契约草案见 §3.9，尚未实现。
-- `/api/spaces/push`：跨空间推送不进 Phase2 MVP 核心 5 项，请求 / 响应待 P2 后续细化。
+### [P1.5] / [P2] / [愿景] 接口（骨架·待该阶段细化）
+- `/api/export-pdf`：P1.5 PDF 导出契约草案见 §3.9，受 RG-006 约束，尚未实现。
+- `/api/tags`、`/api/tags/{id}`、`/api/quick-entry`、`/api/doc-links`、`/api/documents/{id}/polish`：P2 MVP 核心 4 项契约草案见 §3.9，尚未实现。
+- `/api/spaces/push`：跨空间推送不进 Phase2 MVP 核心 4 项，请求 / 响应待 P2 后续细化。
 - `/api/briefs/{token}`：简报隔离与有效期待愿景验证（REQ-022）
 
 ## 4. REQ → 接口追溯矩阵
@@ -263,7 +264,7 @@ sequenceDiagram
 | REQ-025 | `POST /api/quick-entry` | 快速录入索引条目，可转文档 / 追加文档 / 保留草稿 |
 | REQ-026 | `GET/POST /api/doc-links` | 内部链接与反向链接索引，需空间和文档权限过滤 |
 | REQ-027 | `POST /api/export-pdf` | 单文档导出 PDF，受 RG-006 与导出库验证约束 |
-| REQ-013 / 015 / 016 / 017 / 024 | P2 后续接口骨架 | 不进 Phase2 MVP 核心 5 项；后续单独细化 |
+| REQ-013 / 015 / 016 / 017 / 024 | P2 后续接口骨架 | 不进 Phase2 MVP 核心 4 项；后续单独细化 |
 | REQ-018..023 / 028..035 | 愿景接口骨架 | 技术验证通过后细化契约 |
 
 ## 5. API ↔ DB / Service / Test 交叉追溯
@@ -289,7 +290,7 @@ sequenceDiagram
 | API-017 | quick_entry.capture_quick_entry | lumen_quick_entries, lumen_documents, lumen_tag_links | owner 私有 + 转文档后继承权限 | 4001/4003/4220 | TC-P2-QUICK-001 | P2-契约草案 |
 | API-018 | doc_links.list_links / upsert_link | lumen_doc_links, lumen_documents | source / target 双向权限过滤 | 4001/4003/4004/4220 | TC-P2-LINK-001 | P2-契约草案 |
 | API-028 | writing.polish_document | lumen_ai_drafts, lumen_chunks, lumen_documents | 文档可写 + 来源 chunk 可见 | 4001/4003/4004/4220/5030 | TC-P2-AI-001 | P2-契约草案 |
-| API-019 | export.create_pdf_export | lumen_doc_exports, lumen_documents, lumen_document_versions | 文档可读 / 可导出 | 4001/4003/4004/4220/5030 | TC-P2-PDF-001 | P2-契约草案（待 RG-006） |
+| API-019 | export.create_pdf_export | lumen_doc_exports, lumen_documents, lumen_document_versions | 文档可读 / 可导出 | 4001/4003/4004/4220/5030 | TC-P1-017 | P1.5-契约草案（待 RG-006） |
 
 **权限场景矩阵**（权限隔离由 DB 过滤 + service/查询层执行，不依赖前端）：
 
@@ -302,9 +303,9 @@ sequenceDiagram
 | P2 标签统计 | `tag_links -> documents` join 后继续套用文档权限 | 仅统计可见文档 | 不泄露隐藏文档数量 | TC-P2-TAG-001 |
 | P2 反向链接 | target 文档不可见时不返回标题 / 摘要 | 查询层返回 `no_access` 或过滤 | 4003 / 空结果 | TC-P2-LINK-001 |
 | P2 AI 润色引用 | sources 仅来自当前用户可见 chunks | LLM 调用前过滤上下文 | 5030 可降级 Mock | TC-P2-AI-001 |
-| P2 PDF 导出 | 导出前复用文档可见性校验 | 导出产物继承源文档权限 | 5030 依赖不可用 | TC-P2-PDF-001 |
+| P1.5 PDF 导出 | 导出前复用文档可见性校验 | 导出产物继承源文档权限 | 5030 依赖不可用 | TC-P1-017 |
 
 ## 6. 待人工确认项
 
-- Batch B 已补 P2 核心 5 项 API 契约草案，但尚未实现接口、未新增依赖、未创建任务；正式编码前需确认首个 vertical slice 与 `docs/09-verification.md` TC-P2-* 用例。
+- Batch B 已补 P1.5 PDF 导出与 P2 核心 API 契约草案，但尚未实现接口、未新增依赖、未创建任务；正式编码前需确认对应 Sprint / vertical slice 与 `docs/09-verification.md` TC 用例。
 - `API-019` PDF 导出受 `docs/05-tech-spec.md` RG-006 与 tech-env 草案约束；导出库未安装 / 未验证前不得进入实现。

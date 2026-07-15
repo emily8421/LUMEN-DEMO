@@ -9,15 +9,15 @@
 | 项 | 内容 |
 |---|---|
 | 输入来源 | `docs/02-srs.md`、`docs/03-prd.md`、`docs/env/local-env.md`、`ai/project-rules.md` |
-| 覆盖功能 / REQ | Phase1：REQ-001..REQ-011、REQ-036；P2 / 愿景保留架构骨架 |
-| 当前状态 | 目标架构基线已定；Sprint-7/8 后运行时已接入 PostgreSQL+pgvector、`PgRepository`、本机 Embedding 与 GLM LLM。仍降级：真实 Word/PDF 解析、OCR；逐模块实现状态见 §2。Phase2 MVP（核心 5 项）模块 / Flow / ADR 已补 P2-已设计骨架（见 §2 MOD-006/007、§3.1 ADR-006/007、§5.4）。Web App Structure Profile / WSG 已补轻量矩阵，作为 Phase2 UI 实现前门禁草案 |
-| 最后更新 | 2026-07-14（Batch A：WSG + UI-G 门禁回填） |
+| 覆盖功能 / REQ | Phase1：REQ-001..REQ-011、REQ-036；P1.5：REQ-027/037/038；P2 / 愿景保留架构骨架 |
+| 当前状态 | 目标架构基线已定；Sprint-7/8 后运行时已接入 PostgreSQL+pgvector、`PgRepository`、本机 Embedding 与 GLM LLM。仍降级：真实 Word/PDF 解析、OCR；逐模块实现状态见 §2。P1.5 PDF 导出 ADR / Flow 与 Phase2 MVP（核心 4 项）模块 / Flow / ADR 已补骨架（见 §2 MOD-006/007、§3.1 ADR-006/007、§5.4）。Web App Structure Profile / WSG 已补轻量矩阵，作为 Phase2 UI 实现前门禁草案 |
+| 最后更新 | 2026-07-15（REQ-027 前移 P1.5；同步 Phase2 核心 4 项范围） |
 
 ### 0.1 架构目标与约束
 
 | 维度 | 内容 |
 |---|---|
-| 当前 Phase | Phase1（功能范围 `[P1]` · 交付物形态 **Demo**），见 `ai/project-rules.md` §1 |
+| 当前 Phase | Phase1（含 P1.5 可用性收口候选；功能范围 `[P1]` · 交付物形态 **Demo / Demo 可用性增强**），见 `ai/project-rules.md` §1 |
 | 交付物形态 | Demo：核心价值可演示，可用最简实现 / 明确 Mock，**保留产品红线**（库外问答回复"未找到"、不编造） |
 | 运行环境 | 本机单机 Demo（React + FastAPI + Docker PostgreSQL+pgvector + 本机 Embedding + 内网 LLM 中转），详见 §4 |
 | 项目形态裁剪 | Full 剖面；`06/07` 保留（持久化 + 对外 REST），见 `ai/project-rules.md` §3 |
@@ -128,7 +128,7 @@ flowchart LR
 | ADR-003 | 导入流水线收敛异构格式为文本→切块→Embedding | 已确认（目标；当前仅 `.md`/`.txt`） | Phase1+ | 检索侧只面对一种数据形态，解析复杂度集中于导入 | 各格式独立检索路径 | 检索侧统一数据形态；解析复杂度集中于导入 | TC-P1-009 / 010（09 §2） |
 | ADR-004 | 权限下沉到 SQL / 检索层（查询时过滤） | 已确认（当前内存等价实现） | Phase1+ | 空间隔离 + 文档权限在查询时过滤，不依赖应用层记忆，防漏过滤 | 应用层记忆当前空间 | 防漏过滤、安全边界强；强依赖查询层正确性 | TC-P1-001 / 003（09 §2） |
 | ADR-005 | RAG / 导入 / 权限独立成 docs/design/ | 已确认 | Phase1+ | 三者非平凡且可独立演进，单列详细设计便于维护 | 全部并入 04 | 子系统可独立演进；多份详细设计需维护 | `docs/design/*` 已存在 |
-| ADR-006 | Phase2 PDF 导出方案 | 候选 | Phase2 | MVP 需可排版对外交付（REQ-027） | weasyprint / reportlab / 浏览器打印 | 中文排版 / 资源占用差异；引新依赖 | 待 tech-env-eval（RG-006） |
+| ADR-006 | P1.5 PDF 导出方案 | 候选 | P1.5 | 单文档需可排版导出 PDF（REQ-027 从 Phase2 提前） | weasyprint / reportlab / 浏览器打印 | 中文排版 / 资源占用差异；引新依赖 | 待 tech-env-eval（RG-006） |
 | ADR-007 | 标签 + 反向链接索引用 PG 关系表 + `[[wikilink]]` 解析 | 候选 | Phase2 | 复用现有 PG，少引图数据库（REQ-012 / 026） | 图数据库 / 全文索引 | 关系表 JOIN 成本；解析规则需定义 | 待 Phase2 详细设计 |
 
 ## 4. 部署 / 运行拓扑约束
@@ -208,13 +208,13 @@ flowchart TB
 - **双层过滤**：SQL / 检索层必须过滤；RAG 构造 Prompt 前必须再次过滤候选 chunk。
 - **前端不可作为权限边界**：前端隐藏入口只改善体验，不作为安全判断依据。
 
-### 5.4 Phase2 关键流程（骨架，P2-设计中）
+### 5.4 P1.5 / Phase2 关键流程（骨架）
 
-> Phase2 MVP（核心 5 项）的关键流程待 Phase2 详细设计补全；当前仅列骨架，成功 / 异常 / 降级 / 权限路径在 `docs/design/navigation.md`、`writing-export.md` 落地。
+> P1.5 PDF 导出与 Phase2 MVP（核心 4 项）的关键流程待对应 Sprint / Phase2 详细设计补全；当前仅列骨架，成功 / 异常 / 降级 / 权限路径在 `docs/design/navigation.md`、`writing-export.md` 落地。
 
 - **Flow-003 标签浏览与内部链接跳转**（REQ-012 / 026）：按标签聚合 → 点击 `[[文件名]]` 跳转 / 反向链接面板；权限沿用 Flow-002 过滤。
 - **Flow-004 AI 润色与写作引用**（REQ-014）：选中文本 → LLM 润色建议 / 检索引用块插入；复用 ADR-002 LLM adapter，候选 chunk 按权限过滤。
-- **Flow-005 单文档导出 PDF**（REQ-027）：文档 → 渲染 → PDF（ADR-006 候选）；受文档权限约束。
+- **Flow-005 单文档导出 PDF**（REQ-027，P1.5）：文档 → 渲染 → PDF（ADR-006 候选）；受文档权限约束。
 - **快速录入索引条目**（REQ-025）：轻量条目（标题 / 来源 / 摘要）→ 索引入库参与检索；走 Flow-002 过滤。
 
 ## 6. REQ / 功能 → 模块 / Flow 追溯矩阵
@@ -229,7 +229,8 @@ flowchart TB
 | REQ-009 / 010 | [P1] | COMP-002 / 003 / 004 | MOD-003（+ MOD-004） | Flow-002 | `docs/design/ingestion.md`、`docs/06-db-design.md`、`docs/07-api-spec.md` | P1-部分实现（`.md`/`.txt`；真实 PDF/OCR 后续） |
 | REQ-011 | [P1] | COMP-001 / 002 | 全 P1 模块（横切） | Flow-001 / 002 | `docs/08-dev-plan.md` Sprint-6、`docs/09-verification.md` | P1-已实现（桌面 smoke） |
 | REQ-036 | [P1] | COMP-002 / 003 / 004 | MOD-005（+ MOD-004 / 002） | Flow-002 | `docs/design/term-management.md`、`docs/06-db-design.md`、`docs/07-api-spec.md` | P1-已实现（PG 术语 + LLM 注入） |
-| REQ-012 / 014 / 025 / 026 / 027 | [P2] | COMP-001 / 002 / 003 / 004 | MOD-006 / 007 | Flow-003 / 004 / 005 | 待 P2 建 `docs/design/navigation.md`、`writing-export.md` | P2-已设计骨架（MVP 必做） |
+| REQ-027 / 037 / 038 | [P1] | COMP-001 / 002 / 003 | MOD-002 / 003 / 007 | Flow-002 / 005 | `docs/08-dev-plan.md` Sprint-16~18、`docs/07-api-spec.md`、`docs/09-verification.md` | P1.5-候选·待编码；REQ-027 待 RG-006 |
+| REQ-012 / 014 / 025 / 026 | [P2] | COMP-001 / 002 / 003 / 004 | MOD-006 / 007 | Flow-003 / 004 | 待 P2 建 `docs/design/navigation.md`、`writing-export.md` | P2-已设计骨架（MVP 必做） |
 | REQ-013 / 024 / 015 / 016 / 017 | [P2] | — | MOD-006 / 007 | — | 升 Phase2 / 后续 Phase 时细化 | 骨架（可选 / 延后） |
 | REQ-018..023 / 028..035 | [愿景] | — | MOD-008 / 009 / 010 | — | 技术验证通过后细化 | 骨架 |
 
