@@ -11,8 +11,8 @@
 | 当前 Phase | Phase1 |
 | 交付物形态 | Demo |
 | 输入基线 | `docs/03-prd.md` §3、`docs/04-architecture.md`、`docs/05-tech-spec.md`、`docs/09-verification.md` |
-| 当前状态 | Phase1 Demo 已完成并已记录全量验收（Conditional Go）；Sprint-1~6 降级口径完成；Sprint-7（LLM）/ Sprint-8（pgvector 接入）真实化完成（RG-001/002/004/005 Go），task-009 search hybrid 完成；P1A 前端结构聚焦重构已实现，构建与 Chrome / Edge 900px smoke 均通过；P1B 前端工作台系统化重设计已实现，构建与 Chrome / Edge 900px smoke 均通过；P2 UI 实现前确认门禁（Sprint-11 草案）已补 WSG + UI-G + smoke 证据路径；待人工确认是否正式进入 Phase2，不直接编码。**2026-07-15 系统完成度审计**（见 `docs/research/2026-07-15-system-completion-audit.md`）：Phase1 核心闭环真实可用、Phase2 核心 5 项 0 实现；据此规划 **P1.5 可用性收口批次（Sprint-12~15 候选·待确认）**，目标=日常当工具，优先于 Phase2 编码；2026-07-15 框架评估（见审计报告 §四 / §五）：WSG 方法论已采纳但 P1 既有代码未对齐（`App.tsx` 1026 行、`styles.css` 886 行、仓储单例 hack），决定插入 **Sprint-0′ 框架补课（候选·待确认）** 作为 P1.5 前置，先出框架再填功能 |
-| 最后更新 | 2026-07-15（系统完成度审计 + P1.5 收口候选 Sprint-12~15 + 框架补课 Sprint-0′ 候选；同步 09 标注校准与 04/05 WSG 显性豁免） |
+| 当前状态 | Phase1 Demo 已完成并已记录全量验收（Conditional Go）；Sprint-1~6 降级口径完成；Sprint-7（LLM）/ Sprint-8（pgvector 接入）真实化完成（RG-001/002/004/005 Go），task-009 search hybrid 完成；P1A 前端结构聚焦重构已实现，构建与 Chrome / Edge 900px smoke 均通过；P1B 前端工作台系统化重设计已实现，构建与 Chrome / Edge 900px smoke 均通过；P2 UI 实现前确认门禁（Sprint-11 草案）已补 WSG + UI-G + smoke 证据路径；待人工确认是否正式进入 Phase2，不直接编码。**2026-07-15 系统完成度审计**（见 `docs/research/2026-07-15-system-completion-audit.md`）：Phase1 核心闭环真实可用、Phase2 核心 5 项 0 实现；据此规划 **P1.5 可用性收口批次（Sprint-12~15 候选·待确认）**，目标=日常当工具，优先于 Phase2 编码；2026-07-15 框架评估（见审计报告 §四 / §五）：WSG 方法论已采纳但 P1 既有代码未对齐（`App.tsx` 1026 行、`styles.css` 886 行、仓储单例 hack），插入 **Sprint-0′ 框架补课** 并已完成（App.tsx 1026→542、styles 拆 6 文件、后端 `repository/` 独立 + 清单例 hack；4b hook 化暂缓·软阈值）；P1.5 前置达成 |
+| 最后更新 | 2026-07-15（Sprint-0′ 框架补课已完成 Step 1-5；4b hook 化暂缓·软阈值；同步 09 标注校准与 04/05 WSG 显性豁免） |
 
 ## Sprint 总览
 
@@ -31,7 +31,7 @@
 | Sprint-9（P1A） | 前端结构聚焦重构 | 011（既有 P1 页面体验修正） | design/frontend-interaction、research/frontend-p1-structure-exploration | frontend 组件拆分 + 视图切换 + CSS 响应式 | / TC-P1-013 | 已完成（构建 + Chrome / Edge 900px smoke 通过） | — |
 | Sprint-10（P1B） | 前端工作台系统化重设计 | 011（既有 P1 页面体验修正） | design/frontend-workspace-redesign、frontend-workspace-redesign-prototype | frontend 工作台骨架 + 密度 token + 四视图 Workspace | / TC-P1-014 | 已完成（构建 + Chrome / Edge 900px smoke 通过） | — |
 | Sprint-11（P2-UI-Gate / WSG 候选） | Phase2 前端 UI 实现前确认与计划冻结 | 012/013/014/025/026（P2 骨架候选，不新增 REQ） | 04 WSG 矩阵、05 §4.1、design/frontend-interaction §9.3、research/prototypes/2026-07-14-frontend-ui-reference-absorbed-prototype、09 TC-P2-WSG-001 + TC-P2-UI-001~005 | docs + 后续 frontend 实现范围冻结；首个 P2 vertical slice 待确认 | / TC-P2-WSG-001 + TC-P2-UI-001~005 | 草案（少容器清爽稿暂定；WSG / UI-G 待用户确认；待 Phase2 启动确认） | — |
-| Sprint-0′（框架补课·候选） | 前端目录骨架 + 拆 App.tsx / styles.css；后端 repository 独立 + 清单例 hack | 011（结构收口，不新增 REQ） | web-fullstack-profile、04 §1.3、05 §4.1、本次审计 §四 / §五 | frontend `src/{app,features,components,api,state,styles}` + backend `repository/` | TC-P1-WSG 重测 + 既有 smoke 全绿 | 候选·待确认（P1.5 前置；未编码） | — |
+| Sprint-0′（框架补课·候选） | 前端目录骨架 + 拆 App.tsx / styles.css；后端 repository 独立 + 清单例 hack | 011（结构收口，不新增 REQ） | web-fullstack-profile、04 §1.3、05 §4.1、本次审计 §四 / §五 | frontend `src/{app,features,components,api,state,styles}` + backend `repository/` | TC-P1-WSG 重测 + 既有 smoke 全绿；前端 build 绿、后端 42 service tests 过 | 已完成（4b hook 化暂缓·软阈值） | ae51210·3d02bb2·2924df4·0a67cfc·2e34c28·a33c536 |
 | Sprint-12（P1C·可用性 A·候选） | 登录态持久化 + seed 自索引修复 | 011（可用性收口，不新增 REQ） | 09 §5 Sprint-8 记录、本次审计 §三 | frontend `App.tsx` + backend seed / 启动钩子 | 待新增 TC-P1-015/016 | 候选·待确认（未编码） | — |
 | Sprint-13（P1C·权限·候选） | 外部只读权限真实化（EXTERNAL 写操作拦截） | 003（权限收口） | design/permissions、06、07 | backend `service/permission` + api | TC-P1-003 扩展 | 候选·待确认（未编码） | — |
 | Sprint-14（P1C·导入·候选·需 RG） | 真实 Word/PDF 文本提取（REQ-009 真实化） | 009（导入真实化） | design/ingestion、05（RG 待评估）、本次审计 §二 | backend `service/imports` + 依赖 | TC-P1-009 扩展 | 候选·待确认（需选型 + RG；未编码） | — |
@@ -298,7 +298,7 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 
 ## Sprint-0′（P1.5 前置 · 框架补课 · 候选）：前端目录骨架 + 后端仓储独立
 
-> **候选·待确认**：2026-07-15 框架评估后规划，对齐 `template-docs/web-fullstack-profile.md` WSG-001..006。本 Sprint 是 P1.5 全部编码的前置；纯结构搬运，**不改业务逻辑、不改 API / DB 契约**，每步跑 smoke 保证不回退。确认任务边界与拆分顺序后再实现（走 `run-dev-task` 写任务单）。
+> **已完成（2026-07-15）**：对齐 `template-docs/web-fullstack-profile.md` WSG-001..006。按「Shell → features → styles → repository」分 6 个小提交实现（Step 1-5）：前端 `App.tsx` 1026→542、`styles.css` 886→6 文件、4 视图抽进 `features/`；后端 `repository/` 独立 + 清单例 hack。纯结构搬运，未改业务逻辑 / API / DB；前端 build 绿、后端 42 service tests 过、所有 repository / api import 验证通过。**4b（handler→hooks，App ≤300）暂缓**（WSG-004 软阈值，App 542 已从 1026 降 47%，待功能稳定后再做）。
 
 ### 目标
 把 Phase1 在 WSG 落地前堆出的代码结构对齐方法论：前端从单文件 `App.tsx`（1026 行）/ `styles.css`（886 行）拆为 `app / pages / features / components / api / state / styles` 目录骨架；后端把 `pg_repository` / `demo_repository` 从 `service/` 迁到独立 `backend/repository/`，清理 `demo_repository` 末尾的单例 hack（改为显式工厂 / 依赖注入）。不新增 REQ，属 REQ-011 结构收口。
@@ -446,6 +446,6 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 
 - 是否正式进入 Phase2：需人工确认范围、进入 / 退出标准后，再更新 `ai/project-rules.md` 当前阶段指针与相关设计 / 计划文档。`Sprint-11（P2-UI-Gate / WSG 候选）` 已回填为实现前门禁草案，但不代表已批准编码。
 - 首个 Phase2 vertical slice 选择：AI 建议从核心 5 项中选一个最小纵切（优先标签 / 内链或 AI 润色之一），确认前不得一次性实现全部 P2 UI。
-- **Sprint-0′ 框架补课（P1.5 前置）拆分顺序与边界**：AI 建议按「Shell → features → api / styles → repository」分多个小提交，每个跟 smoke；纯结构搬运，不改逻辑 / API / DB。**先于所有 P1.5 编码**。确认后才开始编码（走 `run-dev-task` 写任务单）。
+- **Sprint-0′ 框架补课**：✅ 已完成（Step 1-5，commits ae51210/3d02bb2/2924df4/0a67cfc/2e34c28/a33c536）。剩 **4b handler→hooks（App ≤300）暂缓**——WSG-004 软阈值，App 542 已大幅改善，待功能稳定后再做（不阻塞 P1.5/Phase2）。
 - **P1.5 可用性收口批次（Sprint-12~15）执行顺序与范围**：AI 建议先低成本项（Sprint-12 登录持久化 + seed 自索引、Sprint-13 外部只读权限），再做重依赖项（Sprint-14 Word/PDF 需选型 + RG、Sprint-15 zhparser 可选）；**P1.5 优先于 Phase2 编码**。目标档位=日常当工具。确认前不编码。
 - **TC-P1-001~006/012 是否升级为「通过」**：09 已校准为「PG 仓储·Sprint-8 起真实化」（仍标条件通过）；是否进一步升级为「通过」待人工确认。
