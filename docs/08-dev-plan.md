@@ -38,6 +38,7 @@
 | Sprint-15（P1C·可选·分词·候选） | zhparser 中文分词接入 | 007（搜索质量收口） | 05、09 task-009 记录、docker | docker 镜像 + migration 006 | TC-P1-007 扩展 | 候选·可选·待确认（中成本；未编码） | — |
 | Sprint-16（P1.5·批量导入·候选） | 多文件 + 文件夹拖拽导入（drop zone + 批量进度 + 标题前缀 + 冲突跳过） | 037（新增）+ 009 扩展 | 02 REQ-037、07 API-029 | frontend ContextPane drop zone + backend api/imports 批量 + service | 待新增 TC-P1-015 | 候选·待确认（未编码） | — |
 | Sprint-17（P1.5·导出·候选） | 单文档 .md 下载 + 空间 ZIP 打包 | 038（新增） | 02 REQ-038、07 API-030 | frontend 下载入口 + backend api/export（zipfile）+ service | 待新增 TC-P1-016 | 候选·待确认（未编码） | — |
+| Sprint-18（P1.5·PDF 导出·候选·需 RG） | 单文档 PDF 导出（Markdown → PDF，中文） | 027（从 Phase2 提前） | 02 REQ-027、07 API-019、05 RG-006 | backend api/export-pdf + PDF 库 + service | 待新增 TC-P1-017 | 候选·待 RG-006 选型（未编码） | — |
 
 ## 依赖关系与里程碑
 
@@ -466,7 +467,30 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 - 后端 tests + Chrome smoke 下载。
 
 ### 禁止事项
-- 不做 PDF 导出（REQ-027 留 Phase2）；不引 PDF 库；不改 DB schema。
+- 不做 PDF 导出（留 Sprint-18）；不引 PDF 库；不改 DB schema。
+
+## Sprint-18（P1.5·PDF 导出 · 候选·需 RG）：单文档 PDF
+
+> **候选·待 RG-006**：REQ-027 单文档 PDF 导出，从 Phase2 提前到 P1.5。需先选型（weasyprint / reportlab 等）+ 中文排版最小验证（RG-006），未通过不得编码。
+
+### 目标
+单文档导出 PDF（Markdown → PDF，含中文、基础排版 / 页眉页脚）。属 REQ-027（从 Phase2 提前到 P1.5）。文档详情页"导出 PDF"。
+
+### 输入文档
+- `docs/02-srs.md` REQ-027、`docs/07-api-spec.md` API-019、`docs/05-tech-spec.md` RG-006
+
+### 修改范围
+- 后端：`api/export-pdf`（PDF 库渲染 Markdown → PDF）+ service；选型 + 中文验证。
+- 前端：文档详情"导出 PDF"入口。
+- 引 PDF 库（新依赖，须选型 + RG-006 通过）。
+
+### 验收标准
+- 选型 + 中文最小 PDF 导出验证通过（RG-006 Go / Conditional Go）。
+- 文档详情可导出 PDF（中文正常、基础排版）。
+- 后端 tests + 人工 PDF 样例。
+
+### 禁止事项
+- RG-006 选型 / 中文验证未通过前不得编码；不引未确认 PDF 库；不改 DB schema。
 
 ## Sprint 完成包与进度记录
 
@@ -500,4 +524,5 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 - **Sprint-0′ 框架补课**：✅ 已完成（Step 1-5，commits ae51210/3d02bb2/2924df4/0a67cfc/2e34c28/a33c536）。剩 **4b handler→hooks（App ≤300）暂缓**——WSG-004 软阈值，App 542 已大幅改善，待功能稳定后再做（不阻塞 P1.5/Phase2）。
 - **P1.5 可用性收口批次（Sprint-12~15）执行顺序与范围**：AI 建议先低成本项（Sprint-12 登录持久化 + seed 自索引、Sprint-13 外部只读权限），再做重依赖项（Sprint-14 Word/PDF 需选型 + RG、Sprint-15 zhparser 可选）；**P1.5 优先于 Phase2 编码**。目标档位=日常当工具。确认前不编码。
 - **批量/文件夹导入 + 导出（Sprint-16/17，REQ-037/038 新增）**：2026-07-15 用户新增需求。方案已确认【标题前缀模拟目录（不碰 DB）/ 多文件+文件夹拖拽+落区 / 单文档.md+空间ZIP / 同名跳过】。建议**优先于 Sprint-14（Word/PDF 解析）**——批量纯文本导入直接解决"一个个太慢"痛点且风险更低。确认文档体系回写后（02 REQ + 07 API + 09 TC）再决定编码。
+- **单文档 PDF 导出（Sprint-18，REQ-027 从 Phase2 提前）**：用户要求补充。需先 RG-006 选型（weasyprint/reportlab）+ 中文排版验证，通过后才编码。**REQ-027 阶段 [P2]→[P1.5]，03 §3 + project-rules §1 待同步**。建议排在 Sprint-17（.md/ZIP）之后——PDF 依赖重、需选型，.md/ZIP 低风险先落地。
 - **TC-P1-001~006/012 是否升级为「通过」**：09 已校准为「PG 仓储·Sprint-8 起真实化」（仍标条件通过）；是否进一步升级为「通过」待人工确认。

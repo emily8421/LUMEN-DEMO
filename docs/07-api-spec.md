@@ -46,7 +46,7 @@
 | API-016 | GET | /api/briefs/{token} | 对外只读简报 | [愿景] | 骨架 | — | REQ-022 |
 | API-017 | POST | /api/quick-entry | 快速录入索引条目 | [P2] | 契约草案 | — | REQ-025 |
 | API-018 | GET/POST | /api/doc-links | 内部链接 / 反向链接 | [P2] | 契约草案 | — | REQ-026 |
-| API-019 | POST | /api/export-pdf | 单文档导出 PDF | [P2] | 契约草案 | — | REQ-027 |
+| API-019 | POST | /api/export-pdf | 单文档导出 PDF | [P1] | P1.5-契约草案·待 RG-006 | — | REQ-027 |
 | API-020 | POST | /api/sync/feishu | 飞书同步（webhook/拉取） | [愿景] | 骨架 | — | REQ-028 |
 | API-021 | POST | /api/path | 路径推理（多跳） | [愿景] | 骨架 | — | REQ-030 |
 | API-022 | GET | /api/people/{name} | 人物关系网络 | [愿景] | 骨架 | — | REQ-031 |
