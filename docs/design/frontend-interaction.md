@@ -1,7 +1,7 @@
 # 详细设计：前端交互与桌面端界面（frontend-interaction）
 
-> 本文同时承担两层职责：一是记录 Phase1（功能范围 `[P1]` · 交付物形态 Demo）已实现的前端交互基线；二是沉淀 Phase2 UI 实现前确认稿候选。
-> 当前少容器清爽稿已作为实现前 UI 确认版候选回填到 `docs/08-dev-plan.md` Sprint-11 与 `docs/09-verification.md` TC-P2-WSG / TC-P2-UI 草案；但 Phase2 尚未正式启动，本文不直接授权编码。
+> 本文同时承担三层职责：一是记录 Phase1（功能范围 `[P1]` · 交付物形态 Demo）已实现的前端交互基线；二是补 Phase1.5A 批量导入与导出备份的实现前交互路径；三是沉淀 Phase2A/B UI 实现前确认稿候选。
+> 当前少容器清爽稿已作为实现前 UI 确认版候选回填到 `docs/08-dev-plan.md` Sprint-11 与 `docs/09-verification.md` TC-P2-WSG / TC-P2-UI 草案；但 Phase2A/B 尚未正式启动，本文不直接授权编码。
 
 ## 0. 文档元信息
 
@@ -9,15 +9,15 @@
 |---|---|
 | 设计对象 | 前端交互与桌面端界面（COMP-001） |
 | 文档路径 | docs/design/frontend-interaction.md |
-| 输入来源 | 03、04 §1.2 / §5（Flow-001/002）、05、07、08、09；`docs/design/frontend-experience-brief.md`；`docs/research/2026-07-13-ui-prototype-exploration.md`；`docs/research/prototypes/2026-07-14-frontend-ui-reference-absorbed-prototype.html` |
-| 覆盖 REQ | P1：REQ-001..011、REQ-036；P2 UI 候选追溯：REQ-012/013/014/025/026（仅作实现前门禁草案，不新增 REQ） |
-| 所属 Phase | [P1] 已实现基线 + [P2] UI Gate 草案 |
-| 交付物形态 | Demo |
-| 当前状态 | P1-已实现；P1A / P1B 前端体验收口已实现并通过构建与 Chrome / Edge 900px smoke；P2 少容器清爽稿暂定为实现前 UI 确认版候选，08/09 已回填 Sprint-11 与 TC-P2-WSG / TC-P2-UI 草案；Phase2 与实现任务仍待人工确认 |
+| 输入来源 | 03、04 §1.2 / §5（Flow-001/002/006/007/008）、05、07、08、09；`docs/design/ingestion.md`；`docs/design/export-delivery.md`；`docs/design/frontend-experience-brief.md`；`docs/research/2026-07-13-ui-prototype-exploration.md`；`docs/research/prototypes/2026-07-14-frontend-ui-reference-absorbed-prototype.html` |
+| 覆盖 REQ | P1：REQ-001..011、REQ-036；Phase1.5A：REQ-037/038；Phase1.5B：REQ-027（入口待 RG-006）；Phase2A/B UI 候选追溯：REQ-012/013/014/025/026（仅作实现前门禁草案，不新增 REQ） |
+| 所属 Phase | [P1] 已实现基线 + Phase1.5A 交互草案 + Phase2A/B UI Gate 草案 |
+| 交付物形态 | Demo / 个人可用 Alpha |
+| 当前状态 | P1-已实现；P1A / P1B 前端体验收口已实现并通过构建与 Chrome / Edge 900px smoke；Phase1.5A 批量导入与 `.md` / ZIP 导出交互路径已补草案，待 Sprint-16/17；P2 少容器清爽稿暂定为实现前 UI 确认版候选，08/09 已回填 Sprint-11 与 TC-P2-WSG / TC-P2-UI 草案；Phase2A/B 与实现任务仍待人工确认 |
 | 页面 / 流程 ID | Page-ID（§2.2）/ UF 用户流（§3） |
-| UI 原型策略 | P1：代码原型 + smoke；P2：静态 HTML 实现前确认稿 + 后续 Chrome / Edge smoke 草案（见 §8 / §9） |
-| 最后更新 | 2026-07-14（Batch A：WSG + UI-G 门禁回填） |
-| 下游影响 | 08 Sprint-2/4/5/6/9/10；08 Sprint-11（P2-UI-Gate / WSG 候选）；09 TC-P1-001~014、TC-P2-WSG-001 与 TC-P2-UI-001~005 草案；Phase2 编码仍需另行确认任务 |
+| UI 原型策略 | P1 / P1.5A：代码原型 + smoke；P2A/B：静态 HTML 实现前确认稿 + 后续 Chrome / Edge smoke 草案（见 §8 / §9） |
+| 最后更新 | 2026-07-15（补 Phase1.5A 批量导入 / 导出路径；拆 Phase2A/B 口径） |
+| 下游影响 | 08 Sprint-2/4/5/6/9/10/16/17/18；08 Sprint-11（P2-UI-Gate / WSG 候选）；09 TC-P1-001~017、TC-P2-WSG-001 与 TC-P2-UI-001~005 草案；Phase2 编码仍需另行确认任务 |
 
 
 ### 0.1 阅读索引与当前结论
@@ -25,9 +25,10 @@
 | 阅读目的 | 先看章节 | 当前结论 |
 |---|---|---|
 | 了解已实现前端基线 | §2~§7、§10 | P1 / P1A / P1B 已完成并有 09 smoke 证据；RAG 已真实化，PDF/OCR 仍降级 |
-| 确认 Phase2 UI 方向 | §8.1、§9.1~§9.3 | 少容器清爽稿暂定按当前稿继续；吸收面包屑、经典 / 探索、层级搜索和图谱降级，但不吸收卡片墙 |
-| 判断是否可编码 | §9.4、08 Sprint-11、09 TC-P2-UI | 仍不可直接编码；需人工确认 Phase2 范围、进入 / 退出标准和具体实现任务 |
-| 查待确认项 | §11 | P1.5 路由、Phase2 范围、图谱 / 情报墙等仍需人工确认 |
+| 确认 Phase1.5A UI 路径 | §9.0、08 Sprint-16/17、09 TC-P1-015/016 | 批量 / 文件夹导入与 `.md` / ZIP 导出路径已补草案，待编码 smoke |
+| 确认 Phase2 UI 方向 | §8.1、§9.1~§9.3 | 少容器清爽稿暂定按当前稿继续；Phase2A 聚焦标签 / 反链 / 快速录入，Phase2B 再考虑 AI 润色 / 时间轴 |
+| 判断是否可编码 | §9.4、08 Sprint-16/17 或 Sprint-11、09 TC | Phase1.5A 可在 06/07/design 闭合后进入 Sprint-16/17；Phase2A/B 仍不可直接编码 |
+| 查待确认项 | §11 | P1.5A 入口细节、Phase2A/B 范围、图谱 / 情报墙等仍需人工确认 |
 ## 1. 职责与边界
 
 ### 1.1 职责
@@ -262,14 +263,37 @@ sequenceDiagram
 | 实现前需补 | Sprint-11 / TC-P2-UI 已为草案；正式实现前需把 Page-ID / Flow-ID / 状态 / 权限 / 接口依赖 / TC 从草案定稿，并确认具体代码任务 |
 | 禁止项 | 不用原型直接新增 REQ、API、DB；Sprint-11 / TC-P2-UI 只是门禁草案，不直接编码 Phase2 |
 
-## 9. Phase2 UI 候选设计与实现前确认稿
+## 9. Phase1.5A / Phase2 UI 候选设计与实现前确认稿
 
 | 阶段 | 状态 | 说明 |
 |---|---|---|
 | Phase1 Demo `[P1]` | P1-已实现 | 覆盖 P1 桌面端页面、核心用户流、状态与权限呈现；RAG 路径已真实化，PDF/OCR 仍按降级提示 |
 | P1A 结构优化 `[P1]` | P1A-已实现 | 仅修正既有 P1 前端体验：导航 / 视图聚焦、右栏拆分、桌面 768px+ 不破版、组件拆分；不新增业务 REQ；构建与 Chrome / Edge 900px smoke 通过 |
-| Phase2 MVP `[P2]` | UI Gate 草案已回填 | 承接 `docs/design/frontend-experience-brief.md` 与少容器清爽稿：候选方向为分层空间总览、经典 / 探索双模式、标签 / 反链 / 快速录入 / 推荐问题等体验增强；已补 Sprint-11 / TC-P2-UI 草案，但 Phase2 范围和实现任务未确认，不直接进入实现 |
+| Phase1.5A `[P1]` | UI 路径草案已回填 | 批量 / 文件夹导入复用 Context Pane 导入区，增加 drop zone、多文件 / 文件夹选择、批量进度与逐条结果；导出复用文档详情 / 空间工具栏，增加 `.md` 下载与空间 ZIP 导出入口；待 Sprint-16/17 编码与 TC-P1-015/016 smoke |
+| Phase1.5B `[P1]` | 入口候选·待 RG-006 | PDF 导出入口可预留但默认禁用 / 隐藏；RG-006 未通过前不得实现或承诺中文 PDF |
+| Phase2A `[P2]` | UI Gate 草案已回填 | 承接 `docs/design/frontend-experience-brief.md` 与少容器清爽稿：候选方向为标签、内链 / 反链、快速录入、经典 / 探索双模式等个人知识组织增强；已补 Sprint-11 / TC-P2-UI 草案，但 Phase2A 范围和实现任务未确认，不直接进入实现 |
+| Phase2B `[P2]` | 骨架·待确认 | AI 润色 / 写作引用、时间轴 / 密度热条等团队 MVP 候选；需数据外发、AI 降级、时间轴数据来源和 UI smoke 重新确认 |
 | 愿景产品 `[愿景]` | 骨架·待技术验证 | 承接 `docs/design/frontend-experience-brief.md`：受限局部情报墙、证据地图、矛盾检测、路径推理等仅作为愿景方向；不得作为全空间默认首页，待情报分析技术验证与权限边界设计后再细化 |
+
+### 9.0 Phase1.5A 实现前交互路径
+
+> 本节只覆盖 Sprint-16 / Sprint-17 的个人可用 Alpha 路径，不新增 API / DB；API 依据 `docs/07-api-spec.md` API-029 / API-030，详细设计依据 `docs/design/ingestion.md` Flow-006 与 `docs/design/export-delivery.md` Flow-007。
+
+| Path-ID | 关联 REQ / TC | 页面 / 入口 | 用户操作 | 预期结果 | 失败 / 降级口径 | 编码前确认点 |
+|---|---|---|---|---|---|---|
+| PATH-P15A-001 | REQ-037 / TC-P1-015 | Context Pane 导入区 | 拖入多个 `.md` / `.txt`，或点击“选择文件夹” | 显示批量进度与逐条结果；成功项可进入文档列表并可搜索 / 问答 | 不支持格式显示 failed；同名显示 skipped；其他成功项不回滚 | 是否同时保留单文件导入入口；文件夹按钮文案 |
+| PATH-P15A-002 | REQ-037 / TC-P1-015 | 批量结果面板 | 查看成功 / 失败 / 跳过列表，点击成功项打开文档 | 标题保留相对路径前缀，能定位导入来源 | 失败项显示简短原因，不暴露本机绝对路径 | 结果列表是否可折叠、是否保留最近一次导入结果 |
+| PATH-P15A-003 | REQ-038 / TC-P1-016 | 文档详情 / 工具栏 | 点击“下载 .md” | 下载当前可见文档 Markdown | 无权限或文档不存在显示 4004 等价提示 | 文件名安全化规则；版本下载是否进入首批 |
+| PATH-P15A-004 | REQ-038 / TC-P1-016 | 空间工具栏 | 点击“导出空间 ZIP” | 下载只包含当前用户可见文档的 ZIP | 无可见文档显示空态；导出失败显示可重试 | 入口放在空间工具栏还是设置菜单；是否显示导出范围说明 |
+
+| 组件 / 状态 | UI 口径 | API / 数据来源 | 验收 |
+|---|---|---|---|
+| 批量导入 drop zone | “拖入 .md / .txt 或选择文件夹” | API-029 | TC-P1-015 Chrome smoke |
+| 批量结果列表 | done / failed / skipped 三态，失败不影响成功 | API-029 response `items[]` | TC-P1-015 |
+| 单文档 `.md` 下载 | 文档详情轻量按钮，不占主流程 | API-030 document export | TC-P1-016 |
+| 空间 ZIP 导出 | 明确“仅导出当前可见文档” | API-030 space export | TC-P1-016 |
+
+**P1.5A 编码边界**：默认不引 router / 组件库 / 全局状态库；若批量结果跨组件复用，优先抽 feature state / hook；导出使用 blob 下载，不实现长期公开链接。
 
 ### 9.1 Phase2 / 愿景体验方向池
 
@@ -277,15 +301,15 @@ sequenceDiagram
 
 | 方向 ID | 方向 | 阶段口径 | 设计状态 | 回填前置 |
 |---|---|---|---|---|
-| UXD-P2-HOME | 简洁 Wiki 风格首页：欢迎语 + 知识图谱可视化 + 快捷操作工具栏 + AI 助手入口 | `[P2]` 候选·用户已确认方向 | 骨架 | 参考 `知识库Wiki前端交互设计需求说明.md`；补 Page-ID / 状态 / AI 范围提示 / 权限口径 / TC |
-| UXD-P2-IA | 分层空间总览：空间 → 项目 / 主题 → 子目录 → 叶子文档列表 → 单篇文档 | `[P2]` 候选·用户已确认方向 | 骨架·HTML 原型已演示目录折叠 / 页面联动 | 补页面 / 视图清单、面包屑、经典目录树入口；第一眼保持简洁，复杂项目瓦片后置 |
-| UXD-P2-MODE | 经典 / 探索双模式并存 | `[P2]` 候选 | 骨架·HTML 原型已演示经典目录多层折叠 / 展开 | 确认模式切换、用户偏好记忆、经典模式逃生舱、默认视图和目录展开状态 |
-| UXD-P2-DEGRADE | 节点规模视图降级：小集合可探索，中集合聚类，大集合先筛选 | `[P2]` 候选 | 骨架·待验证 | 用 mock / 真实样本标定阈值；未验证前不作为验收标准 |
-| UXD-P2-ASK | 高频 AI 助手 / 问答推荐问题 / 示例问题 | `[P2]` 候选·用户已确认需要 | 骨架 | 补 AI 助手入口位置、推荐问题来源、空间 / 文档范围提示、来源可追溯和无来源兜底 |
+| UXD-P2-HOME | 简洁 Wiki 风格首页：欢迎语 + 知识图谱可视化 + 快捷操作工具栏 + AI 助手入口 | `[P2]` 候选·用户已确认方向 | 骨架 | Phase2A 只承接个人知识组织入口；AI 写作能力留 Phase2B |
+| UXD-P2-IA | 分层空间总览：空间 → 项目 / 主题 → 子目录 → 叶子文档列表 → 单篇文档 | Phase2A 候选·用户已确认方向 | 骨架·HTML 原型已演示目录折叠 / 页面联动 | 补页面 / 视图清单、面包屑、经典目录树入口；第一眼保持简洁，复杂项目瓦片后置 |
+| UXD-P2-MODE | 经典 / 探索双模式并存 | Phase2A 候选 | 骨架·HTML 原型已演示经典目录多层折叠 / 展开 | 确认模式切换、用户偏好记忆、经典模式逃生舱、默认视图和目录展开状态 |
+| UXD-P2-DEGRADE | 节点规模视图降级：小集合可探索，中集合聚类，大集合先筛选 | Phase2A / Phase2B 候选 | 骨架·待验证 | 用 mock / 真实样本标定阈值；未验证前不作为验收标准 |
+| UXD-P2-ASK | 高频 AI 助手 / 问答推荐问题 / 示例问题 | P1 RAG 延续；Phase2B 写作 AI 候选 | 骨架 | 问答入口可沿用 P1；AI 润色 / 写作引用另需数据外发与降级确认 |
 | UXD-VISION-BOARD | 受限局部情报墙 / 关系图 | `[愿景]` 候选 | 骨架·待技术验证 | 情报分析相关能力验证通过；权限过滤、候选关系、待核实文案和节点规模规则明确 |
 | UXD-VISUAL | 明亮蓝白 + 现代靛蓝点缀的数字原生视觉方向 | `[P2]` / `[愿景]` 候选 | 骨架·主题风格已确认可沿用 | HTML 原型已按用户反馈移除最左侧黑色导航条；当前主题风格可沿用；若进入实现，需补视觉规范或实现前 UI 原型，不直接写入必过 TC |
 
-### 9.2 Phase2 实现前追溯草案（已回填 08/09 草案）
+### 9.2 Phase2A/B 实现前追溯草案（已回填 08/09 草案）
 
 > 本节只把已确认的主题风格和体验方向细化为实现前确认稿草案，用于后续 UI 原型确认与 Page-ID / Flow-ID / TC 追溯。当前不新增 REQ、API、DB、08 Sprint 或 09 必过 TC；若进入实现，必须先完成单独原型确认并更新 `08-dev-plan.md` / `09-verification.md`。
 

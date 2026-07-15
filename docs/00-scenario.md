@@ -11,8 +11,8 @@
 | 输入来源 | `docs/vision/product-vision.md` v18 / v19 场景覆盖索引 |
 | 入口模式 | Vision-first |
 | 文档剖面 | Full |
-| 当前状态 | 已确认（Phase1 Demo 基线，按阶段增量演进） |
-| 最后更新 | 2026-07-11（对齐 doc-standards 字段结构） |
+| 当前状态 | 已确认（Phase1 Demo 基线；P1.5 个人可用收口路线已补充，按阶段增量演进） |
+| 最后更新 | 2026-07-15（补 P1.5 个人资料批量入库与导出备份场景） |
 
 ## 1. 背景与问题
 
@@ -50,6 +50,7 @@ LUMEN 是面向中小企业（典型：帮客户做 AI Agent 落地的初创公�
 | SC-004 | R-002 / R-003 | 空间中已有可检索文档与术语 | 用户用关键词或语义问题搜索 / 问答，定位项目历史约束（如延迟下限），并按当前空间术语解释客户习惯用语 | 结果带来源，不跨权限边界；术语解释优先使用空间定义 | `docs/vision/product-vision.md` 场景4 / 场景5b / 场景9 |
 | SC-005 | R-001 / R-002 | 存量资料需要进入知识库 | Phase1 Demo 导入 `.md` / `.txt` 或已提取文本；真实 Word / PDF 解析与图片 OCR 作为后续真实化边界 | 导入内容可搜索、可被问答引用；真实解析 / OCR 不作为 Phase1 必过 | `docs/vision/product-vision.md` 场景5 |
 | SC-006 | R-001 / R-002 / R-003 | 用户使用桌面浏览器访问 | 在 Chrome / Edge 中完成导入、检索、问答、编辑、版本和术语流程 | 桌面端主流程无阻断 | `docs/vision/product-vision.md` 场景8 / 场景9 |
+| SC-007 | R-001 / R-002 / R-003 | 用户准备把 LUMEN 作为个人日常知识库使用 | 用户一次拖入多个 `.md` / `.txt` 或整个资料文件夹，系统批量入库并保留相对路径前缀；需要迁出或备份时，可下载单文档 `.md` 或导出当前空间 ZIP；PDF 导出作为增强能力受 RG-006 验证约束 | 个人能快速把资料放进去，之后可搜索、可问答、可编辑、可备份；PDF 导出不阻塞个人可用 Alpha | 2026-07-15 人工新增诉求：尽快实现并投入个人使用；`docs/03-prd.md` P1.5 路线图 |
 
 ## 3.1 场景边界与非目标
 
@@ -60,6 +61,7 @@ LUMEN 是面向中小企业（典型：帮客户做 AI Agent 落地的初创公�
 | SCB-003 | 私有文档不得进入非作者的检索、问答或共享视图 | 全阶段 | `docs/vision/product-vision.md` 场景4 / 场景8 | `02` REQ-003、`07` 权限错误、`09` TC-P1-003 |
 | SCB-004 | 库外问答必须明确“未找到”，不得编造答案 | 全阶段 | 产品红线，见 `docs/03-prd.md` Phase1 退出标准 | `02` REQ-008、`09` TC-P1-008 |
 | SCB-005 | 高级视图、跨空间推送、协作、移动端、情报分析能力不进入 Phase1 | Phase1 | `ai/project-rules.md` §1 禁止清单 | `03` Phase 路线图、`08` Sprint 禁止事项 |
+| SCB-006 | P1.5 个人可用 Alpha 优先批量导入与导出备份；PDF、真实 Word/PDF 解析、标签 / 内链、AI 润色均不得阻塞 Alpha | P1.5 | 2026-07-15 00-03 路线图重评估 | `03` Phase1.5A / 1.5B 拆分、`08` Sprint 排序、`09` TC-P1-015..017 |
 
 ## 3.2 上游来源映射
 
@@ -71,6 +73,7 @@ LUMEN 是面向中小企业（典型：帮客户做 AI Agent 落地的初创公�
 | SRC-004 | `docs/vision/product-vision.md` 场景5 | R-001 / R-002、SC-003 / SC-005 | 已确认愿景锚点 | 导入、整理、跨空间候选能力；Phase1 仅承接已提取文本导入 |
 | SRC-005 | `docs/vision/product-vision.md` 场景5b / 场景9 | R-003、SC-004 / SC-006 | 已确认愿景锚点 | 术语管理、新成员入职和桌面端 Demo 主路径 |
 | SRC-006 | `ai/project-rules.md` §1、`docs/03-prd.md` §3 | SCB-001..SCB-005 | 阶段边界权威源 | 约束 Phase1 / Phase2 / 愿景边界 |
+| SRC-007 | 2026-07-15 人工目标 + `docs/research/2026-07-15-requirements-00-03-route-audit.md` | SC-007 / SCB-006 | 已确认人工目标 | 优先个人可用：批量入库、导出备份、稳定性收口，再做 PDF / 轻量知识组织 |
 
 ## 3.3 下游影响
 
@@ -82,12 +85,13 @@ LUMEN 是面向中小企业（典型：帮客户做 AI Agent 落地的初创公�
 | SC-004 | U-07 / U-08 / U-42 | REQ-007 / REQ-008 / REQ-036 | MOD-004 检索问答（`docs/design/rag-retrieval.md`）、MOD-005 术语管理（`docs/design/term-management.md`） | TC-P1-007 / 008 / 012 | Sprint-4 / Sprint-5（task-009） | hybrid search、RAG 问答和空间术语对齐 |
 | SC-005 | U-09 / U-10 | REQ-009 / REQ-010 | MOD-003 内容导入（`docs/design/ingestion.md`） | TC-P1-009 / 010 | Sprint-3 | Phase1 已提取文本导入与 OCR 降级边界 |
 | SC-006 | U-11 | REQ-011 | COMP-001 前端 / COMP-002 后端 | TC-P1-011 | Sprint-6 | 桌面浏览器验收入口 |
+| SC-007 | U-09 / U-33 / U-43 | REQ-037 / REQ-038 / REQ-027 | MOD-003 内容导入、MOD-007 写作 / 导出；`docs/07-api-spec.md` API-019/029/030 | TC-P1-015 / 016 / 017 | Sprint-16 / Sprint-17 / Sprint-18 | P1.5 个人可用：先批量入库 + 导出备份，PDF 受 RG-006 约束 |
 
 ## 4. 关联文档
 
 - 产品愿景叙事（愿景，**不直接驱动开发**）：docs/vision/product-vision.md
 - 完整需求链：01-user-requirements → 02-srs → 03-prd（§3 阶段路线图）
-- 当前阶段：Phase1（功能范围 `[P1]` · 交付物形态 **Demo**），见 ai/project-rules.md §1
+- 当前阶段：Phase1 / P1.5（功能范围 `[P1]` · 交付物形态 **Demo / 个人可用增强**），见 ai/project-rules.md §1 与 `docs/03-prd.md` §3
 
 ## 5. 待人工确认项
 

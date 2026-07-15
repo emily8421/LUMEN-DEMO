@@ -9,11 +9,11 @@
 
 | 项 | 内容 |
 |---|---|
-| 当前 Phase | Phase1 |
-| 交付物形态 | Demo |
-| 覆盖 REQ | Phase1：REQ-001..REQ-011、REQ-036；P2 UI 门禁草案：REQ-012/013/014/025/026 相关页面 / 交互候选；其余 P2 / 愿景验证项待升阶段细化 |
-| 当前状态 | Phase1 全量验收已记录，结论为 Conditional Go（Demo closure）；Sprint-1~6 降级口径验收已执行，Sprint-7/8 已完成真实 LLM、PostgreSQL+pgvector、Embedding 与 RAG 向量召回验证；task-009 已完成 search hybrid 验证；P1A / P1B 前端体验收口均已实现，构建与 Chrome / Edge 900px smoke 均通过；P2 UI / WSG 实现前门禁 TC-P2-WSG-001 + TC-P2-UI-001~005 已补草案，当前未执行、不代表可编码 |
-| 最后更新 | 2026-07-15（系统完成度审计：TC-P1-001~006/012「内存」标注校准为 PG 仓储；P1.5 可用性收口规划见 `08` Sprint-12~15） |
+| 当前 Phase | Phase1 / Phase1.5A 候选 |
+| 交付物形态 | Demo / 个人可用 Alpha |
+| 覆盖 REQ | Phase1：REQ-001..REQ-011、REQ-036；Phase1.5A：REQ-037/038；Phase1.5B：REQ-027；Phase2A/B 与愿景验证项待升阶段细化 |
+| 当前状态 | Phase1 全量验收已记录，结论为 Conditional Go（Demo closure）；Sprint-7/8 已完成真实 LLM、PostgreSQL+pgvector、Embedding 与 RAG 向量召回验证；task-009 已完成 search hybrid 验证；P1A / P1B 前端体验收口均已实现。2026-07-15 00-03 路线图重排后，TC-P1-015/016 为个人可用 Alpha 草案，TC-P1-017 为个人增强 Beta 草案；P2 UI / WSG 门禁草案未执行、不代表可编码 |
+| 最后更新 | 2026-07-15（00-03 路线图重排：P1.5A 个人可用 Alpha 优先；TC-P1-015/016/017 阶段语义对齐） |
 
 ## 1. 测试策略
 
@@ -42,9 +42,9 @@
 | TC-P1-012 | REQ-036 术语管理 | 新建空间术语后，文档识别该词，问答优先使用空间定义且不被同名全局术语覆盖 | [P1] | 条件通过（PG 仓储·Sprint-8 起真实化） |
 | TC-P1-013 | REQ-011 P1A 结构聚焦 | 文档 / 搜索 / 问答 / 术语一级视图切换；900px 桌面宽度不横向破版；P0 能力不回退 | [P1] | 通过（构建 + Chrome / Edge 900px smoke） |
 | TC-P1-014 | REQ-011 P1B 工作台重设计 | TopBar + Nav Rail + Context Pane + Workspace 三层布局；Context Pane 随视图变化；900px 桌面宽度不横向破版；信息密度达标；P0/P1A 能力不回退 | [P1] | 通过（构建 + Chrome / Edge 900px smoke） |
-| TC-P1-015 | REQ-037 批量导入 | 拖入文件夹 / 多文件后全部 `.md`/`.txt` 入库可搜可问答；标题保留路径前缀；同名跳过 | [P1] | 草案·待编码（Sprint-16） |
-| TC-P1-016 | REQ-038 导出 | 文档详情下载 `.md`；空间导出 ZIP 含可见文档、权限过滤 | [P1] | 草案·待编码（Sprint-17） |
-| TC-P1-017 | REQ-027 单文档 PDF | 选型 + 中文 PDF 导出验证（RG-006）；文档详情导出 PDF 中文正常 | [P1] | 草案·待 RG-006（Sprint-18） |
+| TC-P1-015 | REQ-037 批量导入 | 拖入文件夹 / 多文件后全部 `.md`/`.txt` 入库可搜可问答；标题保留路径前缀；同名跳过 | [P1] | P1.5A 草案·待编码（Sprint-16） |
+| TC-P1-016 | REQ-038 导出备份 | 文档详情下载 `.md`；空间导出 ZIP 含可见文档、权限过滤 | [P1] | P1.5A 草案·待编码（Sprint-17） |
+| TC-P1-017 | REQ-027 单文档 PDF | 选型 + 中文 PDF 导出验证（RG-006）；文档详情导出 PDF 中文正常 | [P1] | P1.5B 草案·待 RG-006（Sprint-18） |
 
 > 状态说明：Sprint-2~6 按**降级口径**验收（原内存 `demo_repository`）；Sprint-7/8 真实化后 RAG 已走真实 LLM（GLM-5.2）+ 向量召回（pgvector），存储切到 PostgreSQL（见 §5 Sprint-7/8 记录）。仍降级的：真实 PDF/Word 解析、OCR（RG-003，后续阶段）。search 已在 task-009 升级为 hybrid（关键词 / ts_vector / pgvector 语义召回），zhparser 为可选回退。「条件通过」= 当前实现满足 Demo 级别验收；详见 §6 与 `docs/05-tech-spec.md §5.1`。 TC-P1-013 / TC-P1-014 为 REQ-011 体验收口增量，不改变 Phase1 Demo closure 结论。**2026-07-15 标注校准**：TC-P1-001~006/012 原标「降级口径·内存」，因运行时仓储自 Sprint-8 起为 `repository = PgRepository()`（内存降级已解除），已校准为「PG 仓储·Sprint-8 起真实化」；是否进一步将这些 TC 升级为「通过」待人工确认（见 `08` 待确认项）。
 
@@ -90,7 +90,7 @@
 | TC-P2-LINK-001 | REQ-026；`lumen_doc_links`；API-018 | Batch B 契约已回填；首个 vertical slice 建议优先选择 | 在文档内容中登记 `[[wikilink]]`；查询出链 / 反链；target 缺失、无权限、跨空间分别验证 | resolved / unresolved / no_access 状态正确；无权限目标不泄露标题 / 摘要；反链仅返回当前用户可见文档 | 后续后端 tests + UI smoke；DB / API 契约锚点 | 契约草案·未执行 |
 | TC-P2-QUICK-001 | REQ-025；`lumen_quick_entries`；API-017 | Batch B 契约已回填 | 快速录入 draft；转为新文档；追加到已有文档；关联 tag_ids；丢弃 draft | draft 默认 owner 私有；转换后继承文档权限；非法 tag_ids / document_id 返回 4220；不绕过权限 | 后续后端 tests + UI smoke | 契约草案·未执行 |
 | TC-P2-AI-001 | REQ-014；`lumen_ai_drafts`；API-028；RG-004 | LLM adapter 可用或 Mock 降级；真实文档外发边界需确认 | 对可写文档选中文本执行 polish / citation；验证 sources 仅来自可见 chunks；LLM 不可用时降级 | 输出保存为 draft；引用可追溯到 chunk / document；库外或无权限来源不进入 prompt；5030 / Mock 降级不编造 | 后续后端 tests + 人工审查 prompt 边界 + UI smoke | 契约草案·未执行 |
-- REQ-027 PDF 导出已提前到 P1.5，验证口径见 TC-P1-017；REQ-013 / 015 / 016 / 017 / 024 其余 P2 后续用例（时间轴 / 推送 / 协作 / 移动端 / 时间轴热条）——不进 Phase2 MVP 核心 4 项，待后续阶段细化。
+- REQ-027 PDF 导出已提前到 Phase1.5B，验证口径见 TC-P1-017；REQ-013 / 015 / 016 / 017 / 024 其余 P2 后续用例（时间轴 / 推送 / 协作 / 移动端 / 时间轴热条）——不进 Phase2A 个人知识组织，待 Phase2B / 后续阶段细化。
 
 ### 远期愿景（不承诺）
 - REQ-018..023、REQ-028..035 用例——待 05 技术验证可行后补
@@ -98,7 +98,9 @@
 ## 3. 分阶段验证范围
 
 - **Phase1（Demo）**：覆盖 REQ-001..011、REQ-036（上表）——可演示 + 守产品红线；REQ-009/010 按 `.md` / `.txt` 已提取文本降级验收，真实 Word / PDF 解析与 OCR 不作为 Phase1 Demo 必过。P1A 的 TC-P1-013 是既有 REQ-011 的前端结构体验收口，不新增业务范围
-- **Phase2（MVP）**：已原位追加 P2 UI 实现前门禁 TC-P2-UI-001~005 草案；REQ-012..017、REQ-024..027 其余用例待 Phase2 范围确认后继续细化
+- **Phase1.5A（个人可用 Alpha）**：覆盖 REQ-037 / REQ-038，对应 TC-P1-015 / 016；目标是批量入库 + 导出备份，优先于 PDF 和 Phase2 编码。
+- **Phase1.5B（个人增强 Beta）**：覆盖 REQ-027，对应 TC-P1-017；受 RG-006 约束，未验证前不得实现。
+- **Phase2A / Phase2B**：P2 UI 实现前门禁 TC-P2-UI-001~005 已原位追加为草案；REQ-026 / 012 / 025 属 Phase2A 个人知识组织优先候选，REQ-014 / 013 / 024 属 Phase2B 团队 MVP 候选，其余 P2 用例待阶段确认后继续细化。
 - **愿景（产品）**：待技术验证后再补用例
 
 ## 4. 本机资源验证
@@ -159,6 +161,6 @@
 
 ## 7. 待人工确认项
 
-- Phase1 全量验收已记录；是否正式进入 Phase2 仍需人工确认，并在确认后同步更新阶段指针与 Phase2 进入 / 退出标准。TC-P2-WSG-001 与 TC-P2-UI-001~005 已回填为实现前门禁草案，但未执行、未通过、不可直接编码。
-- 首个 Phase2 vertical slice 仍需人工确认；未确认前不得一次性实现全部 P2 UI 或跳过 WSG / UI-G 修改 `frontend/`。
-- Batch B 已补 P1.5 PDF 与 P2 核心 4 项 TC 草案；建议首个 Phase2 vertical slice 优先 `REQ-012 + REQ-026`（标签 + 内链 / 反链），避开 OCR / 完整 AI 润色高风险依赖；REQ-027 PDF 另按 Sprint-18 + RG-006 推进。
+- Phase1 全量验收已记录；下一步建议确认并执行 Phase1.5A（TC-P1-015/016），使个人可批量入库并导出备份。
+- Phase1.5B 的 TC-P1-017 受 RG-006 控制；PDF 不得阻塞 Phase1.5A。
+- Phase2A / Phase2B 仍需人工确认；首个 Phase2A vertical slice 建议优先 `REQ-026 内链 / 反链`，其次 `REQ-012 标签`，再考虑 `REQ-025 快速录入`；未确认前不得一次性实现全部 P2 UI。

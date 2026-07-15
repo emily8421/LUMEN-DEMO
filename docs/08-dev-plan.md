@@ -8,11 +8,11 @@
 
 | 项 | 内容 |
 |---|---|
-| 当前 Phase | Phase1 |
-| 交付物形态 | Demo |
+| 当前 Phase | Phase1 / Phase1.5A 候选 |
+| 交付物形态 | Demo / 个人可用 Alpha |
 | 输入基线 | `docs/03-prd.md` §3、`docs/04-architecture.md`、`docs/05-tech-spec.md`、`docs/09-verification.md` |
-| 当前状态 | Phase1 Demo 已完成并已记录全量验收（Conditional Go）；Sprint-1~6 降级口径完成；Sprint-7（LLM）/ Sprint-8（pgvector 接入）真实化完成（RG-001/002/004/005 Go），task-009 search hybrid 完成；P1A 前端结构聚焦重构已实现，构建与 Chrome / Edge 900px smoke 均通过；P1B 前端工作台系统化重设计已实现，构建与 Chrome / Edge 900px smoke 均通过；P2 UI 实现前确认门禁（Sprint-11 草案）已补 WSG + UI-G + smoke 证据路径；待人工确认是否正式进入 Phase2，不直接编码。**2026-07-15 系统完成度审计**（见 `docs/research/2026-07-15-system-completion-audit.md`）：Phase1 核心闭环真实可用、原 Phase2 核心项 0 实现；据此规划 **P1.5 可用性收口批次（Sprint-12~18 候选·待确认）**，目标=日常当工具，优先于 Phase2 编码；2026-07-15 框架评估（见审计报告 §四 / §五）：WSG 方法论已采纳但 P1 既有代码未对齐（`App.tsx` 1026 行、`styles.css` 886 行、仓储单例 hack），插入 **Sprint-0′ 框架补课** 并已完成（App.tsx 1026→542、styles 拆 6 文件、后端 `repository/` 独立 + 清单例 hack；4b hook 化暂缓·软阈值）；P1.5 前置达成；2026-07-15 新增需求 **批量/文件夹导入 + 导出 + 单文档 PDF 导出**（REQ-037/038/027，API-029/030/019，Sprint-16/17/18 候选），方案已确认【标题前缀保留目录感 / 多文件+文件夹拖拽+落区 / 单文档.md+空间ZIP / PDF 需 RG-006】；REQ-027 已从 Phase2 前移 P1.5，Phase2 MVP 调整为核心 4 项（REQ-012/014/025/026） |
-| 最后更新 | 2026-07-15（Sprint-18 PDF 导出补充；REQ-027 前移 P1.5；03/04/05/06/07/09 阶段指针对齐） |
+| 当前状态 | Phase1 Demo 已完成并已记录全量验收（Conditional Go）；Sprint-1~10 已完成核心闭环真实化与前端体验收口；Sprint-0′ 框架补课已完成 Step 1-5。2026-07-15 00-03 路线图重评估后，后续编码顺序改为**个人可用优先**：Phase1.5A 先做 Sprint-16 批量 / 文件夹导入（REQ-037）与 Sprint-17 `.md` / ZIP 导出备份（REQ-038），Phase1.5B 再做 Sprint-18 PDF（REQ-027，需 RG-006）及真实 Word/PDF 文本提取、zhparser 等增强；Phase2A 为个人知识组织（REQ-026/012/025），Phase2B 才是团队 MVP。 |
+| 最后更新 | 2026-07-15（00-03 审计后重排：Phase1.5A 个人可用 Alpha 优先于 PDF 与 Phase2） |
 
 ## Sprint 总览
 
@@ -519,10 +519,11 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 
 ## 待人工确认项
 
-- 是否正式进入 Phase2：需人工确认范围、进入 / 退出标准后，再更新 `ai/project-rules.md` 当前阶段指针与相关设计 / 计划文档。`Sprint-11（P2-UI-Gate / WSG 候选）` 已回填为实现前门禁草案，但不代表已批准编码。
-- 首个 Phase2 vertical slice 选择：AI 建议从核心 4 项中选一个最小纵切（优先标签 / 内链或 AI 润色之一），确认前不得一次性实现全部 P2 UI。
+- 是否确认 Phase1.5A 立即进入编码：AI 建议先做 Sprint-16 批量 / 文件夹导入，再做 Sprint-17 `.md` / ZIP 导出备份；这两项是个人可用 Alpha 的退出门槛。
+- 是否正式进入 Phase2A / Phase2B：需在 Phase1.5A/B 后人工确认范围、进入 / 退出标准，再更新 `ai/project-rules.md` 当前阶段指针与相关设计 / 计划文档。`Sprint-11（P2-UI-Gate / WSG 候选）` 仅为实现前门禁草案，不代表已批准编码。
+- 首个 Phase2A vertical slice 选择：AI 建议优先 `REQ-026 内链 / 反链`，其次 `REQ-012 标签`，最后 `REQ-025 快速录入`；确认前不得一次性实现全部 P2 UI。
 - **Sprint-0′ 框架补课**：✅ 已完成（Step 1-5，commits ae51210/3d02bb2/2924df4/0a67cfc/2e34c28/a33c536）。剩 **4b handler→hooks（App ≤300）暂缓**——WSG-004 软阈值，App 542 已大幅改善，待功能稳定后再做（不阻塞 P1.5/Phase2）。
-- **P1.5 可用性收口批次（Sprint-12~15）执行顺序与范围**：AI 建议先低成本项（Sprint-12 登录持久化 + seed 自索引、Sprint-13 外部只读权限），再做重依赖项（Sprint-14 Word/PDF 需选型 + RG、Sprint-15 zhparser 可选）；**P1.5 优先于 Phase2 编码**。目标档位=日常当工具。确认前不编码。
+- **P1.5 可用性收口批次执行顺序与范围**：AI 建议先 Sprint-16/17（批量入库 + 导出备份）形成个人可用 Alpha，再穿插 Sprint-12/13 稳定性收口；Sprint-14/15/18 属个人增强 Beta，需选型 / RG 后做。
 - **批量/文件夹导入 + 导出（Sprint-16/17，REQ-037/038 新增）**：2026-07-15 用户新增需求。方案已确认【标题前缀模拟目录（不碰 DB）/ 多文件+文件夹拖拽+落区 / 单文档.md+空间ZIP / 同名跳过】。建议**优先于 Sprint-14（Word/PDF 解析）**——批量纯文本导入直接解决"一个个太慢"痛点且风险更低。确认文档体系回写后（02 REQ + 07 API + 09 TC）再决定编码。
-- **单文档 PDF 导出（Sprint-18，REQ-027 从 Phase2 提前）**：用户要求补充。需先 RG-006 选型（weasyprint/reportlab）+ 中文排版验证，通过后才编码。**REQ-027 阶段已按 [P1] / P1.5 候选同步到 03 §3 + project-rules §1**。建议排在 Sprint-17（.md/ZIP）之后——PDF 依赖重、需选型，.md/ZIP 低风险先落地。
+- **单文档 PDF 导出（Sprint-18，REQ-027 从 Phase2 提前）**：属于 Phase1.5B 个人增强 Beta。需先 RG-006 选型（weasyprint/reportlab）+ 中文排版验证，通过后才编码；不得阻塞 Phase1.5A 的批量入库和导出备份。
 - **TC-P1-001~006/012 是否升级为「通过」**：09 已校准为「PG 仓储·Sprint-8 起真实化」（仍标条件通过）；是否进一步升级为「通过」待人工确认。

@@ -13,7 +13,7 @@
 | 覆盖 REQ | REQ-001、REQ-002、REQ-003 |
 | 所属 Phase | [P1] |
 | 交付物形态 | Demo |
-| 当前状态 | P1-已设计；权限逻辑已实现（内存），存储层为降级（见 §6） |
+| 当前状态 | P1-已实现；权限逻辑与 PostgreSQL 查询过滤已接入，`DemoRepository` 仅作单测 fake（见 §6） |
 | 流程 ID | Flow-D-002（权限过滤决策流，见 §2） |
 | 最后更新 | 2026-07-09 |
 | 下游影响 | 08 Sprint-1、09 TC-P1-001/002/003 |
@@ -72,7 +72,7 @@ flowchart LR
 
 | 设计点 | 关联 REQ | 关联 Sprint | 关联 TC | 验证方式 | 状态 |
 |---|---|---|---|---|---|
-| 跨空间隔离 | REQ-001 | Sprint-1 | TC-P1-001 | `tests/backend/test_permission.py`、`test_space.py` | 条件通过（内存） |
+| 跨空间隔离 | REQ-001 | Sprint-1（+ Sprint-8 PG 存储） | TC-P1-001 | `tests/backend/test_permission.py`、`test_space.py`、PG 集成 tests | 条件通过（PG 已接入；DemoRepository 仅 fake） |
 | 空间切换 | REQ-002 | Sprint-1 | TC-P1-002 | `tests/backend/test_space.py`、`test_api_routes.py` | 条件通过 |
 | 私有文档对他人不可见 | REQ-003 | Sprint-1 | TC-P1-003 | `tests/backend/test_permission.py` | 条件通过 |
 | Flow-D-002 权限过滤决策流 | REQ-001/002/003 | Sprint-1 | TC-P1-001/002/003 | 见上 | 降级实现（逻辑等价） |
