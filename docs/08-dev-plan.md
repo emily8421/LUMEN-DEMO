@@ -11,8 +11,8 @@
 | 当前 Phase | Phase1 |
 | 交付物形态 | Demo |
 | 输入基线 | `docs/03-prd.md` §3、`docs/04-architecture.md`、`docs/05-tech-spec.md`、`docs/09-verification.md` |
-| 当前状态 | Phase1 Demo 已完成并已记录全量验收（Conditional Go）；Sprint-1~6 降级口径完成；Sprint-7（LLM）/ Sprint-8（pgvector 接入）真实化完成（RG-001/002/004/005 Go），task-009 search hybrid 完成；P1A 前端结构聚焦重构已实现，构建与 Chrome / Edge 900px smoke 均通过；P1B 前端工作台系统化重设计已实现，构建与 Chrome / Edge 900px smoke 均通过；P2 UI 实现前确认门禁（Sprint-11 草案）已补 WSG + UI-G + smoke 证据路径；待人工确认是否正式进入 Phase2，不直接编码 |
-| 最后更新 | 2026-07-14（Batch A：WSG + UI-G 门禁回填） |
+| 当前状态 | Phase1 Demo 已完成并已记录全量验收（Conditional Go）；Sprint-1~6 降级口径完成；Sprint-7（LLM）/ Sprint-8（pgvector 接入）真实化完成（RG-001/002/004/005 Go），task-009 search hybrid 完成；P1A 前端结构聚焦重构已实现，构建与 Chrome / Edge 900px smoke 均通过；P1B 前端工作台系统化重设计已实现，构建与 Chrome / Edge 900px smoke 均通过；P2 UI 实现前确认门禁（Sprint-11 草案）已补 WSG + UI-G + smoke 证据路径；待人工确认是否正式进入 Phase2，不直接编码。**2026-07-15 系统完成度审计**（见 `docs/research/2026-07-15-system-completion-audit.md`）：Phase1 核心闭环真实可用、Phase2 核心 5 项 0 实现；据此规划 **P1.5 可用性收口批次（Sprint-12~15 候选·待确认）**，目标=日常当工具，优先于 Phase2 编码；2026-07-15 框架评估（见审计报告 §四 / §五）：WSG 方法论已采纳但 P1 既有代码未对齐（`App.tsx` 1026 行、`styles.css` 886 行、仓储单例 hack），决定插入 **Sprint-0′ 框架补课（候选·待确认）** 作为 P1.5 前置，先出框架再填功能 |
+| 最后更新 | 2026-07-15（系统完成度审计 + P1.5 收口候选 Sprint-12~15 + 框架补课 Sprint-0′ 候选；同步 09 标注校准与 04/05 WSG 显性豁免） |
 
 ## Sprint 总览
 
@@ -31,6 +31,11 @@
 | Sprint-9（P1A） | 前端结构聚焦重构 | 011（既有 P1 页面体验修正） | design/frontend-interaction、research/frontend-p1-structure-exploration | frontend 组件拆分 + 视图切换 + CSS 响应式 | / TC-P1-013 | 已完成（构建 + Chrome / Edge 900px smoke 通过） | — |
 | Sprint-10（P1B） | 前端工作台系统化重设计 | 011（既有 P1 页面体验修正） | design/frontend-workspace-redesign、frontend-workspace-redesign-prototype | frontend 工作台骨架 + 密度 token + 四视图 Workspace | / TC-P1-014 | 已完成（构建 + Chrome / Edge 900px smoke 通过） | — |
 | Sprint-11（P2-UI-Gate / WSG 候选） | Phase2 前端 UI 实现前确认与计划冻结 | 012/013/014/025/026（P2 骨架候选，不新增 REQ） | 04 WSG 矩阵、05 §4.1、design/frontend-interaction §9.3、research/prototypes/2026-07-14-frontend-ui-reference-absorbed-prototype、09 TC-P2-WSG-001 + TC-P2-UI-001~005 | docs + 后续 frontend 实现范围冻结；首个 P2 vertical slice 待确认 | / TC-P2-WSG-001 + TC-P2-UI-001~005 | 草案（少容器清爽稿暂定；WSG / UI-G 待用户确认；待 Phase2 启动确认） | — |
+| Sprint-0′（框架补课·候选） | 前端目录骨架 + 拆 App.tsx / styles.css；后端 repository 独立 + 清单例 hack | 011（结构收口，不新增 REQ） | web-fullstack-profile、04 §1.3、05 §4.1、本次审计 §四 / §五 | frontend `src/{app,features,components,api,state,styles}` + backend `repository/` | TC-P1-WSG 重测 + 既有 smoke 全绿 | 候选·待确认（P1.5 前置；未编码） | — |
+| Sprint-12（P1C·可用性 A·候选） | 登录态持久化 + seed 自索引修复 | 011（可用性收口，不新增 REQ） | 09 §5 Sprint-8 记录、本次审计 §三 | frontend `App.tsx` + backend seed / 启动钩子 | 待新增 TC-P1-015/016 | 候选·待确认（未编码） | — |
+| Sprint-13（P1C·权限·候选） | 外部只读权限真实化（EXTERNAL 写操作拦截） | 003（权限收口） | design/permissions、06、07 | backend `service/permission` + api | TC-P1-003 扩展 | 候选·待确认（未编码） | — |
+| Sprint-14（P1C·导入·候选·需 RG） | 真实 Word/PDF 文本提取（REQ-009 真实化） | 009（导入真实化） | design/ingestion、05（RG 待评估）、本次审计 §二 | backend `service/imports` + 依赖 | TC-P1-009 扩展 | 候选·待确认（需选型 + RG；未编码） | — |
+| Sprint-15（P1C·可选·分词·候选） | zhparser 中文分词接入 | 007（搜索质量收口） | 05、09 task-009 记录、docker | docker 镜像 + migration 006 | TC-P1-007 扩展 | 候选·可选·待确认（中成本；未编码） | — |
 
 ## 依赖关系与里程碑
 
@@ -45,6 +50,8 @@
 | Sprint-9（P1A）前端结构聚焦 | Sprint-6 + #72 P0 UX + #74 探索 | 范围蔓延到 router / 组件库 / 移动端 | 可与 Phase2 tech-env-eval 并行 | 先纯 React state + CSS，不引新依赖 | M7 P1A 体验收口 |
 | Sprint-10（P1B）前端工作台重设计 | Sprint-9 + `frontend-workspace-redesign` 原型确认 | 继续局部样式微调导致返工；范围蔓延到组件库 / router | 可与 Phase2 tech-env-eval 并行 | 先按原型落地 Nav Rail + Context Pane + Workspace，不引新依赖 | M8 P1B 工作台体验收口 |
 | Sprint-11（P2-UI-Gate / WSG 候选）实现前门禁 | Sprint-10 + `frontend-interaction` §9.3 + 少容器清爽稿暂定确认 + WSG-001..006 草案 | UI 方向继续返工；跳过 WSG / UI-G 直接编码；范围蔓延到组件库 / router / 新 API / 图谱算法；未选首个 vertical slice 导致一次做太多 | 可与 Phase2 tech-env-eval 并行 | 先冻结 Page-ID / Flow-ID / TC / WSG，再确认首个 P2 vertical slice；当前只回填计划与验证草案 | M9 P2 UI + WSG 实现前门禁 |
+| Sprint-0′（框架补课·候选） | Phase1 closure（Sprint-8/10）已完成 | 继续往 `App.tsx` / 全局 CSS / 后端 service 堆 P1.5 功能，导致更难拆 | 否（P1.5 全部前置） | 纯结构搬运、逻辑不动、每步 smoke；前端建目录骨架 + 拆 App.tsx / styles.css，后端 repository 独立 + 清单例 hack；**先于所有 P1.5 编码** | M9.5 框架对齐（WSG 闭环） |
+| Sprint-12~15（P1.5 可用性收口·候选） | Phase1 closure（Sprint-8/10）已完成 | 范围蔓延到 Phase2 高级功能；跳过收口直接做 Phase2 编码 | 可与 Phase2 tech-env-eval 并行评估 | 先做低成本收口（Sprint-12 登录持久化 / seed 自索引、Sprint-13 外部只读），再做重依赖项（Sprint-14 Word/PDF 需选型 + RG、Sprint-15 zhparser 可选）；**P1.5 优先于 Phase2 编码** | M10 日常可用（P1.5 收口） |
 
 ## 任务拆分规则
 
@@ -70,6 +77,11 @@
 | Sprint-9（P1A） | TC-P1-013 | 前端构建 + 浏览器 smoke | `npm.cmd run build`（frontend） | Chrome / Edge：登录、视图切换、文档、搜索、问答、术语、900px 宽度 | 不新增 API / 后端能力；不引 router / 组件库；移动端不验收 |
 | Sprint-10（P1B） | TC-P1-014 | 前端构建 + 浏览器 smoke | `npm.cmd run build`（frontend） | Chrome / Edge：工作台三层布局、Context Pane 随视图变化、文档 / 搜索 / 问答 / 术语主流程、900px 宽度 | 不新增 API / 后端能力；不引 router / 组件库；移动端不验收 |
 | Sprint-11（P2-UI-Gate / WSG 候选） | TC-P2-WSG-001、TC-P2-UI-001~005 | 文档门禁 + 原型走查 + 后续浏览器 smoke | `git diff --check`；后续实现前 `npm.cmd run build`（frontend） | 先审阅 `04` WSG、`05 §4.1`、`frontend-interaction §9.3`、`09` TC 草案；Phase2 启动后再执行 Chrome / Edge smoke | 当前不编码；不新增 API / DB / 权限模型 / 图谱算法 / router / 组件库；首个 P2 vertical slice 待确认 |
+| Sprint-0′ | TC-P1-WSG-001..006 重测（结构对齐后）+ 既有 P1 smoke 全绿 | 前端构建 + 后端单测 + 浏览器 smoke | `npm.cmd run build`；`.venv\Scripts\python.exe -m unittest discover -s tests/backend`；Chrome / Edge 900px smoke | 拆分后登录 / 文档 / 搜索 / 问答 / 术语主流程不回退 | 纯结构搬运，不改 API / DB / 业务逻辑 |
+| Sprint-12 | 待新增 TC-P1-015（登录持久化）/ TC-P1-016（seed 自索引） | 前端构建 + 后端单测 | `npm.cmd run build`；`.venv\Scripts\python.exe -m unittest discover -s tests/backend`（seed 回填） | Chrome 刷新不掉线；全新起库后 seed 文档开箱可搜 | 不新增 API / DB 能力 |
+| Sprint-13 | TC-P1-003 扩展（EXTERNAL 写拦截） | 单元 + 集成 | 同上（test_permission） | EXTERNAL 账号改 / 删被拒；读 / 搜 / 问答不受影响 | 不改变可见性边界，只补写权限 |
+| Sprint-14 | TC-P1-009 扩展（.docx / .pdf 文本提取） | 集成 | 同上（test_imports） | 导入 .docx / 文本型 .pdf 后可搜可问答 | 选型未定前为降级；OCR 仍后续（RG-003） |
+| Sprint-15 | TC-P1-007 扩展（中文分词） | 集成（PG） | 同上（test_search） | 中文长词精确命中改善 | 无 zhparser 时仍回退 simple（不阻塞） |
 
 > 资源 / 环境验证：Sprint-8 起 Docker / pgvector / Embedding **已 Go**（RG-001/002 Go，见 05 §5.1；TE-C-003 闭合）；OCR / 真实 PDF 解析仍 No-Go（RG-003，后续阶段，不在 P1 必过范围）。
 
@@ -283,6 +295,128 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 - 不新增后端接口、数据库字段、权限模型或图谱 / 冲突检测算法。
 - 不把愿景级局部情报墙、随机关系图、强“矛盾检测”提前做成 Phase2 默认能力。
 - 不做移动端适配；桌面端宽度和现有 P1 能力不回退。
+
+## Sprint-0′（P1.5 前置 · 框架补课 · 候选）：前端目录骨架 + 后端仓储独立
+
+> **候选·待确认**：2026-07-15 框架评估后规划，对齐 `template-docs/web-fullstack-profile.md` WSG-001..006。本 Sprint 是 P1.5 全部编码的前置；纯结构搬运，**不改业务逻辑、不改 API / DB 契约**，每步跑 smoke 保证不回退。确认任务边界与拆分顺序后再实现（走 `run-dev-task` 写任务单）。
+
+### 目标
+把 Phase1 在 WSG 落地前堆出的代码结构对齐方法论：前端从单文件 `App.tsx`（1026 行）/ `styles.css`（886 行）拆为 `app / pages / features / components / api / state / styles` 目录骨架；后端把 `pg_repository` / `demo_repository` 从 `service/` 迁到独立 `backend/repository/`，清理 `demo_repository` 末尾的单例 hack（改为显式工厂 / 依赖注入）。不新增 REQ，属 REQ-011 结构收口。
+
+### 输入文档
+- `template-docs/web-fullstack-profile.md` §3 / §4 / §5 / §6
+- `docs/04-architecture.md` §1.3（WSG 矩阵）、`docs/05-tech-spec.md` §4.1（目录边界 + 阈值）
+- `docs/research/2026-07-15-system-completion-audit.md` §四 / §五
+
+### 修改范围
+- 前端：`frontend/src/` 建 `app / pages / features / components / api / state / styles` 目录；把 TopBar / NavRail / ContextPane / Workspace 抽进 `app/`，文档 / 搜索 / 问答 / 术语四视图抽进 `features/`，`api.ts` 进 `api/`，`styles.css` 拆 tokens / layout / components。**仅搬运，逻辑不动**。
+- 后端：新增 `backend/repository/`，迁入 `pg_repository.py` / `demo_repository.py`；删 `demo_repository` 末尾 `repository = PgRepository()` 单例覆盖，改为显式工厂 / 依赖注入；`main.py` 用 router 注册表。
+- 不改 API 契约、不改 DB schema、不改业务逻辑、不引新依赖（router / 组件库 / 状态库仍不引入）。
+
+### 验收标准
+- `npm.cmd run build` 通过；`.venv\Scripts\python.exe -m unittest discover -s tests/backend` 76 tests 全绿；Chrome / Edge 900px smoke 覆盖登录 / 四视图 / 文档 CRUD / 版本 / 搜索 / 问答 / 术语，**与重构前行为一致**。
+- `App.*` 主入口 ≤ 300 行；拆出的页面 / feature 文件 ≤ 250 行；全局 CSS 拆分后单文件 ≤ 300 行。
+- `backend/repository/` 独立；无单例 hack；API 层不再直接 `import repository` 单例。
+
+### 禁止事项
+- 不改业务逻辑、API 契约、DB schema、权限规则；不顺手修 P1.5 缺陷（登录持久化 / 外部只读等留 Sprint-12 / 13）。
+- 不引入 react-router / 组件库 / 全局状态库 / 新依赖。
+- 不得一次提交全部拆分；按「Shell → features → api / styles → repository」分多个小提交，每个跟 smoke。
+
+## Sprint-12（P1C·可用性收口 A · 候选）：登录态持久化 + seed 自索引修复
+
+> **候选·待确认**：2026-07-15 系统完成度审计后规划的 P1.5 可用性收口批次，尚未批准编码；确认任务范围、验证命令后再实现。
+
+### 目标
+修复两个"日常可用"硬伤（审计 §三 坑 1 / 坑 3）：① 登录态持久化（当前 token 只存 React state，刷新即掉线）；② seed 示例文档自索引（seed 直接 INSERT 不经服务层，2 篇 demo 文档无 chunks / embedding，开箱搜不到）。不新增业务 REQ，属 REQ-011 可用性收口。
+
+### 输入文档
+- `docs/research/2026-07-15-system-completion-audit.md` §三（坑 1 / 坑 3）
+- `docs/09-verification.md` §5（Sprint-8 seed 记录）
+- `frontend/src/App.tsx`、`backend/service/demo_repository.py`（seed）、`backend/main.py`（lifespan）
+
+### 修改范围
+- `frontend/src/App.tsx`：登录 token 存 localStorage，启动时恢复。
+- `backend`：seed 后或 lifespan 启动钩子中对无 chunks 的文档回填分块 + embedding（或改 seed 脚本经服务层写入）。
+- 不改 API 契约、不改 DB schema、不引新依赖。
+
+### 验收标准
+- 刷新页面后仍保持登录态。
+- 全新起库后，seed 的 2 篇示例文档无需手动重存即可被搜索 / RAG 命中。
+- `npm.cmd run build` 通过；后端单测通过；Chrome 刷新不掉线 smoke。
+
+### 禁止事项
+- 不把 token 与敏感信息写入不可控存储；不新增 API / DB / 权限模型。
+- 不扩大到其他 P1.5 项。
+
+## Sprint-13（P1C·可用性收口 B · 候选）：外部只读权限真实化
+
+> **候选·待确认**：尚未批准编码。
+
+### 目标
+修复权限缺口（审计 §三 坑 4）：EXTERNAL 权限当前与 TEAM 等价、无只读约束。补写操作（创建 / 改 / 删文档、改术语等）的只读拦截，使"外部只读"名副其实。属 REQ-003 权限收口，不新增 REQ。
+
+### 输入文档
+- `docs/research/2026-07-15-system-completion-audit.md` §二 / §三
+- `docs/design/permissions.md`、`backend/service/permission.py`
+
+### 修改范围
+- `backend/service/permission.py` + 相关 api 写操作：EXTERNAL 成员写操作被拒（返回明确错误码）。
+- 不改可见性边界（PRIVATE / TEAM / EXTERNAL 可见性维持现状），只补写权限。
+
+### 验收标准
+- EXTERNAL 成员对团队文档执行改 / 删被拒；读 / 搜 / 问答不受影响。
+- `tests/backend/test_permission.py` 新增 EXTERNAL 写拦截用例并通过。
+
+### 禁止事项
+- 不改 DB schema、不改权限三级定义、不引新依赖。
+- 前端隐藏 / 禁用不得作为唯一权限边界（权限必须后端执行）。
+
+## Sprint-14（P1C·可用性收口 C · 候选·需技术验证）：真实 Word/PDF 文本提取
+
+> **候选·待确认·需 RG 技术验证**：REQ-009 真实化，需先选型（如 python-docx / pdfplumber）并做技术环境评估；RG 未通过前不得编码。
+
+### 目标
+将导入从"仅 .md / .txt 已提取文本"真实化为"可上传 .docx / .pdf 提取文本后入库"（OCR 仍后续）。属 REQ-009 真实化，不新增 REQ。
+
+### 输入文档
+- `docs/design/ingestion.md`、`docs/05-tech-spec.md`（RG 待评估）、`docs/09-verification.md` TC-P1-009
+- 本次审计 §二
+
+### 修改范围
+- `backend/service/imports.py` + 依赖文件（新增解析库）。
+- 不做 OCR（REQ-010 仍后续）；不改 DB schema（`lumen_imports.mime` 列已预留）。
+
+### 验收标准
+- 上传 .docx / 文本型 .pdf 后能被搜索 / RAG 命中。
+- 选型 + 最小导入技术验证通过（RG 结论 Go / Conditional Go）。
+- `tests/backend/test_imports.py` 扩展并通过。
+
+### 禁止事项
+- 未完成选型与技术验证前不得编码；不得引入未确认依赖。
+- 不做 OCR、不做扫描件、不改既有 .md / .txt 路径。
+
+## Sprint-15（P1C·可选 · 候选）：zhparser 中文分词接入
+
+> **候选·可选·待确认**：中成本，可延后；不阻塞"日常可用"主线。
+
+### 目标
+改善中文关键词搜索（审计 §三 坑 2）：当前 pgvector 镜像无 zhparser，关键词路退回 simple、对 CJK 基本不分词。接入 zhparser 扩展（或等价中文分词）。属 REQ-007 搜索质量收口，向量语义召回不受影响。
+
+### 输入文档
+- `docs/05-tech-spec.md`、`docs/09-verification.md` task-009 记录、`backend/migrations/006_optional_zhparser_search.sql`
+
+### 修改范围
+- docker 镜像（带 zhparser 的 pgvector 变体）+ migration 006 启用。
+- 不改 API、不改向量召回路径。
+
+### 验收标准
+- 中文长词精确匹配命中率提升；无 zhparser 时仍回退 simple（不阻塞）。
+- `tests/backend/test_search.py` 中文用例通过。
+
+### 禁止事项
+- 不改 DB schema 既有表；不引入向量库替代品。
+
 ## Sprint 完成包与进度记录
 
 > 对照 `ai/doc-standards/08-dev-plan.md` §4（完成包）+ §5（进度记录）。Sprint-1~6 为早期降级实现；Sprint-7/8 已完成真实 LLM、PostgreSQL+pgvector、Embedding 与 RAG 向量召回接入；task-009 已完成 search 向量化 + 可选 zhparser 回退。仍降级：真实 Word / PDF 解析、OCR。验收证据见 `docs/09-verification.md §5`。
@@ -312,3 +446,6 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 
 - 是否正式进入 Phase2：需人工确认范围、进入 / 退出标准后，再更新 `ai/project-rules.md` 当前阶段指针与相关设计 / 计划文档。`Sprint-11（P2-UI-Gate / WSG 候选）` 已回填为实现前门禁草案，但不代表已批准编码。
 - 首个 Phase2 vertical slice 选择：AI 建议从核心 5 项中选一个最小纵切（优先标签 / 内链或 AI 润色之一），确认前不得一次性实现全部 P2 UI。
+- **Sprint-0′ 框架补课（P1.5 前置）拆分顺序与边界**：AI 建议按「Shell → features → api / styles → repository」分多个小提交，每个跟 smoke；纯结构搬运，不改逻辑 / API / DB。**先于所有 P1.5 编码**。确认后才开始编码（走 `run-dev-task` 写任务单）。
+- **P1.5 可用性收口批次（Sprint-12~15）执行顺序与范围**：AI 建议先低成本项（Sprint-12 登录持久化 + seed 自索引、Sprint-13 外部只读权限），再做重依赖项（Sprint-14 Word/PDF 需选型 + RG、Sprint-15 zhparser 可选）；**P1.5 优先于 Phase2 编码**。目标档位=日常当工具。确认前不编码。
+- **TC-P1-001~006/012 是否升级为「通过」**：09 已校准为「PG 仓储·Sprint-8 起真实化」（仍标条件通过）；是否进一步升级为「通过」待人工确认。

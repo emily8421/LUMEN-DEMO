@@ -91,7 +91,7 @@ flowchart TB
 
 ### 4.1 Web App Structure Profile：目录边界与文件膨胀阈值
 
-> 对照 `template-docs/web-fullstack-profile.md` WSG-002 / WSG-004。当前只作为 Phase2 UI / Web 实现前治理门禁，不改既有 P1 代码结构，不新增依赖。
+> 对照 `template-docs/web-fullstack-profile.md` WSG-002 / WSG-004。**2026-07-15 校准**：原「不改既有 P1 代码结构」的定位已调整为——通过 `docs/08-dev-plan.md` **Sprint-0′ 框架补课**（P1.5 前置）主动对齐：前端拆 `app / pages / features / components / api / state / styles`、后端 `repository/` 独立；P1.5 / Phase2 起本节目录边界与文件阈值强制生效。Sprint-0′ 仍不新增依赖。
 
 | 边界项 | 当前基线 | Phase2 实现前要求 |
 |---|---|---|

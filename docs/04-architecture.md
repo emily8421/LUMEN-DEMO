@@ -83,7 +83,7 @@ flowchart LR
 
 ### 1.3 Web App Structure Profile / Walking Skeleton Gate（Batch A 回填）
 
-> 对照 `template-docs/web-fullstack-profile.md`。本项目同时启用 `frontend/` 与 `backend/`，存在前端调用后端 API，且交付物需要浏览器点击演示；因此采用轻量 WSG 矩阵，不记录豁免。当前回填只定义 Phase2 UI 实现前门禁，不代表 Phase2 已启动。
+> 对照 `template-docs/web-fullstack-profile.md`。本项目同时启用 `frontend/` 与 `backend/`，存在前端调用后端 API，且交付物需要浏览器点击演示；因此采用轻量 WSG 矩阵。**显性豁免声明（2026-07-15 校准）**：Phase1 业务 Sprint（1~10）在 WSG 落地前已完成，既有 `App.tsx`（1026 行）/ `styles.css`（886 行）/ 仓储单例 hack 作为 Demo 框架豁免 Sprint 0；经框架评估（见 `docs/research/2026-07-15-system-completion-audit.md` §四 / §五），决定插入 `docs/08-dev-plan.md` **Sprint-0′ 框架补课**（P1.5 前置）主动对齐 WSG-002 / WSG-004，P1.5 / Phase2 起强制遵守目录边界与文件阈值。WSG 矩阵不再仅作 Phase2 门禁。
 
 | WSG-ID | Gate | 当前架构事实 | 证据 / 锚点 | Phase2 实现前缺口 |
 |---|---|---|---|---|

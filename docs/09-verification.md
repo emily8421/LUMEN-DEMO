@@ -13,7 +13,7 @@
 | 交付物形态 | Demo |
 | 覆盖 REQ | Phase1：REQ-001..REQ-011、REQ-036；P2 UI 门禁草案：REQ-012/013/014/025/026 相关页面 / 交互候选；其余 P2 / 愿景验证项待升阶段细化 |
 | 当前状态 | Phase1 全量验收已记录，结论为 Conditional Go（Demo closure）；Sprint-1~6 降级口径验收已执行，Sprint-7/8 已完成真实 LLM、PostgreSQL+pgvector、Embedding 与 RAG 向量召回验证；task-009 已完成 search hybrid 验证；P1A / P1B 前端体验收口均已实现，构建与 Chrome / Edge 900px smoke 均通过；P2 UI / WSG 实现前门禁 TC-P2-WSG-001 + TC-P2-UI-001~005 已补草案，当前未执行、不代表可编码 |
-| 最后更新 | 2026-07-14（Batch A：WSG + UI-G 验证门禁回填） |
+| 最后更新 | 2026-07-15（系统完成度审计：TC-P1-001~006/012「内存」标注校准为 PG 仓储；P1.5 可用性收口规划见 `08` Sprint-12~15） |
 
 ## 1. 测试策略
 
@@ -28,22 +28,22 @@
 
 | TC-ID | REQ | 验收用例 | 阶段 | 状态 |
 |---|---|---|---|---|
-| TC-P1-001 | REQ-001 隔离 | brightlite 账号查询 nova-internal 文档 = 0 命中 | [P1] | 条件通过（降级口径·内存） |
-| TC-P1-002 | REQ-002 切换 | 切换后搜索 / 问答只反映目标空间 | [P1] | 条件通过（降级口径·内存） |
-| TC-P1-003 | REQ-003 权限 | 作者私有文档，同空间他人搜不到、问答不引用 | [P1] | 条件通过（降级口径·内存） |
-| TC-P1-004 | REQ-004 CRUD | 创建 / 读 / 改 / 删均成功，删后不可检索 | [P1] | 条件通过（降级口径·内存） |
-| TC-P1-005 | REQ-005 行内编辑 | 编辑保存后内容持久、再打开一致 | [P1] | 条件通过（降级口径·内存） |
-| TC-P1-006 | REQ-006 版本 | 3 次修改 → 3 版本 → 能恢复指定版本 | [P1] | 条件通过（降级口径·内存） |
+| TC-P1-001 | REQ-001 隔离 | brightlite 账号查询 nova-internal 文档 = 0 命中 | [P1] | 条件通过（PG 仓储·Sprint-8 起真实化） |
+| TC-P1-002 | REQ-002 切换 | 切换后搜索 / 问答只反映目标空间 | [P1] | 条件通过（PG 仓储·Sprint-8 起真实化） |
+| TC-P1-003 | REQ-003 权限 | 作者私有文档，同空间他人搜不到、问答不引用 | [P1] | 条件通过（PG 仓储·Sprint-8 起真实化） |
+| TC-P1-004 | REQ-004 CRUD | 创建 / 读 / 改 / 删均成功，删后不可检索 | [P1] | 条件通过（PG 仓储·Sprint-8 起真实化） |
+| TC-P1-005 | REQ-005 行内编辑 | 编辑保存后内容持久、再打开一致 | [P1] | 条件通过（PG 仓储·Sprint-8 起真实化） |
+| TC-P1-006 | REQ-006 版本 | 3 次修改 → 3 版本 → 能恢复指定版本 | [P1] | 条件通过（PG 仓储·Sprint-8 起真实化） |
 | TC-P1-007 | REQ-007 搜索 | 已知关键词 / 语义相近问题返回正确文档 | [P1] | 条件通过（hybrid：关键词 + `ts_vector` SQL 候选 + pgvector 语义召回；zhparser 可选回退 `simple`） |
 | TC-P1-008 | REQ-008 RAG | 库内问答正确 + 标来源；库外回复"未找到" | [P1] | 通过（真实 LLM·glm-5.2 + 向量召回·bge-small-zh pgvector ANN threshold 0.6；RG-001/002 Go） |
 | TC-P1-009 | REQ-009 导入 | 导入 `.md` / `.txt` 已提取文本后可搜、可问答引用 | [P1] | 条件通过（真实 Word / PDF 解析未验证，留后续） |
 | TC-P1-010 | REQ-010 OCR | 中文白板照片 OCR 后可搜 | [P1] | 后续阶段（OCR 未实现，降级移出 P1 必过） |
 | TC-P1-011 | REQ-011 桌面端 | Chrome / Edge 完成上述全部 | [P1] | 条件通过（降级口径·Edge Headless + Chrome 人工 smoke） |
-| TC-P1-012 | REQ-036 术语管理 | 新建空间术语后，文档识别该词，问答优先使用空间定义且不被同名全局术语覆盖 | [P1] | 条件通过（降级口径·内存） |
+| TC-P1-012 | REQ-036 术语管理 | 新建空间术语后，文档识别该词，问答优先使用空间定义且不被同名全局术语覆盖 | [P1] | 条件通过（PG 仓储·Sprint-8 起真实化） |
 | TC-P1-013 | REQ-011 P1A 结构聚焦 | 文档 / 搜索 / 问答 / 术语一级视图切换；900px 桌面宽度不横向破版；P0 能力不回退 | [P1] | 通过（构建 + Chrome / Edge 900px smoke） |
 | TC-P1-014 | REQ-011 P1B 工作台重设计 | TopBar + Nav Rail + Context Pane + Workspace 三层布局；Context Pane 随视图变化；900px 桌面宽度不横向破版；信息密度达标；P0/P1A 能力不回退 | [P1] | 通过（构建 + Chrome / Edge 900px smoke） |
 
-> 状态说明：Sprint-2~6 按**降级口径**验收（原内存 `demo_repository`）；Sprint-7/8 真实化后 RAG 已走真实 LLM（GLM-5.2）+ 向量召回（pgvector），存储切到 PostgreSQL（见 §5 Sprint-7/8 记录）。仍降级的：真实 PDF/Word 解析、OCR（RG-003，后续阶段）。search 已在 task-009 升级为 hybrid（关键词 / ts_vector / pgvector 语义召回），zhparser 为可选回退。「条件通过」= 当前实现满足 Demo 级别验收；详见 §6 与 `docs/05-tech-spec.md §5.1`。 TC-P1-013 / TC-P1-014 为 REQ-011 体验收口增量，不改变 Phase1 Demo closure 结论。
+> 状态说明：Sprint-2~6 按**降级口径**验收（原内存 `demo_repository`）；Sprint-7/8 真实化后 RAG 已走真实 LLM（GLM-5.2）+ 向量召回（pgvector），存储切到 PostgreSQL（见 §5 Sprint-7/8 记录）。仍降级的：真实 PDF/Word 解析、OCR（RG-003，后续阶段）。search 已在 task-009 升级为 hybrid（关键词 / ts_vector / pgvector 语义召回），zhparser 为可选回退。「条件通过」= 当前实现满足 Demo 级别验收；详见 §6 与 `docs/05-tech-spec.md §5.1`。 TC-P1-013 / TC-P1-014 为 REQ-011 体验收口增量，不改变 Phase1 Demo closure 结论。**2026-07-15 标注校准**：TC-P1-001~006/012 原标「降级口径·内存」，因运行时仓储自 Sprint-8 起为 `repository = PgRepository()`（内存降级已解除），已校准为「PG 仓储·Sprint-8 起真实化」；是否进一步将这些 TC 升级为「通过」待人工确认（见 `08` 待确认项）。
 
 #### Phase1 TC 用例详情
 
