@@ -4,7 +4,7 @@ import unittest
 class ImportServiceTest(unittest.TestCase):
     def test_import_extracted_text_creates_document_and_chunks(self) -> None:
         from backend.model.entities import DocumentPermission
-        from backend.service.demo_repository import DemoRepository
+        from backend.repository.demo_repository import DemoRepository
         from backend.service.imports import ImportTextRequest, import_extracted_text
 
         repository = DemoRepository()
@@ -34,7 +34,7 @@ class ImportServiceTest(unittest.TestCase):
         self.assertIn("First paragraph", chunks[0].text)
 
     def test_import_rejects_unsupported_file_type(self) -> None:
-        from backend.service.demo_repository import DemoRepository
+        from backend.repository.demo_repository import DemoRepository
         from backend.service.imports import ImportTextRequest, ImportValidationError, import_extracted_text
 
         with self.assertRaises(ImportValidationError) as context:
@@ -48,7 +48,7 @@ class ImportServiceTest(unittest.TestCase):
         self.assertIn("only pre-extracted", str(context.exception))
 
     def test_import_rejects_empty_text(self) -> None:
-        from backend.service.demo_repository import DemoRepository
+        from backend.repository.demo_repository import DemoRepository
         from backend.service.imports import ImportTextRequest, ImportValidationError, import_extracted_text
 
         with self.assertRaises(ImportValidationError) as context:
@@ -62,7 +62,7 @@ class ImportServiceTest(unittest.TestCase):
         self.assertEqual(str(context.exception), "uploaded text is empty")
 
     def test_import_rejects_non_member_space(self) -> None:
-        from backend.service.demo_repository import DemoRepository
+        from backend.repository.demo_repository import DemoRepository
         from backend.service.imports import ImportTextRequest, ImportValidationError, import_extracted_text
 
         with self.assertRaises(ImportValidationError) as context:

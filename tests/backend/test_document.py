@@ -13,7 +13,7 @@ from backend.service.document import (
     restore_version,
     update_document,
 )
-from backend.service.demo_repository import DemoRepository
+from backend.repository.demo_repository import DemoRepository
 
 
 class DocumentServiceTest(unittest.TestCase):

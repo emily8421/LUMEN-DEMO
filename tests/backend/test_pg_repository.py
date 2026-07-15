@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 from backend.model.entities import DocumentPermission, TermStatus
 from backend.model.orm import SpaceMemberORM, SpaceORM, UserORM
 from backend.service.db import SessionLocal, engine, init_db
-from backend.service.pg_repository import PgRepository
+from backend.repository.pg_repository import PgRepository
 
 
 def _truncate_all() -> None:

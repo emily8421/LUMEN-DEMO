@@ -1,7 +1,7 @@
 import unittest
 
 from backend.model.entities import DocumentChunk, DocumentPermission
-from backend.service.demo_repository import DemoRepository
+from backend.repository.demo_repository import DemoRepository
 from backend.service.document import DocumentCreate, create_document
 from backend.service.search import SearchValidationError, search_documents
 

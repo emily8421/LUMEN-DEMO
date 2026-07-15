@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from backend.api.auth import TOKEN_SIGNING_KEY
 from backend.service.auth import TokenError, create_demo_token, extract_bearer_token, parse_demo_token
-from backend.service.demo_repository import repository
+from backend.repository import repository
 from backend.service.space import SpaceAccessError, list_user_spaces, switch_space
 
 try:

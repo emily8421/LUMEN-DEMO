@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 
 from backend.service.auth import create_demo_token
-from backend.service.demo_repository import repository
+from backend.repository import repository
 from backend.service.space import SpaceAccessError, ensure_space_access
 
 TOKEN_SIGNING_KEY = os.environ.get("LUMEN_DEMO_TOKEN_KEY", "local-demo-signing-key")

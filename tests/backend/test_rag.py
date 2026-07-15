@@ -1,7 +1,7 @@
 import unittest
 
 from backend.model.entities import DocumentPermission, TermStatus
-from backend.service.demo_repository import DemoRepository
+from backend.repository.demo_repository import DemoRepository
 from backend.service.document import DocumentCreate, create_document
 from backend.service.rag import NOT_FOUND_ANSWER, RagValidationError, answer_question
 from backend.service.term import TermWrite, create_term

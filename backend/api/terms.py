@@ -5,7 +5,7 @@ from __future__ import annotations
 from backend.api.auth import TOKEN_SIGNING_KEY
 from backend.model.entities import Term, TermStatus
 from backend.service.auth import TokenError, extract_bearer_token, parse_demo_token
-from backend.service.demo_repository import repository
+from backend.repository import repository
 from backend.service.term import (
     TermAccessError,
     TermNotFoundError,

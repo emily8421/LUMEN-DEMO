@@ -370,16 +370,4 @@ def _now_iso() -> str:
     return datetime.now(UTC).isoformat()
 
 
-# task-008 T5: the production runtime is now PostgreSQL-backed. DemoRepository
-# above is retained as the in-memory unit-test fake (service tests instantiate
-# it directly) and as the pre-T5 degraded baseline. Service / API layers are
-# duck-typed on this interface, so keeping the singleton name `repository` means
-# the 7 API route files need no changes — they captured this name at import time.
-# PG unavailable is no longer a silent-degrade path post-T5: the demo now
-# requires lumen-pg (docker/compose.yml) to be healthy; queries fail loudly.
-from backend.service.pg_repository import PgRepository
-
-repository = PgRepository()
-
-
 

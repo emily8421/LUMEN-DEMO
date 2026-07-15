@@ -1,7 +1,7 @@
 import unittest
 
 from backend.model.entities import TermStatus
-from backend.service.demo_repository import DemoRepository
+from backend.repository.demo_repository import DemoRepository
 from backend.service.term import (
     TermAccessError,
     TermValidationError,
