@@ -2,7 +2,9 @@ param(
     [int]$BackendPort = 18000,
     [int]$FrontendPort = 5173,
     [switch]$NoBrowser,
-    [switch]$StopExisting
+    [switch]$StopExisting,
+    [switch]$Detached,
+    [switch]$Stop
 )
 
 $ErrorActionPreference = "Stop"
@@ -12,6 +14,7 @@ $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $frontendRoot = Join-Path $repoRoot "frontend"
 $tempRoot = Join-Path $env:TEMP "lumen-sprint16-demo"
 $processes = @()
+$leaveRunning = $false
 $hadViteApiBase = Test-Path Env:VITE_API_BASE
 $oldViteApiBase = $env:VITE_API_BASE
 $hadDemoBackendProxyUrl = Test-Path Env:DEMO_BACKEND_PROXY_URL
@@ -94,6 +97,13 @@ function Find-Browser() {
 try {
     New-Item -ItemType Directory -Force -Path $tempRoot | Out-Null
 
+    if ($Stop) {
+        Stop-PortOwners $BackendPort
+        Stop-PortOwners $FrontendPort
+        Write-Host "Demo services stopped for backend port $BackendPort and frontend port $FrontendPort."
+        return
+    }
+
     if ($StopExisting) {
         Stop-PortOwners $BackendPort
         Stop-PortOwners $FrontendPort
@@ -169,16 +179,26 @@ if __name__ == "__main__":
         }
     }
 
+    if ($Detached) {
+        $leaveRunning = $true
+        Write-Host ""
+        Write-Host "Demo services are running in background."
+        Write-Host "Stop them with: powershell -ExecutionPolicy Bypass -File scripts/run-sprint16-demo.ps1 -Stop"
+        return
+    }
+
     Write-Host ""
     Read-Host "Press Enter here to stop the demo services"
 } finally {
-    foreach ($process in $processes) {
-        if ($process -and -not $process.HasExited) {
-            Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
+    if (-not $leaveRunning) {
+        foreach ($process in $processes) {
+            if ($process -and -not $process.HasExited) {
+                Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
+            }
         }
+        Stop-PortOwners $BackendPort
+        Stop-PortOwners $FrontendPort
     }
-    Stop-PortOwners $BackendPort
-    Stop-PortOwners $FrontendPort
     if ($hadViteApiBase) {
         $env:VITE_API_BASE = $oldViteApiBase
     } else {
@@ -189,5 +209,7 @@ if __name__ == "__main__":
     } else {
         Remove-Item Env:DEMO_BACKEND_PROXY_URL -ErrorAction SilentlyContinue
     }
-    Write-Host "Demo services stopped."
+    if (-not $leaveRunning) {
+        Write-Host "Demo services stopped."
+    }
 }

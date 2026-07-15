@@ -15,6 +15,7 @@
 - AI 执行流程：先读取本 SOP；说明将启动本地临时后端、前端 dev server 和浏览器；用户确认后运行一键脚本；输出实际 URL、账号、演示路径和降级边界。
 - AI 输出模板：演示入口、登录账号、推荐操作、关闭方式、当前边界。
 - 需用户确认的动作：启动本地进程、打开浏览器、使用 `-StopExisting` 停止占用默认端口的旧进程。
+- AI 启动方式：AI / 非交互环境必须使用 `-Detached`，不能使用默认 `Read-Host` 交互模式，否则脚本会读不到 Enter 并立即清理服务。
 - 禁止事项：不得安装依赖、不得接真实外部服务、不得把内存 Demo 说成生产可用、不得把临时日志提交进仓库。
 
 ## 3. 启动前提
@@ -42,13 +43,19 @@ powershell -ExecutionPolicy Bypass -File scripts/run-sprint16-demo.ps1 -NoBrowse
 # 默认端口被旧进程占用时，先停止旧进程再启动
 powershell -ExecutionPolicy Bypass -File scripts/run-sprint16-demo.ps1 -StopExisting
 
+# AI / 非交互环境后台启动；不会等待 Enter，也不会自动清理服务
+powershell -ExecutionPolicy Bypass -File scripts/run-sprint16-demo.ps1 -StopExisting -Detached
+
+# 停止后台启动的服务
+powershell -ExecutionPolicy Bypass -File scripts/run-sprint16-demo.ps1 -Stop
+
 # 指定备用端口
 powershell -ExecutionPolicy Bypass -File scripts/run-sprint16-demo.ps1 -BackendPort 28000 -FrontendPort 5174
 ```
 
 - 端口策略：脚本预检端口，前端使用 `--strictPort`，最终入口以脚本输出为准。
 - 后端代理：脚本通过 `DEMO_BACKEND_PROXY_URL=http://127.0.0.1:<BackendPort>` 注入 Vite dev server 代理；浏览器仍同源请求 `/api`，避免 CORS 问题。
-- 关闭方式：在脚本窗口按 Enter，脚本会停止本次启动的前后端进程。
+- 关闭方式：交互模式下在脚本窗口按 Enter；后台模式下运行 `powershell -ExecutionPolicy Bypass -File scripts/run-sprint16-demo.ps1 -Stop`。
 
 ## 5. 访问入口
 
@@ -65,6 +72,7 @@ powershell -ExecutionPolicy Bypass -File scripts/run-sprint16-demo.ps1 -BackendP
 - 前后端链路：前端同源请求 `/api`，Vite dev server 通过 `DEMO_BACKEND_PROXY_URL` 代理到本次启动的内存后端；登录 `alice` 后可执行批量导入、搜索和问答。
 - 期望结果：页面身份匹配；登录成功；批量导入 `.md` / `.txt` 后文档列表出现路径标题，搜索和问答可命中。
 - 常见失败：端口占用、依赖未安装、浏览器未自动打开、端口被其他项目页面占用。
+- AI 误停服务：如果 AI 用默认交互模式运行脚本，`Read-Host` 在非交互环境可能立即返回，导致服务刚启动就被 `finally` 清理；AI 必须改用 `-Detached`。
 
 ## 7. 推荐演示路径
 
