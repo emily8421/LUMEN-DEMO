@@ -30,12 +30,10 @@ import {
 import { MarkdownBlock } from './components/MarkdownBlock';
 import { StatusBar } from './components/StatusBar';
 import { WorkspaceViewNav, type ActiveView } from './app/WorkspaceViewNav';
-
-const permissionLabels: Record<DocumentPermission, string> = {
-  private: '私有',
-  team: '团队共享',
-  external_readonly: '外部只读',
-};
+import { TopBar } from './app/TopBar';
+import { ContextPane } from './app/ContextPane';
+import { permissionLabels } from './app/constants';
+import type { Session, ImportDraft } from './app/types';
 
 const emptyDraft = {
   title: '',
@@ -58,14 +56,6 @@ const emptyImportDraft = {
 type Draft = typeof emptyDraft;
 
 type TermDraft = typeof emptyTermDraft;
-
-type ImportDraft = typeof emptyImportDraft;
-
-type Session = {
-  token: string;
-  userId: number;
-  currentSpaceId: number;
-};
 
 function markdownExcerpt(content: string, maxLength = 140) {
   const trimmedContent = content.trim();
@@ -426,36 +416,7 @@ function App() {
 
   return (
     <main className="app-shell">
-      <header className="topbar app-topbar">
-        <div className="brand-block">
-          <span className="brand-mark">L</span>
-          <div>
-            <p className="eyebrow">LUMEN Demo</p>
-            <h1>LUMEN 团队知识库工作台</h1>
-          </div>
-        </div>
-        {session ? (
-          <div className="top-context">
-            <span>当前空间</span>
-            <select
-              value={session.currentSpaceId}
-              onChange={(event) => void handleSpaceChange(Number(event.target.value))}
-              disabled={isBusy}
-              aria-label="当前空间"
-            >
-              {spaces.map((space) => (
-                <option key={space.id} value={space.id}>{space.name}</option>
-              ))}
-            </select>
-          </div>
-        ) : null}
-        {session ? (
-          <div className="session-card">
-            <span>用户 #{session.userId}</span>
-            <strong>{currentSpace?.name ?? `空间 ${session.currentSpaceId}`}</strong>
-          </div>
-        ) : null}
-      </header>
+      <TopBar session={session} spaces={spaces} isBusy={isBusy} currentSpace={currentSpace} onSpaceChange={handleSpaceChange} />
 
       {!session ? (
         <section className="login-panel card">
@@ -473,168 +434,33 @@ function App() {
         <div className="workspace-layout workspace-shell">
           <WorkspaceViewNav activeView={activeView} disabled={isBusy} onChange={setActiveView} />
 
-          <aside className={`sidebar context-pane context-${activeView}`.trim()}>
-            {activeView === 'documents' ? (
-              <>
-                <section className="context-header section-title">
-                  <div>
-                    <h2>文档</h2>
-                    <p className="empty-state">当前空间 {documents.length} 篇</p>
-                  </div>
-                  <button type="button" onClick={handleCreateDocument} disabled={isBusy}>新建</button>
-                </section>
-                {documents.length === 0 ? (
-                  <p className="empty-state context-empty">当前空间暂无可见文档。</p>
-                ) : (
-                  <ul className="document-list context-list">
-                    {documents.map((document) => (
-                      <li key={document.id}>
-                        <button
-                          type="button"
-                          className={document.id === selectedId && !isCreating ? 'active' : ''}
-                          onClick={() => handleSelectDocument(document.id)}
-                        >
-                          <span>{document.title}</span>
-                          <small>{permissionLabels[document.permission]} · v{document.current_version}</small>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                <section className="import-panel context-footer">
-                  <div className="subsection-heading">
-                    <strong>导入文本</strong>
-                    <span>仅 .txt / .md；真实 PDF / OCR 后续阶段</span>
-                  </div>
-                  <form className="compact-form" onSubmit={handleImport}>
-                    <label>
-                      文件
-                      <input
-                        key={importInputKey}
-                        type="file"
-                        accept=".md,.txt,text/markdown,text/plain"
-                        onChange={(event) => setImportFile(event.target.files?.[0] ?? null)}
-                      />
-                    </label>
-                    <label>
-                      标题（可选）
-                      <input
-                        value={importDraft.title}
-                        onChange={(event) => setImportDraft({ ...importDraft, title: event.target.value })}
-                        placeholder="留空则使用文件名"
-                      />
-                    </label>
-                    <label>
-                      权限
-                      <select
-                        value={importDraft.permission}
-                        onChange={(event) => setImportDraft({ ...importDraft, permission: event.target.value as DocumentPermission })}
-                      >
-                        {Object.entries(permissionLabels).map(([value, label]) => (
-                          <option key={value} value={value}>{label}</option>
-                        ))}
-                      </select>
-                    </label>
-                    <button type="submit" disabled={isBusy || !importFile}>导入</button>
-                  </form>
-                  {lastImportSummary ? <p className="import-summary">{lastImportSummary}</p> : null}
-                </section>
-              </>
-            ) : null}
-
-            {activeView === 'search' ? (
-              <>
-                <section className="context-header">
-                  <div className="section-title stacked">
-                    <h2>搜索上下文</h2>
-                    <p className="empty-state">筛选与最近任务，不挤占结果区。</p>
-                  </div>
-                </section>
-                <div className="context-list info-list">
-                  <article className="info-row active">
-                    <strong>全部可见文档</strong>
-                    <span>权限过滤以后端返回为准。</span>
-                  </article>
-                  <article className="info-row">
-                    <strong>Hybrid Search</strong>
-                    <span>关键词 + ts_vector + pgvector 语义召回。</span>
-                  </article>
-                  <article className="info-row">
-                    <strong>最近查询</strong>
-                    <span>触发延迟 / RAG 来源 / 权限过滤</span>
-                  </article>
-                </div>
-              </>
-            ) : null}
-
-            {activeView === 'query' ? (
-              <>
-                <section className="context-header">
-                  <div className="section-title stacked">
-                    <h2>问答上下文</h2>
-                    <p className="empty-state">当前空间：{currentSpace?.name ?? '未知空间'}</p>
-                  </div>
-                </section>
-                <div className="context-list info-list">
-                  <article className="info-row active">
-                    <strong>回答红线</strong>
-                    <span>库外问题必须返回“未找到”，不编造。</span>
-                  </article>
-                  <article className="info-row">
-                    <strong>来源要求</strong>
-                    <span>答案必须附文档或术语来源。</span>
-                  </article>
-                  <article className="info-row">
-                    <strong>术语注入</strong>
-                    <span>空间术语优先于全局同名术语。</span>
-                  </article>
-                </div>
-              </>
-            ) : null}
-
-            {activeView === 'terms' ? (
-              <>
-                <section className="context-header section-title">
-                  <div>
-                    <h2>术语</h2>
-                    <p className="empty-state">当前空间 {terms.length} 条</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedTermId(null);
-                      setTermDraft(emptyTermDraft);
-                    }}
-                    disabled={isBusy}
-                  >
-                    新建
-                  </button>
-                </section>
-                {terms.length === 0 ? (
-                  <p className="empty-state context-empty">当前空间暂无术语。</p>
-                ) : (
-                  <ul className="term-list context-list">
-                    {terms.map((term) => (
-                      <li key={term.id}>
-                        <button
-                          type="button"
-                          className={term.id === selectedTermId ? 'active' : ''}
-                          onClick={() => {
-                            setSelectedTermId(term.id);
-                            setTermDraft(termToDraft(term));
-                          }}
-                        >
-                          <strong>{term.term}</strong>
-                          <small>{term.space_id ? '当前空间' : '全局'} · {term.status === 'confirmed' ? '已确认' : '待确认'}</small>
-                          <span>{term.definition}</span>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </>
-            ) : null}
-          </aside>
+          <ContextPane
+            activeView={activeView}
+            currentSpace={currentSpace}
+            documents={documents}
+            selectedId={selectedId}
+            isCreating={isCreating}
+            isBusy={isBusy}
+            onCreateDocument={handleCreateDocument}
+            onSelectDocument={handleSelectDocument}
+            importDraft={importDraft}
+            onImportDraftChange={setImportDraft}
+            importFile={importFile}
+            onImportFileChange={setImportFile}
+            importInputKey={importInputKey}
+            lastImportSummary={lastImportSummary}
+            onImport={handleImport}
+            terms={terms}
+            selectedTermId={selectedTermId}
+            onSelectTerm={(term) => {
+              setSelectedTermId(term.id);
+              setTermDraft(termToDraft(term));
+            }}
+            onNewTerm={() => {
+              setSelectedTermId(null);
+              setTermDraft(emptyTermDraft);
+            }}
+          />
 
           <section className="workspace-main workspace">
             {activeView === 'documents' ? (
