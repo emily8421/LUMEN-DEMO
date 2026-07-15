@@ -1,4 +1,4 @@
-import type { DocumentPermission } from '../api';
+import type { DocumentPermission, TermStatus } from '../api';
 
 export type Session = {
   token: string;
@@ -15,4 +15,11 @@ export type Draft = {
   title: string;
   content_md: string;
   permission: DocumentPermission;
+};
+
+export type TermDraft = {
+  term: string;
+  definition: string;
+  aliases: string;
+  status: TermStatus;
 };
