@@ -41,9 +41,9 @@
 | API-013 | GET/PUT/DELETE | /api/terms/{id} | 术语详情 / 更新 / 删除 | [P1] | P1-已实现 | 已实现（PG 术语存储） | REQ-036 |
 | API-029 | POST | /api/import/batch | 批量导入（多文件 + 文件夹，标题前缀，同名跳过） | [P1] | Phase1.5A-契约草案 | — | REQ-037 |
 | API-030 | GET | /api/documents/{id}/export · /api/export/space | 单文档 .md 下载 / 空间 ZIP 导出 | [P1] | Phase1.5A-契约草案 | — | REQ-038 |
-| API-014 | GET/POST | /api/tags | 标签列表 / 创建标签 | [P2] | Phase2A-已设计 | — | REQ-012 |
-| API-031 | GET/POST/DELETE | /api/documents/{id}/tags | 文档-标签关联（列 / 打 / 移除） | [P2] | Phase2A-已设计 | — | REQ-012 |
-| API-032 | GET | /api/tags/{id}/documents | 标签下可见文档列表 | [P2] | Phase2A-已设计 | — | REQ-012 |
+| API-014 | GET/POST | /api/tags | 标签列表 / 创建标签 | [P2] | Phase2A-已实现 | — | REQ-012 |
+| API-031 | GET/POST/DELETE | /api/documents/{id}/tags | 文档-标签关联（列 / 打 / 移除） | [P2] | Phase2A-已实现 | — | REQ-012 |
+| API-032 | GET | /api/tags/{id}/documents | 标签下可见文档列表 | [P2] | Phase2A-已实现 | — | REQ-012 |
 | API-015 | POST | /api/spaces/push | 跨空间推送 | [P2] | 骨架 | — | REQ-015 |
 | API-016 | GET | /api/briefs/{token} | 对外只读简报 | [愿景] | 骨架 | — | REQ-022 |
 | API-017 | POST | /api/quick-entry | 快速录入索引条目 | [P2] | 契约草案 | — | REQ-025 |
@@ -56,7 +56,7 @@
 | API-024 | POST | /api/hypotheses | 假设检验 / 证据地图 | [愿景] | 骨架 | — | REQ-033 |
 | API-025 | GET/POST | /api/signal-tracks | 信号追踪 | [愿景] | 骨架 | — | REQ-034 |
 | API-026 | POST | /api/kits | 分析包 A Kit | [愿景] | 骨架 | — | REQ-035 |
-| API-027 | GET/PUT/DELETE | /api/tags/{id} | 标签详情 / 更新 / 归档 | [P2] | 契约草案 | — | REQ-012 |
+| API-027 | GET/PUT/DELETE | /api/tags/{id} | 标签详情 / 更新 / 归档 | [P2] | Phase2A-已实现 | — | REQ-012 |
 | API-028 | POST | /api/documents/{id}/polish | AI 润色 / 写作引用 | [P2] | 契约草案 | — | REQ-014 |
 
 ## 3. 请求 / 响应契约（[P1]）
@@ -94,8 +94,8 @@
 | API-029 | Phase1.5A-契约草案 | §3.9 | 4001/4003/4090/4220 | 空间成员；逐文件写入当前空间；同名默认跳过 | TC-P1-015 | 待 Sprint-16 |
 | API-030 | Phase1.5A-契约草案 | §3.9 | 4001/4003/4004/4220/5000 | 单文档可读；空间 ZIP 只包含当前用户可见文档 | TC-P1-016 | 待 Sprint-17 |
 | API-019 | Phase1.5B-契约草案·待 RG-006 | §3.9 | 4001/4003/4004/4220/5030 | 导出前校验源文档可见 / 可导出 | TC-P1-017 | 待 RG-006 |
-| API-014 | Phase2A-契约草案 | §3.9 | 4001/4003/4090/4220 | 空间成员；标签仅当前空间可见 | TC-P2-TAG-001 | P1.5A/B 后确认 |
-| API-027 | Phase2A-契约草案 | §3.9 | 4001/4003/4004/4090/4220 | 空间成员；归档不删除历史关联 | TC-P2-TAG-001 | P1.5A/B 后确认 |
+| API-014 | Phase2A-已实现 | §3.9 | 4001/4003/4090/4220 | 空间成员；标签仅当前空间可见 | TC-P2-TAG-001 | 已实现（Task A 1e4cf48） |
+| API-027 | Phase2A-已实现 | §3.9 | 4001/4003/4004/4090/4220 | 空间成员；归档不删除历史关联 | TC-P2-TAG-001 | 已实现（Task A 1e4cf48） |
 | API-017 | Phase2A-契约草案 | §3.9 | 4001/4003/4220 | 默认 owner 私有；转换后继承文档权限 | TC-P2-QUICK-001 | P1.5A/B 后确认 |
 | API-018 | Phase2A-已实现 | §3.9 | 4001/4003/4004/4220 | source / target 文档均需权限过滤；无权限反链不泄露 | TC-P2-LINK-001 | 已实现（Task A fc2b869 + Task B 6228f3f） |
 | API-028 | Phase2B-契约草案 | §3.9 | 4001/4003/4004/4220/5030 | 文档可写权限；引用 chunk 必须当前用户可见 | TC-P2-AI-001 | Phase2B 确认后 |
@@ -271,8 +271,8 @@ sequenceDiagram
 ### [Phase1.5] / [P2] / [愿景] 接口（骨架·待该阶段细化）
 - `/api/import/batch`、`/api/documents/{id}/export`、`/api/export/space`：Phase1.5A 契约草案见 §3.9，尚未实现；默认不引新依赖、不建真实目录表。
 - `/api/export-pdf`：Phase1.5B PDF 导出契约草案见 §3.9，受 RG-006 约束，尚未实现。
-- `/api/tags`、`/api/tags/{id}`：Phase2A 已设计（最小版，待 Task A 实现）。扁平标签 CRUD（API-014/027）：空间隔离、`UNIQUE(space_id, normalized_name)` 重名 4090、`DELETE` 归档不硬删；`document_count` 只统计当前用户可见文档。
-- `/api/documents/{id}/tags`（API-031）+ `/api/tags/{id}/documents`（API-032）：Phase2A 已设计。文档-标签关联（列 / 打 `link_source=manual` / 移除，需文档可写 + 标签同空间）；标签下可见文档列表（按文档可见性过滤）。
+- `/api/tags`、`/api/tags/{id}`：Phase2A 已实现（Task A `1e4cf48`）。扁平标签 CRUD（API-014/027）：空间隔离、`UNIQUE(space_id, normalized_name)` 重名 4090、`DELETE` 归档不硬删；`document_count` 只统计当前用户可见文档。
+- `/api/documents/{id}/tags`（API-031）+ `/api/tags/{id}/documents`（API-032）：Phase2A 已实现（Task A `1e4cf48`）。文档-标签关联（列 / 打 `link_source=manual` / 移除，需文档可写 + 标签同空间）；标签下可见文档列表（按文档可见性过滤）。
 - `/api/quick-entry`：Phase2A 契约草案见 §3.9，尚未实现。
 - `/api/doc-links`：Phase2A 已实现（Task A `fc2b869` + Task B `6228f3f`）。GET 返回 `data` 直接数组（出链 target 不可见→`status=no_access` 且不泄露标题；反链来源不可见过滤）；POST 仅 `link_type=manual`（wikilink 由文档保存时正文解析，拒手动 POST）。
 - `/api/documents/{id}/polish`：Phase2B 团队 MVP 候选，需数据外发风险确认后再实现。
@@ -326,8 +326,8 @@ sequenceDiagram
 | API-029 | imports.import_batch | lumen_imports, lumen_documents, lumen_chunks | 空间成员；逐文件导入当前空间 | 4001/4003/4090/4220 | TC-P1-015 | Phase1.5A-契约草案（待 Sprint-16） |
 | API-030 | export.export_document_md / export.export_space_zip | lumen_documents, lumen_document_versions | 文档可读；ZIP 只含当前用户可见文档 | 4001/4003/4004/4220/5000 | TC-P1-016 | Phase1.5A-契约草案（待 Sprint-17） |
 | API-019 | export.create_pdf_export | lumen_doc_exports, lumen_documents, lumen_document_versions | 文档可读 / 可导出 | 4001/4003/4004/4220/5030 | TC-P1-017 | Phase1.5B-契约草案（待 RG-006） |
-| API-014 / API-027 | tag.list_tags / create_tag / update_tag / archive_tag | lumen_tags, lumen_tag_links | space 成员 + 文档权限统计 | 4001/4003/4004/4090/4220 | TC-P2-TAG-001 | Phase2A-已设计 |
-| API-031 / API-032 | tag.list_document_tags / add_document_tag / remove_document_tag / list_documents_by_tag | lumen_tag_links, lumen_tags, lumen_documents | 文档可写 + 标签同空间；document_count / 筛选按文档可见性 | 4001/4003/4004/4090/4220 | TC-P2-TAG-001 | Phase2A-已设计 |
+| API-014 / API-027 | tag.list_tags / create_tag / update_tag / archive_tag | lumen_tags, lumen_tag_links | space 成员 + 文档权限统计 | 4001/4003/4004/4090/4220 | TC-P2-TAG-001 | Phase2A-已实现 |
+| API-031 / API-032 | tag.list_document_tags / add_document_tag / remove_document_tag / list_documents_by_tag | lumen_tag_links, lumen_tags, lumen_documents | 文档可写 + 标签同空间；document_count / 筛选按文档可见性 | 4001/4003/4004/4090/4220 | TC-P2-TAG-001 | Phase2A-已实现 |
 | API-017 | quick_entry.capture_quick_entry | lumen_quick_entries, lumen_documents, lumen_tag_links | owner 私有 + 转文档后继承权限 | 4001/4003/4220 | TC-P2-QUICK-001 | Phase2A-契约草案 |
 | API-018 | doc_links.list_links / upsert_link | lumen_doc_links, lumen_documents | source / target 双向权限过滤 | 4001/4003/4004/4220 | TC-P2-LINK-001 | Phase2A-已实现 |
 | API-028 | writing.polish_document | lumen_ai_drafts, lumen_chunks, lumen_documents | 文档可写 + 来源 chunk 可见 | 4001/4003/4004/4220/5030 | TC-P2-AI-001 | Phase2B-契约草案 |
