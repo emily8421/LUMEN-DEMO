@@ -37,11 +37,13 @@ import { StatusBar } from './components/StatusBar';
 import { WorkspaceViewNav, type ActiveView } from './app/WorkspaceViewNav';
 import { TopBar } from './app/TopBar';
 import { ContextPane } from './app/ContextPane';
+import { useTags } from './app/useTags';
 import type { Session, ImportDraft, Draft, ImportFileSelection, TermDraft } from './app/types';
 import { DocumentsFeature } from './features/DocumentsFeature';
 import { SearchFeature } from './features/SearchFeature';
 import { QueryFeature } from './features/QueryFeature';
 import { TermsFeature } from './features/TermsFeature';
+import { TagsFeature } from './features/TagsFeature';
 
 const emptyDraft = {
   title: '',
@@ -143,6 +145,14 @@ function App() {
     () => spaces.find((space) => space.id === session?.currentSpaceId) ?? null,
     [spaces, session],
   );
+
+  const tags = useTags({
+    token: session?.token,
+    currentSpaceId: session?.currentSpaceId,
+    selectedDocumentId: selectedId,
+    runAction,
+    setNotice,
+  });
 
   useEffect(() => {
     if (!session) {
@@ -593,6 +603,12 @@ function App() {
                 onSave={handleSave}
                 onRestore={handleRestore}
                 onDownloadMarkdown={handleDownloadMarkdown}
+                documentTags={tags.documentTags}
+                availableTags={tags.tags}
+                addTagSelection={tags.addTagSelection}
+                onAddTagSelectionChange={tags.setAddTagSelection}
+                onAddTag={tags.handleAddDocumentTag}
+                onRemoveTag={tags.handleRemoveDocumentTag}
               />
             ) : null}
 
@@ -630,6 +646,20 @@ function App() {
                   setSelectedTermId(null);
                   setTermDraft(emptyTermDraft);
                 }}
+              />
+            ) : null}
+
+            {activeView === 'tags' ? (
+              <TagsFeature
+                isBusy={isBusy}
+                tags={tags.tags}
+                selectedTagId={tags.selectedTagId}
+                tagDocuments={tags.tagDocuments}
+                newTagName={tags.newTagName}
+                onNewTagNameChange={tags.setNewTagName}
+                onSelectTag={tags.handleSelectTag}
+                onCreateTag={tags.handleCreateTag}
+                onOpenDocument={handleOpenDocument}
               />
             ) : null}
           </section>

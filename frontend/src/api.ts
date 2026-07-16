@@ -12,3 +12,4 @@ export * from './api/terms';
 export * from './api/imports';
 export * from './api/exports';
 export * from './api/docLinks';
+export * from './api/tags';

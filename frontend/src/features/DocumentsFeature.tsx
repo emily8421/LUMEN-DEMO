@@ -1,4 +1,11 @@
-import type { DocLinkView, DocumentPermission, DocumentVersion, KnowledgeDocument } from '../api';
+import type {
+  DocLinkView,
+  DocumentPermission,
+  DocumentTagView,
+  DocumentVersion,
+  KnowledgeDocument,
+  TagView,
+} from '../api';
 import type { Draft } from '../app/types';
 import { permissionLabels } from '../app/constants';
 import { MarkdownBlock } from '../components/MarkdownBlock';
@@ -22,6 +29,15 @@ type DocumentsFeatureProps = {
   onSave: (event: React.FormEvent<HTMLFormElement>) => void;
   onRestore: (versionNo: number) => void;
   onDownloadMarkdown: () => void;
+  /** 当前文档已打标签。 */
+  documentTags: DocumentTagView[];
+  /** 当前空间可见标签（打标签下拉用）。 */
+  availableTags: TagView[];
+  /** 打标签下拉当前选中。 */
+  addTagSelection: number | null;
+  onAddTagSelectionChange: (tagId: number | null) => void;
+  onAddTag: (tagId: number | null) => void;
+  onRemoveTag: (tagId: number) => void;
 };
 
 function markdownExcerpt(content: string, maxLength = 140) {
@@ -48,6 +64,12 @@ export function DocumentsFeature({
   onSave,
   onRestore,
   onDownloadMarkdown,
+  documentTags,
+  availableTags,
+  addTagSelection,
+  onAddTagSelectionChange,
+  onAddTag,
+  onRemoveTag,
 }: DocumentsFeatureProps) {
   return (
     <section className="documents-workspace">
@@ -177,6 +199,65 @@ export function DocumentsFeature({
                     );
                   })}
                 </ol>
+              )}
+            </section>
+
+            <section className="tags-block" aria-label="标签">
+              <div className="subsection-heading">
+                <strong>标签</strong>
+                <span>归类与组织文档</span>
+              </div>
+              {!selectedDocument || isCreating ? (
+                <p className="empty-state inspector-empty">保存文档后可管理标签。</p>
+              ) : (
+                <>
+                  {documentTags.length === 0 ? (
+                    <p className="empty-state inspector-empty">暂未打标签。</p>
+                  ) : (
+                    <ul className="tag-chips">
+                      {documentTags.map((tag) => (
+                        <li key={tag.tag_id} className="tag-chip">
+                          <span>{tag.name}</span>
+                          <button
+                            type="button"
+                            className="chip-remove"
+                            onClick={() => onRemoveTag(tag.tag_id)}
+                            disabled={isBusy}
+                            aria-label={`移除标签 ${tag.name}`}
+                          >
+                            ×
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <div className="tag-add-row">
+                    <select
+                      value={addTagSelection ?? ''}
+                      onChange={(event) =>
+                        onAddTagSelectionChange(event.target.value ? Number(event.target.value) : null)
+                      }
+                      disabled={isBusy}
+                    >
+                      <option value="">选择标签…</option>
+                      {availableTags
+                        .filter((tag) => !documentTags.some((current) => current.tag_id === tag.id))
+                        .map((tag) => (
+                          <option key={tag.id} value={tag.id}>
+                            {tag.name}
+                          </option>
+                        ))}
+                    </select>
+                    <button
+                      type="button"
+                      className="secondary"
+                      onClick={() => onAddTag(addTagSelection)}
+                      disabled={isBusy || addTagSelection == null}
+                    >
+                      打标签
+                    </button>
+                  </div>
+                </>
               )}
             </section>
           </div>

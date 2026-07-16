@@ -374,3 +374,136 @@
 .status-bar strong {
   color: var(--red);
 }
+
+/* REQ-012 标签视图（TagsFeature） */
+.tag-workspace-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  gap: var(--space-3);
+  min-height: 0;
+  overflow: hidden;
+  padding: var(--space-3);
+}
+
+.tag-list-pane,
+.tag-documents-pane {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  background: var(--panel);
+  padding: var(--space-2);
+}
+
+.tag-list,
+.tag-document-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+}
+
+.tag-list .tag-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  width: 100%;
+  text-align: left;
+  border: none;
+  border-left: 2px solid transparent;
+  background: transparent;
+  color: var(--text);
+  padding: 7px 8px;
+  cursor: pointer;
+  font: inherit;
+}
+
+.tag-list .tag-item:hover {
+  background: #f8fafc;
+}
+
+.tag-list .tag-item.active {
+  border-left-color: var(--blue);
+  background: var(--blue-soft);
+}
+
+.tag-list .tag-item small {
+  color: #94a3b8;
+}
+
+.tag-document-list .tag-document-link {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  text-align: left;
+  border: none;
+  border-bottom: 1px solid var(--line-soft);
+  background: transparent;
+  color: var(--text);
+  padding: 7px 2px;
+  cursor: pointer;
+  font: inherit;
+}
+
+.tag-document-list .tag-document-link:first-child {
+  padding-top: 0;
+}
+
+.tag-document-list .tag-document-link:hover {
+  background: #f8fafc;
+}
+
+.tag-document-list .tag-document-link small {
+  color: #94a3b8;
+}
+
+/* REQ-012 文档详情标签面板（versions 面板内，参照 backlinks-block） */
+.tag-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+  margin: 0 0 var(--space-2);
+  padding: 0;
+}
+
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-control);
+  background: #f8fafc;
+  color: var(--text);
+  font-size: 12px;
+  padding: 3px 4px 3px 8px;
+}
+
+.chip-remove {
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  padding: 0 4px;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.chip-remove:hover:not(:disabled) {
+  color: var(--red);
+}
+
+.tag-add-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.tag-add-row select {
+  flex: 1;
+  min-width: 0;
+}

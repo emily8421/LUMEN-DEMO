@@ -1,10 +1,11 @@
-export type ActiveView = 'documents' | 'search' | 'query' | 'terms';
+export type ActiveView = 'documents' | 'search' | 'query' | 'terms' | 'tags';
 
 const workspaceViews: Array<{ id: ActiveView; label: string; description: string }> = [
   { id: 'documents', label: '文档', description: '编辑、预览、版本' },
   { id: 'search', label: '搜索', description: '全文 / 语义检索' },
   { id: 'query', label: '问答', description: 'RAG 答案与来源' },
   { id: 'terms', label: '术语', description: '空间术语维护' },
+  { id: 'tags', label: '标签', description: '标签视图与筛选' },
 ];
 
 type WorkspaceViewNavProps = {
