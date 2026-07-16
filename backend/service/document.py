@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 from backend.model.entities import Document, DocumentPermission, DocumentVersion, SpaceMember
 from backend.service.chunking import clean_text, split_text_into_chunks
-from backend.service.permission import can_view_document, filter_visible_documents, is_space_member
+from backend.service.permission import can_write_document, can_view_document, filter_visible_documents, is_space_member
 
 
 class DocumentAccessError(Exception):
@@ -83,20 +83,22 @@ def update_document(
     document_id: int,
     request: DocumentUpdate,
 ) -> Document:
-    get_visible_document(repository, user_id, current_space_id, document_id)
-    document = repository.update_document(
+    document = get_visible_document(repository, user_id, current_space_id, document_id)
+    _ensure_can_write(repository, user_id, current_space_id, document)
+    updated = repository.update_document(
         document_id=document_id,
         title=request.title,
         content_md=request.content_md,
         permission=request.permission,
         editor_id=user_id,
     )
-    sync_document_chunks(repository, document)
-    return document
+    sync_document_chunks(repository, updated)
+    return updated
 
 
 def delete_document(repository, user_id: int, current_space_id: int, document_id: int) -> None:
-    get_visible_document(repository, user_id, current_space_id, document_id)
+    document = get_visible_document(repository, user_id, current_space_id, document_id)
+    _ensure_can_write(repository, user_id, current_space_id, document)
     repository.delete_document(document_id)
 
 
@@ -112,18 +114,24 @@ def restore_version(
     document_id: int,
     version_no: int,
 ) -> Document:
-    get_visible_document(repository, user_id, current_space_id, document_id)
+    document = get_visible_document(repository, user_id, current_space_id, document_id)
+    _ensure_can_write(repository, user_id, current_space_id, document)
     if repository.get_document_version(document_id, version_no) is None:
         raise VersionNotFoundError("version not found")
-    document = repository.restore_document_version(document_id, version_no, editor_id=user_id)
-    sync_document_chunks(repository, document)
-    return document
+    restored = repository.restore_document_version(document_id, version_no, editor_id=user_id)
+    sync_document_chunks(repository, restored)
+    return restored
 
 
 def sync_document_chunks(repository, document: Document) -> None:
     cleaned_text = clean_text(document.content_md)
     chunk_texts = split_text_into_chunks(cleaned_text) if cleaned_text else []
     repository.replace_document_chunks(document.id, chunk_texts)
+
+
+def _ensure_can_write(repository, user_id: int, current_space_id: int, document: Document) -> None:
+    if not can_write_document(user_id, current_space_id, document, repository.list_memberships()):
+        raise DocumentAccessError("no write permission on external document")
 
 
 def ensure_documents_indexed(repository) -> int:

@@ -49,6 +49,7 @@ flowchart LR
 - **过滤下沉**：权限条件进 SQL / 检索 where 子句，不在应用层事后裁剪
 - **私有文档是否入索引**：P1 决策——仍入 `lumen_chunks` 索引，但检索时按 `owner_id` 过滤（实现简单）；P2 可评估"私有不入索引"以更强隔离
 - **空间切换**：切换即换 session 当前 `space_id`，后续所有操作以此为上下文（REQ-002）
+- **写权限（Sprint-13 口径 B）**：external 文档仅 owner 可写（update/delete/restore），其他成员只读；team/private 维持"可见即可写"。由 `can_write_document`（`backend/service/permission.py`）在 service 层执行——写口径此前未定义（§2 仅描述读），本 Sprint 补齐
 
 ## 4. 阶段增量
 
@@ -75,4 +76,5 @@ flowchart LR
 | 跨空间隔离 | REQ-001 | Sprint-1（+ Sprint-8 PG 存储） | TC-P1-001 | `tests/backend/test_permission.py`、`test_space.py`、PG 集成 tests | 条件通过（PG 已接入；DemoRepository 仅 fake） |
 | 空间切换 | REQ-002 | Sprint-1 | TC-P1-002 | `tests/backend/test_space.py`、`test_api_routes.py` | 条件通过 |
 | 私有文档对他人不可见 | REQ-003 | Sprint-1 | TC-P1-003 | `tests/backend/test_permission.py` | 条件通过 |
+| external 文档仅 owner 可写（Sprint-13 口径 B） | REQ-003 | Sprint-13 | 09 §5 | `tests/backend/test_permission.py`、`tests/backend/test_external_write.py` | 通过 |
 | Flow-D-002 权限过滤决策流 | REQ-001/002/003 | Sprint-1 | TC-P1-001/002/003 | 见上 | 降级实现（逻辑等价） |

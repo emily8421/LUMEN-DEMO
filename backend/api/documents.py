@@ -7,6 +7,7 @@ from backend.model.entities import Document, DocumentPermission, DocumentVersion
 from backend.service.auth import TokenError, extract_bearer_token, parse_demo_token
 from backend.repository import repository
 from backend.service.document import (
+    DocumentAccessError,
     DocumentCreate,
     DocumentNotFoundError,
     DocumentUpdate,
@@ -97,6 +98,8 @@ if APIRouter is not None:
             )
         except DocumentNotFoundError as exc:
             raise HTTPException(status_code=404, detail={"code": 4004, "msg": "document not found"}) from exc
+        except DocumentAccessError as exc:
+            raise HTTPException(status_code=403, detail={"code": 4003, "msg": "no write permission on external document"}) from exc
         return {"code": 0, "msg": "ok", "data": _document_detail(document)}
 
     @router.delete("/{document_id}")
@@ -109,6 +112,8 @@ if APIRouter is not None:
             delete_document(repository, payload.user_id, payload.current_space_id, document_id)
         except DocumentNotFoundError as exc:
             raise HTTPException(status_code=404, detail={"code": 4004, "msg": "document not found"}) from exc
+        except DocumentAccessError as exc:
+            raise HTTPException(status_code=403, detail={"code": 4003, "msg": "no write permission on external document"}) from exc
         return {"code": 0, "msg": "ok", "data": {"deleted": True}}
 
     @router.get("/{document_id}/versions")
@@ -136,6 +141,8 @@ if APIRouter is not None:
             raise HTTPException(status_code=404, detail={"code": 4004, "msg": "document not found"}) from exc
         except VersionNotFoundError as exc:
             raise HTTPException(status_code=404, detail={"code": 4004, "msg": "version not found"}) from exc
+        except DocumentAccessError as exc:
+            raise HTTPException(status_code=403, detail={"code": 4003, "msg": "no write permission on external document"}) from exc
         return {"code": 0, "msg": "ok", "data": _document_detail(document)}
 
     def _read_document_or_404(user_id: int, current_space_id: int, document_id: int) -> Document:

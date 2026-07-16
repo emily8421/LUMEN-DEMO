@@ -354,7 +354,7 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 
 ## Sprint-13（P1C·可用性收口 B · 候选）：外部只读权限真实化
 
-> **候选·待确认**：尚未批准编码。
+> **已完成（2026-07-16）**：口径 B——external 文档仅 owner 可写（update/delete/restore 拦截非 owner，403/4003），team/private 维持"可见即可写"；读/搜/问答不变。`permissions.md` 原仅定义读、未定义写，本 Sprint 按 B 补写口径并回写 `permissions.md §3/§7`。
 
 ### 目标
 修复权限缺口（审计 §三 坑 4）：EXTERNAL 权限当前与 TEAM 等价、无只读约束。补写操作（创建 / 改 / 删文档、改术语等）的只读拦截，使"外部只读"名副其实。属 REQ-003 权限收口，不新增 REQ。
@@ -520,6 +520,7 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 | Sprint-17（P1.5A）实现 | 2026-07-16 | 038 | 单文档 `.md` 下载 + 空间 ZIP 导出备份：`GET /api/documents/{id}/export`（`text/markdown`）+ `GET /api/export/space`（标准库 `zipfile`，按权限过滤，不可见文档不进 ZIP）；前端文档详情"下载 `.md`" + TopBar"导出空间 ZIP" + `api.ts` blob 下载 | 本批 | `git diff --check`；`python -m unittest tests.backend.test_export`（13 tests）；回归 `test_imports` + `test_import_api`（9 tests）；`npm.cmd run build`；FastAPI TestClient 端到端 HTTP smoke（路由注册 / 异常 handler / 二进制 Response / 权限 4004 / 非法 format 4220 / 无 token 4001） | 不改 DB schema、不引依赖、不做 PDF；全量 PG/embedding 测试受本机环境限制未完成；浏览器按钮下载落盘的人工 smoke 可用 `scripts/run-sprint16-demo.ps1` 补 | §5（TC-P1-016 通过） |
 | Sprint-12①（P1C）实现 | 2026-07-16 | 011 | 登录态持久化：`App.tsx` 将 `{token,userId,currentSpaceId}` 存 localStorage、启动恢复、切空间同步、token 失效（invalid token / 401）自动清除登出 | 本批 | `npm.cmd run build` 通过；刷新不掉线端到端 smoke 建议用 `scripts/run-sprint16-demo.ps1`（内存后端，不需 Docker）人工验证 | 不改 API / DB / 权限 / 依赖；seed 自索引（Sprint-12②）待做 | §5 |
 | Sprint-12②（P1C）实现 | 2026-07-16 | 011 | seed 自索引：`document.py` 加 `ensure_documents_indexed`（回填无 chunks 文档的分块 + embedding，幂等），`main.py` lifespan `init_db` 后调用 | 本批 | `python -m unittest tests.backend.test_seed_index`（4 tests）；回归 `test_document`（5 tests）；embedding 向量集成验证待本机 PG（沙箱受限，`_safe_embed` 降级时 chunks 仍写入、关键词搜索可用） | 不改 DB schema / 不改 seed SQL / 不引依赖；demo 内存模式 lifespan noop 不触发（PG 生产生效） | §5 |
+| Sprint-13（P1C）实现 | 2026-07-16 | 003 | 外部只读真实化（口径 B）：`permission.py` `can_write_document`（external 仅 owner 可写）+ `document.py` update/delete/restore 写校验（`DocumentAccessError`）+ `documents.py` 端点 403/4003 + `test_permission`/`test_external_write` | 本批 | `python -m unittest tests.backend.test_permission tests.backend.test_external_write`（3 个 can_write + 5 个 service 级拦截）；回归 44 tests 通过 | 不改 DB schema / 权限定义 / 可见性边界 / 依赖；team/private 写权限不变 | §5 |
 
 > Sprint-8 后：pgvector / Embedding / LLM 已接入（RG-001/002/004 Go），基础 Web / ORM 栈为 Go（RG-005）。Phase1 全量验收结论为 Conditional Go（Demo closure）；仍移出 P1：真实 PDF 解析、图片 OCR（REQ-010，RG-003 No-Go，后续阶段）。Sprint-9（P1A）与 Sprint-10（P1B）是已完成 Demo 之上的前端体验收口，不改变 Phase1 closure 结论。Phase2 启动前需人工确认范围、进入 / 退出标准，并另行更新阶段指针。Sprint-11 目前仅为 P2 UI / WSG 实现前门禁草案，不计入已完成 Sprint；TC-P2-WSG-001 与 TC-P2-UI-001~005 未执行、未通过。
 
