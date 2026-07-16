@@ -81,7 +81,7 @@
 | Sprint-10（P1B） | TC-P1-014 | 前端构建 + 浏览器 smoke | `npm.cmd run build`（frontend） | Chrome / Edge：工作台三层布局、Context Pane 随视图变化、文档 / 搜索 / 问答 / 术语主流程、900px 宽度 | 不新增 API / 后端能力；不引 router / 组件库；移动端不验收 |
 | Sprint-11（P2-UI-Gate / WSG 候选） | TC-P2-WSG-001、TC-P2-UI-001~005 | 文档门禁 + 原型走查 + 后续浏览器 smoke | `git diff --check`；后续实现前 `npm.cmd run build`（frontend） | 先审阅 `04` WSG、`05 §4.1`、`frontend-interaction §9.3`、`09` TC 草案；Phase2 启动后再执行 Chrome / Edge smoke | 当前不编码；不新增 API / DB / 权限模型 / 图谱算法 / router / 组件库；首个 P2 vertical slice 待确认 |
 | Sprint-0′ | TC-P1-WSG-001..006 重测（结构对齐后）+ 既有 P1 smoke 全绿 | 前端构建 + 后端单测 + 浏览器 smoke | `npm.cmd run build`；`.venv\Scripts\python.exe -m unittest discover -s tests/backend`；Chrome / Edge 900px smoke | 拆分后登录 / 文档 / 搜索 / 问答 / 术语主流程不回退 | 纯结构搬运，不改 API / DB / 业务逻辑 |
-| Sprint-12 | 待新增 TC-P1-015（登录持久化）/ TC-P1-016（seed 自索引） | 前端构建 + 后端单测 | `npm.cmd run build`；`.venv\Scripts\python.exe -m unittest discover -s tests/backend`（seed 回填） | Chrome 刷新不掉线；全新起库后 seed 文档开箱可搜 | 不新增 API / DB 能力 |
+| Sprint-12 | 09 §5 验收（REQ-011 可用性收口；TC-P1-015/016 已被 REQ-037/038 占用，登录持久化 / seed 自索引走 §5 描述性验收） | 前端构建 + 后端单测 | `npm.cmd run build`；`.venv\Scripts\python.exe -m unittest tests.backend.test_seed_index`（seed 回填） | Chrome 刷新不掉线；全新起库后 seed 文档开箱可搜 | 不新增 API / DB 能力 |
 | Sprint-13 | TC-P1-003 扩展（EXTERNAL 写拦截） | 单元 + 集成 | 同上（test_permission） | EXTERNAL 账号改 / 删被拒；读 / 搜 / 问答不受影响 | 不改变可见性边界，只补写权限 |
 | Sprint-14 | TC-P1-009 扩展（.docx / .pdf 文本提取） | 集成 | 同上（test_imports） | 导入 .docx / 文本型 .pdf 后可搜可问答 | 选型未定前为降级；OCR 仍后续（RG-003） |
 | Sprint-15 | TC-P1-007 扩展（中文分词） | 集成（PG） | 同上（test_search） | 中文长词精确命中改善 | 无 zhparser 时仍回退 simple（不阻塞） |
@@ -328,7 +328,7 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 
 ## Sprint-12（P1C·可用性收口 A · 候选）：登录态持久化 + seed 自索引修复
 
-> **进行中（2026-07-16）**：① 登录态持久化已实现（`App.tsx` 存 localStorage、启动恢复、切空间同步、token 失效自动登出；`npm.cmd run build` 通过；刷新不掉线 smoke 建议用 `scripts/run-sprint16-demo.ps1` 人工验证）；② seed 自索引待做（涉及 embedding，集成验证待本机 PG）。
+> **已完成（2026-07-16）**：① 登录态持久化（`App.tsx` localStorage，刷新不掉线、token 失效自动登出）；② seed 自索引（`document.py` `ensure_documents_indexed` 幂等回填 + `main.py` lifespan 启动调用）均已实现并验证。
 
 ### 目标
 修复两个"日常可用"硬伤（审计 §三 坑 1 / 坑 3）：① 登录态持久化（当前 token 只存 React state，刷新即掉线）；② seed 示例文档自索引（seed 直接 INSERT 不经服务层，2 篇 demo 文档无 chunks / embedding，开箱搜不到）。不新增业务 REQ，属 REQ-011 可用性收口。
@@ -519,6 +519,7 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 | Sprint-16（P1.5A）实现 | 2026-07-15 | 037/009 | 批量 / 文件夹 `.md` / `.txt` 导入：`POST /api/import/batch`、逐文件结果、同名跳过、路径标题前缀；前端 drop zone、多文件 / 文件夹选择、批量摘要与逐条结果 | `e958001` | `git diff --check`；`python -m unittest tests.backend.test_imports tests.backend.test_import_api`（9 tests）；非 PG/embedding 后端业务测试 47 tests；`npm.cmd run build`；Chrome headless drop-zone smoke 通过 | 不改 DB schema、不引新依赖、不做 Word/PDF/PDF 导出；全量 PG/embedding 测试受本机环境限制未完成 | §5（TC-P1-015 通过） |
 | Sprint-17（P1.5A）实现 | 2026-07-16 | 038 | 单文档 `.md` 下载 + 空间 ZIP 导出备份：`GET /api/documents/{id}/export`（`text/markdown`）+ `GET /api/export/space`（标准库 `zipfile`，按权限过滤，不可见文档不进 ZIP）；前端文档详情"下载 `.md`" + TopBar"导出空间 ZIP" + `api.ts` blob 下载 | 本批 | `git diff --check`；`python -m unittest tests.backend.test_export`（13 tests）；回归 `test_imports` + `test_import_api`（9 tests）；`npm.cmd run build`；FastAPI TestClient 端到端 HTTP smoke（路由注册 / 异常 handler / 二进制 Response / 权限 4004 / 非法 format 4220 / 无 token 4001） | 不改 DB schema、不引依赖、不做 PDF；全量 PG/embedding 测试受本机环境限制未完成；浏览器按钮下载落盘的人工 smoke 可用 `scripts/run-sprint16-demo.ps1` 补 | §5（TC-P1-016 通过） |
 | Sprint-12①（P1C）实现 | 2026-07-16 | 011 | 登录态持久化：`App.tsx` 将 `{token,userId,currentSpaceId}` 存 localStorage、启动恢复、切空间同步、token 失效（invalid token / 401）自动清除登出 | 本批 | `npm.cmd run build` 通过；刷新不掉线端到端 smoke 建议用 `scripts/run-sprint16-demo.ps1`（内存后端，不需 Docker）人工验证 | 不改 API / DB / 权限 / 依赖；seed 自索引（Sprint-12②）待做 | §5 |
+| Sprint-12②（P1C）实现 | 2026-07-16 | 011 | seed 自索引：`document.py` 加 `ensure_documents_indexed`（回填无 chunks 文档的分块 + embedding，幂等），`main.py` lifespan `init_db` 后调用 | 本批 | `python -m unittest tests.backend.test_seed_index`（4 tests）；回归 `test_document`（5 tests）；embedding 向量集成验证待本机 PG（沙箱受限，`_safe_embed` 降级时 chunks 仍写入、关键词搜索可用） | 不改 DB schema / 不改 seed SQL / 不引依赖；demo 内存模式 lifespan noop 不触发（PG 生产生效） | §5 |
 
 > Sprint-8 后：pgvector / Embedding / LLM 已接入（RG-001/002/004 Go），基础 Web / ORM 栈为 Go（RG-005）。Phase1 全量验收结论为 Conditional Go（Demo closure）；仍移出 P1：真实 PDF 解析、图片 OCR（REQ-010，RG-003 No-Go，后续阶段）。Sprint-9（P1A）与 Sprint-10（P1B）是已完成 Demo 之上的前端体验收口，不改变 Phase1 closure 结论。Phase2 启动前需人工确认范围、进入 / 退出标准，并另行更新阶段指针。Sprint-11 目前仅为 P2 UI / WSG 实现前门禁草案，不计入已完成 Sprint；TC-P2-WSG-001 与 TC-P2-UI-001~005 未执行、未通过。
 

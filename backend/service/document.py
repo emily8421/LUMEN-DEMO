@@ -124,3 +124,25 @@ def sync_document_chunks(repository, document: Document) -> None:
     cleaned_text = clean_text(document.content_md)
     chunk_texts = split_text_into_chunks(cleaned_text) if cleaned_text else []
     repository.replace_document_chunks(document.id, chunk_texts)
+
+
+def ensure_documents_indexed(repository) -> int:
+    """Sprint-12②：回填无分块文档的 chunks（+ embedding）。
+
+    ``migrations/005_sprint8_seed_demo.sql`` 直接 INSERT 文档不经服务层，导致 seed
+    demo 文档开箱无 chunks / embedding、搜不到。本函数在启动时扫描全部文档，对无
+    chunks 的逐篇调 ``sync_document_chunks`` 补齐；幂等（已索引的跳过）。
+
+    返回本次回填的文档数。单文档回填失败不阻塞其他文档或启动（embedding 不可用时
+    ``replace_document_chunks`` 已降级——chunks 仍写入、向量 NULL、退回关键词召回）。
+    """
+    indexed = 0
+    for document in repository.list_documents():
+        if repository.list_document_chunks(document.id):
+            continue
+        try:
+            sync_document_chunks(repository, document)
+            indexed += 1
+        except Exception:
+            continue
+    return indexed

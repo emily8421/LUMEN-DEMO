@@ -27,6 +27,13 @@ async def lifespan(_app):
         from backend.service.db import init_db
 
         init_db()
+        # Sprint-12②：seed 文档自索引回填（migrations/005 直接 INSERT 不经服务层）
+        from backend.repository import repository
+        from backend.service.document import ensure_documents_indexed
+
+        indexed = ensure_documents_indexed(repository)
+        if indexed:
+            print(f"[seed] indexed {indexed} previously unindexed document(s)")
     except Exception as exc:  # pragma: no cover - 依赖外部 PG 容器
         print(f"[db] init skipped: {exc} (PG required since T5; queries will error)")
     yield
