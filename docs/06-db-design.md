@@ -26,9 +26,9 @@
 | lumen_chunks | 切块 + Embedding 向量 + 全文向量 | [P1] | P1-已实现 | 已落地 PostgreSQL（migration 003；T6 起写入 embedding 并用于 RAG 向量召回） | REQ-007/008 |
 | lumen_imports | 导入任务 | [P1] | P1-已实现；Phase1.5A 复用 | 已落地 PostgreSQL（migration 004；当前导入仅 `.md`/`.txt` 已提取文本；批量导入默认逐文件复用此表） | REQ-009/010/037 |
 | lumen_terms | 空间级术语表 | [P1] | P1-已实现 | 已落地 PostgreSQL（migration 004；PgRepository 接入） | REQ-036 |
-| lumen_tags | 标签 | [P2] | Phase2A-契约草案 | — | REQ-012 |
-| lumen_tag_links | 标签-文档关联 | [P2] | Phase2A-契约草案 | — | REQ-012 |
-| lumen_doc_links | 内部链接与反向链接索引 | [P2] | Phase2A-契约草案 | — | REQ-026 |
+| lumen_tags | 标签 | [P2] | Phase2A-已设计 | 待 Task A 迁移 008；扁平标签（无层级） | REQ-012 |
+| lumen_tag_links | 标签-文档关联 | [P2] | Phase2A-已设计 | 待 Task A 迁移 008；最小版仅写入 link_source='manual'，其余值预留 | REQ-012 |
+| lumen_doc_links | 内部链接与反向链接索引 | [P2] | Phase2A-已实现 | 已落地（migration 007；fc2b869 Task A） | REQ-026 |
 | lumen_quick_entries | 快速录入索引条目 | [P2] | Phase2A-契约草案 | — | REQ-025 |
 | lumen_ai_drafts | AI 润色 / 写作引用草稿 | [P2] | Phase2B-契约草案 | — | REQ-014 |
 | lumen_doc_exports | 单文档导出 PDF 任务 | [P1] | Phase1.5B-契约草案 | — | REQ-027 |

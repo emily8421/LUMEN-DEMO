@@ -41,7 +41,9 @@
 | API-013 | GET/PUT/DELETE | /api/terms/{id} | 术语详情 / 更新 / 删除 | [P1] | P1-已实现 | 已实现（PG 术语存储） | REQ-036 |
 | API-029 | POST | /api/import/batch | 批量导入（多文件 + 文件夹，标题前缀，同名跳过） | [P1] | Phase1.5A-契约草案 | — | REQ-037 |
 | API-030 | GET | /api/documents/{id}/export · /api/export/space | 单文档 .md 下载 / 空间 ZIP 导出 | [P1] | Phase1.5A-契约草案 | — | REQ-038 |
-| API-014 | GET/POST | /api/tags | 标签列表 / 创建标签 | [P2] | 契约草案 | — | REQ-012 |
+| API-014 | GET/POST | /api/tags | 标签列表 / 创建标签 | [P2] | Phase2A-已设计 | — | REQ-012 |
+| API-031 | GET/POST/DELETE | /api/documents/{id}/tags | 文档-标签关联（列 / 打 / 移除） | [P2] | Phase2A-已设计 | — | REQ-012 |
+| API-032 | GET | /api/tags/{id}/documents | 标签下可见文档列表 | [P2] | Phase2A-已设计 | — | REQ-012 |
 | API-015 | POST | /api/spaces/push | 跨空间推送 | [P2] | 骨架 | — | REQ-015 |
 | API-016 | GET | /api/briefs/{token} | 对外只读简报 | [愿景] | 骨架 | — | REQ-022 |
 | API-017 | POST | /api/quick-entry | 快速录入索引条目 | [P2] | 契约草案 | — | REQ-025 |
@@ -249,6 +251,10 @@ sequenceDiagram
 | API-014 `GET /api/tags` | `q?`、`status?=active`、`page?` | `items[{id,name,color,description,document_count,status}]`、`total` | 仅当前空间标签；`document_count` 只统计当前用户可见文档 | `lumen_tags`、`lumen_tag_links`、`lumen_documents` | 支撑标签视图与筛选 |
 | API-014 `POST /api/tags` | `name`、`color?`、`description?` | `{id,name,color,description,status}` | 空间成员可创建；同空间 `normalized_name` 冲突返回 4090 | `lumen_tags` | 不自动跨空间复制 |
 | API-027 `/api/tags/{id}` | `PUT`: `name?`、`color?`、`description?`、`status?`；`DELETE`: 归档 | `{id,name,color,description,status}` | 仅当前空间标签；删除采用 `archived`，不硬删历史 | `lumen_tags` | 避免破坏文档历史关联 |
+| API-031 `GET /api/documents/{id}/tags` | — | `items[{tag_id,name,color,link_source}]` | 需可读文档；仅返回同空间 active 标签 | `lumen_tag_links`、`lumen_tags` | 文档详情展示标签 |
+| API-031 `POST /api/documents/{id}/tags` | `tag_id` | `{tag_id,document_id,link_source:'manual'}` | 需文档可写；标签须同空间 active；重复打幂等返回既有 | `lumen_tag_links` | `link_source` 固定 manual（quick_entry / import / ai_suggested 预留） |
+| API-031 `DELETE /api/documents/{id}/tags/{tag_id}` | — | `{deleted:true}` | 需文档可写；移除关联不删标签本身 | `lumen_tag_links` | 归档标签不自动移除既有 link |
+| API-032 `GET /api/tags/{id}/documents` | `status?=active` | `items[{id,title,permission,...}]`、`total` | 仅当前空间标签；文档按当前用户可见性过滤 | `lumen_tag_links`、`lumen_documents` | 标签视图点标签看文档 |
 | API-017 `POST /api/quick-entry` | `title`、`content_md`、`target_document_id?`、`tag_ids?`、`mode=create_document / append_document / draft` | `{id,status,created_document_id?,target_document_id?}` | 草稿默认 owner 私有；转换为文档时继承目标文档权限或新文档默认 private | `lumen_quick_entries`、`lumen_documents`、`lumen_tag_links` | 不触发 AI；不绕过文档权限 |
 | API-018 `GET /api/doc-links` | `document_id`、`direction=outbound / backlink`、`status?` | `data:[{id,source_document_id,target_document_id?,target_title?,link_text,link_type,status}]` | source / target 均按空间 + 权限过滤；无权限 target 返回 `status=no_access` 且不泄露标题 | `lumen_doc_links`、`lumen_documents` | 支撑内部链接与反向链接 |
 | API-018 `POST /api/doc-links` | `source_document_id`、`target_document_id?`、`target_title?`、`link_text`、`link_type=manual`（wikilink 由文档正文解析，不接受手动 POST） | `{id,status}` | 需可编辑 source；target 缺失时 `unresolved` | `lumen_doc_links` | 后续可由 Markdown 解析器批量维护 |
@@ -258,14 +264,16 @@ sequenceDiagram
 
 | code | 场景 | 适用 API |
 |---|---|---|
-| 4090 | 标签重名、快速录入重复转换、PDF 导出任务重复提交、批量导入同名且策略不允许跳过等业务冲突 | API-014/017/019/027/029 |
+| 4090 | 标签重名、快速录入重复转换、PDF 导出任务重复提交、批量导入同名且策略不允许跳过等业务冲突 | API-014/017/019/027/029/031 |
 | 4220 | 字段缺失、非法状态、无效 tag_ids / document_id / mode、文件类型不支持、relative_paths 与 files 数量不匹配 | 全部 Phase1.5 / Phase2 API |
 | 5030 | LLM / PDF 导出 / 外部依赖不可用 | API-019/028 |
 
 ### [Phase1.5] / [P2] / [愿景] 接口（骨架·待该阶段细化）
 - `/api/import/batch`、`/api/documents/{id}/export`、`/api/export/space`：Phase1.5A 契约草案见 §3.9，尚未实现；默认不引新依赖、不建真实目录表。
 - `/api/export-pdf`：Phase1.5B PDF 导出契约草案见 §3.9，受 RG-006 约束，尚未实现。
-- `/api/tags`、`/api/tags/{id}`、`/api/quick-entry`：Phase2A 个人知识组织契约草案见 §3.9，尚未实现。
+- `/api/tags`、`/api/tags/{id}`：Phase2A 已设计（最小版，待 Task A 实现）。扁平标签 CRUD（API-014/027）：空间隔离、`UNIQUE(space_id, normalized_name)` 重名 4090、`DELETE` 归档不硬删；`document_count` 只统计当前用户可见文档。
+- `/api/documents/{id}/tags`（API-031）+ `/api/tags/{id}/documents`（API-032）：Phase2A 已设计。文档-标签关联（列 / 打 `link_source=manual` / 移除，需文档可写 + 标签同空间）；标签下可见文档列表（按文档可见性过滤）。
+- `/api/quick-entry`：Phase2A 契约草案见 §3.9，尚未实现。
 - `/api/doc-links`：Phase2A 已实现（Task A `fc2b869` + Task B `6228f3f`）。GET 返回 `data` 直接数组（出链 target 不可见→`status=no_access` 且不泄露标题；反链来源不可见过滤）；POST 仅 `link_type=manual`（wikilink 由文档保存时正文解析，拒手动 POST）。
 - `/api/documents/{id}/polish`：Phase2B 团队 MVP 候选，需数据外发风险确认后再实现。
 - `/api/spaces/push`：跨空间推送不进 Phase2B 首批，请求 / 响应待后续细化。
@@ -288,7 +296,7 @@ sequenceDiagram
 | REQ-037 | `POST /api/import/batch` | Phase1.5A 批量 / 文件夹 `.md` / `.txt` 导入，逐条结果、同名跳过 |
 | REQ-038 | `GET /api/documents/{id}/export`、`GET /api/export/space` | Phase1.5A 单文档 `.md` 下载与空间 ZIP 导出备份，权限过滤 |
 | REQ-027 | `POST /api/export-pdf` | Phase1.5B 单文档导出 PDF，受 RG-006 与导出库验证约束 |
-| REQ-012 | `GET/POST /api/tags`、`GET/PUT/DELETE /api/tags/{id}` | Phase2A 标签视图、标签创建 / 归档与标签-文档统计契约草案 |
+| REQ-012 | `GET/POST /api/tags`、`GET/PUT/DELETE /api/tags/{id}`、`GET/POST/DELETE /api/documents/{id}/tags`、`GET /api/tags/{id}/documents` | Phase2A 标签视图（扁平标签 + 独立视图 + 单标签筛选 + 文档详情打标签），待 Task A 实现 |
 | REQ-025 | `POST /api/quick-entry` | Phase2A 快速录入索引条目，可转文档 / 追加文档 / 保留草稿 |
 | REQ-026 | `GET/POST /api/doc-links` | Phase2A 内部链接与反向链接索引，需空间和文档权限过滤 |
 | REQ-014 | `POST /api/documents/{id}/polish` | Phase2B AI 润色 / 写作引用，复用 RAG 来源与 LLM adapter，需权限过滤和降级 |
@@ -318,9 +326,10 @@ sequenceDiagram
 | API-029 | imports.import_batch | lumen_imports, lumen_documents, lumen_chunks | 空间成员；逐文件导入当前空间 | 4001/4003/4090/4220 | TC-P1-015 | Phase1.5A-契约草案（待 Sprint-16） |
 | API-030 | export.export_document_md / export.export_space_zip | lumen_documents, lumen_document_versions | 文档可读；ZIP 只含当前用户可见文档 | 4001/4003/4004/4220/5000 | TC-P1-016 | Phase1.5A-契约草案（待 Sprint-17） |
 | API-019 | export.create_pdf_export | lumen_doc_exports, lumen_documents, lumen_document_versions | 文档可读 / 可导出 | 4001/4003/4004/4220/5030 | TC-P1-017 | Phase1.5B-契约草案（待 RG-006） |
-| API-014 / API-027 | tag.list_tags / create_tag / update_tag / archive_tag | lumen_tags, lumen_tag_links | space 成员 + 文档权限统计 | 4001/4003/4004/4090/4220 | TC-P2-TAG-001 | Phase2A-契约草案 |
+| API-014 / API-027 | tag.list_tags / create_tag / update_tag / archive_tag | lumen_tags, lumen_tag_links | space 成员 + 文档权限统计 | 4001/4003/4004/4090/4220 | TC-P2-TAG-001 | Phase2A-已设计 |
+| API-031 / API-032 | tag.list_document_tags / add_document_tag / remove_document_tag / list_documents_by_tag | lumen_tag_links, lumen_tags, lumen_documents | 文档可写 + 标签同空间；document_count / 筛选按文档可见性 | 4001/4003/4004/4090/4220 | TC-P2-TAG-001 | Phase2A-已设计 |
 | API-017 | quick_entry.capture_quick_entry | lumen_quick_entries, lumen_documents, lumen_tag_links | owner 私有 + 转文档后继承权限 | 4001/4003/4220 | TC-P2-QUICK-001 | Phase2A-契约草案 |
-| API-018 | doc_links.list_links / upsert_link | lumen_doc_links, lumen_documents | source / target 双向权限过滤 | 4001/4003/4004/4220 | TC-P2-LINK-001 | Phase2A-契约草案 |
+| API-018 | doc_links.list_links / upsert_link | lumen_doc_links, lumen_documents | source / target 双向权限过滤 | 4001/4003/4004/4220 | TC-P2-LINK-001 | Phase2A-已实现 |
 | API-028 | writing.polish_document | lumen_ai_drafts, lumen_chunks, lumen_documents | 文档可写 + 来源 chunk 可见 | 4001/4003/4004/4220/5030 | TC-P2-AI-001 | Phase2B-契约草案 |
 
 **权限场景矩阵**（权限隔离由 DB 过滤 + service/查询层执行，不依赖前端）：
