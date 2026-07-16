@@ -256,6 +256,30 @@ export async function importBatchDocuments(
   });
 }
 
+export type DownloadResult = {
+  blob: Blob;
+  filename: string;
+};
+
+export async function downloadDocumentMarkdown(token: string, documentId: number): Promise<DownloadResult> {
+  return downloadBlob(`/api/documents/${documentId}/export?format=md`, token, 'document.md');
+}
+
+export async function exportSpaceZip(token: string): Promise<DownloadResult> {
+  return downloadBlob('/api/export/space?format=zip', token, 'lumen-space-export.zip');
+}
+
+export function triggerBrowserDownload(blob: Blob, filename: string): void {
+  const objectUrl = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = objectUrl;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(objectUrl);
+}
+
 export async function listTerms(token: string): Promise<TermListResponse> {
   return request<TermListResponse>('/api/terms', { token });
 }
@@ -311,4 +335,38 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   }
 
   return envelope.data;
+}
+
+async function downloadBlob(path: string, token: string, fallbackFilename: string): Promise<DownloadResult> {
+  const response = await fetch(`${API_BASE}${path}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!response.ok) {
+    throw new Error(await extractErrorMessage(response));
+  }
+
+  const blob = await response.blob();
+  const filename = parseContentDispositionFilename(response.headers.get('content-disposition')) ?? fallbackFilename;
+  return { blob, filename };
+}
+
+async function extractErrorMessage(response: Response): Promise<string> {
+  try {
+    const envelope = (await response.json()) as ApiEnvelope<unknown>;
+    if (envelope?.msg) {
+      return envelope.msg;
+    }
+  } catch {
+    // 非 JSON 错误体，回退到 HTTP 状态码
+  }
+  return `请求失败（${response.status}）`;
+}
+
+function parseContentDispositionFilename(header: string | null): string | null {
+  if (!header) {
+    return null;
+  }
+  const match = header.match(/filename="?([^";]+)"?/);
+  return match ? match[1] : null;
 }

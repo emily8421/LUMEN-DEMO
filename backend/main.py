@@ -38,6 +38,7 @@ def create_app():
 
     from backend.api.auth import router as auth_router
     from backend.api.documents import router as documents_router
+    from backend.api.export import router as export_router
     from backend.api.imports import router as imports_router
     from backend.api.rag import router as rag_router
     from backend.api.search import router as search_router
@@ -61,6 +62,8 @@ def create_app():
         app.include_router(documents_router)
     if imports_router is not None:
         app.include_router(imports_router)
+    if export_router is not None:
+        app.include_router(export_router)
     if search_router is not None:
         app.include_router(search_router)
     if rag_router is not None:

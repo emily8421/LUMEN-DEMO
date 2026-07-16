@@ -9,6 +9,9 @@ import {
   getDocument,
   ImportBatchItem,
   importBatchDocuments,
+  downloadDocumentMarkdown,
+  exportSpaceZip,
+  triggerBrowserDownload,
   KnowledgeDocument,
   listDocuments,
   listSpaces,
@@ -365,6 +368,30 @@ function App() {
     });
   }
 
+  async function handleDownloadMarkdown() {
+    if (!session || !selectedDocument) {
+      return;
+    }
+
+    await runAction('正在下载文档...', async () => {
+      const { blob, filename } = await downloadDocumentMarkdown(session.token, selectedDocument.id);
+      triggerBrowserDownload(blob, filename);
+      setNotice(`已下载：${filename}`);
+    });
+  }
+
+  async function handleExportSpace() {
+    if (!session) {
+      return;
+    }
+
+    await runAction('正在导出空间备份...', async () => {
+      const { blob, filename } = await exportSpaceZip(session.token);
+      triggerBrowserDownload(blob, filename);
+      setNotice(`已导出空间备份：${filename}`);
+    });
+  }
+
   async function handleOpenDocument(documentId: number | null, title: string) {
     if (!documentId) {
       setNotice('该来源为术语表记录，暂无可打开文档。');
@@ -410,7 +437,7 @@ function App() {
 
   return (
     <main className="app-shell">
-      <TopBar session={session} spaces={spaces} isBusy={isBusy} currentSpace={currentSpace} onSpaceChange={handleSpaceChange} />
+      <TopBar session={session} spaces={spaces} isBusy={isBusy} currentSpace={currentSpace} onSpaceChange={handleSpaceChange} onExportSpace={handleExportSpace} />
 
       {!session ? (
         <section className="login-panel card">
@@ -470,6 +497,7 @@ function App() {
                 onDelete={handleDelete}
                 onSave={handleSave}
                 onRestore={handleRestore}
+                onDownloadMarkdown={handleDownloadMarkdown}
               />
             ) : null}
 

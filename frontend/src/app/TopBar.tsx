@@ -7,9 +7,10 @@ type TopBarProps = {
   isBusy: boolean;
   currentSpace: Space | null;
   onSpaceChange: (spaceId: number) => void;
+  onExportSpace: () => void;
 };
 
-export function TopBar({ session, spaces, isBusy, currentSpace, onSpaceChange }: TopBarProps) {
+export function TopBar({ session, spaces, isBusy, currentSpace, onSpaceChange, onExportSpace }: TopBarProps) {
   return (
     <header className="topbar app-topbar">
       <div className="brand-block">
@@ -32,6 +33,7 @@ export function TopBar({ session, spaces, isBusy, currentSpace, onSpaceChange }:
               <option key={space.id} value={space.id}>{space.name}</option>
             ))}
           </select>
+          <button type="button" className="secondary" onClick={onExportSpace} disabled={isBusy}>导出空间 ZIP</button>
         </div>
       ) : null}
       {session ? (

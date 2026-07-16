@@ -13,7 +13,7 @@
 | 交付物形态 | Demo / 个人可用 Alpha |
 | 覆盖 REQ | Phase1：REQ-001..REQ-011、REQ-036；Phase1.5A：REQ-037/038；Phase1.5B：REQ-027；Phase2A/B 与愿景验证项待升阶段细化 |
 | 当前状态 | Phase1 全量验收已记录，结论为 Conditional Go（Demo closure）；Sprint-7/8 已完成真实 LLM、PostgreSQL+pgvector、Embedding 与 RAG 向量召回验证；task-009 已完成 search hybrid 验证；P1A / P1B 前端体验收口均已实现。2026-07-15 00-03 路线图重排后，TC-P1-015/016 为个人可用 Alpha；TC-P1-015 已随 Sprint-16 自动化验证 + Chrome headless drop-zone smoke 通过；TC-P1-017 为个人增强 Beta 草案；P2 UI / WSG 门禁草案未执行、不代表可编码 |
-| 最后更新 | 2026-07-15（Sprint-16 批量 / 文件夹导入 Chrome headless drop-zone smoke 通过） |
+| 最后更新 | 2026-07-16（Sprint-17 单文档 `.md` + 空间 ZIP 导出：后端 tests + 端到端 HTTP smoke 通过） |
 
 ## 1. 测试策略
 
@@ -43,7 +43,7 @@
 | TC-P1-013 | REQ-011 P1A 结构聚焦 | 文档 / 搜索 / 问答 / 术语一级视图切换；900px 桌面宽度不横向破版；P0 能力不回退 | [P1] | 通过（构建 + Chrome / Edge 900px smoke） |
 | TC-P1-014 | REQ-011 P1B 工作台重设计 | TopBar + Nav Rail + Context Pane + Workspace 三层布局；Context Pane 随视图变化；900px 桌面宽度不横向破版；信息密度达标；P0/P1A 能力不回退 | [P1] | 通过（构建 + Chrome / Edge 900px smoke） |
 | TC-P1-015 | REQ-037 批量导入 | 拖入文件夹 / 多文件后全部 `.md`/`.txt` 入库可搜可问答；标题保留路径前缀；同名跳过 | [P1] | 通过（Sprint-16 自动化 + Chrome headless drop-zone smoke） |
-| TC-P1-016 | REQ-038 导出备份 | 文档详情下载 `.md`；空间导出 ZIP 含可见文档、权限过滤 | [P1] | P1.5A 草案·待编码（Sprint-17） |
+| TC-P1-016 | REQ-038 导出备份 | 文档详情下载 `.md`；空间导出 ZIP 含可见文档、权限过滤 | [P1] | 通过（Sprint-17 后端 tests + 端到端 HTTP smoke） |
 | TC-P1-017 | REQ-027 单文档 PDF | 选型 + 中文 PDF 导出验证（RG-006）；文档详情导出 PDF 中文正常 | [P1] | P1.5B 草案·待 RG-006（Sprint-18） |
 
 > 状态说明：Sprint-2~6 按**降级口径**验收（原内存 `demo_repository`）；Sprint-7/8 真实化后 RAG 已走真实 LLM（GLM-5.2）+ 向量召回（pgvector），存储切到 PostgreSQL（见 §5 Sprint-7/8 记录）。仍降级的：真实 PDF/Word 解析、OCR（RG-003，后续阶段）。search 已在 task-009 升级为 hybrid（关键词 / ts_vector / pgvector 语义召回），zhparser 为可选回退。「条件通过」= 当前实现满足 Demo 级别验收；详见 §6 与 `docs/05-tech-spec.md §5.1`。 TC-P1-013 / TC-P1-014 为 REQ-011 体验收口增量，不改变 Phase1 Demo closure 结论。**2026-07-15 标注校准**：TC-P1-001~006/012 原标「降级口径·内存」，因运行时仓储自 Sprint-8 起为 `repository = PgRepository()`（内存降级已解除），已校准为「PG 仓储·Sprint-8 起真实化」；是否进一步将这些 TC 升级为「通过」待人工确认（见 `08` 待确认项）。
@@ -69,10 +69,10 @@
 | TC-P1-013 | REQ-011 | P1A 前端实现 + Chrome / Edge 桌面 | ① 登录并切换文档 / 搜索 / 问答 / 术语视图；② 在 900px 宽度完成文档、搜索、问答、术语主流程；③ 回归 Markdown 渲染、来源点击、删除 / 恢复二次确认 | 视图切换保持当前空间上下文；各视图主区不被无关面板挤压；900px 无全局横向滚动；P0 能力不回退 | `npm.cmd run build` 通过；Chrome / Edge headless smoke（900px）通过，覆盖登录、四视图切换、文档新建 / 编辑 / 版本恢复 / 删除、Markdown 预览、搜索来源打开、问答、术语新建 / 删除确认 | 通过 |
 | TC-P1-014 | REQ-011 | P1B 工作台重设计实现 + Chrome / Edge 桌面 | ① 登录后检查 TopBar + Nav Rail + Context Pane + Workspace 三层布局；② 切换文档 / 搜索 / 问答 / 术语并确认 Context Pane 随视图变化；③ 在 900px 宽度完成文档、搜索、问答、术语主流程；④ 检查搜索首屏 ≥5 条结果、术语首屏 ≥8 条、编辑区 ≥12 行；⑤ 回归 Markdown 渲染、来源点击、删除 / 恢复二次确认 | 工作台布局与 `frontend-workspace-redesign` 原型一致；任务聚焦，不显示无关大卡片；900px 无全局横向滚动；P0/P1A 能力不回退 | `npm.cmd run build` 通过；Chrome / Edge headless smoke（900px）通过，覆盖登录、四视图切换、文档新建 / 编辑 / 版本恢复 / 删除、Markdown 预览、搜索来源打开、问答、术语新建 / 删除确认 | 通过 |
 | TC-P1-015 | REQ-037 | 多个 `.md` / `.txt` 文件或文件夹 | 拖入文件夹 / 多文件后批量导入 | 全部入库可搜可问答；标题保留路径前缀；同名跳过 | `tests/backend/test_imports.py`（批量成功、失败隔离、同名跳过、可搜可问答）；`tests/backend/test_import_api.py`（API-029 响应契约）；`npm.cmd run build`；Chrome headless drop-zone smoke（登录 → drop 两个带 `webkitRelativePath` 文件 → 导入成功 2 → 搜索 / 问答命中） | 通过 |
-| TC-P1-016 | REQ-038 | 当前空间存在多篇可见 / 不可见文档 | 文档详情下载 `.md`；空间导出 ZIP | 单文档 `.md` 内容正确；ZIP 只含可见文档 | 待 Sprint-17 后端 tests + Chrome smoke | 草案·待编码 |
+| TC-P1-016 | REQ-038 | 当前空间存在多篇可见 / 不可见文档 | 文档详情下载 `.md`；空间导出 ZIP | 单文档 `.md` 内容正确；ZIP 只含可见文档 | `tests/backend/test_export.py`（13 tests：单文档可见 / 不可见 / 指定版本、ZIP 只含可见 / 空空间 / 路径前缀 / 防穿越 / 非成员）+ FastAPI TestClient 端到端 HTTP smoke（路由注册 / 异常 handler / 二进制 Response / 不可见 4004 / 非法 format 4220 / 无 token 4001） | 通过 |
 | TC-P1-017 | REQ-027 | RG-006 已 Go / Conditional Go；当前用户可读文档 | 对可读文档指定版本发起 PDF 导出；验证中文、失败态、权限态和产物访问 | 导出任务与版本绑定；中文正常；产物继承源文档权限；导出库不可用返回 5030；未验证前不得进入实现 | 待 tech-env 依赖验证 + 后端 tests + 人工 PDF 样例 | 草案·待 RG-006 |
 
-> TC-P1-010 暂为「后续阶段」，待 OCR 落地后补步骤与证据；TC-P1-013 已随 PR #76 合并后完成前端构建与 Chrome / Edge 900px smoke；TC-P1-014 已随 Sprint-10（P1B）完成前端构建与 Chrome / Edge 900px smoke；TC-P1-015 已随 Sprint-16 完成自动化验证与 Chrome headless drop-zone smoke；TC-P1-016~017 待 Sprint-17~18 编码后补证据；其余 TC 自动化均含于后端测试与既有 smoke 证据（见 §5）。
+> TC-P1-010 暂为「后续阶段」，待 OCR 落地后补步骤与证据；TC-P1-013 已随 PR #76 合并后完成前端构建与 Chrome / Edge 900px smoke；TC-P1-014 已随 Sprint-10（P1B）完成前端构建与 Chrome / Edge 900px smoke；TC-P1-015 已随 Sprint-16 完成自动化验证与 Chrome headless drop-zone smoke；TC-P1-016 已随 Sprint-17 完成后端 tests + 端到端 HTTP smoke；TC-P1-017 待 Sprint-18（RG-006）编码后补证据；其余 TC 自动化均含于后端测试与既有 smoke 证据（见 §5）。
 
 ### Phase2（功能范围 `[P2]` · 交付物形态 **MVP**，升阶段时追加）
 
@@ -136,6 +136,7 @@
 | 2026-07-14 | Sprint-11（P2-UI-Gate 候选）实现前 UI 门禁草案 | 草案·未执行 | 已根据少容器清爽稿回填 TC-P2-UI-001~005；当前仅作为进入编码前的验证草案，不代表 Phase2 已启动或可直接编码。 |
 | 2026-07-14 | UI / WSG 门禁静态评审 + 首个 vertical slice 确认 | Conditional Go（实现前） | WSG-001..006 与 P2-UI-G-001..006 均有文档锚点；静态检查少容器清爽稿原型关键入口、面包屑 / 层级搜索、文档预览 / 编辑并排、搜索 / 问答来源和关系图降级说明；首个 Phase2 vertical slice 静态评审建议为 `REQ-012 + REQ-026`（标签视图 + 内链 / 反向链接最小闭环）。仍未启动 Phase2、不改代码；进入实现前需补具体任务、迁移 / API / UI 实现计划和 smoke 证据。 |
 | 2026-07-15 | Sprint-16（P1.5A）批量 / 文件夹导入 | 通过 | 已实现 API-029 `POST /api/import/batch` 与前端 drop zone / 多文件 / 文件夹选择；同名默认 skipped，失败隔离，标题保留相对路径前缀。验证：`git diff --check` 通过；`python -m unittest tests.backend.test_imports tests.backend.test_import_api` 9 tests 通过；非 PG/embedding 后端业务测试 47 tests 通过；`npm.cmd run build` 通过；Chrome headless drop-zone smoke 通过（登录 → drop 两个带 `webkitRelativePath` 文件 `smoke-folder/readme.md` / `smoke-folder/notes.txt` → 导入成功 2 → 文档列表保留路径标题 → 搜索命中 `smoke-folder/readme` → 问答来源命中 `smoke-folder/notes`）。未完成：全量 `python -m unittest discover -s tests/backend` 因本地 PG 测试超时未完成，embedding 模块在沙箱内触发 `torch_python.dll` 权限错误。 |
+| 2026-07-16 | Sprint-17（P1.5A）单文档 `.md` + 空间 ZIP 导出 | 通过 | 已实现 API-030 `GET /api/documents/{id}/export`（`text/markdown`）+ `GET /api/export/space`（标准库 `zipfile`，按权限过滤，不可见文档不进 ZIP、不泄露数量）；前端文档详情"下载 `.md`"按钮 + TopBar"导出空间 ZIP"入口 + `api.ts` blob 下载。验证：`git diff --check` 通过；`python -m unittest tests.backend.test_export` 13 tests 通过（service + API 级）；回归 `test_imports` + `test_import_api` 9 tests 通过；`npm.cmd run build` 通过；FastAPI TestClient 端到端 HTTP smoke 通过（路由注册 + 全局异常 handler + 二进制 Response：单文档 markdown、空间 ZIP 含可见文档、不可见 4004、非法 format 4220、无 token 4001）。未完成：全量 PG/embedding 测试受本机环境限制未完成；浏览器按钮点击下载落盘的人工 smoke 可用 `scripts/run-sprint16-demo.ps1` 起服务后补充。 |
 
 ### 5.1 缺陷与回归记录
 
@@ -163,6 +164,6 @@
 
 ## 7. 待人工确认项
 
-- Phase1 全量验收已记录；Sprint-16 / TC-P1-015 已完成自动化验证与 Chrome headless drop-zone smoke；下一步建议执行 Sprint-17 / TC-P1-016 导出备份。
+- Phase1 全量验收已记录；Sprint-16 / TC-P1-015 已完成；Sprint-17 / TC-P1-016 已完成单文档 `.md` + 空间 ZIP 导出（后端 tests + 端到端 HTTP smoke）；下一步建议 Sprint-18（PDF，受 RG-006）或穿插 Sprint-12/13 稳定性收口。
 - Phase1.5B 的 TC-P1-017 受 RG-006 控制；PDF 不得阻塞 Phase1.5A。
 - Phase2A / Phase2B 仍需人工确认；首个 Phase2A vertical slice 建议优先 `REQ-026 内链 / 反链`，其次 `REQ-012 标签`，再考虑 `REQ-025 快速录入`；未确认前不得一次性实现全部 P2 UI。

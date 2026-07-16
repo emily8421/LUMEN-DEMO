@@ -453,7 +453,7 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 
 ## Sprint-17（P1.5·导出 · 候选）：单文档 .md + 空间 ZIP
 
-> **候选·待确认**：方案已确认【单文档.md + 空间ZIP】。不碰 PDF 导出（REQ-027 已前移 Sprint-18，需 RG-006）。
+> **已完成（2026-07-16）**：方案已确认并实现【单文档 `.md` + 空间 ZIP】（API-030 + 前端下载 / 导出入口；后端 tests + 端到端 HTTP smoke 通过，TC-P1-016 通过）。不碰 PDF 导出（REQ-027 已前移 Sprint-18，需 RG-006）。
 
 ### 目标
 对称的导出能力：文档详情页"下载 .md"；工具栏"导出整个空间"打包 ZIP（所有可见文档 `.md`）。属 REQ-038（新增）。
@@ -517,6 +517,7 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 | Sprint-9（P1A）实现 | 2026-07-11 | 011 | 前端结构聚焦重构：本地 `activeView` 四视图切换、右栏拆回文档 / 搜索 / 问答 / 术语主视图、桌面响应式 CSS | `9ede5b6`（PR #76） | `git diff --check`；`npm.cmd run build`；Chrome / Edge 900px headless smoke 通过 | 不阻塞 Phase1 Demo closure；P1A 仅作为既有 Demo 的前端结构体验收口 | §2 / §5（TC-P1-013 通过） |
 | Sprint-10（P1B）实现 | 2026-07-12 | 011 | 前端工作台系统化重设计：TopBar + Nav Rail + Context Pane + Workspace 三层布局；Context Pane 随文档 / 搜索 / 问答 / 术语变化；CSS token + pane / toolbar / list-row / inspector 分层；新增正式设计文档与 HTML 原型 | 本批 | `git diff --check`；`npm.cmd run build`；Chrome / Edge 900px headless smoke 通过，覆盖登录、四视图切换、文档新建 / 编辑 / 版本恢复 / 删除、Markdown 预览、搜索来源打开、问答、术语新建 / 删除确认；无全局横向滚动 | 不阻塞 Phase1 Demo closure；P1B 仅作为既有 Demo 的前端工作台体验收口；不引 router / 组件库 / 新 API | §2 / §5（TC-P1-014 通过） |
 | Sprint-16（P1.5A）实现 | 2026-07-15 | 037/009 | 批量 / 文件夹 `.md` / `.txt` 导入：`POST /api/import/batch`、逐文件结果、同名跳过、路径标题前缀；前端 drop zone、多文件 / 文件夹选择、批量摘要与逐条结果 | `e958001` | `git diff --check`；`python -m unittest tests.backend.test_imports tests.backend.test_import_api`（9 tests）；非 PG/embedding 后端业务测试 47 tests；`npm.cmd run build`；Chrome headless drop-zone smoke 通过 | 不改 DB schema、不引新依赖、不做 Word/PDF/PDF 导出；全量 PG/embedding 测试受本机环境限制未完成 | §5（TC-P1-015 通过） |
+| Sprint-17（P1.5A）实现 | 2026-07-16 | 038 | 单文档 `.md` 下载 + 空间 ZIP 导出备份：`GET /api/documents/{id}/export`（`text/markdown`）+ `GET /api/export/space`（标准库 `zipfile`，按权限过滤，不可见文档不进 ZIP）；前端文档详情"下载 `.md`" + TopBar"导出空间 ZIP" + `api.ts` blob 下载 | 本批 | `git diff --check`；`python -m unittest tests.backend.test_export`（13 tests）；回归 `test_imports` + `test_import_api`（9 tests）；`npm.cmd run build`；FastAPI TestClient 端到端 HTTP smoke（路由注册 / 异常 handler / 二进制 Response / 权限 4004 / 非法 format 4220 / 无 token 4001） | 不改 DB schema、不引依赖、不做 PDF；全量 PG/embedding 测试受本机环境限制未完成；浏览器按钮下载落盘的人工 smoke 可用 `scripts/run-sprint16-demo.ps1` 补 | §5（TC-P1-016 通过） |
 
 > Sprint-8 后：pgvector / Embedding / LLM 已接入（RG-001/002/004 Go），基础 Web / ORM 栈为 Go（RG-005）。Phase1 全量验收结论为 Conditional Go（Demo closure）；仍移出 P1：真实 PDF 解析、图片 OCR（REQ-010，RG-003 No-Go，后续阶段）。Sprint-9（P1A）与 Sprint-10（P1B）是已完成 Demo 之上的前端体验收口，不改变 Phase1 closure 结论。Phase2 启动前需人工确认范围、进入 / 退出标准，并另行更新阶段指针。Sprint-11 目前仅为 P2 UI / WSG 实现前门禁草案，不计入已完成 Sprint；TC-P2-WSG-001 与 TC-P2-UI-001~005 未执行、未通过。
 
@@ -526,7 +527,7 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 
 ## 待人工确认项
 
-- Phase1.5A 下一步建议进入 Sprint-17 `.md` / ZIP 导出备份；Sprint-16 自动化验证与 Chrome headless drop-zone smoke 已完成。
+- Phase1.5A 的 Sprint-16（批量导入）与 Sprint-17（`.md` / ZIP 导出备份）均已完成；个人可用 Alpha「入库 → 导出」闭环成形。下一步可考虑 Sprint-18（PDF，受 RG-006）或穿插 Sprint-12/13 稳定性收口。
 - 是否正式进入 Phase2A / Phase2B：需在 Phase1.5A/B 后人工确认范围、进入 / 退出标准，再更新 `ai/project-rules.md` 当前阶段指针与相关设计 / 计划文档。`Sprint-11（P2-UI-Gate / WSG 候选）` 仅为实现前门禁草案，不代表已批准编码。
 - 首个 Phase2A vertical slice 选择：AI 建议优先 `REQ-026 内链 / 反链`，其次 `REQ-012 标签`，最后 `REQ-025 快速录入`；确认前不得一次性实现全部 P2 UI。
 - **Sprint-0′ 框架补课**：✅ 已完成（Step 1-5，commits ae51210/3d02bb2/2924df4/0a67cfc/2e34c28/a33c536）。剩 **4b handler→hooks（App ≤300）暂缓**——WSG-004 软阈值，App 542 已大幅改善，待功能稳定后再做（不阻塞 P1.5/Phase2）。

@@ -14,6 +14,7 @@ type DocumentsFeatureProps = {
   onDelete: () => void;
   onSave: (event: React.FormEvent<HTMLFormElement>) => void;
   onRestore: (versionNo: number) => void;
+  onDownloadMarkdown: () => void;
 };
 
 function markdownExcerpt(content: string, maxLength = 140) {
@@ -35,6 +36,7 @@ export function DocumentsFeature({
   onDelete,
   onSave,
   onRestore,
+  onDownloadMarkdown,
 }: DocumentsFeatureProps) {
   return (
     <section className="documents-workspace">
@@ -46,7 +48,10 @@ export function DocumentsFeature({
         <div className="toolbar-actions">
           <button type="button" className="secondary" onClick={onCreateDocument} disabled={isBusy}>新建</button>
           {selectedDocument && !isCreating ? (
-            <button type="button" className="danger" onClick={onDelete} disabled={isBusy}>删除</button>
+            <>
+              <button type="button" className="secondary" onClick={onDownloadMarkdown} disabled={isBusy}>下载 .md</button>
+              <button type="button" className="danger" onClick={onDelete} disabled={isBusy}>删除</button>
+            </>
           ) : null}
         </div>
       </div>
