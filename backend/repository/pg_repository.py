@@ -26,6 +26,8 @@ from backend.model.entities import (
     Space,
     SpaceMember,
     SpaceRole,
+    Tag,
+    TagLink,
     Term,
     TermStatus,
     User,
@@ -38,6 +40,8 @@ from backend.model.orm import (
     ImportJobORM,
     SpaceMemberORM,
     SpaceORM,
+    TagLinkORM,
+    TagORM,
     TermORM,
     UserORM,
 )
@@ -141,6 +145,31 @@ def _to_doc_link(r: DocLinkORM) -> DocLink:
         status=r.status,
         created_at=_dt_iso(r.created_at),
         updated_at=_dt_iso(r.updated_at),
+    )
+
+
+def _to_tag(r: TagORM) -> Tag:
+    return Tag(
+        id=r.id,
+        space_id=r.space_id,
+        name=r.name,
+        normalized_name=r.normalized_name,
+        color=r.color,
+        description=r.description,
+        status=r.status,
+        created_by=r.created_by,
+        created_at=_dt_iso(r.created_at),
+        updated_at=_dt_iso(r.updated_at),
+    )
+
+
+def _to_tag_link(r: TagLinkORM) -> TagLink:
+    return TagLink(
+        tag_id=r.tag_id,
+        document_id=r.document_id,
+        link_source=r.link_source,
+        created_by=r.created_by,
+        created_at=_dt_iso(r.created_at),
     )
 
 
@@ -473,6 +502,122 @@ class PgRepository:
             session.add(row)
             session.commit()
             return _to_doc_link(row)
+
+    # --- tags (REQ-012) ---
+
+    def list_tags(self, space_id: int, q: str | None = None, status: str | None = "active") -> list[Tag]:
+        with SessionLocal() as session:
+            query = select(TagORM).where(TagORM.space_id == space_id)
+            if status is not None:
+                query = query.where(TagORM.status == status)
+            if q:
+                query = query.where(TagORM.normalized_name.contains(q.strip().lower()))
+            rows = session.scalars(query.order_by(TagORM.id)).all()
+            return [_to_tag(r) for r in rows]
+
+    def get_tag(self, tag_id: int) -> Tag | None:
+        with SessionLocal() as session:
+            row = session.scalars(select(TagORM).where(TagORM.id == tag_id)).first()
+            return None if row is None else _to_tag(row)
+
+    def create_tag(
+        self,
+        space_id: int,
+        name: str,
+        normalized_name: str,
+        created_by: int,
+        color: str | None = None,
+        description: str | None = None,
+    ) -> Tag:
+        with SessionLocal() as session:
+            row = TagORM(
+                space_id=space_id,
+                name=name,
+                normalized_name=normalized_name,
+                color=color,
+                description=description,
+                status="active",
+                created_by=created_by,
+            )
+            session.add(row)
+            session.commit()
+            return _to_tag(row)
+
+    def update_tag(
+        self,
+        tag_id: int,
+        name: str | None = None,
+        normalized_name: str | None = None,
+        color: str | None = None,
+        description: str | None = None,
+        status: str | None = None,
+    ) -> Tag | None:
+        with SessionLocal() as session:
+            row = session.scalars(select(TagORM).where(TagORM.id == tag_id)).first()
+            if row is None:
+                return None
+            if name is not None and normalized_name is not None:
+                row.name = name
+                row.normalized_name = normalized_name
+            if color is not None:
+                row.color = color
+            if description is not None:
+                row.description = description
+            if status is not None:
+                row.status = status
+            session.commit()
+            return _to_tag(row)
+
+    def list_document_tag_links(self, document_id: int) -> list[TagLink]:
+        with SessionLocal() as session:
+            rows = session.scalars(
+                select(TagLinkORM).where(TagLinkORM.document_id == document_id)
+            ).all()
+            return [_to_tag_link(r) for r in rows]
+
+    def upsert_document_tag(
+        self,
+        tag_id: int,
+        document_id: int,
+        link_source: str,
+        created_by: int,
+    ) -> TagLink:
+        with SessionLocal() as session:
+            existing = session.scalars(
+                select(TagLinkORM).where(
+                    TagLinkORM.tag_id == tag_id,
+                    TagLinkORM.document_id == document_id,
+                )
+            ).first()
+            if existing is not None:
+                return _to_tag_link(existing)
+            row = TagLinkORM(
+                tag_id=tag_id,
+                document_id=document_id,
+                link_source=link_source,
+                created_by=created_by,
+            )
+            session.add(row)
+            session.commit()
+            return _to_tag_link(row)
+
+    def remove_document_tag(self, tag_id: int, document_id: int) -> bool:
+        with SessionLocal() as session:
+            deleted = session.execute(
+                delete(TagLinkORM).where(
+                    TagLinkORM.tag_id == tag_id,
+                    TagLinkORM.document_id == document_id,
+                )
+            ).rowcount
+            session.commit()
+            return deleted > 0
+
+    def list_tag_document_ids(self, tag_id: int) -> list[int]:
+        with SessionLocal() as session:
+            rows = session.scalars(
+                select(TagLinkORM.document_id).where(TagLinkORM.tag_id == tag_id)
+            ).all()
+            return list(rows)
 
     def search_chunks(self, document_ids: list[int], query: str, limit: int) -> list[DocumentChunk]:
         """Search visible chunks with PostgreSQL full-text indexes.

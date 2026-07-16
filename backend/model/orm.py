@@ -13,7 +13,7 @@ from __future__ import annotations
 from datetime import datetime
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import BigInteger, ForeignKey, Integer, String, Text, func
+from sqlalchemy import BigInteger, ForeignKey, Integer, String, Text, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import JSONB, TIMESTAMP
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -132,3 +132,35 @@ class DocLinkORM(Base):
     status: Mapped[str] = mapped_column(String, default="unresolved")
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
+
+
+class TagORM(Base):
+    """REQ-012 扁平标签（migration 008）。"""
+
+    __tablename__ = "lumen_tags"
+    __table_args__ = (
+        UniqueConstraint("space_id", "normalized_name", name="lumen_tags_unique_name"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    space_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("lumen_spaces.id", ondelete="CASCADE"))
+    name: Mapped[str] = mapped_column(Text)
+    normalized_name: Mapped[str] = mapped_column(Text)
+    color: Mapped[str | None] = mapped_column(Text, nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    status: Mapped[str] = mapped_column(String, default="active")
+    created_by: Mapped[int] = mapped_column(BigInteger, ForeignKey("lumen_users.id"))
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
+
+
+class TagLinkORM(Base):
+    """REQ-012 文档-标签关联（migration 008）。复合主键 (tag_id, document_id)。"""
+
+    __tablename__ = "lumen_tag_links"
+
+    tag_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("lumen_tags.id", ondelete="CASCADE"), primary_key=True)
+    document_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("lumen_documents.id", ondelete="CASCADE"), primary_key=True)
+    link_source: Mapped[str] = mapped_column(String, default="manual")
+    created_by: Mapped[int] = mapped_column(BigInteger, ForeignKey("lumen_users.id"))
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())

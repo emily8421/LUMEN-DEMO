@@ -16,6 +16,8 @@ from backend.model.entities import (
     Space,
     SpaceMember,
     SpaceRole,
+    Tag,
+    TagLink,
     Term,
     TermStatus,
     User,
@@ -83,6 +85,9 @@ class DemoRepository:
         self._next_term_id = 2
         self.doc_links: list[DocLink] = []
         self._next_doc_link_id = 1
+        self.tags: list[Tag] = []
+        self.tag_links: list[TagLink] = []
+        self._next_tag_id = 1
 
     def find_user_by_external_id(self, external_id: str) -> User | None:
         return next((user for user in self.users if user.external_id == external_id), None)
@@ -440,6 +445,114 @@ class DemoRepository:
         self._next_doc_link_id += 1
         self.doc_links.append(link)
         return link
+
+    # --- tags (REQ-012) ---
+
+    def list_tags(self, space_id: int, q: str | None = None, status: str | None = "active") -> list[Tag]:
+        result = [tag for tag in self.tags if tag.space_id == space_id]
+        if status is not None:
+            result = [tag for tag in result if tag.status == status]
+        if q:
+            needle = q.strip().lower()
+            result = [tag for tag in result if needle in tag.normalized_name]
+        return result
+
+    def get_tag(self, tag_id: int) -> Tag | None:
+        return next((tag for tag in self.tags if tag.id == tag_id), None)
+
+    def create_tag(
+        self,
+        space_id: int,
+        name: str,
+        normalized_name: str,
+        created_by: int,
+        color: str | None = None,
+        description: str | None = None,
+    ) -> Tag:
+        tag = Tag(
+            id=self._next_tag_id,
+            space_id=space_id,
+            name=name,
+            normalized_name=normalized_name,
+            color=color,
+            description=description,
+            status="active",
+            created_by=created_by,
+            created_at=_now_iso(),
+            updated_at=_now_iso(),
+        )
+        self._next_tag_id += 1
+        self.tags.append(tag)
+        return tag
+
+    def update_tag(
+        self,
+        tag_id: int,
+        name: str | None = None,
+        normalized_name: str | None = None,
+        color: str | None = None,
+        description: str | None = None,
+        status: str | None = None,
+    ) -> Tag | None:
+        for index, tag in enumerate(self.tags):
+            if tag.id != tag_id:
+                continue
+            fields: dict[str, object] = {"updated_at": _now_iso()}
+            if name is not None and normalized_name is not None:
+                fields["name"] = name
+                fields["normalized_name"] = normalized_name
+            if color is not None:
+                fields["color"] = color
+            if description is not None:
+                fields["description"] = description
+            if status is not None:
+                fields["status"] = status
+            updated = replace(tag, **fields)
+            self.tags[index] = updated
+            return updated
+        return None
+
+    def list_document_tag_links(self, document_id: int) -> list[TagLink]:
+        return [link for link in self.tag_links if link.document_id == document_id]
+
+    def upsert_document_tag(
+        self,
+        tag_id: int,
+        document_id: int,
+        link_source: str,
+        created_by: int,
+    ) -> TagLink:
+        existing = next(
+            (
+                link
+                for link in self.tag_links
+                if link.tag_id == tag_id and link.document_id == document_id
+            ),
+            None,
+        )
+        if existing is not None:
+            return existing
+        link = TagLink(
+            tag_id=tag_id,
+            document_id=document_id,
+            link_source=link_source,
+            created_by=created_by,
+            created_at=_now_iso(),
+        )
+        self.tag_links.append(link)
+        return link
+
+    def remove_document_tag(self, tag_id: int, document_id: int) -> bool:
+        before = len(self.tag_links)
+        self.tag_links = [
+            link
+            for link in self.tag_links
+            if not (link.tag_id == tag_id and link.document_id == document_id)
+        ]
+        return len(self.tag_links) < before
+
+    def list_tag_document_ids(self, tag_id: int) -> list[int]:
+        return [link.document_id for link in self.tag_links if link.tag_id == tag_id]
 
 
 def _now_iso() -> str:

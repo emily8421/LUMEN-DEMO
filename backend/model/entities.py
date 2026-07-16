@@ -137,3 +137,30 @@ class Term:
     source_document_id: int | None = None
     created_at: str = ""
     updated_at: str = ""
+
+
+@dataclass(frozen=True)
+class Tag:
+    """REQ-012 扁平标签（lumen_tags）。空间隔离；normalized_name 用于重名校验。"""
+
+    id: int
+    space_id: int
+    name: str
+    normalized_name: str
+    color: str | None = None
+    description: str | None = None
+    status: str = "active"  # 'active' | 'archived'
+    created_by: int = 0
+    created_at: str = ""
+    updated_at: str = ""
+
+
+@dataclass(frozen=True)
+class TagLink:
+    """REQ-012 文档-标签关联（lumen_tag_links）。最小版 link_source 固定 manual。"""
+
+    tag_id: int
+    document_id: int
+    link_source: str = "manual"  # 'manual' | 'quick_entry' | 'import' | 'ai_suggested'
+    created_by: int = 0
+    created_at: str = ""
