@@ -115,3 +115,20 @@ class TermORM(Base):
     source_document_id: Mapped[int | None] = mapped_column(BigInteger, ForeignKey("lumen_documents.id"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
+
+
+class DocLinkORM(Base):
+    """REQ-026 内部链接索引（migration 007）。"""
+
+    __tablename__ = "lumen_doc_links"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    space_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("lumen_spaces.id", ondelete="CASCADE"))
+    source_document_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("lumen_documents.id", ondelete="CASCADE"))
+    target_document_id: Mapped[int | None] = mapped_column(BigInteger, ForeignKey("lumen_documents.id", ondelete="SET NULL"), nullable=True)
+    target_title: Mapped[str] = mapped_column(Text)
+    link_text: Mapped[str] = mapped_column(Text)
+    link_type: Mapped[str] = mapped_column(String, default="wikilink")
+    status: Mapped[str] = mapped_column(String, default="unresolved")
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())

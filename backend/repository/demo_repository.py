@@ -6,6 +6,8 @@ from dataclasses import replace
 from datetime import UTC, datetime
 
 from backend.model.entities import (
+    DocLink,
+    DocLinkDraft,
     Document,
     DocumentChunk,
     DocumentPermission,
@@ -79,6 +81,8 @@ class DemoRepository:
         self._next_import_id = 1
         self._next_chunk_id = 1
         self._next_term_id = 2
+        self.doc_links: list[DocLink] = []
+        self._next_doc_link_id = 1
 
     def find_user_by_external_id(self, external_id: str) -> User | None:
         return next((user for user in self.users if user.external_id == external_id), None)
@@ -364,6 +368,78 @@ class DemoRepository:
         self._next_version_id += 1
         self.document_versions.append(version)
         return version
+
+    # --- doc links (REQ-026) ---
+
+    def list_doc_links(self, space_id: int, document_id: int, direction: str) -> list[DocLink]:
+        if direction == "backlink":
+            return [
+                link
+                for link in self.doc_links
+                if link.space_id == space_id and link.target_document_id == document_id
+            ]
+        return [
+            link
+            for link in self.doc_links
+            if link.space_id == space_id and link.source_document_id == document_id
+        ]
+
+    def find_document_id_by_title(self, space_id: int, title: str) -> int | None:
+        return next(
+            (document.id for document in self.documents if document.space_id == space_id and document.title == title),
+            None,
+        )
+
+    def replace_document_wikilinks(
+        self,
+        space_id: int,
+        source_document_id: int,
+        drafts: list[DocLinkDraft],
+    ) -> list[DocLink]:
+        self.doc_links = [
+            link
+            for link in self.doc_links
+            if not (link.source_document_id == source_document_id and link.link_type == "wikilink")
+        ]
+        created: list[DocLink] = []
+        for draft in drafts:
+            link = DocLink(
+                id=self._next_doc_link_id,
+                space_id=space_id,
+                source_document_id=source_document_id,
+                target_document_id=draft.target_document_id,
+                target_title=draft.target_title,
+                link_text=draft.link_text,
+                link_type="wikilink",
+                status=draft.status,
+            )
+            self._next_doc_link_id += 1
+            self.doc_links.append(link)
+            created.append(link)
+        return created
+
+    def upsert_manual_link(
+        self,
+        space_id: int,
+        source_document_id: int,
+        target_document_id: int | None,
+        target_title: str,
+        link_text: str,
+    ) -> DocLink:
+        status = "resolved" if target_document_id is not None else "unresolved"
+        link = DocLink(
+            id=self._next_doc_link_id,
+            space_id=space_id,
+            source_document_id=source_document_id,
+            target_document_id=target_document_id,
+            target_title=target_title,
+            link_text=link_text,
+            link_type="manual",
+            status=status,
+        )
+        self._next_doc_link_id += 1
+        self.doc_links.append(link)
+        return link
 
 
 def _now_iso() -> str:

@@ -16,6 +16,8 @@ from datetime import datetime
 from sqlalchemy import delete, func, select, text as sql_text
 
 from backend.model.entities import (
+    DocLink,
+    DocLinkDraft,
     Document,
     DocumentChunk,
     DocumentPermission,
@@ -29,6 +31,7 @@ from backend.model.entities import (
     User,
 )
 from backend.model.orm import (
+    DocLinkORM,
     DocumentChunkORM,
     DocumentORM,
     DocumentVersionORM,
@@ -121,6 +124,21 @@ def _to_term(r: TermORM) -> Term:
         owner_id=r.owner_id,
         status=TermStatus(r.status),
         source_document_id=r.source_document_id,
+        created_at=_dt_iso(r.created_at),
+        updated_at=_dt_iso(r.updated_at),
+    )
+
+
+def _to_doc_link(r: DocLinkORM) -> DocLink:
+    return DocLink(
+        id=r.id,
+        space_id=r.space_id,
+        source_document_id=r.source_document_id,
+        target_document_id=r.target_document_id,
+        target_title=r.target_title,
+        link_text=r.link_text,
+        link_type=r.link_type,
+        status=r.status,
         created_at=_dt_iso(r.created_at),
         updated_at=_dt_iso(r.updated_at),
     )
@@ -384,6 +402,77 @@ class PgRepository:
                 select(DocumentChunkORM).order_by(DocumentChunkORM.document_id, DocumentChunkORM.ordinal)
             ).all()
             return [_to_chunk(r) for r in rows]
+
+    # --- doc links (REQ-026) ---
+
+    def list_doc_links(self, space_id: int, document_id: int, direction: str) -> list[DocLink]:
+        with SessionLocal() as session:
+            query = select(DocLinkORM).where(DocLinkORM.space_id == space_id)
+            if direction == "backlink":
+                query = query.where(DocLinkORM.target_document_id == document_id)
+            else:
+                query = query.where(DocLinkORM.source_document_id == document_id)
+            rows = session.scalars(query).all()
+            return [_to_doc_link(r) for r in rows]
+
+    def find_document_id_by_title(self, space_id: int, title: str) -> int | None:
+        with SessionLocal() as session:
+            row = session.scalars(
+                select(DocumentORM).where(DocumentORM.space_id == space_id, DocumentORM.title == title)
+            ).first()
+            return None if row is None else row.id
+
+    def replace_document_wikilinks(
+        self,
+        space_id: int,
+        source_document_id: int,
+        drafts: list[DocLinkDraft],
+    ) -> list[DocLink]:
+        with SessionLocal() as session:
+            session.execute(
+                delete(DocLinkORM).where(
+                    DocLinkORM.source_document_id == source_document_id,
+                    DocLinkORM.link_type == "wikilink",
+                )
+            )
+            created = [
+                DocLinkORM(
+                    space_id=space_id,
+                    source_document_id=source_document_id,
+                    target_document_id=draft.target_document_id,
+                    target_title=draft.target_title,
+                    link_text=draft.link_text,
+                    link_type="wikilink",
+                    status=draft.status,
+                )
+                for draft in drafts
+            ]
+            session.add_all(created)
+            session.commit()
+            return [_to_doc_link(r) for r in created]
+
+    def upsert_manual_link(
+        self,
+        space_id: int,
+        source_document_id: int,
+        target_document_id: int | None,
+        target_title: str,
+        link_text: str,
+    ) -> DocLink:
+        status = "resolved" if target_document_id is not None else "unresolved"
+        with SessionLocal() as session:
+            row = DocLinkORM(
+                space_id=space_id,
+                source_document_id=source_document_id,
+                target_document_id=target_document_id,
+                target_title=target_title,
+                link_text=link_text,
+                link_type="manual",
+                status=status,
+            )
+            session.add(row)
+            session.commit()
+            return _to_doc_link(row)
 
     def search_chunks(self, document_ids: list[int], query: str, limit: int) -> list[DocumentChunk]:
         """Search visible chunks with PostgreSQL full-text indexes.

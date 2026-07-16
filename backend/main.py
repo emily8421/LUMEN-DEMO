@@ -44,6 +44,7 @@ def create_app():
         raise RuntimeError("FastAPI is not installed")
 
     from backend.api.auth import router as auth_router
+    from backend.api.doc_links import router as doc_links_router
     from backend.api.documents import router as documents_router
     from backend.api.export import router as export_router
     from backend.api.imports import router as imports_router
@@ -69,6 +70,8 @@ def create_app():
         app.include_router(documents_router)
     if imports_router is not None:
         app.include_router(imports_router)
+    if doc_links_router is not None:
+        app.include_router(doc_links_router)
     if export_router is not None:
         app.include_router(export_router)
     if search_router is not None:

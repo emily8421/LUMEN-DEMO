@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 
-from backend.model.entities import Document, DocumentPermission, DocumentVersion, SpaceMember
+from backend.model.entities import DocLinkDraft, Document, DocumentPermission, DocumentVersion, SpaceMember
 from backend.service.chunking import clean_text, split_text_into_chunks
 from backend.service.permission import can_write_document, can_view_document, filter_visible_documents, is_space_member
 
@@ -62,6 +63,7 @@ def create_document(
         permission=request.permission,
     )
     sync_document_chunks(repository, document)
+    sync_document_wikilinks(repository, document)
     return document
 
 
@@ -93,6 +95,7 @@ def update_document(
         editor_id=user_id,
     )
     sync_document_chunks(repository, updated)
+    sync_document_wikilinks(repository, updated)
     return updated
 
 
@@ -120,6 +123,7 @@ def restore_version(
         raise VersionNotFoundError("version not found")
     restored = repository.restore_document_version(document_id, version_no, editor_id=user_id)
     sync_document_chunks(repository, restored)
+    sync_document_wikilinks(repository, restored)
     return restored
 
 
@@ -154,3 +158,38 @@ def ensure_documents_indexed(repository) -> int:
         except Exception:
             continue
     return indexed
+
+
+_WIKILINK_PATTERN = re.compile(r"\[\[([^\[\]]+?)\]\]")
+
+
+def extract_wikilinks(content_md: str) -> list[str]:
+    """提取 Markdown 正文中的 ``[[target]]`` wikilink 目标文本（保序）。"""
+    return _WIKILINK_PATTERN.findall(content_md)
+
+
+def sync_document_wikilinks(repository, document: Document) -> None:
+    """解析正文 ``[[target]]``，按标题匹配当前空间文档，幂等重建该文档的 wikilink 索引。
+
+    命中且非自链 → resolved；未命中 → unresolved（target_document_id=None）；
+    自链（``[[自己]]``）跳过。manual 链接不受影响（replace 只删 wikilink 类型）。
+    """
+    seen: set[str] = set()
+    drafts: list[DocLinkDraft] = []
+    for raw_target in extract_wikilinks(document.content_md):
+        target_text = raw_target.strip()
+        if not target_text or target_text in seen:
+            continue
+        seen.add(target_text)
+        target_id = repository.find_document_id_by_title(document.space_id, target_text)
+        if target_id == document.id:
+            continue  # 自链跳过（DB CHECK source != target）
+        if target_id is not None:
+            drafts.append(
+                DocLinkDraft(target_document_id=target_id, target_title=target_text, link_text=target_text, status="resolved")
+            )
+        else:
+            drafts.append(
+                DocLinkDraft(target_document_id=None, target_title=target_text, link_text=target_text, status="unresolved")
+            )
+    repository.replace_document_wikilinks(document.space_id, document.id, drafts)

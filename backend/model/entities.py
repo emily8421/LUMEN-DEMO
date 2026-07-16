@@ -100,6 +100,32 @@ class DocumentChunk:
 
 
 @dataclass(frozen=True)
+class DocLink:
+    """REQ-026 内部链接 / 反向链接索引行（lumen_doc_links）。"""
+
+    id: int
+    space_id: int
+    source_document_id: int
+    target_document_id: int | None
+    target_title: str
+    link_text: str
+    link_type: str  # 'wikilink' | 'manual'
+    status: str  # 'resolved' | 'unresolved' | 'no_access'（no_access 查询时折算）
+    created_at: str = ""
+    updated_at: str = ""
+
+
+@dataclass(frozen=True)
+class DocLinkDraft:
+    """sync_document_wikilinks 传给 repository 的 wikilink 草稿（未落 id）。"""
+
+    target_document_id: int | None
+    target_title: str
+    link_text: str
+    status: str  # 'resolved' | 'unresolved'
+
+
+@dataclass(frozen=True)
 class Term:
     id: int
     space_id: int | None
