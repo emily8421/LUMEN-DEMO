@@ -45,7 +45,7 @@
 | API-015 | POST | /api/spaces/push | 跨空间推送 | [P2] | 骨架 | — | REQ-015 |
 | API-016 | GET | /api/briefs/{token} | 对外只读简报 | [愿景] | 骨架 | — | REQ-022 |
 | API-017 | POST | /api/quick-entry | 快速录入索引条目 | [P2] | 契约草案 | — | REQ-025 |
-| API-018 | GET/POST | /api/doc-links | 内部链接 / 反向链接 | [P2] | 契约草案 | — | REQ-026 |
+| API-018 | GET/POST | /api/doc-links | 内部链接 / 反向链接 | [P2] | Phase2A-已实现 | — | REQ-026 |
 | API-019 | POST | /api/export-pdf | 单文档导出 PDF | [P1] | Phase1.5B-契约草案·待 RG-006 | — | REQ-027 |
 | API-020 | POST | /api/sync/feishu | 飞书同步（webhook/拉取） | [愿景] | 骨架 | — | REQ-028 |
 | API-021 | POST | /api/path | 路径推理（多跳） | [愿景] | 骨架 | — | REQ-030 |
@@ -95,7 +95,7 @@
 | API-014 | Phase2A-契约草案 | §3.9 | 4001/4003/4090/4220 | 空间成员；标签仅当前空间可见 | TC-P2-TAG-001 | P1.5A/B 后确认 |
 | API-027 | Phase2A-契约草案 | §3.9 | 4001/4003/4004/4090/4220 | 空间成员；归档不删除历史关联 | TC-P2-TAG-001 | P1.5A/B 后确认 |
 | API-017 | Phase2A-契约草案 | §3.9 | 4001/4003/4220 | 默认 owner 私有；转换后继承文档权限 | TC-P2-QUICK-001 | P1.5A/B 后确认 |
-| API-018 | Phase2A-契约草案 | §3.9 | 4001/4003/4004/4220 | source / target 文档均需权限过滤；无权限反链不泄露 | TC-P2-LINK-001 | P1.5A/B 后确认 |
+| API-018 | Phase2A-已实现 | §3.9 | 4001/4003/4004/4220 | source / target 文档均需权限过滤；无权限反链不泄露 | TC-P2-LINK-001 | 已实现（Task A fc2b869 + Task B 6228f3f） |
 | API-028 | Phase2B-契约草案 | §3.9 | 4001/4003/4004/4220/5030 | 文档可写权限；引用 chunk 必须当前用户可见 | TC-P2-AI-001 | Phase2B 确认后 |
 
 ### 3.2 请求 / 输入契约（字段级·核心接口）
@@ -250,8 +250,8 @@ sequenceDiagram
 | API-014 `POST /api/tags` | `name`、`color?`、`description?` | `{id,name,color,description,status}` | 空间成员可创建；同空间 `normalized_name` 冲突返回 4090 | `lumen_tags` | 不自动跨空间复制 |
 | API-027 `/api/tags/{id}` | `PUT`: `name?`、`color?`、`description?`、`status?`；`DELETE`: 归档 | `{id,name,color,description,status}` | 仅当前空间标签；删除采用 `archived`，不硬删历史 | `lumen_tags` | 避免破坏文档历史关联 |
 | API-017 `POST /api/quick-entry` | `title`、`content_md`、`target_document_id?`、`tag_ids?`、`mode=create_document / append_document / draft` | `{id,status,created_document_id?,target_document_id?}` | 草稿默认 owner 私有；转换为文档时继承目标文档权限或新文档默认 private | `lumen_quick_entries`、`lumen_documents`、`lumen_tag_links` | 不触发 AI；不绕过文档权限 |
-| API-018 `GET /api/doc-links` | `document_id`、`direction=outbound / backlink`、`status?` | `items[{id,source_document_id,target_document_id?,target_title?,link_text,status}]` | source / target 均按空间 + 权限过滤；无权限 target 返回 `status=no_access` 且不泄露标题 | `lumen_doc_links`、`lumen_documents` | 支撑内部链接与反向链接 |
-| API-018 `POST /api/doc-links` | `source_document_id`、`target_document_id?`、`target_title?`、`link_text`、`link_type=wikilink / manual` | `{id,status}` | 需可编辑 source；target 缺失时 `unresolved` | `lumen_doc_links` | 后续可由 Markdown 解析器批量维护 |
+| API-018 `GET /api/doc-links` | `document_id`、`direction=outbound / backlink`、`status?` | `data:[{id,source_document_id,target_document_id?,target_title?,link_text,link_type,status}]` | source / target 均按空间 + 权限过滤；无权限 target 返回 `status=no_access` 且不泄露标题 | `lumen_doc_links`、`lumen_documents` | 支撑内部链接与反向链接 |
+| API-018 `POST /api/doc-links` | `source_document_id`、`target_document_id?`、`target_title?`、`link_text`、`link_type=manual`（wikilink 由文档正文解析，不接受手动 POST） | `{id,status}` | 需可编辑 source；target 缺失时 `unresolved` | `lumen_doc_links` | 后续可由 Markdown 解析器批量维护 |
 | API-028 `POST /api/documents/{id}/polish` | `mode=polish / citation`、`selection_md?`、`instruction?`、`use_sources?=true` | `{draft_id,output_md,sources[{chunk_id,document_id,title,snippet}],status}` | 需文档可写；sources 必须来自当前用户可见 chunk；LLM 不可用返回 5030 或 Mock 降级 | `lumen_ai_drafts`、`lumen_chunks`、`lumen_documents` | Phase2B；不存 API key；真实文档外发需风险接受 |
 
 **Phase1.5 / Phase2 错误码补充**：
@@ -265,7 +265,8 @@ sequenceDiagram
 ### [Phase1.5] / [P2] / [愿景] 接口（骨架·待该阶段细化）
 - `/api/import/batch`、`/api/documents/{id}/export`、`/api/export/space`：Phase1.5A 契约草案见 §3.9，尚未实现；默认不引新依赖、不建真实目录表。
 - `/api/export-pdf`：Phase1.5B PDF 导出契约草案见 §3.9，受 RG-006 约束，尚未实现。
-- `/api/tags`、`/api/tags/{id}`、`/api/quick-entry`、`/api/doc-links`：Phase2A 个人知识组织契约草案见 §3.9，尚未实现。
+- `/api/tags`、`/api/tags/{id}`、`/api/quick-entry`：Phase2A 个人知识组织契约草案见 §3.9，尚未实现。
+- `/api/doc-links`：Phase2A 已实现（Task A `fc2b869` + Task B `6228f3f`）。GET 返回 `data` 直接数组（出链 target 不可见→`status=no_access` 且不泄露标题；反链来源不可见过滤）；POST 仅 `link_type=manual`（wikilink 由文档保存时正文解析，拒手动 POST）。
 - `/api/documents/{id}/polish`：Phase2B 团队 MVP 候选，需数据外发风险确认后再实现。
 - `/api/spaces/push`：跨空间推送不进 Phase2B 首批，请求 / 响应待后续细化。
 - `/api/briefs/{token}`：简报隔离与有效期待愿景验证（REQ-022）
