@@ -1,4 +1,4 @@
-import type { DocumentPermission, DocumentVersion, KnowledgeDocument } from '../api';
+import type { DocLinkView, DocumentPermission, DocumentVersion, KnowledgeDocument } from '../api';
 import type { Draft } from '../app/types';
 import { permissionLabels } from '../app/constants';
 import { MarkdownBlock } from '../components/MarkdownBlock';
@@ -10,6 +10,13 @@ type DocumentsFeatureProps = {
   draft: Draft;
   onDraftChange: (draft: Draft) => void;
   versions: DocumentVersion[];
+  /** 当前文档出链（outbound），供编辑预览把 [[wikilink]] 渲染成带状态可点击链接。 */
+  outboundLinks: DocLinkView[];
+  /** 当前文档反向链接（backlink），即引用本文的文档列表。 */
+  backlinks: DocLinkView[];
+  /** 当前空间可见文档，用于把反链 source_document_id 解析成可读标题。 */
+  documents: KnowledgeDocument[];
+  onOpenDocument: (documentId: number, title: string) => void;
   onCreateDocument: () => void;
   onDelete: () => void;
   onSave: (event: React.FormEvent<HTMLFormElement>) => void;
@@ -32,6 +39,10 @@ export function DocumentsFeature({
   draft,
   onDraftChange,
   versions,
+  outboundLinks,
+  backlinks,
+  documents,
+  onOpenDocument,
   onCreateDocument,
   onDelete,
   onSave,
@@ -98,7 +109,12 @@ export function DocumentsFeature({
                   <strong>预览</strong>
                   <span>保存前检查标题、列表、强调与段落</span>
                 </div>
-                <MarkdownBlock content={draft.content_md} emptyText="暂无可预览内容。" />
+                <MarkdownBlock
+                  content={draft.content_md}
+                  emptyText="暂无可预览内容。"
+                  docLinks={outboundLinks}
+                  onOpenDocument={onOpenDocument}
+                />
               </section>
             </div>
           </form>
@@ -111,26 +127,59 @@ export function DocumentsFeature({
               <h2>版本历史</h2>
             </div>
           </div>
-          {!selectedDocument || isCreating ? (
-            <p className="empty-state inspector-empty">保存文档后可查看版本历史。</p>
-          ) : versions.length === 0 ? (
-            <p className="empty-state inspector-empty">暂无版本记录。</p>
-          ) : (
-            <ol className="version-list inspector-list">
-              {versions.map((version) => (
-                <li key={version.id}>
-                  <div>
-                    <strong>v{version.version_no}</strong>
-                    <small>{new Date(version.created_at).toLocaleString()} · editor #{version.editor_id}</small>
-                  </div>
-                  <MarkdownBlock content={markdownExcerpt(version.content_md)} emptyText="空内容" className="compact-markdown" />
-                  <button type="button" onClick={() => onRestore(version.version_no)} disabled={isBusy}>
-                    恢复
-                  </button>
-                </li>
-              ))}
-            </ol>
-          )}
+          <div className="inspector-list">
+            {!selectedDocument || isCreating ? (
+              <p className="empty-state inspector-empty">保存文档后可查看版本历史。</p>
+            ) : versions.length === 0 ? (
+              <p className="empty-state inspector-empty">暂无版本记录。</p>
+            ) : (
+              <ol className="version-list">
+                {versions.map((version) => (
+                  <li key={version.id}>
+                    <div>
+                      <strong>v{version.version_no}</strong>
+                      <small>{new Date(version.created_at).toLocaleString()} · editor #{version.editor_id}</small>
+                    </div>
+                    <MarkdownBlock content={markdownExcerpt(version.content_md)} emptyText="空内容" className="compact-markdown" />
+                    <button type="button" onClick={() => onRestore(version.version_no)} disabled={isBusy}>
+                      恢复
+                    </button>
+                  </li>
+                ))}
+              </ol>
+            )}
+
+            <section className="backlinks-block" aria-label="反向链接">
+              <div className="subsection-heading">
+                <strong>反向链接</strong>
+                <span>引用本文的文档</span>
+              </div>
+              {!selectedDocument || isCreating ? (
+                <p className="empty-state inspector-empty">保存文档后可查看反向链接。</p>
+              ) : backlinks.length === 0 ? (
+                <p className="empty-state inspector-empty">暂无文档引用本文。</p>
+              ) : (
+                <ol className="backlink-list">
+                  {backlinks.map((link) => {
+                    const sourceTitle = documents.find((document) => document.id === link.source_document_id)?.title
+                      ?? `文档 #${link.source_document_id}`;
+                    return (
+                      <li key={link.id}>
+                        <button
+                          type="button"
+                          className="backlink-link"
+                          onClick={() => onOpenDocument(link.source_document_id, sourceTitle)}
+                        >
+                          <strong>{sourceTitle}</strong>
+                          <small>以「{link.link_text}」引用</small>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ol>
+              )}
+            </section>
+          </div>
         </aside>
       </div>
     </section>

@@ -4,6 +4,7 @@ import {
   createTerm,
   deleteDocument,
   deleteTerm,
+  DocLinkView,
   DocumentPermission,
   DocumentVersion,
   getDocument,
@@ -13,6 +14,7 @@ import {
   exportSpaceZip,
   triggerBrowserDownload,
   KnowledgeDocument,
+  listDocLinks,
   listDocuments,
   listSpaces,
   listTerms,
@@ -111,6 +113,8 @@ function App() {
   const [documents, setDocuments] = useState<KnowledgeDocument[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [versions, setVersions] = useState<DocumentVersion[]>([]);
+  const [outboundLinks, setOutboundLinks] = useState<DocLinkView[]>([]);
+  const [backlinks, setBacklinks] = useState<DocLinkView[]>([]);
   const [draft, setDraft] = useState<Draft>(emptyDraft);
   const [isCreating, setIsCreating] = useState(false);
   const [notice, setNotice] = useState('请使用 Demo 账号登录。');
@@ -161,6 +165,8 @@ function App() {
     if (isCreating) {
       setDraft(emptyDraft);
       setVersions([]);
+      setOutboundLinks([]);
+      setBacklinks([]);
       return;
     }
 
@@ -177,6 +183,7 @@ function App() {
       });
       if (session) {
         void loadVersions(session.token, selectedDocument.id);
+        void loadDocLinks(session.token, selectedDocument.id);
       }
     }
   }, [isCreating, selectedDocument?.id, selectedDocument?.content_md, selectedDocument?.permission, selectedDocument?.title, session?.token]);
@@ -223,6 +230,25 @@ function App() {
   async function loadVersions(token: string, documentId: number) {
     const versionResult = await listVersions(token, documentId);
     setVersions(versionResult);
+  }
+
+  async function loadDocLinks(token: string, documentId: number) {
+    try {
+      const [outbound, back] = await Promise.all([
+        listDocLinks(token, documentId, 'outbound'),
+        listDocLinks(token, documentId, 'backlink'),
+      ]);
+      setOutboundLinks(outbound);
+      setBacklinks(back);
+    } catch (caughtError) {
+      // doc-links 加载失败不阻塞文档编辑；仅处理登录失效，其余静默以免覆盖主流程错误提示。
+      const message = caughtError instanceof Error ? caughtError.message : '';
+      if (isAuthTokenError(message)) {
+        clearStoredSession();
+        setSession(null);
+        setNotice('登录已失效，请重新登录。');
+      }
+    }
   }
 
   async function loadDocumentDetail(token: string, documentId: number) {
@@ -558,6 +584,10 @@ function App() {
                 draft={draft}
                 onDraftChange={setDraft}
                 versions={versions}
+                outboundLinks={outboundLinks}
+                backlinks={backlinks}
+                documents={documents}
+                onOpenDocument={handleOpenDocument}
                 onCreateDocument={handleCreateDocument}
                 onDelete={handleDelete}
                 onSave={handleSave}
