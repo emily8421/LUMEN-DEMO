@@ -328,7 +328,7 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 
 ## Sprint-12（P1C·可用性收口 A · 候选）：登录态持久化 + seed 自索引修复
 
-> **候选·待确认**：2026-07-15 系统完成度审计后规划的 P1.5 可用性收口批次，尚未批准编码；确认任务范围、验证命令后再实现。
+> **进行中（2026-07-16）**：① 登录态持久化已实现（`App.tsx` 存 localStorage、启动恢复、切空间同步、token 失效自动登出；`npm.cmd run build` 通过；刷新不掉线 smoke 建议用 `scripts/run-sprint16-demo.ps1` 人工验证）；② seed 自索引待做（涉及 embedding，集成验证待本机 PG）。
 
 ### 目标
 修复两个"日常可用"硬伤（审计 §三 坑 1 / 坑 3）：① 登录态持久化（当前 token 只存 React state，刷新即掉线）；② seed 示例文档自索引（seed 直接 INSERT 不经服务层，2 篇 demo 文档无 chunks / embedding，开箱搜不到）。不新增业务 REQ，属 REQ-011 可用性收口。
@@ -518,6 +518,7 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 | Sprint-10（P1B）实现 | 2026-07-12 | 011 | 前端工作台系统化重设计：TopBar + Nav Rail + Context Pane + Workspace 三层布局；Context Pane 随文档 / 搜索 / 问答 / 术语变化；CSS token + pane / toolbar / list-row / inspector 分层；新增正式设计文档与 HTML 原型 | 本批 | `git diff --check`；`npm.cmd run build`；Chrome / Edge 900px headless smoke 通过，覆盖登录、四视图切换、文档新建 / 编辑 / 版本恢复 / 删除、Markdown 预览、搜索来源打开、问答、术语新建 / 删除确认；无全局横向滚动 | 不阻塞 Phase1 Demo closure；P1B 仅作为既有 Demo 的前端工作台体验收口；不引 router / 组件库 / 新 API | §2 / §5（TC-P1-014 通过） |
 | Sprint-16（P1.5A）实现 | 2026-07-15 | 037/009 | 批量 / 文件夹 `.md` / `.txt` 导入：`POST /api/import/batch`、逐文件结果、同名跳过、路径标题前缀；前端 drop zone、多文件 / 文件夹选择、批量摘要与逐条结果 | `e958001` | `git diff --check`；`python -m unittest tests.backend.test_imports tests.backend.test_import_api`（9 tests）；非 PG/embedding 后端业务测试 47 tests；`npm.cmd run build`；Chrome headless drop-zone smoke 通过 | 不改 DB schema、不引新依赖、不做 Word/PDF/PDF 导出；全量 PG/embedding 测试受本机环境限制未完成 | §5（TC-P1-015 通过） |
 | Sprint-17（P1.5A）实现 | 2026-07-16 | 038 | 单文档 `.md` 下载 + 空间 ZIP 导出备份：`GET /api/documents/{id}/export`（`text/markdown`）+ `GET /api/export/space`（标准库 `zipfile`，按权限过滤，不可见文档不进 ZIP）；前端文档详情"下载 `.md`" + TopBar"导出空间 ZIP" + `api.ts` blob 下载 | 本批 | `git diff --check`；`python -m unittest tests.backend.test_export`（13 tests）；回归 `test_imports` + `test_import_api`（9 tests）；`npm.cmd run build`；FastAPI TestClient 端到端 HTTP smoke（路由注册 / 异常 handler / 二进制 Response / 权限 4004 / 非法 format 4220 / 无 token 4001） | 不改 DB schema、不引依赖、不做 PDF；全量 PG/embedding 测试受本机环境限制未完成；浏览器按钮下载落盘的人工 smoke 可用 `scripts/run-sprint16-demo.ps1` 补 | §5（TC-P1-016 通过） |
+| Sprint-12①（P1C）实现 | 2026-07-16 | 011 | 登录态持久化：`App.tsx` 将 `{token,userId,currentSpaceId}` 存 localStorage、启动恢复、切空间同步、token 失效（invalid token / 401）自动清除登出 | 本批 | `npm.cmd run build` 通过；刷新不掉线端到端 smoke 建议用 `scripts/run-sprint16-demo.ps1`（内存后端，不需 Docker）人工验证 | 不改 API / DB / 权限 / 依赖；seed 自索引（Sprint-12②）待做 | §5 |
 
 > Sprint-8 后：pgvector / Embedding / LLM 已接入（RG-001/002/004 Go），基础 Web / ORM 栈为 Go（RG-005）。Phase1 全量验收结论为 Conditional Go（Demo closure）；仍移出 P1：真实 PDF 解析、图片 OCR（REQ-010，RG-003 No-Go，后续阶段）。Sprint-9（P1A）与 Sprint-10（P1B）是已完成 Demo 之上的前端体验收口，不改变 Phase1 closure 结论。Phase2 启动前需人工确认范围、进入 / 退出标准，并另行更新阶段指针。Sprint-11 目前仅为 P2 UI / WSG 实现前门禁草案，不计入已完成 Sprint；TC-P2-WSG-001 与 TC-P2-UI-001~005 未执行、未通过。
 

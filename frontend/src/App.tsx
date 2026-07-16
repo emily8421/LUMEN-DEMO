@@ -58,9 +58,55 @@ const emptyImportDraft = {
   permission: 'team' as DocumentPermission,
 };
 
+const SESSION_STORAGE_KEY = 'lumen-demo-session';
+
+function loadStoredSession(): Session | null {
+  try {
+    const raw = window.localStorage.getItem(SESSION_STORAGE_KEY);
+    if (!raw) {
+      return null;
+    }
+    const parsed = JSON.parse(raw) as Partial<Session>;
+    if (
+      typeof parsed.token !== 'string' ||
+      typeof parsed.userId !== 'number' ||
+      typeof parsed.currentSpaceId !== 'number'
+    ) {
+      return null;
+    }
+    return {
+      token: parsed.token,
+      userId: parsed.userId,
+      currentSpaceId: parsed.currentSpaceId,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function persistSession(session: Session): void {
+  try {
+    window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
+  } catch {
+    // localStorage 不可用（如隐私模式）时静默降级，登录态仅存内存
+  }
+}
+
+function clearStoredSession(): void {
+  try {
+    window.localStorage.removeItem(SESSION_STORAGE_KEY);
+  } catch {
+    // 同上
+  }
+}
+
+function isAuthTokenError(message: string): boolean {
+  return /invalid token|unauthorized|\b401\b/i.test(message);
+}
+
 function App() {
   const [username, setUsername] = useState('alice');
-  const [session, setSession] = useState<Session | null>(null);
+  const [session, setSession] = useState<Session | null>(() => loadStoredSession());
   const [spaces, setSpaces] = useState<Space[]>([]);
   const [documents, setDocuments] = useState<KnowledgeDocument[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -99,7 +145,16 @@ function App() {
       return;
     }
 
-    void refreshWorkspace(session.token);
+    void refreshWorkspace(session.token).catch((error) => {
+      const message = error instanceof Error ? error.message : '';
+      if (isAuthTokenError(message)) {
+        clearStoredSession();
+        setSession(null);
+        setNotice('登录已失效，请重新登录。');
+      } else {
+        setError(message || '加载工作区失败');
+      }
+    });
   }, [session?.token, session?.currentSpaceId]);
 
   useEffect(() => {
@@ -130,11 +185,13 @@ function App() {
     event.preventDefault();
     await runAction('正在登录...', async () => {
       const result = await login(username.trim());
-      setSession({
+      const nextSession = {
         token: result.token,
         userId: result.user_id,
         currentSpaceId: result.current_space_id,
-      });
+      };
+      setSession(nextSession);
+      persistSession(nextSession);
       setNotice(`已登录：user_id=${result.user_id}`);
     });
   }
@@ -191,11 +248,13 @@ function App() {
 
     await runAction('正在切换空间...', async () => {
       const result = await switchSpace(session.token, spaceId);
-      setSession({
+      const nextSession = {
         ...session,
         token: result.token,
         currentSpaceId: result.current_space_id,
-      });
+      };
+      setSession(nextSession);
+      persistSession(nextSession);
       setSelectedId(null);
       setActiveView('documents');
       setSearchResult(null);
@@ -429,7 +488,13 @@ function App() {
     } catch (caughtError) {
       const message = caughtError instanceof Error ? caughtError.message : '操作失败';
       setError(message);
-      setNotice('操作失败，请查看错误信息。');
+      if (isAuthTokenError(message)) {
+        clearStoredSession();
+        setSession(null);
+        setNotice('登录已失效，请重新登录。');
+      } else {
+        setNotice('操作失败，请查看错误信息。');
+      }
     } finally {
       setIsBusy(false);
     }
