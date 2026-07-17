@@ -84,3 +84,7 @@ tests/
 ## 7. 与 UI 探索链路的关系
 
 UI Brief / UI Exploration / frontend experience brief / frontend-interaction / UI 原型策略回答“用户要什么体验、页面如何呈现、状态如何被确认”。Web App Structure Profile 回答“代码结构如何支撑这些体验、首个纵切如何可验证、后续功能如何不堆到少数文件”。两者互补，不能互相替代。
+
+## 8. 与 scaffold 实验的关系
+
+本 Profile 只定义结构基线和 Gate，不在母模板内生成真实 Web App scaffold。若需要验证 `template-docs/web-app/`、`new-project --profile web-app` 或领域模板是否值得推进，先按 `template-docs/web-app-scaffold-experiment.md` 在真实项目或独立实验仓记录候选结构、Walking Skeleton 验证、文件膨胀观察和推广结论。

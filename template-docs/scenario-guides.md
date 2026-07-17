@@ -191,7 +191,7 @@ AI 识别场景后，**先输出引导计划给用户看（用人话 + 为什么
 | 2 | 从模板派生新项目并建远端 | 从 GitHub main 派生拿最新模板；脚本自动 git init/首提交/建仓 | `scripts/new-project.sh` + `new-project`(14) |
 | 3 | 给采集环境的入口 | 新项目第一件事是记录本机能跑什么 | `collect-env`(13) |
 
-- **完成判据**：新项目 git 干净 · 远端可见性正确 · `VERSION` 作为项目自身版本存在 · `TEMPLATE-BASE.md` 记录继承模板版本
+- **完成判据**：新项目 git 干净 · 远端可见性正确 · `VERSION` 作为项目自身版本从 `v0.1.0` 起步且 `CHANGELOG.md` 顶部项目版本与 `VERSION` 一致 · `TEMPLATE-BASE.md` 记录继承模板版本
 - **下一步**：A3
 - **cmd 指针**：`README` §5 分钟最小路径 + `git-guide.md` §2
 

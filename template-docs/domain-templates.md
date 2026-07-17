@@ -53,6 +53,8 @@
 
 反例：单个 web 应用、单个 CLI 工具、单个数据脚本——**直连母模板**即可，不必为此建领域模板。
 
+Web App scaffold 也不自动等于领域模板。复杂 Web / 全栈交互项目先使用 `template-docs/web-fullstack-profile.md` 与 `template-docs/web-app-scaffold-experiment.md` 做普通项目或独立实验仓验证；只有当多个同类 Web 项目共享领域标准件、独立版本和自检需求时，才进入领域模板评估。
+
 ## 3. 三层职责边界
 
 完整定义见 `_proposals/TEMPLATE-UPGRADE-domain-template-inheritance.md` §4.1 / §4.2 / §4.3，本节为结论摘要，不复制正文：
