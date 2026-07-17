@@ -174,6 +174,32 @@ else
 fi
 
 echo
+echo "==> 派生项目版本机制启用状态（非阻断）"
+# 复用前段 LINEAGE_ROLE 判定；前段无 TEMPLATE-BASE.md 时该变量未定义，兜底为空按普通派生项目处理。
+LINEAGE_ROLE="${LINEAGE_ROLE:-}"
+if [[ "$LINEAGE_ROLE" == "domain" ]]; then
+  echo "ℹ️  领域模板（domain lineage）：VERSION / CHANGELOG 由领域模板自身治理，跳过版本机制启用状态检测。"
+else
+  main_signal_ok=false
+  aux_signal_ok=false
+  if [[ -f ".github/workflows/project-check.yml" ]] && grep -q "Check project version consistency" ".github/workflows/project-check.yml"; then
+    main_signal_ok=true
+  fi
+  if [[ -f "ai/project-rules.md" ]] && grep -q "项目版本管理" "ai/project-rules.md"; then
+    aux_signal_ok=true
+  fi
+  if $main_signal_ok && $aux_signal_ok; then
+    pass "派生项目版本机制已启用（project-check.yml 含版本一致性校验 + ai/project-rules.md 含「项目版本管理」规则）"
+  elif $main_signal_ok; then
+    echo "⚠️  版本机制主信号在（project-check.yml 校验 VERSION↔CHANGELOG）但辅信号缺：ai/project-rules.md 未含「项目版本管理」规则。建议补 §2.8 明确 PATCH/MINOR/MAJOR 语义（非阻断，不计入失败）。"
+  elif $aux_signal_ok; then
+    echo "⚠️  版本机制辅信号在（ai/project-rules.md 含「项目版本管理」）但主信号缺：.github/workflows/project-check.yml 未含「Check project version consistency」校验。建议补 CI 校验防 VERSION/CHANGELOG 漂移（非阻断，不计入失败）。"
+  else
+    echo "⚠️  派生项目版本机制未启用：project-check.yml 缺「Check project version consistency」且 ai/project-rules.md 缺「项目版本管理」。建议按 ai/prompts/maintainers/15-post-sync-cleanup.md 审计版本机制启用状态（非阻断，不计入失败）。"
+  fi
+fi
+
+echo
 if [[ "$FAILURES" -eq 0 ]]; then
   echo "✅ 派生项目同步边界检查通过。"
   echo "   下一步：若需要整理项目内容，另开分支执行 ai/prompts/maintainers/15-post-sync-cleanup.md，先审计并输出迁移计划。"

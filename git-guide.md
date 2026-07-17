@@ -42,6 +42,16 @@ powershell -ExecutionPolicy Bypass -File scripts/check-github-context.ps1 -Expec
 
 > 该预检不能替代 GitHub 授权：`gh auth login`、OAuth scope、SSO 授权、Git Credential Manager 和仓库权限仍需在本机按 GitHub 官方流程处理；模板只提供操作前门禁，避免多仓 / 多会话误操作。
 
+### 1.2 远端 / CI / sandbox 防卡死策略
+
+涉及 `git push`、`gh pr create`、`gh pr merge`、`gh issue close`、删除远端分支、查询 GitHub Actions / CI 或其他远端状态时，默认使用 Checkpoint Mode（见 `ai/session-rules.md` §3.3）：
+
+- **远端状态变更单步确认**：push、创建 / 合并 PR、关闭 issue、删除分支、发 release 或打 tag 前，先说明目标仓库、分支、命令、风险和回滚方式，等待用户确认。
+- **CI 短轮询**：只查询一次或短轮询；若 checks / Actions 仍为 pending，汇报 pending 和复查命令，不长时间挂起等待。
+- **失败日志最小化**：CI failed 只摘失败 job / step、关键错误和链接；不要把完整长日志刷入上下文。
+- **sandbox / network / auth 错误即停**：遇到权限不足、network restricted、DNS / registry 失败、`gh auth` / askpass / credential 错误或命令超时，先停止并说明错误类别；不得连续重试或改用绕过权限边界的方式继续。
+- **不扩大修复范围**：CI 失败或远端报错若无法确认与本次改动相关，先标记不确定并请用户确认，不得直接进入大范围修复。
+
 ## 2. 场景速查（你要做哪件事？）
 
 | 你想做 | 你是 | 去哪节 | 对应 scenario 码 |

@@ -87,6 +87,12 @@
    - 检查 §2.5 是否引用 `docs/env/local-env.md`，并保留待人工确认项。
    - 检查 §3 是否明确 `docs/06`、`docs/07`、`frontend/`、`backend/`、`tests/`、`scripts/`、`docker/` 的保留 / 省略 / 删除决策。
    - 不要把模板方法论长文复制进 project-rules；只补项目专属约束和裁剪决策。
+   - 审计版本机制启用状态：检查 `ai/project-rules.md` 是否含「项目版本管理」规则（辅信号，对应 §2.8 的 PATCH/MINOR/MAJOR 语义），以及 `.github/workflows/project-check.yml` 是否含「Check project version consistency」校验（主信号，防 VERSION↔CHANGELOG 漂移）。
+     - 双信号都在：版本机制已启用，无需迁移。
+     - 仅辅信号在（project-rules 有规则但 project-check.yml 缺校验）：建议补 CI 版本校验。
+     - 仅主信号在（project-check.yml 有校验但 project-rules 缺规则）：建议补 §2.8。
+     - 双信号都缺（存量项目未启用版本机制）：建议补 §2.8 + project-check.yml 版本校验，并从 `VERSION` 当前值起按项目自有版本递增；`VERSION` / `CHANGELOG` 顶部项目版本 / `TEMPLATE-BASE.md` 的 `Project version at sync time` 三者保持一致。
+   - `scripts/check-derived-sync.*` 在版本一致性段后会非阻断检测版本机制启用状态，可作为本步审计的自动化参考。
 
 6. 输出迁移计划
    先不要修改文件，只输出计划，格式如下：

@@ -87,6 +87,24 @@ jobs:
             git diff --check "${{ github.event.before }}" "${{ github.sha }}"
           fi
 
+      - name: Check project version consistency
+        shell: bash
+        run: |
+          version="$(tr -d '\r\n[:space:]' < VERSION)"
+          if [[ ! "$version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "VERSION must use vMAJOR.MINOR.PATCH, got: ${version:-<empty>}" >&2
+            exit 1
+          fi
+          first_changelog_version="$(grep -E '^## v[0-9]+\.[0-9]+\.[0-9]+（' CHANGELOG.md | head -n 1 | sed -E 's/^## (v[0-9]+\.[0-9]+\.[0-9]+).*/\1/')"
+          if [[ -z "$first_changelog_version" ]]; then
+            echo "CHANGELOG.md must start its project history with a ## vMAJOR.MINOR.PATCH（...） heading" >&2
+            exit 1
+          fi
+          if [[ "$first_changelog_version" != "$version" ]]; then
+            echo "CHANGELOG latest project version $first_changelog_version does not match VERSION $version" >&2
+            exit 1
+          fi
+
       - name: Check template sync boundary
         shell: bash
         run: |
@@ -114,6 +132,17 @@ fi
 
 TEMPLATE_VERSION="$(tr -d '[:space:]' < "$TARGET/VERSION" 2>/dev/null || true)"
 [[ -n "$TEMPLATE_VERSION" ]] || TEMPLATE_VERSION="unknown"
+DERIVED_PROJECT_VERSION="v0.1.0"
+printf '%s\n' "$DERIVED_PROJECT_VERSION" > "$TARGET/VERSION"
+cat > "$TARGET/CHANGELOG.md" <<EOF
+# CHANGELOG
+
+本文件记录派生项目自身版本历史；继承的模板版本见 \`TEMPLATE-BASE.md\`。
+
+## $DERIVED_PROJECT_VERSION（$(date +%Y-%m-%d)）
+
+- 初始化项目，基于 ai-project-template $TEMPLATE_VERSION 创建。
+EOF
 cat > "$TARGET/TEMPLATE-BASE.md" <<EOF
 # Template Base
 
@@ -124,12 +153,13 @@ cat > "$TARGET/TEMPLATE-BASE.md" <<EOF
 - Current synced template version: $TEMPLATE_VERSION
 - Synced at: $(date +%Y-%m-%d)
 - Project version file: VERSION
-- Project version at sync time: $TEMPLATE_VERSION
+- Project version at sync time: $DERIVED_PROJECT_VERSION
 
 ## Version Semantics
 
 - \`VERSION\` is owned by this derived project and records the project version.
 - \`TEMPLATE-BASE.md\` records the inherited ai-project-template version used for methodology sync audit.
+- New ordinary derived projects start at \`v0.1.0\`; override the project bump rules in \`ai/project-rules.md\` if needed.
 - Template sync commits keep the message format \`sync template $TEMPLATE_VERSION from ai-project-template\`.
 EOF
 
@@ -202,6 +232,7 @@ cat > "$TARGET/README.md" <<EOF
 - 是否有持久化存储、是否有对外接口、演示形态。
 - \`docs/06-db-design.md\` 与 \`docs/07-api-spec.md\` 的保留 / 省略决策。
 - 需要保留的代码目录；不用的目录后续再删除，不要先删再补依据。
+- 项目版本规则：默认从 \`v0.1.0\` 起步；确认 \`ai/project-rules.md\` 的项目版本管理规则是否适用。
 
 ## 文档入口
 
@@ -237,6 +268,7 @@ cat > "$TARGET/README.md" <<EOF
 
 - 通用方法论来自 \`ai-project-template\`。
 - 项目自身版本记录在 \`VERSION\`；继承 / 当前同步到的模板版本记录在 \`TEMPLATE-BASE.md\`。
+- 新建项目默认以 \`v0.1.0\` 作为项目自有版本起点，\`CHANGELOG.md\` 顶部项目版本应与 \`VERSION\` 保持一致。
 - 文档生成、追溯链、变更传播与多入口规则见 \`ai/document-lifecycle-rules.md\`；可复制 Prompt 见 \`INIT-PROMPT.md\` 索引与 \`ai/prompts/\`。
 - 根 \`README.md\` 是项目专属文档，不参与模板下行同步。
 - 模板方法论文件由 \`template-sync.json\` 定义，执行 \`scripts/sync-template.*\` 时可能被覆盖。

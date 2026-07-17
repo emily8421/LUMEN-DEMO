@@ -335,6 +335,33 @@ function Invoke-NativeDerivedSyncCheck {
   }
 
   Write-Host ""
+  Write-Host "==> Derived project version mechanism enablement (non-blocking)"
+  # 复用前段 $lineageRole 判定；前段无 TEMPLATE-BASE.md 时为 $null，按普通派生项目处理。
+  if ($lineageRole -eq "domain") {
+    Write-Host "INFO  Domain lineage: VERSION/CHANGELOG are domain-template-owned. Skip version mechanism enablement check."
+  } else {
+    $mainSignal = $false
+    $auxSignal = $false
+    if ((Test-Path -LiteralPath ".github/workflows/project-check.yml") -and
+        ((Get-Content -Raw -Encoding UTF8 ".github/workflows/project-check.yml") -match 'Check project version consistency')) {
+      $mainSignal = $true
+    }
+    if ((Test-Path -LiteralPath "ai/project-rules.md") -and
+        ((Get-Content -Raw -Encoding UTF8 "ai/project-rules.md") -match '项目版本管理')) {
+      $auxSignal = $true
+    }
+    if ($mainSignal -and $auxSignal) {
+      Pass "derived project version mechanism enabled (project-check.yml version consistency + project-rules version-management rule)"
+    } elseif ($mainSignal) {
+      Write-Host "WARN  Version mechanism main signal present (project-check.yml validates VERSION<->CHANGELOG) but aux signal missing: ai/project-rules.md lacks version-management rule. Suggest adding it to define PATCH/MINOR/MAJOR semantics (non-blocking)."
+    } elseif ($auxSignal) {
+      Write-Host "WARN  Version mechanism aux signal present (project-rules.md has version-management rule) but main signal missing: .github/workflows/project-check.yml lacks 'Check project version consistency'. Suggest adding CI check to prevent VERSION/CHANGELOG drift (non-blocking)."
+    } else {
+      Write-Host "WARN  Derived project version mechanism not enabled: project-check.yml lacks 'Check project version consistency' and ai/project-rules.md lacks version-management rule. Suggest running ai/prompts/maintainers/15-post-sync-cleanup.md to audit version mechanism enablement (non-blocking)."
+    }
+  }
+
+  Write-Host ""
   if ($script:Failures -eq 0) {
     Write-Host "OK derived sync boundary check passed."
     Write-Host "   Next: if project cleanup is needed, use ai/prompts/maintainers/15-post-sync-cleanup.md on a separate branch."

@@ -5,8 +5,8 @@
 - Lineage type: ordinary derived project
 - Template repository: github.com/emily8421/ai-project-template
 - Base template version: v1.51.0
-- Current synced template version: v1.51.0
-- Synced at: 2026-07-14
+- Current synced template version: v1.54.1
+- Synced at: 2026-07-17
 - Project version file: VERSION
 - Project version at sync time: v1.47.1
 
@@ -14,4 +14,4 @@
 
 - `VERSION` is owned by this derived project and records the project version.
 - `TEMPLATE-BASE.md` records the inherited ai-project-template version used for methodology sync audit.
-- Template sync commits keep the message format `sync template v1.51.0 from ai-project-template`.
+- Template sync commits keep the message format `sync template v1.54.1 from ai-project-template`.

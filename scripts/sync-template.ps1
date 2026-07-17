@@ -97,6 +97,17 @@ function Invoke-Git {
   }
 }
 
+function Write-FallbackCommitRecoveryHint {
+  param([string]$Version)
+
+  Write-Warning "PowerShell fallback commit failed after staging sync files."
+  Write-Warning "Recovery:"
+  Write-Warning "  1. Run: git status --short --branch"
+  Write-Warning "  2. Confirm only template sync files are staged."
+  Write-Warning ("  3. Run: git commit -m `"sync template {0} from ai-project-template`"" -f $Version)
+  Write-Warning "  4. Run: powershell -ExecutionPolicy Bypass -File scripts/check-derived-sync.ps1 <sync-commit>"
+}
+
 function Get-GitText {
   param([Parameter(ValueFromRemainingArguments = $true)][string[]]$GitArgs)
 
@@ -769,13 +780,21 @@ function Invoke-NativeTemplateSync {
   }
 
   Write-Host ""
-  & git diff --quiet HEAD -- @($updatedFiles.ToArray())
+  & git diff --cached --quiet
   if ($LASTEXITCODE -eq 0) {
     Write-Host "INFO no commit needed: sync files already match template."
     return 0
   }
+  if ($LASTEXITCODE -ne 1) {
+    throw "git diff --cached --quiet failed with exit code $LASTEXITCODE"
+  }
 
-  Invoke-Git commit -q -m "sync template $version from ai-project-template" -- @($updatedFiles.ToArray())
+  try {
+    Invoke-Git commit -q -m "sync template $version from ai-project-template"
+  } catch {
+    Write-FallbackCommitRecoveryHint -Version $version
+    throw
+  }
   Write-Host "OK committed: sync template $version"
   Write-Host "   Push: git push"
   Write-Host ""

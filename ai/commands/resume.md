@@ -26,6 +26,14 @@
 - `ai/session-rules.md` §1、§3.1
 - `.ai/session-handoff.md`；若不存在，再读 `NEXT-STEPS.md`
 
+Windows / PowerShell 环境若中文规则输出乱码，先用显式 UTF-8 重读上述最小文件，不得基于乱码内容推断续接状态：
+
+```powershell
+$OutputEncoding = [System.Text.UTF8Encoding]::new()
+[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new()
+Get-Content -Path ai/session-rules.md -Encoding UTF8 -Raw
+```
+
 ## 执行流程
 
 1. 进入 `ai/session-rules.md` §3.1 的快速续接模式。
