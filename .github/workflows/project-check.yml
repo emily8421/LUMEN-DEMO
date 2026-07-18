@@ -1,0 +1,59 @@
+name: Project Check
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  project-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check whitespace
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            git diff --check "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}"
+          elif [[ "${{ github.event.before }}" =~ ^0+$ ]]; then
+            git diff-tree --check --no-commit-id --root -r "${{ github.sha }}"
+          else
+            git diff --check "${{ github.event.before }}" "${{ github.sha }}"
+          fi
+
+      - name: Check project version consistency
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(tr -d '\r\n[:space:]' < VERSION)"
+          if ! [[ "$version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::VERSION 必须是三段式 vX.Y.Z，当前：$version"
+            exit 1
+          fi
+          if ! grep -qE "^## ${version//./\\.}（" CHANGELOG.md; then
+            echo "::error::CHANGELOG.md 缺少当前 VERSION 的标题：## $version（"
+            exit 1
+          fi
+          first="$(grep -E '^## v[0-9]+\.[0-9]+\.[0-9]+（' CHANGELOG.md | head -n 1 | sed -E 's/^## (v[0-9]+\.[0-9]+\.[0-9]+).*/\1/')"
+          if [[ "$first" != "$version" ]]; then
+            echo "::error::CHANGELOG 顶部第一个版本标题（${first:-未找到}）不等于 VERSION（$version）；项目版本必须在顶部。"
+            exit 1
+          fi
+          echo "版本一致性检查通过：$version"
+
+      - name: Check derived sync boundary
+        shell: bash
+        run: |
+          subject="$(git log -1 --format=%s)"
+          if [[ "$subject" =~ ^sync[[:space:]]template[[:space:]]v[0-9]+\.[0-9]+\.[0-9]+[[:space:]]from[[:space:]]ai-project-template$ ]]; then
+            bash scripts/check-derived-sync.sh HEAD
+          else
+            echo "Not a template sync commit; skip derived sync boundary check."
+          fi
