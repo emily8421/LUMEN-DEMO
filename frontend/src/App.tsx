@@ -1,9 +1,7 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
 import {
   createDocument,
-  createTerm,
   deleteDocument,
-  deleteTerm,
   DocLinkView,
   DocumentPermission,
   DocumentVersion,
@@ -23,11 +21,7 @@ import {
   restoreVersion,
   Space,
   switchSpace,
-  Term,
-  TermStatus,
-  TermWritePayload,
   updateDocument,
-  updateTerm,
 } from './api';
 import { StatusBar } from './components/StatusBar';
 import { WorkspaceViewNav, type ActiveView } from './app/WorkspaceViewNav';
@@ -37,7 +31,8 @@ import { useTags } from './app/useTags';
 import { useQuickEntry } from './app/useQuickEntry';
 import { useSearch } from './app/useSearch';
 import { useQuery } from './app/useQuery';
-import type { Session, ImportDraft, Draft, ImportFileSelection, TermDraft } from './app/types';
+import { useTerms } from './app/useTerms';
+import type { Session, ImportDraft, Draft, ImportFileSelection } from './app/types';
 import { DocumentsFeature } from './features/DocumentsFeature';
 import { SearchFeature } from './features/SearchFeature';
 import { QueryFeature } from './features/QueryFeature';
@@ -49,13 +44,6 @@ const emptyDraft = {
   title: '',
   content_md: '',
   permission: 'team' as DocumentPermission,
-};
-
-const emptyTermDraft = {
-  term: '',
-  definition: '',
-  aliases: '',
-  status: 'confirmed' as TermStatus,
 };
 
 const emptyImportDraft = {
@@ -122,9 +110,6 @@ function App() {
   const [notice, setNotice] = useState('请使用 Demo 账号登录。');
   const [isBusy, setIsBusy] = useState(false);
   const [error, setError] = useState('');
-  const [terms, setTerms] = useState<Term[]>([]);
-  const [selectedTermId, setSelectedTermId] = useState<number | null>(null);
-  const [termDraft, setTermDraft] = useState<TermDraft>(emptyTermDraft);
   const [importDraft, setImportDraft] = useState<ImportDraft>(emptyImportDraft);
   const [importFiles, setImportFiles] = useState<ImportFileSelection[]>([]);
   const [importInputKey, setImportInputKey] = useState(0);
@@ -162,6 +147,7 @@ function App() {
 
   const search = useSearch({ token: session?.token, runAction, setNotice });
   const query = useQuery({ token: session?.token, runAction, setNotice });
+  const terms = useTerms({ token: session?.token, runAction, setNotice });
 
   useEffect(() => {
     if (!session) {
@@ -230,7 +216,7 @@ function App() {
     const [spaceResult, documentResult, termResult] = await Promise.all([listSpaces(token), listDocuments(token), listTerms(token)]);
     setSpaces(spaceResult);
     setDocuments(documentResult);
-    setTerms(termResult.items);
+    terms.setTerms(termResult.items);
     setSelectedId((currentId) => {
       if (currentId && documentResult.some((document) => document.id === currentId)) {
         return currentId;
@@ -304,8 +290,7 @@ function App() {
       setActiveView('documents');
       search.setSearchResult(null);
       query.setQueryResult(null);
-      setSelectedTermId(null);
-      setTermDraft(emptyTermDraft);
+      terms.newTerm();
       setNotice('空间已切换，文档列表已刷新。');
     });
   }
@@ -337,46 +322,6 @@ function App() {
       const summary = `批量导入完成：成功 ${result.success_count}，失败 ${result.failed_count}，跳过 ${result.skipped_count}`;
       setLastImportSummary(summary);
       setNotice(summary);
-    });
-  }
-
-  async function handleSaveTerm(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!session) {
-      return;
-    }
-
-    await runAction('正在保存术语...', async () => {
-      const payload = normalizeTermDraft(termDraft);
-      const savedTerm = selectedTermId
-        ? await updateTerm(session.token, selectedTermId, payload)
-        : await createTerm(session.token, payload);
-      const result = await listTerms(session.token);
-      setTerms(result.items);
-      setSelectedTermId(savedTerm.id);
-      setTermDraft(termToDraft(savedTerm));
-      setNotice(`术语已保存：${savedTerm.term}`);
-    });
-  }
-
-  async function handleDeleteTerm() {
-    if (!session || !selectedTermId) {
-      return;
-    }
-
-    const selectedTerm = terms.find((term) => term.id === selectedTermId);
-    const termLabel = selectedTerm?.term ?? `#${selectedTermId}`;
-    if (!window.confirm(`确认删除术语「${termLabel}」？此操作不可撤销。`)) {
-      return;
-    }
-
-    await runAction('正在删除术语...', async () => {
-      await deleteTerm(session.token, selectedTermId);
-      const result = await listTerms(session.token);
-      setTerms(result.items);
-      setSelectedTermId(null);
-      setTermDraft(emptyTermDraft);
-      setNotice('术语已删除。');
     });
   }
 
@@ -556,16 +501,10 @@ function App() {
             lastImportSummary={lastImportSummary}
             lastImportItems={lastImportItems}
             onImport={handleImport}
-            terms={terms}
-            selectedTermId={selectedTermId}
-            onSelectTerm={(term) => {
-              setSelectedTermId(term.id);
-              setTermDraft(termToDraft(term));
-            }}
-            onNewTerm={() => {
-              setSelectedTermId(null);
-              setTermDraft(emptyTermDraft);
-            }}
+            terms={terms.terms}
+            selectedTermId={terms.selectedTermId}
+            onSelectTerm={terms.selectTerm}
+            onNewTerm={terms.newTerm}
           />
 
           <section className="workspace-main workspace">
@@ -624,16 +563,13 @@ function App() {
 
             {activeView === 'terms' ? (
               <TermsFeature
-                selectedTermId={selectedTermId}
+                selectedTermId={terms.selectedTermId}
                 isBusy={isBusy}
-                termDraft={termDraft}
-                onTermDraftChange={setTermDraft}
-                onSaveTerm={handleSaveTerm}
-                onDeleteTerm={handleDeleteTerm}
-                onNewTerm={() => {
-                  setSelectedTermId(null);
-                  setTermDraft(emptyTermDraft);
-                }}
+                termDraft={terms.termDraft}
+                onTermDraftChange={terms.setTermDraft}
+                onSaveTerm={terms.handleSaveTerm}
+                onDeleteTerm={terms.handleDeleteTerm}
+                onNewTerm={terms.newTerm}
               />
             ) : null}
 
@@ -688,24 +624,6 @@ function normalizeDraft(draft: Draft) {
     title: draft.title.trim(),
     content_md: draft.content_md,
     permission: draft.permission,
-  };
-}
-
-function normalizeTermDraft(draft: TermDraft): TermWritePayload {
-  return {
-    term: draft.term.trim(),
-    definition: draft.definition.trim(),
-    aliases: draft.aliases.split(',').map((alias) => alias.trim()).filter(Boolean),
-    status: draft.status,
-  };
-}
-
-function termToDraft(term: Term): TermDraft {
-  return {
-    term: term.term,
-    definition: term.definition,
-    aliases: term.aliases.join(', '),
-    status: term.status,
   };
 }
 
