@@ -38,12 +38,14 @@ import { WorkspaceViewNav, type ActiveView } from './app/WorkspaceViewNav';
 import { TopBar } from './app/TopBar';
 import { ContextPane } from './app/ContextPane';
 import { useTags } from './app/useTags';
+import { useQuickEntry } from './app/useQuickEntry';
 import type { Session, ImportDraft, Draft, ImportFileSelection, TermDraft } from './app/types';
 import { DocumentsFeature } from './features/DocumentsFeature';
 import { SearchFeature } from './features/SearchFeature';
 import { QueryFeature } from './features/QueryFeature';
 import { TermsFeature } from './features/TermsFeature';
 import { TagsFeature } from './features/TagsFeature';
+import { QuickEntryFeature } from './features/QuickEntryFeature';
 
 const emptyDraft = {
   title: '',
@@ -152,6 +154,16 @@ function App() {
     selectedDocumentId: selectedId,
     runAction,
     setNotice,
+  });
+
+  const quickEntry = useQuickEntry({
+    token: session?.token,
+    currentSpaceId: session?.currentSpaceId,
+    runAction,
+    setNotice,
+    onDocumentsChanged: () => {
+      void refreshWorkspace();
+    },
   });
 
   useEffect(() => {
@@ -586,6 +598,11 @@ function App() {
           />
 
           <section className="workspace-main workspace">
+            <div className="workspace-action-bar">
+              <button type="button" className="quick-entry-trigger" onClick={quickEntry.open} disabled={isBusy}>
+                ＋ 快速录入
+              </button>
+            </div>
             {activeView === 'documents' ? (
               <DocumentsFeature
                 isCreating={isCreating}
@@ -663,6 +680,30 @@ function App() {
               />
             ) : null}
           </section>
+
+          <QuickEntryFeature
+            isOpen={quickEntry.isOpen}
+            isBusy={isBusy}
+            title={quickEntry.title}
+            source={quickEntry.source}
+            contentMd={quickEntry.contentMd}
+            tagIds={quickEntry.tagIds}
+            mode={quickEntry.mode}
+            targetDocumentId={quickEntry.targetDocumentId}
+            tags={tags.tags}
+            documents={documents}
+            lastEntry={quickEntry.lastEntry}
+            onTitleChange={quickEntry.setTitle}
+            onSourceChange={quickEntry.setSource}
+            onContentMdChange={quickEntry.setContentMd}
+            onToggleTag={quickEntry.toggleTag}
+            onModeChange={quickEntry.changeMode}
+            onTargetDocumentChange={quickEntry.setTargetDocumentId}
+            onSubmit={quickEntry.handleSubmit}
+            onDiscard={quickEntry.handleDiscard}
+            onClose={quickEntry.close}
+            onOpenDocument={handleOpenDocument}
+          />
         </div>
       )}
 

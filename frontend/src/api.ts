@@ -13,3 +13,4 @@ export * from './api/imports';
 export * from './api/exports';
 export * from './api/docLinks';
 export * from './api/tags';
+export * from './api/quickEntry';
