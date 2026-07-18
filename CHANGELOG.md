@@ -1,5 +1,23 @@
 # CHANGELOG
 
+本文件自 2026-07-18 起记录 LUMEN-DEMO 项目自身版本；历史上随模板同步带入的记录保留在下方，作为模板同步审计材料，不再作为项目版本语义。
+
+- 项目版本入口：`VERSION`
+- 模板继承版本入口：`TEMPLATE-BASE.md`
+- 模板同步运行记录：`sync-records/template-sync/`
+
+## v0.1.0（2026-07-18）
+
+项目版本基线重定义：从模板沿用版本切换为项目自有版本语义，不沿用旧 `VERSION=v1.47.1`。
+
+- **版本语义**：`VERSION` 自本版本起只表示 LUMEN-DEMO 项目版本；继承的 `ai-project-template` 版本由 `TEMPLATE-BASE.md` 记录。
+- **基线定位**：`v0.1.0` 作为项目自有语义版本起点，承接当前 Phase2A（个人知识组织）状态，不代表新增业务功能发布。
+- **同步关系**：当前已同步模板方法论 `v1.54.1`；后续模板同步继续使用 `--preserve-project-version`，避免覆盖项目 `VERSION` / `CHANGELOG.md`。
+- **审计记录**：见 `sync-records/template-sync/2026-07-17-sync-template-v1.54.1.md` 及本次版本机制启用记录。
+
+## 历史模板同步记录（保留）
+
+> 以下内容来自双版本治理前的模板同步记录，保留用于审计和追溯；其中的版本号是 `ai-project-template` 历史版本，不代表 LUMEN-DEMO 项目自身版本。
 > Sync notice: This file is maintained by `ai-project-template` and may be overwritten when a derived project syncs template methodology.
 > Do not edit it directly in derived projects; propose reusable changes in `_proposals/` and upstream them to the template repository.
 
