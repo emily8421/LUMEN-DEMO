@@ -20,10 +20,6 @@ import {
   listTerms,
   listVersions,
   login,
-  queryKnowledgeBase,
-  QueryResponse,
-  searchDocuments,
-  SearchResponse,
   restoreVersion,
   Space,
   switchSpace,
@@ -39,6 +35,8 @@ import { TopBar } from './app/TopBar';
 import { ContextPane } from './app/ContextPane';
 import { useTags } from './app/useTags';
 import { useQuickEntry } from './app/useQuickEntry';
+import { useSearch } from './app/useSearch';
+import { useQuery } from './app/useQuery';
 import type { Session, ImportDraft, Draft, ImportFileSelection, TermDraft } from './app/types';
 import { DocumentsFeature } from './features/DocumentsFeature';
 import { SearchFeature } from './features/SearchFeature';
@@ -124,10 +122,6 @@ function App() {
   const [notice, setNotice] = useState('请使用 Demo 账号登录。');
   const [isBusy, setIsBusy] = useState(false);
   const [error, setError] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResult, setSearchResult] = useState<SearchResponse | null>(null);
-  const [question, setQuestion] = useState('');
-  const [queryResult, setQueryResult] = useState<QueryResponse | null>(null);
   const [terms, setTerms] = useState<Term[]>([]);
   const [selectedTermId, setSelectedTermId] = useState<number | null>(null);
   const [termDraft, setTermDraft] = useState<TermDraft>(emptyTermDraft);
@@ -165,6 +159,9 @@ function App() {
       void refreshWorkspace();
     },
   });
+
+  const search = useSearch({ token: session?.token, runAction, setNotice });
+  const query = useQuery({ token: session?.token, runAction, setNotice });
 
   useEffect(() => {
     if (!session) {
@@ -305,37 +302,11 @@ function App() {
       persistSession(nextSession);
       setSelectedId(null);
       setActiveView('documents');
-      setSearchResult(null);
-      setQueryResult(null);
+      search.setSearchResult(null);
+      query.setQueryResult(null);
       setSelectedTermId(null);
       setTermDraft(emptyTermDraft);
       setNotice('空间已切换，文档列表已刷新。');
-    });
-  }
-
-  async function handleSearch(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!session) {
-      return;
-    }
-
-    await runAction('正在搜索当前空间...', async () => {
-      const result = await searchDocuments(session.token, searchQuery.trim());
-      setSearchResult(result);
-      setNotice(`搜索完成：${result.total} 条结果。`);
-    });
-  }
-
-  async function handleQuery(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!session) {
-      return;
-    }
-
-    await runAction('正在问答当前空间...', async () => {
-      const result = await queryKnowledgeBase(session.token, question.trim());
-      setQueryResult(result);
-      setNotice(`问答完成：${result.sources.length} 个来源。`);
     });
   }
 
@@ -357,8 +328,8 @@ function App() {
       }
       setActiveView('documents');
       setIsCreating(false);
-      setSearchResult(null);
-      setQueryResult(null);
+      search.setSearchResult(null);
+      query.setQueryResult(null);
       setImportDraft(emptyImportDraft);
       setImportFiles([]);
       setLastImportItems(result.items);
@@ -631,22 +602,22 @@ function App() {
 
             {activeView === 'search' ? (
               <SearchFeature
-                searchQuery={searchQuery}
-                onSearchQueryChange={setSearchQuery}
-                searchResult={searchResult}
+                searchQuery={search.searchQuery}
+                onSearchQueryChange={search.setSearchQuery}
+                searchResult={search.searchResult}
                 isBusy={isBusy}
-                onSearch={handleSearch}
+                onSearch={search.handleSearch}
                 onOpenDocument={handleOpenDocument}
               />
             ) : null}
 
             {activeView === 'query' ? (
               <QueryFeature
-                question={question}
-                onQuestionChange={setQuestion}
-                queryResult={queryResult}
+                question={query.question}
+                onQuestionChange={query.setQuestion}
+                queryResult={query.queryResult}
                 isBusy={isBusy}
-                onQuery={handleQuery}
+                onQuery={query.handleQuery}
                 onOpenDocument={handleOpenDocument}
               />
             ) : null}
