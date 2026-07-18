@@ -6,6 +6,19 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v0.2.0（2026-07-19）
+
+Phase2A 个人知识组织「快速录入」交付（REQ-025，Task A 后端 + Task B 前端）。
+
+- **REQ-025 快速录入索引条目**：30s 录标题/来源/摘要，mode=draft 保留私有草稿 / create_document 转新私有文档 / append_document 追加到已有文档；可关联 tag_ids；draft 可丢弃。
+- **Task A 后端**（`f771e02`）：迁移 009 `lumen_quick_entries` + service（capture 三 mode + discard）+ API-017（POST `/api/quick-entry` + DELETE `/api/quick-entry/{id}`）；test_quick_entry 17/17 + service 回归 53 + PG smoke。
+- **Task B 前端**（`bad8fe5`）：顶部胶囊 + 侧滑抽屉（标题/来源/摘要/tag_ids/mode 表单 + 结果区）+ useQuickEntry hook；build + API smoke + 浏览器 smoke 通过。
+- **文档回写**：02 REQ-025 / 06 `lumen_quick_entries` / 07 API-017 / 08 完成包 / 09 TC-P2-QUICK-001 草案→已实现/通过；补 API-017 `source` 字段 + DELETE discard endpoint。
+- **discard 最小版限制**：后端无 list endpoint，会话内保留最近一次草稿可丢弃，刷新/切空间丢失（持久草稿列表留后续）。
+- **追溯**：REQ-025 / U-31 / API-017 / TC-P2-QUICK-001 / Sprint 完成包（08）。
+
+> MINOR 递增依据（`ai/project-rules.md` §2.8.2）：Phase2A 内功能增强 + 新增 API endpoint，里程碑交付。
+
 ## v0.1.0（2026-07-18）
 
 项目版本基线重定义：从模板沿用版本切换为项目自有版本语义，不沿用旧 `VERSION=v1.47.1`。

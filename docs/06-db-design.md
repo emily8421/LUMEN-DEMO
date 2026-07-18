@@ -29,7 +29,7 @@
 | lumen_tags | 标签 | [P2] | Phase2A-已实现 | 迁移 008 已落地（Task A `1e4cf48`）；扁平标签（无层级） | REQ-012 |
 | lumen_tag_links | 标签-文档关联 | [P2] | Phase2A-已实现 | 迁移 008 已落地（Task A `1e4cf48`）；最小版仅写入 link_source='manual'，其余值预留 | REQ-012 |
 | lumen_doc_links | 内部链接与反向链接索引 | [P2] | Phase2A-已实现 | 已落地（migration 007；fc2b869 Task A） | REQ-026 |
-| lumen_quick_entries | 快速录入索引条目 | [P2] | Phase2A-契约草案 | — | REQ-025 |
+| lumen_quick_entries | 快速录入索引条目 | [P2] | Phase2A-已实现 | 迁移 009 已落地（Task A `f771e02`）；draft 默认 owner 私有 | REQ-025 |
 | lumen_ai_drafts | AI 润色 / 写作引用草稿 | [P2] | Phase2B-契约草案 | — | REQ-014 |
 | lumen_doc_exports | 单文档导出 PDF 任务 | [P1] | Phase1.5B-契约草案 | — | REQ-027 |
 | lumen_push_copies | 跨空间推送只读副本 | [P2] | 骨架 | — | REQ-015 |
@@ -304,7 +304,7 @@ erDiagram
 | REQ-038 | `lumen_documents`、`lumen_document_versions` | TC-P1-016 | Sprint-17（Phase1.5A） | 单文档 `.md` 与空间 ZIP 导出备份；默认流式 / 临时产物，不写导出表 |
 | REQ-027 | `lumen_doc_exports`、`lumen_documents`、`lumen_document_versions` | TC-P1-017 | Sprint-18（Phase1.5B·待 RG-006） | 单文档 PDF 导出任务、版本绑定和权限继承契约草案 |
 | REQ-012 | `lumen_tags`、`lumen_tag_links`、`lumen_documents` | TC-P2-TAG-001 | Phase2A 后续 | 标签视图、标签筛选与标签-文档关联契约草案 |
-| REQ-025 | `lumen_quick_entries`、`lumen_documents`、`lumen_tag_links` | TC-P2-QUICK-001 | Phase2A 后续 | 快速录入条目转文档 / 追加文档 / 关联标签契约草案 |
+| REQ-025 | `lumen_quick_entries`、`lumen_documents`、`lumen_tag_links` | TC-P2-QUICK-001 | Phase2A-已实现（Task A `f771e02` + Task B `bad8fe5`） | 快速录入 draft/转文档/追加/tag_ids/丢弃；API-017 |
 | REQ-026 | `lumen_doc_links`、`lumen_documents` | TC-P2-LINK-001 | Phase2A 后续 | `[[wikilink]]` 出链 / 反链索引与权限过滤契约草案 |
 | REQ-014 | `lumen_ai_drafts`、`lumen_documents`、`lumen_chunks` | TC-P2-AI-001 | Phase2B 后续 | AI 润色草稿、写作引用和来源 chunk 追溯契约草案 |
 | REQ-013 / 024 | Phase2B 后续骨架 | — | — | 时间轴 / 密度热条候选，后续单独细化 |
