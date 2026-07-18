@@ -28,6 +28,7 @@ from backend.model.entities import (
     SpaceRole,
     Tag,
     TagLink,
+    QuickEntry,
     Term,
     TermStatus,
     User,
@@ -38,6 +39,7 @@ from backend.model.orm import (
     DocumentORM,
     DocumentVersionORM,
     ImportJobORM,
+    QuickEntryORM,
     SpaceMemberORM,
     SpaceORM,
     TagLinkORM,
@@ -170,6 +172,22 @@ def _to_tag_link(r: TagLinkORM) -> TagLink:
         link_source=r.link_source,
         created_by=r.created_by,
         created_at=_dt_iso(r.created_at),
+    )
+
+
+def _to_quick_entry(r: QuickEntryORM) -> QuickEntry:
+    return QuickEntry(
+        id=r.id,
+        space_id=r.space_id,
+        owner_id=r.owner_id,
+        title=r.title,
+        content_md=r.content_md,
+        source=r.source,
+        target_document_id=r.target_document_id,
+        created_document_id=r.created_document_id,
+        status=r.status,
+        created_at=_dt_iso(r.created_at),
+        updated_at=_dt_iso(r.updated_at),
     )
 
 
@@ -600,6 +618,75 @@ class PgRepository:
             session.add(row)
             session.commit()
             return _to_tag_link(row)
+
+    # --- quick entries (REQ-025) ---
+
+    def create_quick_entry(
+        self,
+        space_id: int,
+        owner_id: int,
+        title: str,
+        content_md: str = "",
+        source: str | None = None,
+        target_document_id: int | None = None,
+        created_document_id: int | None = None,
+        status: str = "draft",
+    ) -> QuickEntry:
+        with SessionLocal() as session:
+            row = QuickEntryORM(
+                space_id=space_id,
+                owner_id=owner_id,
+                title=title,
+                content_md=content_md,
+                source=source,
+                target_document_id=target_document_id,
+                created_document_id=created_document_id,
+                status=status,
+            )
+            session.add(row)
+            session.commit()
+            return _to_quick_entry(row)
+
+    def get_quick_entry(self, entry_id: int) -> QuickEntry | None:
+        with SessionLocal() as session:
+            row = session.scalars(select(QuickEntryORM).where(QuickEntryORM.id == entry_id)).first()
+            return None if row is None else _to_quick_entry(row)
+
+    def list_quick_entries(
+        self,
+        space_id: int,
+        owner_id: int,
+        status: str | None = None,
+    ) -> list[QuickEntry]:
+        with SessionLocal() as session:
+            query = select(QuickEntryORM).where(
+                QuickEntryORM.space_id == space_id,
+                QuickEntryORM.owner_id == owner_id,
+            )
+            if status is not None:
+                query = query.where(QuickEntryORM.status == status)
+            rows = session.scalars(query.order_by(QuickEntryORM.id)).all()
+            return [_to_quick_entry(r) for r in rows]
+
+    def update_quick_entry(
+        self,
+        entry_id: int,
+        status: str | None = None,
+        target_document_id: int | None = None,
+        created_document_id: int | None = None,
+    ) -> QuickEntry | None:
+        with SessionLocal() as session:
+            row = session.scalars(select(QuickEntryORM).where(QuickEntryORM.id == entry_id)).first()
+            if row is None:
+                return None
+            if status is not None:
+                row.status = status
+            if target_document_id is not None:
+                row.target_document_id = target_document_id
+            if created_document_id is not None:
+                row.created_document_id = created_document_id
+            session.commit()
+            return _to_quick_entry(row)
 
     def remove_document_tag(self, tag_id: int, document_id: int) -> bool:
         with SessionLocal() as session:

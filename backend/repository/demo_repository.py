@@ -18,6 +18,7 @@ from backend.model.entities import (
     SpaceRole,
     Tag,
     TagLink,
+    QuickEntry,
     Term,
     TermStatus,
     User,
@@ -88,6 +89,8 @@ class DemoRepository:
         self.tags: list[Tag] = []
         self.tag_links: list[TagLink] = []
         self._next_tag_id = 1
+        self.quick_entries: list[QuickEntry] = []
+        self._next_quick_entry_id = 1
 
     def find_user_by_external_id(self, external_id: str) -> User | None:
         return next((user for user in self.users if user.external_id == external_id), None)
@@ -541,6 +544,76 @@ class DemoRepository:
         )
         self.tag_links.append(link)
         return link
+
+    # --- quick entries (REQ-025) ---
+
+    def create_quick_entry(
+        self,
+        space_id: int,
+        owner_id: int,
+        title: str,
+        content_md: str = "",
+        source: str | None = None,
+        target_document_id: int | None = None,
+        created_document_id: int | None = None,
+        status: str = "draft",
+    ) -> QuickEntry:
+        entry = QuickEntry(
+            id=self._next_quick_entry_id,
+            space_id=space_id,
+            owner_id=owner_id,
+            title=title,
+            content_md=content_md,
+            source=source,
+            target_document_id=target_document_id,
+            created_document_id=created_document_id,
+            status=status,
+            created_at=_now_iso(),
+            updated_at=_now_iso(),
+        )
+        self._next_quick_entry_id += 1
+        self.quick_entries.append(entry)
+        return entry
+
+    def get_quick_entry(self, entry_id: int) -> QuickEntry | None:
+        return next((entry for entry in self.quick_entries if entry.id == entry_id), None)
+
+    def list_quick_entries(
+        self,
+        space_id: int,
+        owner_id: int,
+        status: str | None = None,
+    ) -> list[QuickEntry]:
+        result = [
+            entry
+            for entry in self.quick_entries
+            if entry.space_id == space_id and entry.owner_id == owner_id
+        ]
+        if status is not None:
+            result = [entry for entry in result if entry.status == status]
+        return result
+
+    def update_quick_entry(
+        self,
+        entry_id: int,
+        status: str | None = None,
+        target_document_id: int | None = None,
+        created_document_id: int | None = None,
+    ) -> QuickEntry | None:
+        for index, entry in enumerate(self.quick_entries):
+            if entry.id != entry_id:
+                continue
+            fields: dict[str, object] = {"updated_at": _now_iso()}
+            if status is not None:
+                fields["status"] = status
+            if target_document_id is not None:
+                fields["target_document_id"] = target_document_id
+            if created_document_id is not None:
+                fields["created_document_id"] = created_document_id
+            updated = replace(entry, **fields)
+            self.quick_entries[index] = updated
+            return updated
+        return None
 
     def remove_document_tag(self, tag_id: int, document_id: int) -> bool:
         before = len(self.tag_links)

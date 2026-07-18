@@ -164,3 +164,25 @@ class TagLinkORM(Base):
     link_source: Mapped[str] = mapped_column(String, default="manual")
     created_by: Mapped[int] = mapped_column(BigInteger, ForeignKey("lumen_users.id"))
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
+
+
+class QuickEntryORM(Base):
+    """REQ-025 快速录入索引条目（migration 009）。"""
+
+    __tablename__ = "lumen_quick_entries"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    space_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("lumen_spaces.id", ondelete="CASCADE"))
+    owner_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("lumen_users.id"))
+    title: Mapped[str] = mapped_column(Text)
+    content_md: Mapped[str] = mapped_column(Text, default="")
+    source: Mapped[str | None] = mapped_column(Text, nullable=True)
+    target_document_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("lumen_documents.id", ondelete="SET NULL"), nullable=True
+    )
+    created_document_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("lumen_documents.id", ondelete="SET NULL"), nullable=True
+    )
+    status: Mapped[str] = mapped_column(String, default="draft")
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())

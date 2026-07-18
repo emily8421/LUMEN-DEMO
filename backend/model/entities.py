@@ -164,3 +164,25 @@ class TagLink:
     link_source: str = "manual"  # 'manual' | 'quick_entry' | 'import' | 'ai_suggested'
     created_by: int = 0
     created_at: str = ""
+
+
+@dataclass(frozen=True)
+class QuickEntry:
+    """REQ-025 快速录入索引条目（lumen_quick_entries）。
+
+    轻量条目：标题 / 来源 / 摘要；无原文也能沉淀。draft 默认仅 owner 可见；
+    转文档后继承目标文档权限。status：'draft'（保留草稿）/ 'converted'
+    （已转新文档 created_document_id 或追加到 target_document_id）/ 'discarded'（已丢弃）。
+    """
+
+    id: int
+    space_id: int
+    owner_id: int
+    title: str
+    content_md: str = ""
+    source: str | None = None
+    target_document_id: int | None = None
+    created_document_id: int | None = None
+    status: str = "draft"
+    created_at: str = ""
+    updated_at: str = ""
