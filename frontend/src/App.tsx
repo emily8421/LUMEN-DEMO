@@ -1,28 +1,7 @@
-﻿import { useEffect, useMemo, useState } from 'react';
-import {
-  createDocument,
-  deleteDocument,
-  DocLinkView,
-  DocumentPermission,
-  DocumentVersion,
-  getDocument,
-  downloadDocumentMarkdown,
-  exportSpaceZip,
-  triggerBrowserDownload,
-  KnowledgeDocument,
-  listDocLinks,
-  listDocuments,
-  listSpaces,
-  listTerms,
-  listVersions,
-  login,
-  restoreVersion,
-  Space,
-  switchSpace,
-  updateDocument,
-} from './api';
+import { useEffect } from 'react';
+import { exportSpaceZip, triggerBrowserDownload } from './api';
 import { StatusBar } from './components/StatusBar';
-import { WorkspaceViewNav, type ActiveView } from './app/WorkspaceViewNav';
+import { WorkspaceViewNav } from './app/WorkspaceViewNav';
 import { TopBar } from './app/TopBar';
 import { ContextPane } from './app/ContextPane';
 import { useTags } from './app/useTags';
@@ -31,7 +10,10 @@ import { useSearch } from './app/useSearch';
 import { useQuery } from './app/useQuery';
 import { useTerms } from './app/useTerms';
 import { useImport } from './app/useImport';
-import type { Session, Draft } from './app/types';
+import { useWorkspace } from './app/useWorkspace';
+import { useSession } from './app/useSession';
+import { useDocuments } from './app/useDocuments';
+import { isAuthTokenError } from './app/session-store';
 import { DocumentsFeature } from './features/DocumentsFeature';
 import { SearchFeature } from './features/SearchFeature';
 import { QueryFeature } from './features/QueryFeature';
@@ -39,432 +21,162 @@ import { TermsFeature } from './features/TermsFeature';
 import { TagsFeature } from './features/TagsFeature';
 import { QuickEntryFeature } from './features/QuickEntryFeature';
 
-const emptyDraft = {
-  title: '',
-  content_md: '',
-  permission: 'team' as DocumentPermission,
-};
-
-const SESSION_STORAGE_KEY = 'lumen-demo-session';
-
-function loadStoredSession(): Session | null {
-  try {
-    const raw = window.localStorage.getItem(SESSION_STORAGE_KEY);
-    if (!raw) {
-      return null;
-    }
-    const parsed = JSON.parse(raw) as Partial<Session>;
-    if (
-      typeof parsed.token !== 'string' ||
-      typeof parsed.userId !== 'number' ||
-      typeof parsed.currentSpaceId !== 'number'
-    ) {
-      return null;
-    }
-    return {
-      token: parsed.token,
-      userId: parsed.userId,
-      currentSpaceId: parsed.currentSpaceId,
-    };
-  } catch {
-    return null;
-  }
-}
-
-function persistSession(session: Session): void {
-  try {
-    window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
-  } catch {
-    // localStorage 不可用（如隐私模式）时静默降级，登录态仅存内存
-  }
-}
-
-function clearStoredSession(): void {
-  try {
-    window.localStorage.removeItem(SESSION_STORAGE_KEY);
-  } catch {
-    // 同上
-  }
-}
-
-function isAuthTokenError(message: string): boolean {
-  return /invalid token|unauthorized|\b401\b/i.test(message);
-}
-
 function App() {
-  const [username, setUsername] = useState('alice');
-  const [session, setSession] = useState<Session | null>(() => loadStoredSession());
-  const [spaces, setSpaces] = useState<Space[]>([]);
-  const [documents, setDocuments] = useState<KnowledgeDocument[]>([]);
-  const [selectedId, setSelectedId] = useState<number | null>(null);
-  const [versions, setVersions] = useState<DocumentVersion[]>([]);
-  const [outboundLinks, setOutboundLinks] = useState<DocLinkView[]>([]);
-  const [backlinks, setBacklinks] = useState<DocLinkView[]>([]);
-  const [draft, setDraft] = useState<Draft>(emptyDraft);
-  const [isCreating, setIsCreating] = useState(false);
-  const [notice, setNotice] = useState('请使用 Demo 账号登录。');
-  const [isBusy, setIsBusy] = useState(false);
-  const [error, setError] = useState('');
-  const [activeView, setActiveView] = useState<ActiveView>('documents');
+  const workspace = useWorkspace();
+  const session = useSession({ runAction, setNotice: workspace.setNotice, onSpaceChanged: handleSpaceChanged });
+  const token = session.session?.token;
 
-  const selectedDocument = useMemo(
-    () => documents.find((document) => document.id === selectedId) ?? null,
-    [documents, selectedId],
-  );
-
-  const currentSpace = useMemo(
-    () => spaces.find((space) => space.id === session?.currentSpaceId) ?? null,
-    [spaces, session],
-  );
-
-  const tags = useTags({
-    token: session?.token,
-    currentSpaceId: session?.currentSpaceId,
-    selectedDocumentId: selectedId,
+  const documents = useDocuments({
+    token,
     runAction,
-    setNotice,
+    setNotice: workspace.setNotice,
+    setError: workspace.setError,
+    onAuthError: session.handleAuthError,
+    setActiveView: workspace.setActiveView,
+    refreshWorkspace,
   });
 
-  const quickEntry = useQuickEntry({
-    token: session?.token,
-    currentSpaceId: session?.currentSpaceId,
+  const tags = useTags({
+    token,
+    currentSpaceId: session.session?.currentSpaceId,
+    selectedDocumentId: documents.selectedId,
     runAction,
-    setNotice,
+    setNotice: workspace.setNotice,
+  });
+  const quickEntry = useQuickEntry({
+    token,
+    currentSpaceId: session.session?.currentSpaceId,
+    runAction,
+    setNotice: workspace.setNotice,
     onDocumentsChanged: () => {
       void refreshWorkspace();
     },
   });
+  const search = useSearch({ token, runAction, setNotice: workspace.setNotice });
+  const query = useQuery({ token, runAction, setNotice: workspace.setNotice });
+  const terms = useTerms({ token, runAction, setNotice: workspace.setNotice });
+  const imports = useImport({ token, runAction, setNotice: workspace.setNotice, onImported: handleImported });
 
-  const search = useSearch({ token: session?.token, runAction, setNotice });
-  const query = useQuery({ token: session?.token, runAction, setNotice });
-  const terms = useTerms({ token: session?.token, runAction, setNotice });
-  const imports = useImport({ token: session?.token, runAction, setNotice, onImported: handleImported });
+  const currentSpace = session.spaces.find((space) => space.id === session.session?.currentSpaceId) ?? null;
 
+  // session / 空间变化 → 刷新工作区（spaces + documents + terms）。
   useEffect(() => {
-    if (!session) {
+    if (!session.session) {
       return;
     }
-
-    void refreshWorkspace(session.token).catch((error) => {
-      const message = error instanceof Error ? error.message : '';
-      if (isAuthTokenError(message)) {
-        clearStoredSession();
-        setSession(null);
-        setNotice('登录已失效，请重新登录。');
-      } else {
-        setError(message || '加载工作区失败');
-      }
-    });
-  }, [session?.token, session?.currentSpaceId]);
-
-  useEffect(() => {
-    if (isCreating) {
-      setDraft(emptyDraft);
-      setVersions([]);
-      setOutboundLinks([]);
-      setBacklinks([]);
-      return;
-    }
-
-    if (selectedDocument) {
-      if (selectedDocument.content_md === undefined && session) {
-        void loadDocumentDetail(session.token, selectedDocument.id);
-        return;
-      }
-
-      setDraft({
-        title: selectedDocument.title,
-        content_md: selectedDocument.content_md ?? '',
-        permission: selectedDocument.permission,
-      });
-      if (session) {
-        void loadVersions(session.token, selectedDocument.id);
-        void loadDocLinks(session.token, selectedDocument.id);
-      }
-    }
-  }, [isCreating, selectedDocument?.id, selectedDocument?.content_md, selectedDocument?.permission, selectedDocument?.title, session?.token]);
-
-  async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    await runAction('正在登录...', async () => {
-      const result = await login(username.trim());
-      const nextSession = {
-        token: result.token,
-        userId: result.user_id,
-        currentSpaceId: result.current_space_id,
-      };
-      setSession(nextSession);
-      persistSession(nextSession);
-      setNotice(`已登录：user_id=${result.user_id}`);
-    });
-  }
-
-  async function refreshWorkspace(token = session?.token) {
-    if (!token) {
-      return;
-    }
-
-    const [spaceResult, documentResult, termResult] = await Promise.all([listSpaces(token), listDocuments(token), listTerms(token)]);
-    setSpaces(spaceResult);
-    setDocuments(documentResult);
-    terms.setTerms(termResult.items);
-    setSelectedId((currentId) => {
-      if (currentId && documentResult.some((document) => document.id === currentId)) {
-        return currentId;
-      }
-      return documentResult[0]?.id ?? null;
-    });
-    if (documentResult.length === 0) {
-      setIsCreating(true);
-      setDraft(emptyDraft);
-      setVersions([]);
-    } else {
-      setIsCreating(false);
-    }
-  }
-
-  async function loadVersions(token: string, documentId: number) {
-    const versionResult = await listVersions(token, documentId);
-    setVersions(versionResult);
-  }
-
-  async function loadDocLinks(token: string, documentId: number) {
-    try {
-      const [outbound, back] = await Promise.all([
-        listDocLinks(token, documentId, 'outbound'),
-        listDocLinks(token, documentId, 'backlink'),
-      ]);
-      setOutboundLinks(outbound);
-      setBacklinks(back);
-    } catch (caughtError) {
-      // doc-links 加载失败不阻塞文档编辑；仅处理登录失效，其余静默以免覆盖主流程错误提示。
+    void refreshWorkspace().catch((caughtError) => {
       const message = caughtError instanceof Error ? caughtError.message : '';
       if (isAuthTokenError(message)) {
-        clearStoredSession();
-        setSession(null);
-        setNotice('登录已失效，请重新登录。');
+        session.handleAuthError();
+        workspace.setNotice('登录已失效，请重新登录。');
+      } else {
+        workspace.setError(message || '加载工作区失败');
       }
-    }
-  }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session.session?.token, session.session?.currentSpaceId]);
 
-  async function loadDocumentDetail(token: string, documentId: number) {
-    try {
-      const detail = await getDocument(token, documentId);
-      setDocuments((currentDocuments) => {
-        const hasDocument = currentDocuments.some((document) => document.id === detail.id);
-        if (!hasDocument) {
-          return [detail, ...currentDocuments];
-        }
-        return currentDocuments.map((document) => (document.id === detail.id ? detail : document));
-      });
-    } catch (caughtError) {
-      const message = caughtError instanceof Error ? caughtError.message : '文档详情加载失败';
-      setError(message);
-    }
-  }
-
-  async function handleSpaceChange(spaceId: number) {
-    if (!session) {
+  // App 级 orchestrator：各域 hook 暴露 reloadX()，统一刷新 spaces + documents + terms。
+  async function refreshWorkspace() {
+    if (!session.session) {
       return;
     }
+    const refreshToken = session.session.token;
+    await Promise.all([
+      session.reloadSpaces(refreshToken),
+      documents.reloadDocuments(refreshToken),
+      terms.reloadTerms(),
+    ]);
+  }
 
-    await runAction('正在切换空间...', async () => {
-      const result = await switchSpace(session.token, spaceId);
-      const nextSession = {
-        ...session,
-        token: result.token,
-        currentSpaceId: result.current_space_id,
-      };
-      setSession(nextSession);
-      persistSession(nextSession);
-      setSelectedId(null);
-      setActiveView('documents');
-      search.setSearchResult(null);
-      query.setQueryResult(null);
-      terms.newTerm();
-      setNotice('空间已切换，文档列表已刷新。');
-    });
+  function handleSpaceChanged() {
+    documents.setSelectedId(null);
+    workspace.setActiveView('documents');
+    search.setSearchResult(null);
+    query.setQueryResult(null);
+    terms.newTerm();
   }
 
   async function handleImported(firstDocId: number | null) {
     await refreshWorkspace();
     if (firstDocId) {
-      setSelectedId(firstDocId);
+      documents.setSelectedId(firstDocId);
     }
-    setActiveView('documents');
-    setIsCreating(false);
+    workspace.setActiveView('documents');
+    documents.setIsCreating(false);
     search.setSearchResult(null);
     query.setQueryResult(null);
   }
 
-  async function handleSave(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!session) {
-      return;
-    }
-
-    await runAction('正在保存文档...', async () => {
-      const payload = normalizeDraft(draft);
-      const savedDocument = isCreating || !selectedDocument
-        ? await createDocument(session.token, payload)
-        : await updateDocument(session.token, selectedDocument.id, payload);
-      await refreshWorkspace(session.token);
-      setSelectedId(savedDocument.id);
-      setIsCreating(false);
-      await loadVersions(session.token, savedDocument.id);
-      setNotice(`已保存：${savedDocument.title}（版本 ${savedDocument.current_version}）`);
-    });
-  }
-
-  function handleCreateDocument() {
-    setActiveView('documents');
-    setIsCreating(true);
-  }
-
-  function handleSelectDocument(documentId: number) {
-    setActiveView('documents');
-    setSelectedId(documentId);
-    setIsCreating(false);
-  }
-
-  async function handleDelete() {
-    if (!session || !selectedDocument) {
-      return;
-    }
-
-    if (!window.confirm(`确认删除文档「${selectedDocument.title}」？此操作不可撤销。`)) {
-      return;
-    }
-
-    await runAction('正在删除文档...', async () => {
-      await deleteDocument(session.token, selectedDocument.id);
-      setSelectedId(null);
-      setIsCreating(false);
-      await refreshWorkspace(session.token);
-      setNotice('文档已删除。');
-    });
-  }
-
-  async function handleRestore(versionNo: number) {
-    if (!session || !selectedDocument) {
-      return;
-    }
-
-    if (!window.confirm(`确认将「${selectedDocument.title}」恢复到版本 ${versionNo}？`)) {
-      return;
-    }
-
-    await runAction(`正在恢复版本 ${versionNo}...`, async () => {
-      const restored = await restoreVersion(session.token, selectedDocument.id, versionNo);
-      await refreshWorkspace(session.token);
-      setSelectedId(restored.id);
-      await loadVersions(session.token, restored.id);
-      setNotice(`已恢复到版本 ${versionNo}。`);
-    });
-  }
-
-  async function handleDownloadMarkdown() {
-    if (!session || !selectedDocument) {
-      return;
-    }
-
-    await runAction('正在下载文档...', async () => {
-      const { blob, filename } = await downloadDocumentMarkdown(session.token, selectedDocument.id);
-      triggerBrowserDownload(blob, filename);
-      setNotice(`已下载：${filename}`);
-    });
-  }
-
   async function handleExportSpace() {
-    if (!session) {
+    if (!session.session) {
       return;
     }
-
+    const exportToken = session.session.token;
     await runAction('正在导出空间备份...', async () => {
-      const { blob, filename } = await exportSpaceZip(session.token);
+      const { blob, filename } = await exportSpaceZip(exportToken);
       triggerBrowserDownload(blob, filename);
-      setNotice(`已导出空间备份：${filename}`);
+      workspace.setNotice(`已导出空间备份：${filename}`);
     });
   }
 
-  async function handleOpenDocument(documentId: number | null, title: string) {
-    if (!documentId) {
-      setNotice('该来源为术语表记录，暂无可打开文档。');
-      return;
-    }
-
-    if (!session) {
-      return;
-    }
-
-    setActiveView('documents');
-    setIsCreating(false);
-    setSelectedId(documentId);
-
-    const documentRecord = documents.find((document) => document.id === documentId);
-    if (!documentRecord || documentRecord.content_md === undefined) {
-      await runAction('正在打开来源文档...', async () => {
-        await loadDocumentDetail(session.token, documentId);
-        await loadVersions(session.token, documentId);
-        setNotice(`已打开来源文档：${title}`);
-      });
-      return;
-    }
-
-    await loadVersions(session.token, documentId);
-    setNotice(`已打开来源文档：${title}`);
-  }
-
+  // cross-cutting：统一忙碌 / 通知 / 错误 + 登录失效处理（组合 workspace setters + session.handleAuthError）。
   async function runAction(progressMessage: string, action: () => Promise<void>) {
-    setIsBusy(true);
-    setError('');
-    setNotice(progressMessage);
+    workspace.setIsBusy(true);
+    workspace.setError('');
+    workspace.setNotice(progressMessage);
     try {
       await action();
     } catch (caughtError) {
       const message = caughtError instanceof Error ? caughtError.message : '操作失败';
-      setError(message);
+      workspace.setError(message);
       if (isAuthTokenError(message)) {
-        clearStoredSession();
-        setSession(null);
-        setNotice('登录已失效，请重新登录。');
+        session.handleAuthError();
+        workspace.setNotice('登录已失效，请重新登录。');
       } else {
-        setNotice('操作失败，请查看错误信息。');
+        workspace.setNotice('操作失败，请查看错误信息。');
       }
     } finally {
-      setIsBusy(false);
+      workspace.setIsBusy(false);
     }
   }
 
   return (
     <main className="app-shell">
-      <TopBar session={session} spaces={spaces} isBusy={isBusy} currentSpace={currentSpace} onSpaceChange={handleSpaceChange} onExportSpace={handleExportSpace} />
+      <TopBar
+        session={session.session}
+        spaces={session.spaces}
+        isBusy={workspace.isBusy}
+        currentSpace={currentSpace}
+        onSpaceChange={session.handleSpaceChange}
+        onExportSpace={handleExportSpace}
+      />
 
-      {!session ? (
+      {!session.session ? (
         <section className="login-panel card">
           <h2>Demo 登录</h2>
           <p>登录后前端会将 Bearer Token 附加到文档与空间接口请求中。</p>
-          <form onSubmit={handleLogin}>
+          <form onSubmit={session.handleLogin}>
             <label>
               账号
-              <input value={username} onChange={(event) => setUsername(event.target.value)} />
+              <input value={session.username} onChange={(event) => session.setUsername(event.target.value)} />
             </label>
-            <button type="submit" disabled={isBusy || username.trim().length === 0}>登录</button>
+            <button type="submit" disabled={workspace.isBusy || session.username.trim().length === 0}>登录</button>
           </form>
         </section>
       ) : (
         <div className="workspace-layout workspace-shell">
-          <WorkspaceViewNav activeView={activeView} disabled={isBusy} onChange={setActiveView} />
+          <WorkspaceViewNav activeView={workspace.activeView} disabled={workspace.isBusy} onChange={workspace.setActiveView} />
 
           <ContextPane
-            activeView={activeView}
+            activeView={workspace.activeView}
             currentSpace={currentSpace}
-            documents={documents}
-            selectedId={selectedId}
-            isCreating={isCreating}
-            isBusy={isBusy}
-            onCreateDocument={handleCreateDocument}
-            onSelectDocument={handleSelectDocument}
+            documents={documents.documents}
+            selectedId={documents.selectedId}
+            isCreating={documents.isCreating}
+            isBusy={workspace.isBusy}
+            onCreateDocument={documents.handleCreateDocument}
+            onSelectDocument={documents.handleSelectDocument}
             importDraft={imports.importDraft}
             onImportDraftChange={imports.setImportDraft}
             importFiles={imports.importFiles}
@@ -481,27 +193,27 @@ function App() {
 
           <section className="workspace-main workspace">
             <div className="workspace-action-bar">
-              <button type="button" className="quick-entry-trigger" onClick={quickEntry.open} disabled={isBusy}>
+              <button type="button" className="quick-entry-trigger" onClick={quickEntry.open} disabled={workspace.isBusy}>
                 ＋ 快速录入
               </button>
             </div>
-            {activeView === 'documents' ? (
+            {workspace.activeView === 'documents' ? (
               <DocumentsFeature
-                isCreating={isCreating}
-                selectedDocument={selectedDocument}
-                isBusy={isBusy}
-                draft={draft}
-                onDraftChange={setDraft}
-                versions={versions}
-                outboundLinks={outboundLinks}
-                backlinks={backlinks}
-                documents={documents}
-                onOpenDocument={handleOpenDocument}
-                onCreateDocument={handleCreateDocument}
-                onDelete={handleDelete}
-                onSave={handleSave}
-                onRestore={handleRestore}
-                onDownloadMarkdown={handleDownloadMarkdown}
+                isCreating={documents.isCreating}
+                selectedDocument={documents.selectedDocument}
+                isBusy={workspace.isBusy}
+                draft={documents.draft}
+                onDraftChange={documents.setDraft}
+                versions={documents.versions}
+                outboundLinks={documents.outboundLinks}
+                backlinks={documents.backlinks}
+                documents={documents.documents}
+                onOpenDocument={documents.handleOpenDocument}
+                onCreateDocument={documents.handleCreateDocument}
+                onDelete={documents.handleDelete}
+                onSave={documents.handleSave}
+                onRestore={documents.handleRestore}
+                onDownloadMarkdown={documents.handleDownloadMarkdown}
                 documentTags={tags.documentTags}
                 availableTags={tags.tags}
                 addTagSelection={tags.addTagSelection}
@@ -511,32 +223,32 @@ function App() {
               />
             ) : null}
 
-            {activeView === 'search' ? (
+            {workspace.activeView === 'search' ? (
               <SearchFeature
                 searchQuery={search.searchQuery}
                 onSearchQueryChange={search.setSearchQuery}
                 searchResult={search.searchResult}
-                isBusy={isBusy}
+                isBusy={workspace.isBusy}
                 onSearch={search.handleSearch}
-                onOpenDocument={handleOpenDocument}
+                onOpenDocument={documents.handleOpenDocument}
               />
             ) : null}
 
-            {activeView === 'query' ? (
+            {workspace.activeView === 'query' ? (
               <QueryFeature
                 question={query.question}
                 onQuestionChange={query.setQuestion}
                 queryResult={query.queryResult}
-                isBusy={isBusy}
+                isBusy={workspace.isBusy}
                 onQuery={query.handleQuery}
-                onOpenDocument={handleOpenDocument}
+                onOpenDocument={documents.handleOpenDocument}
               />
             ) : null}
 
-            {activeView === 'terms' ? (
+            {workspace.activeView === 'terms' ? (
               <TermsFeature
                 selectedTermId={terms.selectedTermId}
-                isBusy={isBusy}
+                isBusy={workspace.isBusy}
                 termDraft={terms.termDraft}
                 onTermDraftChange={terms.setTermDraft}
                 onSaveTerm={terms.handleSaveTerm}
@@ -545,9 +257,9 @@ function App() {
               />
             ) : null}
 
-            {activeView === 'tags' ? (
+            {workspace.activeView === 'tags' ? (
               <TagsFeature
-                isBusy={isBusy}
+                isBusy={workspace.isBusy}
                 tags={tags.tags}
                 selectedTagId={tags.selectedTagId}
                 tagDocuments={tags.tagDocuments}
@@ -555,14 +267,14 @@ function App() {
                 onNewTagNameChange={tags.setNewTagName}
                 onSelectTag={tags.handleSelectTag}
                 onCreateTag={tags.handleCreateTag}
-                onOpenDocument={handleOpenDocument}
+                onOpenDocument={documents.handleOpenDocument}
               />
             ) : null}
           </section>
 
           <QuickEntryFeature
             isOpen={quickEntry.isOpen}
-            isBusy={isBusy}
+            isBusy={workspace.isBusy}
             title={quickEntry.title}
             source={quickEntry.source}
             contentMd={quickEntry.contentMd}
@@ -570,7 +282,7 @@ function App() {
             mode={quickEntry.mode}
             targetDocumentId={quickEntry.targetDocumentId}
             tags={tags.tags}
-            documents={documents}
+            documents={documents.documents}
             lastEntry={quickEntry.lastEntry}
             onTitleChange={quickEntry.setTitle}
             onSourceChange={quickEntry.setSource}
@@ -581,22 +293,14 @@ function App() {
             onSubmit={quickEntry.handleSubmit}
             onDiscard={quickEntry.handleDiscard}
             onClose={quickEntry.close}
-            onOpenDocument={handleOpenDocument}
+            onOpenDocument={documents.handleOpenDocument}
           />
         </div>
       )}
 
-      <StatusBar notice={notice} error={error} />
+      <StatusBar notice={workspace.notice} error={workspace.error} />
     </main>
   );
-}
-
-function normalizeDraft(draft: Draft) {
-  return {
-    title: draft.title.trim(),
-    content_md: draft.content_md,
-    permission: draft.permission,
-  };
 }
 
 export default App;
