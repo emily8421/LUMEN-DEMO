@@ -6,6 +6,16 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v0.2.2（2026-07-19）
+
+新增面向最终用户的《用户操作手册》（`docs/env/user-guide.md`），覆盖 Phase1 + Phase1.5 + Phase2A 全部已实现功能的日常使用操作；`demo-guide.md` 补交叉引用。纯文档，不新增可演示能力、不改 API 契约。
+
+- 新增 `docs/env/user-guide.md`（16 节：30 秒上手 / 界面总览 / 登录空间 / 文档 / 批量导入 / 版本 / 双向链接 / 标签 / 快速录入 / 搜索 / 问答 / 术语 / 导出 / 权限 / 能力边界 / 常见问题）
+- `docs/env/demo-guide.md` 定位块加 1 行交叉引用，指向 user-guide 并说明分工（起服务 + 演示 SOP vs 日常使用）
+- 内容基于 `frontend/src/` 真实 UI 入口核对（按钮文案 / 字段 / 入口均对照实际组件，未经浏览器实走校验）
+
+> PATCH 依据（`ai/project-rules.md` §2.8.1）：纯文档新增，不新增可演示能力、不改对外 API 契约。
+
 ## v0.2.1（2026-07-19）
 
 APP-SIZE-C-011：App.tsx 主应用文件重构减压（内部改进，不新增可演示能力）。
