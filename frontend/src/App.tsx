@@ -33,7 +33,6 @@ function App() {
     setError: workspace.setError,
     onAuthError: session.handleAuthError,
     setActiveView: workspace.setActiveView,
-    refreshWorkspace,
   });
 
   const tags = useTags({

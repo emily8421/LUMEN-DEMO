@@ -27,8 +27,6 @@ type UseDocumentsArgs = {
   setError: (message: string) => void;
   onAuthError: () => void;
   setActiveView: (view: ActiveView) => void;
-  /** 文档变更后刷新工作区（App 级 orchestrator：reload spaces/documents/terms）。 */
-  refreshWorkspace: () => Promise<void>;
 };
 
 /**
@@ -48,7 +46,6 @@ export function useDocuments({
   setError,
   onAuthError,
   setActiveView,
-  refreshWorkspace,
 }: UseDocumentsArgs) {
   const [documents, setDocuments] = useState<KnowledgeDocument[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -160,7 +157,7 @@ export function useDocuments({
         isCreating || !selectedDocument
           ? await createDocument(token, payload)
           : await updateDocument(token, selectedDocument.id, payload);
-      await refreshWorkspace();
+      await reloadDocuments(token);
       setSelectedId(savedDocument.id);
       setIsCreating(false);
       await loadVersions(token, savedDocument.id);
@@ -190,7 +187,7 @@ export function useDocuments({
       await deleteDocument(token, selectedDocument.id);
       setSelectedId(null);
       setIsCreating(false);
-      await refreshWorkspace();
+      await reloadDocuments(token);
       setNotice('文档已删除。');
     });
   };
@@ -204,7 +201,7 @@ export function useDocuments({
     }
     void runAction(`正在恢复版本 ${versionNo}...`, async () => {
       const restored = await restoreVersion(token, selectedDocument.id, versionNo);
-      await refreshWorkspace();
+      await reloadDocuments(token);
       setSelectedId(restored.id);
       await loadVersions(token, restored.id);
       setNotice(`已恢复到版本 ${versionNo}。`);
