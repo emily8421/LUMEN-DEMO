@@ -6,6 +6,16 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v0.2.1（2026-07-19）
+
+APP-SIZE-C-011：App.tsx 主应用文件重构减压（内部改进，不新增可演示能力）。
+
+- App.tsx 741→306 行，业务全下沉到 8 个域 hook（useWorkspace/Session/Documents/Search/Query/Terms/Import + 既有 useTags/useQuickEntry）；helpers 迁出 `session-store.ts` / `drafts.ts`
+- hotfix：切换空间后保存 UI 不刷新（跨域闭包 → useDocuments 自身 `reloadDocuments(token)`）
+- 模板提案回流：[ai-project-template#232](https://github.com/emily8421/ai-project-template/issues/232)（主应用文件膨胀约束规则）
+
+> PATCH 依据（`ai/project-rules.md` §2.8.1）：重构 / bug 修复，不新增可演示能力、不改对外 API 契约。
+
 ## v0.2.0（2026-07-19）
 
 Phase2A 个人知识组织「快速录入」交付（REQ-025，Task A 后端 + Task B 前端）。
