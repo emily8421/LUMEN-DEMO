@@ -9,15 +9,15 @@
 |---|---|
 | 输入来源 | `docs/01-user-requirements.md`、`docs/02-srs.md`、`ai/project-rules.md` §1 |
 | 覆盖 REQ | REQ-001..REQ-038（按 Phase1 / Phase1.5A / Phase1.5B / Phase2A / Phase2B / 愿景分阶段） |
-| 当前状态 | 已确认（§3 为阶段标签唯一来源；路线图重排为“个人可用优先”；Phase1 Demo 允许 REQ-009/010 按 05/09 降级边界验收） |
-| 最后更新 | 2026-07-15（00-03 审计后重排：个人可用 Alpha / Beta → 个人知识组织 → 团队 MVP） |
+| 当前状态 | 已确认（§3 为阶段标签唯一来源；Phase2A 个人知识组织已完成；未进入 Phase2B） |
+| 最后更新 | 2026-07-20（Phase2A closure：REQ-026 / REQ-012 / REQ-025 三个 vertical slice 验收通过） |
 
 ## 1. 功能范围（完整，对齐 01 / 02）
 
 完整清单见 `docs/01-user-requirements.md`（U-01..U-43）与 `02-srs.md`（REQ-001..REQ-038）。
 
-- 本期（P1 / P1.5）实现：U-01..U-12、U-33、U-42、U-43 / REQ-001..REQ-011、REQ-027、REQ-036..REQ-038
-- 个人知识组织（Phase2A）：U-13、U-31、U-32 / REQ-012、REQ-025、REQ-026
+- 已完成基线：Phase1（U-01..U-12、U-42 / REQ-001..REQ-011、REQ-036）、Phase1.5A（U-43 / REQ-037、REQ-038）、Phase2A（U-13、U-31、U-32 / REQ-012、REQ-025、REQ-026）
+- 个人增强候选（Phase1.5B）：U-33 / REQ-027 + 真实 Word/PDF 文本提取、zhparser 中文分词增强
 - 团队 MVP（Phase2B）：U-14..U-20、U-30 / REQ-013..REQ-017、REQ-024（其中 U-18..U-20 不进首批团队 MVP）
 - 远期愿景：U-21..U-29、U-34..U-41 / REQ-018..REQ-023、REQ-028..REQ-035
 
@@ -50,7 +50,7 @@
 | F-004 | 内容导入降级闭环 | REQ-009 / REQ-010 | `[P1]` | Demo | Phase1 降级演示；真实 Word / PDF / OCR 留后续 |
 | F-005 | 桌面端访问 | REQ-011 | `[P1]` | Demo | Phase1 必演示 |
 | F-006 | 术语管理与口径对齐 | REQ-036 | `[P1]` | Demo | Phase1 必演示 |
-| F-007 | 个人知识组织增强 | REQ-012 / REQ-025 / REQ-026 | `[P2]` | 个人知识组织 | 骨架，Phase2A 时细化 |
+| F-007 | 个人知识组织增强 | REQ-012 / REQ-025 / REQ-026 | `[P2]` | 个人知识组织 | Phase2A 已完成（TC-P2-TAG-001 / LINK-001 / QUICK-001 通过） |
 | F-008 | 写作、团队协作与跨端体验 | REQ-013 / REQ-014 / REQ-015 / REQ-016 / REQ-017 / REQ-024 | `[P2]` | 团队 MVP / 后续 | 骨架，Phase2B 时细化 |
 | F-009 | 存量知识源与交付能力 | REQ-018 / REQ-019 / REQ-022 / REQ-023 / REQ-028 / REQ-035 | `[愿景]` | 产品 | 待技术验证 |
 | F-010 | 情报分析与高风险 AI 能力 | REQ-020 / REQ-021 / REQ-029 / REQ-030 / REQ-031 / REQ-032 / REQ-033 / REQ-034 | `[愿景]` | 产品 | 高风险，待技术验证 |
@@ -68,7 +68,7 @@
 | Phase1（已完成 / 当前基线） | `[P1]` · REQ-001..011、REQ-036 | **Demo** | 已完成（Conditional Go） | 项目起点（无前置 Phase） | REQ-001..011、REQ-036 可演示 + REQ-009/010 降级边界清晰 + 产品红线未被破坏 |
 | Phase1.5A（已完成） | `[P1]` · REQ-037、REQ-038 | **个人可用 Alpha** | 已完成（Sprint-16/17，TC-P1-015/016 通过） | Phase1 Demo closure 已完成；Sprint-0′ 框架补课不阻塞 | 批量 / 文件夹 `.md/.txt` 入库可搜可问答；单文档 `.md` 与空间 ZIP 可导出备份；权限过滤正确；产品红线未破坏 |
 | Phase1.5B（Alpha 后） | `[P1]` · REQ-027 + REQ-009 真实文本提取 / REQ-007 搜索增强候选 | **个人增强 Beta** | 候选·需 RG | Phase1.5A 可用；PDF / Word-PDF 解析 / zhparser 分别通过选型与环境验证 | PDF 中文导出可用；真实 Word/PDF 文本提取可用或明确降级；中文检索体验增强；不得阻塞 Alpha |
-| Phase2A（个人知识组织 · 当前） | `[P2]` · REQ-026、REQ-012、REQ-025 | **个人知识组织** | 已启动·进行中（首个 slice：REQ-026 内链/反链） | Phase1.5A/B 使真实资料量上来；06/07/09 补最小契约（Batch B 已回填） | 文档可用内链 / 反链互联，可用标签组织，可快速录入轻量条目；适合个人长期管理资料 |
+| Phase2A（个人知识组织 · 已完成） | `[P2]` · REQ-026、REQ-012、REQ-025 | **个人知识组织** | 已完成（REQ-026 / REQ-012 / REQ-025 三个 vertical slice 通过） | Phase1.5A 使真实资料量进入系统；06/07/09 已补最小契约与 TC | 文档可用内链 / 反链互联，可用标签组织，可快速录入轻量条目；权限过滤不泄露 |
 | Phase2B（团队 MVP） | `[P2]` · REQ-014、REQ-013/024 候选；REQ-015/016/017 延后 | **团队 MVP** | 范围待确认 | Phase2A 稳定；04/05 Phase2 设计补强 + tech-env-eval + 06/07 契约齐备 | 小团队可真实使用知识组织与写作辅助；是否纳入时间轴 / 协作 / 移动端另行确认 |
 | 远期愿景（不承诺时间） | `[愿景]` · REQ-018..023、REQ-028..035 | **产品** | 骨架 | 05 技术验证高难度 AI 可行 | 不承诺时间 |
 
@@ -94,12 +94,12 @@
 - **进入标准**：Phase1.5A 已可用；PDF / Word-PDF 解析 / zhparser 各自完成选型和环境验证。
 - **退出标准**：Sprint-18 在 RG-006 Go / Conditional Go 后通过 TC-P1-017；真实 Word/PDF 解析和 zhparser 可独立 Go / No-Go，不得反向阻塞 Alpha。
 
-### Phase2A —— 当前（功能范围 `[P2]` · 交付物形态 **个人知识组织**）
+### Phase2A —— 已完成（功能范围 `[P2]` · 交付物形态 **个人知识组织**）
 - **目标**：资料量上来后，补标签、内部链接和快速录入，让个人知识库不变成文件堆。
 - **功能范围 `[P2]`**：REQ-026 内部链接 + 反向链接、REQ-012 标签视图、REQ-025 快速录入索引条目。
 - **交付物形态个人知识组织**：文档可互联、按主题聚合、无原文条目也能快速沉淀。
-- **进入标准**：Phase1.5A/B 使真实资料量进入系统；`06/07/09` 为 REQ-012/025/026 补最小可实现契约和 TC。
-- **退出标准**：内链 / 反链、标签筛选、快速录入至少一个可真实使用 vertical slice 通过验收；权限过滤不泄露。
+- **进入标准**：Phase1.5A 个人可用 Alpha 已完成；`06/07/09` 为 REQ-012/025/026 补最小可实现契约和 TC。
+- **退出标准**：内链 / 反链、标签筛选、快速录入三个可真实使用 vertical slice 已通过验收；权限过滤不泄露。
 
 ### Phase2B —— 团队 MVP（功能范围 `[P2]` · 交付物形态 **MVP**）
 - **目标**：从个人可用推进到小团队可真实使用，补写作辅助与团队化体验。
@@ -167,8 +167,9 @@
 | F-001 / F-002 / F-005 / F-006 | `docs/09-verification.md` §2 / §5 | Sprint-1~6 降级口径验收记录 |
 | F-003 | `docs/09-verification.md` §2 / §5，task-009 | 真实 LLM、pgvector、Embedding 与 hybrid search 已验证 |
 | F-004 | `docs/09-verification.md` §2 / §6 | `.md` / `.txt` 导入条件通过；真实 Word / PDF / OCR 留后续 |
-| F-011（P1.5A/B） | `docs/08-dev-plan.md` Sprint-16~18、`docs/09-verification.md` TC-P1-015~017 | Alpha=REQ-037/038 待编码；Beta=REQ-027 待 RG-006 选型 + 中文验证 |
-| Phase2A / Phase2B / 愿景 | 本文 §3 / §6 待确认项 | 启动前需重新评估；近期优先个人可用，不直接进入团队 MVP |
+| F-011（P1.5A/B） | `docs/08-dev-plan.md` Sprint-16~18、`docs/09-verification.md` TC-P1-015~017 | Alpha=REQ-037/038 已完成；Beta=REQ-027 待 RG-006 选型 + 中文验证 |
+| Phase2A closure | `docs/09-verification.md` §2 / §5，`docs/08-dev-plan.md` Phase2A 完成包 | REQ-026 / REQ-012 / REQ-025 三个 vertical slice 已通过；未进入 Phase2B |
+| Phase2B / 愿景 | 本文 §3 / §6 待确认项 | 团队 MVP 首批范围和进入标准待确认；不直接把愿景写入当前阶段 |
 
 ## 5. 非目标（明确不做，防范围蔓延）
 
@@ -184,5 +185,4 @@
 
 | ID | 待确认项 | AI 建议 | 建议依据 | 备选方案 | 取舍影响 / 阻塞关系 |
 |---|---|---|---|---|---|
-| PRD-C-001 | 是否确认“个人可用优先”路线图 | **建议确认**：先 Phase1.5A 批量导入 + 导出备份，再 Phase1.5B PDF / 真实文本提取 / 搜索增强，再 Phase2A 个人知识组织，最后 Phase2B 团队 MVP | 2026-07-15 人工目标：尽快个人可用；审计报告 `docs/research/2026-07-15-requirements-00-03-route-audit.md` | 直接进入 Phase2B 团队 MVP | 会跳过个人可用收口，延后真实投入使用 |
-| PRD-C-002 | Phase2A 首个 vertical slice | AI 建议优先 `REQ-026 内链 / 反链`，其次 `REQ-012 标签`，最后 `REQ-025 快速录入` | 资料量上来后最先需要组织与互联；比 AI 润色更贴近个人知识库 | 先做 AI 润色 | 对个人可用帮助较弱，且有数据外发风险 |
+| PRD-C-003 | Phase2B 首批范围与进入标准 | 建议先确认团队 MVP 是否优先 `REQ-014 AI 润色 / 写作引用`，以及是否纳入时间轴候选（REQ-013/024） | Phase2A 已完成个人知识组织闭环；Phase2B 涉及数据外发、团队化体验与更高验证成本 | 先做 Phase1.5B PDF / Word-PDF / zhparser | 影响下一阶段指针、设计补强、tech-env-eval、08/09 验证范围与版本规划 |

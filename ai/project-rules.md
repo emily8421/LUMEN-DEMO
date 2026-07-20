@@ -14,16 +14,16 @@
 
 ## 1. Phase边界
 
-当前阶段：**Phase2A（个人知识组织）**；Phase1 Demo + Phase1.5A 可用性收口已完成（Sprint-1~17、Sprint-12/13），Phase1.5B（PDF / Word-PDF / zhparser，Sprint-14/15/18）留后续候选、不阻塞 Phase2A；未进入 Phase2B
+当前阶段：**Phase2A（个人知识组织）已完成**；Phase1 Demo + Phase1.5A 可用性收口已完成（Sprint-1~17、Sprint-12/13），Phase1.5B（PDF / Word-PDF / zhparser，Sprint-14/15/18）留后续候选、不阻塞 Phase2A closure；**未进入 Phase2B**
 
 > 双维度（global-rules §8.1）：每个阶段同时声明**功能范围**与**交付物形态**，两者正交、不得混用。
 - **功能范围**：`[P2]`（Phase2A：REQ-026 内链/反链、REQ-012 标签、REQ-025 快速录入）；`[P1]`（REQ-001..011、REQ-036、REQ-037/038 已完成；REQ-027 等 Phase1.5B 候选留后续），见 `docs/03-prd.md` §3 路线图
-- **交付物形态**：**个人知识组织**（Phase2A）— 在 Demo + 个人可用 Alpha（已完成）之上补内链 / 反链、标签、快速录入，让资料可互联、可组织；**保留产品红线**（库外问答回复"未找到"、不编造、权限不泄露）；不默认称为团队 MVP
+- **交付物形态**：**个人知识组织**（Phase2A 已完成）— 在 Demo + 个人可用 Alpha（已完成）之上补内链 / 反链、标签、快速录入，让资料可互联、可组织；**保留产品红线**（库外问答回复"未找到"、不编造、权限不泄露）；不默认称为团队 MVP
 
 > 阶段划分的唯一来源是 `docs/03-prd.md` §3 路线图；本节是"当前阶段指针"。
 > 升阶段时只改本节指针 + 在设计文档原位补充新阶段细节（见 global-rules §8），不重写需求。
 
-允许（Phase1 / Phase1.5 已完成能力 + Phase2A 当前）：
+允许（Phase1 / Phase1.5A / Phase2A 已完成能力 + 后续候选）：
 - 后端 Python + FastAPI；存储 PostgreSQL + pgvector；LLM 走 OpenAI 兼容 API；Embedding 本机运行 `bge-small-zh`（512 维）；前端 React
 - 双空间隔离 + 文档权限三级（私有 / 团队共享 / 外部只读）
 - Markdown 文档 CRUD + 全文搜索 + RAG 问答（带来源引用）+ 行内编辑 / 版本历史
@@ -32,9 +32,9 @@
 - Phase1.5B 个人增强候选：单文档 PDF 导出、真实 Word/PDF 文本提取、zhparser 中文分词增强；其中 PDF 必须先通过 RG-006 选型 + 中文最小样例验证，未通过不得编码
 - 空间级术语表 + 文档术语识别 + 问答口径对齐
 - 桌面端浏览器访问
-- Phase2A 个人知识组织：内部链接 / 反向链接（REQ-026）、标签视图（REQ-012）、快速录入索引条目（REQ-025）；首个 vertical slice 为 REQ-026 内链 / 反链
+- Phase2A 个人知识组织：内部链接 / 反向链接（REQ-026）、标签视图（REQ-012）、快速录入索引条目（REQ-025）均已完成；验收见 `docs/09-verification.md` TC-P2-LINK-001 / TC-P2-TAG-001 / TC-P2-QUICK-001
 
-禁止（当前 Phase2A 内不做，留待后续 Phase）：
+禁止（Phase2A closure 后未确认进入 Phase2B，不做）：
 - 高级视图：时间轴、关联图、问题热力矩阵、事件卡片因果展开、气泡图谱（标签视图已随 Phase2A 解锁）
 - 外部知识源挂载（Obsidian Vault 路径挂载）、跨空间文档推送
 - 录音转文字入库、对外只读简报（临时链接）、文档包生成

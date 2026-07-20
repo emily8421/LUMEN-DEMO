@@ -1,6 +1,6 @@
 # 08 开发计划
 
-> 按阶段拆 Sprint。本文件当前承载 **Phase1（功能范围 `[P1]` · 交付物形态 Demo）**；
+> 按阶段拆 Sprint。本文件承载 Phase1 → Phase1.5A → Phase2A 的计划与完成记录；
 > 升阶段时在**原位追加**新 Sprint（global-rules §8，不删旧 Sprint）。
 > Sprint 格式见 `ai/global-rules.md` §3。
 
@@ -8,11 +8,11 @@
 
 | 项 | 内容 |
 |---|---|
-| 当前 Phase | Phase1 / Phase1.5A 候选 |
-| 交付物形态 | Demo / 个人可用 Alpha |
+| 当前 Phase | Phase2A 已完成；未进入 Phase2B |
+| 交付物形态 | Demo / 个人可用 Alpha / 个人知识组织 |
 | 输入基线 | `docs/03-prd.md` §3、`docs/04-architecture.md`、`docs/05-tech-spec.md`、`docs/09-verification.md` |
-| 当前状态 | Phase1 Demo 已完成并已记录全量验收（Conditional Go）；Sprint-1~10 已完成核心闭环真实化与前端体验收口；Sprint-0′ 框架补课已完成 Step 1-5。2026-07-15 00-03 路线图重评估后，后续编码顺序改为**个人可用优先**：Phase1.5A 先做 Sprint-16 批量 / 文件夹导入（REQ-037）与 Sprint-17 `.md` / ZIP 导出备份（REQ-038），Phase1.5B 再做 Sprint-18 PDF（REQ-027，需 RG-006）及真实 Word/PDF 文本提取、zhparser 等增强；Phase2A 为个人知识组织（REQ-026/012/025），Phase2B 才是团队 MVP。 |
-| 最后更新 | 2026-07-15（00-03 审计后重排：Phase1.5A 个人可用 Alpha 优先于 PDF 与 Phase2） |
+| 当前状态 | Phase1 Demo 已完成并已记录全量验收（Conditional Go）；Phase1.5A 已完成批量 / 文件夹导入（REQ-037）与 `.md` / ZIP 导出备份（REQ-038）；Phase2A 已完成 REQ-026 内链 / 反链、REQ-012 标签、REQ-025 快速录入三个 vertical slice 并通过 `09` 对应用例。Phase1.5B（PDF / Word-PDF / zhparser）与 Phase2B（团队 MVP）仍待后续确认 / RG。 |
+| 最后更新 | 2026-07-20（Phase2A closure：三 vertical slice 完成包与 `09` 验收记录闭环） |
 
 ## Sprint 总览
 
@@ -523,10 +523,12 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 | Sprint-13（P1C）实现 | 2026-07-16 | 003 | 外部只读真实化（口径 B）：`permission.py` `can_write_document`（external 仅 owner 可写）+ `document.py` update/delete/restore 写校验（`DocumentAccessError`）+ `documents.py` 端点 403/4003 + `test_permission`/`test_external_write` | 本批 | `python -m unittest tests.backend.test_permission tests.backend.test_external_write`（3 个 can_write + 5 个 service 级拦截）；回归 44 tests 通过 | 不改 DB schema / 权限定义 / 可见性边界 / 依赖；team/private 写权限不变 | §5 |
 | Phase2A·REQ-026 Task A（后端） | 2026-07-16 | 026 | 内链/反链后端：迁移 007 `lumen_doc_links` + entities/ORM + Demo/Pg repository（list/find_by_title/replace_wikilinks/upsert_manual）+ `service/doc_links`（list_links 权限折算 / upsert_link）+ `service/document` `sync_document_wikilinks`（保存时解析 `[[target]]`）+ `api/doc_links`（API-018 GET/POST）+ `main.py` 注册 | 本批 | `test_doc_links` 8 tests + 全回归 52 tests；TestClient 路由 smoke 5/5（outbound resolved/unresolved、manual POST、4220） | 不改既有 DB 表/权限模型/依赖；wikilink 拒手动 POST（仅正文解析）；前端 Task B 已完成（6228f3f，UI smoke 4/4 通过） | §5（TC-P2-LINK-001 后端） |
 | Phase2A·REQ-026 Task B（前端） | 2026-07-16 | 026 | 内链/反链前端：`api.ts` DocLink client（`listDocLinks`/`createDocLink`）+ `MarkdownBlock` `[[wikilink]]` 四态渲染（resolved 可点跳转 / unresolved 虚线占位 / no_access 隐藏锚文本显占位 / pending 编辑未同步；自定义 `urlTransform` 放行 wikilink scheme）+ `DocumentsFeature` 反链面板（来源标题取自 `documents` 按 `source_document_id` 查）+ `App.tsx` 出链/反链加载 + `panels.css` 三态样式 | 本批（`6228f3f`） | `npm.cmd run build`（tsc -b + vite，209 modules）；react-dom/server SSR 五态渲染验证（resolved/unresolved/no_access/pending/plain，no_access 锚文本已隐藏）；浏览器 UI smoke 4/4 通过（resolved 跳转 / unresolved 占位 / 反链面板 / pending） | no_access 单用户单空间场景未浏览器验证（SSR 已验证隐藏锚文本）；`docs/07` API-018 偏差本次回写 | §5（TC-P2-LINK-001 通过） |
+| Phase2A·REQ-012 Task A（后端） | 2026-07-17 | 012 | 标签后端：迁移 008 `lumen_tags` / `lumen_tag_links` + entities/ORM + Demo/Pg repository + `service/tag.py` + `api/tags.py`（API-014/027/031/032） | `1e4cf48` | `tests/backend/test_tags.py` 15/15 通过 | 扁平标签最小版；标签空间隔离，document_count 只统计当前用户可见文档；不做层级 / 组合筛选 / AI 自动打标签 | §5（TC-P2-TAG-001 后端） |
+| Phase2A·REQ-012 Task B（前端） | 2026-07-17 | 012 | 标签前端：`api/tags.ts` + `useTags` + `TagsFeature` 独立标签视图 + 文档详情打标签 / 移除 + 标签下文档筛选入口 | `d07688b` | `npm run build` 通过；浏览器 smoke 通过 | 最小版仅单标签筛选；归档标签不破坏历史关联；批量打标签 / AI 建议留后续 | §5（TC-P2-TAG-001 通过） |
 | Phase2A·REQ-025 Task A（后端） | 2026-07-18 | 025 | 快速录入后端：迁移 009 `lumen_quick_entries` + entities/ORM + Demo/Pg repository（create/get/list/update + _to_quick_entry）+ `service/quick_entry`（capture 三 mode：draft/create_document/append_document + discard）+ `api/quick_entry`（API-017 POST capture + DELETE discard）+ `main.py` 注册 | `f771e02` | `test_quick_entry` 17/17 + service 回归 53 + 迁移 009 PG 建表/PgRepository smoke + test_api_routes 15 passed | 最小版不暴露 list endpoint；draft 默认 owner 私有；`source` 字段 07 草案未列，本次 Task C 回写补 | §5（TC-P2-QUICK-001 后端） |
 | Phase2A·REQ-025 Task B（前端） | 2026-07-19 | 025 | 快速录入前端：`api/quickEntry.ts`（capture/discard + 类型）+ `api.ts` barrel + `app/useQuickEntry.ts`（表单 state + handler）+ `features/QuickEntryFeature.tsx`（顶部胶囊 + 侧滑抽屉：标题/来源/摘要/tag_ids/mode + 结果区丢弃/打开）+ `App.tsx` 集成 + `panels.css` | `bad8fe5` | `npm run build` 通过；API smoke（draft/create/append + discard + 4220）通过；浏览器 smoke 通过 | discard 最小版（后端无 list，会话内保留最近一次草稿）；App.tsx +41 胶水，整体拆分留 APP-SIZE-C-011 | §5（TC-P2-QUICK-001 通过） |
 
-> Sprint-8 后：pgvector / Embedding / LLM 已接入（RG-001/002/004 Go），基础 Web / ORM 栈为 Go（RG-005）。Phase1 全量验收结论为 Conditional Go（Demo closure）；仍移出 P1：真实 PDF 解析、图片 OCR（REQ-010，RG-003 No-Go，后续阶段）。Sprint-9（P1A）与 Sprint-10（P1B）是已完成 Demo 之上的前端体验收口，不改变 Phase1 closure 结论。Phase2 启动前需人工确认范围、进入 / 退出标准，并另行更新阶段指针。Sprint-11 目前仅为 P2 UI / WSG 实现前门禁草案，不计入已完成 Sprint；TC-P2-WSG-001 与 TC-P2-UI-001~005 未执行、未通过。
+> Sprint-8 后：pgvector / Embedding / LLM 已接入（RG-001/002/004 Go），基础 Web / ORM 栈为 Go（RG-005）。Phase1 全量验收结论为 Conditional Go（Demo closure）；仍移出 P1：真实 PDF 解析、图片 OCR（REQ-010，RG-003 No-Go，后续阶段）。Sprint-9/10/12/13 为已完成 Demo 之上的前端体验与可用性收口；Phase1.5A 已完成批量入库与导出备份。Phase2A 已完成 REQ-026 / REQ-012 / REQ-025 三个 vertical slice；Sprint-11 仅保留为 P2 UI / WSG 实现前门禁草案，Phase2B 启动前需重新确认范围、进入 / 退出标准与验证包。
 
 ---
 
@@ -534,11 +536,8 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 
 ## 待人工确认项
 
-- Phase1.5A 的 Sprint-16（批量导入）与 Sprint-17（`.md` / ZIP 导出备份）均已完成；个人可用 Alpha「入库 → 导出」闭环成形。下一步可考虑 Sprint-18（PDF，受 RG-006）或穿插 Sprint-12/13 稳定性收口。
-- 是否正式进入 Phase2A / Phase2B：需在 Phase1.5A/B 后人工确认范围、进入 / 退出标准，再更新 `ai/project-rules.md` 当前阶段指针与相关设计 / 计划文档。`Sprint-11（P2-UI-Gate / WSG 候选）` 仅为实现前门禁草案，不代表已批准编码。
-- Phase2A 三个 vertical slice 均已完成：REQ-026 内链/反链（fc2b869/6228f3f）+ REQ-012 标签（1e4cf48/d07688b）+ REQ-025 快速录入（f771e02/bad8fe5）；个人知识组织「互联 / 组织 / 快录」闭环成形。
-- **Sprint-0′ 框架补课**：✅ 已完成（Step 1-5，commits ae51210/3d02bb2/2924df4/0a67cfc/2e34c28/a33c536）。剩 **4b handler→hooks（App ≤300）暂缓**——WSG-004 软阈值，App 542 已大幅改善，待功能稳定后再做（不阻塞 P1.5/Phase2）。
-- **P1.5 可用性收口批次执行顺序与范围**：AI 建议先 Sprint-16/17（批量入库 + 导出备份）形成个人可用 Alpha，再穿插 Sprint-12/13 稳定性收口；Sprint-14/15/18 属个人增强 Beta，需选型 / RG 后做。
-- **批量/文件夹导入 + 导出（Sprint-16/17，REQ-037/038 新增）**：2026-07-15 用户新增需求。方案已确认【标题前缀模拟目录（不碰 DB）/ 多文件+文件夹拖拽+落区 / 单文档.md+空间ZIP / 同名跳过】。建议**优先于 Sprint-14（Word/PDF 解析）**——批量纯文本导入直接解决"一个个太慢"痛点且风险更低。确认文档体系回写后（02 REQ + 07 API + 09 TC）再决定编码。
-- **单文档 PDF 导出（Sprint-18，REQ-027 从 Phase2 提前）**：属于 Phase1.5B 个人增强 Beta。需先 RG-006 选型（weasyprint/reportlab）+ 中文排版验证，通过后才编码；不得阻塞 Phase1.5A 的批量入库和导出备份。
+- Phase2A closure 已确认：REQ-026 内链/反链（fc2b869/6228f3f）+ REQ-012 标签（1e4cf48/d07688b）+ REQ-025 快速录入（f771e02/bad8fe5）均完成；个人知识组织「互联 / 组织 / 快录」闭环成形。
+- 是否正式进入 Phase2B：需确认团队 MVP 首批范围（建议先评估 REQ-014 AI 润色 / 写作引用与 REQ-013/024 时间轴候选）、进入 / 退出标准、数据外发风险接受方式、`04/05` 设计补强和 `08/09` 验证包。
+- **P1.5B 候选**：单文档 PDF 导出（Sprint-18 / REQ-027）、真实 Word/PDF 文本提取、zhparser 中文分词增强仍需 RG / 选型 / 中文样例验证；不阻塞 Phase2A closure。
+- **Sprint-0′ / APP-SIZE-C-011**：框架补课已完成，后续 App 主应用文件减压也已由 APP-SIZE-C-011 收口（App.tsx 741→306，v0.2.1）；继续保持新功能优先下沉到域 hook / feature。
 - **TC-P1-001~006/012 是否升级为「通过」**：09 已校准为「PG 仓储·Sprint-8 起真实化」（仍标条件通过）；是否进一步升级为「通过」待人工确认。

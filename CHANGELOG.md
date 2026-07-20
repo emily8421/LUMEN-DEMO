@@ -6,6 +6,17 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v0.2.3（2026-07-20）
+
+Phase2A 个人知识组织整体验收闭环（纯文档 / 状态校准）。
+
+- 将 `docs/03-prd.md`、`docs/08-dev-plan.md`、`docs/09-verification.md` 与 `ai/project-rules.md` 的阶段状态统一为 Phase2A 已完成、未进入 Phase2B。
+- 补 Phase2A closure 记录：REQ-026 内链 / 反链、REQ-012 标签、REQ-025 快速录入三个 vertical slice 均已有 TC 与实现证据。
+- 校准过期待确认 / 风险项：Phase2A 不再标为待确认或未实现；Phase2B 首批范围、REQ-014 AI 润色 / 写作引用、P1.5B PDF / Word-PDF / zhparser 仍待后续确认或 RG。
+- 本版本不新增可演示能力、不改 API / DB / 前端代码，仅做验收状态和版本记录闭环。
+
+> PATCH 依据（`ai/project-rules.md` §2.8.1）：文档状态校准 / 验收闭环，不新增可演示能力、不改对外 API 契约。
+
 ## v0.2.2（2026-07-19）
 
 新增面向最终用户的《用户操作手册》（`docs/env/user-guide.md`），覆盖 Phase1 + Phase1.5 + Phase2A 全部已实现功能的日常使用操作；`demo-guide.md` 补交叉引用。纯文档，不新增可演示能力、不改 API 契约。

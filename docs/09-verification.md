@@ -9,11 +9,11 @@
 
 | 项 | 内容 |
 |---|---|
-| 当前 Phase | Phase1 / Phase1.5A 候选 |
-| 交付物形态 | Demo / 个人可用 Alpha |
-| 覆盖 REQ | Phase1：REQ-001..REQ-011、REQ-036；Phase1.5A：REQ-037/038；Phase1.5B：REQ-027；Phase2A/B 与愿景验证项待升阶段细化 |
-| 当前状态 | Phase1 全量验收已记录，结论为 Conditional Go（Demo closure）；Sprint-7/8 已完成真实 LLM、PostgreSQL+pgvector、Embedding 与 RAG 向量召回验证；task-009 已完成 search hybrid 验证；P1A / P1B 前端体验收口均已实现。2026-07-15 00-03 路线图重排后，TC-P1-015/016 为个人可用 Alpha；TC-P1-015 已随 Sprint-16 自动化验证 + Chrome headless drop-zone smoke 通过；TC-P1-017 为个人增强 Beta 草案；P2 UI / WSG 门禁草案未执行、不代表可编码 |
-| 最后更新 | 2026-07-16（Sprint-17 单文档 `.md` + 空间 ZIP 导出：后端 tests + 端到端 HTTP smoke 通过） |
+| 当前 Phase | Phase2A 已完成；未进入 Phase2B |
+| 交付物形态 | Demo / 个人可用 Alpha / 个人知识组织 |
+| 覆盖 REQ | Phase1：REQ-001..REQ-011、REQ-036；Phase1.5A：REQ-037/038；Phase1.5B：REQ-027；Phase2A：REQ-026/012/025；Phase2B / 愿景验证项待升阶段细化 |
+| 当前状态 | Phase1 全量验收已记录，结论为 Conditional Go（Demo closure）；Phase1.5A 已完成 TC-P1-015/016；Phase2A 已完成 TC-P2-LINK-001 / TC-P2-TAG-001 / TC-P2-QUICK-001，个人知识组织三个 vertical slice 验收通过。Phase1.5B、Phase2B 与愿景项仍待后续 RG / 范围确认。 |
+| 最后更新 | 2026-07-20（Phase2A 个人知识组织整体验收 closure） |
 
 ## 1. 测试策略
 
@@ -74,9 +74,9 @@
 
 > TC-P1-010 暂为「后续阶段」，待 OCR 落地后补步骤与证据；TC-P1-013 已随 PR #76 合并后完成前端构建与 Chrome / Edge 900px smoke；TC-P1-014 已随 Sprint-10（P1B）完成前端构建与 Chrome / Edge 900px smoke；TC-P1-015 已随 Sprint-16 完成自动化验证与 Chrome headless drop-zone smoke；TC-P1-016 已随 Sprint-17 完成后端 tests + 端到端 HTTP smoke；TC-P1-017 待 Sprint-18（RG-006）编码后补证据；其余 TC 自动化均含于后端测试与既有 smoke 证据（见 §5）。
 
-### Phase2（功能范围 `[P2]` · 交付物形态 **MVP**，升阶段时追加）
+### Phase2（功能范围 `[P2]` · Phase2A **个人知识组织** / Phase2B **团队 MVP**）
 
-> 当前仅回填 P2 UI 实现前门禁草案；Phase2 范围、进入 / 退出标准和实现任务仍需人工确认。
+> Phase2A 已完成 REQ-026 / REQ-012 / REQ-025 三个 vertical slice；Phase2B 范围、进入 / 退出标准和实现任务仍需人工确认。
 
 | TC ID | 覆盖对象 | 前置条件 | 验证步骤 | 预期结果 | 证据要求 | 状态 |
 |---|---|---|---|---|---|---|
@@ -142,6 +142,7 @@
 | 2026-07-16 | Sprint-13 外部只读真实化（REQ-003 权限收口，口径 B） | 通过（单测） | `permission.py` 加 `can_write_document`（external 文档仅 owner 可写，team/private 维持可见即可写）；`document.py` `update_document`/`delete_document`/`restore_version` 加 `_ensure_can_write` 校验（抛 `DocumentAccessError`）；`documents.py` 改/删/恢复端点捕获 → 403/4003。验证：`test_permission` 3 个 `can_write` 用例 + `test_external_write` 5 个 service 级用例（非 owner 改/删/恢复被拒、owner 可改、team 维持现状）通过；回归 44 tests 通过。设计回写：`permissions.md §3/§7` 补写口径（原仅定义读）。 |
 | 2026-07-16 | Phase2A·REQ-026 内链/反链后端（Task A） | 通过（后端单测 + TestClient smoke；前端待 Task B） | 迁移 007 建 `lumen_doc_links`（resolved/unresolved/no_access + 防自链 CHECK + 索引）；`service/document.py` `sync_document_wikilinks` 文档保存时解析 `[[target]]` 按标题匹配（resolved/unresolved，自链跳过）；`service/doc_links.py` `list_links` 出链 target 不可见→`no_access` 不泄露标题、反链来源不可见过滤、`upsert_link` 仅 manual（wikilink 拒手动 POST）；API-018 `GET/POST /api/doc-links`。验证：`test_doc_links` 8 tests（解析 / 同步 / no_access / 反链过滤 / manual / wikilink 拒收 / API）+ 全回归 52 tests；TestClient 路由 smoke 5/5。前端 `[[wikilink]]` 渲染 + 反链面板见下行 Task B 验收。 |
 | 2026-07-16 | Phase2A·REQ-026 内链/反链前端（Task B） | 通过（build + SSR + 浏览器 UI smoke 4/4） | `api.ts` 加 DocLink client（`listDocLinks`/`createDocLink`）；`MarkdownBlock` 扩展可选 `docLinks`/`onOpenDocument`，正则 `[[target]]`（同后端）注入伪链接 `lumen-wikilink:`，`components.a` 拦截按 status 渲染四态（resolved 可点跳转 / unresolved 虚线占位 / no_access 隐藏锚文本显「无权访问的链接」/ pending 编辑未同步）；自定义 `urlTransform` 放行 wikilink scheme（react-markdown v10 `defaultUrlTransform` 的 `safeProtocol` 会清空自定义 scheme，须放行）；`DocumentsFeature` 加反链面板（来源标题取自 `documents` 按 `source_document_id` 查）；`App.tsx` `loadDocLinks` + 出链/反链 state + effect；`panels.css` 三态 + 反链样式。验证：`npm.cmd run build`（tsc -b + vite，209 modules）；react-dom/server SSR 五态渲染验证；浏览器 UI smoke（`scripts/run-sprint16-demo.ps1` 内存后端，alice space10）4/4 通过：resolved `[[Nova Sprint Notes]]` 可点跳转、unresolved `[[不存在的文档]]` 虚线占位、反链面板显示引用方、编辑未保存 pending 占位。no_access 单用户单空间场景未构造（SSR 已验证隐藏锚文本）。 |
+| 2026-07-20 | Phase2A 个人知识组织整体验收 closure | 通过 | 验收范围：REQ-026 内链 / 反链（TC-P2-LINK-001）、REQ-012 标签（TC-P2-TAG-001）、REQ-025 快速录入（TC-P2-QUICK-001）。证据：后端单测 / service 回归 / API smoke / 前端 build / 浏览器 smoke 均已分别记录在上方 Sprint / Task 验收与 §2 矩阵；`docs/08-dev-plan.md` 已补 Phase2A 完成包。结论：Phase2A「互联 / 组织 / 快录」闭环通过；未进入 Phase2B，REQ-014 AI 润色 / 写作引用与团队 MVP 范围仍待确认。 |
 
 ### 5.1 缺陷与回归记录
 
@@ -161,14 +162,14 @@
 | RISK-P2-002 | RG-003 | OCR 质量与资源占用 | REQ-010、内容导入 | OCR 未实现，REQ-010 移至后续阶段（RG-003 No-Go）；当前降级为已提取文本 | 待 OCR 引擎定版与资源验证 |
 | RISK-P1-005 | RG-004 | LLM 外部调用可用性 | REQ-008、REQ-036 | GLM `glm-5.2` 真实问答已验证（Sprint-7 首验 + 2026-07-11 新中转 `192.168.15.190:7777/v1` 复测，RG-004→Go；旧 `47.107.134.2` key 已停用）；GPT/ollama 待验证 | GLM 复测记录；GPT/ollama 非 P1 必过 |
 | RISK-VISION-001 | 后续 AI Gate | P2 / 愿景高风险 AI 能力 | REQ-020 / 021 / 030 / 032 / 033 等 | 不进入 Phase1 必过项，技术验证通过后再补用例 | 待愿景技术验证 |
-| RISK-P2-003 | WSG-001..006 / P2-UI-G-001..006 | P2 UI 少容器清爽稿尚未实现 / smoke | Sprint-11、TC-P2-WSG-001、TC-P2-UI-001~005 | 当前仅 HTML 原型与验证草案，需人工确认 Phase2 范围并开实现任务后，再执行 Chrome / Edge smoke；未执行前不得标记通过 | 待用户确认 + 后续 smoke 证据 |
-| RISK-P2-004 | OI-005 / TC-P2-TAG-001..AI-001 | P2 核心 4 项 DB / API / TC 契约未实现 | REQ-012 / 014 / 025 / 026 | Batch B 已补契约草案；尚未创建迁移、接口、前端或自动化测试；未执行前不得标记 Phase2 Go | 待首个 vertical slice 确认 + 实现任务 + 对应 TC 通过 |
+| RISK-P2-003 | WSG-001..006 / P2-UI-G-001..006 | P2 UI 少容器清爽稿通用 gate 未形成独立全量 smoke | Sprint-11、TC-P2-WSG-001、TC-P2-UI-001~005、Phase2B | Phase2A 三个 vertical slice 已分别完成浏览器 smoke / build；Sprint-11 仍作为后续 Phase2B UI gate 草案保留，不阻塞 Phase2A closure | Phase2B 启动前重新确认 UI gate 与 smoke 范围 |
+| RISK-P2-004 | OI-005 / TC-P2-TAG-001..QUICK-001 | ~~Phase2A 核心 DB / API / TC 契约未实现~~ | ~~REQ-012 / 025 / 026~~ | ✅ **已解决**（REQ-026 / REQ-012 / REQ-025 已完成后端 + 前端 vertical slice；TC-P2-LINK-001 / TAG-001 / QUICK-001 通过） | 2026-07-20 Phase2A closure；§2 矩阵与 §5 验收记录 |
 | RISK-P2-005 | RG-004 / 数据外发 | AI 润色 / 写作引用可能发送真实文档片段到外部 LLM | REQ-014 | 复用 LLM adapter；真实文档外发需风险接受，sources 必须权限过滤；可用 Mock 降级 | 待 prompt / source 过滤测试与人工审查 |
 | RISK-P1-006 | RG-006 | PDF 导出库未验证 | REQ-027 | tech-env 草案标记 `reportlab` / `weasyprint` 未安装；API / DB 仅为契约草案，不得编码导出能力 | 待 PDF 库选型、安装、中文样例和资源验证 |
 | RISK-P1-007 | TC-P1-015 | ~~Sprint-16 Chrome 拖拽 / 文件夹 smoke 未补~~ | ~~REQ-037 前端人工验收~~ | ✅ **已解决**（Chrome headless drop-zone smoke 已覆盖批量 drop、路径标题、搜索与问答来源） | Sprint-16 smoke 记录（2026-07-15） |
 
 ## 7. 待人工确认项
 
-- Phase1 全量验收已记录；Sprint-16 / TC-P1-015 已完成；Sprint-17 / TC-P1-016 已完成单文档 `.md` + 空间 ZIP 导出（后端 tests + 端到端 HTTP smoke）；下一步建议 Sprint-18（PDF，受 RG-006）或穿插 Sprint-12/13 稳定性收口。
-- Phase1.5B 的 TC-P1-017 受 RG-006 控制；PDF 不得阻塞 Phase1.5A。
-- Phase2A / Phase2B 仍需人工确认；首个 Phase2A vertical slice 建议优先 `REQ-026 内链 / 反链`，其次 `REQ-012 标签`，再考虑 `REQ-025 快速录入`；未确认前不得一次性实现全部 P2 UI。
+- Phase2A 已完成整体验收 closure；不得再把 REQ-026 / REQ-012 / REQ-025 标为待确认或未实现。
+- Phase2B 仍需人工确认首批范围、进入 / 退出标准、数据外发风险接受方式与 UI / smoke 验证包；REQ-014 AI 润色 / 写作引用仍为契约草案·未执行。
+- Phase1.5B 的 TC-P1-017 受 RG-006 控制；PDF / Word-PDF / zhparser 不阻塞 Phase2A closure。
