@@ -11,8 +11,8 @@
 | 评估角色 | 系统架构专家视角——评估输入材料的性质、可信度、与 LUMEN 现状 / 阶段边界的一致性、可采纳性与归位 |
 | 评估者构成 | 两份 AI 评估交叉：① 本会话 Claude 评估；② 用户提供的另一 AI 评估。两者论断均已与 Git 客观事实、`docs/00-09`、`docs/design/*`、`frontend/` 代码逐条核实 |
 | 输入来源 | 上述 5 份 inputs；`docs/02-srs.md` / `04-architecture.md` / `05-tech-spec.md` / `06-db-design.md` / `docs/design/frontend-interaction.md` / `docs/vision/product-vision.md`；`frontend/package.json`、`frontend/src/features/DocumentsFeature.tsx`、`frontend/src/components/MarkdownBlock.tsx`；`ai/project-rules.md` §1/§2.8、`ai/global-rules.md` §8、`ai/document-lifecycle-rules.md` |
-| 当前状态 | 草案，已落盘；其中 Phase2A 漂移清单与 OB 架构裁决项待人工确认后回填正式文档 |
-| 最后更新 | 2026-07-20 |
+| 当前状态 | 已落盘；P0 Phase2A 漂移同步已提交 v0.2.4（91817d3）；P1 文档归位 / 索引建设已落盘；OB-01 架构裁决仍待 ADR |
+| 最后更新 | 2026-07-21（补 P0/P1 执行状态） |
 
 ---
 
@@ -69,7 +69,7 @@ OB 六条逐条评估（阶段标注已与 `project-rules §1` 核对）：
 | OB-05 | 编辑器统一"标注层"扩展点 | 工程质量建议，合理 | 同 OB-02，依赖编辑器选型先确认 |
 | OB-06 | 团队协作差异化定位写入 03-prd | 纯文档补充 | 无冲突 ✅，建议采纳 |
 
-**小瑕疵**：`obsidian-suggestions §0` 引用 `docs/research/ref-obsidian-overview.md`，但实际文件在 `docs/inputs/ref-obsidian-overview.md`——迁移时一并修正。
+**小瑕疵（P1 已修正）**：`obsidian-suggestions §0` 原引用旧 research 路径，但迁移前文件实际位于 inputs 旧位置；P1 已将外部参考归位到 `docs/references/ref-obsidian-overview.md`，并同步修正建议文档输入来源。
 
 ### 3.3 A 方法论两份
 
@@ -151,12 +151,12 @@ OB-01 原文建议："数据库中的 chunks、向量、`document_relations` 等
 
 | 文档 | 建议归位 | 前提 |
 |---|---|---|
-| doc-system-architecture-evaluation | `docs/research/`（内部审计） | 先修正 §4.1 kb-\* 冲突 |
-| obsidian-design-reference-suggestions | `docs/research/`（内部建议） | OB-01 改写为待裁决议题；§0 路径修正 |
-| ref-obsidian-overview | `docs/references/`（外部调研） | 需先建该目录（B-1 §4.3） |
-| 方法论 ×2 | `docs/references/` 或留 inputs | 校对原图后定 |
+| doc-system-architecture-evaluation | `docs/research/2026-07-20-doc-system-architecture-evaluation.md`（内部审计） | P1 已归位；§4.1 kb-\* 冲突以归位说明修正 |
+| obsidian-design-reference-suggestions | `docs/research/2026-07-20-obsidian-design-reference-suggestions.md`（内部建议） | P1 已归位；OB-01 标记为待 ADR 裁决；§0 路径已修正 |
+| ref-obsidian-overview | `docs/references/ref-obsidian-overview.md`（外部调研） | P1 已归位 |
+| 方法论 ×2 | `docs/references/`（外部方法论参考） | P1 已归位；正式引用前仍需校对原图 |
 
-> `docs/references/` 目录尚未建立；建立动作属 B-1 §4.3 建议，建议与归位一并执行（P1）。
+> `docs/references/` 已于 2026-07-21 的 P1 文档治理中建立；索引见 `docs/references/00-index.md`。
 
 ---
 
@@ -164,9 +164,9 @@ OB-01 原文建议："数据库中的 chunks、向量、`document_relations` 等
 
 | 优先级 | 行动 | 性质 | 前置 |
 |---|---|---|---|
-| **P0** | Phase2A closure 文档漂移同步：`02/04/05/design` 状态字段 → `P2-已实现`；回填 `product-vision` v19 溯源 | 横切状态变更，改 4+ 份正式文档 | 先核查 `08/09` 验收落点（§5.1）；需人工授权 + 一致性检查 |
-| **P1** | 建 `docs/design/00-index.md` + `docs/research/00-index.md` | 文档治理，低风险 | 无 |
-| **P1** | 建 `docs/references/`，迁移 ref-obsidian + 方法论；修正 obsidian-suggestions §0 路径 | 文档治理 | 无 |
+| **P0** | Phase2A closure 文档漂移同步：`02/04/05/design` 状态字段 → `P2-已实现`；回填 `product-vision` v19 溯源 | 横切状态变更，改 4+ 份正式文档 | ✅ 已完成并提交 v0.2.4（91817d3） |
+| **P1** | 建 `docs/design/00-index.md` + `docs/research/00-index.md` | 文档治理，低风险 | ✅ P1 执行中 / 已落盘 |
+| **P1** | 建 `docs/references/`，迁移 ref-obsidian + 方法论；修正 obsidian-suggestions §0 路径 | 文档治理 | ✅ P1 执行中 / 已落盘 |
 | **P2** | 评审吸收 OB-06（→ 03-prd）+ OB-01 改写版（→ ADR，被 04/06 引用） | 架构补强 | OB-01 需架构裁决（C-001） |
 | **P3** | OB-02/05 编辑器 Spike（textarea→CM6 可行性）；OB-03/04 留 Phase2B / 图谱阶段 | 技术预研 | 不阻塞当前 |
 
@@ -179,9 +179,9 @@ OB-01 原文建议："数据库中的 chunks、向量、`document_relations` 等
 | C-001 | 2026-07-20 | OB-01 / 本报告 §6 | 数据层模式方向（路线 A vs B） | 采纳改写版"衍生数据可重建"，记 ADR | 04/06 无原原则；与权限 / 版本 DB 模型冲突 | 全量迁 .md 权威（路线 A，成本高） | 影响 U-43 灾备 / 未来术语 / 矛盾标记数据落地 | 04/06 修订前 / Phase 升级前 | 阻塞 OB-01 落地 | `docs/decisions/ADR-xxxx` + 04/06 引用 | 待确认 |
 | C-002 | 2026-07-20 | B-1 §4.1 | kb-\* 草稿实际去向 | 确认已删除 / 在根目录 / 已归档 | `docs/**/kb-*.md` 无结果 | — | 决定 §4.1 迁移条是否保留 | P1 归位前 | 条件阻塞 §4.1 | B-1 报告 §4.1 | 部分明（不在 docs/；product-vision 溯源仍缺） |
 | C-003 | 2026-07-20 | OB-02/05 / 本报告 §5.2 | 编辑器选型 | 先在 `05-tech-spec` 补选型 + Spike | 05 无记录；frontend 现状 textarea+react-markdown | 保留 textarea / 换 Monaco 等 | 决定 OB-02/05 是否可行 | OB-02/05 编码前 | 阻塞 OB-02/05 | `05-tech-spec` + Spike 报告 | 待确认 |
-| C-004 | 2026-07-20 | 本报告 | 评估报告落盘位置 | 落 `docs/research/2026-07-20-inputs-architecture-review.md` | document-lifecycle §2 | — | — | — | 不阻塞 | 本文件 | ✅ 已确认（本文件） |
-| C-005 | 2026-07-20 | 本报告 §5 | Phase2A 漂移同步授权 | 授权后执行 P0（先核查 08/09） | v0.2.3 已 close，下游状态滞后 | 仅改状态字段 / 连带补 08/09 | 改 4+ 份正式文档，横切变更 | P0 执行前 | 阻塞 02/04/05/design 状态修正 | `02/04/05/design` + 可能 `08/09` | 待确认 |
-| C-006 | 2026-07-20 | B-1 §4.3 | 是否建立 `docs/references/` | 建立，承接外部调研 | 与 research/ 分层 | 暂留 inputs | 影响 ref-obsidian + 方法论归位 | P1 归位前 | 条件阻塞归位 | `docs/references/` + `docs/README.md` | 待确认 |
+| C-004 | 2026-07-20 | 本报告 | 评估报告落盘位置 | 落 `docs/research/2026-07-20-inputs-architecture-review.md` | document-lifecycle §2 | — | — | — | 不阻塞 | 本文件 | ✅ 已完成（v0.2.4） |
+| C-005 | 2026-07-20 | 本报告 §5 | Phase2A 漂移同步授权 | 授权后执行 P0（先核查 08/09） | v0.2.3 已 close，下游状态滞后 | 仅改状态字段 / 连带补 08/09 | 改 4+ 份正式文档，横切变更 | P0 执行前 | 阻塞 02/04/05/design 状态修正 | `02/04/05/design` + 可能 `08/09` | ✅ 已完成（91817d3 / v0.2.4） |
+| C-006 | 2026-07-20 | B-1 §4.3 | 是否建立 `docs/references/` | 建立，承接外部调研 | 与 research/ 分层 | 暂留 inputs | 影响 ref-obsidian + 方法论归位 | P1 归位前 | 条件阻塞归位 | `docs/references/00-index.md` | ✅ P1 已落盘 |
 
 ---
 
@@ -189,9 +189,9 @@ OB-01 原文建议："数据库中的 chunks、向量、`document_relations` 等
 
 - 本报告所有行号引用（`02:76/83/84`、`04:106/240`、`05:90`、`frontend-interaction:4/16/19`、`product-vision:4/6`、`package.json:14`、`DocumentsFeature.tsx:122`）均经 Git / 文件**直接核实**（2026-07-20）。
 - OB 评估中的"阶段一致 ✅"判断依据 `ai/project-rules.md §1` 现行阶段边界（Phase2A 已完成、未进 Phase2B）。
-- 本报告为 **AI 辅助分析**，C-001~C-006 均标为"待人工确认"，不替用户决策；OB 建议采纳与否以 `01/03/04/05/06` 权威文档修订结果为准。
-- 本报告不替代 `docs/00-09` 正式修订；Phase2A 漂移同步（P0）需单独授权后执行。
+- 本报告为 **AI 辅助分析**，不替用户决策；C-001 / C-003 仍待人工确认，OB 建议采纳与否以 `01/03/04/05/06` 权威文档修订结果为准。
+- 本报告不替代 `docs/00-09` 正式修订；Phase2A 漂移同步（P0）已单独授权并提交，P1 文档治理只处理索引 / 归位 / 路径修正。
 
 ---
 
-*本报告基于 2026-07-20 两份 AI 评估交叉核实整理；具体归位日期、索引表内容、ADR 编号留待人工确认后填入。*
+*本报告基于 2026-07-20 两份 AI 评估交叉核实整理；P0 / P1 执行记录补于 2026-07-21。ADR 编号仍留待 OB-01 架构裁决后填入。*

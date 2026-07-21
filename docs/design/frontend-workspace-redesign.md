@@ -2,6 +2,7 @@
 
 > 定位：本文是 Phase1 Demo 后续前端体验收口的**工作台级详细设计**，承接 `docs/design/frontend-interaction.md`、`docs/research/2026-07-11-frontend-ux-evaluation.md`、`docs/research/2026-07-11-frontend-p1-structure-exploration.md`、`docs/08-dev-plan.md` 与 `docs/09-verification.md`。
 > 本文只定义既有 P1 功能在桌面工作台中的信息架构、视觉密度、组件拆分与验收口径，不新增需求、后端接口、权限规则、移动端能力或 Phase2 功能。
+> 原型关系：本目录下 `frontend-workspace-redesign-prototype.html` 是 P1B 落地确认版；`docs/research/prototypes/` 下的 2026-07-14 HTML 文件为探索期参考，不是本文的后续版本。
 
 ## 0. 文档元信息
 

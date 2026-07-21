@@ -2,6 +2,7 @@
 
 > 本文同时承担三层职责：一是记录 Phase1（功能范围 `[P1]` · 交付物形态 Demo）已实现的前端交互基线；二是补 Phase1.5A 批量导入与导出备份的实现前交互路径；三是沉淀 Phase2A/B UI 实现前确认稿候选。
 > 当前少容器清爽稿已作为实现前 UI 确认版候选回填到 `docs/08-dev-plan.md` Sprint-11 与 `docs/09-verification.md` TC-P2-WSG / TC-P2-UI 草案；Phase2A 已完成（REQ-026/012/025 vertical slice，TC-P2-LINK/TAG/QUICK-001 通过），Phase2B 尚未正式启动；本文 Phase2A 部分对应已实现基线，Phase2B 部分不直接授权编码。
+> 交叉引用：`docs/design/frontend-workspace-redesign.md` 已承接并实现 P1B 工作台视觉密度、布局与组件拆分口径；本文仍保留页面职责、UF 用户流、接口依赖与状态边界的权威口径。
 
 ## 0. 文档元信息
 
