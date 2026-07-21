@@ -4,6 +4,7 @@
 **版本**：v19.0
 **日期**：2026-06-24（v19.0：新增场景5b 术语管理；场景9 补充术语悬浮解释与 AI 术语感知；场景覆盖索引新增术语管理板块）
 **关联文档**：URS-KB-001 v2.0
+**转正溯源**：本文前身早期 scenario 草稿（版本号 v19.0 沿用），已转正为产品愿景叙事；下游 `docs/00-scenario.md` 承接工程想定。
 **说明**：本文以故事形式呈现 LUMEN 在不同空间配置中的使用方式。Nova 是一家面向中小企业做 AI Agent 落地的初创公司；BrightLite 是他们的试点客户，主营智能照明解决方案。Nova 为 BrightLite 部署了 LUMEN，并划分为两个隔离的项目空间：`nova-internal`（Nova 内部，BrightLite 不可见）和 `brightlite-team`（BrightLite 团队协作空间）。Alice 是 Nova 的法人，作为系统部署方持有两个空间的管理员权限，可在两个空间之间推送文档；Lily 和 Mark 是 BrightLite 的普通成员，只能访问 `brightlite-team`，`nova-internal` 对他们不可见。本文人物、公司、产品名称均为虚构，不指向任何真实个人、组织或事件，仅用于场景演示。
 
 ---

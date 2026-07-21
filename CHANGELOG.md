@@ -6,6 +6,17 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v0.2.4（2026-07-21）
+
+Phase2A 文档漂移同步与输入评估落盘（纯文档 / 状态校准）。
+
+- 新增 `docs/research/2026-07-20-inputs-architecture-review.md`，汇总 2026-07-20 输入材料、另一 AI 评估与本仓 Git / docs / frontend 事实核对结论。
+- 同步 6 份核心 / 设计文档中的 Phase2A 状态字段，将 REQ-026 内链 / 反链、REQ-012 标签、REQ-025 快速录入统一标为 `P2-已实现`，追溯到 TC-P2-LINK-001 / TC-P2-TAG-001 / TC-P2-QUICK-001。
+- 补 `docs/vision/product-vision.md` 的 v19 溯源说明；保持 Phase2B 候选、愿景项和编辑器 Spike 事项为后续待确认，不提前写成已实现。
+- 本版本不新增可演示能力、不改 API / DB / 前端代码，仅做文档一致性修正与研究记录落盘。
+
+> PATCH 依据（`ai/project-rules.md` §2.8.1）：纯文档修正 / 状态校准，不新增可演示能力、不改对外 API 契约。
+
 ## v0.2.3（2026-07-20）
 
 Phase2A 个人知识组织整体验收闭环（纯文档 / 状态校准）。

@@ -1,7 +1,7 @@
 # 详细设计：前端交互与桌面端界面（frontend-interaction）
 
 > 本文同时承担三层职责：一是记录 Phase1（功能范围 `[P1]` · 交付物形态 Demo）已实现的前端交互基线；二是补 Phase1.5A 批量导入与导出备份的实现前交互路径；三是沉淀 Phase2A/B UI 实现前确认稿候选。
-> 当前少容器清爽稿已作为实现前 UI 确认版候选回填到 `docs/08-dev-plan.md` Sprint-11 与 `docs/09-verification.md` TC-P2-WSG / TC-P2-UI 草案；但 Phase2A/B 尚未正式启动，本文不直接授权编码。
+> 当前少容器清爽稿已作为实现前 UI 确认版候选回填到 `docs/08-dev-plan.md` Sprint-11 与 `docs/09-verification.md` TC-P2-WSG / TC-P2-UI 草案；Phase2A 已完成（REQ-026/012/025 vertical slice，TC-P2-LINK/TAG/QUICK-001 通过），Phase2B 尚未正式启动；本文 Phase2A 部分对应已实现基线，Phase2B 部分不直接授权编码。
 
 ## 0. 文档元信息
 
@@ -13,10 +13,10 @@
 | 覆盖 REQ | P1：REQ-001..011、REQ-036；Phase1.5A：REQ-037/038；Phase1.5B：REQ-027（入口待 RG-006）；Phase2A/B UI 候选追溯：REQ-012/013/014/025/026（仅作实现前门禁草案，不新增 REQ） |
 | 所属 Phase | [P1] 已实现基线 + Phase1.5A 交互草案 + Phase2A/B UI Gate 草案 |
 | 交付物形态 | Demo / 个人可用 Alpha |
-| 当前状态 | P1-已实现；P1A / P1B 前端体验收口已实现并通过构建与 Chrome / Edge 900px smoke；Phase1.5A 批量导入与 `.md` / ZIP 导出交互路径已补草案，待 Sprint-16/17；P2 少容器清爽稿暂定为实现前 UI 确认版候选，08/09 已回填 Sprint-11 与 TC-P2-WSG / TC-P2-UI 草案；Phase2A/B 与实现任务仍待人工确认 |
+| 当前状态 | P1-已实现；P1A / P1B 前端体验收口已实现并通过构建与 Chrome / Edge 900px smoke；Phase1.5A 批量导入与 `.md` / ZIP 导出交互路径已补草案，待 Sprint-16/17；P2 少容器清爽稿暂定为实现前 UI 确认版候选，08/09 已回填 Sprint-11 与 TC-P2-WSG / TC-P2-UI 草案；Phase2A 已完成（REQ-026/012/025，TC-P2-LINK/TAG/QUICK-001 通过），Phase2B 实现任务仍待人工确认 |
 | 页面 / 流程 ID | Page-ID（§2.2）/ UF 用户流（§3） |
 | UI 原型策略 | P1 / P1.5A：代码原型 + smoke；P2A/B：静态 HTML 实现前确认稿 + 后续 Chrome / Edge smoke 草案（见 §8 / §9） |
-| 最后更新 | 2026-07-15（补 Phase1.5A 批量导入 / 导出路径；拆 Phase2A/B 口径） |
+| 最后更新 | 2026-07-20（Phase2A closure 状态同步：REQ-026/012/025 已实现，TC-P2-LINK/TAG/QUICK-001 通过） |
 | 下游影响 | 08 Sprint-2/4/5/6/9/10/16/17/18；08 Sprint-11（P2-UI-Gate / WSG 候选）；09 TC-P1-001~017、TC-P2-WSG-001 与 TC-P2-UI-001~005 草案；Phase2 编码仍需另行确认任务 |
 
 

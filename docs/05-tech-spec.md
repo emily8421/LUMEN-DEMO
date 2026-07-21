@@ -87,7 +87,7 @@ flowchart TB
 - **前端交互设计边界**：UI 型项目，前端交互设计与 UI 原型策略见 `ai/project-rules.md` §2.7 与 `docs/design/frontend-interaction.md`（代码原型 + mock，Sprint-6 Edge/Chrome smoke 已通过）。
 - **Phase1.5A（个人可用 Alpha）**：允许 REQ-037 / 038 低依赖导入导出增强；不得以 PDF、真实 Word/PDF 解析、OCR、标签 / 内链、AI 润色作为退出门槛；新增实现必须遵守 WSG 文件阈值。
 - **Phase1.5B（个人增强 Beta）**：REQ-027 单文档 PDF 必须先完成 RG-006 选型 + 中文最小样例验证，未通过不得编码；真实 Word/PDF 文本提取、zhparser 搜索增强需单独选型 / RG，不阻塞 Alpha。
-- **Phase2A（个人知识组织）**：候选 REQ-026 / 012 / 025；需在 P1.5A/B 后补 04/05/06/07/09 契约与首个 vertical slice，不得一次性实现全部 P2 UI。
+- **Phase2A（个人知识组织）**：已完成 REQ-026 / 012 / 025 三个 vertical slice（TC-P2-LINK/TAG/QUICK-001 通过，2026-07-20 closure）。Phase2B（团队 MVP）契约与首个 vertical slice 待升阶段确认，不得一次性实现全部 P2 UI。
 - **Phase2B（团队 MVP）**：候选 REQ-014 / 013 / 024；AI 润色需确认数据外发过滤与 Mock 降级；REQ-015 / 016 / 017（推送 / 协作 / 移动端）不进首批，留后续 Phase。
 
 ## 4. 编码约定
