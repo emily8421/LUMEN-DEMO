@@ -11,8 +11,8 @@
 | 评估角色 | 系统架构专家视角——评估输入材料的性质、可信度、与 LUMEN 现状 / 阶段边界的一致性、可采纳性与归位 |
 | 评估者构成 | 两份 AI 评估交叉：① 本会话 Claude 评估；② 用户提供的另一 AI 评估。两者论断均已与 Git 客观事实、`docs/00-09`、`docs/design/*`、`frontend/` 代码逐条核实 |
 | 输入来源 | 上述 5 份 inputs；`docs/02-srs.md` / `04-architecture.md` / `05-tech-spec.md` / `06-db-design.md` / `docs/design/frontend-interaction.md` / `docs/vision/product-vision.md`；`frontend/package.json`、`frontend/src/features/DocumentsFeature.tsx`、`frontend/src/components/MarkdownBlock.tsx`；`ai/project-rules.md` §1/§2.8、`ai/global-rules.md` §8、`ai/document-lifecycle-rules.md` |
-| 当前状态 | 已落盘；P0 Phase2A 漂移同步已提交 v0.2.4（91817d3）；P1 文档归位 / 索引建设已落盘；OB-01 架构裁决仍待 ADR |
-| 最后更新 | 2026-07-21（补 P0/P1 执行状态） |
+| 当前状态 | 已落盘；P0 Phase2A 漂移同步已提交 v0.2.4（91817d3）；P1 文档归位 / 索引建设已落盘；OB-01 架构裁决已形成 ADR-010 |
+| 最后更新 | 2026-07-21（补 P0/P1/OB-01 执行状态） |
 
 ---
 
@@ -140,8 +140,8 @@ OB-01 原文建议："数据库中的 chunks、向量、`document_relations` 等
 **AI 建议（待人工确认）**：
 - **不采纳** OB-01 原文"DB 为可丢弃缓存、frontmatter 唯一权威"——与现状冲突。
 - **采纳改写版**（另一 AI 提出）：**衍生数据（chunks / embedding / 反链索引 / document_count 计数等）必须可从权威文档内容 / 元数据重建**；DB 仍是权威运行态，但衍生索引具备可重建性，为灾备 / 迁移 / 导出（U-43）提供正当性。
-- **治理形式**：即便改写，仍应记入 `docs/decisions/ADR-xxxx` 架构决策记录，被 `04/06` 引用，**而非埋在 04 某小节**——因为它会约束未来所有新功能的数据落地位置（术语关联、矛盾标记等）。
-- **阶段**：原则性建议，不占 Phase 排期，但需架构裁决确认后方可写入。
+- **治理形式**：已记入 `docs/decisions/ADR-010-db-authority-derived-data-rebuildability.md` 架构决策记录，并由 `04/06` 引用，**而非埋在 04 某小节**——因为它会约束未来所有新功能的数据落地位置（术语关联、矛盾标记等）。
+- **阶段**：原则性建议，不占 Phase 排期；已于 2026-07-21 形成 ADR-010，不声明当前已有全量重建脚本。
 
 ---
 
@@ -167,7 +167,7 @@ OB-01 原文建议："数据库中的 chunks、向量、`document_relations` 等
 | **P0** | Phase2A closure 文档漂移同步：`02/04/05/design` 状态字段 → `P2-已实现`；回填 `product-vision` v19 溯源 | 横切状态变更，改 4+ 份正式文档 | ✅ 已完成并提交 v0.2.4（91817d3） |
 | **P1** | 建 `docs/design/00-index.md` + `docs/research/00-index.md` | 文档治理，低风险 | ✅ P1 执行中 / 已落盘 |
 | **P1** | 建 `docs/references/`，迁移 ref-obsidian + 方法论；修正 obsidian-suggestions §0 路径 | 文档治理 | ✅ P1 执行中 / 已落盘 |
-| **P2** | 评审吸收 OB-06（→ 03-prd）+ OB-01 改写版（→ ADR，被 04/06 引用） | 架构补强 | OB-01 需架构裁决（C-001） |
+| **P2** | 评审吸收 OB-06（→ 03-prd）+ OB-01 改写版（→ ADR，被 04/06 引用） | 架构补强 | OB-01 已形成 ADR-010；OB-06 仍待后续 |
 | **P3** | OB-02/05 编辑器 Spike（textarea→CM6 可行性）；OB-03/04 留 Phase2B / 图谱阶段 | 技术预研 | 不阻塞当前 |
 
 ---
@@ -176,7 +176,7 @@ OB-01 原文建议："数据库中的 chunks、向量、`document_relations` 等
 
 | ID | 提出时间 | 来源 | 待确认项 | AI 建议 | 建议依据 | 备选 | 取舍影响 | 需确认节点 | 阻塞 | 回填位置 | 状态 |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| C-001 | 2026-07-20 | OB-01 / 本报告 §6 | 数据层模式方向（路线 A vs B） | 采纳改写版"衍生数据可重建"，记 ADR | 04/06 无原原则；与权限 / 版本 DB 模型冲突 | 全量迁 .md 权威（路线 A，成本高） | 影响 U-43 灾备 / 未来术语 / 矛盾标记数据落地 | 04/06 修订前 / Phase 升级前 | 阻塞 OB-01 落地 | `docs/decisions/ADR-xxxx` + 04/06 引用 | 待确认 |
+| C-001 | 2026-07-20 | OB-01 / 本报告 §6 | 数据层模式方向（路线 A vs B） | 采纳改写版"衍生数据可重建"，记 ADR | 04/06 无原原则；与权限 / 版本 DB 模型冲突 | 全量迁 .md 权威（路线 A，成本高） | 影响 U-43 灾备 / 未来术语 / 矛盾标记数据落地 | 04/06 修订前 / Phase 升级前 | 阻塞 OB-01 落地 | `docs/decisions/ADR-010-db-authority-derived-data-rebuildability.md` + 04/06 引用 | ✅ 已接受（ADR-010） |
 | C-002 | 2026-07-20 | B-1 §4.1 | kb-\* 草稿实际去向 | 确认已删除 / 在根目录 / 已归档 | `docs/**/kb-*.md` 无结果 | — | 决定 §4.1 迁移条是否保留 | P1 归位前 | 条件阻塞 §4.1 | B-1 报告 §4.1 | 部分明（不在 docs/；product-vision 溯源仍缺） |
 | C-003 | 2026-07-20 | OB-02/05 / 本报告 §5.2 | 编辑器选型 | 先在 `05-tech-spec` 补选型 + Spike | 05 无记录；frontend 现状 textarea+react-markdown | 保留 textarea / 换 Monaco 等 | 决定 OB-02/05 是否可行 | OB-02/05 编码前 | 阻塞 OB-02/05 | `05-tech-spec` + Spike 报告 | 待确认 |
 | C-004 | 2026-07-20 | 本报告 | 评估报告落盘位置 | 落 `docs/research/2026-07-20-inputs-architecture-review.md` | document-lifecycle §2 | — | — | — | 不阻塞 | 本文件 | ✅ 已完成（v0.2.4） |
@@ -189,9 +189,9 @@ OB-01 原文建议："数据库中的 chunks、向量、`document_relations` 等
 
 - 本报告所有行号引用（`02:76/83/84`、`04:106/240`、`05:90`、`frontend-interaction:4/16/19`、`product-vision:4/6`、`package.json:14`、`DocumentsFeature.tsx:122`）均经 Git / 文件**直接核实**（2026-07-20）。
 - OB 评估中的"阶段一致 ✅"判断依据 `ai/project-rules.md §1` 现行阶段边界（Phase2A 已完成、未进 Phase2B）。
-- 本报告为 **AI 辅助分析**，不替用户决策；C-001 / C-003 仍待人工确认，OB 建议采纳与否以 `01/03/04/05/06` 权威文档修订结果为准。
+- 本报告为 **AI 辅助分析**，不替用户决策；C-001 已由 ADR-010 关闭，C-003 仍待人工确认，其他 OB 建议采纳与否以 `01/03/04/05/06` 权威文档修订结果为准。
 - 本报告不替代 `docs/00-09` 正式修订；Phase2A 漂移同步（P0）已单独授权并提交，P1 文档治理只处理索引 / 归位 / 路径修正。
 
 ---
 
-*本报告基于 2026-07-20 两份 AI 评估交叉核实整理；P0 / P1 执行记录补于 2026-07-21。ADR 编号仍留待 OB-01 架构裁决后填入。*
+*本报告基于 2026-07-20 两份 AI 评估交叉核实整理；P0 / P1 / OB-01 ADR-010 执行记录补于 2026-07-21。*

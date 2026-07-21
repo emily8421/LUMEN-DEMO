@@ -8,10 +8,10 @@
 
 | 项 | 内容 |
 |---|---|
-| 输入来源 | `docs/00-scenario.md`、`docs/01-user-requirements.md`、`docs/02-srs.md`、`docs/03-prd.md`、`docs/env/local-env.md`、`ai/project-rules.md`、`docs/research/2026-07-15-overall-design-04-05-audit.md` |
+| 输入来源 | `docs/00-scenario.md`、`docs/01-user-requirements.md`、`docs/02-srs.md`、`docs/03-prd.md`、`docs/env/local-env.md`、`ai/project-rules.md`、`docs/research/2026-07-15-overall-design-04-05-audit.md`、`docs/decisions/ADR-010-db-authority-derived-data-rebuildability.md` |
 | 覆盖功能 / REQ | Phase1：REQ-001..REQ-011、REQ-036；Phase1.5A：REQ-037/038；Phase1.5B：REQ-027；Phase2A：REQ-012/025/026；Phase2B / 后续 / 愿景保留架构骨架 |
-| 当前状态 | 目标架构基线已定；Sprint-7/8 后运行时已接入 PostgreSQL+pgvector、`PgRepository`、本机 Embedding 与 GLM LLM。仍降级：真实 Word/PDF 解析、OCR。2026-07-15 04/05 审计后按“个人可用优先”重排：Phase1.5A 先闭合批量 / 文件夹导入与 `.md` / ZIP 导出备份，Phase1.5B 再处理 PDF；Phase2A 为个人知识组织，Phase2B 才进入团队 MVP。Web App Structure Profile / WSG 自 P1.5A 起生效 |
-| 最后更新 | 2026-07-15（按 04/05 审计补 Phase1.5A/B、Phase2A/B 架构链路） |
+| 当前状态 | 目标架构基线已定；Sprint-7/8 后运行时已接入 PostgreSQL+pgvector、`PgRepository`、本机 Embedding 与 GLM LLM。仍降级：真实 Word/PDF 解析、OCR。2026-07-15 04/05 审计后按“个人可用优先”重排：Phase1.5A 先闭合批量 / 文件夹导入与 `.md` / ZIP 导出备份，Phase1.5B 再处理 PDF；Phase2A 为个人知识组织，Phase2B 才进入团队 MVP。Web App Structure Profile / WSG 自 P1.5A 起生效；2026-07-21 新增 ADR-010 固化 DB 权威运行态 + 衍生数据可重建原则 |
+| 最后更新 | 2026-07-21（补 ADR-010：DB 权威运行态与衍生数据可重建） |
 
 ### 0.1 架构目标与约束
 
@@ -114,6 +114,7 @@ flowchart LR
 > 与 05 互补：这里讲"为什么"，05 讲"具体版本"。决策状态用 §7.1 横切状态词典；决策已采纳但实现未接入的，状态标「已确认（目标）」。
 
 - **PostgreSQL + pgvector**：关系数据与向量检索一体，Phase1 少引一个独立向量库（Milvus/Qdrant），降低部署与一致性成本。
+- **DB 权威运行态 + 衍生数据可重建**：LUMEN 不采用 `.md` / frontmatter 唯一权威模型；DB 承载运行态业务事实，chunks / embedding / 反链索引 / 计数等派生数据必须可从权威文档内容与元数据重建（见 `docs/decisions/ADR-010-db-authority-derived-data-rebuildability.md`）。
 - **AI 调用边界**：LLM 不绑单一闭源 SDK，走 OpenAI 兼容接口；Embedding Phase1 本机运行 `bge-small-zh`（512 维），通过 adapter 保留迁移到内网 Embedding 服务的空间。
 - **导入流水线收敛异构格式**：Word / PDF / 图片统一走"提取纯文本 → 切块 → Embedding"，检索侧只面对一种数据形态。
 - **权限下沉到 SQL / 检索层**：空间隔离 + 文档权限在数据查询时过滤，不依赖应用层记忆，防漏过滤。
@@ -132,6 +133,7 @@ flowchart LR
 | ADR-007 | 标签 + 反向链接索引用 PG 关系表 + `[[wikilink]]` 解析 | 候选 | Phase2A | 复用现有 PG，少引图数据库（REQ-012 / 026） | 图数据库 / 全文索引 | 关系表 JOIN 成本；解析规则需定义 | 待 Phase2A 详细设计 |
 | ADR-008 | Phase1.5A `.md` / ZIP 导出备份走标准文件流 | 已确认（目标） | Phase1.5A | 个人可用 Alpha 需要可迁出、可备份；标准库 ZIP 风险低、不引重依赖（REQ-038 / U-43） | 直接做 PDF / 数据库整库导出 | 快速落地且权限边界简单；不保留富格式排版 | TC-P1-016 |
 | ADR-009 | Phase1.5A 批量 / 文件夹导入以标题相对路径保留目录感 | 已确认（目标） | Phase1.5A | 用户要快速放入一批资料；不建真实目录表可避免 DB 迁移与范围扩张（REQ-037 / SC-007） | 新增 folder 表与真实目录树 | 低风险、快落地；后续若做真实目录需迁移 | TC-P1-015 |
+| ADR-010 | DB 权威运行态 + 衍生数据可重建 | 已接受 | Phase1+ | 保留 PostgreSQL 作为权限 / 版本 / 文档权威，同时要求 chunks / embedding / 反链索引 / 计数等派生数据可从权威内容与元数据重建 | `.md` / frontmatter 唯一权威；DB 全权威不设重建约束 | 避免多头权威并降低索引漂移 / 灾备风险；不声明已实现重建脚本 | `docs/decisions/ADR-010-db-authority-derived-data-rebuildability.md`；06 §1.1 |
 
 ## 4. 部署 / 运行拓扑约束
 

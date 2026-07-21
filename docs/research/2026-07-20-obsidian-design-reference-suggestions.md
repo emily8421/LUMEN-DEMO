@@ -3,7 +3,7 @@
 > 本文是 `docs/research/` 类输入文档，用于向 04-architecture / 05-tech-spec / 01-user-requirements 等
 > 下游文档提供修订依据，本身不是权威规格，需被下游文档采纳后才具约束力。
 > 参照 `docs/00-scenario.md`「完整骨架 + 阶段增量」演进方式，本文建议项均标注建议阶段，不默认进入当前 Phase。
-> P1 归位说明（2026-07-21）：本文已从 `docs/inputs/` 归位到 `docs/research/`。OB-01 原文与 LUMEN 当前 DB 权威模型存在冲突，需以 `docs/research/2026-07-20-inputs-architecture-review.md` §6 的改写版和后续 ADR 裁决为准；本文保留原建议作为评审输入，不直接授权改 04/06。
+> P1 / ADR 归位说明（2026-07-21）：本文已从 `docs/inputs/` 归位到 `docs/research/`。OB-01 原文与 LUMEN 当前 DB 权威模型存在冲突，需以 `docs/decisions/ADR-010-db-authority-derived-data-rebuildability.md` 为准；本文保留原建议作为评审输入，不直接授权改 04/06。
 
 ## 0. 文档元信息
 

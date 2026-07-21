@@ -7,9 +7,9 @@
 
 | 文件 | 类型 | 状态 | 采纳 / 后续 |
 |---|---|---|---|
-| `2026-07-20-inputs-architecture-review.md` | 输入评审 + 架构评估 | P0 已采纳并提交 v0.2.4；P1 归位执行中 | OB-01 仍需 ADR 裁决；OB-02/05 需编辑器 Spike |
+| `2026-07-20-inputs-architecture-review.md` | 输入评审 + 架构评估 | P0 已采纳并提交 v0.2.4；P1 归位已完成；OB-01 已形成 ADR-010 | OB-02/05 需编辑器 Spike |
 | `2026-07-20-doc-system-architecture-evaluation.md` | 文档体系内部评估 | 已从 `docs/inputs/` 归位 | P1 采纳索引 / references 分区建议；`kb-*` 迁移建议因仓库无对应文件不执行 |
-| `2026-07-20-obsidian-design-reference-suggestions.md` | 基于外部参考的内部建议 | 已从 `docs/inputs/` 归位 | OB-01 原文不直接采纳，等待 ADR；OB-06 可后续回填 PRD |
+| `2026-07-20-obsidian-design-reference-suggestions.md` | 基于外部参考的内部建议 | 已从 `docs/inputs/` 归位 | OB-01 原文不直接采纳，以 ADR-010 为准；OB-06 可后续回填 PRD |
 
 ## 2. 历史 research 清单
 

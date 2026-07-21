@@ -11,8 +11,8 @@
 | 保留 / 省略决策 | 保留 |
 | 决策来源 | `ai/project-rules.md` §3（项目有 PostgreSQL + pgvector 持久化存储） |
 | 覆盖 REQ / 模块 | Phase1：空间 / 权限、文档、版本、导入、检索向量、术语管理；Phase1.5A：批量导入与 `.md` / ZIP 导出备份（REQ-037/038）；Phase1.5B：PDF 导出任务契约（REQ-027）；Phase2A/B / 愿景保留骨架 |
-| 当前状态 | P1 表结构**已落地 PostgreSQL**（Sprint-8 / task-008 T1–T5：8 张 `lumen_*` 表由 `migrations/001-005` 建，后端切 `PgRepository`；`lumen_chunks.embedding vector(512)` + hnsw + ts_vector 由 T4/T6 启用；migration 006 为 search 增加可选 zhparser / `simple` 回退配置）。内存 `demo_repository` 保留为单测 fake。Phase1.5A 的 REQ-037/038 默认复用既有表、不新增迁移；真实 Word/PDF 文本提取与 OCR 仍降级（RG-007 / RG-003）；Phase1.5B PDF 导出表仅为契约草案，待 RG-006 与 Sprint-18 |
-| 最后更新 | 2026-07-15（按详细设计审计补 REQ-037/038 追溯与 Phase1.5A/B、Phase2A/B 口径） |
+| 当前状态 | P1 表结构**已落地 PostgreSQL**（Sprint-8 / task-008 T1–T5：8 张 `lumen_*` 表由 `migrations/001-005` 建，后端切 `PgRepository`；`lumen_chunks.embedding vector(512)` + hnsw + ts_vector 由 T4/T6 启用；migration 006 为 search 增加可选 zhparser / `simple` 回退配置）。内存 `demo_repository` 保留为单测 fake。Phase1.5A 的 REQ-037/038 默认复用既有表、不新增迁移；真实 Word/PDF 文本提取与 OCR 仍降级（RG-007 / RG-003）；Phase1.5B PDF 导出表仅为契约草案，待 RG-006 与 Sprint-18。2026-07-21 按 ADR-010 补“DB 权威运行态 + 衍生数据可重建”原则 |
+| 最后更新 | 2026-07-21（补 ADR-010 数据权威与派生可重建原则） |
 
 ## 1. 表清单（完整）
 
@@ -44,6 +44,15 @@
 | lumen_analysis_kits | 分析包（A Kit）配置 | [愿景] | 骨架 | — | REQ-035 |
 
 > 当前实现说明（Sprint-8 / task-008 T1–T5 后）：Phase1 Demo 后端已切 `PgRepository`，**全部 P1 表（8 张）已落地 PostgreSQL**（lumen-pg 容器）。`migrations/001-005` 建表 + demo seed（`db.init_db` 幂等执行）；`lumen_chunks` 含 `embedding vector(512)` + hnsw + ts_vector（T4/T6 启用 embedding 写入与向量召回）。内存 `demo_repository` 保留为单测 fake（不落 PG）。真实 PDF/OCR 仍降级（RG-003）。
+
+### 1.1 数据权威与派生可重建原则（ADR-010）
+
+LUMEN 采用 `docs/decisions/ADR-010-db-authority-derived-data-rebuildability.md` 定义的 **DB 权威运行态 + 衍生数据可重建** 模型：
+
+- **权威运行态数据**：`lumen_users`、`lumen_spaces`、`lumen_space_members`、`lumen_documents`、`lumen_document_versions`、`lumen_terms`、`lumen_tags`、`lumen_quick_entries` 等承载用户、空间、权限、正文、版本、术语、标签定义和快速录入业务事实，PostgreSQL 是权威来源。
+- **可重建派生数据**：`lumen_chunks.text` / `embedding` / `ts_vector`、`lumen_doc_links` 中由 `[[wikilink]]` 解析出的出链 / 反链索引，以及 `document_count` 等计数类结果，必须可从权威文档内容、文档元数据、标签关系和权限边界重新生成或校验。
+- **不采纳项**：不采纳 `.md` / frontmatter 是唯一权威、DB 是可丢弃缓存的原始 OB-01 模型。`.md` 在 LUMEN 中是导入源、导出格式和迁出载体，不替代 DB 权威。
+- **实现边界**：本原则不声明当前已有全量重建脚本；后续新增索引 / 缓存 / 计数字段时，必须在本文件说明来源、重建触发和权限过滤口径。
 
 ## 2. 表结构（[P1] 已设计）
 
