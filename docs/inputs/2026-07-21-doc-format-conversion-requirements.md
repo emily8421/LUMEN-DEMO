@@ -1,11 +1,12 @@
-# RESEARCH 文档格式转换（office/wps → MD，MD → PDF）— 补充需求输入材料
+# INPUT 文档格式转换（office/wps → MD，MD → PDF）— 补充需求输入材料
 
-> 本文是 `docs/research/` 类输入文档，用于向 `01-user-requirements` / `02-srs` / `05-tech-spec` / `08-dev-plan`
+> 输入归位说明（2026-07-21）：本文保留在 `docs/inputs/`，作为用户提供 / 前置分析输入材料；文内建议编号、判断口径和结论均为原材料自带观点或历史草稿，不代表本轮 AI 已采纳事实。本轮评审见 `docs/research/2026-07-21-format-conversion-input-review.md`。
+
+> 本文是 `docs/inputs/` 类**外部输入材料**（其他 AI 的前置分析报告），用于向 `01-user-requirements` / `02-srs` / `05-tech-spec` / `08-dev-plan`
 > 等下游文档提供修订依据，本身不是权威规格，需被下游文档采纳后才具约束力。
 > 参照 `docs/00-scenario.md`「完整骨架 + 阶段增量」演进方式，本文建议项均标注建议阶段，不默认进入当前 Phase。
 > 文中出现的 REQ-039 / REQ-040 / U-44 / U-45 / AC-ID / TC-ID 均为**建议编号**，非最终分配，
 > 最终编号以 `01-user-requirements` / `02-srs` / `09-verification` 正式收录结果为准。
-> 评审归位说明（2026-07-21）：本文已从 `docs/inputs/` 归位到 `docs/research/`。评审结论为 Conditional Go：FC-01/02/04 可作为候选需求输入进入后续正式文档修订，FC-03 可作为 REQ-027 的子验收项候选；但格式范围、Excel 解析依赖、水印模板、独立工具权限 / 临时文件模型仍需人工确认，故本次不直接回填 01/02/05/08。
 
 ## 0. 文档元信息
 
@@ -13,19 +14,9 @@
 |---|---|
 | 输入来源 | 用户对话讨论（2026-07-21）；`docs/01-user-requirements.md` U-09 / U-33 / U-43；`docs/02-srs.md` REQ-009 / REQ-027；`docs/05-tech-spec.md` RG-006 / RG-007 |
 | 覆盖范围 | 导入环节文档格式转换（office/wps → MD）、MD 导出加水印、格式转换独立工具 三个方向 |
-| 当前状态 | 已归位为 research；评审结论 Conditional Go，待人工确认后再拆解为 U-ID / REQ 变更，并同步至 01 / 02 / 05 / 08 |
+| 当前状态 | 保留为 `docs/inputs/` 输入材料；待本轮独立评审与人工确认后，再决定是否拆解为 U-ID / REQ 变更 |
 | 建议处理方式 | 逐条评审 → 采纳项在 `01-user-requirements` 补 U-ID、在 `02-srs` 补 REQ 条目 → 关闭本条 |
-| 最后更新 | 2026-07-21（归位评审） |
-
-## 0.1 评审结论（2026-07-21）
-
-| 项 | 结论 |
-|---|---|
-| 材料性质 | 新需求输入 + 技术约束输入；不是外部参考，不直接成为权威规格 |
-| 评估码 | Conditional Go |
-| 可采纳方向 | FC-01 / FC-02 可合并为候选 REQ-039；FC-03 可作为 REQ-027 子 AC；FC-04 可作为候选 REQ-040 |
-| 暂不直接回填原因 | 仍存在格式范围、Excel 解析依赖、源格式检索数据形态、水印模板、独立工具权限 / 临时文件生命周期等待确认项 |
-| 建议下一步 | 先确认 §4 待评审事项；确认后再修订 `01-user-requirements.md`、`02-srs.md`、`05-tech-spec.md`、`08-dev-plan.md`、`09-verification.md` |
+| 最后更新 | 2026-07-21（输入归位校正） |
 
 ---
 
