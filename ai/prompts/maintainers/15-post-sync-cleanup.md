@@ -93,6 +93,18 @@
      - 仅主信号在（project-check.yml 有校验但 project-rules 缺规则）：建议补 §2.8。
      - 双信号都缺（存量项目未启用版本机制）：建议补 §2.8 + project-check.yml 版本校验，并从 `VERSION` 当前值起按项目自有版本递增；`VERSION` / `CHANGELOG` 顶部项目版本 / `TEMPLATE-BASE.md` 的 `Project version at sync time` 三者保持一致。
    - `scripts/check-derived-sync.*` 在版本一致性段后会非阻断检测版本机制启用状态，可作为本步审计的自动化参考。
+   - 启用项目自有版本机制 checklist（当上述审计判定需要启用时，按以下步骤；版本号必须人工确认）：
+     - 前置判断：确认项目类型（普通派生 / 领域模板 / 领域派生）；读取 `VERSION`、`CHANGELOG.md` 顶部、`TEMPLATE-BASE.md`、`ai/project-rules.md`、`.github/workflows/`。
+     - 普通派生项目启用步骤：
+       1. 根 `VERSION` 调整为项目自有版本（初始如 `v0.1.0`，具体值需人工确认）。
+       2. 重构 `CHANGELOG.md` 顶部：项目版本记录在上，模板继承历史保留在分隔区 / 历史区。
+       3. 更新 `TEMPLATE-BASE.md`：记录当前继承模板版本、同步时间、Project version。
+       4. `ai/project-rules.md` 增加「项目版本管理」章节（§2.8），说明项目版本与模板版本分层。
+       5. 新增 / 补齐 `.github/workflows/project-check.yml`，至少校验项目版本信号与模板同步边界。
+       6. 运行 `check-derived-sync.*` 确认版本机制检测通过或明确非阻断提示。
+       7. 在 `sync-records/template-sync/` 记录启用状态、验证结果与后续待办。
+     - 领域模板差异：使用 `--domain-template` 保留领域模板自己的 `VERSION` / `CHANGELOG.md`；`TEMPLATE-BASE.md` 记录母模板继承版本和领域标准件范围；不把普通派生 workflow 强行套到领域模板。
+     - 验收（双信号）：项目侧 workflow（主信号）+ `ai/project-rules.md` 项目版本管理章节（辅信号）都在；`VERSION` / `CHANGELOG.md` 顶部项目版本 / `TEMPLATE-BASE.md` 的 Project version 三者一致。
 
 6. 输出迁移计划
    先不要修改文件，只输出计划，格式如下：

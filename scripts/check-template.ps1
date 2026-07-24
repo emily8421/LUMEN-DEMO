@@ -50,13 +50,23 @@ function Test-TemplateBash {
   $stderrFile = Join-Path $tmpDir "stderr.txt"
 
   try {
-    $proc = Start-Process -FilePath $BashPath `
-      -ArgumentList "--version" `
-      -NoNewWindow `
-      -Wait `
-      -PassThru `
-      -RedirectStandardOutput $stdoutFile `
-      -RedirectStandardError $stderrFile
+    try {
+      $proc = Start-Process -FilePath $BashPath `
+        -ArgumentList "--version" `
+        -NoNewWindow `
+        -Wait `
+        -PassThru `
+        -RedirectStandardOutput $stdoutFile `
+        -RedirectStandardError $stderrFile
+    }
+    catch {
+      return [pscustomobject]@{
+        Ready    = $false
+        ExitCode = -1
+        StdOut   = ''
+        StdErr   = "Start-Process failed: $($_.Exception.Message)"
+      }
+    }
 
     if ($null -eq $proc) {
       return [pscustomobject]@{ Ready = $false; ExitCode = -1; StdOut = ''; StdErr = 'Start-Process returned null (bash failed to start from PowerShell)' }
@@ -139,10 +149,12 @@ function Invoke-NativeTemplateCheck {
       return
     }
 
+    # Select-String uses .NET regular expressions: use | for alternation and
+    # escape regex metacharacters only when matching them literally.
     if (Select-String -Path $fullPath -Pattern $Pattern -Quiet) {
       Pass $Message
     } else {
-      Fail $Message
+      Fail ($Message + " (file: " + $RelativePath + "; expected .NET regex pattern: " + $Pattern + ")")
     }
   }
 
@@ -173,6 +185,7 @@ function Invoke-NativeTemplateCheck {
       "template-docs/template-methodology.md",
       "template-docs/web-fullstack-profile.md",
       "CHANGELOG.md",
+      "CHANGELOG-PLAIN.md",
       "VERSION",
       "template-sync.json",
       "AGENTS.md",

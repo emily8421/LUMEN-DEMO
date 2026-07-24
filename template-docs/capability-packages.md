@@ -67,10 +67,12 @@ Capability Package / Profile 是一组围绕特定场景的轻量契约，目标
 | Docs | 需求到文档体系、追溯链、变更传播、裁剪 | 输入材料、愿景、PRD / SRS / task | `docs/00-09`、`docs/design/*` | Implementation、Verification、README | `ai/document-lifecycle-rules.md`、`ai/doc-standards/*` |
 | Implementation | Phase / Sprint / Task、实现边界、完成包 | `03-09`、`tasks/*`、设计文档 | 代码改动、验证摘要、完成记录 | Verification、Git / PR | `ai/implementation-lifecycle-rules.md`、`ai/commands/run-dev-task.md` |
 | Verification | TC、smoke、回归、资源验证、验收记录 | REQ、实现事实、环境事实 | `docs/09`、测试证据、验收结论 | Phase 升级、PR、维护者 | `docs/09-verification.md`、`template-docs/*report*` |
-| Profiles | 可选能力剖面，如 Web App、UI Prototype、Remote / CI SOP、Domain Template | Core + Docs / Implementation 的子集 | Profile Gate、契约、局部 SOP、最小验证 | Commands、Docs、Implementation、自检 | `template-docs/web-fullstack-profile.md`、`git-guide.md`、`SOP.md` |
+| Profiles | 可选能力剖面，如 Web App、UI Prototype、Remote / CI SOP、Domain Template | Core + Docs / Implementation 的子集 | Profile Gate、契约、局部 SOP、最小验证 | Commands、Docs、Implementation、自检 | `template-docs/web-fullstack-profile.md`、`template-docs/remote-ci-sop-profile.md`、`git-guide.md`、`SOP.md` |
 | Governance | 版本、同步、提案、发布、自检 | 变更 diff、提案、PR / issue 事实 | VERSION、CHANGELOG、sync list、归档记录 | 模板维护者、派生同步 | `MAINTAINERS.md`、`CONTRIBUTING.md`、`template-sync.json`、`scripts/check-template.*` |
 
-## 4. Remote / CI SOP Profile（试点）
+## 4. Remote / CI SOP Profile（已转正）
+
+完整速查入口见 `template-docs/remote-ci-sop-profile.md`。本节保留概要契约；PR / CI / Git 收尾任务应优先读取该 Profile，再按需读取下列权威 SOP。
 
 ### 4.1 适用场景
 

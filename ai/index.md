@@ -20,7 +20,7 @@
 |---|---|---|
 | 快速续接 | 读取续接点 / resume，且不继续执行任务 | `ai/session-rules.md` §1 / §3.1；必要时 `ai/commands/resume.md` |
 | 命令路由 | 用户使用 `/run ...` 或明显命令意图 | `ai/commands/README.md`、对应命令文件、命令文件列出的权威文档 / Prompt / 脚本说明 |
-| PR / CI / Git 收尾 | 闭环 PR、看 checks、修 CI、amend / push / merge closure | `ai/implementation-lifecycle-rules.md`、`ai/project-rules.md`、`ai/commands/README.md`；涉及 Git 流程时读取 `git-guide.md` 相关章节 |
+| PR / CI / Git 收尾 | 闭环 PR、看 checks、修 CI、amend / push / merge closure | `template-docs/remote-ci-sop-profile.md`、`ai/implementation-lifecycle-rules.md`、`ai/project-rules.md`、`ai/commands/README.md`；涉及 Git 流程时读取 `git-guide.md` 相关章节 |
 | 编码 / 修 bug / Sprint 执行 | 实现任务、修缺陷、执行当前 Sprint | `ai/global-rules.md`、`ai/implementation-lifecycle-rules.md`、`ai/project-rules.md`、`ai/commands/run-dev-task.md` 或 `ai/commands/fix-bug.md` |
 | 文档 / 需求 / 设计 / 计划 | 生成或审计 docs、精修单文档、阶段规划、同步代码事实到文档 | `ai/global-rules.md`、`ai/document-lifecycle-rules.md`、相关 `ai/doc-standards/`、`ai/implementation-lifecycle-rules.md`、`ai/project-rules.md` |
 | UI 探索 / 原型 / 交互设计 | UI brief、需求探索原型、实现前原型、前端交互设计 | `ai/document-lifecycle-rules.md`、相关 `ai/doc-standards/`、`ai/commands/ui-prototype-exploration.md`、`ai/project-rules.md` |

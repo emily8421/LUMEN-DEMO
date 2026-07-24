@@ -72,6 +72,23 @@ tests/
 | 后端 service / controller | 250 行 | 拆 service、repository / gateway、schema、error handling |
 | 单个测试文件 | 300 行 | 拆 smoke、contract、edge cases |
 
+### 5.1 主应用文件职责边界与业务下沉
+
+§5 阈值回答「何时该拆」；本节回答「主应用文件只该放什么、新功能往哪里去」，从源头避免膨胀。主应用文件（前端 `App.*` / `src/app/*`、后端 `main` 入口、同等聚合文件）只承担：
+
+- **组合各域 hook / service**——装配业务模块，不实现业务逻辑；
+- **跨域 orchestration**——一次性协调多域（如统一 refresh、初始化顺序）；
+- **cross-cutting wrapper**——全局忙碌 / 错误 / 通知 / 登录失效等横切装配；
+- **render / 启动装配**——路由、providers、布局、入口挂载。
+
+不承担具体业务的状态机、数据加载副作用、事件处理实现、领域计算——这些下沉到域 hook（如 `useSearch` / `useDocuments`）或独立模块 / service。新功能以「最少改动胶水式」在主文件直接加 `useState` / handler / `useEffect` 仅限临时探索或极小改动；进入正式 Sprint 前必须抽到域 hook / 模块。
+
+软上限提醒（配合 §5 行数）：主应用文件内 `useState` / 等价状态 **~10–15 个**、事件 handler **~10–15 个**；超限按业务域抽 hook 或回调聚合。
+
+跨域边界：业务 hook **不持有跨域 setter**；需联动其他域时经回调（如 `onDocumentsChanged`、`onAuthError`）交回主文件做 orchestration，避免循环依赖与跨域闭包过期。一次性 set 多域 state 的跨域 refresh 可留在主文件，但应显式标注 orchestration 职责。
+
+> 与 §5 一致为治理提醒，非硬性；派生项目可在 `ai/project-rules.md` §3 / `docs/05-tech-spec.md` 覆盖或写明豁免。
+
 ## 6. Sprint 0 / Walking Skeleton 建议
 
 复杂 Web 项目可在首个业务 Sprint 前加入一个很小的 Sprint 0：

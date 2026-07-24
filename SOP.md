@@ -141,4 +141,10 @@ bash scripts/check-template.sh
 - **结构性兜底检查**：PowerShell native fallback（Git Bash 无法启动时最低保障）
 - **等价性**：fallback 通过 ≠ 完整自检通过；发布前仍应以 CI 或 Bash 自检为准
 
+**Windows fallback 最短判断链**：
+1. 模板仓先跑 `powershell -ExecutionPolicy Bypass -File scripts/check-template.ps1`。
+2. 若进入 fallback，先看 Bash 启动错误和 fallback 结果；fallback 通过只代表结构检查通过。
+3. 发布前仍以 `bash scripts/check-template.sh` 或 CI 为准；本地快速自检可用 `bash scripts/check-template.sh --summary`（只输出计数与失败项，避免回灌 1800+ 行成功日志）；必要时用 Git Bash 全路径重跑。
+4. 成功路径只记命令、退出码 / check 结论和通过摘要；失败路径只保留失败断言块、文件、expected pattern、复现命令和必要的 Bash / fallback 错误。
+
 远端建仓默认优先使用当前 `gh` 已登录账号；只有需要切换账号时，才显式传 `--account`。

@@ -6,7 +6,7 @@
 > 本文件对所有基于本模板创建的项目逐字复用，不针对具体项目修改。
 > 如需调整通用原则，先改本模板仓库的本文件，再覆盖同步到各项目（见README）。
 >
-> **全局规则版本：v1.10（2026-07-14）**。本文件仅记录跨项目通用规则自身版本；
+> **全局规则版本：v1.11（2026-07-20）**。本文件仅记录跨项目通用规则自身版本；
 > 整个模板版本以根目录 `VERSION` 为准，并在 `CHANGELOG.md` 登记。
 
 ## 1. AI编程总体原则
@@ -102,6 +102,8 @@ ProjectName/
 `frontend/` 是否启用取决于 `ai/project-rules.md` §3 的「演示形态」决策：消息通道内交互、CLI 或不需演示通常不启用；独立 Web 页面、移动端、小程序、桌面端等可点击 UI 通常启用，并在 `docs/04-architecture.md`、`docs/05-tech-spec.md` 体现前端设计。若项目存在多页面、多角色、复杂表单、状态流、验收依赖点击路径，或 Sprint 修改范围包含页面 / 组件 / 搜索问答 UI / 管理页 / 桌面端集成，开发前应补充 `docs/design/frontend-interaction.md` 或按入口拆分的 `docs/design/*interaction*.md`；若不补，须在 `ai/project-rules.md` §3 或 `docs/05-tech-spec.md` 写明豁免理由。满足前端交互触发条件且用户需实现前预览界面、页面信息密度高、主流程依赖点击验收、存在多状态 / 多角色 / 权限可见性，或 Demo / Mock / 降级口径可能被误读时，应在 `ai/project-rules.md` §2.7 / §3、`docs/05-tech-spec.md` 或前端交互设计中选择 UI 原型策略（Figma / Penpot / Balsamiq / Axure / Storybook / 代码原型 / 截图标注 / 其他）或写明豁免；原型不替代需求、设计或验收，不新增未授权需求 / 接口 / 权限 / 验收目标。非平凡子系统、复杂权限 / 安全边界、AI / 外部服务、导入 / 异步任务、跨模块状态机、Mock / 降级差异或高风险愿景能力，也应按 `ai/doc-standards/design-doc.md` 补充 `docs/design/<subsystem>.md` 或写明豁免理由。根 `README.md` 是项目件，用于说明具体项目，不纳入下行同步清单，各项目自行维护。
 
 复杂 Web / 全栈交互项目（同时启用 `frontend/` 与 `backend/`、需要浏览器演示、多页面 / 多状态 / 多角色 / 数据密集界面，或首个前端 Sprint 可能把多个业务能力堆入单个主应用文件）应触发 **Web App Structure Profile + Walking Skeleton Gate**：参考 `template-docs/web-fullstack-profile.md`，在 `docs/04-architecture.md` / `docs/05-tech-spec.md` / `docs/08-dev-plan.md` / `docs/09-verification.md` 中明确 App Shell、前后端目录边界、API client ↔ API-ID 追溯、vertical slice、文件膨胀阈值和浏览器 / API smoke；若不触发，须在 `ai/project-rules.md` §3 或 `docs/05-tech-spec.md` 写明豁免理由。
+
+项目涉及具体运行时版本锁定（如 Node / Python / Java 锁定特定版本）时，应在 `ai/project-rules.md` §2.9 写明锁定的运行时与版本、版本声明文件、切换工具、CI 校验方式和锁定原因，或写明豁免理由；声明文件标准与切换工具推荐见 `template-docs/env-setup.md`「运行时版本管理」小节。
 
 两类常见的语义命名约定：
 - **原始输入包**：用户提供的愿景草稿、brief、客户 PRD/SRS、访谈、现有系统说明和外部接入材料，默认先放
