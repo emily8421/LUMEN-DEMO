@@ -90,6 +90,7 @@ TEMPLATE_REMOTE="${TEMPLATE_REMOTE:-https://github.com/emily8421/ai-project-temp
 DEFAULT_SYNC_FILES=(
   "VERSION"
   "CHANGELOG.md"
+  "CHANGELOG-PLAIN.md"
   "MAINTAINERS.md"
   "template-docs/beginner-guide.md"
   "template-docs/env-setup.md"
@@ -98,6 +99,7 @@ DEFAULT_SYNC_FILES=(
   "template-docs/smoke-test-report-template.md"
   "template-docs/template-methodology.md"
   "template-docs/capability-packages.md"
+  "template-docs/remote-ci-sop-profile.md"
   "template-docs/glossary.md"
   "template-docs/docs-scaffold/README.md"
   "template-docs/docs-scaffold/inputs/input-review-report.md"
@@ -425,9 +427,16 @@ git rev-parse --is-inside-work-tree >/dev/null
 
 echo "==> 抓取模板: $TEMPLATE_REMOTE (main)"
 if ! git fetch --no-tags --depth=1 "$TEMPLATE_REMOTE" main; then
-  echo "✗ 抓取失败。模板仓库是私有的——确保活跃 gh 账号有访问权限：" >&2
-  echo "    gh auth status" >&2
-  echo "    gh auth switch -u <有模板仓库访问权限的账号>" >&2
+  echo "✗ 抓取失败。常见两类原因：" >&2
+  echo "  1) 模板仓库私有——确保活跃 gh 账号有访问权限：" >&2
+  echo "       gh auth status" >&2
+  echo "       gh auth switch -u <有模板仓库访问权限的账号>" >&2
+  echo "  2) 网络——受限网络（如国内直连 GitHub）需走代理；git fetch/push 走 git 代理，gh 另带环境变量：" >&2
+  echo "       git config --local http.proxy http://127.0.0.1:<代理端口>" >&2
+  echo "       git config --local https.proxy http://127.0.0.1:<代理端口>" >&2
+  echo "       # gh 不读 git http.proxy，命令需单独带：" >&2
+  echo "       HTTPS_PROXY=http://127.0.0.1:<代理端口> HTTP_PROXY=http://127.0.0.1:<代理端口> gh ..." >&2
+  echo "  直连症状：HTTPS 被 reset（curl 16 framing / curl 52 empty reply）。详见 git-guide.md §5.7。" >&2
   exit 1
 fi
 REF="FETCH_HEAD"
@@ -504,19 +513,22 @@ show_local_to_template_stat() {
   local tmp_dir
   local local_file
   local remote_file
+  # 仅 dry-run diff：临时关 autocrlf/safecrlf 消 Windows 临时文件 CRLF 噪音；
+  # git -c 内联只作用于下面 git show/diff，不影响 --commit 的 git checkout 写入（v1.56.12）。
+  local -a NOCRLF=(-c core.autocrlf=false -c core.safecrlf=false)
 
   tmp_dir="$(mktemp -d)"
   local_file="$tmp_dir/local/$file"
   remote_file="$tmp_dir/template/$file"
   mkdir -p "$(dirname "$local_file")"
   mkdir -p "$(dirname "$remote_file")"
-  git show "$REF:$file" > "$remote_file"
+  git "${NOCRLF[@]}" show "$REF:$file" > "$remote_file"
 
   if [[ -f "$file" ]]; then
     cp "$file" "$local_file"
-    git diff --no-index --stat -- "$local_file" "$remote_file" || true
+    git "${NOCRLF[@]}" diff --no-index --stat -- "$local_file" "$remote_file" || true
   else
-    git diff --no-index --stat -- /dev/null "$remote_file" | sed "s#${tmp_dir//\/\\}/##g" || true
+    git "${NOCRLF[@]}" diff --no-index --stat -- /dev/null "$remote_file" | sed "s#${tmp_dir//\/\\}/##g" || true
   fi
 
   rm -rf "$tmp_dir"
