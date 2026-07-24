@@ -276,6 +276,37 @@ powershell -ExecutionPolicy Bypass -File scripts/check-template.ps1       # 仅�
 - 用途：同步后用 `ai/prompts/review/16-docs-system-audit.md` 对照 `ai/doc-standards`（规范基线）回溯审计整条 PLM 链路（见 §5.5 末尾闭环）。
 - 兼容：v1.18.x 旧路径 `docs/_scaffold/00-09` 不再是主路径；迁移期审计提示词和边界检查会 fallback / 放行该旧路径，但 `sync-template` 不主动删除旧目录。
 
+### 5.7 网络与代理配置（受限网络环境）
+
+受限网络（如国内直连 GitHub）下，`git fetch` / `git push` 直连常被重置（症状：HTTPS `curl 16 framing` / `curl 52 empty reply`、连接 reset），`sync-template` 的 `git fetch` 会失败。此时需要走代理，且 `git` 与 `gh` 的代理配置**不共用**：
+
+- **git（fetch/push）**：对仓库设 local 代理，或临时带 `-c`：
+  ```bash
+  git config --local http.proxy http://127.0.0.1:<代理端口>
+  git config --local https.proxy http://127.0.0.1:<代理端口>
+  # 或临时：git -c http.proxy=http://127.0.0.1:<代理端口> fetch ...
+  ```
+- **gh（不读 `git http.proxy`）**：命令必须单独带环境变量：
+  ```bash
+  HTTPS_PROXY=http://127.0.0.1:<代理端口> HTTP_PROXY=http://127.0.0.1:<代理端口> gh pr create ...
+  ```
+
+`<代理端口>` 以本机代理工具（如 clash mixed-port）实际端口为准。`sync-template` fetch 失败时会打印上述配置提示；后续 `gh pr create` / `gh pr merge` / `gh pr checks` 等命令都要带 `HTTPS_PROXY` / `HTTP_PROXY`。
+
+### 5.8 Windows 大同步输出与超时
+
+Windows / Git Bash 下大批量同步（跨多版本 / 首次同步）会输出大量 `warning: LF will be replaced by CRLF` 与 diff-stat，可能命中 AI 工具默认超时（如 120s），但脚本本身未必失败。大同步建议：
+
+- **重定向到 log**：`sync-template.sh --dry-run > sync.log 2>&1`（或 `.ps1`），完整输出落盘，不直接灌入上下文。
+- **长超时**：大同步 dry-run / commit 用更长超时（300s+），避免工具超时被误判为脚本失败。
+- **grep 摘要**：只看 EXIT、变化文件数、删除数、项目专属触及、版本机制结果：
+  - 禁止路径：`grep -nE 'README\.md|ai/project-rules\.md|docs/00-09|frontend/|backend/|tests/|docker/' sync.log`
+  - 版本机制：`grep -nE 'VERSION|CHANGELOG|TEMPLATE-BASE|preserve-project-version|domain-template' sync.log`
+- **CRLF warning 不判失败**：`LF will be replaced by CRLF` 是 Windows 换行提示，不等于错误；只有真实 Git 错误、冲突、越界覆盖或校验失败才算失败。
+- **失败才展开**：成功时只保留摘要计数；失败或可疑时再打开 log 的最小相关片段。
+
+`check-derived-sync` 成功路径同理：优先看同步文件计数、越界检查摘要、版本机制结果；逐文件列表在失败 / 可疑时再展开。
+
 ## 6. 场景 D：新建派生项目（使用者 / 维护者）
 
 你要从模板创建一个新项目。

@@ -109,7 +109,7 @@ jobs:
         shell: bash
         run: |
           subject="$(git log -1 --format=%s)"
-          if [[ "$subject" =~ ^sync[[:space:]]template[[:space:]]v[0-9]+\.[0-9]+\.[0-9]+[[:space:]]from[[:space:]]ai-project-template$ ]]; then
+          if [[ "$subject" =~ ^sync[[:space:]]template[[:space:]]v[0-9]+\.[0-9]+\.[0-9]+[[:space:]]from[[:space:]]ai-project-template([[:space:]]\(#[0-9]+\))?$ ]]; then
             bash scripts/check-derived-sync.sh HEAD
           else
             echo "Not a template sync commit; skip derived sync boundary check."

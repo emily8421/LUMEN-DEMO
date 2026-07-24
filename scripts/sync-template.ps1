@@ -439,7 +439,8 @@ function Show-TemplateDiffStat {
     $remoteContent = Get-GitUtf8Text show ("{0}:{1}" -f $Ref, $RemotePath)
     $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
     [System.IO.File]::WriteAllText($remoteFile, $remoteContent, $utf8NoBom)
-    & git diff --no-index --stat -- $localFile $remoteFile | ForEach-Object { Write-Host ($_ -replace [regex]::Escape($tmpDir + [System.IO.Path]::DirectorySeparatorChar), "") }
+    # 仅 dry-run diff：临时关 autocrlf/safecrlf 消 Windows 临时文件 CRLF 噪音；git -c 内联不影响 --commit（v1.56.12）。
+    & git -c core.autocrlf=false -c core.safecrlf=false diff --no-index --stat -- $localFile $remoteFile | ForEach-Object { Write-Host ($_ -replace [regex]::Escape($tmpDir + [System.IO.Path]::DirectorySeparatorChar), "") }
     $global:LASTEXITCODE = 0
   }
   finally {
@@ -608,7 +609,14 @@ function Invoke-NativeTemplateSync {
   Write-Host "==> Fetch template: $templateRemote (main)"
   & git fetch --no-tags --depth=1 $templateRemote main
   if ($LASTEXITCODE -ne 0) {
-    Write-Error "Fetch failed. If the template repo is private, check gh auth status or switch to an account with access."
+    Write-Warning "Fetch failed. Two common causes:"
+    Write-Warning "  1) Template repo is private — check gh auth status or switch to an account with access."
+    Write-Warning "  2) Network — restricted networks (e.g. direct GitHub from some regions) need a proxy. git fetch/push use the git proxy; gh needs separate env vars:"
+    Write-Warning "       git config --local http.proxy http://127.0.0.1:<proxy-port>"
+    Write-Warning "       git config --local https.proxy http://127.0.0.1:<proxy-port>"
+    Write-Warning "       # gh does not read git http.proxy; pass env vars explicitly:"
+    Write-Warning "       HTTPS_PROXY=http://127.0.0.1:<proxy-port> HTTP_PROXY=http://127.0.0.1:<proxy-port> gh ..."
+    Write-Warning "  Direct-connect symptom: HTTPS reset (curl 16 framing / curl 52 empty reply). See git-guide.md section 5.7."
     return 1
   }
 

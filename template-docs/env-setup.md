@@ -271,7 +271,76 @@ bash scripts/new-project.sh smoke-demo --local --no-remote
 
 若 `gh` 下载失败且你当前只做本地烟测，可以先跳过；若你要远端建仓或依赖 `gh` 的流程，再回头解决网络 / 代理 / 防火墙问题。
 
-## 6. AI CLI 与公司中转站
+## 6. 运行时版本管理
+
+### 何时需要
+
+项目锁定了具体运行时版本（如米家插件锁 Node 16.13.0、Python 项目锁 3.11、跨语言项目锁多运行时）时，应使用版本声明文件 + 版本管理器组合，避免“本机是 Node 20 但项目要 Node 16”导致的环境漂移。
+
+是否启用由 `ai/project-rules.md` §2.9 决定；锁定的具体版本与声明文件在 `docs/05-tech-spec.md` §1 / §1.1 记录；本机实际版本由 `scripts/collect-env.ps1` 生成到 `docs/env/local-env.md`。三者职责分离。
+
+### 声明文件（中立，按需选用）
+
+| 文件 | 适用运行时 | 格式 | 备注 |
+|---|---|---|---|
+| `package.json` 的 `volta` 字段 | Node（Volta） | `"volta": { "node": "16.13.0" }` | **Volta 专用**，精确锁定，进目录自动切 / 离开自动回；可同时锁 `"npm"` |
+| `.node-version` | Node | 纯版本号，如 `16.13.0` | 被 fnm / nvm / nvs 识别；**Volta 不认**（Volta 用 `package.json` 的 `volta` 字段） |
+| `.python-version` | Python | 纯版本号，如 `3.11.7` | 被 pyenv / pyenv-win 识别 |
+| `.tool-versions` | 多语言（asdf） | `nodejs 16.13.0` 等多行 | 被 asdf 识别；Windows 原生不支持 |
+| `package.json` 的 `engines.node` | Node（npm 包） | `"node": ">=16.13.0 <17"` | npm 兼容范围提示，**不自动切版本**（区别于 `volta` 字段的精确锁定）；建议与 `volta` 或 `.node-version` 并用 |
+| `pyproject.toml` 的 `requires-python` | Python（PEP 621） | `requires-python = ">=3.11"` | 与 `.python-version` 语义不同（兼容范围 vs 精确锁定） |
+
+Volta 项目用 `package.json` 的 `volta` 字段；fnm / nvm / asdf 项目用 `.node-version` / `.tool-versions`。建议单语言项目只选一个声明文件，避免多文件漂移。
+
+**混合 manager 团队**（成员 Volta + nvm/fnm 共存）：在仓库根同时放 `.node-version`（fnm/nvm 读）与 `package.json` 的 `volta` 字段（Volta 读），两者必须写同一个版本，由 `scripts/check-runtime.ps1` 断言一致——任一方偏离即报漂移。单 manager 团队保持单文件即可。
+
+### 切换工具推荐（Windows 友好优先）
+
+| 运行时 | 推荐工具（Windows） | 备选 | 不推荐（Windows） |
+|---|---|---|---|
+| Node | **Volta**（Windows 原生、自动 pin） | fnm（更快但配置略繁） | nvm-windows（项目活跃度低、不支持自动切换） |
+| Python | **pyenv-win**（Windows 原生） | conda（重型） | 原生 pyenv（仅 Unix） |
+| 多语言统一 | Dev Container（VS Code + Docker） | — | asdf（Windows 需 WSL，原生不支持） |
+
+> **asdf 在 Windows 的限制**：asdf 是跨语言版本管理器，但在 Windows 上原生不支持，必须通过 WSL 运行。若团队全部成员都使用 WSL 开发，可考虑 asdf + `.tool-versions`；否则建议按运行时分别使用 Volta / pyenv-win，或用 Dev Container 统一环境。
+
+### 母模板中立性
+
+母模板**不预置**任何版本声明文件，也**不强制**具体工具。派生项目按需在仓库根放 `.node-version` 等；切换工具由派生项目自选，记录在 `ai/project-rules.md` §2.9 的「切换工具」字段。
+
+不在 `scripts/bootstrap-dev-env.ps1` 里自动装版本管理器（遵循本文件「非最小工具的处理建议」先例）：版本管理器安装涉及 PATH / shell profile / 用户偏好，脚本化会引入额外维护面。本节只文档说明，由用户手工安装。
+
+### 安装与使用提示
+
+**Volta（Node 推荐）**：
+
+1. 安装：`winget install Volta.Volta`（或见官网 `https://volta.sh`），装完重开终端。
+2. 设全局默认（=“未锁版本的项目用最新 LTS”）：`volta install node@lts`。**不用卸载**机器上已有的 Node，Volta 装上会接管 `node` / `npm` 命令。
+3. 在锁版本项目的 `package.json` 加 `volta` 字段 pin：`"volta": { "node": "16.13.0" }`（如需连 npm 一起锁，加 `"npm": "8.x.x"`）。
+4. 进该目录跑一次 `node --version`，Volta 自动下载并切到锁定版本；**离开目录自动回 LTS**，其他项目不受影响。
+5. CI 一致：CI 机器装 Volta 后会自动按 `package.json` 的 `volta` 字段切版本，不会出现“本地能跑、CI 挂”。
+
+**fnm / nvm / nvs**：读 `.node-version` 自动切（fnm 需配 PowerShell hook）；也可手动 `fnm use` / `nvm use`。
+
+**pyenv-win**：见 `https://github.com/pyenv-win/pyenv-win` 的 PowerShell 安装步骤；读 `.python-version`。
+
+**asdf**：读 `.tool-versions`，Windows 需 WSL（见上方限制说明）。
+
+**Dev Container**：随 Docker Desktop + VS Code Dev Containers 扩展自动可用，在容器内锁定整个运行时。
+
+### 运行时健康检测
+
+声明层（本节声明文件）回答“想要哪个版本”；`scripts/check-prereqs.ps1`（v1.55.1）做轻量“声明 vs 实际主版本”对比 warning；`scripts/check-runtime.ps1`（v1.56.0）做深度诊断：
+
+- node 的**解析来源**（Volta shim / Volta image 直连绕过 shim / nvm symlink / 系统安装 / 未知）；
+- 检测到的**版本管理器**（Volta / nvm-windows / fnm / 无）；
+- **声明 vs 实际**主版本是否漂移；
+- 路径污染来自**持久 PATH**（User/Machine）还是**仅会话注入**——区分“重启终端即恢复”与“需改系统环境变量”；
+- 按诊断组合给出可操作修复提示。
+
+`check-runtime.ps1` **退出码恒为 0**（纯诊断、只读、不改 PATH）；是否把“漂移 / 异常解析”当作失败由调用方 opt-in 决定——派生项目可自行接入 CI / smoke / build 前预检（解析输出里的 `major drift` 与 `node resolution` 字段）。模板不替项目决定“版本漂移就是错误”（见 §9 跨平台边界）。
+
+## 7. AI CLI 与公司中转站
 
 本模板本身支持多入口：Codex / AGENTS、Claude Code、Cursor。但它们的安装和登录方式差异较大，也可能经常变化，所以这里建议只在文档中说明“至少准备一种”，不在一键脚本里强装。
 
@@ -320,7 +389,7 @@ bash scripts/new-project.sh smoke-demo --local --no-remote
 
 模板这里只做入口提醒，不复制其中可能频繁变化的地址、鉴权或代理细节。
 
-## 7. 常见限制与排障
+## 8. 常见限制与排障
 
 - `winget` 不可用时，一键安装脚本会失败；这时需要先安装 App Installer 或改为手工安装。
 - Docker Desktop 往往需要管理员权限，部分机器还需要开启虚拟化或额外系统组件。
@@ -342,7 +411,7 @@ bash scripts/new-project.sh smoke-demo --local --no-remote
 - `scripts/sync-template.ps1` 与 `scripts/check-derived-sync.ps1` 优先调用 Git Bash；如果它们报 `Win32 error 5`、`E_ACCESSDENIED` 或类似 MSYS 启动错误，会明确标注并进入 PowerShell fallback。fallback 会按 UTF-8 bytes 解码 Git 输出，避免 Windows PowerShell 5.1 按系统代码页读取中文 Markdown、JSON 或文件名导致乱码 / 解析失败。fallback 也失败时，才优先判断为本机 Git Bash / MSYS、权限策略或网络环境问题。
 - 这类问题通常不意味着“新手少做了模板规定的某个初始化步骤”；fallback 已覆盖同步 / 边界检查的最小能力，若仍失败，先检查本机 Git for Windows、终端宿主、权限策略或安全软件限制。
 
-## 8. 跨平台边界
+## 9. 跨平台边界
 
 - 当前正式提供并验证的是 Windows 路径：`check-prereqs.ps1`、`bootstrap-dev-env.ps1`、`collect-env.ps1`。
 - Linux / macOS 目前只有文档层面的软件清单参考，尚未提供仓库内的正式安装脚本。
@@ -350,7 +419,7 @@ bash scripts/new-project.sh smoke-demo --local --no-remote
 - 后续若要补跨平台安装脚本，建议单独新增并单独验证，例如 `scripts/bootstrap-dev-env.sh`，再补入同步清单、自检脚本和环境手册。
 - 在那之前，Linux / macOS 用户可以参考本手册的软件清单手工安装，但不应把这视为模板已经正式支持的一键能力。
 
-## 9. 安装后验收
+## 10. 安装后验收
 
 至少确认以下命令能运行：
 
@@ -370,7 +439,7 @@ bash --version
 powershell -ExecutionPolicy Bypass -File scripts/collect-env.ps1
 ```
 
-## 10. 去哪看什么（导航）
+## 11. 去哪看什么（导航）
 
 | 想做的事 | 看哪 |
 |---|---|

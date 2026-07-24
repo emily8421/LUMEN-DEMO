@@ -4,6 +4,7 @@
   "files": [
     "VERSION",
     "CHANGELOG.md",
+    "CHANGELOG-PLAIN.md",
     "MAINTAINERS.md",
     "template-docs/beginner-guide.md",
     "template-docs/scenario-guides.md",
@@ -13,6 +14,7 @@
     "template-docs/smoke-test-report-template.md",
     "template-docs/template-methodology.md",
     "template-docs/capability-packages.md",
+    "template-docs/remote-ci-sop-profile.md",
     "template-docs/domain-templates.md",
     "template-docs/glossary.md",
     "template-docs/docs-scaffold/README.md",
@@ -145,6 +147,7 @@
     "scripts/check-github-context.ps1",
     "scripts/collect-env.ps1",
     "scripts/check-prereqs.ps1",
+    "scripts/check-runtime.ps1",
     "scripts/bootstrap-dev-env.ps1"
   ]
 }
