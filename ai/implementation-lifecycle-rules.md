@@ -21,6 +21,7 @@
 | 层级 | 权威来源 | 作用 | 最小输出 |
 |---|---|---|---|
 | Phase | `docs/03-prd.md` §3、`ai/project-rules.md` §1 | 定义当前阶段允许 / 禁止 / 下一阶段预告 | 阶段目标、退出标准、禁止越界 |
+| System Skeleton | `ai/implementation-lifecycle-rules.md` §3、`docs/08-dev-plan.md` Sprint 0 | non-trivial 项目首个业务 Sprint 前的可运行系统框架先行 | 框架验收证据、豁免理由 |
 | Sprint | `docs/08-dev-plan.md` | 把 Phase 拆成可执行增量 | 目标、输入文档、修改范围、验收标准 |
 | Task | `docs/08-dev-plan.md` 或 `tasks/task-*.md` | 执行一个小范围目标 | 1–3 个文件 / 模块、明确禁止项 |
 | Test Case | `docs/09-verification.md` | 定义怎么算通过 | TC-ID、步骤、通过标准、自动化位置 |
@@ -33,7 +34,9 @@
 
 若项目包含真实运行依赖（如 `backend/`、`frontend/`、`docker/`、数据库、本机模型、外部 API、重型 SDK、LLM、真实数据或权限安全能力），进入首个会触发这些依赖的编码 Sprint 前，必须已有技术路线与环境支撑评估，并在 `docs/05-tech-spec.md` 记录 Risk-ID、依赖配置、readiness gate 和解锁条件；或记录用户明确跳过的原因、风险、影响范围和补做时点。评估结论为 `No-Go` 时不得进入相关 Sprint；`Conditional Go` 只能进入满足限制条件或不触发该风险的 Sprint。
 
-若项目触发 Web App Structure Profile + Walking Skeleton Gate（见 `template-docs/web-fullstack-profile.md`），进入首个 Web 业务功能 Sprint 前必须先完成或显式豁免 Sprint 0 / Walking Skeleton：App Shell、前后端目录边界、API client ↔ API-ID 追溯、至少一个 vertical slice、文件膨胀阈值和最小浏览器 / API smoke。未完成且无豁免时，不得把多页面 / 多状态功能继续堆入单个主应用文件、全局样式或后端 controller / service。
+若项目为 non-trivial（多模块 / 有对外接口 / 有运行依赖），进入首个业务模块 Sprint 前必须先实现并验收一套可运行系统框架（System Skeleton）：基于 `docs/04-architecture.md` 架构与功能划分、`docs/07-api-spec.md` 接口规范和主业务流程，落地最小可运行框架——模块边界就位、关键接口连通、至少一条纵切可跑通、错误 / 空 / 加载入口存在，但不含完整业务逻辑；并在 `docs/08-dev-plan.md`（Sprint 0 / Framework Sprint）与 `docs/09-verification.md`（系统框架测试大纲）留框架验收证据。quick-script、纯计算库、单文件工具等可豁免，须在 `ai/project-rules.md` §3 写明豁免理由、风险和补做时点。未完成且无豁免时，不得直接堆入完整业务模块。
+
+复杂 Web / 全栈交互项目在通用 System Skeleton 基础上叠加 `template-docs/web-fullstack-profile.md` 的 Web 特化（触发条件见 `ai/global-rules.md` §5）：App Shell、前后端目录边界、API client ↔ API-ID 追溯、至少一个 vertical slice、文件膨胀阈值和最小浏览器 / API smoke。未完成且无豁免时，不得把多页面 / 多状态功能继续堆入单个主应用文件、全局样式或后端 controller / service。
 
 1. 输入必须至少包括 `docs/03-prd.md`、`docs/04-architecture.md`、`docs/05-tech-spec.md`、`docs/08-dev-plan.md`、`docs/09-verification.md`。
 2. 若项目涉及持久化或对外接口，还必须读取 `docs/06-db-design.md`、`docs/07-api-spec.md` 的相关章节。
@@ -80,8 +83,11 @@ AI 执行 Sprint / Task 前必须先输出实现方案，并等待用户确认�
 | 回归测试 | 验证修复或改动未破坏既有能力 | 回归范围、历史用例、结果 |
 | 资源 / 环境验证 | 验证本机或目标环境能运行 | `docs/env/local-env.md`、耗时、内存、端口、降级记录 |
 | Readiness gate | 验证真实依赖进入 Sprint / Phase 的条件 | `docs/05-tech-spec.md` Risk-ID / RG-ID、技术环境评估报告、命令输出、TC 证据 |
+| 系统框架 smoke | 验证 System Skeleton 可运行：纵切可跑通、关键接口连通、错误 / 空 / 加载入口存在 | `docs/09-verification.md` 系统框架测试大纲、smoke 命令 / 截图 / 日志 |
 
 Lean / 小工具项目可以采用最小验证包，但至少需要：一个可复现的运行命令或人工步骤、预期输出、实际结果、未验证项。
+
+验收还可按大纲层次组织（与测试等级矩阵正交的另一维度）：需求验收大纲 → 系统框架测试大纲 → 集成测试大纲 → 单元模块测试大纲；层次化结构见 `docs/09-verification.md`，等级矩阵保留为「等级维度」，不替代层次维度。
 
 ## 7. 验收与留痕
 

@@ -40,6 +40,8 @@
 | ADR / 决策 | 关键技术 / 交付 / 安全决策 | 有状态、理由、备选、取舍影响和验证方式 | 补 ADR 字段 |
 | Web App Structure Profile | 复杂 Web / 全栈交互项目的 App Shell、页面 / feature 边界、前后端组件关系 | 说明是否触发 `template-docs/web-fullstack-profile.md`，以及 WSG-001 / WSG-003 如何由架构承接 | 补 App Shell / vertical slice 架构边界或写明豁免 |
 
+架构图审核四维度（图纸审核准则，对齐 `document-lifecycle-rules.md` §13）：① 可渲染（mermaid 默认或 `ai/project-rules.md` §2.6 指定格式，CI / 文档预览不破）；② 有图 ID（架构图 `DIAG-ARCH-NN`，可被评审 / 验收指名引用）；③ 可追溯（架构图挂 `REQ → COMP-ID / MOD-ID / Flow-ID` 追溯链）；④ 覆盖关键路径（异常 / 降级 / 权限边界，非仅正常路径）。
+
 ## 4. ID 与追溯规则
 
 - 组件使用 `COMP-001`，模块使用 `MOD-001`，关键流程使用 `Flow-001`，架构决策使用 `ADR-001`。

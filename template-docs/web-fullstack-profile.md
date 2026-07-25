@@ -3,11 +3,11 @@
 > Sync notice: This file is maintained by `ai-project-template` and may be overwritten when a derived project syncs template methodology.
 > Do not edit it directly in derived projects; propose reusable changes in `_proposals/` and upstream them to the template repository.
 
-本文件定义复杂 Web / 全栈交互项目的轻量结构基线。它不是具体技术栈脚手架，不要求母模板内置业务代码；它用于在派生项目进入首个业务功能 Sprint 前，确认可运行骨架、目录边界、纵切验证和文件膨胀阈值。
+本文件定义复杂 Web / 全栈交互项目的轻量结构基线，是通用 System Skeleton Gate（见 `ai/implementation-lifecycle-rules.md` §3）的 **Web 特化扩展**。它不是具体技术栈脚手架，不要求母模板内置业务代码；它用于在派生项目进入首个业务功能 Sprint 前，在通用可运行系统框架（System Skeleton）基础上叠加确认 App Shell、目录边界、纵切验证和文件膨胀阈值等 Web 特化。
 
 ## 1. 适用范围
 
-满足以下任一条件时，应触发 Web App Structure Profile + Walking Skeleton Gate，或在 `ai/project-rules.md` §3 / `docs/05-tech-spec.md` 中写明豁免理由：
+满足以下任一条件时，应在通用 System Skeleton Gate 基础上叠加本 Web App Structure Profile（Web 特化），或在 `ai/project-rules.md` §3 / `docs/05-tech-spec.md` 中写明豁免理由：
 
 - 项目同时启用 `frontend/` 与 `backend/`，并存在前端调用后端 API。
 - 交付物为 Demo / MVP / 产品，需要浏览器点击演示或人工走查。
@@ -89,7 +89,7 @@ tests/
 
 > 与 §5 一致为治理提醒，非硬性；派生项目可在 `ai/project-rules.md` §3 / `docs/05-tech-spec.md` 覆盖或写明豁免。
 
-## 6. Sprint 0 / Walking Skeleton 建议
+## 6. Sprint 0 / System Skeleton（Web 特化）建议
 
 复杂 Web 项目可在首个业务 Sprint 前加入一个很小的 Sprint 0：
 

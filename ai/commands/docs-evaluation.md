@@ -47,7 +47,7 @@
 3. 只读扫描相关文档，按完整性、合理性、可行性、一致性、追溯性、阶段边界、可验证性和维护性输出评估。
 4. E2 / E3 或真实依赖项目必须检查 `04` 架构视图、`05` 技术状态、依赖配置、Risk-ID、readiness gate 和 `05 ↔ 09` 映射。
 5. E3 / E4 或详细设计评估必须检查 `06/07` 字段级契约、endpoint contract matrix、API-ID、错误码、权限边界、迁移 / seed / 回滚、DB / API / TC 追溯、契约状态，以及 `docs/design/*` 的元信息、追溯矩阵、readiness gate、验收追溯、实现偏差区和豁免理由。
-6. E4 / E5 / E6 或实现 / 验证 / 回写评估必须检查 `08/09` Sprint 验证包、完成包、TC 详情、验收证据、缺陷 / 回归记录、正式回写和 handoff 边界。
+6. E4 / E5 / E6 或实现 / 验证 / 回写评估必须检查 `08/09` Sprint 验证包、完成包、TC 详情、验收证据、缺陷 / 回归记录、正式回写和 handoff 边界。non-trivial 项目必须检查 System Skeleton Gate（Sprint 0 / 可运行框架）已完成或豁免，以及 `09` 验收大纲是否分层（需求验收 → 系统框架 → 集成 → 单元）。
 7. 检查待确认事项总览和 open items 门禁；阻塞项未关闭或未被明确风险接受时，不得输出无条件 `Go`。
 8. 给出 `Go / Conditional Go / No Go` 结论、阻塞项、修复建议和结构化待人工确认项。
 9. 若用户要求“记录下来”，先说明路径和影响范围，确认后写入 `docs/research/YYYY-MM-DD-docs-evaluation-<scope>.md`。

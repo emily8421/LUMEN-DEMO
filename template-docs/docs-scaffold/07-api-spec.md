@@ -39,7 +39,7 @@
 
 | API-ID | 方法 / 命令 | 路径 / 名称 | 用途 | 阶段 | 状态 | 来源 REQ / NFR | 关联模块 |
 |---|---|---|---|---|---|---|---|
-| API-001 | POST | /process |  | [P1] | 骨架 / P1-已设计 | REQ-001 | MOD-001 |
+| API-001 | POST | /process |  | [P1] | 设计骨架 / P1-已设计 | REQ-001 | MOD-001 |
 
 ## 3. Endpoint contract matrix
 

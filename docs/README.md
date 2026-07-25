@@ -39,7 +39,7 @@
 
 - **编号固定**：`00-09` 编号不因项目而变；根目录只放 `README.md` 与 `00-09`，不堆其它文档（见 §4）。
 - **追溯链**：`U-ID → REQ-ID → Phase → 设计 → Sprint → 测试 → 代码`，不留悬空 ID（权威见 `ai/document-lifecycle-rules.md` §6）。
-- **阶段双维度标签**：功能范围 `[P1]/[P2]/[愿景]` × 交付物形态 `Demo/MVP/产品`；状态 `骨架 → P{N}-已设计 → P{N}-已实现`（权威见 `ai/global-rules.md` §8）。
+- **阶段双维度标签**：功能范围 `[P1]/[P2]/[愿景]` × 交付物形态 `Demo/MVP/产品`；状态 `设计骨架 → P{N}-已设计 → P{N}-已实现`（权威见 `ai/global-rules.md` §8）。
 - **只增不删**：设计类文档（03-09、design）按积累式演进，不删既有阶段内容（权威见 `ai/global-rules.md` §8.2-3）。
 - **三层分工**：`docs/inputs/*`、`docs/vision/*`、`docs/00-09`、`docs/design/*`、`docs/decisions/*`、`docs/research/*` 是项目事实；`template-docs/docs-scaffold/` 是长期参考结构模板；`ai/doc-standards/00-09` 和相关标准是规则 / 审计基线。
 - **撰写规范**：`00-09` 每份文档的撰写规范见 `ai/doc-standards/00-09`（只读、审计基线、不手改；由 `sync-template` 刷新）。如需查看模板原始大纲、占位表格和 `【撰写提要：...】`，参考 `template-docs/docs-scaffold/`。
@@ -104,7 +104,7 @@ UI Exploration to Delivery Pipeline 建议按 `docs/inputs/*` → UI brief / 输
 
 视觉效果探索只产生视觉候选、已确认视觉方向或视觉验证失败记录；未确认前不得写入正式设计。可视化原型被用户确认后，也不得直接进入实现，必须先检查是否回填 `frontend-experience-brief`、`frontend-interaction`、UI 原型策略、`08` 和 `09`。
 
-复杂 Web / 全栈交互项目若触发 `template-docs/web-fullstack-profile.md`，应在首个业务 Sprint 前完成或豁免 Web App Structure Profile + Walking Skeleton Gate，并把 App Shell、前后端目录边界、最小 vertical slice、文件膨胀阈值、API / browser smoke 回填到 `04/05/08/09`；该 profile 不替代 UI brief、前端交互设计、UI 原型策略或正式验收记录。
+复杂 Web / 全栈交互项目若触发 `template-docs/web-fullstack-profile.md`，应在首个业务 Sprint 前完成或豁免通用 System Skeleton Gate + Web App Structure Profile（Web 特化），并把 App Shell、前后端目录边界、最小 vertical slice、文件膨胀阈值、API / browser smoke 回填到 `04/05/08/09`；该 profile 是通用 Gate 的 Web 特化扩展，不替代 UI brief、前端交互设计、UI 原型策略或正式验收记录。
 
 ## 7. AI 新增文档规则
 

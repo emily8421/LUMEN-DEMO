@@ -129,7 +129,8 @@ AI 识别场景后，**先输出引导计划给用户看（用人话 + 为什么
 | A24 技术路线与环境支撑评估 | 「评估依赖能不能装」「本机能不能跑」「技术环境评估」 | 真实运行依赖进入 Sprint 前评估本机环境支撑 |
 | A25 UI Brief Intake / 前端交互输入补齐 | 「界面应该长什么样」「前端交互怎么定」「用户没给 UI 参考」「补 UI 输入材料」 | 输入评审、原型或实现前主动补齐 UI 交互输入 |
 | A26 UI Interaction Discovery / UI 探索到交付 | 「先确认交互原型」「分析参考产品」「视觉效果探索」「前端和后端先做哪个」 | 把 UI brief、参考分析、探索原型、experience brief、正式交互设计、实现前原型和 `08/09` 串成可审计路径 |
-| A27 Web App Structure Profile / Walking Skeleton Gate | 「Web 全栈骨架怎么定」「先搭应用骨架」「避免 App.tsx 越写越大」「前后端目录结构怎么定」 | 在首个业务 Sprint 前确认 App Shell、目录边界、vertical slice、文件阈值和 smoke 验证 |
+| A27 Web App Structure Profile / Walking Skeleton Gate | 「Web 全栈骨架怎么定」「先搭应用骨架」「避免 App.tsx 越写越大」「前后端目录结构怎么定」 | 通用 Gate 的 Web 特化：首个业务 Sprint 前确认 App Shell、目录边界、vertical slice、文件阈值和 smoke 验证 |
+| A28 System Skeleton Gate / 可运行系统框架先行 | 「先搭可运行框架」「框架先行」「Sprint 0 怎么定」「先跑通主链路再细化」 | non-trivial 项目首业务 Sprint 前实现并验收最小可运行系统框架（纵切跑通、接口连通）或豁免 |
 
 **C 维护者**（C1–C8）
 
@@ -346,7 +347,7 @@ AI 识别场景后，**先输出引导计划给用户看（用人话 + 为什么
 - **cmd 指针**：`ai/document-lifecycle-rules.md` §5.2.1 + `ai/prompts/docs/22-ui-prototype-exploration.md` + `ai/prompts/docs/04-edit-single-doc.md`
 
 #### A27 Web App Structure Profile / Walking Skeleton Gate
-- **说明**：当项目是复杂 Web / 全栈交互系统，或用户担心前端主应用文件、全局样式、后端 controller / service 越写越大时，先确认轻量可运行骨架、目录边界和首个 vertical slice，再进入业务功能 Sprint。
+- **说明**：本场景是通用 System Skeleton Gate（A28）的 **Web 特化**。当项目是复杂 Web / 全栈交互系统，或用户担心前端主应用文件、全局样式、后端 controller / service 越写越大时，在通用可运行框架基础上叠加确认 App Shell、目录边界和首个 vertical slice，再进入业务功能 Sprint。
 - **触发**：「Web 全栈骨架怎么定」「先搭应用骨架」「前后端目录结构怎么定」「避免 App.tsx 越写越大」「先做 Walking Skeleton」「Web 项目 Sprint 0」
 - **cwd·前置**：在派生项目 · 已有或准备生成 `04/05/08/09`；若 UI 输入 / 体验原则不足，先回 A25 / A26。
 
@@ -360,6 +361,22 @@ AI 识别场景后，**先输出引导计划给用户看（用人话 + 为什么
 - **完成判据**：WSG-001 到 WSG-006 状态明确；已在 `04/05/08/09` 记录 App Shell、目录边界、vertical slice、文件膨胀阈值和 smoke 验证，或写明豁免理由。
 - **下一步**：A10 执行 Sprint 0 / 首个业务 Sprint；A8 文档评估；A17 open items。
 - **cmd 指针**：`template-docs/web-fullstack-profile.md` + `ai/prompts/dev/02-run-task.md`
+
+#### A28 System Skeleton Gate / 可运行系统框架先行
+- **说明**：non-trivial 项目（多模块 / 有对外接口 / 有运行依赖）在首个业务模块 Sprint 前，先实现并验收一套最小可运行系统框架（System Skeleton）：模块边界就位、关键接口连通、至少一条纵切可跑通、错误 / 空 / 加载入口存在，再做模块细化。quick-script / 纯计算库 / 单文件工具可豁免。复杂 Web / 全栈项目叠加 A27 Web 特化。
+- **触发**：「先搭可运行框架」「框架先行」「Sprint 0 怎么定」「先跑通主链路再细化」「System Skeleton」
+- **cwd·前置**：在派生项目 · 已有 `04` 架构 / `07` 接口规范；首个业务 Sprint 前。
+
+| # | 做什么 | 为什么 | 机器执行 |
+|---|---|---|---|
+| 1 | 判断是否触发通用 System Skeleton Gate 或豁免 | quick-script / 纯计算库 / 单文件工具可豁免，须在 `ai/project-rules.md` §3 写明 | 参考 `ai/implementation-lifecycle-rules.md` §3 |
+| 2 | 定义最小可运行框架边界 | 模块边界就位、关键接口连通，不含完整业务 | 回填 `04/05` |
+| 3 | 规划 Sprint 0 / Framework Sprint | 先跑通至少一条纵切，错误 / 空 / 加载入口存在 | 回填 `08` |
+| 4 | 定义系统框架 smoke | 验证纵切可跑通、接口连通 | 回填 `09` 系统框架测试大纲 |
+
+- **完成判据**：System Skeleton 可运行（纵切跑通、接口连通、错误 / 空 / 加载入口存在）或写明豁免理由；`08` Sprint 0 + `09` 系统框架测试大纲有证据。
+- **下一步**：A10 执行首个业务 Sprint；A8 文档评估；A17 open items；复杂 Web / 全栈转 A27 叠加 Web 特化。
+- **cmd 指针**：`ai/implementation-lifecycle-rules.md` §3 + `ai/prompts/dev/02-run-task.md`
 
 #### A8 文档评估 / 审计 / 检查
 - **说明**：编码前或阶段转换前判断文档是否能继续往下走；评估给 Go / Conditional Go / No Go，审计找断点，checklist 做最后拦截。

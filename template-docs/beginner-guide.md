@@ -156,6 +156,8 @@ docs/inputs/ 原始输入  ──→  docs/vision/product-vision.md  ──→  
 | 装 AI CLI | `template-docs/ai-cli-setup.md` |
 | 具体场景怎么操作 | `template-docs/scenario-guides.md`（A0–A27 / C1–C8 / 元场景） |
 | 找命令速查 | `SOP.md`、`ai/commands/README.md` |
+| 查 how-to 任务操作入口 | `template-docs/user-guide-template.md`（任务→权威入口导航表） |
+| 查研发数据沉淀路径 | `template-docs/rd-data-chain.md`（数据类别→载体→主链关系） |
 | 理解模板为什么这么设计 | `template-docs/template-methodology.md` |
 | 查术语是什么意思 | `template-docs/glossary.md` |
 | 查看领域模板（可选中间层） | `template-docs/domain-templates.md` |

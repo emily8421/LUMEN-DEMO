@@ -101,7 +101,7 @@ ProjectName/
 
 `frontend/` 是否启用取决于 `ai/project-rules.md` §3 的「演示形态」决策：消息通道内交互、CLI 或不需演示通常不启用；独立 Web 页面、移动端、小程序、桌面端等可点击 UI 通常启用，并在 `docs/04-architecture.md`、`docs/05-tech-spec.md` 体现前端设计。若项目存在多页面、多角色、复杂表单、状态流、验收依赖点击路径，或 Sprint 修改范围包含页面 / 组件 / 搜索问答 UI / 管理页 / 桌面端集成，开发前应补充 `docs/design/frontend-interaction.md` 或按入口拆分的 `docs/design/*interaction*.md`；若不补，须在 `ai/project-rules.md` §3 或 `docs/05-tech-spec.md` 写明豁免理由。满足前端交互触发条件且用户需实现前预览界面、页面信息密度高、主流程依赖点击验收、存在多状态 / 多角色 / 权限可见性，或 Demo / Mock / 降级口径可能被误读时，应在 `ai/project-rules.md` §2.7 / §3、`docs/05-tech-spec.md` 或前端交互设计中选择 UI 原型策略（Figma / Penpot / Balsamiq / Axure / Storybook / 代码原型 / 截图标注 / 其他）或写明豁免；原型不替代需求、设计或验收，不新增未授权需求 / 接口 / 权限 / 验收目标。非平凡子系统、复杂权限 / 安全边界、AI / 外部服务、导入 / 异步任务、跨模块状态机、Mock / 降级差异或高风险愿景能力，也应按 `ai/doc-standards/design-doc.md` 补充 `docs/design/<subsystem>.md` 或写明豁免理由。根 `README.md` 是项目件，用于说明具体项目，不纳入下行同步清单，各项目自行维护。
 
-复杂 Web / 全栈交互项目（同时启用 `frontend/` 与 `backend/`、需要浏览器演示、多页面 / 多状态 / 多角色 / 数据密集界面，或首个前端 Sprint 可能把多个业务能力堆入单个主应用文件）应触发 **Web App Structure Profile + Walking Skeleton Gate**：参考 `template-docs/web-fullstack-profile.md`，在 `docs/04-architecture.md` / `docs/05-tech-spec.md` / `docs/08-dev-plan.md` / `docs/09-verification.md` 中明确 App Shell、前后端目录边界、API client ↔ API-ID 追溯、vertical slice、文件膨胀阈值和浏览器 / API smoke；若不触发，须在 `ai/project-rules.md` §3 或 `docs/05-tech-spec.md` 写明豁免理由。
+复杂 Web / 全栈交互项目（同时启用 `frontend/` 与 `backend/`、需要浏览器演示、多页面 / 多状态 / 多角色 / 数据密集界面，或首个前端 Sprint 可能把多个业务能力堆入单个主应用文件）在通用 System Skeleton Gate（见 `ai/implementation-lifecycle-rules.md` §3）基础上叠加 **Web App Structure Profile（Web 特化）**：参考 `template-docs/web-fullstack-profile.md`，在 `docs/04-architecture.md` / `docs/05-tech-spec.md` / `docs/08-dev-plan.md` / `docs/09-verification.md` 中明确 App Shell、前后端目录边界、API client ↔ API-ID 追溯、vertical slice、文件膨胀阈值和浏览器 / API smoke；若不触发，须在 `ai/project-rules.md` §3 或 `docs/05-tech-spec.md` 写明豁免理由。
 
 项目涉及具体运行时版本锁定（如 Node / Python / Java 锁定特定版本）时，应在 `ai/project-rules.md` §2.9 写明锁定的运行时与版本、版本声明文件、切换工具、CI 校验方式和锁定原因，或写明豁免理由；声明文件标准与切换工具推荐见 `template-docs/env-setup.md`「运行时版本管理」小节。
 
@@ -153,7 +153,7 @@ Prompt / SOP / 脚本说明执行；不要要求用户手工打开 prompt 文件
 阶段必须同时声明两个正交维度：
 - **功能范围**：`[P1]` / `[P2]` / `[愿景]`，表示做哪些 REQ，取自 `docs/03-prd.md` §3 已确认的路线图。
 - **交付物形态**：`Demo` / `MVP` / `产品`，表示做到什么程度，不得与功能范围混用。
-- **状态标签**：`骨架` → `P{N}-已设计` → `P{N}-已实现`。
+- **状态标签**：`设计骨架` → `P{N}-已设计` → `P{N}-已实现`。（注：「设计骨架」指设计文档占位状态；与「System Skeleton / 可运行骨架」——基于总体设计实现的最小可运行系统框架，见 `ai/implementation-lifecycle-rules.md` §3——是不同概念，勿混用。）
 
 推荐定义（项目可在 `ai/project-rules.md` 中细化）：
 - **Demo**：核心价值可演示，可使用模拟器 / 原型通道 / 最简实现，但必须保留产品红线。
@@ -165,7 +165,7 @@ Prompt / SOP / 脚本说明执行；不要要求用户手工打开 prompt 文件
 **推荐：双维度总览表**。功能范围 `[P1]/[P2]/[愿景]` 是「要素级」标签（遍布 `04-09`、`docs/design/*`，可达上百次），而交付物形态 `Demo/MVP/产品` 是「阶段级」属性（仅在 `03 §3` 等少数点声明），后者易被前者淹没、读者难一眼把握演进线。建议 `docs/03-prd.md` §3 路线图**顶部**用一张总览表集中呈现双维度，列至少含：阶段 / 功能范围 / 交付物形态 / 状态 / 进入标准 / 退出标准；表下方保留各阶段 `###` 子节展开详情。这样 `Demo→MVP→产品` 演进一目了然，与全文要素级标签形成「全景 ↔ 要素」对照。Lean 剖面项目可裁剪列集；此为撰写推荐（非强制）。
 
 ### 8.2 演进方式
-1. **初次生成**：按完整愿景铺出全部要素并打标签；只把 `[P1]` 及其交付物形态写细，其余留 `骨架·待细化`
+1. **初次生成**：按完整愿景铺出全部要素并打标签；只把 `[P1]` 及其交付物形态写细，其余留 `设计骨架·待细化`
 2. **阶段执行**：在原位补本阶段要素的详细设计，状态推进到 `P{N}-已设计` → `已实现`
 3. **升阶段**：当前阶段指针（`project-rules.md` §1）后移；在原位补新阶段要素细节，前阶段内容原封不动
 4. **最终态**：愿景实现完毕时，每份文档即完整系统设计

@@ -48,6 +48,8 @@
     "template-docs/web-fullstack-profile.md",
     "template-docs/web-app-scaffold-experiment.md",
     "template-docs/demo-runbook-template.md",
+    "template-docs/user-guide-template.md",
+    "template-docs/rd-data-chain.md",
     "template-docs/e2e-regression-checklist.md",
     "template-docs/e2e-report-template.md",
     "template-sync.json",

@@ -107,7 +107,7 @@ E3 / E4 阶段评估必须重点检查：
 - `docs/design/*` 是否只承接上游已批准需求、架构、技术方案和 `06/07` 契约；是否孤立新增需求、接口、表、TC 或 Phase 外能力。
 - 对于 UI 型项目，若存在 UI brief、参考分析、需求探索原型、视觉效果探索或 experience brief，是否有用户确认依据、采纳 / 未采纳项和 open items 回填；未确认候选、AI 默认 UI 建议或视觉候选进入正式设计 / Sprint 必过项时，不得给出无条件 Go。
 - 对于 UI 型项目，是否已有足以支持前端 Sprint 的可视化原型或明确豁免；若缺少原型策略、默认 UI 标准基线、UI / 后端 / 双轨顺序判断、UI-G-004 / UI-G-006 / UI-G-007、原型证据不可访问、覆盖主流程 / 关键状态 / 权限与降级不足，或原型把新需求 / 接口 / 权限 / 验收目标绕过正式文档链路，不得给出无条件 Go。
-- 对于复杂 Web / 全栈交互项目，若缺少 Web App Structure Profile、Sprint 0 / Walking Skeleton、App Shell、目录边界、文件膨胀阈值或 API / browser smoke，且无豁免理由，不得给出进入首个业务功能 Sprint 的无条件 Go。
+- 对于复杂 Web / 全栈交互项目，若缺少通用 System Skeleton Gate（Sprint 0 / 可运行框架）或其 Web 特化（Web App Structure Profile：App Shell、目录边界、文件膨胀阈值、API / browser smoke），且无豁免理由，不得给出进入首个业务功能 Sprint 的无条件 Go。
 
 E4 / E5 / E6 阶段评估必须重点检查：
 - `08` 是否为当前 Sprint / Task 写明 REQ / NFR、输入设计 / 契约（含触发的 `docs/design/*`）、修改范围、验证包、TC-ID、状态、完成包和任务拆分依据。

@@ -142,3 +142,4 @@ Windows 下若 PowerShell 无法拉起 Git Bash，`check-template.ps1`、`sync-t
 - 历史归档放 `docs/archive/`。
 - `ai/doc-standards/`（v1.20.0+）是模板 `00-09` 撰写规范的只读镜像，随模板同步刷新，不作为项目事实、不直接驱动开发；旧项目可能残留 `docs/_scaffold/`。
 - AI 需要新增文档时，必须先判断文档类型；不确定则先提议路径并等待人工确认。
+- 研发过程各类数据（决策 / 调研 / 会议 / 验证 / 版本 / AI 成本 / 续接）如何沉淀、流转和回写，见 `template-docs/rd-data-chain.md`（索引 / 分类，不替代 00-09）。

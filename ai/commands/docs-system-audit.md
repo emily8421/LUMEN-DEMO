@@ -29,7 +29,7 @@
 
 1. 读取文档生命周期规则和 16 号审计 Prompt。
 2. 盘点项目 `docs/00-09`、`docs/design/`、`docs/env/` 等相关文档。
-3. 对照追溯链、阶段标签、交付物形态、可验证性、`docs/design/*` 通用详细设计和规范基线。
+3. 对照追溯链、阶段标签、交付物形态、可验证性、`docs/design/*` 通用详细设计和规范基线；按图纸审核四维度检查 04/06/07 关键图（可渲染 / 有图 ID / 可追溯 REQ·API·TC / 覆盖异常·降级·权限路径，见 `ai/document-lifecycle-rules.md` §13 与各 doc-standards）。
 4. 若处于同步后审计模式，同时读取最近一次 `sync-records/template-sync/` 同步报告（兼容旧路径 `docs/archive/template-sync/`），区分规范基线缺口、兼容差异和项目事实问题。
 5. 检查待确认事项总览是否覆盖阻塞项、状态冲突和回填位置；缺失时建议转 `docs-open-items`。
 6. 输出审计报告、回梳计划、design 缺口 / 豁免结论、open items 门禁结论和同步报告回写建议。
