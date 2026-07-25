@@ -47,7 +47,7 @@
 4. 若任务涉及真实运行依赖但缺少技术环境评估，先停止并建议运行 `tech-env-evaluation`；若用户明确跳过，记录跳过原因、风险、影响范围和补做时点
 5. 若任务涉及 Web / UI / 可点击 Demo，编码前必须检查 UI 输入是否齐备：参考产品、演示主线、页面结构、信息密度、首屏目标、设备范围和视觉禁区；缺失时先停止并转 A25 UI Brief Intake，不得直接堆 UI 实现。若存在需求探索原型、视觉效果探索或 experience brief，必须确认用户确认依据、未采纳项和 open items 已回填；未确认候选不得进入 Sprint 必过项
 6. 若任务涉及前端实现，必须检查 UI 原型策略 / 实现前原型是否已选择默认 UI 标准基线、原型形式、权威位置、覆盖范围、UI / 后端 / 双轨顺序判断，并满足 UI-G-006；未满足时先回 A23 / A26，不得直接编码
-7. 若任务涉及复杂 Web / 全栈交互，编码前必须检查 WSG-001 到 WSG-006：App Shell、前后端目录边界、API client ↔ API-ID、vertical slice、文件膨胀阈值和 API / browser smoke 是否已在 `04/05/08/09` 中定义；未满足时先安排 Sprint 0 / Walking Skeleton 或写明豁免，不得把多个业务能力堆入单个主应用文件、全局样式或后端 controller / service
+7. 若任务涉及复杂 Web / 全栈交互，编码前必须检查通用 System Skeleton Gate（可运行框架）及其 Web 特化 WSG-001 到 WSG-006：App Shell、前后端目录边界、API client ↔ API-ID、vertical slice、文件膨胀阈值和 API / browser smoke 是否已在 `04/05/08/09` 中定义；未满足时先安排 Sprint 0 / System Skeleton 或写明豁免，不得把多个业务能力堆入单个主应用文件、全局样式或后端 controller / service
 8. 执行前必须核对当前 Sprint / Task 的关联 REQ、TC-ID、验证包和任务拆分规则；缺少 TC-ID、验证命令 / 人工步骤或验收口径时，先回到 `08/09` 补齐，不得直接编码
 9. 若任务涉及 DB / API，实现前必须核对对应表字段、API-ID、错误码、权限边界、契约状态和 TC-ID；`草案` / `候选` / `默认关闭` / `目标设计` / `Mock` 不得直接作为真实实现依据，除非用户确认风险接受或先做 Spike / PoC
 10. 确认不超出当前 Phase 和本任务范围

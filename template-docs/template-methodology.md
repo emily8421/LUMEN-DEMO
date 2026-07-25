@@ -94,6 +94,30 @@
 | `ai/prompts/` | 可复制 Prompt | 项目事实和规则权威源 |
 | `CONTRIBUTING.md`、`MAINTAINERS.md` | 模板治理与维护 | 派生项目业务约束 |
 
+**模板分层架构图源**（与根 `README.md`「模板一览」一致，供派生项目参考模板分层）：
+
+```mermaid
+flowchart TB
+  subgraph 手册["template-docs/ 手册层"]
+    M["scenario-guides / beginner-guide / glossary"]
+  end
+  subgraph 规则["ai/ 规则层"]
+    A["index → global / document / implementation / session-rules"]
+  end
+  subgraph 事实["docs/ 项目事实层"]
+    D["00-09 / design / inputs / decisions"]
+  end
+  subgraph 代码["代码层"]
+    C["frontend / backend / tests / scripts"]
+  end
+  subgraph 治理["治理与双向闭环"]
+    G["_proposals ↔ PR ↔ VERSION/CHANGELOG ↔ sync"]
+  end
+  A -->|约束| D -->|约束| C
+  M -.引导.-> A
+  G <-->|回流 / 下行同步| D
+```
+
 ### `docs/` 与 `ai/` 的分工（为什么各不承载对方内容）
 
 为什么 `docs/` 不承载模板自身设计：
@@ -126,7 +150,7 @@
 
 - 功能范围：`[P1]`、`[P2]`、`[愿景]`。
 - 交付物形态：`Demo`、`MVP`、`产品`。
-- 状态标签：`骨架`、`P{N}-已设计`、`P{N}-已实现`。
+- 状态标签：`设计骨架`、`P{N}-已设计`、`P{N}-已实现`。
 
 这样设计的原因是：
 
