@@ -15,7 +15,9 @@
 
 ## 适用场景
 
-派生项目需要同步 `ai-project-template` 的最新方法论文件，并在同步后完成边界验证、同步后整理、文档体系审计、项目验证建议和同步报告留痕；若旧流程已完成同步提交但后续闭环缺失，本命令也用于从边界验证开始补完后续。
+派生项目或领域模板需要同步 `ai-project-template` 的最新通用方法论文件，并在同步后完成边界验证、同步后整理、文档体系审计、项目验证建议和同步报告留痕；若旧流程已完成同步提交但后续闭环缺失，本命令也用于从边界验证开始补完后续。
+
+不适用：领域派生项目同步领域 overlay 时，应读取对应领域模板维护的 L2→L3 场景剧本（L2-to-L3 playbook）和领域同步脚本；不要让领域 L3 直接跨层同步母模板。
 
 ## 必读文件
 
@@ -25,22 +27,29 @@
 - `template-docs/derived-sync-report-template.md`
 - `scripts/sync-template.ps1`
 - `scripts/check-derived-sync.ps1`
+- `ai-records/project-registry/README.md` 与 `ai-records/project-registry/registry.md`（仅当从模板仓发起“同步至派生项目 / 同步 N 个派生”时读取）
 
 ## 执行流程
 
-1. 判断当前仓库是否为派生项目，而不是模板仓库本身。
-2. 检查 Git 状态、当前 `VERSION`、`TEMPLATE-BASE.md`（若存在）、同步脚本与 `template-sync.json` 是否存在。
-3. 按 `git-guide.md` §5 和 `12-sync-template` 判断是旧项目首次同步、v1.6.8+ 后续同步，还是“已同步但只补后续”的同步后续接模式。
-4. 先输出标准闭环计划；若为同步后续接模式，明确跳过 dry-run / commit，从 `check-derived-sync` 开始。
-5. 用户确认后执行同步命令；普通派生项目优先使用 `--preserve-project-version` 保留项目自身 `VERSION` 并更新 `TEMPLATE-BASE.md`，领域模板改用 `--domain-template` 保留领域模板自身 `VERSION` / `CHANGELOG.md` 并更新领域版 `TEMPLATE-BASE.md`；同步后续接模式不重新执行同步命令。
-6. 同步后运行 `check-derived-sync`，不要用 `check-template` 验收派生项目。
-7. 检查派生项目 workflow：普通 PR 不应运行模板仓 `scripts/check-template.sh`；如仍保留 `.github/workflows/template-check.yml`，提示迁移为派生项目版 `.github/workflows/project-check.yml`。
-8. 触发或引导执行 `post-sync-cleanup`，先输出整理审计与迁移计划；实际移动 / 修改项目事实文档前再次确认。
-9. 触发或引导执行 `docs-system-audit` 的同步后审计模式，判断旧方法生成的 `docs/00-09`、`docs/design/`、`docs/env/` 是否需按新方法回梳。
-10. 给出项目验证建议；若无法运行测试 / lint / 人工验收，记录为未验证项，不写成已通过。
-11. 生成或更新派生同步运行记录，推荐路径：`sync-records/template-sync/YYYY-MM-DD-sync-template-vX.Y.Z.md`（长期记录，与项目文档分离）；若用户暂不想提交，可先写入 `.ai/session-handoff.md`。
-12. 检查派生项目本地 `_proposals/`、续接记录、同步运行记录和已提交到模板仓的 issue 链接，判断哪些回流提案已被模板采纳 / 决议 / 延后，并给出归档或保留建议。
-13. 从运行记录中判断是否存在新的可通用模板优化点；如有，生成去项目化 `_proposals/TEMPLATE-UPGRADE-*.md`。
+1. 判断当前仓库角色：
+   - 若当前在普通派生项目根目录，按常规 A13 同步流程执行。
+   - 若当前在领域模板根目录，按 A13 的领域模板角色口径执行，使用 `--domain-template` 保留领域模板自身版本空间。
+   - 若当前在领域派生项目且目标是同步领域标准件，停止跨层操作，转对应领域模板的 L2→L3 场景剧本。
+   - 若当前在 `ai-project-template` 模板仓，且用户要求“同步至派生项目 / 同步 N 个派生 / 同步 LUMEN、zhiyan 等”，进入**模板仓发起模式**：先读取 `ai-records/project-registry/README.md` 与 `registry.md`，用 `Project` / `Aliases` / `Status` / `Path status` 解析目标项目和本地路径；不得先全盘递归找目录，除非 registry 缺失或记录不完整。
+2. 模板仓发起模式下，对每个目标项目做只读预检：`Local path` 存在且 `Path status=verified`、路径是 git 仓、工作区干净、`TEMPLATE-BASE.md` lineage 与 `Sync mode` 不冲突；若路径为 missing / stale-risk，先列为待确认项并停下。
+3. 进入每个派生项目后，检查 Git 状态、当前 `VERSION`、`TEMPLATE-BASE.md`（若存在）、同步脚本与 `template-sync.json` 是否存在。
+4. 按 `git-guide.md` §5 和 `12-sync-template` 判断是旧项目首次同步、v1.6.8+ 后续同步，还是“已同步但只补后续”的同步后续接模式。
+5. 先输出标准闭环计划；若为同步后续接模式，明确跳过 dry-run / commit，从 `check-derived-sync` 开始。
+6. 用户确认后执行同步命令；普通派生项目优先使用 `--preserve-project-version` 保留项目自身 `VERSION` 并更新 `TEMPLATE-BASE.md`，领域模板改用 `--domain-template` 保留领域模板自身 `VERSION` / `CHANGELOG.md` 并更新领域版 `TEMPLATE-BASE.md`；同步后续接模式不重新执行同步命令。
+7. 同步后运行 `check-derived-sync`，不要用 `check-template` 验收派生项目。
+8. 检查派生项目 workflow：普通 PR 不应运行模板仓 `scripts/check-template.sh`；如仍保留 `.github/workflows/template-check.yml`，提示迁移为派生项目版 `.github/workflows/project-check.yml`。
+9. 触发或引导执行 `post-sync-cleanup`，先输出整理审计与迁移计划；实际移动 / 修改项目事实文档前再次确认。
+10. 触发或引导执行 `docs-system-audit` 的同步后审计模式，判断旧方法生成的 `docs/00-09`、`docs/design/`、`docs/env/` 是否需按新方法回梳。
+11. 给出项目验证建议；若无法运行测试 / lint / 人工验收，记录为未验证项，不写成已通过。
+12. 生成或更新派生同步运行记录，推荐路径：`sync-records/template-sync/YYYY-MM-DD-sync-template-vX.Y.Z.md`（长期记录，与项目文档分离）；若用户暂不想提交，可先写入 `.ai/session-handoff.md`。
+13. 检查派生项目本地 `_proposals/`、续接记录、同步运行记录和已提交到模板仓的 issue 链接，判断哪些回流提案已被模板采纳 / 决议 / 延后，并给出归档或保留建议。
+14. 从运行记录中判断是否存在新的可通用模板优化点；如有，生成去项目化 `_proposals/TEMPLATE-UPGRADE-*.md`。
+15. 模板仓发起模式完成后，回到模板仓更新 registry 的 point-in-time 字段（Inherited / Own ver / Last sync / Notes / Path status），但不得让 registry 替代派生仓库的同步提交、PR、`TEMPLATE-BASE.md` 或同步运行记录。
 
 ## A13 完成判据门禁
 

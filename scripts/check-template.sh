@@ -10,6 +10,11 @@
 #   1. 基础 helper：文件 / 目录 / 内容断言。
 #   2. 专项检查函数：复杂或容易增长的检查主题。
 #   3. 主流程：按入口、文档、治理、脚本、同步清单、样例分组调度。
+#
+# 断言哲学（防膨胀）:
+#   断言只守「行为 / 结构 / 口径 / 同步范围」，不守「内部函数名、写死的版本号、
+#   可替换的文案措辞」。守实现细节会让重构 / 升级误触发自检失败，反而阻碍维护；
+#   守护目标优先用「用户可见的输出 / 诊断文本」表达，而非内部符号。
 set -euo pipefail
 
 # 参数（opt-in）：--summary / --quiet 只输出分区计数、总数与失败项，不逐条打印 ✓；默认仍全量，CI 不受影响。
@@ -32,13 +37,30 @@ export GIT_CONFIG_VALUE_0=false
 export GIT_CONFIG_KEY_1=core.safecrlf
 export GIT_CONFIG_VALUE_1=false
 
+# MSYS PATH 自举守卫（MSYS_PATH_GUARD）：非登录 bash 或 PATH 被沙箱刮掉时，
+# /usr/bin（dirname/grep/sed）与 /mingw64/bin（git）可能不在 PATH 上，导致
+# 早期 dirname/sed/git 调用塌掉、后续雪崩。只用 bash 内建判定
+# （command -v / [[ -d ]]），不依赖 uname 等外部工具——触发场景本身就是 /usr/bin 缺失。
+# 三种 canonical 调用方式见 template-docs/env-setup.md §8.1。
+if [[ -z "${MSYS_PATH_GUARD:-}" ]] && ! command -v dirname >/dev/null 2>&1; then
+  for _guard_dir in /usr/bin /mingw64/bin /mingw32/bin; do
+    [[ -d "$_guard_dir" ]] || continue
+    case ":${PATH:-}:" in
+      *":$_guard_dir:"*) ;;
+      *) PATH="$_guard_dir:$PATH" ;;
+    esac
+  done
+  export PATH MSYS_PATH_GUARD=1
+fi
+
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
 # early-exit 守卫：ROOT 不像模板根 或 核心前置文件缺失时早退，避免一次环境 / 入口故障引爆上千条假 ✗（token 炸弹）。
 if [[ ! -d "$ROOT/.git" || ! -f "$ROOT/VERSION" ]]; then
   echo "✗ 环境守卫: ROOT($ROOT) 不像模板仓库根目录（缺 .git 或 VERSION），多为 bash 入口 / PATH 环境问题，非模板内容失败。" >&2
-  echo "  复现诊断: bash --version; command -v dirname grep sed; echo ROOT=$ROOT" >&2
+  echo "  复现诊断: bash --version; command -v dirname grep sed git; echo ROOT=$ROOT; uname -s" >&2
+  echo "  若 dirname/git 缺失：非登录 bash 或沙箱刮了 PATH；三种 canonical 调用方式见 template-docs/env-setup.md §8.1。" >&2
   exit 2
 fi
 for _prereq in README.md VERSION template-sync.json ai/index.md; do
@@ -208,7 +230,14 @@ require_changelog_current_version() {
   require_contains "CHANGELOG.md" "^## ${version//./\\.}（" "CHANGELOG 包含当前 VERSION: $version"
 
   local first_version
-  first_version="$(grep -E '^## v[0-9]+\.[0-9]+\.[0-9]+（' CHANGELOG.md | head -n 1 | sed -E 's/^## (v[0-9]+\.[0-9]+\.[0-9]+).*/\1/')"
+  local changelog_line
+  first_version=""
+  while IFS= read -r changelog_line; do
+    if [[ "$changelog_line" =~ ^##[[:space:]]+(v[0-9]+\.[0-9]+\.[0-9]+) ]]; then
+      first_version="${BASH_REMATCH[1]}"
+      break
+    fi
+  done < CHANGELOG.md
   if [[ "$first_version" == "$version" ]]; then
     pass "CHANGELOG 最新三段式版本位于顶部: $version"
   else
@@ -397,6 +426,7 @@ require_new_project_local_smoke() {
   require_file "$project_dir/README.md"
   require_contains "$project_dir/VERSION" '^v0\.1\.0$' "new-project 烟测 VERSION 使用项目自有初始版本 v0.1.0"
   require_contains "$project_dir/CHANGELOG.md" '^## v0\.1\.0（' "new-project 烟测 CHANGELOG 顶部项目版本匹配 v0.1.0"
+  require_contains "$project_dir/CHANGELOG-PLAIN.md" '^## v0\.1\.0（' "new-project 烟测 CHANGELOG-PLAIN 顶部项目版本匹配 v0.1.0"
   require_contains "$project_dir/TEMPLATE-BASE.md" 'Project version at sync time: v0\.1\.0' "new-project 烟测 TEMPLATE-BASE 记录项目版本起点"
   require_contains "$project_dir/.github/workflows/project-check.yml" 'Check project version consistency' "new-project 烟测 workflow 校验项目版本一致性"
   require_contains "$project_dir/ai/project-rules.md" '## 2\.8 项目版本管理' "new-project 烟测 project-rules 含项目版本管理"
@@ -609,11 +639,8 @@ check_project_bootstrap_scripts() {
   require_contains "scripts/collect-env.ps1" '服务器资源预案' "collect-env 保留服务器资源预案"
   require_contains "scripts/check-prereqs.ps1" 'Git Bash' "check-prereqs 检查 Git Bash"
   require_contains "scripts/check-prereqs.ps1" 'bootstrap-dev-env\.ps1' "check-prereqs 提示一键安装脚本"
-  require_contains "scripts/check-prereqs.ps1" 'Get-DeclaredNodeVersion' "check-prereqs 含运行时声明版本读取（阶段 1 声明 vs 实际对比）"
   require_contains "scripts/check-prereqs.ps1" 'major version drift' "check-prereqs 含 Node 主版本漂移告警"
-  require_contains "scripts/check-prereqs.ps1" 'Get-NodeResolutionHint' "check-prereqs 含阶段 2 node 解析路径健康提示"
   require_contains "scripts/check-prereqs.ps1" 'bypassing shim' "check-prereqs 阶段 2 告警提示 Volta image 绕过 shim"
-  require_contains "scripts/check-runtime.ps1" 'Resolve-NodeSource' "check-runtime 含 node 解析来源判定"
   require_contains "scripts/check-runtime.ps1" 'major drift' "check-runtime 含声明 vs 实际主版本漂移判定"
   require_contains "scripts/check-runtime.ps1" 'persistent' "check-runtime 区分会话注入 vs 持久 PATH 污染"
   require_contains "scripts/check-runtime.ps1" 'declaration consistency' "check-runtime 含混合 manager 双声明文件一致性诊断"
@@ -622,7 +649,7 @@ check_project_bootstrap_scripts() {
   require_contains "scripts/bootstrap-dev-env.ps1" 'Git\.Git' "bootstrap 脚本安装 Git for Windows"
   require_contains "scripts/bootstrap-dev-env.ps1" 'GitHub\.cli' "bootstrap 脚本安装 GitHub CLI"
   require_contains "scripts/bootstrap-dev-env.ps1" 'OpenJS\.NodeJS\.LTS' "bootstrap 脚本安装 Node.js LTS"
-  require_contains "scripts/bootstrap-dev-env.ps1" 'Python\.Python\.3\.11' "bootstrap 脚本安装 Python"
+  require_contains "scripts/bootstrap-dev-env.ps1" 'Python\.Python\.3' "bootstrap 脚本安装 Python 3.x"
   require_contains "scripts/bootstrap-dev-env.ps1" 'Microsoft\.VisualStudioCode' "bootstrap 脚本安装 VS Code"
 }
 
@@ -743,7 +770,11 @@ require_changelog_current_version
 require_changelog_semver_desc
 require_contains "CHANGELOG.md" '版本是发布边界，不是提案数量边界' "CHANGELOG 说明版本是发布边界"
 require_contains "CHANGELOG-PLAIN.md" 'Sync notice' "CHANGELOG-PLAIN 包含同步覆盖说明"
-require_contains "CHANGELOG-PLAIN.md" '权威版本事实仍以 `VERSION`、`CHANGELOG.md` 和 Git 历史为准' "CHANGELOG-PLAIN 说明不替代权威 changelog"
+require_contains "CHANGELOG-PLAIN.md" '记录母模板自身演进' "CHANGELOG-PLAIN 说明自身记录母模板演进"
+require_contains "CHANGELOG-PLAIN.md" '派生项目同步后，根目录 `CHANGELOG.md` / `CHANGELOG-PLAIN.md` 归派生项目自有' "CHANGELOG-PLAIN 说明派生项目 changelog 对归项目自有"
+require_contains "template-docs/beginner-guide.md" 'upstream/CHANGELOG\.md' "新手指南说明 upstream 母模板 changelog 继承参考"
+require_contains "template-docs/template-methodology.md" '模板仓本身不维护 `upstream/` 物理副本' "方法论手册说明 upstream 由同步脚本生成且模板仓不维护副本"
+require_contains "template-docs/domain-templates.md" 'upstream/CHANGELOG\.md' "领域模板说明 upstream changelog 继承参考"
 require_contains "CONTRIBUTING.md" '提案收件箱增长不触发版本递增' "CONTRIBUTING 区分提案收件箱与版本递增"
 require_contains "CONTRIBUTING.md" 'Release impact' "CONTRIBUTING 包含 release impact 决策"
 require_contains "CONTRIBUTING.md" '同主题小改可聚合为同一个版本发布' "CONTRIBUTING 说明同主题聚合发布"
@@ -864,6 +895,16 @@ require_contains "_archive/proposals/README.md" 'TEMPLATE-UPGRADE-version-impact
 # 派生项目登记（维护者侧索引，不入同步清单，不下行同步）
 require_file "ai-records/project-registry/README.md"
 require_contains "ai-records/project-registry/README.md" '不下行同步' "project-registry README 声明不下行同步"
+require_contains "ai-records/project-registry/README.md" '模板仓发起同步时优先读取' "project-registry README 说明模板仓发起同步优先读取 registry"
+require_contains "ai-records/project-registry/README.md" 'Path status' "project-registry README 定义 Path status"
+require_contains "ai-records/project-registry/registry.md" 'Sync mode' "project-registry registry 记录 Sync mode"
+require_contains "ai-records/project-registry/registry.md" 'Local path' "project-registry registry 记录 Local path"
+require_contains "ai/commands/sync-methodology.md" '模板仓发起模式' "sync-methodology 覆盖模板仓发起模式"
+require_contains "ai/commands/sync-methodology.md" 'ai-records/project-registry/registry\.md' "sync-methodology 要求读取 project registry"
+require_contains "ai/prompts/maintainers/12-sync-template.md" '模板仓发起模式' "同步 Prompt 覆盖模板仓发起模式"
+require_contains "ai/prompts/maintainers/12-sync-template.md" 'Path status=verified' "同步 Prompt 使用 Path status 区分目标"
+require_contains "git-guide.md" 'ai-records/project-registry/registry\.md' "git-guide 批量同步 registry 优先"
+require_contains "MAINTAINERS.md" 'ai-records/project-registry/registry\.md' "MAINTAINERS 批量同步 registry 优先"
 require_contains "CONTRIBUTING.md" '提案 → 分支 → PR → 评审 → 合并 → 归档' "CONTRIBUTING 含提案先行流程"
 require_contains "CONTRIBUTING.md" 'vMAJOR\.MINOR\.PATCH' "CONTRIBUTING 含三段式版本规则"
 require_contains "CONTRIBUTING.md" '默认发布级别.*兼容增强' "CONTRIBUTING 说明 patch 是兼容增强默认级别"
@@ -874,13 +915,11 @@ require_contains "README.md" 'SOP\.md' "README 包含 SOP 索引入口"
 require_contains "README.md" 'ai/commands/README\.md' "README 包含 AI 快捷命令入口"
 require_contains "README.md" 'ai/session-rules\.md' "README 包含会话续接规则入口"
 require_contains "README.md" 'scenario-guides' "README 快速开始指向 scenario-guides"
-require_contains "README.md" 'SOP\.md' "README 快速开始指向 SOP"
 require_contains "README.md" 'beginner-guide' "README 快速开始指向 beginner-guide"
 require_contains "README.md" 'git-guide\.md' "README 指向 git-guide"
 require_contains "README.md" 'scripts/check-prereqs\.ps1' "README 提示环境检查"
 require_contains "README.md" 'scripts/bootstrap-dev-env\.ps1' "README 提示基础安装脚本"
 require_contains "README.md" 'template-docs/ai-cli-setup\.md' "README 包含 AI CLI 安装入口"
-require_contains "README.md" 'ai/session-rules\.md' "README 包含会话续接规则入口"
 require_contains "README.md" 'MAINTAINERS\.md' "README 指向 MAINTAINERS"
 require_contains "README.md" 'CHANGELOG\.md' "README 指向 CHANGELOG"
 require_contains "README.md" 'docs/README\.md' "README 指向 docs 分区规则"
@@ -1045,6 +1084,10 @@ require_contains "scripts/check-derived-sync.sh" '同步清单外变更' "check-
 require_contains "scripts/check-derived-sync.sh" 'README 模板版本' "check-derived-sync 含 README 模板版本一致性告警（非阻断）"
 require_contains "scripts/check-derived-sync.sh" 'TEMPLATE-BASE\.md' "check-derived-sync 支持普通派生项目继承版本记录"
 require_contains "scripts/check-derived-sync.ps1" 'TEMPLATE-BASE\.md' "check-derived-sync PowerShell fallback 支持继承版本记录"
+require_contains "scripts/check-derived-sync.sh" 'upstream/CHANGELOG\.md\|upstream/CHANGELOG-PLAIN\.md' "check-derived-sync Bash 仅放行 upstream changelog 继承参考对"
+require_contains "scripts/check-derived-sync.ps1" 'upstream/CHANGELOG-PLAIN\.md' "check-derived-sync PowerShell fallback 放行 upstream changelog 继承参考对"
+require_contains "scripts/check-derived-sync.sh" 'Upstream template changelog reference' "check-derived-sync Bash 校验 upstream changelog 定位说明"
+require_contains "scripts/check-derived-sync.ps1" 'Upstream template changelog reference' "check-derived-sync PowerShell fallback 校验 upstream changelog 定位说明"
 require_contains "scripts/check-derived-sync.sh" 'Domain standards scope' "check-derived-sync 校验领域版 TEMPLATE-BASE.md 领域标准件字段"
 require_contains "scripts/check-derived-sync.ps1" 'Domain standards scope' "check-derived-sync PowerShell fallback 校验领域版 TEMPLATE-BASE.md"
 require_contains "scripts/check-derived-sync.sh" 'README\.md\|ai/project-rules\.md\|docs/0\[0-9\]-\*' "check-derived-sync 保护项目专属文件"
@@ -1057,16 +1100,32 @@ require_contains "scripts/sync-template.sh" 'core.autocrlf=false' "sync-template
 require_contains "scripts/sync-template.ps1" 'core.autocrlf=false' "sync-template PowerShell fallback dry-run diff 局部关 autocrlf"
 require_contains "scripts/sync-template.sh" 'detect_lineage_role' "sync-template 自动判定 TEMPLATE-BASE 普通版/领域版角色"
 require_contains "scripts/sync-template.sh" 'TEMPLATE-BASE\.md' "sync-template 维护普通派生项目继承版本记录"
+require_contains "scripts/sync-template.sh" 'VERSION\|CHANGELOG\.md\|CHANGELOG-PLAIN\.md' "sync-template Bash 保留过滤含 CHANGELOG-PLAIN"
+require_contains "scripts/sync-template.sh" 'warn_if_changelog_plain_needs_project_rewrite' "sync-template Bash 含 CHANGELOG-PLAIN 存量迁移提示"
+require_contains "scripts/sync-template.sh" 'sync_upstream_changelog_references' "sync-template Bash 生成 upstream changelog 继承参考"
+require_contains "scripts/sync-template.sh" 'Upstream template changelog reference' "sync-template Bash 为 upstream changelog 写入定位说明"
 require_contains "scripts/sync-template.sh" '--domain-template' "sync-template 支持领域模板角色保留自身 VERSION/CHANGELOG"
 require_contains "scripts/sync-template.sh" 'write_domain_template_base' "sync-template 维护领域版 TEMPLATE-BASE.md"
 require_contains "scripts/sync-template.sh" 'extract_legacy_domain_standards_scope' "sync-template 迁移旧领域版 TEMPLATE-BASE.md 标准件范围"
 require_contains "scripts/sync-template.sh" '叠加的标准件范围' "sync-template 兼容旧领域版 TEMPLATE-BASE.md 中文范围标题"
 require_contains "scripts/sync-template.ps1" '--preserve-project-version' "sync-template PowerShell fallback 支持保留自身 VERSION"
 require_contains "scripts/sync-template.ps1" 'Get-LineageRole' "sync-template PowerShell fallback 自动判定 TEMPLATE-BASE 角色"
+require_contains "scripts/sync-template.ps1" '\$_ -ne "CHANGELOG-PLAIN\.md"' "sync-template PowerShell fallback 保留过滤含 CHANGELOG-PLAIN"
+require_contains "scripts/sync-template.ps1" 'Show-ChangelogPlainMigrationNotice' "sync-template PowerShell fallback 含 CHANGELOG-PLAIN 存量迁移提示"
+require_contains "scripts/sync-template.ps1" 'Write-UpstreamChangelogReference' "sync-template PowerShell fallback 生成 upstream changelog 继承参考"
+require_contains "scripts/sync-template.ps1" 'Upstream template changelog reference' "sync-template PowerShell fallback 为 upstream changelog 写入定位说明"
 require_contains "scripts/sync-template.ps1" '--domain-template' "sync-template PowerShell fallback 支持领域模板角色"
 require_contains "scripts/sync-template.ps1" 'Write-DomainTemplateBase' "sync-template PowerShell fallback 维护领域版 TEMPLATE-BASE.md"
 require_contains "scripts/sync-template.ps1" 'Get-LegacyDomainStandardsScope' "sync-template PowerShell fallback 迁移旧领域版 TEMPLATE-BASE.md 标准件范围"
 require_contains "scripts/sync-template.ps1" '叠加的标准件范围' "sync-template PowerShell fallback 兼容旧领域版 TEMPLATE-BASE.md 中文范围标题"
+# Windows Git Bash 入口健壮性：.sh 自举 MSYS PATH 守卫（坑 2：非登录 bash 缺 /usr/bin 工具箱）+
+# env-setup §8.1 防漂移（坑 1：PS5.1 内嵌双引号丢变量）。坑 1 由文档+断言约束，不靠脚本自救。
+require_contains "scripts/check-template.sh" 'MSYS_PATH_GUARD' "check-template.sh 含 MSYS PATH 自举守卫（dirname 缺失时前置 /usr/bin + mingw 目录）"
+require_contains "scripts/sync-template.sh" 'MSYS_PATH_GUARD' "sync-template.sh 含 MSYS PATH 自举守卫"
+require_contains "scripts/new-project.sh" 'MSYS_PATH_GUARD' "new-project.sh 含 MSYS PATH 自举守卫"
+require_contains "template-docs/env-setup.md" 'MSYS_PATH_GUARD' "env-setup §8.1 引用 MSYS PATH 自举守卫关键词"
+require_contains "template-docs/env-setup.md" '继承当前工作目录|env 变量|wrapper 文件' "env-setup §8.1 提供避开 PS5.1 内嵌双引号坑的三种 canonical 调用"
+require_absent_dir "upstream"
 require_contains "scripts/sync-template.sh" 'http\.proxy|HTTPS_PROXY' "sync-template fetch 失败提示受限网络代理配置（git http.proxy + gh HTTPS_PROXY）"
 require_contains "scripts/sync-template.ps1" 'http\.proxy|HTTPS_PROXY' "sync-template PowerShell fallback fetch 失败提示受限网络代理配置"
 require_contains "scripts/check-derived-sync.sh" 'ai/doc-standards/\*' "check-derived-sync 放行 doc-standards 规范镜像"
@@ -1153,9 +1212,13 @@ require_contains "ai/prompts/planning/19-plan-phases-and-sprints.md" 'docs/09-ve
 require_contains "ai/session-rules.md" '\.ai/session-handoff\.md' "session-rules 定义新续接文件"
 require_contains "ai/session-rules.md" 'NEXT-STEPS\.md' "session-rules 兼容 NEXT-STEPS"
 require_contains "ai/session-rules.md" 'Token 热点观察触发' "session-rules 定义 token hotspot 主动提醒"
+require_contains "ai/session-rules.md" '\.ai/token-hotspots/' "session-rules 定义 token hotspot 单条本地路径"
 require_contains "ai/session-rules.md" 'ai-records/token-hotspots/' "session-rules 定义 token hotspot 记录目录"
 require_contains "ai/session-rules.md" '累计 summary 触发' "session-rules 定义 token hotspot 累计 summary 触发"
 require_contains "ai/session-rules.md" 'ai-records/token-hotspots/SUMMARY.md' "session-rules 定义 token hotspot summary 文件"
+require_contains ".gitignore" '\.ai/token-hotspots/' ".gitignore 排除本地 token hotspot 记录"
+require_contains "MAINTAINERS.md" '\.ai/token-hotspots/' "MAINTAINERS 区分本地 token hotspot 记录"
+require_contains "template-docs/rd-data-chain.md" '\.ai/token-hotspots/' "rd-data-chain 区分本地 token hotspot 记录"
 require_contains "ai/session-rules.md" '同会话规则复用边界' "session-rules 定义同会话规则复用边界"
 require_contains "ai/session-rules.md" '后续顺序治理步骤可复用已加载规则' "session-rules 限定同会话复用规则"
 require_contains "ai/session-rules.md" '验证证据摘要约定' "session-rules 定义成功验证摘要约定"
@@ -1553,10 +1616,30 @@ require_contains "template-docs/scenario-guides.md" '母模板 → 领域模板 
 require_contains "template-docs/scenario-guides.md" 'Phase 0 预检' "A20 要求领域模板创建前预检"
 require_contains "template-docs/scenario-guides.md" '未向母模板新增领域 scaffold|不把领域 scaffold 直接塞进母模板' "A20 禁止领域 scaffold 污染母模板"
 require_contains "template-sync.json" 'template-docs/domain-templates\.md' "同步清单包含领域模板方法论文档"
+require_contains "template-sync.json" 'template-docs/domain-derived-scenarios-template\.md' "同步清单包含领域派生项目场景剧本模板"
+require_contains "scripts/sync-template.sh" 'template-docs/domain-derived-scenarios-template\.md' "sync-template Bash fallback 包含领域派生项目场景剧本模板"
 require_file "template-docs/domain-templates.md"
+require_file "template-docs/domain-derived-scenarios-template.md"
 require_contains "template-docs/domain-templates.md" '可选中间层' "领域模板文档定位为可选中间层"
 require_contains "template-docs/domain-templates.md" '母模板 → 领域模板 → 项目' "领域模板文档定义三层继承模型"
 require_contains "template-docs/domain-templates.md" '主线治理仍为两层' "领域模板文档声明主线仍为两层（防回退为强制三层）"
+require_contains "template-docs/domain-templates.md" 'domain-derived-scenarios\.md' "领域模板文档定义 L2→L3 场景剧本入口"
+require_contains "template-docs/domain-templates.md" 'domain-derived-scenarios-template\.md' "领域模板文档指向 L2→L3 通用骨架"
+require_contains "template-docs/domain-derived-scenarios-template.md" 'L2-to-L3 playbook template' "领域派生项目场景剧本模板声明英文稳定定位"
+require_contains "template-docs/domain-derived-scenarios-template.md" 'domain-derived-scenarios\.md' "领域派生项目场景剧本模板说明复制目标"
+require_contains "template-docs/domain-derived-scenarios-template.md" '适用性判断' "领域派生项目场景剧本模板覆盖适用性判断"
+require_contains "template-docs/domain-derived-scenarios-template.md" '发布后的下游同步' "领域派生项目场景剧本模板覆盖发布后下游同步"
+require_contains "template-docs/scenario-guides.md" '三层路径矩阵' "场景引导包含三层路径矩阵"
+require_contains "template-docs/scenario-guides.md" 'L2→L3 场景剧本' "场景引导要求领域模板规划 L2→L3 场景剧本"
+require_contains "template-docs/scenario-guides.md" 'domain-derived-scenarios-template\.md' "场景引导指向 L2→L3 通用骨架"
+require_contains "ai/commands/domain-template-lab.md" 'L2→L3 场景剧本' "domain-template-lab 命令要求规划 L2→L3 场景剧本"
+require_contains "ai/commands/domain-template-lab.md" 'domain-derived-scenarios-template\.md' "domain-template-lab 命令指向 L2→L3 通用骨架"
+require_contains "ai/prompts/maintainers/23-domain-template-lab.md" 'domain-derived-scenarios\.md' "domain-template-lab Prompt 收录领域派生项目场景剧本资产"
+require_contains "ai/prompts/maintainers/23-domain-template-lab.md" 'domain-derived-scenarios-template\.md' "domain-template-lab Prompt 收录 L2→L3 通用骨架"
+require_contains "ai/commands/new-project.md" '领域派生项目.*L2→L3 场景剧本|L2→L3 场景剧本.*领域派生项目' "new-project 命令区分领域派生项目路由"
+require_contains "ai/commands/sync-methodology.md" '领域 L3 直接跨层同步母模板' "sync-methodology 命令禁止领域 L3 跨层同步母模板"
+require_contains "ai/commands/submit-proposal.md" '领域 L3.*领域模板.*跨领域通用结论|跨领域通用结论.*领域模板.*领域 L3' "submit-proposal 命令定义相邻层回流"
+require_contains "ai/commands/submit-feedback.md" '领域 L3.*领域模板.*跨领域通用结论|跨领域通用结论.*领域模板.*领域 L3' "submit-feedback 命令定义相邻层反馈"
 require_contains "template-docs/glossary.md" '领域模板（domain template）' "术语表收录领域模板条目"
 require_file "ai/commands/show-demo.md"
 require_contains "ai/commands/show-demo.md" '查看演示效果' "show-demo 命令定位查看演示效果"

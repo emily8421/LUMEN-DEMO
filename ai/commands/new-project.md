@@ -12,7 +12,9 @@
 
 ## 适用场景
 
-需要从 `ai-project-template` 创建新的派生项目。
+需要从 `ai-project-template` 创建新的普通 L3 派生项目。
+
+不适用：创建领域模板时转 A20 / `/run domain-template-lab`；创建领域派生项目时读取对应领域模板维护的 L2→L3 场景剧本（L2-to-L3 playbook），母模板 `new-project` 只作为过渡期底座候选，不直接承担领域 overlay 初始化。
 
 ## 必读文件
 

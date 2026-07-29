@@ -18,6 +18,22 @@
 # 说明: 默认从 GitHub main 派生（事实来源）；--local 走本地。两种产物等价，派生时任选。
 set -euo pipefail
 
+# MSYS PATH 自举守卫（MSYS_PATH_GUARD）：非登录 bash 或 PATH 被沙箱刮掉时，
+# /usr/bin（dirname/grep/sed）与 /mingw64/bin（git）可能不在 PATH 上，导致
+# 早期 dirname/sed/git 调用塌掉、后续雪崩。只用 bash 内建判定
+# （command -v / [[ -d ]]），不依赖 uname 等外部工具——触发场景本身就是 /usr/bin 缺失。
+# 三种 canonical 调用方式见 template-docs/env-setup.md §8.1。
+if [[ -z "${MSYS_PATH_GUARD:-}" ]] && ! command -v dirname >/dev/null 2>&1; then
+  for _guard_dir in /usr/bin /mingw64/bin /mingw32/bin; do
+    [[ -d "$_guard_dir" ]] || continue
+    case ":${PATH:-}:" in
+      *":$_guard_dir:"*) ;;
+      *) PATH="$_guard_dir:$PATH" ;;
+    esac
+  done
+  export PATH MSYS_PATH_GUARD=1
+fi
+
 ACCOUNT="${ACCOUNT:-}"
 VISIBILITY="${VISIBILITY:-private}"
 NO_EXAMPLES=0
@@ -142,6 +158,15 @@ cat > "$TARGET/CHANGELOG.md" <<EOF
 ## $DERIVED_PROJECT_VERSION（$(date +%Y-%m-%d)）
 
 - 初始化项目，基于 ai-project-template $TEMPLATE_VERSION 创建。
+EOF
+cat > "$TARGET/CHANGELOG-PLAIN.md" <<EOF
+# CHANGELOG-PLAIN
+
+本文件记录派生项目自身版本历史的大白话说明；继承的母模板版本见 \`TEMPLATE-BASE.md\`。
+
+## $DERIVED_PROJECT_VERSION（$(date +%Y-%m-%d)）
+
+初始化项目，基于 ai-project-template $TEMPLATE_VERSION 创建。后续这里记录“这个项目自己每个版本改善了什么”，不记录母模板自身版本历史。
 EOF
 cat > "$TARGET/TEMPLATE-BASE.md" <<EOF
 # Template Base
@@ -268,7 +293,7 @@ cat > "$TARGET/README.md" <<EOF
 
 - 通用方法论来自 \`ai-project-template\`。
 - 项目自身版本记录在 \`VERSION\`；继承 / 当前同步到的模板版本记录在 \`TEMPLATE-BASE.md\`。
-- 新建项目默认以 \`v0.1.0\` 作为项目自有版本起点，\`CHANGELOG.md\` 顶部项目版本应与 \`VERSION\` 保持一致。
+- 新建项目默认以 \`v0.1.0\` 作为项目自有版本起点，\`CHANGELOG.md\` / \`CHANGELOG-PLAIN.md\` 顶部项目版本应与 \`VERSION\` 保持一致。
 - 文档生成、追溯链、变更传播与多入口规则见 \`ai/document-lifecycle-rules.md\`；可复制 Prompt 见 \`INIT-PROMPT.md\` 索引与 \`ai/prompts/\`。
 - 根 \`README.md\` 是项目专属文档，不参与模板下行同步。
 - 模板方法论文件由 \`template-sync.json\` 定义，执行 \`scripts/sync-template.*\` 时可能被覆盖。

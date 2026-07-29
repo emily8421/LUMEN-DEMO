@@ -31,6 +31,20 @@ require_file() {
   fi
 }
 
+require_contains() {
+  local file="$1"
+  local pattern="$2"
+  local message="$3"
+
+  if [[ ! -f "$file" ]]; then
+    fail "$message（文件缺失: $file）"
+  elif grep -qE "$pattern" "$file"; then
+    pass "$message"
+  else
+    fail "$message"
+  fi
+}
+
 extract_sync_files() {
   sed -n '/"files"[[:space:]]*:[[:space:]]*\[/,/\]/ s/^[[:space:]]*"\([^"]\+\)"[[:space:]]*,\{0,1\}[[:space:]]*$/\1/p' template-sync.json
 }
@@ -39,6 +53,7 @@ is_sync_file() {
   local changed_file="$1"
   case "$changed_file" in
     TEMPLATE-BASE.md) return 0 ;;   # 普通派生项目路线 A：继承模板版本记录，由 sync-template --preserve-project-version 维护
+    upstream/CHANGELOG.md|upstream/CHANGELOG-PLAIN.md) return 0 ;; # 母模板 changelog 继承参考，由 sync-template 映射生成
     ai/doc-standards/*) return 0 ;; # 模板 00-09 撰写规范镜像，由 sync-template 专用镜像步骤产生
     docs/_scaffold/*) return 0 ;;   # v1.18.x 旧规范镜像路径，迁移期兼容
   esac
@@ -175,6 +190,19 @@ elif [[ -f "VERSION" && -f "README.md" ]]; then
   fi
 else
   echo "ℹ️  缺少 VERSION 或 README.md，跳过版本号一致性检查"
+fi
+
+echo
+echo "==> 母模板 changelog 继承参考（upstream/）"
+if [[ -f "TEMPLATE-BASE.md" ]]; then
+  require_file "upstream/CHANGELOG.md"
+  require_file "upstream/CHANGELOG-PLAIN.md"
+  require_contains "upstream/CHANGELOG.md" 'Upstream template changelog reference' "upstream/CHANGELOG.md 标注为母模板 changelog 继承参考"
+  require_contains "upstream/CHANGELOG-PLAIN.md" 'Upstream template changelog reference' "upstream/CHANGELOG-PLAIN.md 标注为母模板大白话 changelog 继承参考"
+  require_contains "upstream/CHANGELOG.md" '^# CHANGELOG' "upstream/CHANGELOG.md 保留正式 changelog 标题"
+  require_contains "upstream/CHANGELOG-PLAIN.md" '^# CHANGELOG-PLAIN' "upstream/CHANGELOG-PLAIN.md 保留大白话 changelog 标题"
+else
+  echo "ℹ️  未检测到 TEMPLATE-BASE.md；跳过 upstream/ 继承参考检查（旧式同名同步路径）。"
 fi
 
 echo

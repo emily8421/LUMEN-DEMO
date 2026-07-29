@@ -23,12 +23,30 @@
 
 > 事实来源：下行同步标准流程以 `git-guide.md` 与 `CONTRIBUTING.md` 为准；本节只是把该流程整理成可复制给 AI 执行的 Prompt。
 
+## 模板仓发起模式
+
+当当前工作目录是 `ai-project-template` 模板仓，且用户要求“同步至派生项目 / 同步 N 个派生 / 同步 LUMEN、zhiyan 等”时，不要直接假设当前目录就是派生项目，也不要先全盘递归查找目录。先读取：
+
+- `ai-records/project-registry/README.md`
+- `ai-records/project-registry/registry.md`
+
+执行要求：
+
+1. 用 registry 的 `Project` / `Aliases` / `Status` 解析用户目标；用户说“全部 / 4 派生”时，列出 active 项，并区分 `Path status=verified`、missing、stale-risk。
+2. 对 `Path status=verified` 的目标，逐个进入 `Local path` 做只读预检：路径存在、是 git 仓、工作区干净、`TEMPLATE-BASE.md` lineage 与 registry 的 `Sync mode` 不冲突。
+3. 对 missing / stale-risk 目标，先停下列待确认项，不得改用全盘递归猜路径继续同步。
+4. 输出逐项目同步计划，说明每个项目的同步模式：普通派生 `--preserve-project-version`，领域模板 `--domain-template`。
+5. 用户确认后，再在每个派生项目内按下方标准 SOP 执行 A13 闭环。
+6. 同步完成后回到模板仓，更新 registry 的 point-in-time 字段和 path status；live 事实仍以各派生项目 `git status`、`VERSION`、`TEMPLATE-BASE.md`、同步提交 / PR 和同步运行记录为准。
+
 ### 标准 SOP Prompt（直接复制到派生项目使用）
 
 ```text
 请按标准 SOP 帮我执行派生项目模板方法论下行同步。
 
 目标：将当前派生项目同步到 ai-project-template 最新模板方法论版本。目标版本必须以模板仓库根目录 `VERSION` 为准，不要使用本 Prompt 文本中的示例版本号。
+
+若当前目录是 `ai-project-template` 模板仓，且本轮目标是从模板仓同步到一个或多个派生项目，先进入“模板仓发起模式”：读取 `ai-records/project-registry/README.md` 与 `ai-records/project-registry/registry.md`，按 Project / Aliases / Local path / Path status / Sync mode 解析目标项目；路径 missing 或 stale-risk 时先停下列待确认项，不得先全盘递归找目录。确认目标路径后，再逐个进入派生项目执行本 SOP。
 
 先说明本次标准闭环计划：同步预检 → dry-run → 同步提交 → `check-derived-sync` 边界验证 → `post-sync-cleanup` 整理计划 → `docs-system-audit` 同步后审计 → 项目验证建议 → `sync-records/template-sync/` 同步报告。每一步说明是否只读、是否会写文件；写入前等待确认。若用户明确说已同步但只需补后续，或 Git 显示最近已有 `sync template vX.Y.Z from ai-project-template` 同步提交，则进入“同步后续接模式”：不要重新执行 dry-run / commit，先核对同步提交、`VERSION`、`TEMPLATE-BASE.md`（若存在）、工作区和既有同步记录，再从 `check-derived-sync` 边界验证开始补完后续闭环。
 

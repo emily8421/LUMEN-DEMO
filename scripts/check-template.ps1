@@ -8,10 +8,10 @@ Notes:
   This script prefers Git Bash so Windows does not accidentally invoke WSL
   bash. If Git Bash cannot be started from PowerShell on this machine, it
   falls back to a MINIMAL native PowerShell structural check (file/dir
-  existence, VERSION format, template-sync.json parse). All detailed content
-  assertions live only in check-template.sh and run when Bash is available;
-  the fallback intentionally does NOT mirror them, so adding a new assertion
-  no longer requires editing this file (avoids the double-mirror coupling).
+  existence, VERSION format, template-sync.json parse). Detailed content
+  assertions mostly live in check-template.sh and run when Bash is available;
+  the fallback mirrors only Windows-critical ownership guards that affect
+  PowerShell sync behavior.
   For release, always rely on CI or the Bash self-check.
 #>
 $ErrorActionPreference = "Stop"
@@ -169,9 +169,8 @@ function Invoke-NativeTemplateCheck {
   Write-Host "Running a MINIMAL native structural check instead."
   Write-Host ""
   Write-Host "Note: This fallback only checks structural integrity (key files/dirs exist,"
-  Write-Host "      VERSION format, template-sync.json parses). All detailed content"
-  Write-Host "      assertions run only via check-template.sh (Bash). For release, always"
-  Write-Host "      rely on CI or the Bash self-check."
+  Write-Host "      VERSION format, template-sync.json parses) plus Windows-critical"
+  Write-Host "      ownership guards. For release, always rely on CI or the Bash self-check."
 
   # --- Structural existence: key files ---
   foreach ($path in @(
@@ -236,10 +235,9 @@ function Invoke-NativeTemplateCheck {
     Fail "VERSION does not use vMAJOR.MINOR.PATCH"
   }
 
-  # Detailed content assertions (file-contains-keyword) are intentionally NOT
-  # mirrored here. They live only in check-template.sh and run when Bash is
-  # available. This keeps the fallback minimal and breaks the double-mirror
-  # coupling (adding an assertion no longer requires editing this file).
+  # Detailed content assertions mostly live in check-template.sh and run when
+  # Bash is available. Keep this fallback minimal; only mirror Windows-critical
+  # ownership guards that affect PowerShell sync behavior.
 
   # --- Structural: template-sync.json parses and lists existing files ---
   $syncFiles = Get-SyncFiles
@@ -259,6 +257,35 @@ function Invoke-NativeTemplateCheck {
   Require-Contains "AGENTS.md" "Sync notice" "AGENTS.md contains sync notice"
   Require-Contains "CLAUDE.md" "Sync notice" "CLAUDE.md contains sync notice"
   Require-Contains ".cursor/rules/project-rules.mdc" "Sync notice" "Cursor rules contain sync notice"
+  Require-Contains "scripts/sync-template.sh" 'VERSION\|CHANGELOG\.md\|CHANGELOG-PLAIN\.md' "sync-template Bash preserves project-owned CHANGELOG-PLAIN.md"
+  Require-Contains "scripts/sync-template.ps1" '\$_ -ne "CHANGELOG-PLAIN\.md"' "sync-template PowerShell fallback preserves project-owned CHANGELOG-PLAIN.md"
+  Require-Contains "scripts/sync-template.sh" 'sync_upstream_changelog_references' "sync-template Bash generates upstream changelog references"
+  Require-Contains "scripts/sync-template.ps1" 'Write-UpstreamChangelogReference' "sync-template PowerShell fallback generates upstream changelog references"
+  Require-Contains "scripts/check-derived-sync.sh" 'upstream/CHANGELOG\.md\|upstream/CHANGELOG-PLAIN\.md' "check-derived-sync Bash allows only upstream changelog references"
+  Require-Contains "scripts/check-derived-sync.ps1" 'upstream/CHANGELOG-PLAIN\.md' "check-derived-sync PowerShell fallback allows upstream changelog references"
+  Require-Contains "scripts/new-project.sh" 'CHANGELOG-PLAIN\.md' "new-project initializes project-owned CHANGELOG-PLAIN.md"
+  Require-Contains ".gitignore" '\.ai/token-hotspots/' ".gitignore excludes local token hotspot records"
+  Require-Contains "ai/session-rules.md" '\.ai/token-hotspots/' "session-rules defines local token hotspot path"
+  Require-Contains "ai/session-rules.md" 'ai-records/token-hotspots/SUMMARY\.md' "session-rules defines token hotspot summary path"
+  Require-Contains "MAINTAINERS.md" '\.ai/token-hotspots/' "MAINTAINERS distinguishes local token hotspot records"
+  Require-Contains "template-docs/rd-data-chain.md" '\.ai/token-hotspots/' "rd-data-chain distinguishes local token hotspot records"
+  Require-Contains "template-docs/domain-templates.md" 'L2-to-L3 playbook' "domain-templates defines L2-to-L3 playbook"
+  Require-Contains "template-docs/domain-templates.md" 'domain-derived-scenarios-template\.md' "domain-templates points to L2-to-L3 playbook template"
+  Require-Contains "template-docs/domain-derived-scenarios-template.md" 'L2-to-L3 playbook template' "domain-derived scenarios template defines stable role"
+  Require-Contains "template-docs/domain-derived-scenarios-template.md" 'domain-derived-scenarios\.md' "domain-derived scenarios template documents copy target"
+  Require-Contains "template-sync.json" 'domain-derived-scenarios-template\.md' "template-sync includes domain-derived scenarios template"
+  Require-Contains "scripts/sync-template.sh" 'domain-derived-scenarios-template\.md' "Bash fallback includes domain-derived scenarios template"
+  Require-Contains "template-docs/scenario-guides.md" 'L2-to-L3 playbook' "scenario-guides contains L2-to-L3 playbook routing"
+  Require-Contains "template-docs/scenario-guides.md" 'domain-derived-scenarios\.md' "scenario-guides points to domain-derived scenarios"
+  Require-Contains "template-docs/scenario-guides.md" 'domain-derived-scenarios-template\.md' "scenario-guides points to L2-to-L3 playbook template"
+  Require-Contains "ai/commands/domain-template-lab.md" 'L2-to-L3 playbook' "domain-template-lab command requires L2-to-L3 playbook"
+  Require-Contains "ai/commands/domain-template-lab.md" 'domain-derived-scenarios-template\.md' "domain-template-lab command points to L2-to-L3 playbook template"
+  Require-Contains "ai/prompts/maintainers/23-domain-template-lab.md" 'L2-to-L3 playbook' "domain-template-lab prompt lists L2-to-L3 playbook asset"
+  Require-Contains "ai/prompts/maintainers/23-domain-template-lab.md" 'domain-derived-scenarios-template\.md' "domain-template-lab prompt points to L2-to-L3 playbook template"
+  Require-Contains "ai/commands/new-project.md" 'L2-to-L3 playbook' "new-project command routes domain-derived project creation"
+  Require-Contains "ai/commands/sync-methodology.md" 'L2-to-L3 playbook' "sync-methodology command routes domain overlay sync"
+  Require-Contains "ai/commands/submit-proposal.md" 'adjacent-layer upstream' "submit-proposal command defines adjacent-layer proposal flow"
+  Require-Contains "ai/commands/submit-feedback.md" 'adjacent-layer upstream' "submit-feedback command defines adjacent-layer feedback flow"
 
   Write-Host ""
   if ($script:NativeFailures -eq 0) {

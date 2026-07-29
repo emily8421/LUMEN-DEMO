@@ -144,11 +144,11 @@ cd /path/ai-project-template && git worktree remove ../ai-tpl-wt2
 
 派生项目同步模板方法论更新时，优先使用同步脚本，不要手动逐文件复制。该流程是**模板 → 派生项目**的下行获取，不会把派生项目内容提交回模板。
 
-> **批量同步（维护者）**：发新版后要一次更新父目录下所有派生项目，用 `bash scripts/sync-all-derived.sh <父目录> --dry-run`（场景 C8），不用逐个进派生项目终端；确认后 `--commit`。
+> **批量同步（维护者）**：从模板仓目录发起“同步至派生项目 / 同步 N 个派生”时，优先读取维护者侧 `ai-records/project-registry/registry.md` 解析目标、别名、本地路径和同步模式；路径缺失或 stale-risk 先停下确认。`bash scripts/sync-all-derived.sh <父目录> --dry-run` 仅作为同父目录项目的 fallback 批量扫描工具；确认后 `--commit`。
 
 ### 5.1 路径判定
 
-先在派生项目根目录判断当前项目属于哪种情况：
+若当前在模板仓发起多项目同步，先按 registry 解析并进入目标派生项目；若当前已在派生项目根目录，则判断当前项目属于哪种情况：
 
 | 情况 | 使用流程 |
 |---|---|
@@ -197,6 +197,8 @@ git commit -m "chore: bootstrap latest sync script"
 git status --short --branch
 git show --name-only --stat HEAD
 ```
+
+> 在 PowerShell 调 Git Bash 跑 `.sh` 时若遇带空格路径被拆词或 `dirname`/`git` 找不到，三种 canonical 调用方式见 `template-docs/env-setup.md §8.1`（推荐：直接执行 .sh；带变量：改用 env 变量或 wrapper 文件，避开 `bash -lc '...$var...'`）。
 
 检查最新同步提交没有误覆盖 `README.md`、`ai/project-rules.md`、`docs/00-09` 或业务代码。旧派生项目首次同步到新版脚本后，不要停在同步提交；应继续读取新同步到的 `ai/prompts/maintainers/12-sync-template.md`，按标准闭环完成边界验证、同步后整理、文档体系审计、项目验证建议和同步运行记录。同步到包含 `scripts/check-derived-sync.ps1` 的版本后，也可以运行：
 

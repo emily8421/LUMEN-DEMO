@@ -150,21 +150,31 @@ Checkpoint Mode 是非快速续接任务的执行中防跑飞协议；触发条�
 
 ### 4.1 Token 热点观察触发
 
-`ai-records/token-hotspots/` 是可选的 AI 协作观察记录，用于记录上下文读取成本、重复读取、可优化点和质量影响；它不是项目事实文档，不替代 `.ai/session-handoff.md`、`docs/08-dev-plan.md` 或 `docs/09-verification.md`。
+token hotspot 是可选的 AI 协作观察记录，用于记录上下文读取成本、重复读取、可优化点和质量影响；它不是项目事实文档，不替代 `.ai/session-handoff.md`、`docs/08-dev-plan.md` 或 `docs/09-verification.md`。
 
-当一次连续任务命中以下任一情况时，AI 应在收尾前主动提示“本轮可能触发 token hotspot 记录”，并询问用户是否写入 `ai-records/token-hotspots/YYYY-MM-DD-<task-slug>.md`：
+**路径分层（v1.57.2 起）**：
+
+| 类型 | 路径 | Git 语义 |
+|---|---|---|
+| 单条原始记录（默认） | `.ai/token-hotspots/YYYY-MM-DD-<task-slug>.md` | gitignored，**纯本地、不询问、不上传** |
+| 阶段汇总（提炼后的有价值结论） | `ai-records/token-hotspots/SUMMARY.md`、`ai-records/token-hotspots/summaries/` | **入库**，需用户确认并走 PR |
+
+单条记录是过程性材料，默认只本地保留；只有被提炼进汇总、值得跨会话 / 跨项目参考的结论才入库。派生项目启用此机制时，需自行在 `.gitignore` 补 `.ai/token-hotspots/`（`.gitignore` 不纳入下行同步，各项目自行维护）。
+
+当一次连续任务命中以下任一情况时，AI 应在收尾前主动提示“本轮可能触发 token hotspot 记录”，并默认写入本地 `.ai/token-hotspots/YYYY-MM-DD-<task-slug>.md`（不询问、不上传）：
 
 - 从快速续接进入分析 / 设计 / 写入任务后，又完整读取 `ai/index.md` 及其规则清单。
 - 执行模板维护、提案评估、文档审计、同步整理、编码实现、PR / CI 闭环等较长任务，并多次读取大文件、长日志或重复运行大输出命令。
 - `scripts/check-template.*`、CI 日志、GitHub PR / Actions 状态、`_proposals/` / `_archive/` / `ai/prompts/` 等成为主要上下文成本。
 - 用户询问 token 消耗、上下文热点、是否触发 hotspot，或显式要求记录本轮热点。
 
-写入边界：
+写入与处置协议：
 
-- 默认只自动**识别并询问**，不得静默创建或修改文件；写入仍需遵守 `ai/project-rules.md` §6 的确认规则。
-- 若用户在当前任务中明确授权“本轮结束自动记录 token hotspot”，AI 可在本轮收尾时写入；写入前仍应说明目标路径、内容类别和隐私过滤口径。
+- **默认本地、不询问、不上传**：单条 hotspot 记录默认写入 gitignored 的 `.ai/token-hotspots/`，AI 直接写入即可，不需要每次询问“保留 / 提交 / 删除”，也不进入正式提交。
+- **“不提交”不等于“删除”**：用户说“不用上传 / 不提交远端”时，AI 必须保留本地记录，**不得自动删除**；删除本地记录必须由用户明确说出“删除”。
+- **三选一仅用于入库决策**：只有当用户考虑把某条记录**入库**（写进 `ai-records/token-hotspots/`）时，AI 才给出三选一——保留本地不入库 / 作为观察材料提交走 PR / 删除；用户说“提交 / 走 PR”才按模板维护流程切分支、提交、push、PR。
 - 记录不得包含 token、密钥、账号密码、客户敏感数据、完整对话正文或无法提交到仓库的隐私事实；只记录任务类型、文件路径、命令类别、热点判断、质量影响和优化建议。
-- 若 `ai-records/token-hotspots/` 不存在，首次创建目录前必须说明这是可选观察材料，并等待用户确认。
+- 若 `.ai/token-hotspots/` 不存在，首次创建目录无需等待确认（本地观察材料，已 gitignore）；若需写入入库路径 `ai-records/token-hotspots/`，首次创建前仍需说明并等待用户确认。
 
 验证证据摘要约定：
 
@@ -173,18 +183,24 @@ Checkpoint Mode 是非快速续接任务的执行中防跑飞协议；触发条�
 
 ### 4.2 累计 summary 触发（rollup）
 
-token hotspot 记录累计后，应主动提示阶段性汇总，避免重复热点分散、不回流：
+单条 hotspot 记录在本地累计后，应主动提示阶段性汇总，提炼出入库的 `SUMMARY.md`，避免重复热点分散、不回流。**汇总循环**：本地攒若干条单条 → 提炼成 SUMMARY 入库 → 本地单条可清理 / 归档。
 
-- 当 `ai-records/token-hotspots/` 下已有 **3 份及以上未被 summary 覆盖**的记录时，AI 在相关任务收尾前应提示“已有多份 token hotspot 记录，建议生成 / 更新阶段性 summary”，并询问是否写入 `ai-records/token-hotspots/SUMMARY.md`。
-- 若已有 `SUMMARY.md`，且上次 summary 后又新增 **3 份及以上**记录，AI 应提示更新。
+- 当本地 `.ai/token-hotspots/` 有 **3 份及以上未被 summary 覆盖**的记录时，AI 在相关任务收尾前应提示“已有多份 token hotspot 记录，建议生成 / 更新阶段性 summary”，并询问是否把提炼结论写入入库路径 `ai-records/token-hotspots/SUMMARY.md`（单条仍留本地）。
+- 若已有 `SUMMARY.md`，且上次 summary 后本地又新增 **3 份及以上**记录，AI 应提示更新。
 - 若用户显式询问 token 消耗、hotspot 机制、“为什么没有 summary”或要求“分析 hotspots / 形成 summary”，AI 可直接按授权生成 / 更新。
-- summary 的写入边界与 §4.1 单条记录一致：默认只识别并询问，不得静默创建 / 修改；首次创建 `SUMMARY.md` 前仍需说明目标路径、内容类别和隐私过滤口径。
-- summary 不替代 handoff、正式文档、验证记录或模板提案；可复用的模板改进须另起 `_proposals/TEMPLATE-UPGRADE-*.md`。
+- summary（入库）的写入边界严于单条：默认识别并询问，不得静默创建 / 修改；首次创建或更新 `SUMMARY.md` 前需说明目标路径、内容类别和隐私过滤口径，并按 `ai/project-rules.md` §6 取得确认。
+- summary 不替代 handoff、正式文档、验证记录或模板提案；可复用的模板改进须另起 `_proposals/TEMPLATE-UPGRADE-*.md`，已转提案的记录不重复作为同一问题的 summary 输入（除非用户明确要求复盘）。
+- 已纳入 SUMMARY 的记录不得再次计入 3 份阈值；旧记录状态缺失时，AI 应先按 SUMMARY 覆盖边界判断，无法判断时列为“需人工确认”，不得直接重复纳入。
 
 summary 最小结构（写入 `SUMMARY.md` 时参考）：
 
 ```text
 # Token Hotspot 汇总：<日期范围>
+
+## 0. 覆盖边界
+- 已覆盖记录（本地 .ai/token-hotspots/）：<日期或文件名清单>
+- 未覆盖记录：<日期或文件名清单>
+- 下一次 rollup 起点：从 <date> 起，只统计 `汇总状态：未汇总` 的本地记录
 
 ## 1. 汇总范围（记录日期、任务类型、主要热点）
 ## 2. 为什么触发 / 为什么此前未触发
@@ -193,11 +209,14 @@ summary 最小结构（写入 `SUMMARY.md` 时参考）：
 ## 5. 模板回流判断（是否需要形成 _proposals/ 提案，去项目化边界）
 ```
 
-单份 hotspot 记录可选增加汇总状态字段，方便识别 rollup 范围：
+单条 hotspot 记录**必须填写**汇总状态字段（新记录必填；旧记录不强制改写，逐步补齐），方便识别 rollup 范围与避免重复分析：
 
 ```text
-- 汇总状态：未汇总 / 已纳入 SUMMARY.md / 已转提案 <path-or-url>
+- 汇总状态：未汇总 / 已纳入 SUMMARY.md（<日期或范围>） / 已转提案 <path-or-url> / 本地保留不提交 / 已归档 <path>
+- 处置状态（可选）：本地未提交 / 已提交 PR #<n> / 已合并 <commit> / 已删除（用户确认）
 ```
+
+> 上述“必填”为写入时的字段完整性要求（AI 自觉），**不引入 `scripts/check-template.sh` 自检断言或 CI 门禁**，与 `template-docs/rd-data-chain.md` §4「无自检门禁、避免过度治理」一致。
 
 ## 5. 写入确认边界
 

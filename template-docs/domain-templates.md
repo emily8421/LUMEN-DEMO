@@ -76,7 +76,27 @@ Web App scaffold 也不自动等于领域模板。复杂 Web / 全栈交互项�
 
 回流因此是**两级**：领域派生项目的可通用经验 → 先回流领域模板（领域部分）；领域模板沉淀的、可跨领域的通用经验 → 再回流母模板。回流仍走 `ai/commands/submit-proposal.md` / `submit-feedback.md`（跨仓库开 issue，免 fork）。
 
-> **当前脚本能力边界（重要）**：`scripts/sync-template.sh` 与 `scripts/check-derived-sync.sh` 按「模板侧 ↔ 派生侧」**两端**校验。自 v1.47.0 起，领域模板作为母模板下游 sync 时可用 `sync-template.* --domain-template`（或仓库存在领域版 `TEMPLATE-BASE.md` 时自动启用）保留领域模板自身 `VERSION`/`CHANGELOG`，并维护领域版 `TEMPLATE-BASE.md`（见 §5）。**多级同步自动化（领域模板作为领域派生项目上游的中间同步节点链路）仍属 inheritance 提案 Batch 3，尚未落地**；在它落地前，领域模板的上下游同步沿用两端流程，不引入多级自动化。
+### 4.1 领域派生项目场景剧本
+
+每个领域模板必须维护自己的 **L2→L3 场景剧本入口（L2-to-L3 playbook）**，例如：
+
+```text
+template-docs/<domain>/domain-derived-scenarios.md
+```
+
+母模板提供通用骨架 `template-docs/domain-derived-scenarios-template.md`，领域模板可复制为上面的入口后再填入领域事实、领域脚本和领域自检项。母模板仍只提供三层边界、初始化要求和检查口径；不承载 agent / OCR / IoT 等具体领域派生项目的创建、同步、整理、自检、回流和发布后下游同步细节。领域派生项目应从对应领域模板读取该剧本，而不是要求母模板脚本直接处理领域 overlay。
+
+该剧本最少覆盖：
+
+1. 适用性判断：什么时候直连母模板、什么时候走本领域模板、什么时候不适用。
+2. 创建领域派生项目：过渡期组合流程、成熟期 profile / 领域脚本、初始化后必填事实。
+3. 同步领域模板更新：dry-run / commit、覆盖范围、copy-if-missing、永不覆盖项。
+4. 初始化后整理与领域自检：领域 docs / rules / checklist 填写顺序、advisory / gate 强度。
+5. 领域派生项目日常开发：哪些母模板 A 场景照常适用、哪些任务必须读取领域 overlay。
+6. L3→L2 回流：领域专属经验回流 L2；跨领域通用经验由 L2 提炼后回流 L1。
+7. 领域模板发布后的下游同步：L2 版本发布、领域 L3 同步、运行记录和验证摘要。
+
+> **当前脚本能力边界（重要）**：`scripts/sync-template.sh` 与 `scripts/check-derived-sync.sh` 按「模板侧 ↔ 派生侧」**两端**校验。自 v1.47.0 起，领域模板作为母模板下游 sync 时可用 `sync-template.* --domain-template`（或仓库存在领域版 `TEMPLATE-BASE.md` 时自动启用）保留领域模板自身 `VERSION`/`CHANGELOG`，并维护领域版 `TEMPLATE-BASE.md`（见 §5）；自 v1.58.0 起，同步脚本会把母模板 `CHANGELOG.md` / `CHANGELOG-PLAIN.md` 映射到派生侧 `upstream/CHANGELOG.md` / `upstream/CHANGELOG-PLAIN.md`，作为只读继承参考。**多级同步自动化（领域模板作为领域派生项目上游的中间同步节点链路）仍属 inheritance 提案 Batch 3，尚未落地**；在它落地前，领域模板的上下游同步沿用两端流程，不引入多级自动化。
 
 ## 5. `TEMPLATE-BASE.md` 约定
 
@@ -86,7 +106,7 @@ Web App scaffold 也不自动等于领域模板。复杂 Web / 全栈交互项�
 - 继承时的母模板 base version（对应母模板 `VERSION`）。
 - 本领域模板叠加的标准件范围。
 
-> **状态：机制已落地（v1.47.0，C-004）**。普通派生项目由 `scripts/new-project.sh` / `scripts/sync-template.* --preserve-project-version` 生成**精简版** `TEMPLATE-BASE.md`（`Lineage type: ordinary derived project`，只记母模板继承版本）；领域模板由 `scripts/sync-template.* --domain-template` 生成 / 维护**领域版** `TEMPLATE-BASE.md`（`Lineage type: domain template`，额外记 `Domain standards scope` 领域标准件范围；首次生成留 TODO 占位由维护者填，后续 sync 保留）。`check-derived-sync.*` 按 `Lineage type` 识别角色，领域版额外校验 `Domain standards scope`。两条线互不混用：不得把普通派生精简版套用到领域模板，反之亦然；`--preserve-project-version` 与 `--domain-template` 互斥。
+> **状态：机制已落地（v1.47.0，C-004；v1.57.4 补齐 `CHANGELOG-PLAIN.md` 归属；v1.58.0 补 `upstream/` 继承参考）**。普通派生项目由 `scripts/new-project.sh` / `scripts/sync-template.* --preserve-project-version` 生成**精简版** `TEMPLATE-BASE.md`（`Lineage type: ordinary derived project`，只记母模板继承版本）；领域模板由 `scripts/sync-template.* --domain-template` 生成 / 维护**领域版** `TEMPLATE-BASE.md`（`Lineage type: domain template`，额外记 `Domain standards scope` 领域标准件范围；首次生成留 TODO 占位由维护者填，后续 sync 保留）。普通派生项目和领域模板的根 `VERSION`、`CHANGELOG.md`、`CHANGELOG-PLAIN.md` 均归自身所有，模板同步不覆盖；母模板继承版本号见 `TEMPLATE-BASE.md`，母模板发布说明参考见同步生成的 `upstream/CHANGELOG.md` / `upstream/CHANGELOG-PLAIN.md`。`check-derived-sync.*` 按 `Lineage type` 识别角色，领域版额外校验 `Domain standards scope`，并校验 upstream changelog 继承参考对。两条线互不混用：不得把普通派生精简版套用到领域模板，反之亦然；`--preserve-project-version` 与 `--domain-template` 互斥。
 
 ## 6. 操作入口（怎么创建领域模板）
 
@@ -94,7 +114,7 @@ Web App scaffold 也不自动等于领域模板。复杂 Web / 全栈交互项�
 
 AI 可执行实验入口为 `/run domain-template-lab`（见 `ai/commands/domain-template-lab.md` 与 `ai/prompts/maintainers/23-domain-template-lab.md`）。该入口只服务领域模板独立试验线：AI 自动判定当前仓库是母模板、派生领域模板、领域派生项目还是普通派生项目，先输出计划和写入范围，用户确认后才在目标领域模板仓库生成实验资产。
 
-边界：`domain-template-lab` 不接入 `git-guide.md` §5 的普通派生项目同步主路径，不修改母模板 `sync-template` 语义，不让领域派生项目直接同步母模板。母模板只提供实验启动器和方法论边界；领域 scaffold、领域同步清单、领域自检和领域回流 SOP 应在独立领域模板仓库内试验。
+边界：`domain-template-lab` 不接入 `git-guide.md` §5 的普通派生项目同步主路径，不修改母模板 `sync-template` 语义，不让领域派生项目直接同步母模板。母模板只提供实验启动器和方法论边界；领域 scaffold、领域同步清单、领域自检、L2→L3 场景剧本和领域回流 SOP 应在独立领域模板仓库内试验。
 
 ## 7. 状态与演进
 
