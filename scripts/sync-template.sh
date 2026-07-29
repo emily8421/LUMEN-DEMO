@@ -8,16 +8,32 @@
 #     --summary  等价于 --dry-run --no-stat
 #     --commit   抓取、覆盖、stage 并提交 "sync template vX.Y.Z"
 #     --preserve-project-version
-#                普通派生项目路线 A：保留项目自己的 VERSION/CHANGELOG，改写 TEMPLATE-BASE.md 记录继承的模板版本
+#                普通派生项目路线 A：保留项目自己的 VERSION/CHANGELOG/CHANGELOG-PLAIN，改写 TEMPLATE-BASE.md 记录继承的模板版本
 #                若仓库已存在 TEMPLATE-BASE.md，本模式会自动启用
 #     --domain-template
-#                领域模板角色（如 agent-system-template）：保留领域模板自己的 VERSION/CHANGELOG，
+#                领域模板角色（如 agent-system-template）：保留领域模板自己的 VERSION/CHANGELOG/CHANGELOG-PLAIN，
 #                改写 TEMPLATE-BASE.md 为领域版（Lineage type: domain template，含领域标准件范围字段）
 #                若仓库已存在领域版 TEMPLATE-BASE.md，本模式会自动启用；与 --preserve-project-version 互斥
 #   环境变量:
 #     TEMPLATE_REMOTE  模板远端（默认 https://github.com/emily8421/ai-project-template.git）
 # 依赖: git（网络可达模板远端；模板私有，活跃 gh 账号须有访问权限）
 set -euo pipefail
+
+# MSYS PATH 自举守卫（MSYS_PATH_GUARD）：非登录 bash 或 PATH 被沙箱刮掉时，
+# /usr/bin（dirname/grep/sed）与 /mingw64/bin（git）可能不在 PATH 上，导致
+# 早期 dirname/sed/git 调用塌掉、后续雪崩。只用 bash 内建判定
+# （command -v / [[ -d ]]），不依赖 uname 等外部工具——触发场景本身就是 /usr/bin 缺失。
+# 三种 canonical 调用方式见 template-docs/env-setup.md §8.1。
+if [[ -z "${MSYS_PATH_GUARD:-}" ]] && ! command -v dirname >/dev/null 2>&1; then
+  for _guard_dir in /usr/bin /mingw64/bin /mingw32/bin; do
+    [[ -d "$_guard_dir" ]] || continue
+    case ":${PATH:-}:" in
+      *":$_guard_dir:"*) ;;
+      *) PATH="$_guard_dir:$PATH" ;;
+    esac
+  done
+  export PATH MSYS_PATH_GUARD=1
+fi
 
 usage() {
   echo "用法: bash scripts/sync-template.sh [--dry-run [--no-stat]|--summary|--commit] [--preserve-project-version|--domain-template]" >&2
@@ -100,6 +116,7 @@ DEFAULT_SYNC_FILES=(
   "template-docs/template-methodology.md"
   "template-docs/capability-packages.md"
   "template-docs/remote-ci-sop-profile.md"
+  "template-docs/domain-derived-scenarios-template.md"
   "template-docs/glossary.md"
   "template-docs/docs-scaffold/README.md"
   "template-docs/docs-scaffold/inputs/input-review-report.md"
@@ -264,7 +281,7 @@ load_sync_files() {
     local file
     for file in "${SYNC_FILES[@]}"; do
       case "$file" in
-        VERSION|CHANGELOG.md)
+        VERSION|CHANGELOG.md|CHANGELOG-PLAIN.md)
           ;;
         *)
           filtered+=("$file")
@@ -348,7 +365,9 @@ write_template_base() {
 ## Version Semantics
 
 - \`VERSION\` is owned by this derived project and records the project version.
+- \`CHANGELOG.md\` and \`CHANGELOG-PLAIN.md\` are owned by this derived project and record project evolution; template sync does not overwrite them.
 - \`TEMPLATE-BASE.md\` records the inherited ai-project-template version used for methodology sync audit.
+- \`upstream/CHANGELOG.md\` and \`upstream/CHANGELOG-PLAIN.md\` are generated read-only references for upstream ai-project-template release notes.
 - Template sync commits keep the message format \`sync template $template_version from ai-project-template\`.
 EOF
 }
@@ -398,10 +417,52 @@ write_domain_template_base() {
 ## Version Semantics
 
 - \`VERSION\` is owned by this domain template and records the domain template version.
-- \`CHANGELOG.md\` is owned by this domain template and records domain template evolution; template sync does not overwrite it.
+- \`CHANGELOG.md\` and \`CHANGELOG-PLAIN.md\` are owned by this domain template and record domain template evolution; template sync does not overwrite them.
 - \`TEMPLATE-BASE.md\` records the inherited ai-project-template version used for methodology sync audit.
+- \`upstream/CHANGELOG.md\` and \`upstream/CHANGELOG-PLAIN.md\` are generated read-only references for upstream ai-project-template release notes.
 - Template sync commits keep the message format \`sync template $template_version from ai-project-template\`.
 EOF
+}
+
+first_changelog_plain_version() {
+  [[ -f CHANGELOG-PLAIN.md ]] || return 0
+  grep -E '^## v[0-9]+\.[0-9]+\.[0-9]+（' CHANGELOG-PLAIN.md \
+    | head -1 \
+    | sed -E 's/^## (v[0-9]+\.[0-9]+\.[0-9]+).*/\1/' || true
+}
+
+warn_if_changelog_plain_needs_project_rewrite() {
+  [[ "$PRESERVE_PROJECT_VERSION" -eq 1 || "$DOMAIN_TEMPLATE_MODE" -eq 1 ]] || return 0
+
+  local owner_label="派生项目"
+  [[ "$DOMAIN_TEMPLATE_MODE" -eq 1 ]] && owner_label="领域模板"
+
+  if [[ ! -f CHANGELOG-PLAIN.md ]]; then
+    echo "⚠️  根 CHANGELOG-PLAIN.md 不存在；从本版起模板同步不会覆盖该文件，请补 $owner_label 自有大白话 changelog。"
+    return 0
+  fi
+
+  local project_version
+  local plain_version
+  local template_hash
+  local local_hash
+  local reason=""
+
+  project_version="$(sed '1s/^\xEF\xBB\xBF//' VERSION 2>/dev/null | tr -d '[:space:]' || true)"
+  plain_version="$(first_changelog_plain_version)"
+  template_hash="$(git rev-parse "$REF:CHANGELOG-PLAIN.md" 2>/dev/null || true)"
+  local_hash="$(git hash-object --path=CHANGELOG-PLAIN.md CHANGELOG-PLAIN.md 2>/dev/null || true)"
+
+  if [[ -n "$template_hash" && -n "$local_hash" && "$template_hash" == "$local_hash" ]]; then
+    reason="内容与当前母模板 CHANGELOG-PLAIN.md 相同"
+  elif [[ -n "$project_version" && -n "$plain_version" && "$plain_version" != "$project_version" ]]; then
+    reason="顶部版本 $plain_version 与本地 VERSION $project_version 不一致"
+  fi
+
+  if [[ -n "$reason" ]]; then
+    echo "⚠️  根 CHANGELOG-PLAIN.md 可能仍是母模板内容（$reason）。"
+    echo "   从本版起模板同步会保留该文件，不再覆盖；请把它改写为 $owner_label 自有大白话 changelog。"
+  fi
 }
 
 detect_lineage_role() {
@@ -491,9 +552,9 @@ fi
 
 echo "==> 模板版本: $VERSION"
 if [[ "$PRESERVE_PROJECT_VERSION" -eq 1 ]]; then
-  echo "==> 普通派生项目版本治理: 保留本地 VERSION/CHANGELOG，更新 TEMPLATE-BASE.md 为继承版本记录"
+  echo "==> 普通派生项目版本治理: 保留本地 VERSION/CHANGELOG/CHANGELOG-PLAIN，更新 TEMPLATE-BASE.md 为继承版本记录"
 elif [[ "$DOMAIN_TEMPLATE_MODE" -eq 1 ]]; then
-  echo "==> 领域模板版本治理: 保留领域模板 VERSION/CHANGELOG，更新 TEMPLATE-BASE.md 为领域版继承版本记录"
+  echo "==> 领域模板版本治理: 保留领域模板 VERSION/CHANGELOG/CHANGELOG-PLAIN，更新 TEMPLATE-BASE.md 为领域版继承版本记录"
 fi
 warn_derived_workflow_migration
 echo "==> 同步文件:"
@@ -506,6 +567,43 @@ remote_file_matches_local() {
   remote_hash="$(git rev-parse "$REF:$file")"
   local_hash="$(git hash-object --path="$file" "$file" 2>/dev/null || true)"
   [[ -n "$local_hash" && "$remote_hash" == "$local_hash" ]]
+}
+
+should_sync_upstream_changelogs() {
+  [[ "$PRESERVE_PROJECT_VERSION" -eq 1 || "$DOMAIN_TEMPLATE_MODE" -eq 1 ]]
+}
+
+upstream_changelog_notice() {
+  local source="$1"
+  cat <<EOF
+> Upstream template changelog reference: generated by scripts/sync-template from ai-project-template root $source.
+> It records upstream template releases only. Do not edit this file in a derived project; the next template sync refreshes it. Project-owned history stays in root VERSION, CHANGELOG.md, and CHANGELOG-PLAIN.md; inherited template version is audited in TEMPLATE-BASE.md.
+
+EOF
+}
+
+write_generated_upstream_changelog() {
+  local source="$1"
+  local output="$2"
+
+  upstream_changelog_notice "$source" > "$output"
+  git show "$REF:$source" >> "$output"
+}
+
+upstream_changelog_matches_local() {
+  local source="$1"
+  local dest="$2"
+  local tmp_file
+  local generated_hash
+  local local_hash
+
+  [[ -f "$dest" ]] || return 1
+  tmp_file="$(mktemp)"
+  write_generated_upstream_changelog "$source" "$tmp_file"
+  generated_hash="$(git hash-object "$tmp_file")"
+  local_hash="$(git hash-object "$dest" 2>/dev/null || true)"
+  rm -f "$tmp_file"
+  [[ -n "$local_hash" && "$generated_hash" == "$local_hash" ]]
 }
 
 show_local_to_template_stat() {
@@ -532,6 +630,49 @@ show_local_to_template_stat() {
   fi
 
   rm -rf "$tmp_dir"
+}
+
+show_upstream_changelog_stat() {
+  local source="$1"
+  local dest="$2"
+  local tmp_dir
+  local local_file
+  local generated_file
+  local -a NOCRLF=(-c core.autocrlf=false -c core.safecrlf=false)
+
+  tmp_dir="$(mktemp -d)"
+  local_file="$tmp_dir/local/$dest"
+  generated_file="$tmp_dir/template/$dest"
+  mkdir -p "$(dirname "$local_file")"
+  mkdir -p "$(dirname "$generated_file")"
+  write_generated_upstream_changelog "$source" "$generated_file"
+
+  if [[ -f "$dest" ]]; then
+    cp "$dest" "$local_file"
+    git "${NOCRLF[@]}" diff --no-index --stat -- "$local_file" "$generated_file" || true
+  else
+    git "${NOCRLF[@]}" diff --no-index --stat -- /dev/null "$generated_file" | sed "s#${tmp_dir//\/\\}/##g" || true
+  fi
+
+  rm -rf "$tmp_dir"
+}
+
+sync_upstream_changelog_references() {
+  local source
+  local dest
+
+  for source in CHANGELOG.md CHANGELOG-PLAIN.md; do
+    dest="upstream/$source"
+    if git cat-file -e "$REF:$source" 2>/dev/null; then
+      mkdir -p "$(dirname "$dest")"
+      write_generated_upstream_changelog "$source" "$dest"
+      git add "$dest"
+      UPDATED_FILES+=("$dest")
+      echo "    ✓ $dest（母模板 $source 继承参考）"
+    else
+      echo "    · $dest （模板无 $source，跳过）"
+    fi
+  done
 }
 
 summary_bucket_for() {
@@ -636,6 +777,29 @@ if [[ "$MODE" == "--dry-run" ]]; then
       echo "    Δ TEMPLATE-BASE.md（新增继承版本记录，$LINEAGE_MODE_LABEL）"
       record_summary "TEMPLATE-BASE.md" "added"
     fi
+    warn_if_changelog_plain_needs_project_rewrite
+  fi
+  if should_sync_upstream_changelogs; then
+    echo
+    echo "==> upstream/ 母模板 changelog 继承参考:"
+    for source in CHANGELOG.md CHANGELOG-PLAIN.md; do
+      dest="upstream/$source"
+      if git cat-file -e "$REF:$source" 2>/dev/null; then
+        if upstream_changelog_matches_local "$source" "$dest"; then
+          echo "    = $dest（无差异）"
+        else
+          echo "    Δ $dest（母模板 $source 继承参考）"
+          if [[ -f "$dest" ]]; then
+            record_summary "$dest" "modified"
+          else
+            record_summary "$dest" "added"
+          fi
+        fi
+      else
+        echo "    · $dest （模板无 $source，跳过）"
+        record_summary "$dest" "skipped"
+      fi
+    done
   fi
   if [[ "$SKIP_STAT" -eq 1 ]]; then
     print_summary
@@ -648,6 +812,14 @@ if [[ "$MODE" == "--dry-run" ]]; then
         fi
       fi
     done
+    if should_sync_upstream_changelogs; then
+      for source in CHANGELOG.md CHANGELOG-PLAIN.md; do
+        dest="upstream/$source"
+        if git cat-file -e "$REF:$source" 2>/dev/null && ! upstream_changelog_matches_local "$source" "$dest"; then
+          show_upstream_changelog_stat "$source" "$dest"
+        fi
+      done
+    fi
   fi
 
   echo
@@ -684,6 +856,9 @@ else
     UPDATED_FILES+=("TEMPLATE-BASE.md")
     echo "    ✓ TEMPLATE-BASE.md（继承版本记录）"
   fi
+  if should_sync_upstream_changelogs; then
+    sync_upstream_changelog_references
+  fi
   for f in "${SYNC_FILES[@]}"; do
     if git cat-file -e "$REF:$f" 2>/dev/null; then
       git checkout "$REF" -- "$f"
@@ -709,6 +884,8 @@ else
     fi
   done
 
+  warn_if_changelog_plain_needs_project_rewrite
+
   echo
   if git diff --quiet HEAD -- "${UPDATED_FILES[@]}"; then
     echo "ℹ️  无需提交：同步文件与模板一致。"
@@ -727,8 +904,8 @@ else
   echo "  5. 生成或更新同步运行记录: sync-records/template-sync/YYYY-MM-DD-sync-template-$VERSION.md"
   echo "     可参考: template-docs/derived-sync-report-template.md"
   if [[ "$PRESERVE_PROJECT_VERSION" -eq 1 ]]; then
-    echo "  6. 核对项目自身版本仍记录在 VERSION；继承模板版本见 TEMPLATE-BASE.md"
+    echo "  6. 核对项目自身版本仍记录在 VERSION，项目演进记录在 CHANGELOG.md / CHANGELOG-PLAIN.md；继承模板版本见 TEMPLATE-BASE.md，母模板发布参考见 upstream/CHANGELOG.md / upstream/CHANGELOG-PLAIN.md"
   elif [[ "$DOMAIN_TEMPLATE_MODE" -eq 1 ]]; then
-    echo "  6. 核对领域模板版本仍记录在 VERSION、领域演进在 CHANGELOG；继承母模板版本见 TEMPLATE-BASE.md（领域版）"
+    echo "  6. 核对领域模板版本仍记录在 VERSION、领域演进在 CHANGELOG.md / CHANGELOG-PLAIN.md；继承母模板版本见 TEMPLATE-BASE.md（领域版），母模板发布参考见 upstream/CHANGELOG.md / upstream/CHANGELOG-PLAIN.md"
   fi
 fi

@@ -49,7 +49,7 @@
 7. 若新增 / 删除下行同步方法论文件，更新 `template-sync.json`；若改动 `docs/00-09` 撰写规范，确认 `check-template.sh` 的 doc-standards 镜像自检（`require_doc_standards_mirror`）通过。
 8. 若改变用户入口，保持 `README.md` 的「快速开始」三入口可读，不塞入维护者细节。
 9. 运行：`git diff --check`。
-10. 若新增 / 修改 `_proposals/`、`ai-records/` 等 Markdown 记录，运行：`powershell -ExecutionPolicy Bypass -File scripts/check-markdown-clean.ps1 _proposals ai-records`，避免行尾空格、BOM 或 EOF 多空行到 CI 后才失败。
+10. 若新增 / 修改准备提交的 `_proposals/`、`ai-records/` 等 Markdown 记录，运行：`powershell -ExecutionPolicy Bypass -File scripts/check-markdown-clean.ps1 _proposals ai-records`，避免行尾空格、BOM 或 EOF 多空行到 CI 后才失败。单条 token hotspot 记录位于 `.ai/token-hotspots/`，是 gitignored 本地过程观察，不作为提交内容；只有脱敏汇总 `ai-records/token-hotspots/` 才按正式记录检查。
 11. 运行：`bash scripts/check-template.sh`（或 `powershell -ExecutionPolicy Bypass -File scripts/check-template.ps1`）。
 12. push 分支并创建 PR，等待 GitHub Actions `Template Check` 通过后再合并。
 
@@ -68,7 +68,7 @@
 - `scripts/check-template.sh` / `.ps1` 只用于模板仓库完整性自检；派生项目同步验收用 `scripts/check-derived-sync.sh` / `.ps1`。
 - `NEXT-STEPS.md` / `.ai/session-handoff.md` 是本地续接便签，不属于模板方法论文档；保持本地临时性，通过 `.gitignore` 排除，不进同步清单和正式提交。模板只同步 `ai/session-rules.md` 与 `template-docs/session-handoff.example.md`。
 - 真实派生项目同步后的问题优先沉淀到 `template-docs/derived-sync-report-template.md` 运行记录；只有可通用于多个项目的问题，才去项目化转写为 `_proposals/TEMPLATE-UPGRADE-*.md` 回流。
-- **批量同步**：维护者发新版后，可用 `scripts/sync-all-derived.sh <父目录> --dry-run|--commit` 一条指令更新父目录下所有派生项目（场景 C8）；默认 dry-run，工作区不干净 / 非派生 / 模板本体自动跳过。要 PR-per-project 可审计流程仍走 A13。
+- **批量同步**：维护者发新版后，从模板仓目录发起“同步至派生项目 / 同步 N 个派生”时，优先读取维护者侧 `ai-records/project-registry/registry.md`，用 Project / Aliases / Local path / Path status / Sync mode 解析目标；路径缺失或 stale-risk 先停下确认。`scripts/sync-all-derived.sh <父目录> --dry-run|--commit` 仅作为同父目录项目的 fallback 扫描工具；默认 dry-run，工作区不干净 / 非派生 / 模板本体自动跳过。要 PR-per-project 可审计流程仍走 A13。
 
 ## 5. 自检与 CI
 
@@ -99,6 +99,8 @@ Windows 下若 PowerShell 无法拉起 Git Bash，`check-template.ps1`、`sync-t
 3. 发布前仍以 `bash scripts/check-template.sh` 或 CI 为准；本地快速自检可用 `bash scripts/check-template.sh --summary`（只输出计数与失败项，避免回灌完整成功日志）；必要时用 Git Bash 全路径重跑。
 4. 成功路径只记命令、退出码 / check 结论和通过摘要，不回灌完整成功日志。
 5. 失败路径只保留失败断言块、文件、expected pattern、复现命令和必要的 Bash / fallback 错误。
+
+Windows 下从 PowerShell 调 Git Bash 跑 `.sh` 时若出现内嵌双引号丢变量（ARGCOUNT 错乱）或 `/usr/bin` 工具箱缺失（`dirname`/`git` 找不到），三种 canonical 调用方式见 `template-docs/env-setup.md §8.1`；三个 `.sh` 内置 `MSYS_PATH_GUARD` 自举守卫，正常路径无需手动配 PATH。
 
 ## 6. README 边界与派生 README 规范
 
@@ -142,4 +144,4 @@ Windows 下若 PowerShell 无法拉起 Git Bash，`check-template.ps1`、`sync-t
 - 历史归档放 `docs/archive/`。
 - `ai/doc-standards/`（v1.20.0+）是模板 `00-09` 撰写规范的只读镜像，随模板同步刷新，不作为项目事实、不直接驱动开发；旧项目可能残留 `docs/_scaffold/`。
 - AI 需要新增文档时，必须先判断文档类型；不确定则先提议路径并等待人工确认。
-- 研发过程各类数据（决策 / 调研 / 会议 / 验证 / 版本 / AI 成本 / 续接）如何沉淀、流转和回写，见 `template-docs/rd-data-chain.md`（索引 / 分类，不替代 00-09）。
+- 研发过程各类数据（决策 / 调研 / 会议 / 验证 / 版本 / AI 成本 / 续接）如何沉淀、流转和回写，见 `template-docs/rd-data-chain.md`（索引 / 分类，不替代 00-09）。其中单条 token hotspot 为 `.ai/token-hotspots/` 本地记录，入库只保留 `ai-records/token-hotspots/` 脱敏汇总。

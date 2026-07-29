@@ -411,6 +411,53 @@ Volta 项目用 `package.json` 的 `volta` 字段；fnm / nvm / asdf 项目用 `
 - `scripts/sync-template.ps1` 与 `scripts/check-derived-sync.ps1` 优先调用 Git Bash；如果它们报 `Win32 error 5`、`E_ACCESSDENIED` 或类似 MSYS 启动错误，会明确标注并进入 PowerShell fallback。fallback 会按 UTF-8 bytes 解码 Git 输出，避免 Windows PowerShell 5.1 按系统代码页读取中文 Markdown、JSON 或文件名导致乱码 / 解析失败。fallback 也失败时，才优先判断为本机 Git Bash / MSYS、权限策略或网络环境问题。
 - 这类问题通常不意味着“新手少做了模板规定的某个初始化步骤”；fallback 已覆盖同步 / 边界检查的最小能力，若仍失败，先检查本机 Git for Windows、终端宿主、权限策略或安全软件限制。
 
+### 8.1 在 Windows 上调用 .sh 脚本的三种 canonical 方式
+
+模板的同步 / 自检 / 派生脚本（`scripts/*.sh`）以 bash 为权威入口。从 PowerShell 调起 Git Bash 时，反复踩过两个坑：**坑 1**（PowerShell 5.1 原生参数传递把 `bash -lc '..."$var"...'` 里内嵌的双引号弄丢 → 带空格路径被拆词，已实测 `ARGCOUNT=2`）；**坑 2**（非登录 bash 或被沙箱刮 PATH 时 `/usr/bin` 工具箱缺失，`dirname/grep/sed/git` 找不到）。三个 `.sh` 内置 **MSYS PATH 自举守卫**（`MSYS_PATH_GUARD`）已覆盖坑 2 的自动自救；坑 1 只能靠「选对调用方式」规避。下面三种方式按优先级递减：
+
+#### (a) 直接执行 .sh（推荐）
+
+PowerShell 不内嵌任何变量到 bash 命令行，bash 直接拿脚本路径作为 argv，无内嵌双引号 → 坑 1 不复现；.sh 内自举守卫兜住坑 2。CI 与维护者 SOP 默认走它。
+
+```powershell
+& "C:\Program Files\Git\bin\bash.exe" scripts/sync-template.sh --dry-run
+```
+
+#### (b) 带空格路径 / 变量：避开 `bash -lc '...$var...'`
+
+需要把 PowerShell 侧变量（路径、项目名等）传给 bash 时，**不要**用 `bash -lc '...$var...'`（PS5.1 会弄丢内嵌双引号）。三选一：
+
+- **继承当前工作目录**：在 PowerShell 里先 `Set-Location` 到目标目录，bash 用 `$PWD` 读，不传任何变量。
+- **env 变量**：`$env:TEMPLATE_REMOTE = '...'; & bash.exe scripts/sync-template.sh` —— bash 侧用 `"${TEMPLATE_REMOTE:-}"` 读，env 变量不经命令行解析，PS5.1 无法拆词。
+- **wrapper 文件**：把命令写进临时 `.sh`（变量用 here-doc 注入），bash 执行该文件；变量在文件里是正常 bash 语法，不经 argv。
+
+```powershell
+# 反例（不要这样写）：PS5.1 弄丢内嵌双引号 → ARGCOUNT 错乱
+$proj = "C:\Some Path With Spaces"
+bash -lc "echo \"$proj\""          # ✗
+
+# 正例：env 变量
+$env:PROJECT_PATH = $proj
+& "C:\Program Files\Git\bin\bash.exe" -c 'echo "$PROJECT_PATH"'
+```
+
+#### (c) 需登录 shell / 完整工具箱（兜底）
+
+极少数情况下自举守卫也救不回来（如 bash.exe 包装器本身缺 `/usr/bin` 物理目录，或第三方沙箱把 PATH 刮到系统最小集）。此时显式给 bash 一个完整环境：
+
+```powershell
+# 方式 1：登录 shell（拉起整个 .bash_profile，副作用大，仅兜底）
+& "C:\Program Files\Git\bin\bash.exe" -l scripts/check-template.sh
+
+# 方式 2：env.exe 显式注入 PATH（精确，不拉 .bash_profile；必须含 /mingw64/bin，否则丢 git）
+& "C:\Program Files\Git\usr\bin\env.exe" "PATH=/usr/bin:/bin:/mingw64/bin" "/bin/bash" "scripts/check-template.sh" "--summary"
+
+# 方式 3：wrapper 顶部手动 export（最透明，可在脚本内调试；$PATH 由 bash 展开，保留继承 PATH）
+#   wrapper.sh: export PATH="/usr/bin:/mingw64/bin:$PATH"; exec scripts/check-template.sh "$@"
+```
+
+若以上三种都不行，再优先判断为本机 Git for Windows 安装损坏、安全软件拦截或终端宿主（codex / VS Code 集成终端等）PATH 继承策略问题，不要先理解为模板缺了某个步骤。
+
 ## 9. 跨平台边界
 
 - 当前正式提供并验证的是 Windows 路径：`check-prereqs.ps1`、`bootstrap-dev-env.ps1`、`collect-env.ps1`。
@@ -446,6 +493,6 @@ powershell -ExecutionPolicy Bypass -File scripts/collect-env.ps1
 | 第一次整体上手 | `template-docs/beginner-guide.md` + `README.md` |
 | 知道为什么模板这样分层 | `template-docs/template-methodology.md` |
 | 装 AI CLI | `template-docs/ai-cli-setup.md` |
-| 具体场景怎么操作 | `template-docs/scenario-guides.md`（A0–A27 / C1–C8 / 元场景） |
+| 具体场景怎么操作 | `template-docs/scenario-guides.md`（A0–A28 / C1–C8 / 元场景） |
 | 找命令速查 | `SOP.md`（仓库根）、`ai/commands/README.md` |
 | 采集本机资源 | `docs/env/README.md`、`scripts/collect-env.ps1` |

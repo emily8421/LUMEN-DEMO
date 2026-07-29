@@ -33,7 +33,7 @@
 | `INIT-PROMPT.md`、`ai/prompts/` | 可复制给 AI 的 Prompt Library |
 | `CONTRIBUTING.md`、`MAINTAINERS.md` | 模板治理与维护规则 |
 | `template-sync.json` | 下行同步清单 |
-| `VERSION`、`CHANGELOG.md` | 版本与发布记录 |
+| `VERSION`、`CHANGELOG.md`、`CHANGELOG-PLAIN.md` | 母模板版本与发布记录（正式 + 大白话）；派生同步时会映射为 `upstream/CHANGELOG.md` / `upstream/CHANGELOG-PLAIN.md` 继承参考 |
 
 ## 3. 解决什么问题 + 设计目标
 
@@ -191,6 +191,8 @@ Prompt Library 设计：
 - 模板仓库负责跨项目复用的方法论、Prompt、脚本、治理和同步机制。
 - 派生项目负责自己的 `ai/project-rules.md`、业务事实文档、代码和运行决策。
 - `template-sync.json` 只同步跨项目复用的方法论文件，不同步派生项目根 `README.md` 或业务文档。
+- 普通派生项目和领域模板的根 `VERSION`、`CHANGELOG.md`、`CHANGELOG-PLAIN.md` 归项目自有；继承的母模板版本记录在 `TEMPLATE-BASE.md`。
+- 普通派生项目和领域模板同步母模板时，母模板 `CHANGELOG.md` / `CHANGELOG-PLAIN.md` 会由 `sync-template.*` 映射生成到 `upstream/CHANGELOG.md` / `upstream/CHANGELOG-PLAIN.md`，作为只读继承参考；模板仓本身不维护 `upstream/` 物理副本。
 - 模板改动必须走提案、版本、PR、归档流程，避免派生项目各自演化成不同流派。
 - 版本是发布边界，不是提案数量边界；提案收件箱增长不触发版本递增，只有合并到同步范围内并改变模板行为或下游同步判断的 PR 才判断 `PATCH / MINOR / MAJOR`。
 
@@ -205,7 +207,7 @@ Prompt Library 设计：
 - 项目轻量时，用 Lean 或 Standard 剖面快速启动。
 - 复杂度上升时，再逐步引入 `tasks/`、更多 `docs/design/`、更完整的验证矩阵。
 - 规则真正膨胀时，再拆规则文件或增加 Prompt，不提前过度设计。
-- 任何影响下游同步判断的发布，都通过 `VERSION`、`CHANGELOG.md` 和同步清单留痕；同主题小改可聚合为一个发布边界。
+- 任何影响下游同步判断的发布，都通过 `VERSION`、`CHANGELOG.md`、`CHANGELOG-PLAIN.md` 和同步清单留痕；同主题小改可聚合为一个发布边界。
 
 ### 历史来源说明
 

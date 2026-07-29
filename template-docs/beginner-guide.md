@@ -106,7 +106,7 @@ docs/inputs/ 原始输入  ──→  docs/vision/product-vision.md  ──→  
 
 | 层 | 放什么 | 关键内容 |
 |---|---|---|
-| 模板方法层 | 模板自身 + AI 行为规范 + 手册脚本（派生项目里是下行同步的只读件，除根 README；普通派生项目用 `TEMPLATE-BASE.md` 记录继承模板版本） | `README.md`、`SOP.md`、`git-guide.md`、`ai/`、`template-docs/`、`scripts/`、`VERSION`、`TEMPLATE-BASE.md` |
+| 模板方法层 | 模板自身 + AI 行为规范 + 手册脚本（派生项目里是下行同步的只读件，除根 README；普通派生项目用 `TEMPLATE-BASE.md` 记录继承模板版本，用 `upstream/CHANGELOG.md` / `upstream/CHANGELOG-PLAIN.md` 查看母模板发布参考） | `README.md`、`SOP.md`、`git-guide.md`、`ai/`、`template-docs/`、`scripts/`、`VERSION`、`TEMPLATE-BASE.md`、`upstream/CHANGELOG*.md` |
 | 文档事实层 | 你这个项目的需求 / 设计 / 计划 / 验证（AI 输出，见 §4） | `docs/00-09`、`docs/vision/`、`docs/inputs/`、`docs/design/`、`docs/decisions/` 等 |
 | 代码骨架层 | 实现代码（按项目形态裁剪） | `frontend/`、`backend/`、`tests/`、`scripts/`、`docker/` |
 
@@ -146,6 +146,7 @@ docs/inputs/ 原始输入  ──→  docs/vision/product-vision.md  ──→  
 - 什么时候需要 `docs/design/`：当某个子系统非平凡，光靠 `docs/04` / `docs/05` 不够表达内部逻辑。
 - 什么时候需要服务器预案：本机资源撑不住当前阶段 Demo / MVP，且不能靠降级或 Mock 解决。
 - 切换 AI 工具怎么办：规则不变，先记录当前进度（`.ai/session-handoff.md`），再让新工具从 `ai/index.md` 和当前 Sprint 继续。
+- 派生项目的版本记录看哪里：根 `VERSION`、`CHANGELOG.md`、`CHANGELOG-PLAIN.md` 记录项目自己；`TEMPLATE-BASE.md` 记录继承到的母模板版本号；`upstream/CHANGELOG.md` / `upstream/CHANGELOG-PLAIN.md` 是同步生成的母模板发布参考，只读、不要手改。
 
 ## 7. 去哪看什么（导航）
 
@@ -154,7 +155,7 @@ docs/inputs/ 原始输入  ──→  docs/vision/product-vision.md  ──→  
 | 第一次整体上手 | 本手册 + `README.md` |
 | 装工具 / 装环境 | `template-docs/env-setup.md` |
 | 装 AI CLI | `template-docs/ai-cli-setup.md` |
-| 具体场景怎么操作 | `template-docs/scenario-guides.md`（A0–A27 / C1–C8 / 元场景） |
+| 具体场景怎么操作 | `template-docs/scenario-guides.md`（A0–A28 / C1–C8 / 元场景） |
 | 找命令速查 | `SOP.md`、`ai/commands/README.md` |
 | 查 how-to 任务操作入口 | `template-docs/user-guide-template.md`（任务→权威入口导航表） |
 | 查研发数据沉淀路径 | `template-docs/rd-data-chain.md`（数据类别→载体→主链关系） |
