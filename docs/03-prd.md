@@ -9,7 +9,7 @@
 |---|---|
 | 输入来源 | `docs/01-user-requirements.md`、`docs/02-srs.md`、`ai/project-rules.md` §1 |
 | 覆盖 REQ | REQ-001..REQ-038（按 Phase1 / Phase1.5A / Phase1.5B / Phase2A / Phase2B / 愿景分阶段） |
-| 当前状态 | 已确认（§3 为阶段标签唯一来源；Phase2A 个人知识组织已完成；未进入 Phase2B） |
+| 当前状态 | 已确认（§3 为阶段标签唯一来源；Phase2A 个人知识组织已完成；**Phase2B 团队 MVP 进行中，2026-07-30 切指针**） |
 | 最后更新 | 2026-07-20（Phase2A closure：REQ-026 / REQ-012 / REQ-025 三个 vertical slice 验收通过） |
 
 ## 1. 功能范围（完整，对齐 01 / 02）
@@ -69,7 +69,7 @@
 | Phase1.5A（已完成） | `[P1]` · REQ-037、REQ-038 | **个人可用 Alpha** | 已完成（Sprint-16/17，TC-P1-015/016 通过） | Phase1 Demo closure 已完成；Sprint-0′ 框架补课不阻塞 | 批量 / 文件夹 `.md/.txt` 入库可搜可问答；单文档 `.md` 与空间 ZIP 可导出备份；权限过滤正确；产品红线未破坏 |
 | Phase1.5B（Alpha 后） | `[P1]` · REQ-027 + REQ-009 真实文本提取 / REQ-007 搜索增强候选 | **个人增强 Beta** | 候选·需 RG | Phase1.5A 可用；PDF / Word-PDF 解析 / zhparser 分别通过选型与环境验证 | PDF 中文导出可用；真实 Word/PDF 文本提取可用或明确降级；中文检索体验增强；不得阻塞 Alpha |
 | Phase2A（个人知识组织 · 已完成） | `[P2]` · REQ-026、REQ-012、REQ-025 | **个人知识组织** | 已完成（REQ-026 / REQ-012 / REQ-025 三个 vertical slice 通过） | Phase1.5A 使真实资料量进入系统；06/07/09 已补最小契约与 TC | 文档可用内链 / 反链互联，可用标签组织，可快速录入轻量条目；权限过滤不泄露 |
-| Phase2B（团队 MVP） | `[P2]` · REQ-014 首批核心 + REQ-013/024 时间轴紧随；REQ-015/016/017 延后 | **团队 MVP** | **范围已确认（2026-07-30）；待 RG-008 验证升 Go 后切指针，当前未进入 Phase2B** | Phase2A 稳定；04/05 Phase2 设计补强；**RG-008（AI 数据外发风险接受）Conditional Go**；06/07 契约齐备；Sprint-11 UI/WSG 门禁重跑 | 小团队可真实使用知识组织与写作辅助；AI 润色数据外发风险已接受（护栏见 `ai/project-rules.md` §2.5 / `docs/05-tech-spec.md` RG-008）；产品红线未破坏 |
+| Phase2B（团队 MVP） | `[P2]` · REQ-014 首批核心 + REQ-013/024 时间轴紧随；REQ-015/016/017 延后 | **团队 MVP** | **已启动（2026-07-30 切指针；RG-008 Conditional Go，待 Sprint-19 实跑升 Go）** | Phase2A 稳定；04/05 Phase2 设计补强；**RG-008（AI 数据外发风险接受）Conditional Go**；06/07 契约齐备；Sprint-19/20 已规划 | 小团队可真实使用知识组织与写作辅助；AI 润色数据外发风险已接受（护栏见 `ai/project-rules.md` §2.5 / `docs/05-tech-spec.md` RG-008）；产品红线未破坏 |
 | 远期愿景（不承诺时间） | `[愿景]` · REQ-018..023、REQ-028..035 | **产品** | 骨架 | 05 技术验证高难度 AI 可行 | 不承诺时间 |
 
 ### Phase1 —— 已完成基线（功能范围 `[P1]` · 交付物形态 **Demo**）

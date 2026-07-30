@@ -6,6 +6,17 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v1.0.0（2026-07-30）
+
+**Phase 跨越：Phase2A（个人知识组织）→ Phase2B（团队 MVP）。** 切阶段指针，正式进入团队 MVP 阶段。
+
+- `ai/project-rules.md` §1 当前阶段 → **Phase2B 进行中**；AI 润色 / 时间轴从禁止清单移到允许清单；双维度 + 阶段进度更新。
+- `docs/00 / 03 / 04 / 08 / 09` 当前 Phase 元信息 + `03` §3 双维度表 Phase2B 行 → **已启动（2026-07-30 切指针；RG-008 Conditional Go）**。
+- Phase2B 首批：REQ-014 AI 润色 / 写作引用（Sprint-19）、REQ-013/024 时间轴（第二 slice，Sprint-20）；数据外发风险已接受（RG-008 Conditional Go，待 Sprint-19 实跑升 Go）。
+- 历史记录保留原始时间点表述：`03` §4.1 Phase2A closure 证据、`09` §5 2026-07-20 closure 验收、ADR-010、`docs/research/2026-07-30-phase2b-kickoff-decision.md` 决策快照。
+
+> MAJOR 依据（`ai/project-rules.md` §2.8.1）：Phase 跨越（Phase2A 个人知识组织 → Phase2B 团队 MVP）。
+
 ## v0.2.7（2026-07-30）
 
 App.tsx 拆分重构（WSG 文件膨胀阈值，纯结构搬运，不改业务逻辑）。
