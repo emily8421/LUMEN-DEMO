@@ -10,8 +10,8 @@
 | 保留 / 省略决策 | 保留 |
 | 接口形态 | REST API |
 | 覆盖 REQ / 模块 | Phase1：REQ-001..REQ-011、REQ-036；Phase1.5A：REQ-037/038（API-029/030）；Phase1.5B：REQ-027（API-019）；Phase2A：REQ-012/025/026；Phase2B / 后续 / 愿景接口保留骨架 |
-| 当前状态 | P1 接口契约已用于 Phase1 Demo；Sprint-8 后 P1 主要接口已接 PostgreSQL 表，RAG 已接 pgvector 向量召回 + GLM LLM；task-009 后 API-009 search 已为 substring + ts_vector + pgvector 语义召回的 hybrid search（zhparser 可选）。仍降级：API-011 仅 `.md`/`.txt` 已提取文本；Phase1.5A API-029/030 为契约草案，待 Sprint-16/17；API-019 PDF 待 RG-006 |
-| 最后更新 | 2026-07-15（按详细设计审计补 API-029/030 与 Phase1.5A/B、Phase2A/B 口径） |
+| 当前状态 | P1 接口契约已用于 Phase1 Demo；Sprint-8 后 P1 主要接口已接 PostgreSQL 表，RAG 已接 pgvector 向量召回 + GLM LLM；task-009 后 API-009 search 已为 substring + ts_vector + pgvector 语义召回的 hybrid search（zhparser 可选）。API-029/030 已随 Phase1.5A 完成；Phase2A 标签、快速录入、内链 / 反链接口已完成。仍降级：API-011 仅 `.md`/`.txt` 已提取文本；API-019 PDF 待 RG-006；Phase2B API 待后续确认 |
+| 最后更新 | 2026-07-30（Phase1.5A / Phase2A 完成后状态回写，保留 Phase1.5B 与 Phase2B API 边界） |
 
 ## 1. 统一约定
 
@@ -39,8 +39,8 @@
 | API-011 | POST | /api/import | 导入文件 | [P1] | P1-已设计 | **降级实现（仅 `.md`/`.txt` 已提取文本；无 PDF/OCR）** | REQ-009/010 |
 | API-012 | GET/POST | /api/terms | 术语列表 / 创建术语 | [P1] | P1-已实现 | 已实现（PG 术语存储） | REQ-036 |
 | API-013 | GET/PUT/DELETE | /api/terms/{id} | 术语详情 / 更新 / 删除 | [P1] | P1-已实现 | 已实现（PG 术语存储） | REQ-036 |
-| API-029 | POST | /api/import/batch | 批量导入（多文件 + 文件夹，标题前缀，同名跳过） | [P1] | Phase1.5A-契约草案 | — | REQ-037 |
-| API-030 | GET | /api/documents/{id}/export · /api/export/space | 单文档 .md 下载 / 空间 ZIP 导出 | [P1] | Phase1.5A-契约草案 | — | REQ-038 |
+| API-029 | POST | /api/import/batch | 批量导入（多文件 + 文件夹，标题前缀，同名跳过） | [P1] | Phase1.5A-已实现 | — | REQ-037 |
+| API-030 | GET | /api/documents/{id}/export · /api/export/space | 单文档 .md 下载 / 空间 ZIP 导出 | [P1] | Phase1.5A-已实现 | — | REQ-038 |
 | API-014 | GET/POST | /api/tags | 标签列表 / 创建标签 | [P2] | Phase2A-已实现 | — | REQ-012 |
 | API-031 | GET/POST/DELETE | /api/documents/{id}/tags | 文档-标签关联（列 / 打 / 移除） | [P2] | Phase2A-已实现 | — | REQ-012 |
 | API-032 | GET | /api/tags/{id}/documents | 标签下可见文档列表 | [P2] | Phase2A-已实现 | — | REQ-012 |
@@ -61,7 +61,7 @@
 
 ## 3. 请求 / 响应契约（[P1]）
 
-> 以下为 P1 Demo 接口契约：`/api/query` 已接 pgvector 向量召回 + GLM LLM；`/api/search` 已升级为 substring + `ts_vector` + pgvector 语义召回的 hybrid search；`/api/import` 仅 `.md`/`.txt` 已提取文本（无真实 PDF/OCR）。Phase1.5A 的 API-029/030 在本节补契约草案但尚未实现；`[P2]`/`[愿景]` 接口保留骨架，升阶段时补字段级契约。
+> 以下为 P1 Demo 接口契约：`/api/query` 已接 pgvector 向量召回 + GLM LLM；`/api/search` 已升级为 substring + `ts_vector` + pgvector 语义召回的 hybrid search；`/api/import` 仅 `.md`/`.txt` 已提取文本（无真实 PDF/OCR）。Phase1.5A 的 API-029/030 已完成；Phase2A 标签、快速录入、内链 / 反链接口已完成；`[愿景]` 与 Phase2B 接口保留骨架，升阶段时补字段级契约。
 
 ### 3.1 Endpoint contract matrix
 
@@ -82,17 +82,17 @@
 | API-011 | 降级实现（仅 `.md`/`.txt`） | §3.2 / §3.3 | 4001/4003/4220 | 空间过滤 | TC-P1-009/010 | 是 |
 | API-012 | P1-已实现 | §3.2 / §3.3 | 4001/4003/4220 | 空间成员 | TC-P1-012 | 是 |
 | API-013 | P1-已实现 | §3.7 示例 | 4001/4003/4004 | 空间+权限 | TC-P1-012 | 是 |
-| API-029 | Phase1.5A-契约草案 | §3.9 | 4001/4003/4090/4220 | 空间成员；逐文件写入当前空间 | TC-P1-015 | 待 Sprint-16 |
-| API-030 | Phase1.5A-契约草案 | §3.9 | 4001/4003/4004/4220/5000 | 文档 / 空间可见性过滤；ZIP 只含可见文档 | TC-P1-016 | 待 Sprint-17 |
+| API-029 | Phase1.5A-已实现 | §3.9 | 4001/4003/4090/4220 | 空间成员；逐文件写入当前空间 | TC-P1-015 | 已实现（Sprint-16） |
+| API-030 | Phase1.5A-已实现 | §3.9 | 4001/4003/4004/4220/5000 | 文档 / 空间可见性过滤；ZIP 只含可见文档 | TC-P1-016 | 已实现（Sprint-17） |
 
 ### 3.1.1 Phase1.5 / Phase2 endpoint contract matrix（草案）
 
-> 本节补 Phase1.5A 导入 / 导出、Phase1.5B PDF 与 Phase2A/B 契约草案，不代表已实现。正式编码前需与 `docs/06-db-design.md` 的表契约、`docs/09-verification.md` 的对应 TC 和首个 vertical slice 选择对齐。
+> 本节记录 Phase1.5A 导入 / 导出、Phase1.5B PDF 与 Phase2A/B 契约状态。Phase1.5A API-029/030 与 Phase2A 标签、快速录入、内链 / 反链接口已完成；Phase1.5B 与 Phase2B 正式编码前仍需与 `docs/06-db-design.md` 的表契约、`docs/09-verification.md` 的对应 TC 和首个 vertical slice 选择对齐。
 
 | API-ID | 契约状态 | 请求 / 响应契约 | 错误契约 | 权限契约 | 验证项 (TC) | 是否可实现 |
 |---|---|---|---|---|---|---|
-| API-029 | Phase1.5A-契约草案 | §3.9 | 4001/4003/4090/4220 | 空间成员；逐文件写入当前空间；同名默认跳过 | TC-P1-015 | 待 Sprint-16 |
-| API-030 | Phase1.5A-契约草案 | §3.9 | 4001/4003/4004/4220/5000 | 单文档可读；空间 ZIP 只包含当前用户可见文档 | TC-P1-016 | 待 Sprint-17 |
+| API-029 | Phase1.5A-已实现 | §3.9 | 4001/4003/4090/4220 | 空间成员；逐文件写入当前空间；同名默认跳过 | TC-P1-015 | 已实现（Sprint-16） |
+| API-030 | Phase1.5A-已实现 | §3.9 | 4001/4003/4004/4220/5000 | 单文档可读；空间 ZIP 只包含当前用户可见文档 | TC-P1-016 | 已实现（Sprint-17） |
 | API-019 | Phase1.5B-契约草案·待 RG-006 | §3.9 | 4001/4003/4004/4220/5030 | 导出前校验源文档可见 / 可导出 | TC-P1-017 | 待 RG-006 |
 | API-014 | Phase2A-已实现 | §3.9 | 4001/4003/4090/4220 | 空间成员；标签仅当前空间可见 | TC-P2-TAG-001 | 已实现（Task A 1e4cf48） |
 | API-027 | Phase2A-已实现 | §3.9 | 4001/4003/4004/4090/4220 | 空间成员；归档不删除历史关联 | TC-P2-TAG-001 | 已实现（Task A 1e4cf48） |
@@ -244,9 +244,9 @@ sequenceDiagram
 
 | API-ID | 请求字段 | 响应字段 | 权限 / 降级 | 关联 DB | 备注 |
 |---|---|---|---|---|---|
-| API-029 `POST /api/import/batch` | multipart：`files[]`、`relative_paths[]?`、`conflict_policy=skip` | `{batch_id,total,success_count,failed_count,skipped_count,items[{filename,relative_path,title,status,import_id?,parsed_doc_id?,error?}]}` | 需当前空间成员；仅支持 `.md` / `.txt`；逐文件处理，部分成功不回滚；同名默认 skipped | `lumen_imports`、`lumen_documents`、`lumen_chunks` | Phase1.5A；不建真实目录表，relative_path 仅用于标题前缀 / import metadata |
-| API-030 `GET /api/documents/{id}/export` | `format=md`、`version_no?` | file/blob：`text/markdown`，文件名由文档标题安全化 | 需可读文档；不可见返回 4004；P1.5A 不支持 PDF | `lumen_documents`、`lumen_document_versions` | Phase1.5A；单文档 `.md` 下载，不写 `lumen_doc_exports` |
-| API-030 `GET /api/export/space` | `format=zip`、`include_versions?=false` | file/blob：ZIP，内含当前用户可见文档 `.md` | 仅打包当前空间且当前用户可见文档；不可见文档不进入 ZIP | `lumen_documents`、`lumen_document_versions` | Phase1.5A；使用 Python `zipfile`，默认流式 / 临时产物，不生成长期公开链接 |
+| API-029 `POST /api/import/batch` | multipart：`files[]`、`relative_paths[]?`、`conflict_policy=skip` | `{batch_id,total,success_count,failed_count,skipped_count,items[{filename,relative_path,title,status,import_id?,parsed_doc_id?,error?}]}` | 需当前空间成员；仅支持 `.md` / `.txt`；逐文件处理，部分成功不回滚；同名默认 skipped | `lumen_imports`、`lumen_documents`、`lumen_chunks` | Phase1.5A-已实现；不建真实目录表，relative_path 仅用于标题前缀 / import metadata |
+| API-030 `GET /api/documents/{id}/export` | `format=md`、`version_no?` | file/blob：`text/markdown`，文件名由文档标题安全化 | 需可读文档；不可见返回 4004；P1.5A 不支持 PDF | `lumen_documents`、`lumen_document_versions` | Phase1.5A-已实现；单文档 `.md` 下载，不写 `lumen_doc_exports` |
+| API-030 `GET /api/export/space` | `format=zip`、`include_versions?=false` | file/blob：ZIP，内含当前用户可见文档 `.md` | 仅打包当前空间且当前用户可见文档；不可见文档不进入 ZIP | `lumen_documents`、`lumen_document_versions` | Phase1.5A-已实现；使用 Python `zipfile`，默认流式 / 临时产物，不生成长期公开链接 |
 | API-019 `POST /api/export-pdf` | `document_id`、`version_no?`、`options?{include_sources,theme}` | `{export_id,status,artifact_path?}` | 需可读 / 可导出文档；导出产物继承文档权限，不生成公开长期链接 | `lumen_doc_exports`、`lumen_documents`、`lumen_document_versions` | Phase1.5B；受 RG-006；PDF 库未验证前不得实现 |
 | API-014 `GET /api/tags` | `q?`、`status?=active`、`page?` | `items[{id,name,color,description,document_count,status}]`、`total` | 仅当前空间标签；`document_count` 只统计当前用户可见文档 | `lumen_tags`、`lumen_tag_links`、`lumen_documents` | 支撑标签视图与筛选 |
 | API-014 `POST /api/tags` | `name`、`color?`、`description?` | `{id,name,color,description,status}` | 空间成员可创建；同空间 `normalized_name` 冲突返回 4090 | `lumen_tags` | 不自动跨空间复制 |
@@ -270,7 +270,7 @@ sequenceDiagram
 | 5030 | LLM / PDF 导出 / 外部依赖不可用 | API-019/028 |
 
 ### [Phase1.5] / [P2] / [愿景] 接口（骨架·待该阶段细化）
-- `/api/import/batch`、`/api/documents/{id}/export`、`/api/export/space`：Phase1.5A 契约草案见 §3.9，尚未实现；默认不引新依赖、不建真实目录表。
+- `/api/import/batch`、`/api/documents/{id}/export`、`/api/export/space`：Phase1.5A 已实现；默认不引新依赖、不建真实目录表。
 - `/api/export-pdf`：Phase1.5B PDF 导出契约草案见 §3.9，受 RG-006 约束，尚未实现。
 - `/api/tags`、`/api/tags/{id}`：Phase2A 已实现（Task A `1e4cf48`）。扁平标签 CRUD（API-014/027）：空间隔离、`UNIQUE(space_id, normalized_name)` 重名 4090、`DELETE` 归档不硬删；`document_count` 只统计当前用户可见文档。
 - `/api/documents/{id}/tags`（API-031）+ `/api/tags/{id}/documents`（API-032）：Phase2A 已实现（Task A `1e4cf48`）。文档-标签关联（列 / 打 `link_source=manual` / 移除，需文档可写 + 标签同空间）；标签下可见文档列表（按文档可见性过滤）。
@@ -297,7 +297,7 @@ sequenceDiagram
 | REQ-037 | `POST /api/import/batch` | Phase1.5A 批量 / 文件夹 `.md` / `.txt` 导入，逐条结果、同名跳过 |
 | REQ-038 | `GET /api/documents/{id}/export`、`GET /api/export/space` | Phase1.5A 单文档 `.md` 下载与空间 ZIP 导出备份，权限过滤 |
 | REQ-027 | `POST /api/export-pdf` | Phase1.5B 单文档导出 PDF，受 RG-006 与导出库验证约束 |
-| REQ-012 | `GET/POST /api/tags`、`GET/PUT/DELETE /api/tags/{id}`、`GET/POST/DELETE /api/documents/{id}/tags`、`GET /api/tags/{id}/documents` | Phase2A 标签视图（扁平标签 + 独立视图 + 单标签筛选 + 文档详情打标签），待 Task A 实现 |
+| REQ-012 | `GET/POST /api/tags`、`GET/PUT/DELETE /api/tags/{id}`、`GET/POST/DELETE /api/documents/{id}/tags`、`GET /api/tags/{id}/documents` | Phase2A 标签视图（扁平标签 + 独立视图 + 单标签筛选 + 文档详情打标签）已实现 |
 | REQ-025 | `POST /api/quick-entry` | Phase2A 快速录入索引条目，可转文档 / 追加文档 / 保留草稿 |
 | REQ-026 | `GET/POST /api/doc-links` | Phase2A 内部链接与反向链接索引，需空间和文档权限过滤 |
 | REQ-014 | `POST /api/documents/{id}/polish` | Phase2B AI 润色 / 写作引用，复用 RAG 来源与 LLM adapter，需权限过滤和降级 |
@@ -324,8 +324,8 @@ sequenceDiagram
 | API-011 | imports.import_extracted_text | lumen_imports, lumen_documents | space 过滤 | 4001/4003/4220 | TC-P1-009/010 | 降级实现（仅 .md/.txt） |
 | API-012 | term.list_visible_terms / create_term | lumen_terms | space 成员 | 4001/4003/4220 | TC-P1-012 | P1-已实现 |
 | API-013 | term.get/update/delete_term | lumen_terms | space + owner | 4001/4003/4004 | TC-P1-012 | P1-已实现 |
-| API-029 | imports.import_batch | lumen_imports, lumen_documents, lumen_chunks | 空间成员；逐文件导入当前空间 | 4001/4003/4090/4220 | TC-P1-015 | Phase1.5A-契约草案（待 Sprint-16） |
-| API-030 | export.export_document_md / export.export_space_zip | lumen_documents, lumen_document_versions | 文档可读；ZIP 只含当前用户可见文档 | 4001/4003/4004/4220/5000 | TC-P1-016 | Phase1.5A-契约草案（待 Sprint-17） |
+| API-029 | imports.import_batch | lumen_imports, lumen_documents, lumen_chunks | 空间成员；逐文件导入当前空间 | 4001/4003/4090/4220 | TC-P1-015 | Phase1.5A-已实现 |
+| API-030 | export.export_document_md / export.export_space_zip | lumen_documents, lumen_document_versions | 文档可读；ZIP 只含当前用户可见文档 | 4001/4003/4004/4220/5000 | TC-P1-016 | Phase1.5A-已实现 |
 | API-019 | export.create_pdf_export | lumen_doc_exports, lumen_documents, lumen_document_versions | 文档可读 / 可导出 | 4001/4003/4004/4220/5030 | TC-P1-017 | Phase1.5B-契约草案（待 RG-006） |
 | API-014 / API-027 | tag.list_tags / create_tag / update_tag / archive_tag | lumen_tags, lumen_tag_links | space 成员 + 文档权限统计 | 4001/4003/4004/4090/4220 | TC-P2-TAG-001 | Phase2A-已实现 |
 | API-031 / API-032 | tag.list_document_tags / add_document_tag / remove_document_tag / list_documents_by_tag | lumen_tag_links, lumen_tags, lumen_documents | 文档可写 + 标签同空间；document_count / 筛选按文档可见性 | 4001/4003/4004/4090/4220 | TC-P2-TAG-001 | Phase2A-已实现 |
@@ -350,6 +350,6 @@ sequenceDiagram
 
 ## 6. 待人工确认项
 
-- Phase1.5A API-029 / API-030 已补契约草案，但尚未实现接口；正式编码前需确认 Sprint-16 / Sprint-17 并同步 `docs/design/ingestion.md`、导出详细设计与 `docs/09-verification.md` TC-P1-015/016。
+- Phase1.5A API-029 / API-030 已实现并通过 TC-P1-015/016；若后续扩展真实目录表、长期导出产物或新依赖，需同步 `docs/design/ingestion.md`、导出详细设计与 `docs/09-verification.md` TC-P1-015/016。
 - `API-019` PDF 导出属于 Phase1.5B，受 `docs/05-tech-spec.md` RG-006 与 tech-env 草案约束；导出库未安装 / 未验证前不得进入实现。
-- Phase2A / Phase2B API 仍为契约草案；需在 P1.5A/B 后确认 vertical slice、DB 迁移、UI smoke 与数据外发边界。
+- Phase2A 标签 / 快速录入 / 内链 API 已实现；Phase2B API 仍为契约草案，需确认 vertical slice、DB 迁移、UI smoke 与数据外发边界。

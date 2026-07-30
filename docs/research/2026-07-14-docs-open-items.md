@@ -1,6 +1,8 @@
 # 待确认事项总览（Open Items）
 
 > 本报告为 `/run docs-open-items` 只读汇总结果，用于集中展示阻塞项、条件阻塞项、风险接受项和回填位置；不替代 `docs/00-09`、`docs/design/*`、`tasks/*` 或 `ai/project-rules.md` 的权威事实。用户确认后，必须回填对应权威文档或任务单。
+>
+> 2026-07-30 状态校准：本报告是 2026-07-14 历史总览；Phase2A 相关 OI-001/003/004/005 已由 2026-07-20 closure 与 `docs/research/2026-07-30-docs-system-audit-post-v1.59.0.md` 部分关闭 / 降级。最新阶段事实以 `ai/project-rules.md`、`docs/03-prd.md`、`docs/08-dev-plan.md`、`docs/09-verification.md` 为准；Phase2B、PDF / Word-PDF / zhparser / OCR 仍按候选 / 待 RG 处理。
 
 ## 0. 元信息
 
@@ -12,7 +14,7 @@
 | 当前门禁结论 | Phase1 / Demo 文档闭环基本健康；Phase2 UI / MVP 实现为 **No Go** |
 | 权威事实边界 | 当前阶段指针仍以 `ai/project-rules.md` §1 为准；Phase2 范围与进入标准以 `docs/03-prd.md` §3 为准 |
 | Batch A 状态 | 2026-07-14 已回填 `04/05/08/09/frontend-interaction` 的 WSG + UI-G + smoke 证据路径草案；TC-P2-WSG-001 与 TC-P2-UI-001~005 仍未执行 |
-| 状态校准 | 2026-07-14 已补充 tech-env 草案状态：`docs/research/2026-07-14-tech-env-evaluation-phase2.md` 为未跟踪草案，仅作依赖风险输入；下一步应先执行 Batch B，再评审 UI / WSG 门禁与首个 vertical slice |
+| 状态校准 | 2026-07-14 已补充 tech-env 草案状态：`docs/research/2026-07-14-tech-env-evaluation-phase2.md` 为未跟踪草案，仅作依赖风险输入；2026-07-30 已补同步后审计校准，Phase2A closure 与 P1.5A 完成状态以最新正式文档为准，Phase2B / PDF 等后续项仍需确认 |
 
 ## 1. 汇总范围与读取依据
 

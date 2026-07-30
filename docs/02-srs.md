@@ -10,9 +10,9 @@
 |---|---|
 | 输入来源 | `docs/00-scenario.md`、`docs/01-user-requirements.md` |
 | 覆盖 U-ID | U-01..U-43（按阶段标签区分 P1 / P1.5 / P2 / 愿景） |
-| 交付物形态 | Phase1 = **Demo**；P1.5 = **个人可用增强**（功能范围 `[P1]`；与 `docs/03-prd.md §3` 一致） |
-| 当前状态 | 已确认（P1 可验证；P1.5 个人可用收口新增 REQ-027/037/038；REQ-009/010 按 Phase1 Demo 降级口径验收；P2 / 愿景待对应阶段细化） |
-| 最后更新 | 2026-07-15（REQ 主表覆盖 001..038；补 P1.5 验证入口） |
+| 交付物形态 | Phase1 = **Demo**；Phase1.5A = **个人可用 Alpha**；Phase2A = **个人知识组织**；Phase1.5B / Phase2B 为后续候选（与 `docs/03-prd.md §3` 一致） |
+| 当前状态 | 已确认（P1 可验证；Phase1.5A REQ-037/038 已实现并通过 TC-P1-015/016；Phase2A REQ-012/025/026 已实现并通过 TC-P2-TAG/QUICK/LINK-001；REQ-009/010 按 Phase1 Demo 降级口径验收；Phase1.5B / Phase2B / 愿景待对应阶段细化） |
+| 最后更新 | 2026-07-30（同步后文档体系审计回写：校准 Phase1.5A / Phase2A 状态与验证入口） |
 
 ## 0.1 非功能需求 / 约束 / 异常
 
@@ -71,8 +71,8 @@
 | REQ-010 | 以 OCR 预提取文本或人工已提取文本替代真实图片 / 白板 OCR；真实 OCR 留后续阶段 | U-10 | 已提取文本导入后能搜到对应文字；真实 OCR 引擎、图片上传识别不作为 Phase1 必过 | [P1] | 后续阶段（P1 降级移出必过） |
 | REQ-011 | Chrome / Edge 桌面端可用全部 P1 功能 | U-11 | 桌面浏览器完成上述全部操作无阻断 | [P1] | P1-条件通过（Demo） |
 | REQ-036 | 每个空间可维护术语条目，阅读 / 编辑时识别已定义术语，问答时优先采用当前空间术语定义并引用术语来源 | U-42 | 新建「触发延迟」术语后问答优先使用该空间定义，同名全局术语不覆盖空间术语 | [P1] | P1-条件通过（Demo） |
-| REQ-037 | 批量 / 文件夹导入（`.md`/`.txt`）：drop zone + 多文件 + 文件夹拖拽（`webkitdirectory`）批量入库；标题用相对路径前缀保留目录感；批量进度 + 同名跳过 | U-09 扩展 | 拖入文件夹后所有 `.md`/`.txt` 入库可搜可问答，标题保留路径前缀 | [P1] | P1.5-候选·待编码 |
-| REQ-038 | 文档 / 空间导出：单文档下载 `.md`；空间打包 ZIP 导出所有可见文档 `.md`（权限过滤） | U-43 | 文档详情可下载 `.md`；空间导出 ZIP 含可见文档 | [P1] | P1.5A-候选·待编码 |
+| REQ-037 | 批量 / 文件夹导入（`.md`/`.txt`）：drop zone + 多文件 + 文件夹拖拽（`webkitdirectory`）批量入库；标题用相对路径前缀保留目录感；批量进度 + 同名跳过 | U-09 扩展 | 拖入文件夹后所有 `.md`/`.txt` 入库可搜可问答，标题保留路径前缀 | [P1] | P1.5A-已实现（TC-P1-015 通过） |
+| REQ-038 | 文档 / 空间导出：单文档下载 `.md`；空间打包 ZIP 导出所有可见文档 `.md`（权限过滤） | U-43 | 文档详情可下载 `.md`；空间导出 ZIP 含可见文档 | [P1] | P1.5A-已实现（TC-P1-016 通过） |
 | REQ-012 | 标签视图：扁平标签（空间隔离；name + color + description + active/archived）跨目录聚合同标签文档；文档详情打标签 / 移除；标签视图列标签 + 可见文档数，点标签看该标签下可见文档；单标签筛选；document_count 只统计当前用户可见文档 | U-13 | Phase2A 最小版：扁平标签、独立标签视图、单标签筛选、文档详情面板打标签；不做层级 / 组合筛选 / AI 自动打标签（link_source 预留 manual 外的值但不实现） | [P2] | P2-已实现（TC-P2-TAG-001 通过） |
 | REQ-013 | 时间轴视图 / 关联图视图 | U-14 / U-15 | 待该阶段细化（数据来源、布局算法） | [P2] | 骨架 |
 | REQ-014 | AI 润色 + 写作侧边栏引用 | U-16 / U-17 | 待该阶段细化（触发方式、引用块格式） | [P2] | 骨架 |
@@ -81,7 +81,7 @@
 | REQ-017 | 跨设备 / 移动端 | U-20 | 待该阶段细化（响应式范围、VPN 接入） | [P2] | 骨架 |
 | REQ-024 | 时间轴密度热条 | U-30 | 待该阶段细化（密度计算、色阶映射） *(v18)* | [P2] | 骨架 |
 | REQ-025 | 快速录入索引条目 | U-31 | 30s 录标题/来源/摘要；mode=draft 保留私有草稿、create_document 转新私有文档、append_document 追加到已有文档；可关联 tag_ids；draft 可丢弃 *(v18)* | [P2] | P2-已实现（TC-P2-QUICK-001 通过） |
-| REQ-026 | 内部链接 + 反向链接 | U-32 | 待该阶段细化（`[[文件名]]` 解析、反向链接索引） *(v18)* | [P2] | P2-已实现（TC-P2-LINK-001 通过） |
+| REQ-026 | 内部链接 + 反向链接 | U-32 | Phase2A 最小版：`[[文件名]]` 解析、resolved / unresolved / no_access 状态、出链 / 反链查询与权限过滤 | [P2] | P2-已实现（TC-P2-LINK-001 通过） |
 | REQ-027 | 单文档导出 PDF（Markdown → PDF，含中文排版） | U-33 | 选型 weasyprint/reportlab + 中文验证（RG-006）；封面 / 页眉页脚 / 排版 | [P1] | P1.5B-候选·待 RG-006（从 Phase2 提前） |
 | REQ-018 | Obsidian Vault 挂载 | U-21 | 待技术验证（只读索引、账号绑定、不迁移） | [愿景] | 骨架 |
 | REQ-019 | 录音转文字 + 摘要 | U-22 | 待技术验证（转写引擎、摘要质量） | [愿景] | 骨架 |
@@ -126,7 +126,7 @@
 | U-31 | REQ-025 | [P2] | 快速录入索引条目 | P2-已实现（TC-P2-QUICK-001 通过） | — |
 | U-32 | REQ-026 | [P2] | 内部链接 + 反向链接 | P2-已实现（TC-P2-LINK-001 通过） | — |
 | U-33 | REQ-027 | [P1] | 单文档导出 PDF | P1.5B-候选·待 RG-006（从 Phase2 提前） | — |
-| U-43 | REQ-038 | [P1] | 单文档 `.md` + 空间 ZIP 导出备份 | P1.5A-候选·待编码 | — |
+| U-43 | REQ-038 | [P1] | 单文档 `.md` + 空间 ZIP 导出备份 | P1.5A-已实现（TC-P1-016 通过） | — |
 | U-21 | REQ-018 | [愿景] | Obsidian Vault 挂载 | 待验证（骨架） | — |
 | U-22 | REQ-019 | [愿景] | 录音转文字 + 摘要 | 待验证（骨架） | — |
 | U-23 | REQ-020 | [愿景] | 问题热力矩阵 | 待验证（骨架） | 高风险 |
@@ -158,9 +158,12 @@
 | REQ-010 | AC-P1-007 | TC-P1-010 | `docs/09-verification.md` §2 / §6、OCR 风险记录 | 后续阶段（P1 不必过） |
 | REQ-011 | AC-P1-008 | TC-P1-011 | `docs/09-verification.md` §2 / §5、浏览器 smoke | 条件通过 |
 | REQ-036 | AC-P1-009 | TC-P1-012 | `docs/09-verification.md` §2 / §5、术语验收 | 条件通过 |
-| REQ-037 | AC-P1-010 | TC-P1-015 | `docs/09-verification.md` §2、批量导入后端 tests + Chrome smoke | P1.5A-草案·待编码 |
-| REQ-038 | AC-P1-011 | TC-P1-016 | `docs/09-verification.md` §2、导出后端 tests + Chrome smoke | P1.5A-草案·待编码 |
+| REQ-037 | AC-P1-010 | TC-P1-015 | `docs/09-verification.md` §2、批量导入后端 tests + Chrome smoke | P1.5A-已实现 / 通过 |
+| REQ-038 | AC-P1-011 | TC-P1-016 | `docs/09-verification.md` §2、导出后端 tests + 端到端 HTTP smoke | P1.5A-已实现 / 通过 |
 | REQ-027 | AC-P1-012 | TC-P1-017 | `docs/09-verification.md` §2、RG-006 + PDF 样例验证 | P1.5B-草案·待 RG-006 |
+| REQ-012 | AC-P2-TAG-001 | TC-P2-TAG-001 | `docs/09-verification.md` §2、标签后端 tests + 浏览器 smoke | P2-已实现 / 通过 |
+| REQ-025 | AC-P2-QUICK-001 | TC-P2-QUICK-001 | `docs/09-verification.md` §2、快速录入后端 tests + API / 浏览器 smoke | P2-已实现 / 通过 |
+| REQ-026 | AC-P2-LINK-001 | TC-P2-LINK-001 | `docs/09-verification.md` §2、内链后端 tests + API / 浏览器 smoke | P2-已实现 / 通过 |
 
 ## 5. 待人工确认项
 

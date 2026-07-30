@@ -9,8 +9,8 @@
 |---|---|
 | 输入来源 | `docs/03-prd.md`、`docs/04-architecture.md`、`docs/env/local-env.md`、`ai/project-rules.md`、`docs/research/2026-07-15-overall-design-04-05-audit.md` |
 | 覆盖架构组件 | FastAPI 后端、React 前端、PostgreSQL + pgvector、Embedding / LLM 适配、导入解析、导出备份、PDF 候选 |
-| 当前状态 | 目标基线已定（Phase1 技术选型已钉死）。Sprint-7/8 + task-009 真实化后：**PostgreSQL+pgvector / Embedding / LLM 已接入，RAG 与 search 均可走向量召回**（RG-001/002/004 Go，见 §1「当前实现状态」列与 §5.1）；OCR / 真实 PDF 解析仍降级（RG-003，后续阶段）。按 2026-07-15 04/05 审计重排：Phase1.5A 只做低依赖批量导入与 `.md` / ZIP 导出备份；Phase1.5B 的 PDF、真实 Word/PDF 文本提取与搜索增强须先过 RG / 选型；Phase2A/B 实现期变更需先修订本文 |
-| 最后更新 | 2026-07-15（按 04/05 审计补 Phase1.5A/B、Phase2A/B 技术边界） |
+| 当前状态 | 目标基线已定（Phase1 技术选型已钉死）。Sprint-7/8 + task-009 真实化后：**PostgreSQL+pgvector / Embedding / LLM 已接入，RAG 与 search 均可走向量召回**（RG-001/002/004 Go，见 §1「当前实现状态」列与 §5.1）；Phase1.5A 批量导入与 `.md` / ZIP 导出备份已完成；Phase2A 标签、反向链接与快速入口已完成。OCR / 真实 PDF 解析、PDF 导出、真实 Word/PDF 文本提取与搜索增强仍需后续 RG / 选型；Phase2B 实现期变更需先修订本文 |
+| 最后更新 | 2026-07-30（Phase1.5A / Phase2A 完成后状态回写，保留 Phase1.5B 与 Phase2B 技术边界） |
 
 ## 1. 技术栈与版本
 
@@ -52,15 +52,15 @@ flowchart TB
 | TCD-004 | RAG 向量 + 全文双路召回，答案带来源；P1 不做重排调优 | 兼顾语义与关键词；重排留后续 | 纯关键词或纯向量 | RAG（REQ-008） | 已启用（task-009 hybrid） |
 | TCD-005 | 术语口径注入：构造 Prompt 前按当前空间查 `lumen_terms`，空间术语优先于全局 | 保证跨客户口径一致 | — | 术语管理（REQ-036） | 已启用 |
 | TCD-006 | 鉴权用 Demo Bearer Token（HMAC-SHA256；载荷 `user_id` / `current_space_id` / `exp`，8h）；空间 + 文档两级校验，查询 / 检索 / 问答三层统一过滤 | Demo 可用且权限下沉到查询层 | 真实账号系统（后续） | 权限（REQ-001..003） | 已启用（Demo） |
-| TCD-007 | 批量 / 文件夹导入按逐文件循环处理，保留相对路径标题前缀，部分成功不回滚，同名默认跳过 | Phase1.5A 要最快解决“资料放不进去”；不建真实目录表可避免 DB 迁移 | 新增 folder 表 / 真实目录树；失败一项回滚全部 | REQ-037、TC-P1-015 | 候选·待 Sprint-16 编码 |
-| TCD-008 | `.md` / ZIP 导出备份走标准文件流与 Python `zipfile`，导出前统一权限过滤 | Phase1.5A 要可迁出、可备份；标准库不引重依赖 | 先做 PDF；导出数据库整库；长期公开链接 | REQ-038、TC-P1-016 | 候选·待 Sprint-17 编码 |
+| TCD-007 | 批量 / 文件夹导入按逐文件循环处理，保留相对路径标题前缀，部分成功不回滚，同名默认跳过 | Phase1.5A 要最快解决“资料放不进去”；不建真实目录表可避免 DB 迁移 | 新增 folder 表 / 真实目录树；失败一项回滚全部 | REQ-037、TC-P1-015 | 已实现（Sprint-16，TC-P1-015 通过） |
+| TCD-008 | `.md` / ZIP 导出备份走标准文件流与 Python `zipfile`，导出前统一权限过滤 | Phase1.5A 要可迁出、可备份；标准库不引重依赖 | 先做 PDF；导出数据库整库；长期公开链接 | REQ-038、TC-P1-016 | 已实现（Sprint-17，TC-P1-016 通过） |
 | TCD-009 | PDF 导出受 RG-006 控制，未完成中文最小样例与资源验证前不得编码 | PDF 依赖与字体风险高，不应阻塞个人可用 Alpha | 直接引入 weasyprint / reportlab 编码 | REQ-027、TC-P1-017 | 候选·待 RG-006 |
 
 > 关联详细设计：`docs/design/rag-retrieval.md`、`ingestion.md`、`term-management.md`、`permissions.md`。
 > **错误码**：HTTP 状态码 + `{ code, msg, data }` 双层；`code=0` 成功，业务错误 4 位数字码（详见 `docs/07-api-spec.md` §1）。
 > **切块 / Embedding 参数**：导入侧与检索侧共用同一套；按标题 / 段落优先切分，目标块长 512 tokens、重叠 64 tokens、单块最小 80 字符；模型 `BAAI/bge-small-zh-v1.5`（512 维，pgvector `vector(512)`，写入前归一化）；批量 batch size 32。
 >
-> **Phase1.5 / Phase2 候选技术决策**：Phase1.5A 的批量导入与 `.md` / ZIP 导出按 TCD-007/008 执行；Phase1.5B 的 PDF 导出库（REQ-027）受 RG-006 控制；真实 Word/PDF 文本提取需另做选型；Phase2A 标签 + 反向链接索引模型（REQ-012 / 026）候选 PG 关系表 + `[[wikilink]]` 解析；Phase2B AI 润色复用 ADR-002 LLM adapter（REQ-014）但需重新确认数据外发边界。
+> **Phase1.5 / Phase2 技术决策状态**：Phase1.5A 的批量导入与 `.md` / ZIP 导出已按 TCD-007/008 完成；Phase2A 标签 + 反向链接索引模型（REQ-012 / 026）已采用 PG 关系表 + `[[wikilink]]` 解析并完成最小闭环；Phase1.5B 的 PDF 导出库（REQ-027）受 RG-006 控制；真实 Word/PDF 文本提取需另做选型；Phase2B AI 润色复用 ADR-002 LLM adapter（REQ-014）但需重新确认数据外发边界。
 
 ### 2.1 依赖与配置矩阵
 
@@ -74,7 +74,7 @@ flowchart TB
 | Node 包 | React 18 / Vite 5 / TypeScript 5 | 前端 SPA | Phase1 | 已启用 | `frontend/package.json` | 无 | 前端 build + 浏览器 smoke |
 | 外部 API | OpenAI 兼容 LLM 中转（GLM `glm-5.2`） | RAG 问答 + 术语注入 | Phase1 | 已启用（可切 Mock） | `.env`（base_url / api_key） | **secret（api_key）** | RG-004 Go；真实问答验证 |
 | Docker 服务 | Docker Compose（lumen-pg） | 本机起 PostgreSQL+pgvector | Phase1 | 已启用 | `docker/compose.yml` | 无 | daemon live（TE-C-003 闭合） |
-| Python 标准库 | `zipfile` | 空间可见文档 `.md` 打包 ZIP 导出备份 | Phase1.5A | 标准库可用；待编码 | Python runtime | 无 | TC-P1-016 |
+| Python 标准库 | `zipfile` | 空间可见文档 `.md` 打包 ZIP 导出备份 | Phase1.5A | 已启用（Sprint-17） | Python runtime | 无 | TC-P1-016 通过 |
 | Python 包 | weasyprint / reportlab（二选一候选） | 单文档 PDF 导出与中文排版 | Phase1.5B | **候选（未接入）** | 待 RG-006 选型 | 无；字体资源需确认 | RG-006 + TC-P1-017 |
 | Python 包 | python-docx / pdfplumber | 真实 Word / PDF 文本提取 | Phase1.5B | **候选（未接入）** | 待选型 / RG | 无；真实文档敏感性需确认 | 待后续 tech-env-eval |
 | Python 包 | PaddleOCR | 图片 / 白板 OCR | 后续 | **降级 / No-Go（RG-003）** | — | 无 | 待环境兼容验证 |
@@ -118,7 +118,7 @@ flowchart TB
 | 后端 service / controller | 250 行 | 拆 service、repository / gateway、schema、error handling |
 | 单个测试 / smoke 文件 | 300 行 | 拆 contract、smoke、edge cases，避免单文件覆盖过多业务路径 |
 
-> 若确需引入 router、组件库、全局状态库、PDF 库、文档解析库或新图形库，必须先回到本文 §2 / §5.1、`06/07`、`08/09` 和 open items 记录依赖、风险与验证方式。Sprint-16/17 默认不引新依赖；ZIP 使用标准库 `zipfile`。
+> 若确需引入 router、组件库、全局状态库、PDF 库、文档解析库或新图形库，必须先回到本文 §2 / §5.1、`06/07`、`08/09` 和 open items 记录依赖、风险与验证方式。Sprint-16/17 已按不引新依赖完成；ZIP 使用标准库 `zipfile`。
 
 ## 5. 运行环境与资源评估
 
@@ -161,12 +161,12 @@ flowchart TB
 | 真实文档标注 | 真实文档导入须显式标注来源 / 敏感级别 | Phase1+ | 后续阶段待细化 | `project-rules §2.5` | 后续真实导入任务 |
 | Demo 数据边界 | 默认虚构 Demo 数据；真实文档按需导入并标注 | Phase1 | 已执行 | `project-rules §2.5` | — |
 | Token 鉴权 | Demo Bearer Token（HMAC-SHA256，8h） | Phase1 | 已实现 | `04 §5.1`、TCD-006 | 登录 / 切换 tests |
-| 批量导入失败隔离 | 多文件 / 文件夹导入逐文件处理；成功项保留，失败 / 不支持 / 同名冲突逐条提示，不静默覆盖 | Phase1.5A | 待编码 | `04 §5.4` Flow-006、TCD-007 | TC-P1-015 |
-| 导出产物权限 | 单文档 `.md`、空间 ZIP 与 PDF 均继承源文档 / 空间权限；ZIP 只包含当前用户可见文档，不生成长期公开链接 | Phase1.5A/B | 待编码 / 待 RG | `04 §5.4` Flow-007/008、TCD-008/009、`06 §5` | TC-P1-016 / 017 |
-| 导出产物清理 | 若导出产物落盘，需限定本地临时路径、过期清理或不落盘直接流式响应 | Phase1.5A/B | 待实现时确认 | `06` 导出产物边界、`08` Sprint-17/18 | TC-P1-016 / 017 |
+| 批量导入失败隔离 | 多文件 / 文件夹导入逐文件处理；成功项保留，失败 / 不支持 / 同名冲突逐条提示，不静默覆盖 | Phase1.5A | 已实现 | `04 §5.4` Flow-006、TCD-007 | TC-P1-015 通过 |
+| 导出产物权限 | 单文档 `.md`、空间 ZIP 与 PDF 均继承源文档 / 空间权限；ZIP 只包含当前用户可见文档，不生成长期公开链接 | Phase1.5A/B | Phase1.5A 已实现；Phase1.5B 待 RG | `04 §5.4` Flow-007/008、TCD-008/009、`06 §5` | TC-P1-016 通过；TC-P1-017 待 RG |
+| 导出产物清理 | 若导出产物落盘，需限定本地临时路径、过期清理或不落盘直接流式响应 | Phase1.5A/B | Phase1.5A 已实现；Phase1.5B 待 RG | `06` 导出产物边界、`08` Sprint-17/18 | TC-P1-016 通过；TC-P1-017 待 RG |
 
 ## 6. 待人工确认项
 
-- Phase1.5A Sprint-16/17 默认不引新依赖；若实现批量导入或 ZIP 导出需要超出标准库 / 既有栈，必须先修订本文与 `06/07/08/09`。
+- Phase1.5A Sprint-16/17 已完成且未引新依赖；若后续扩展批量导入或 ZIP 导出需要超出标准库 / 既有栈，必须先修订本文与 `06/07/08/09`。
 - Phase1.5B PDF 导出须先完成 RG-006；真实 Word/PDF 文本提取须先完成 RG-007 或独立 tech-env-eval，均不得阻塞 P1.5A。
-- Phase2A / Phase2B 开始前需回到本文补对应依赖、数据外发、安全边界和 smoke / 自动化验证入口。
+- Phase2B 开始前需回到本文补对应依赖、数据外发、安全边界和 smoke / 自动化验证入口。Phase2A 已实现能力如需扩展，按同一门禁补文档与验证。
