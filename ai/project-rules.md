@@ -43,7 +43,7 @@
 - 手机端 / 移动适配（demo 先桌面端）
 
 下一阶段预告：
-- Phase2B：团队 MVP（AI 润色 / 写作引用、时间轴候选；跨空间推送 / 多人协作 / 移动端不进首批）
+- Phase2B：团队 MVP（AI 润色 / 写作引用、时间轴候选；跨空间推送 / 多人协作 / 移动端不进首批）—— **范围已确认（2026-07-30）：REQ-014 AI 润色 / 写作引用为首批核心，REQ-013 / 024 时间轴紧随作为第二 slice；AI 数据外发风险已接受（真实外发 + 权限护栏，见 §2.5 与 `docs/05-tech-spec.md` RG-008）；待 RG-008 验证升 Go 后切阶段指针，当前仍未进入 Phase2B**
 - 远期愿景：问题热力矩阵、事件因果推理、对外简报、Obsidian Vault 挂载、移动端——详见 docs/vision/product-vision.md（产品愿景叙事，不直接驱动 Phase 开发）
 
 ## 2. 技术栈约束
@@ -69,11 +69,11 @@
 - Demo 必须本机运行的部分：FastAPI 后端、PostgreSQL+pgvector、React 前端、`.md` / `.txt` 已提取文本导入、Embedding（`bge-small-zh`，512 维）
 - 允许降级 / Mock / 远程运行的部分：LLM 可走公司内网中转或明确 Mock；Word / PDF 文字解析与 OCR 可降级为已提取文本（具体边界见 `docs/05-tech-spec.md` / `docs/09-verification.md`）
 - 禁止在本机运行的重资源部分：大参数本地 LLM、大型 Embedding / reranker；`bge-small-zh` 本机 Embedding 属 Phase1 例外
-- 是否允许联网（调用外部 OpenAI 兼容 LLM / Embedding API）：允许 LLM 经公司内网中转调用 OpenAI 兼容接口；Embedding 本机运行，不依赖外部 Embedding API
+- 是否允许联网（调用外部 OpenAI 兼容 LLM / Embedding API）：允许 LLM 经公司内网中转调用 OpenAI 兼容接口；Embedding 本机运行，不依赖外部 Embedding API。**Phase2B AI 润色（REQ-014）数据外发走同一内网中转通道，受 `docs/05-tech-spec.md` RG-008 约束（风险已接受，见下条「Demo 数据范围」）**
 - 是否允许安装新依赖 / Docker 镜像：允许本机 `pip install` / `npm install` / `docker pull` 项目所需依赖与镜像；新增依赖须写入依赖文件并说明用途，不得借机替换既定技术栈
 - 是否允许使用公司服务器：Phase1 Demo 暂不使用；当前公司暂无可用 Embedding 资源，后续本机不够用时再申请内网 Embedding / reranker 服务
 - 若需服务器，资源申请口径：优先申请内网 Embedding / reranker 服务，提供 OpenAI-compatible `/v1/embeddings`；具体 CPU / 内存 / GPU / 磁盘按目标模型与数据规模另行评估
-- Demo 数据范围：默认使用已标注的虚构 Demo 数据；允许按需导入部分真实团队文档。真实文档必须显式标注来源 / 敏感级别，并优先避免发送到外部模型
+- Demo 数据范围：默认使用已标注的虚构 Demo 数据；允许按需导入部分真实团队文档。真实文档必须显式标注来源 / 敏感级别。**Phase2B AI 润色 / 写作引用（REQ-014）：允许将用户显式触发的真实文档片段经公司内网中转 LLM 外发处理，数据外发风险已人工接受（2026-07-30）；护栏见 `docs/05-tech-spec.md` RG-008——① sources 仅限当前用户有权限的 chunk（守住「不泄露越权」产品红线）② 草稿只存 `input_excerpt_hash` + `prompt_summary`，不存完整敏感原文 ③ 不做敏感字段自动过滤（由用户自判是否触发润色）④ LLM 不可用返回 5030 或 Mock 降级；非润色场景仍优先避免批量外发**
 - Demo 资源软上限：峰值内存 < 8GB、显存 < 4GB、磁盘 < 20GB；超限先优化批处理、增量索引与 chunk 策略，再触发服务器预案
 
 > 技术方案（`docs/05`）与架构（`docs/04`）必须受本节与 `docs/env/local-env.md` 约束；本机资源不足时须明确所需公司服务器资源与触发条件。

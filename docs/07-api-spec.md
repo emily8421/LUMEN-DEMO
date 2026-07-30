@@ -57,7 +57,8 @@
 | API-025 | GET/POST | /api/signal-tracks | 信号追踪 | [愿景] | 骨架 | — | REQ-034 |
 | API-026 | POST | /api/kits | 分析包 A Kit | [愿景] | 骨架 | — | REQ-035 |
 | API-027 | GET/PUT/DELETE | /api/tags/{id} | 标签详情 / 更新 / 归档 | [P2] | Phase2A-已实现 | — | REQ-012 |
-| API-028 | POST | /api/documents/{id}/polish | AI 润色 / 写作引用 | [P2] | 契约草案 | — | REQ-014 |
+| API-028 | POST | /api/documents/{id}/polish | AI 润色 / 写作引用 | [P2] | MVP 级已设计 | — | REQ-014 |
+| API-033 | GET | /api/spaces/{id}/timeline | 时间轴视图 / 密度热条 | [P2] | Phase2B·第二 slice·骨架 | — | REQ-013/024 |
 
 ## 3. 请求 / 响应契约（[P1]）
 
@@ -98,7 +99,8 @@
 | API-027 | Phase2A-已实现 | §3.9 | 4001/4003/4004/4090/4220 | 空间成员；归档不删除历史关联 | TC-P2-TAG-001 | 已实现（Task A 1e4cf48） |
 | API-017 | Phase2A-已实现 | §3.9 | 4001/4003/4004/4220 | 空间成员；draft 默认 owner 私有；转换继承文档权限 | TC-P2-QUICK-001 | 已实现（Task A `f771e02` + Task B `bad8fe5`） |
 | API-018 | Phase2A-已实现 | §3.9 | 4001/4003/4004/4220 | source / target 文档均需权限过滤；无权限反链不泄露 | TC-P2-LINK-001 | 已实现（Task A fc2b869 + Task B 6228f3f） |
-| API-028 | Phase2B-契约草案 | §3.9 | 4001/4003/4004/4220/5030 | 文档可写权限；引用 chunk 必须当前用户可见 | TC-P2-AI-001 | Phase2B 确认后 |
+| API-028 | Phase2B·MVP 级已设计 | §3.9 | 4001/4003/4004/4220/5030 | 文档可写权限；引用 chunk 必须当前用户可见；数据外发风险已接受（RG-008） | TC-P2-AI-001 | 待 RG-008 升 Go（Sprint-19） |
+| API-033 | Phase2B·第二 slice·骨架 | §3.9（待细化） | 4001/4003/4004 | 空间成员；仅返回当前用户可见文档的事件 | TC-P2-TL-001 | 待 `docs/design/timeline.md` 定稿 |
 
 ### 3.2 请求 / 输入契约（字段级·核心接口）
 
@@ -259,7 +261,8 @@ sequenceDiagram
 | API-017 `DELETE /api/quick-entry/{id}` | — | `{id,status,created_document_id?,target_document_id?,title,owner_id}` | 仅 `status=draft` 且属于当前用户可丢弃 → `discarded`；非 owner / 跨空间按不存在（4004，不泄露）；非 draft → 4220 | `lumen_quick_entries` | 最小版不暴露 list endpoint |
 | API-018 `GET /api/doc-links` | `document_id`、`direction=outbound / backlink`、`status?` | `data:[{id,source_document_id,target_document_id?,target_title?,link_text,link_type,status}]` | source / target 均按空间 + 权限过滤；无权限 target 返回 `status=no_access` 且不泄露标题 | `lumen_doc_links`、`lumen_documents` | 支撑内部链接与反向链接 |
 | API-018 `POST /api/doc-links` | `source_document_id`、`target_document_id?`、`target_title?`、`link_text`、`link_type=manual`（wikilink 由文档正文解析，不接受手动 POST） | `{id,status}` | 需可编辑 source；target 缺失时 `unresolved` | `lumen_doc_links` | 后续可由 Markdown 解析器批量维护 |
-| API-028 `POST /api/documents/{id}/polish` | `mode=polish / citation`、`selection_md?`、`instruction?`、`use_sources?=true` | `{draft_id,output_md,sources[{chunk_id,document_id,title,snippet}],status}` | 需文档可写；sources 必须来自当前用户可见 chunk；LLM 不可用返回 5030 或 Mock 降级 | `lumen_ai_drafts`、`lumen_chunks`、`lumen_documents` | Phase2B；不存 API key；真实文档外发需风险接受 |
+| API-028 `POST /api/documents/{id}/polish` | `mode=polish / citation`、`selection_md?`、`instruction?`、`use_sources?=true` | `{draft_id,output_md,sources[{chunk_id,document_id,title,snippet}],status}` | 需文档可写；sources 必须来自当前用户可见 chunk；LLM 不可用返回 5030 或 Mock 降级 | `lumen_ai_drafts`、`lumen_chunks`、`lumen_documents` | **vertical slice**：`polish` 同步返回；`citation` 复用 RAG 检索 + LLM（首版同步，超时降 5030；若实测延迟过高再补异步 job 状态机）；数据外发风险已接受（RG-008）；不存 API key；草稿只存 hash + 摘要 |
+| API-033 `GET /api/spaces/{id}/timeline` | `from?`、`to?`、`tag_ids?`、`density?=true` | `{items[{date,document_id,title,event_type,permission}],density?[]}` | 空间成员；仅返回当前用户可见文档事件；大集合降级（见 `docs/design/timeline.md`） | `lumen_documents`、`lumen_tags`、`lumen_doc_links`（或 `lumen_doc_timeline_events`） | Phase2B 第二 slice；数据来源与布局待 timeline 设计定稿 |
 
 **Phase1.5 / Phase2 错误码补充**：
 
@@ -276,7 +279,8 @@ sequenceDiagram
 - `/api/documents/{id}/tags`（API-031）+ `/api/tags/{id}/documents`（API-032）：Phase2A 已实现（Task A `1e4cf48`）。文档-标签关联（列 / 打 `link_source=manual` / 移除，需文档可写 + 标签同空间）；标签下可见文档列表（按文档可见性过滤）。
 - `/api/quick-entry`：Phase2A 已实现（Task A `f771e02` + Task B `bad8fe5`）。POST capture（mode=draft/create_document/append_document + `tag_ids` + `source`）+ DELETE discard（仅 draft）；draft 默认 owner 私有，最小版不暴露 list endpoint。
 - `/api/doc-links`：Phase2A 已实现（Task A `fc2b869` + Task B `6228f3f`）。GET 返回 `data` 直接数组（出链 target 不可见→`status=no_access` 且不泄露标题；反链来源不可见过滤）；POST 仅 `link_type=manual`（wikilink 由文档保存时正文解析，拒手动 POST）。
-- `/api/documents/{id}/polish`：Phase2B 团队 MVP 候选，需数据外发风险确认后再实现。
+- `/api/documents/{id}/polish`（API-028）：Phase2B 首批核心，**数据外发风险已接受（RG-008 Conditional Go）**，vertical slice 已定（polish 同步 / citation 首版同步），待 Sprint-19 编码。
+- `/api/spaces/{id}/timeline`（API-033）：Phase2B 第二 slice，待 `docs/design/timeline.md` 定稿数据来源与布局后再实现。
 - `/api/spaces/push`：跨空间推送不进 Phase2B 首批，请求 / 响应待后续细化。
 - `/api/briefs/{token}`：简报隔离与有效期待愿景验证（REQ-022）
 
@@ -300,8 +304,8 @@ sequenceDiagram
 | REQ-012 | `GET/POST /api/tags`、`GET/PUT/DELETE /api/tags/{id}`、`GET/POST/DELETE /api/documents/{id}/tags`、`GET /api/tags/{id}/documents` | Phase2A 标签视图（扁平标签 + 独立视图 + 单标签筛选 + 文档详情打标签）已实现 |
 | REQ-025 | `POST /api/quick-entry` | Phase2A 快速录入索引条目，可转文档 / 追加文档 / 保留草稿 |
 | REQ-026 | `GET/POST /api/doc-links` | Phase2A 内部链接与反向链接索引，需空间和文档权限过滤 |
-| REQ-014 | `POST /api/documents/{id}/polish` | Phase2B AI 润色 / 写作引用，复用 RAG 来源与 LLM adapter，需权限过滤和降级 |
-| REQ-013 / 024 | Phase2B 后续接口骨架 | 时间轴 / 密度热条候选，后续单独细化 |
+| REQ-014 | `POST /api/documents/{id}/polish` | Phase2B 首批核心 AI 润色 / 写作引用，复用 RAG 来源与 LLM adapter，需权限过滤和降级；数据外发风险已接受（RG-008） |
+| REQ-013 / 024 | `GET /api/spaces/{id}/timeline`（API-033） | Phase2B 首批·第二 slice 时间轴 / 密度热条，待 `docs/design/timeline.md` 定稿契约 |
 | REQ-015 / 016 / 017 | 后续 Phase 接口骨架 | 推送 / 协作 / 移动端不进 Phase2B 首批 |
 | REQ-018..023 / 028..035 | 愿景接口骨架 | 技术验证通过后细化契约 |
 
@@ -352,4 +356,4 @@ sequenceDiagram
 
 - Phase1.5A API-029 / API-030 已实现并通过 TC-P1-015/016；若后续扩展真实目录表、长期导出产物或新依赖，需同步 `docs/design/ingestion.md`、导出详细设计与 `docs/09-verification.md` TC-P1-015/016。
 - `API-019` PDF 导出属于 Phase1.5B，受 `docs/05-tech-spec.md` RG-006 与 tech-env 草案约束；导出库未安装 / 未验证前不得进入实现。
-- Phase2A 标签 / 快速录入 / 内链 API 已实现；Phase2B API 仍为契约草案，需确认 vertical slice、DB 迁移、UI smoke 与数据外发边界。
+- Phase2A 标签 / 快速录入 / 内链 API 已实现；**Phase2B API-028 已推进到 MVP 级已设计**（vertical slice 已定：polish 同步 / citation 首版同步；数据外发风险已接受 RG-008），待 Sprint-19 编码；**API-033 时间轴为第二 slice，待 `docs/design/timeline.md` 定稿**。

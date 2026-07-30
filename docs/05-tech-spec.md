@@ -55,12 +55,13 @@ flowchart TB
 | TCD-007 | 批量 / 文件夹导入按逐文件循环处理，保留相对路径标题前缀，部分成功不回滚，同名默认跳过 | Phase1.5A 要最快解决“资料放不进去”；不建真实目录表可避免 DB 迁移 | 新增 folder 表 / 真实目录树；失败一项回滚全部 | REQ-037、TC-P1-015 | 已实现（Sprint-16，TC-P1-015 通过） |
 | TCD-008 | `.md` / ZIP 导出备份走标准文件流与 Python `zipfile`，导出前统一权限过滤 | Phase1.5A 要可迁出、可备份；标准库不引重依赖 | 先做 PDF；导出数据库整库；长期公开链接 | REQ-038、TC-P1-016 | 已实现（Sprint-17，TC-P1-016 通过） |
 | TCD-009 | PDF 导出受 RG-006 控制，未完成中文最小样例与资源验证前不得编码 | PDF 依赖与字体风险高，不应阻塞个人可用 Alpha | 直接引入 weasyprint / reportlab 编码 | REQ-027、TC-P1-017 | 候选·待 RG-006 |
+| TCD-010 | Phase2B AI 润色 / 写作引用（REQ-014）复用 ADR-002 LLM adapter；polish 同步、citation 复用 RAG 来源检索 + LLM | 厂商解耦、复用既有通道；不引新 LLM SDK | 业务层直连 LLM；新增独立 AI 服务 | AI 润色（REQ-014） | 设计就绪·待 RG-008 验证升 Go |
 
 > 关联详细设计：`docs/design/rag-retrieval.md`、`ingestion.md`、`term-management.md`、`permissions.md`。
 > **错误码**：HTTP 状态码 + `{ code, msg, data }` 双层；`code=0` 成功，业务错误 4 位数字码（详见 `docs/07-api-spec.md` §1）。
 > **切块 / Embedding 参数**：导入侧与检索侧共用同一套；按标题 / 段落优先切分，目标块长 512 tokens、重叠 64 tokens、单块最小 80 字符；模型 `BAAI/bge-small-zh-v1.5`（512 维，pgvector `vector(512)`，写入前归一化）；批量 batch size 32。
 >
-> **Phase1.5 / Phase2 技术决策状态**：Phase1.5A 的批量导入与 `.md` / ZIP 导出已按 TCD-007/008 完成；Phase2A 标签 + 反向链接索引模型（REQ-012 / 026）已采用 PG 关系表 + `[[wikilink]]` 解析并完成最小闭环；Phase1.5B 的 PDF 导出库（REQ-027）受 RG-006 控制；真实 Word/PDF 文本提取需另做选型；Phase2B AI 润色复用 ADR-002 LLM adapter（REQ-014）但需重新确认数据外发边界。
+> **Phase1.5 / Phase2 技术决策状态**：Phase1.5A 的批量导入与 `.md` / ZIP 导出已按 TCD-007/008 完成；Phase2A 标签 + 反向链接索引模型（REQ-012 / 026）已采用 PG 关系表 + `[[wikilink]]` 解析并完成最小闭环；Phase1.5B 的 PDF 导出库（REQ-027）受 RG-006 控制；真实 Word/PDF 文本提取需另做选型；Phase2B AI 润色（REQ-014）为首批核心，采用 **TCD-010**（复用 ADR-002 LLM adapter）；数据外发边界已确认——风险已人工接受，护栏见 RG-008 与 `ai/project-rules.md §2.5`。
 
 ### 2.1 依赖与配置矩阵
 
@@ -88,7 +89,7 @@ flowchart TB
 - **Phase1.5A（个人可用 Alpha）**：允许 REQ-037 / 038 低依赖导入导出增强；不得以 PDF、真实 Word/PDF 解析、OCR、标签 / 内链、AI 润色作为退出门槛；新增实现必须遵守 WSG 文件阈值。
 - **Phase1.5B（个人增强 Beta）**：REQ-027 单文档 PDF 必须先完成 RG-006 选型 + 中文最小样例验证，未通过不得编码；真实 Word/PDF 文本提取、zhparser 搜索增强需单独选型 / RG，不阻塞 Alpha。
 - **Phase2A（个人知识组织）**：已完成 REQ-026 / 012 / 025 三个 vertical slice（TC-P2-LINK/TAG/QUICK-001 通过，2026-07-20 closure）。Phase2B（团队 MVP）契约与首个 vertical slice 待升阶段确认，不得一次性实现全部 P2 UI。
-- **Phase2B（团队 MVP）**：候选 REQ-014 / 013 / 024；AI 润色需确认数据外发过滤与 Mock 降级；REQ-015 / 016 / 017（推送 / 协作 / 移动端）不进首批，留后续 Phase。
+- **Phase2B（团队 MVP，范围已确认 2026-07-30，未切指针）**：REQ-014 AI 润色为首批核心、REQ-013 / 024 时间轴紧随第二 slice；**AI 润色数据外发风险已接受（真实外发 + 权限护栏，见 RG-008 + `ai/project-rules.md §2.5`），5030 / Mock 可降级**；REQ-015 / 016 / 017（推送 / 协作 / 移动端）不进首批，留后续 Phase。
 
 ## 4. 编码约定
 
@@ -125,7 +126,7 @@ flowchart TB
 > 受 `ai/project-rules.md` §2.5 与 `docs/env/local-env.md` 约束。给出本机 Demo 可行性、瓶颈、降级 / Mock 与服务器预案。
 
 - 本机 Demo 可行性：PostgreSQL+pgvector、FastAPI、React 均可本机 Docker 运行；Embedding 采用本机 `bge-small-zh`（512 维），不依赖公司 Embedding 资源。
-- 数据范围：默认使用已标注的虚构 Demo 数据；允许按需导入部分真实团队文档。真实文档必须显式标注来源 / 敏感级别，并优先避免发送到外部模型。
+- 数据范围：默认使用已标注的虚构 Demo 数据；允许按需导入部分真实团队文档。真实文档必须显式标注来源 / 敏感级别；RAG / 术语场景优先避免发送到外部模型，**Phase2B AI 润色（REQ-014）允许真实片段外发（风险已接受，见 §5.2 / RG-008）**。
 - 依赖 / 镜像：允许本机安装项目所需 Python / npm 依赖并拉取 Docker 镜像；新增依赖必须进入依赖文件并说明用途，不得替换既定技术栈。
 - 资源软上限：Demo 峰值内存 < 8GB、显存 < 4GB、磁盘 < 20GB；依据见 `docs/env/local-env.md` 自动采集值与人工确认项。
 - 资源瓶颈：大文档批量导入的内存占用、向量索引构建开销；超限先优化批处理、增量索引与 chunk 策略。
@@ -145,6 +146,7 @@ flowchart TB
 | RG-005 | Web / ORM 基础栈（FastAPI/Pydantic/React） | **Go** | 已接入并跑通 74 后端 tests（含 PG 集成 + embedding）+ 前端 build + 浏览器 smoke；requirements.txt drift 已解决（T7 PG-C-001） | — | 74 后端 tests + 前端 build + smoke；TC-P1-001..012 | REQ-001..006/011/036 |
 | RG-006 | Phase1.5B PDF 导出库（候选 weasyprint / reportlab） | **待评估 / 不阻塞 P1.5A** | 新依赖（REQ-027）；中文排版、字体、资源占用未验证 | 选型 + tech-env-eval（中文排版 / 字体 / 内存） | 待 tech-env-eval；TC-P1-017 | REQ-027 |
 | RG-007 | Phase1.5B 真实 Word / PDF 文本提取（候选 python-docx / pdfplumber） | **待评估 / 不阻塞 P1.5A** | 依赖未接入，真实文档隐私与格式兼容性未验证 | 最小样例导入 + 资源 / 隐私边界验证 | 待 tech-env-eval | REQ-009 |
+| RG-008 | Phase2B AI 润色数据外发风险接受（REQ-014） | **Conditional Go** | 数据外发风险已人工接受（2026-07-30，真实外发 + 权限护栏）；sources 权限过滤复用 Phase1 既有查询层过滤；草稿只存 hash + 摘要、不存完整敏感原文；不做敏感字段自动过滤（用户自判）；5030 / Mock 可降级 | 首个 vertical slice（Sprint-19）实跑 polish 外发——权限过滤、5030 降级、hash 留存通过 → 升 **Go** | 待 Sprint-19 验证；TC-P2-AI-001 | REQ-014（解锁 AI 润色编码） |
 
 > 风险与验证映射：本表 RG-ID 与 `docs/09-verification.md §6` 风险项对齐（待 09 补 Risk-ID 列后双向链接）。
 
@@ -157,7 +159,7 @@ flowchart TB
 | 权限隔离 | 空间 + 文档两级权限，查询 / 检索 / 问答三层统一过滤；前端隐藏不作为权限边界 | Phase1 | 已实现 | `04 §5.3`、`docs/design/permissions.md` | TC-P1-001 / 003 |
 | 私有文档隔离 | 私有文档不进他人检索 / 问答 / 共享视图 | Phase1 | 已实现 | `04 §5.3` | TC-P1-003 |
 | 库外问答红线 | 无相关内容明确"未找到"，不编造 | 全阶段 | 已实现（产品红线） | `03 §3` Phase1 退出标准 | TC-P1-008 |
-| 数据外发过滤 | 发往 LLM 前过滤敏感片段，优先避免发送真实团队文档；Embedding 本机不外发 | Phase1 | 已实现（口径） | `04 §1.1`、`project-rules §2.5` | 人工验收 + RAG tests |
+| 数据外发过滤 | RAG / 术语：发往 LLM 前过滤敏感片段，优先避免发送真实团队文档；**Phase2B AI 润色（REQ-014）：允许真实文档片段外发，风险已接受，护栏见 RG-008**（sources 权限过滤、hash 留存、不做自动过滤、5030 降级）；Embedding 本机不外发 | Phase1 / Phase2B | Phase1 已实现（口径）；Phase2B 待 RG-008 验证 | `04 §1.1`、`project-rules §2.5`、RG-008 | TC-P1-008；TC-P2-AI-001 |
 | 真实文档标注 | 真实文档导入须显式标注来源 / 敏感级别 | Phase1+ | 后续阶段待细化 | `project-rules §2.5` | 后续真实导入任务 |
 | Demo 数据边界 | 默认虚构 Demo 数据；真实文档按需导入并标注 | Phase1 | 已执行 | `project-rules §2.5` | — |
 | Token 鉴权 | Demo Bearer Token（HMAC-SHA256，8h） | Phase1 | 已实现 | `04 §5.1`、TCD-006 | 登录 / 切换 tests |
@@ -169,4 +171,4 @@ flowchart TB
 
 - Phase1.5A Sprint-16/17 已完成且未引新依赖；若后续扩展批量导入或 ZIP 导出需要超出标准库 / 既有栈，必须先修订本文与 `06/07/08/09`。
 - Phase1.5B PDF 导出须先完成 RG-006；真实 Word/PDF 文本提取须先完成 RG-007 或独立 tech-env-eval，均不得阻塞 P1.5A。
-- Phase2B 开始前需回到本文补对应依赖、数据外发、安全边界和 smoke / 自动化验证入口。Phase2A 已实现能力如需扩展，按同一门禁补文档与验证。
+- Phase2B 启动准备已完成（2026-07-30）：数据外发风险已接受（RG-008 Conditional Go，见 §5.1 / `ai/project-rules.md §2.5`）、AI 润色 TCD-010 与 06/07 契约已补、Sprint-19/20 已规划；**待 RG-008 首个 vertical slice 实跑升 Go、Sprint-11 UI/WSG 门禁重跑后，再切阶段指针并编码**。Phase2A 已实现能力如需扩展，按同一门禁补文档与验证。

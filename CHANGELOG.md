@@ -6,6 +6,20 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v0.2.5（2026-07-30）
+
+Phase2B 启动范围确认与数据外发风险接受落盘（纯文档 / 决策留痕，未切阶段指针、未编码）。
+
+- 用户确认 Phase2B 首批范围：REQ-014 AI 润色 / 写作引用为首批核心，REQ-013 / 024 时间轴紧随作为第二 slice（REQ-014 先行，时间轴从零设计成本更高）。
+- 数据外发风险接受口径落锤：允许 AI 润色将真实文档片段经公司内网中转 LLM 外发，护栏 = sources 权限过滤 + 草稿只存 hash / 摘要 + 不做敏感字段自动过滤 + 5030 / Mock 降级；`ai/project-rules.md §2.5` 升级为横切权威源，同步 `04 §1.1` / `05 §5.2` / `09 RISK-P2-005`。
+- 新增 `docs/05-tech-spec.md` **RG-008（Conditional Go）** 与 **TCD-010**；REQ-014 的 `lumen_ai_drafts`（`06`）/ API-028（`07`）推进到 MVP 级已设计；新增时间轴 API-033；新建 `docs/design/ai-polish.md`、`docs/design/timeline.md`。
+- 新增 `docs/08-dev-plan.md` Sprint-19（REQ-014）/ Sprint-20（时间轴）；`docs/09-verification.md` 细化 TC-P2-AI-001、新增 TC-P2-TL-001、RISK-P2-005 转 Conditional Go。
+- 新增 `docs/research/2026-07-30-phase2b-kickoff-decision.md` 决策锚点；关闭 `03` PRD-C-003、部分关闭 open-items OI-001。
+- **阶段指针未切**（`project-rules.md §1` 仍 Phase2A 已完成 / 未进入 Phase2B）；待 RG-008 首个 vertical slice 验证升 Go + Sprint-11 UI/WSG 门禁重跑后，再切指针并编码。
+- 本版本不新增可演示能力、不改对外已生效 API 契约、不改代码，仅做 Phase2B 启动的设计就绪与决策落盘。
+
+> PATCH 依据（`ai/project-rules.md` §2.8.1）：纯文档修订 / 决策落盘 / 状态校准，不新增可演示能力、未切阶段、不改对外 API 契约；切指针与首个 Sprint 验收时再 bump MINOR / MAJOR。
+
 ## v0.2.4（2026-07-21）
 
 Phase2A 文档漂移同步与输入评估落盘（纯文档 / 状态校准）。
