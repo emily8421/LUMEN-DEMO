@@ -9,6 +9,9 @@ import type {
 import type { Draft } from '../app/types';
 import { permissionLabels } from '../app/constants';
 import { MarkdownBlock } from '../components/MarkdownBlock';
+import { AiPolishFeature } from './AiPolishFeature';
+import { useTextareaSelection } from '../app/useTextareaSelection';
+import type { useAiPolish } from '../app/useAiPolish';
 
 type DocumentsFeatureProps = {
   isCreating: boolean;
@@ -38,6 +41,8 @@ type DocumentsFeatureProps = {
   onAddTagSelectionChange: (tagId: number | null) => void;
   onAddTag: (tagId: number | null) => void;
   onRemoveTag: (tagId: number) => void;
+  /** REQ-014 AI 润色侧边栏状态 + handler（useAiPolish 返回）。 */
+  aiPolish: ReturnType<typeof useAiPolish>;
 };
 
 function markdownExcerpt(content: string, maxLength = 140) {
@@ -70,7 +75,12 @@ export function DocumentsFeature({
   onAddTagSelectionChange,
   onAddTag,
   onRemoveTag,
+  aiPolish,
 }: DocumentsFeatureProps) {
+  const { ref: textareaRef, onSelect: handleTextareaSelect } = useTextareaSelection(
+    aiPolish.changeSelection,
+  );
+
   return (
     <section className="documents-workspace">
       <div className="workspace-toolbar">
@@ -120,8 +130,10 @@ export function DocumentsFeature({
               <label className="editor-field">
                 Markdown 内容
                 <textarea
+                  ref={textareaRef}
                   value={draft.content_md}
                   onChange={(event) => onDraftChange({ ...draft, content_md: event.target.value })}
+                  onSelect={handleTextareaSelect}
                   placeholder="输入或编辑 Markdown 内容"
                   rows={14}
                 />
@@ -260,6 +272,23 @@ export function DocumentsFeature({
                 </>
               )}
             </section>
+
+            <AiPolishFeature
+              selection={aiPolish.selection}
+              mode={aiPolish.mode}
+              instruction={aiPolish.instruction}
+              result={aiPolish.result}
+              phase={aiPolish.phase}
+              errorMessage={aiPolish.errorMessage}
+              canWrite={aiPolish.canWrite}
+              isBusy={isBusy}
+              onModeChange={aiPolish.setMode}
+              onInstructionChange={aiPolish.setInstruction}
+              onRequestPolish={aiPolish.requestPolish}
+              onApply={aiPolish.apply}
+              onDiscard={aiPolish.discard}
+              onOpenDocument={onOpenDocument}
+            />
           </div>
         </aside>
       </div>

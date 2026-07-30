@@ -165,6 +165,26 @@ export function useDocuments({
     });
   };
 
+  /** AI 润色应用（REQ-014）：把选区替换为润色结果后保存（PUT update → 版本）。 */
+  const handleApplyPolishedContent = (newContentMd: string) => {
+    if (!token || !selectedDocument || isCreating) {
+      return;
+    }
+    void runAction('正在应用 AI 润色...', async () => {
+      const payload = normalizeDraft({ ...draft, content_md: newContentMd });
+      const savedDocument = await updateDocument(token, selectedDocument.id, payload);
+      setDraft({
+        title: savedDocument.title,
+        content_md: savedDocument.content_md ?? newContentMd,
+        permission: savedDocument.permission,
+      });
+      await reloadDocuments(token);
+      setSelectedId(savedDocument.id);
+      await loadVersions(token, savedDocument.id);
+      setNotice(`已应用 AI 润色（版本 ${savedDocument.current_version}）`);
+    });
+  };
+
   const handleCreateDocument = () => {
     setActiveView('documents');
     setIsCreating(true);
@@ -260,6 +280,7 @@ export function useDocuments({
     selectedDocument,
     reloadDocuments,
     handleSave,
+    handleApplyPolishedContent,
     handleCreateDocument,
     handleSelectDocument,
     handleDelete,

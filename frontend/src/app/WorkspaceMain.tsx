@@ -8,6 +8,7 @@ import { useSearch } from './useSearch';
 import { useQuery } from './useQuery';
 import { useTerms } from './useTerms';
 import { useTags } from './useTags';
+import type { useAiPolish } from './useAiPolish';
 
 interface WorkspaceMainProps {
   activeView: string;
@@ -17,6 +18,7 @@ interface WorkspaceMainProps {
   query: ReturnType<typeof useQuery>;
   terms: ReturnType<typeof useTerms>;
   tags: ReturnType<typeof useTags>;
+  aiPolish: ReturnType<typeof useAiPolish>;
   onQuickEntryOpen: () => void;
 }
 
@@ -28,6 +30,7 @@ export function WorkspaceMain({
   query,
   terms,
   tags,
+  aiPolish,
   onQuickEntryOpen,
 }: WorkspaceMainProps) {
   return (
@@ -60,6 +63,7 @@ export function WorkspaceMain({
           onAddTagSelectionChange={tags.setAddTagSelection}
           onAddTag={tags.handleAddDocumentTag}
           onRemoveTag={tags.handleRemoveDocumentTag}
+          aiPolish={aiPolish}
         />
       ) : null}
 

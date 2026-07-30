@@ -13,6 +13,7 @@ import { useImport } from './app/useImport';
 import { useWorkspace } from './app/useWorkspace';
 import { useSession } from './app/useSession';
 import { useDocuments } from './app/useDocuments';
+import { useAiPolish } from './app/useAiPolish';
 import { isAuthTokenError } from './app/session-store';
 import { QuickEntryFeature } from './features/QuickEntryFeature';
 import { WorkspaceMain } from './app/WorkspaceMain';
@@ -29,6 +30,17 @@ function App() {
     setError: workspace.setError,
     onAuthError: session.handleAuthError,
     setActiveView: workspace.setActiveView,
+  });
+
+  const aiPolish = useAiPolish({
+    token,
+    userId: session.session?.userId,
+    selectedDocument: documents.selectedDocument,
+    isCreating: documents.isCreating,
+    contentMd: documents.draft.content_md,
+    runAction,
+    setNotice: workspace.setNotice,
+    onApplyContent: documents.handleApplyPolishedContent,
   });
 
   const tags = useTags({
@@ -194,6 +206,7 @@ function App() {
             query={query}
             terms={terms}
             tags={tags}
+            aiPolish={aiPolish}
             onQuickEntryOpen={quickEntry.open}
           />
 
