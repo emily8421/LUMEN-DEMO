@@ -23,7 +23,7 @@
 - 是否触发 PowerShell fallback（sync / check）：未触发；Git Bash 路径可用
 - post-sync-cleanup：已执行（本清理提交），处理 README 模板版本、根 CHANGELOG-PLAIN ownership 与 NEXT-STEPS 退役；未修改模板同步清单文件 docs/README.md
 - docs-system-audit（同步后审计）：已执行（2026-07-30，见 `docs/research/2026-07-30-docs-system-audit-post-v1.59.0.md`；本批完成文档状态回写）
-- 项目验证建议 / 已执行验证：仅执行模板同步边界检查；未运行项目测试 / lint / build
+- 项目验证建议 / 已执行验证：已执行模板同步边界检查；2026-07-30 补跑 `git diff --check`、`frontend` build、后端 `compileall` 与 `unittest`，结果见下方项目验证段
 
 ### 命令真实性记录
 
@@ -34,7 +34,7 @@
 | check-derived-sync | `powershell -ExecutionPolicy Bypass -File scripts\check-derived-sync.ps1 751ccd3` | EXIT=0；27 个同步清单内文件合规 | 是 | 否 | 不适用 | 未命中项目专属保护文件；派生项目版本机制已启用 |
 | post-sync-cleanup | 执行本清理任务 | 已完成 | 是 | 否 | 否 | 本次清理与同步提交分离；处理 README / CHANGELOG-PLAIN / NEXT-STEPS；未触碰 docs/README.md 模板同步边界 |
 | docs-system-audit | 执行同步后文档体系审计与状态回写 | 已完成 | 是 | 否 | 是 | 报告见 `docs/research/2026-07-30-docs-system-audit-post-v1.59.0.md`；本批只改文档状态，不运行项目测试 |
-| 项目验证 | 未运行项目测试 / lint / build | 未验证 | 否 | 否 | 不适用 | 本轮只验证模板同步边界 |
+| 项目验证 | `git diff --check`、`npm run build`（frontend）、`python -m compileall backend tests/backend`、`python -m unittest discover -s tests/backend -v` | 已完成 | 是 | 否 | 不适用 | 后端 unittest：112 tests OK，skipped=3（PG 容器不可达、embedding/torch 本机 DLL 权限）；已修复 PG 不可达导致长时间挂起与 embedding 模块导入失败 |
 
 ## A13 完成判据矩阵
 
@@ -48,7 +48,7 @@
 | 提案回流收口 | 只读列出 `_proposals/`，未联网复核 issue / PR | 部分完成 | 远端状态未复核，不能归档 | 后续联网核对模板 issue / PR 后再归档或保留 |
 | 同步报告留痕 | `sync-records/template-sync/2026-07-29-sync-template-v1.59.0.md` | 完成 |  | 同步 PR 一并提交 |
 
-> 结论：同步主链与同步后文档体系审计已完成；A13 完整闭环仍剩项目验证与提案回流复核，不得标记为 A13 完整闭环完成。
+> 结论：同步主链、同步后文档体系审计与本地项目验证已完成；A13 完整闭环仍剩提案回流复核，不得标记为 A13 完整闭环完成。
 
 ## 同步结果
 
@@ -78,9 +78,9 @@
 
 ## 项目验证建议
 
-- 建议运行的测试 / lint / 文档检查 / 人工验收：根据项目现有入口运行测试 / lint / build；如无自动化入口，记录人工验收步骤
-- 已执行验证与结果：`check-derived-sync 751ccd3` 通过
-- 未验证项与原因：未运行项目测试 / lint / build，未运行 GitHub Actions，未执行 docs-system-audit
+- 建议运行的测试 / lint / 文档检查 / 人工验收：如需真实 PG / embedding 覆盖，启动 `lumen-pg` 容器并修复本机 torch DLL 权限后重跑对应依赖测试
+- 已执行验证与结果：`check-derived-sync 751ccd3` 通过；`git diff --check` 通过（仅 LF/CRLF 提示）；`frontend` 执行 `npm run build` 通过；`python -m compileall backend tests/backend` 通过；`python -m unittest discover -s tests/backend -v` 通过（112 tests OK，skipped=3）
+- 未验证项与原因：未运行 GitHub Actions；PG 集成测试因 `127.0.0.1:15432` 不可达而 skip；embedding 测试因本机 `torch_python.dll` 加载 WinError 5 而 skip；`docs-system-audit` 已于 2026-07-30 执行
 
 ## 遇到的问题
 
@@ -103,26 +103,26 @@
 
 ## 提案回流收口
 
-- 扫描范围：`_proposals/` 目录只读列表；未联网复核模板 issue / PR；未扫描 `.ai/session-handoff.md` 与旧同步记录正文
-- 已确认被模板采纳或已有决议的提案：未确认
-- 已归档到 `_archive/proposals/` 的本地提案：无
-- 仍需保留在 `_proposals/` 的提案：全部保留
-- 无法判断是否已处理的 issue / 提案与待确认项：全部本地 `TEMPLATE-UPGRADE-*.md` 均需后续复核
+- 扫描范围：`_proposals/` 目录、模板仓 GitHub issue 状态、同步到本项目的 `upstream/CHANGELOG.md` 与当前模板规则文本
+- 已确认被模板采纳或已有决议的提案：6 个本地 `TEMPLATE-UPGRADE-*.md` 均已在模板仓对应 issue closed 且 `state_reason=completed`
+- 已归档到 `_archive/proposals/` 的本地提案：6 个
+- 仍需保留在 `_proposals/` 的提案：无
+- 无法判断是否已处理的 issue / 提案与待确认项：无
 
 | 本地提案 | 模板 issue 或 PR | 远端状态 | 关闭原因 / 处理结果 | 本地动作建议 |
 |---|---|---|---|---|
-| `TEMPLATE-UPGRADE-app-main-file-size-rule.md` | 未复核 | 未复核 | 不明 | 保留 |
-| `TEMPLATE-UPGRADE-ui-brief-intake-guidance-scenario.md` | 未复核 | 未复核 | 不明 | 保留 |
-| `TEMPLATE-UPGRADE-ui-exploration-to-delivery-pipeline.md` | 未复核 | 未复核 | 不明 | 保留 |
-| `TEMPLATE-UPGRADE-v1.44.0-ui-prototype-gate.md` | 未复核 | 未复核 | 不明 | 保留 |
-| `TEMPLATE-UPGRADE-web-fullstack-skeleton-gate.md` | 未复核 | 未复核 | 不明 | 保留 |
-| `TEMPLATE-UPGRADE-windows-utf8-rule-reading.md` | 未复核 | 未复核 | 不明 | 保留 |
+| `TEMPLATE-UPGRADE-app-main-file-size-rule.md` | issue #232 | closed / completed | v1.56.3 吸收：Web Fullstack Profile 补主应用文件职责边界、业务下沉与软上限 | 已归档到 `_archive/proposals/` |
+| `TEMPLATE-UPGRADE-ui-brief-intake-guidance-scenario.md` | issue #192 | closed / completed | v1.49.0 吸收：UI Brief Intake 场景、模板与输入评审 / 原型 / 编码前门禁衔接 | 已归档到 `_archive/proposals/` |
+| `TEMPLATE-UPGRADE-ui-exploration-to-delivery-pipeline.md` | issue #191 | closed / completed | v1.50.0 吸收：UI Exploration to Delivery Pipeline、UI-G-001~007、experience brief 与视觉候选链路 | 已归档到 `_archive/proposals/` |
+| `TEMPLATE-UPGRADE-v1.44.0-ui-prototype-gate.md` | issue #182 | closed / completed | v1.50.0 吸收：实现前 UI 原型 Gate、默认行业 UI 标准、UI / 后端顺序判断 | 已归档到 `_archive/proposals/` |
+| `TEMPLATE-UPGRADE-web-fullstack-skeleton-gate.md` | issue #187 / PR #262 | closed / completed | v1.48.0 落地 Web Fullstack Profile；v1.57.0 通用 System Skeleton Gate 吸收并保留 Web 特化 | 已归档到 `_archive/proposals/` |
+| `TEMPLATE-UPGRADE-windows-utf8-rule-reading.md` | issue #207 | closed / completed | v1.52.5 吸收：Windows / PowerShell 中文规则显式 UTF-8 读取与乱码处理 | 已归档到 `_archive/proposals/` |
 
 ## 后续动作
 
 - 是否需要 `/run post-sync-cleanup`：已执行，本清理提交处理 `CHANGELOG-PLAIN.md` ownership、README 旧模板版本与 `NEXT-STEPS.md` 退役
 - 是否需要 `/run docs-system-audit`：已执行同步后审计模式（2026-07-30）
 - 是否需要按审计结果回梳 `docs/00-09` / `docs/design` / `docs/env`：已回梳 `docs/00-09` 与相关 `docs/design`；`docs/env` 本次无状态回写需求
-- 是否需要补项目验证入口：待项目测试 / lint / build 入口判断
+- 是否需要补项目验证入口：已补跑本地项目验证；真实 PG / embedding 覆盖仍需对应环境可用
 - 是否需要人工清理旧目录：无需处理 `docs/_scaffold/`；旧临时交接 `NEXT-STEPS.md` 已退役
-- 是否需要同步回模板仓库：本轮无新增回流提案
+- 是否需要同步回模板仓库：本轮无新增回流提案；既有 6 个本地提案已确认被模板吸收并归档

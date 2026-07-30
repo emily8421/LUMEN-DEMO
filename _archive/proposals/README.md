@@ -26,3 +26,9 @@
 | `TEMPLATE-UPGRADE-08-dev-plan-progress-standard.md`（issue #108） | `v1.37.0`，本项目已同步至 `v1.43.0` | 08 开发计划 / 任务拆分 / 进度留痕规范已落地为 `ai/doc-standards/08`。 |
 | `TEMPLATE-UPGRADE-09-verification-standard-detail.md`（issue #109） | `v1.37.0`，本项目已同步至 `v1.43.0` | 09 Verification 文档规范已落地为 `ai/doc-standards/09`。 |
 | `TEMPLATE-UPGRADE-design-doc-standard.md`（issue #110） | `v1.38.0`，本项目已同步至 `v1.43.0` | `docs/design/*` 通用详细设计规范已落地为 `ai/doc-standards/design-doc.md`。 |
+| `TEMPLATE-UPGRADE-ui-brief-intake-guidance-scenario.md`（issue #192） | `v1.49.0`，本项目已同步至 `v1.59.0` | 模板已新增 UI Brief Intake 场景、`template-docs/ui-brief-intake-template.md`、输入评审 / 原型探索 / 编码前门禁衔接。 |
+| `TEMPLATE-UPGRADE-ui-exploration-to-delivery-pipeline.md`（issue #191） | `v1.50.0`，本项目已同步至 `v1.59.0` | UI Exploration to Delivery Pipeline、UI-G-001~007、experience brief、视觉候选与回填链路已落地。 |
+| `TEMPLATE-UPGRADE-v1.44.0-ui-prototype-gate.md`（issue #182） | `v1.50.0`，本项目已同步至 `v1.59.0` | 实现前 UI 原型 Gate、默认行业 UI 标准、UI / 后端实施顺序判断已被 v1.50.0 吸收。 |
+| `TEMPLATE-UPGRADE-web-fullstack-skeleton-gate.md`（issue #187） | `v1.48.0` / `v1.57.0`，本项目已同步至 `v1.59.0` | Web Fullstack Profile 先落地为 Web 特化结构门禁，后续由 v1.57.0 通用 System Skeleton Gate 吸收并保留 Web 特化扩展。 |
+| `TEMPLATE-UPGRADE-windows-utf8-rule-reading.md`（issue #207） | `v1.52.5`，本项目已同步至 `v1.59.0` | `ai/rules-core.md`、`ai/session-rules.md`、`ai/commands/resume.md` 已补 Windows / PowerShell 中文规则显式 UTF-8 读取与乱码处理。 |
+| `TEMPLATE-UPGRADE-app-main-file-size-rule.md`（issue #232） | `v1.56.3`，本项目已同步至 `v1.59.0` | `template-docs/web-fullstack-profile.md` 已补主应用文件职责边界、业务下沉约束和 state / handler 软上限；行数阈值已由 Web Profile 覆盖。 |

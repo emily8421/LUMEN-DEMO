@@ -18,8 +18,10 @@ import os
 os.environ.setdefault("HF_HUB_DISABLE_XET", "1")
 
 from functools import lru_cache
+from typing import TYPE_CHECKING
 
-from sentence_transformers import SentenceTransformer
+if TYPE_CHECKING:  # pragma: no cover - typing only
+    from sentence_transformers import SentenceTransformer
 
 MODEL_NAME = "BAAI/bge-small-zh-v1.5"
 EMBEDDING_DIM = 512
@@ -27,8 +29,10 @@ DEFAULT_BATCH_SIZE = 32
 
 
 @lru_cache(maxsize=1)
-def get_model() -> SentenceTransformer:
+def get_model() -> "SentenceTransformer":
     """Load the bge-small-zh model once, cached for the process lifetime."""
+    from sentence_transformers import SentenceTransformer
+
     return SentenceTransformer(MODEL_NAME)
 
 

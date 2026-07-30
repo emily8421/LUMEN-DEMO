@@ -12,13 +12,27 @@ from __future__ import annotations
 
 import glob
 import os
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import psycopg
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
-_DATABASE_URL = os.environ.get(
-    "DATABASE_URL", "postgresql://lumen:lumen@localhost:15432/lumen"
+_DEFAULT_CONNECT_TIMEOUT_SECONDS = "5"
+
+
+def _with_default_connect_timeout(url: str) -> str:
+    """Ensure PG-unavailable tests fail fast instead of hanging on TCP connect."""
+    parts = urlsplit(url)
+    query = dict(parse_qsl(parts.query, keep_blank_values=True))
+    if "connect_timeout" in query:
+        return url
+    query["connect_timeout"] = _DEFAULT_CONNECT_TIMEOUT_SECONDS
+    return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(query), parts.fragment))
+
+
+_DATABASE_URL = _with_default_connect_timeout(
+    os.environ.get("DATABASE_URL", "postgresql://lumen:lumen@localhost:15432/lumen")
 )
 
 _MIGRATIONS_DIR = os.path.join(os.path.dirname(__file__), "..", "migrations")
