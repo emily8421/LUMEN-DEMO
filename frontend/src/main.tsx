@@ -6,6 +6,7 @@ import './styles/base.css';
 import './styles/layout.css';
 import './styles/workspace.css';
 import './styles/panels.css';
+import './styles/ai-polish.css';
 import './styles/responsive.css';
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
