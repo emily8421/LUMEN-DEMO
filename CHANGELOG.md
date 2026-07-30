@@ -6,6 +6,16 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v0.2.7（2026-07-30）
+
+App.tsx 拆分重构（WSG 文件膨胀阈值，纯结构搬运，不改业务逻辑）。
+
+- 抽出 `frontend/src/app/WorkspaceMain.tsx`（115 行）承接 `workspace-main` 的 views 切换（documents / search / query / terms / tags Feature + quick-entry 触发）。
+- `frontend/src/App.tsx` **305 → 231 行**（低于 WSG 阈值 300），为 Phase2B Sprint-19（AI 润色侧边栏）留余量。
+- 纯 JSX 搬运 + props 传递（类型用 `ReturnType<typeof useX>`）；不改任何业务逻辑、API、DB；build + tsc 绿（Node 22）。
+
+> PATCH 依据（`ai/project-rules.md` §2.8.1）：重构 / 结构调整，不新增可演示能力、不改对外 API 契约。
+
 ## v0.2.6（2026-07-30）
 
 Phase2B 前端交互设计补全 + 构建环境修复（纯文档 / 配置，未切指针、未编码）。
