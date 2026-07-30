@@ -186,3 +186,27 @@ class QuickEntry:
     status: str = "draft"
     created_at: str = ""
     updated_at: str = ""
+
+
+@dataclass(frozen=True)
+class AiDraft:
+    """REQ-014 AI 润色 / 写作引用草稿（lumen_ai_drafts，migration 010）。
+
+    mode：'polish'（改写选区）/ 'citation'（带来源引用）。数据外发护栏（RG-008）：
+    只存 input_excerpt_hash（选区 sha256）+ prompt_summary（摘要，不含完整 prompt），
+    不存完整敏感原文 / API key。status：'generated'（已生成草稿）/ 'applied'
+    （已写回正文 + 版本）/ 'discarded'（已丢弃）/ 'failed'（生成失败 / 降级未落 generated）。
+    cited_chunk_ids：citation 模式召回的可见 chunk id（仅当前用户可见 chunk）。
+    """
+
+    id: int
+    space_id: int
+    document_id: int
+    user_id: int
+    mode: str
+    input_excerpt_hash: str | None = None
+    prompt_summary: str = ""
+    output_md: str = ""
+    cited_chunk_ids: tuple[int, ...] = ()
+    status: str = "generated"
+    created_at: str = ""

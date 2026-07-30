@@ -14,7 +14,7 @@
 | 覆盖 REQ / NFR | REQ-014、NFR-004（数据安全） |
 | 所属 Phase | `[P2]` Phase2B 团队 MVP（首批核心） |
 | 交付物形态 | MVP |
-| 当前状态 | **Phase2B·MVP 级已设计**（待 RG-008 首个 vertical slice 验证升 Go、待 Sprint-19 编码）；数据外发风险已人工接受（2026-07-30） |
+| 当前状态 | **Phase2B·后端已实现（MVP 级）**（Sprint-19 / task-019 后端通过，RG-008 升 Go，2026-07-30；前端 half 待实现）；数据外发风险已人工接受（2026-07-30） |
 | 流程 ID | Flow-D-POLISH-01（润色）/ Flow-D-POLISH-02（写作引用），见 §3 |
 | 最后更新 | 2026-07-30 |
 | 下游影响 | `08` Sprint-19、`09` TC-P2-AI-001、`backend/service/ai_polish`、`lumen_ai_drafts` migration 010 |
@@ -133,13 +133,13 @@ stateDiagram-v2
 
 | 阶段 | 功能范围 | 交付物形态 | 设计状态 | 实现状态 | 备注 |
 |---|---|---|---|---|---|
-| Phase2B | REQ-014 polish + citation | MVP | P2B-已设计 | 待编码（Sprint-19） | 首批核心 |
+| Phase2B | REQ-014 polish + citation | MVP | P2B-已设计 | 后端已实现（Sprint-19，2026-07-30）；前端 half 待实现 | 首批核心 |
 
 readiness gate：
 
 | 能力 | 当前状态 | 解锁条件 | 验证证据 | 降级路径 | 阻塞 Sprint |
 |---|---|---|---|---|---|
-| AI 润色数据外发（RG-008） | Conditional Go（风险已接受） | Sprint-19 实跑 polish 外发：权限过滤、5030 降级、hash 留存通过 → 升 Go | 待 TC-P2-AI-001 | 5030 / Mock | 阻塞 REQ-014 编码（Conditional Go 可进 Sprint-19） |
+| AI 润色数据外发（RG-008） | **Go（后端 vertical slice 通过，2026-07-30）** | ~~Sprint-19 实跑升 Go~~ → 已通过：权限过滤（越权 chunk 不进 prompt / 不返回）、5030 不落库不编造、hash 留存均经 `tests.backend.test_ai_polish` 验证 | TC-P2-AI-001 后端通过；前端 UI smoke 待前端 half | 5030 | ~~阻塞 REQ-014 编码~~ → 已解锁 |
 
 ## 7. 验证与验收追溯
 
@@ -166,7 +166,9 @@ readiness gate：
 
 | 偏差 ID | 代码 / 配置事实 | 原设计 | 偏差类型 | 处理结论 | 回写目标 | 验证 |
 |---|---|---|---|---|---|---|
-| — | 尚未编码 | — | — | Sprint-19 编码后回填 | — | — |
+| D-impl-1 | `PolishView`/`PolishRequest`/`PolishSource` 定义在 service `ai_polish.py`；entities.py 只放持久化 `AiDraft` | task 表曾把 view/request 列在 entities.py | 实现选择（对齐 `quick_entry.py` 既有 DTO 拆分） | 与既有模式一致，无需改设计 | 本文件 §4；`tasks/task-019` 完成记录 | service 9/9 |
+| D-impl-2 | LLM 不可用走「抛 `LlmUnavailableError`→5030、不落库」，未做 Mock 占位 | §5「5030 或 Mock」二选一 | 实现选择（取更严的 5030） | 失败时一行草稿都不存，更安全；§5 已覆盖 | 本文件 §5 | `test_ai_polish` LLM 失败 / 未配置均不落库 |
+| D-impl-3 | citation 复用 `rag._find_candidate_chunks`/`_extract_terms`/`MAX_CANDIDATES`（跨模块 import 私有函数） | §3「复用 RAG 检索」 | 实现选择（task 授权复用） | 不动 RAG 问答行为；耦合可接受 | 本文件 §3、§8 | `test_ai_polish` citation 越权不进 prompt |
 
 ## 10. 待人工确认项
 

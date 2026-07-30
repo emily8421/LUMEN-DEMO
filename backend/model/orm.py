@@ -186,3 +186,21 @@ class QuickEntryORM(Base):
     status: Mapped[str] = mapped_column(String, default="draft")
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
+
+
+class AiDraftORM(Base):
+    """REQ-014 AI 润色 / 写作引用草稿（migration 010）。cited_chunk_ids 用 JSONB。"""
+
+    __tablename__ = "lumen_ai_drafts"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    space_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("lumen_spaces.id", ondelete="CASCADE"))
+    document_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("lumen_documents.id", ondelete="CASCADE"))
+    user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("lumen_users.id"))
+    mode: Mapped[str] = mapped_column(String)
+    input_excerpt_hash: Mapped[str | None] = mapped_column(Text, nullable=True)
+    prompt_summary: Mapped[str] = mapped_column(Text, default="")
+    output_md: Mapped[str] = mapped_column(Text, default="")
+    cited_chunk_ids: Mapped[list] = mapped_column(JSONB, default=list)
+    status: Mapped[str] = mapped_column(String, default="generated")
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())

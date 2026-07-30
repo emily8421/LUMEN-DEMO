@@ -16,6 +16,7 @@ from datetime import datetime
 from sqlalchemy import delete, func, select, text as sql_text
 
 from backend.model.entities import (
+    AiDraft,
     DocLink,
     DocLinkDraft,
     Document,
@@ -34,6 +35,7 @@ from backend.model.entities import (
     User,
 )
 from backend.model.orm import (
+    AiDraftORM,
     DocLinkORM,
     DocumentChunkORM,
     DocumentORM,
@@ -188,6 +190,22 @@ def _to_quick_entry(r: QuickEntryORM) -> QuickEntry:
         status=r.status,
         created_at=_dt_iso(r.created_at),
         updated_at=_dt_iso(r.updated_at),
+    )
+
+
+def _to_ai_draft(r: AiDraftORM) -> AiDraft:
+    return AiDraft(
+        id=r.id,
+        space_id=r.space_id,
+        document_id=r.document_id,
+        user_id=r.user_id,
+        mode=r.mode,
+        input_excerpt_hash=r.input_excerpt_hash,
+        prompt_summary=r.prompt_summary,
+        output_md=r.output_md,
+        cited_chunk_ids=tuple(r.cited_chunk_ids or []),
+        status=r.status,
+        created_at=_dt_iso(r.created_at),
     )
 
 
@@ -687,6 +705,36 @@ class PgRepository:
                 row.created_document_id = created_document_id
             session.commit()
             return _to_quick_entry(row)
+
+    # --- ai drafts (REQ-014, API-028) ---
+
+    def create_ai_draft(
+        self,
+        space_id: int,
+        document_id: int,
+        user_id: int,
+        mode: str,
+        input_excerpt_hash: str | None = None,
+        prompt_summary: str = "",
+        output_md: str = "",
+        cited_chunk_ids: tuple[int, ...] = (),
+        status: str = "generated",
+    ) -> AiDraft:
+        with SessionLocal() as session:
+            row = AiDraftORM(
+                space_id=space_id,
+                document_id=document_id,
+                user_id=user_id,
+                mode=mode,
+                input_excerpt_hash=input_excerpt_hash,
+                prompt_summary=prompt_summary,
+                output_md=output_md,
+                cited_chunk_ids=list(cited_chunk_ids),
+                status=status,
+            )
+            session.add(row)
+            session.commit()
+            return _to_ai_draft(row)
 
     def remove_document_tag(self, tag_id: int, document_id: int) -> bool:
         with SessionLocal() as session:

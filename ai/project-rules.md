@@ -14,7 +14,7 @@
 
 ## 1. Phase边界
 
-当前阶段：**Phase2B（团队 MVP）进行中**；Phase1 Demo + Phase1.5A 可用性收口 + Phase2A（个人知识组织）均已完成；Phase2B 范围已确认（2026-07-30：REQ-014 AI 润色首批核心 + REQ-013/024 时间轴第二 slice），数据外发风险已接受（RG-008 Conditional Go），2026-07-30 切指针进入 Phase2B；Phase1.5B（PDF / Word-PDF / zhparser，Sprint-14/15/18）留后续候选
+当前阶段：**Phase2B（团队 MVP）进行中**；Phase1 Demo + Phase1.5A 可用性收口 + Phase2A（个人知识组织）均已完成；Phase2B 范围已确认（2026-07-30：REQ-014 AI 润色首批核心 + REQ-013/024 时间轴第二 slice），数据外发风险已接受（RG-008 Go，Sprint-19 后端通过），2026-07-30 切指针进入 Phase2B；Phase1.5B（PDF / Word-PDF / zhparser，Sprint-14/15/18）留后续候选
 
 > 双维度（global-rules §8.1）：每个阶段同时声明**功能范围**与**交付物形态**，两者正交、不得混用。
 - **功能范围**：`[P2]`（Phase2A 已完成：REQ-026 内链/反链、REQ-012 标签、REQ-025 快速录入；**Phase2B 进行中：REQ-014 AI 润色/写作引用（首批核心）、REQ-013/024 时间轴（第二 slice）**）；`[P1]`（REQ-001..011、REQ-036、REQ-037/038 已完成；REQ-027 等 Phase1.5B 候选留后续），见 `docs/03-prd.md` §3 路线图
@@ -44,7 +44,7 @@
 - 手机端 / 移动适配（demo 先桌面端）
 
 当前阶段内进度：
-- **Phase2B（团队 MVP）进行中**：REQ-014 AI 润色 / 写作引用（首批核心，Sprint-19）、REQ-013/024 时间轴（第二 slice，Sprint-20）；数据外发风险已接受（RG-008 Conditional Go，待 Sprint-19 实跑升 Go）；跨空间推送 / 多人协作 / 移动端不进首批
+- **Phase2B（团队 MVP）进行中**：REQ-014 AI 润色 / 写作引用（首批核心，Sprint-19）、REQ-013/024 时间轴（第二 slice，Sprint-20）；数据外发风险已接受（RG-008 Go，Sprint-19 后端 vertical slice 通过 2026-07-30）；跨空间推送 / 多人协作 / 移动端不进首批
 - 远期愿景：问题热力矩阵、事件因果推理、对外简报、Obsidian Vault 挂载、移动端——详见 docs/vision/product-vision.md（产品愿景叙事，不直接驱动 Phase 开发）
 
 ## 2. 技术栈约束

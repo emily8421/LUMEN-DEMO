@@ -20,6 +20,13 @@ from backend.service.document import (
     restore_version,
     update_document,
 )
+from backend.service.ai_polish import (
+    LlmUnavailableError,
+    PolishRequest,
+    PolishValidationError,
+    PolishView,
+    polish_selection,
+)
 
 try:
     from fastapi import APIRouter, Header, HTTPException
@@ -144,6 +151,58 @@ if APIRouter is not None:
         except DocumentAccessError as exc:
             raise HTTPException(status_code=403, detail={"code": 4003, "msg": "no write permission on external document"}) from exc
         return {"code": 0, "msg": "ok", "data": _document_detail(document)}
+
+    class PolishRequestBody(BaseModel):
+        mode: str
+        selection_md: str = ""
+        instruction: str | None = None
+        use_sources: bool = True
+
+    @router.post("/{document_id}/polish")
+    def polish_document_endpoint(
+        document_id: int,
+        request: PolishRequestBody,
+        authorization: str = Header(default=""),
+    ) -> dict[str, object]:
+        payload = _read_token_payload(authorization)
+        try:
+            view = polish_selection(
+                repository,
+                payload.user_id,
+                payload.current_space_id,
+                document_id,
+                PolishRequest(
+                    mode=request.mode,
+                    selection_md=request.selection_md,
+                    instruction=request.instruction,
+                    use_sources=request.use_sources,
+                ),
+            )
+        except DocumentNotFoundError as exc:
+            raise HTTPException(status_code=404, detail={"code": 4004, "msg": "document not found"}) from exc
+        except DocumentAccessError as exc:
+            raise HTTPException(status_code=403, detail={"code": 4003, "msg": "no write permission on external document"}) from exc
+        except PolishValidationError as exc:
+            raise HTTPException(status_code=422, detail={"code": 4220, "msg": str(exc)}) from exc
+        except LlmUnavailableError as exc:
+            raise HTTPException(status_code=503, detail={"code": 5030, "msg": "AI service unavailable"}) from exc
+        return {"code": 0, "msg": "ok", "data": _polish_view(view)}
+
+    def _polish_view(view: PolishView) -> dict[str, object]:
+        return {
+            "draft_id": view.draft_id,
+            "output_md": view.output_md,
+            "sources": [
+                {
+                    "chunk_id": source.chunk_id,
+                    "document_id": source.document_id,
+                    "title": source.title,
+                    "snippet": source.snippet,
+                }
+                for source in view.sources
+            ],
+            "status": view.status,
+        }
 
     def _read_document_or_404(user_id: int, current_space_id: int, document_id: int) -> Document:
         try:
