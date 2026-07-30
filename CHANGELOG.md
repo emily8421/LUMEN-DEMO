@@ -6,6 +6,40 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v0.2.7（2026-07-30）
+
+App.tsx 拆分重构（WSG 文件膨胀阈值，纯结构搬运，不改业务逻辑）。
+
+- 抽出 `frontend/src/app/WorkspaceMain.tsx`（115 行）承接 `workspace-main` 的 views 切换（documents / search / query / terms / tags Feature + quick-entry 触发）。
+- `frontend/src/App.tsx` **305 → 231 行**（低于 WSG 阈值 300），为 Phase2B Sprint-19（AI 润色侧边栏）留余量。
+- 纯 JSX 搬运 + props 传递（类型用 `ReturnType<typeof useX>`）；不改任何业务逻辑、API、DB；build + tsc 绿（Node 22）。
+
+> PATCH 依据（`ai/project-rules.md` §2.8.1）：重构 / 结构调整，不新增可演示能力、不改对外 API 契约。
+
+## v0.2.6（2026-07-30）
+
+Phase2B 前端交互设计补全 + 构建环境修复（纯文档 / 配置，未切指针、未编码）。
+
+- 补 `docs/design/frontend-interaction.md` Phase2B AI 润色交互设计：FL-P2-008（润色 / 写作引用 Flow）、CMP-P2-AI-POLISH（侧边栏组件）、PATH-P2-007（点击路径）、PG-P2-003 布局补侧边栏、§9.2.3 状态行、阶段表 / UXD 更新。
+- 修复前端 build：根因 Node ≤16 与 Vite 5.4.19 不兼容（`crypto.getRandomValues is not a function`）；`volta pin node@22.17.1` 锁定项目 Node；新增 `ai/project-rules.md §2.9` 运行时版本锁定。
+- 本版本不新增可演示能力、未切阶段、不改对外 API；前端 build 在 Node 22 验证绿。
+
+> PATCH 依据（`ai/project-rules.md` §2.8.1）：纯文档 / 配置修订，不新增可演示能力、未切阶段、不改对外 API 契约。
+
+## v0.2.5（2026-07-30）
+
+Phase2B 启动范围确认与数据外发风险接受落盘（纯文档 / 决策留痕，未切阶段指针、未编码）。
+
+- 用户确认 Phase2B 首批范围：REQ-014 AI 润色 / 写作引用为首批核心，REQ-013 / 024 时间轴紧随作为第二 slice（REQ-014 先行，时间轴从零设计成本更高）。
+- 数据外发风险接受口径落锤：允许 AI 润色将真实文档片段经公司内网中转 LLM 外发，护栏 = sources 权限过滤 + 草稿只存 hash / 摘要 + 不做敏感字段自动过滤 + 5030 / Mock 降级；`ai/project-rules.md §2.5` 升级为横切权威源，同步 `04 §1.1` / `05 §5.2` / `09 RISK-P2-005`。
+- 新增 `docs/05-tech-spec.md` **RG-008（Conditional Go）** 与 **TCD-010**；REQ-014 的 `lumen_ai_drafts`（`06`）/ API-028（`07`）推进到 MVP 级已设计；新增时间轴 API-033；新建 `docs/design/ai-polish.md`、`docs/design/timeline.md`。
+- 新增 `docs/08-dev-plan.md` Sprint-19（REQ-014）/ Sprint-20（时间轴）；`docs/09-verification.md` 细化 TC-P2-AI-001、新增 TC-P2-TL-001、RISK-P2-005 转 Conditional Go。
+- 新增 `docs/research/2026-07-30-phase2b-kickoff-decision.md` 决策锚点；关闭 `03` PRD-C-003、部分关闭 open-items OI-001。
+- **阶段指针未切**（`project-rules.md §1` 仍 Phase2A 已完成 / 未进入 Phase2B）；待 RG-008 首个 vertical slice 验证升 Go + Sprint-11 UI/WSG 门禁重跑后，再切指针并编码。
+- 本版本不新增可演示能力、不改对外已生效 API 契约、不改代码，仅做 Phase2B 启动的设计就绪与决策落盘。
+
+> PATCH 依据（`ai/project-rules.md` §2.8.1）：纯文档修订 / 决策落盘 / 状态校准，不新增可演示能力、未切阶段、不改对外 API 契约；切指针与首个 Sprint 验收时再 bump MINOR / MAJOR。
+
 ## v0.2.4（2026-07-21）
 
 Phase2A 文档漂移同步与输入评估落盘（纯文档 / 状态校准）。

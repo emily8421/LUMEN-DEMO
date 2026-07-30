@@ -58,7 +58,7 @@
 
 - 本机：Windows 11 / i7-12650H（10C16T）/ 31.7GB 内存 / RTX 3050 6GB；Docker 可用。
 - Demo 默认本机运行（Docker Compose 起 PostgreSQL+pgvector + FastAPI + React）；Embedding 本机运行 `bge-small-zh`（512 维），LLM 走公司内网中转 / 外部 OpenAI 兼容 API 或明确 Mock。
-- 数据默认使用已标注的虚构 Demo 数据；可按需导入部分真实团队文档，但需标注来源 / 敏感级别并优先避免发送到外部模型。
+- 数据默认使用已标注的虚构 Demo 数据；可按需导入部分真实团队文档，但需标注来源 / 敏感级别；RAG / 术语场景优先避免发送到外部模型，Phase2B AI 润色（REQ-014）允许真实片段外发（风险已接受，见 `ai/project-rules.md §2.5` / `docs/05-tech-spec.md` RG-008）。
 - 允许本机安装项目所需依赖与镜像；Demo 资源软上限为峰值内存 < 8GB、显存 < 4GB、磁盘 < 20GB。
 - 具体边界（联网 / 装依赖 / 公司服务器 / 降级 Mock）：见 `docs/env/local-env.md` 人工确认项。
 

@@ -9,10 +9,10 @@
 
 | 项 | 内容 |
 |---|---|
-| 当前 Phase | Phase2A 已完成；未进入 Phase2B |
+| 当前 Phase | Phase2A 已完成；未进入 Phase2B（Phase2B 范围已确认 2026-07-30、设计就绪，待 RG-008 验证升 Go + Sprint-11 门禁重跑后切指针编码） |
 | 交付物形态 | Demo / 个人可用 Alpha / 个人知识组织 |
-| 覆盖 REQ | Phase1：REQ-001..REQ-011、REQ-036；Phase1.5A：REQ-037/038；Phase1.5B：REQ-027；Phase2A：REQ-026/012/025；Phase2B / 愿景验证项待升阶段细化 |
-| 当前状态 | Phase1 全量验收已记录，结论为 Conditional Go（Demo closure）；Phase1.5A 已完成 TC-P1-015/016；Phase2A 已完成 TC-P2-LINK-001 / TC-P2-TAG-001 / TC-P2-QUICK-001，个人知识组织三个 vertical slice 验收通过。Phase1.5B、Phase2B 与愿景项仍待后续 RG / 范围确认。 |
+| 覆盖 REQ | Phase1：REQ-001..REQ-011、REQ-036；Phase1.5A：REQ-037/038；Phase1.5B：REQ-027；Phase2A：REQ-026/012/025；**Phase2B：REQ-014 首批核心 + REQ-013/024 第二 slice（设计就绪·待 RG-008 升 Go 后编码）**；愿景验证项待升阶段 |
+| 当前状态 | Phase1 全量验收已记录，结论为 Conditional Go（Demo closure）；Phase1.5A 已完成 TC-P1-015/016；Phase2A 已完成 TC-P2-LINK-001 / TC-P2-TAG-001 / TC-P2-QUICK-001，个人知识组织三个 vertical slice 验收通过。Phase1.5B 仍待 RG；**Phase2B 范围已确认（2026-07-30）+ 设计就绪 + 数据外发风险已接受（RG-008 Conditional Go），待 RG-008 验证升 Go 与 Sprint-11 门禁重跑后切指针编码**；愿景项待升阶段。 |
 | 最后更新 | 2026-07-30（同步后文档体系审计回写；保留 2026-07-20 Phase2A closure 验收记录） |
 
 ## 1. 测试策略
@@ -76,7 +76,7 @@
 
 ### Phase2（功能范围 `[P2]` · Phase2A **个人知识组织** / Phase2B **团队 MVP**）
 
-> Phase2A 已完成 REQ-026 / REQ-012 / REQ-025 三个 vertical slice；Phase2B 范围、进入 / 退出标准和实现任务仍需人工确认。
+> Phase2A 已完成 REQ-026 / REQ-012 / REQ-025 三个 vertical slice；**Phase2B 范围已确认（2026-07-30）：REQ-014 首批核心 + REQ-013/024 第二 slice；进入 / 退出标准、数据外发风险接受（RG-008）与验证包已就绪，待 RG-008 验证升 Go + Sprint-11 门禁重跑后切指针编码**。
 
 | TC ID | 覆盖对象 | 前置条件 | 验证步骤 | 预期结果 | 证据要求 | 状态 |
 |---|---|---|---|---|---|---|
@@ -89,8 +89,10 @@
 | TC-P2-TAG-001 | REQ-012；`lumen_tags` / `lumen_tag_links`；API-014 / API-027 / API-031 / API-032 | Phase2A 最小版已细化（扁平标签 + 独立标签视图 + 单标签筛选 + 文档详情打标签）；首个 slice REQ-026 已完成 | 创建 / 更新 / 归档标签（API-014/027）；给可见文档打标签 / 移除（API-031）；按标签筛选文档（API-032 `GET /api/tags/{id}/documents`）；跨空间 / 无权限文档不进入 document_count 与筛选结果 | 标签只在当前空间可见；同空间 normalized_name 重名返回 4090；document_count 只统计当前用户可见文档；归档标签不破坏既有 tag_links 历史关联；打标签需文档可写 + 标签同空间 | `tests/backend/test_tags.py` 15 通过 + 浏览器 smoke 通过（Task A `1e4cf48` + Task B `d07688b`） | 通过（Task A `1e4cf48` + Task B `d07688b`） |
 | TC-P2-LINK-001 | REQ-026；`lumen_doc_links`；API-018 | Batch B 契约已回填；首个 vertical slice | 在文档内容中登记 `[[wikilink]]`；查询出链 / 反链；target 缺失、无权限、跨空间分别验证 | resolved / unresolved / no_access 状态正确；无权限目标不泄露标题 / 摘要；反链仅返回当前用户可见文档 | `tests/backend/test_doc_links.py`（8 tests）+ TestClient 路由 smoke 5/5；前端 UI smoke 2026-07-16 通过（resolved 跳转 / unresolved 占位 / 反链面板 / pending，alice space10） | 通过（Task A fc2b869 + Task B 6228f3f；UI smoke 4/4） |
 | TC-P2-QUICK-001 | REQ-025；`lumen_quick_entries`；API-017 | Phase2A 已实现 | 快速录入 draft；转为新文档；追加到已有文档；关联 tag_ids；丢弃 draft | draft 默认 owner 私有；转换后继承文档权限；非法 tag_ids / document_id 返回 4220；不绕过权限 | `tests/backend/test_quick_entry.py` 17/17 + service 回归 53 + API smoke（draft/create/append + discard + 4220）+ 浏览器 smoke（Task B `bad8fe5`） | 通过（Task A `f771e02` + Task B `bad8fe5`） |
-| TC-P2-AI-001 | REQ-014；`lumen_ai_drafts`；API-028；RG-004 | LLM adapter 可用或 Mock 降级；真实文档外发边界需确认 | 对可写文档选中文本执行 polish / citation；验证 sources 仅来自可见 chunks；LLM 不可用时降级 | 输出保存为 draft；引用可追溯到 chunk / document；库外或无权限来源不进入 prompt；5030 / Mock 降级不编造 | 后续后端 tests + 人工审查 prompt 边界 + UI smoke | 契约草案·未执行 |
-- REQ-027 PDF 导出已提前到 Phase1.5B，验证口径见 TC-P1-017；REQ-013 / 015 / 016 / 017 / 024 其余 P2 后续用例（时间轴 / 推送 / 协作 / 移动端 / 时间轴热条）——不进 Phase2A 个人知识组织，待 Phase2B / 后续阶段细化。
+| TC-P2-AI-001 | REQ-014；`lumen_ai_drafts`；API-028；RG-004；**RG-008** | LLM adapter 可用或 Mock 降级；**数据外发风险已接受（RG-008 Conditional Go）** | 对可写文档选中文本执行 polish / citation；验证 sources 仅来自可见 chunks；草稿只存 hash + 摘要；LLM 不可用时降级 | 输出保存为 draft；引用可追溯到 chunk / document；库外或无权限来源不进入 prompt / 不返回；草稿不含 API key 与完整敏感原文；5030 / Mock 降级不编造 | 后端 tests（test_ai_polish）+ prompt 边界人工审查 + Chrome/Edge UI smoke（Sprint-19） | MVP 级已设计·待实现（Sprint-19，待 RG-008 升 Go） |
+- REQ-027 PDF 导出已提前到 Phase1.5B，验证口径见 TC-P1-017。
+- **REQ-013 / 024 时间轴 / 密度热条（Phase2B 首批·第二 slice）**：TC-P2-TL-001（待 Sprint-20 实现）——时间轴渲染仅含当前用户可见文档事件；密度热条色阶正确；大集合聚合 / 采样降级 + 列表逃生舱；越权事件不泄露；详见 `docs/design/timeline.md`。
+- REQ-015 / 016 / 017 其余 P2 后续用例（推送 / 协作 / 移动端）——不进 Phase2B 首批，待后续 Phase 细化。
 
 ### 远期愿景（不承诺）
 - REQ-018..023、REQ-028..035 用例——待 05 技术验证可行后补
@@ -164,12 +166,12 @@
 | RISK-VISION-001 | 后续 AI Gate | P2 / 愿景高风险 AI 能力 | REQ-020 / 021 / 030 / 032 / 033 等 | 不进入 Phase1 必过项，技术验证通过后再补用例 | 待愿景技术验证 |
 | RISK-P2-003 | WSG-001..006 / P2-UI-G-001..006 | P2 UI 少容器清爽稿通用 gate 未形成独立全量 smoke | Sprint-11、TC-P2-WSG-001、TC-P2-UI-001~005、Phase2B | Phase2A 三个 vertical slice 已分别完成浏览器 smoke / build；Sprint-11 仍作为后续 Phase2B UI gate 草案保留，不阻塞 Phase2A closure | Phase2B 启动前重新确认 UI gate 与 smoke 范围 |
 | RISK-P2-004 | OI-005 / TC-P2-TAG-001..QUICK-001 | ~~Phase2A 核心 DB / API / TC 契约未实现~~ | ~~REQ-012 / 025 / 026~~ | ✅ **已解决**（REQ-026 / REQ-012 / REQ-025 已完成后端 + 前端 vertical slice；TC-P2-LINK-001 / TAG-001 / QUICK-001 通过） | 2026-07-20 Phase2A closure；§2 矩阵与 §5 验收记录 |
-| RISK-P2-005 | RG-004 / 数据外发 | AI 润色 / 写作引用可能发送真实文档片段到外部 LLM | REQ-014 | 复用 LLM adapter；真实文档外发需风险接受，sources 必须权限过滤；可用 Mock 降级 | 待 prompt / source 过滤测试与人工审查 |
+| RISK-P2-005 | RG-004 / 数据外发 / **RG-008** | AI 润色 / 写作引用可能发送真实文档片段到外部 LLM | REQ-014 | **数据外发风险已人工接受（2026-07-30，真实外发 + 权限护栏，见 RG-008 / `ai/project-rules.md §2.5`）**：sources 权限过滤、草稿只存 hash + 摘要、不做自动过滤、5030 降级 | Conditional Go；待 Sprint-19 vertical slice 验证（权限过滤 / 5030 / hash 留存）后关闭 |
 | RISK-P1-006 | RG-006 | PDF 导出库未验证 | REQ-027 | tech-env 草案标记 `reportlab` / `weasyprint` 未安装；API / DB 仅为契约草案，不得编码导出能力 | 待 PDF 库选型、安装、中文样例和资源验证 |
 | RISK-P1-007 | TC-P1-015 | ~~Sprint-16 Chrome 拖拽 / 文件夹 smoke 未补~~ | ~~REQ-037 前端人工验收~~ | ✅ **已解决**（Chrome headless drop-zone smoke 已覆盖批量 drop、路径标题、搜索与问答来源） | Sprint-16 smoke 记录（2026-07-15） |
 
 ## 7. 待人工确认项
 
 - Phase2A 已完成整体验收 closure；不得再把 REQ-026 / REQ-012 / REQ-025 标为待确认或未实现。
-- Phase2B 仍需人工确认首批范围、进入 / 退出标准、数据外发风险接受方式与 UI / smoke 验证包；REQ-014 AI 润色 / 写作引用仍为契约草案·未执行。
+- **Phase2B 范围、进入 / 退出标准、数据外发风险接受方式（RG-008 Conditional Go）与验证包均已确认 / 就绪（2026-07-30）**；REQ-014 AI 润色已推进到 MVP 级已设计·待实现（Sprint-19）。**待办**：RG-008 首个 vertical slice 实跑升 Go、Sprint-11 UI/WSG 门禁重跑、切阶段指针——均需再次人工确认。
 - Phase1.5B 的 TC-P1-017 受 RG-006 控制；PDF / Word-PDF / zhparser 不阻塞 Phase2A closure。

@@ -14,12 +14,8 @@ import { useWorkspace } from './app/useWorkspace';
 import { useSession } from './app/useSession';
 import { useDocuments } from './app/useDocuments';
 import { isAuthTokenError } from './app/session-store';
-import { DocumentsFeature } from './features/DocumentsFeature';
-import { SearchFeature } from './features/SearchFeature';
-import { QueryFeature } from './features/QueryFeature';
-import { TermsFeature } from './features/TermsFeature';
-import { TagsFeature } from './features/TagsFeature';
 import { QuickEntryFeature } from './features/QuickEntryFeature';
+import { WorkspaceMain } from './app/WorkspaceMain';
 
 function App() {
   const workspace = useWorkspace();
@@ -190,86 +186,16 @@ function App() {
             onNewTerm={terms.newTerm}
           />
 
-          <section className="workspace-main workspace">
-            <div className="workspace-action-bar">
-              <button type="button" className="quick-entry-trigger" onClick={quickEntry.open} disabled={workspace.isBusy}>
-                ＋ 快速录入
-              </button>
-            </div>
-            {workspace.activeView === 'documents' ? (
-              <DocumentsFeature
-                isCreating={documents.isCreating}
-                selectedDocument={documents.selectedDocument}
-                isBusy={workspace.isBusy}
-                draft={documents.draft}
-                onDraftChange={documents.setDraft}
-                versions={documents.versions}
-                outboundLinks={documents.outboundLinks}
-                backlinks={documents.backlinks}
-                documents={documents.documents}
-                onOpenDocument={documents.handleOpenDocument}
-                onCreateDocument={documents.handleCreateDocument}
-                onDelete={documents.handleDelete}
-                onSave={documents.handleSave}
-                onRestore={documents.handleRestore}
-                onDownloadMarkdown={documents.handleDownloadMarkdown}
-                documentTags={tags.documentTags}
-                availableTags={tags.tags}
-                addTagSelection={tags.addTagSelection}
-                onAddTagSelectionChange={tags.setAddTagSelection}
-                onAddTag={tags.handleAddDocumentTag}
-                onRemoveTag={tags.handleRemoveDocumentTag}
-              />
-            ) : null}
-
-            {workspace.activeView === 'search' ? (
-              <SearchFeature
-                searchQuery={search.searchQuery}
-                onSearchQueryChange={search.setSearchQuery}
-                searchResult={search.searchResult}
-                isBusy={workspace.isBusy}
-                onSearch={search.handleSearch}
-                onOpenDocument={documents.handleOpenDocument}
-              />
-            ) : null}
-
-            {workspace.activeView === 'query' ? (
-              <QueryFeature
-                question={query.question}
-                onQuestionChange={query.setQuestion}
-                queryResult={query.queryResult}
-                isBusy={workspace.isBusy}
-                onQuery={query.handleQuery}
-                onOpenDocument={documents.handleOpenDocument}
-              />
-            ) : null}
-
-            {workspace.activeView === 'terms' ? (
-              <TermsFeature
-                selectedTermId={terms.selectedTermId}
-                isBusy={workspace.isBusy}
-                termDraft={terms.termDraft}
-                onTermDraftChange={terms.setTermDraft}
-                onSaveTerm={terms.handleSaveTerm}
-                onDeleteTerm={terms.handleDeleteTerm}
-                onNewTerm={terms.newTerm}
-              />
-            ) : null}
-
-            {workspace.activeView === 'tags' ? (
-              <TagsFeature
-                isBusy={workspace.isBusy}
-                tags={tags.tags}
-                selectedTagId={tags.selectedTagId}
-                tagDocuments={tags.tagDocuments}
-                newTagName={tags.newTagName}
-                onNewTagNameChange={tags.setNewTagName}
-                onSelectTag={tags.handleSelectTag}
-                onCreateTag={tags.handleCreateTag}
-                onOpenDocument={documents.handleOpenDocument}
-              />
-            ) : null}
-          </section>
+          <WorkspaceMain
+            activeView={workspace.activeView}
+            isBusy={workspace.isBusy}
+            documents={documents}
+            search={search}
+            query={query}
+            terms={terms}
+            tags={tags}
+            onQuickEntryOpen={quickEntry.open}
+          />
 
           <QuickEntryFeature
             isOpen={quickEntry.isOpen}

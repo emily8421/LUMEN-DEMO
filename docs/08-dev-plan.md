@@ -8,10 +8,10 @@
 
 | 项 | 内容 |
 |---|---|
-| 当前 Phase | Phase2A 已完成；未进入 Phase2B |
+| 当前 Phase | Phase2A 已完成；未进入 Phase2B（Phase2B 范围已确认 2026-07-30、设计就绪，待 RG-008 验证升 Go + Sprint-11 门禁重跑后切指针编码） |
 | 交付物形态 | Demo / 个人可用 Alpha / 个人知识组织 |
 | 输入基线 | `docs/03-prd.md` §3、`docs/04-architecture.md`、`docs/05-tech-spec.md`、`docs/09-verification.md` |
-| 当前状态 | Phase1 Demo 已完成并已记录全量验收（Conditional Go）；Phase1.5A 已完成批量 / 文件夹导入（REQ-037）与 `.md` / ZIP 导出备份（REQ-038）；Phase2A 已完成 REQ-026 内链 / 反链、REQ-012 标签、REQ-025 快速录入三个 vertical slice 并通过 `09` 对应用例。Phase1.5B（PDF / Word-PDF / zhparser）与 Phase2B（团队 MVP）仍待后续确认 / RG。 |
+| 当前状态 | Phase1 Demo 已完成并已记录全量验收（Conditional Go）；Phase1.5A 已完成批量 / 文件夹导入（REQ-037）与 `.md` / ZIP 导出备份（REQ-038）；Phase2A 已完成 REQ-026 内链 / 反链、REQ-012 标签、REQ-025 快速录入三个 vertical slice 并通过 `09` 对应用例。Phase1.5B（PDF / Word-PDF / zhparser）仍待后续 RG；**Phase2B（团队 MVP）范围已确认（2026-07-30）：REQ-014 首批核心 + REQ-013/024 时间轴第二 slice，数据外发风险已接受（RG-008 Conditional Go），设计已就绪（05 TCD-010 / 06 lumen_ai_drafts / 07 API-028 + API-033 / design/ai-polish + design/timeline），Sprint-19/20 已规划；待 RG-008 验证升 Go + Sprint-11 UI/WSG 门禁重跑后切阶段指针并编码**。 |
 | 最后更新 | 2026-07-30（同步后文档体系审计回写；保留 2026-07-20 Phase2A closure 完成包） |
 
 ## Sprint 总览
@@ -39,6 +39,8 @@
 | Sprint-16（P1.5·批量导入） | 多文件 + 文件夹拖拽导入（drop zone + 批量进度 + 标题前缀 + 冲突跳过） | 037（新增）+ 009 扩展 | 02 REQ-037、07 API-029 | frontend ContextPane drop zone + backend api/imports 批量 + service | TC-P1-015 | 已完成（自动化 + Chrome headless drop-zone smoke 通过） | — |
 | Sprint-17（P1.5A·导出备份） | 单文档 .md 下载 + 空间 ZIP 打包 | 038（新增） | 02 REQ-038、07 API-030 | frontend 下载入口 + backend api/export（zipfile）+ service | TC-P1-016 | 已完成（后端 tests + 端到端 HTTP smoke 通过） | — |
 | Sprint-18（P1.5·PDF 导出·候选·需 RG） | 单文档 PDF 导出（Markdown → PDF，中文） | 027（从 Phase2 提前） | 02 REQ-027、07 API-019、05 RG-006 | backend api/export-pdf + PDF 库 + service | 待新增 TC-P1-017 | 候选·待 RG-006 选型（未编码） | — |
+| Sprint-19（Phase2B·AI 润色·首个 vertical slice） | AI 润色 polish + 写作引用 citation（API-028）+ `lumen_ai_drafts` migration 010 | 014 | 02 REQ-014、03 Phase2B、04 Flow-005、05 TCD-010 / RG-004 / RG-008、06 lumen_ai_drafts、07 API-028、design/ai-polish | backend service/ai_polish + api + migration 010；frontend 写作侧边栏 | TC-P2-AI-001（后端 tests + prompt 边界审查 + UI smoke） | **待 RG-008 升 Go + Sprint-11 门禁重跑后启动**（未编码） | — |
+| Sprint-20（Phase2B·时间轴·第二 slice） | 时间轴视图 + 密度热条（API-033） | 013/024 | 02 REQ-013/024、04 Flow-009、06 lumen_documents + tags + links、07 API-033、design/timeline | backend service/timeline + api；frontend 时间轴视图 | TC-P2-TL-001（后端 tests + Chrome/Edge smoke） | 待 Sprint-19 落地 + D-T-001 数据来源定稿后启动（未编码） | — |
 
 ## 依赖关系与里程碑
 
@@ -55,6 +57,8 @@
 | Sprint-11（P2-UI-Gate / WSG 候选）实现前门禁 | Sprint-10 + `frontend-interaction` §9.3 + 少容器清爽稿暂定确认 + WSG-001..006 草案 | UI 方向继续返工；跳过 WSG / UI-G 直接编码；范围蔓延到组件库 / router / 新 API / 图谱算法 | Phase2A 已完成；Phase2B 前重新确认 | Phase2A 已按三个 vertical slice 完成；Phase2B 启动前重跑 Page-ID / Flow-ID / TC / WSG 和 UI smoke 范围确认 | M9 P2 UI + WSG 实现前门禁 |
 | Sprint-0′（框架补课·候选） | Phase1 closure（Sprint-8/10）已完成 | 继续往 `App.tsx` / 全局 CSS / 后端 service 堆 P1.5 功能，导致更难拆 | 否（P1.5 全部前置） | 纯结构搬运、逻辑不动、每步 smoke；前端建目录骨架 + 拆 App.tsx / styles.css，后端 repository 独立 + 清单例 hack；**先于所有 P1.5 编码** | M9.5 框架对齐（WSG 闭环） |
 | Sprint-12~15（P1.5 可用性收口·候选） | Phase1 closure（Sprint-8/10）已完成 | 范围蔓延到 Phase2 高级功能；跳过收口直接做 Phase2 编码 | 可与 Phase2 tech-env-eval 并行评估 | 先做低成本收口（Sprint-12 登录持久化 / seed 自索引、Sprint-13 外部只读），再做重依赖项（Sprint-14 Word/PDF 需选型 + RG、Sprint-15 zhparser 可选）；**P1.5 优先于 Phase2 编码** | M10 日常可用（P1.5 收口） |
+| Sprint-19（Phase2B·AI 润色·首个 slice） | Phase2A closure + **RG-008 Conditional Go** + Sprint-11 UI/WSG 门禁重跑 | 数据外发护栏未落实；跳过 RG-008 直接编码 | 否（首个 slice） | 先后端 polish/citation + migration 010，再前端写作侧边栏；复用 RAG / 术语 / LLM adapter | M11 Phase2B AI 润色可用 |
+| Sprint-20（Phase2B·时间轴·第二 slice） | Sprint-19 落地 + D-T-001 数据来源定稿 | 时间轴从零设计，范围蔓延到关联图 / 因果推理（愿景） | 可与 Sprint-19 收尾部分并行 | 数据来源选候选 A（不建表）先行；大集合降级本机实测定阈值 | M12 Phase2B 时间轴可用 |
 
 ## 任务拆分规则
 
@@ -85,6 +89,8 @@
 | Sprint-13 | TC-P1-003 扩展（EXTERNAL 写拦截） | 单元 + 集成 | 同上（test_permission） | EXTERNAL 账号改 / 删被拒；读 / 搜 / 问答不受影响 | 不改变可见性边界，只补写权限 |
 | Sprint-14 | TC-P1-009 扩展（.docx / .pdf 文本提取） | 集成 | 同上（test_imports） | 导入 .docx / 文本型 .pdf 后可搜可问答 | 选型未定前为降级；OCR 仍后续（RG-003） |
 | Sprint-15 | TC-P1-007 扩展（中文分词） | 集成（PG） | 同上（test_search） | 中文长词精确命中改善 | 无 zhparser 时仍回退 simple（不阻塞） |
+| Sprint-19（Phase2B） | TC-P2-AI-001 | 单元 + 集成 + UI smoke | `.venv\Scripts\python.exe -m unittest discover -s tests/backend`（test_ai_polish）；`npm.cmd run build` | Chrome / Edge：写作侧边栏 polish / citation、来源点击、降级提示 | RG-008 Conditional Go；LLM 可 Mock；数据外发护栏（hash / 无 key / sources 权限过滤） |
+| Sprint-20（Phase2B） | TC-P2-TL-001 | 单元 + 集成 + UI smoke | 同上（test_timeline）；`npm.cmd run build` | Chrome / Edge：时间轴渲染、密度热条、大集合降级 / 列表逃生舱 | 数据来源候选 A（不建表）；大集合聚合降级 |
 
 > 资源 / 环境验证：Sprint-8 起 Docker / pgvector / Embedding **已 Go**（RG-001/002 Go，见 05 §5.1；TE-C-003 闭合）；OCR / 真实 PDF 解析仍 No-Go（RG-003，后续阶段，不在 P1 必过范围）。
 
