@@ -17,7 +17,7 @@
 
 | 维度 | 内容 |
 |---|---|
-| 当前 Phase | Phase2A（功能范围 `[P2]` · 交付物形态 **个人知识组织**）已完成；Phase1 Demo 与 Phase1.5A 个人可用 Alpha 已完成，未进入 Phase2B，见 `ai/project-rules.md` §1 |
+| 当前 Phase | **Phase2B（团队 MVP）进行中**（2026-07-30 切指针）；Phase1 Demo + Phase1.5A + Phase2A（个人知识组织）已完成，见 `ai/project-rules.md` §1 |
 | 交付物形态 | Demo / 个人可用 Alpha / 个人知识组织：Phase1 保证核心价值可演示；Phase1.5A 已解决批量入库与导出备份；Phase2A 已补标签、内链 / 反链、快速录入；Phase1.5B / Phase2B 后续确认；全程保留产品红线（库外问答回复"未找到"、不编造） |
 | 运行环境 | 本机单机 Demo（React + FastAPI + Docker PostgreSQL+pgvector + 本机 Embedding + 内网 LLM 中转），详见 §4 |
 | 项目形态裁剪 | Full 剖面；`06/07` 保留（持久化 + 对外 REST），见 `ai/project-rules.md` §3 |

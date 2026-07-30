@@ -8,7 +8,7 @@
 
 | 项 | 内容 |
 |---|---|
-| 当前 Phase | Phase2A 已完成；未进入 Phase2B（Phase2B 范围已确认 2026-07-30、设计就绪，待 RG-008 验证升 Go + Sprint-11 门禁重跑后切指针编码） |
+| 当前 Phase | **Phase2B（团队 MVP）进行中**（2026-07-30 切指针；RG-008 Conditional Go，待 Sprint-19 实跑升 Go） |
 | 交付物形态 | Demo / 个人可用 Alpha / 个人知识组织 |
 | 输入基线 | `docs/03-prd.md` §3、`docs/04-architecture.md`、`docs/05-tech-spec.md`、`docs/09-verification.md` |
 | 当前状态 | Phase1 Demo 已完成并已记录全量验收（Conditional Go）；Phase1.5A 已完成批量 / 文件夹导入（REQ-037）与 `.md` / ZIP 导出备份（REQ-038）；Phase2A 已完成 REQ-026 内链 / 反链、REQ-012 标签、REQ-025 快速录入三个 vertical slice 并通过 `09` 对应用例。Phase1.5B（PDF / Word-PDF / zhparser）仍待后续 RG；**Phase2B（团队 MVP）范围已确认（2026-07-30）：REQ-014 首批核心 + REQ-013/024 时间轴第二 slice，数据外发风险已接受（RG-008 Conditional Go），设计已就绪（05 TCD-010 / 06 lumen_ai_drafts / 07 API-028 + API-033 / design/ai-polish + design/timeline），Sprint-19/20 已规划；待 RG-008 验证升 Go + Sprint-11 UI/WSG 门禁重跑后切阶段指针并编码**。 |

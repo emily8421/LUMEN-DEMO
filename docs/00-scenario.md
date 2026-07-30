@@ -94,7 +94,7 @@ LUMEN 是面向中小企业（典型：帮客户做 AI Agent 落地的初创公�
 
 - 产品愿景叙事（愿景，**不直接驱动开发**）：docs/vision/product-vision.md
 - 完整需求链：01-user-requirements → 02-srs → 03-prd（§3 阶段路线图）
-- 当前阶段：Phase2A（功能范围 `[P2]` · 交付物形态 **个人知识组织**）已完成；Phase1 Demo 与 Phase1.5A 个人可用 Alpha 已完成，未进入 Phase2B；见 `ai/project-rules.md` §1 与 `docs/03-prd.md` §3
+- 当前阶段：**Phase2B（团队 MVP）进行中**（2026-07-30 切指针）；Phase1 Demo + Phase1.5A + Phase2A（个人知识组织）已完成；见 `ai/project-rules.md` §1 与 `docs/03-prd.md` §3
 
 ## 5. 待人工确认项
 

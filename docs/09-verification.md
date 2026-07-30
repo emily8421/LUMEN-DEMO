@@ -9,7 +9,7 @@
 
 | 项 | 内容 |
 |---|---|
-| 当前 Phase | Phase2A 已完成；未进入 Phase2B（Phase2B 范围已确认 2026-07-30、设计就绪，待 RG-008 验证升 Go + Sprint-11 门禁重跑后切指针编码） |
+| 当前 Phase | **Phase2B（团队 MVP）进行中**（2026-07-30 切指针；RG-008 Conditional Go，待 Sprint-19 实跑升 Go） |
 | 交付物形态 | Demo / 个人可用 Alpha / 个人知识组织 |
 | 覆盖 REQ | Phase1：REQ-001..REQ-011、REQ-036；Phase1.5A：REQ-037/038；Phase1.5B：REQ-027；Phase2A：REQ-026/012/025；**Phase2B：REQ-014 首批核心 + REQ-013/024 第二 slice（设计就绪·待 RG-008 升 Go 后编码）**；愿景验证项待升阶段 |
 | 当前状态 | Phase1 全量验收已记录，结论为 Conditional Go（Demo closure）；Phase1.5A 已完成 TC-P1-015/016；Phase2A 已完成 TC-P2-LINK-001 / TC-P2-TAG-001 / TC-P2-QUICK-001，个人知识组织三个 vertical slice 验收通过。Phase1.5B 仍待 RG；**Phase2B 范围已确认（2026-07-30）+ 设计就绪 + 数据外发风险已接受（RG-008 Conditional Go），待 RG-008 验证升 Go 与 Sprint-11 门禁重跑后切指针编码**；愿景项待升阶段。 |
