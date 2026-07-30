@@ -10,9 +10,9 @@
 |---|---|
 | 保留 / 省略决策 | 保留 |
 | 决策来源 | `ai/project-rules.md` §3（项目有 PostgreSQL + pgvector 持久化存储） |
-| 覆盖 REQ / 模块 | Phase1：空间 / 权限、文档、版本、导入、检索向量、术语管理；Phase1.5A：批量导入与 `.md` / ZIP 导出备份（REQ-037/038）；Phase1.5B：PDF 导出任务契约（REQ-027）；Phase2A/B / 愿景保留骨架 |
-| 当前状态 | P1 表结构**已落地 PostgreSQL**（Sprint-8 / task-008 T1–T5：8 张 `lumen_*` 表由 `migrations/001-005` 建，后端切 `PgRepository`；`lumen_chunks.embedding vector(512)` + hnsw + ts_vector 由 T4/T6 启用；migration 006 为 search 增加可选 zhparser / `simple` 回退配置）。内存 `demo_repository` 保留为单测 fake。Phase1.5A 的 REQ-037/038 默认复用既有表、不新增迁移；真实 Word/PDF 文本提取与 OCR 仍降级（RG-007 / RG-003）；Phase1.5B PDF 导出表仅为契约草案，待 RG-006 与 Sprint-18。2026-07-21 按 ADR-010 补“DB 权威运行态 + 衍生数据可重建”原则 |
-| 最后更新 | 2026-07-21（补 ADR-010 数据权威与派生可重建原则） |
+| 覆盖 REQ / 模块 | Phase1：空间 / 权限、文档、版本、导入、检索向量、术语管理；Phase1.5A：批量导入与 `.md` / ZIP 导出备份（REQ-037/038）；Phase1.5B：PDF 导出任务契约（REQ-027）；Phase2A：标签、内链 / 反链、快速录入（REQ-012/025/026）；Phase2B / 愿景保留骨架 |
+| 当前状态 | P1 表结构**已落地 PostgreSQL**（Sprint-8 / task-008 T1–T5：8 张 `lumen_*` 表由 `migrations/001-005` 建，后端切 `PgRepository`；`lumen_chunks.embedding vector(512)` + hnsw + ts_vector 由 T4/T6 启用；migration 006 为 search 增加可选 zhparser / `simple` 回退配置）。内存 `demo_repository` 保留为单测 fake。Phase1.5A 的 REQ-037/038 已复用既有表完成、不新增迁移；Phase2A 的标签、反链与快速录入表已落地；真实 Word/PDF 文本提取与 OCR 仍降级（RG-007 / RG-003）；Phase1.5B PDF 导出表仅为契约草案，待 RG-006 与 Sprint-18。2026-07-21 按 ADR-010 补“DB 权威运行态 + 衍生数据可重建”原则 |
+| 最后更新 | 2026-07-30（Phase1.5A / Phase2A 完成后状态回写；保留 ADR-010 数据权威与派生可重建原则） |
 
 ## 1. 表清单（完整）
 
@@ -202,11 +202,11 @@ LUMEN 采用 `docs/decisions/ADR-010-db-authority-derived-data-rebuildability.md
 | lumen_terms | source_document_id | bigint FK | 否 | — | FK→documents, nullable | REQ-036 | 低 | 随术语删除 |
 | lumen_terms | created_at / updated_at | timestamptz | 是 | now() | — | REQ-036 | 低 | 随术语删除 |
 
-### [Phase1.5A/B / Phase2A/B] 导入、导出与后续表契约草案
+### [Phase1.5A/B / Phase2A/B] 导入、导出与后续表契约状态
 
-> 本节只补 Phase1.5A/B 与 Phase2A/B 进入前契约，不创建迁移、不代表已实现。Phase1.5A 的 REQ-037 / 038 默认复用既有表与标准库 ZIP，不新增 DB 表；正式编码前仍需确认对应 Sprint / vertical slice、迁移 / seed / 回滚策略和 `docs/09-verification.md` 对应用例。
+> 本节记录 Phase1.5A/B 与 Phase2A/B 数据契约状态。Phase1.5A 的 REQ-037 / 038 已复用既有表与标准库 ZIP 完成，不新增 DB 表；Phase2A 的 REQ-012 / 025 / 026 已落地最小表结构与权限过滤；Phase1.5B 与 Phase2B 仍需确认对应 Sprint / vertical slice、迁移 / seed / 回滚策略和 `docs/09-verification.md` 对应用例。
 
-**Phase1.5A 无新增表结论**：
+**Phase1.5A 无新增表实现结论**：
 
 | REQ | DB 策略 | 说明 | 追溯 |
 |---|---|---|---|
@@ -312,9 +312,9 @@ erDiagram
 | REQ-037 | `lumen_imports`、`lumen_documents`、`lumen_chunks` | TC-P1-015 | Sprint-16（Phase1.5A） | 批量 / 文件夹 `.md` / `.txt` 导入；逐文件结果、同名跳过；默认不新增表 |
 | REQ-038 | `lumen_documents`、`lumen_document_versions` | TC-P1-016 | Sprint-17（Phase1.5A） | 单文档 `.md` 与空间 ZIP 导出备份；默认流式 / 临时产物，不写导出表 |
 | REQ-027 | `lumen_doc_exports`、`lumen_documents`、`lumen_document_versions` | TC-P1-017 | Sprint-18（Phase1.5B·待 RG-006） | 单文档 PDF 导出任务、版本绑定和权限继承契约草案 |
-| REQ-012 | `lumen_tags`、`lumen_tag_links`、`lumen_documents` | TC-P2-TAG-001 | Phase2A 后续 | 标签视图、标签筛选与标签-文档关联契约草案 |
+| REQ-012 | `lumen_tags`、`lumen_tag_links`、`lumen_documents` | TC-P2-TAG-001 | Phase2A-已实现（Task A `1e4cf48`） | 标签视图、标签筛选与标签-文档关联已落地 |
 | REQ-025 | `lumen_quick_entries`、`lumen_documents`、`lumen_tag_links` | TC-P2-QUICK-001 | Phase2A-已实现（Task A `f771e02` + Task B `bad8fe5`） | 快速录入 draft/转文档/追加/tag_ids/丢弃；API-017 |
-| REQ-026 | `lumen_doc_links`、`lumen_documents` | TC-P2-LINK-001 | Phase2A 后续 | `[[wikilink]]` 出链 / 反链索引与权限过滤契约草案 |
+| REQ-026 | `lumen_doc_links`、`lumen_documents` | TC-P2-LINK-001 | Phase2A-已实现（Task A `fc2b869` + Task B `6228f3f`） | `[[wikilink]]` 出链 / 反链索引与权限过滤已落地 |
 | REQ-014 | `lumen_ai_drafts`、`lumen_documents`、`lumen_chunks` | TC-P2-AI-001 | Phase2B 后续 | AI 润色草稿、写作引用和来源 chunk 追溯契约草案 |
 | REQ-013 / 024 | Phase2B 后续骨架 | — | — | 时间轴 / 密度热条候选，后续单独细化 |
 | REQ-015 / 016 / 017 | 后续 Phase 骨架 | — | — | 推送 / 协作 / 移动端不进 Phase2B 首批 |
@@ -322,6 +322,6 @@ erDiagram
 
 ## 7. 待人工确认项
 
-- Phase1.5A 的 REQ-037 / REQ-038 默认不新增 DB 表；若实现时需要批次表、目录表或长期导出产物表，必须先回到本文、`07`、`08/09` 修订契约。
+- Phase1.5A 的 REQ-037 / REQ-038 已按不新增 DB 表完成；若后续需要批次表、目录表或长期导出产物表，必须先回到本文、`07`、`08/09` 修订契约。
 - PDF 导出（REQ-027）属于 Phase1.5B，仍受 RG-006 约束；导出产物存储路径、过期清理和中文排版库选型需结合 tech-env 草案继续确认。
-- Phase2A / Phase2B DB 契约仍为草案；P1.5A/B 后需重新确认迁移、seed、回滚脚本与首个 vertical slice。
+- Phase2A 标签、反链与快速录入 DB 契约已实现；Phase2B DB 契约仍为草案，需重新确认迁移、seed、回滚脚本与首个 vertical slice。

@@ -11,9 +11,9 @@
 | 输入来源 | `docs/inputs/*前端交互设计需求说明.md`、`docs/inputs/LUMEN前端设计发散性探讨.md`、`docs/inputs/LUMEN分层信息架构与配色重评估.md`、三份 `docs/research/2026-07-13-*` 前端探索报告 |
 | 覆盖 REQ / NFR | 不新增 REQ；承接 P1 REQ-001..011、REQ-036 的体验底座，Phase1.5A 的导入 / 导出入口复用该工作台，作为 Phase2A/B / 愿景 UI 方向输入 |
 | 所属 Phase | `[P1]` 保持现状；Phase1.5A 作为个人可用入口增强；`[P2]` / `[愿景]` 作为候选体验方向 |
-| 交付物形态 | P1 Demo 已实现；Phase1.5A 个人可用 Alpha 待实现；Phase2A/B / 愿景产品待后续确认 |
-| 当前状态 | 候选体验方向·待人工确认 / 正式交互设计细化 |
-| 最后更新 | 2026-07-13 |
+| 交付物形态 | P1 Demo 已实现；Phase1.5A 个人可用 Alpha 已完成；Phase2A 个人知识组织已完成；Phase2B / 愿景产品待后续确认 |
+| 当前状态 | 历史候选体验方向已沉淀；Phase1.5A / Phase2A 已实现部分以 `frontend-interaction`、`08`、`09` 为准；Phase2B / 愿景仍待人工确认与正式交互设计细化 |
+| 最后更新 | 2026-07-30（同步后状态回写；保留 2026-07-13 候选体验输入） |
 | 下游影响 | `docs/design/frontend-interaction.md` Phase2 / 愿景骨架；后续如排期再影响 `docs/08-dev-plan.md`、`docs/09-verification.md` |
 
 ## 1. 候选体验原则
@@ -91,8 +91,8 @@ Layer 0  空间层（Space）
 | 阶段 | 口径 | 本 brief 对应内容 |
 |---|---|---|
 | Phase1 Demo `[P1]` | 已实现 / 不推翻 | 保持 TopBar + Nav Rail + Context Pane + Workspace；不新增高级视图或移动端 |
-| Phase1.5A `[P1]` | 个人可用 Alpha，待 Sprint-16/17 | 批量 / 文件夹导入、单文档 `.md` 下载、空间 ZIP 导出入口复用既有工作台，不新增复杂首页 |
-| Phase2A `[P2]` | 候选方向，待正式排期 | 分层空间总览、经典 / 探索双模式、标签 / 反链 / 快速录入等个人知识组织增强方向 |
+| Phase1.5A `[P1]` | 个人可用 Alpha 已完成 | 批量 / 文件夹导入、单文档 `.md` 下载、空间 ZIP 导出入口复用既有工作台，不新增复杂首页 |
+| Phase2A `[P2]` | 个人知识组织已完成最小闭环 | 标签 / 反链 / 快速录入已落地；分层空间总览、经典 / 探索双模式等更大 UI 方向仍按候选处理 |
 | Phase2B `[P2]` | 候选方向，待正式排期 | AI 润色 / 写作引用、时间轴候选等团队 MVP 能力，需数据外发与降级口径确认 |
 | 愿景产品 `[愿景]` | 待技术验证 | 受限局部情报墙、证据地图、矛盾检测、路径推理等高风险能力 |
 
@@ -134,4 +134,4 @@ Layer 0  空间层（Space）
 | UI-G-003 | exploration prototype | experience brief | Conditional Go | 本 brief 仅沉淀候选体验方向；待用户逐项确认后才可改为已确认体验原则 |
 | UI-G-005 | experience brief | `docs/design/frontend-interaction.md` | Conditional Go | 仅允许最小回填 Phase2 / 愿景骨架与待确认项；不生成正式 Page-ID / Flow-ID / TC |
 
-> 结论：当前链路符合 `UI Exploration to Delivery Pipeline` 的候选沉淀路径，但尚未达到进入 Phase2 实现或新增 `08/09` 必过项的 Gate。
+> 结论：当前链路符合 `UI Exploration to Delivery Pipeline` 的候选沉淀路径；Phase2A 已通过独立 vertical slice 完成，Phase2B / 愿景 UI 仍不得仅凭本 brief 进入实现或新增 `08/09` 必过项。

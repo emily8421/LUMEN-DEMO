@@ -13,7 +13,7 @@
 | 交付物形态 | Demo / 个人可用 Alpha / 个人知识组织 |
 | 覆盖 REQ | Phase1：REQ-001..REQ-011、REQ-036；Phase1.5A：REQ-037/038；Phase1.5B：REQ-027；Phase2A：REQ-026/012/025；Phase2B / 愿景验证项待升阶段细化 |
 | 当前状态 | Phase1 全量验收已记录，结论为 Conditional Go（Demo closure）；Phase1.5A 已完成 TC-P1-015/016；Phase2A 已完成 TC-P2-LINK-001 / TC-P2-TAG-001 / TC-P2-QUICK-001，个人知识组织三个 vertical slice 验收通过。Phase1.5B、Phase2B 与愿景项仍待后续 RG / 范围确认。 |
-| 最后更新 | 2026-07-20（Phase2A 个人知识组织整体验收 closure） |
+| 最后更新 | 2026-07-30（同步后文档体系审计回写；保留 2026-07-20 Phase2A closure 验收记录） |
 
 ## 1. 测试策略
 
@@ -80,7 +80,7 @@
 
 | TC ID | 覆盖对象 | 前置条件 | 验证步骤 | 预期结果 | 证据要求 | 状态 |
 |---|---|---|---|---|---|---|
-| TC-P2-WSG-001 | WSG-001..006；P2-UI-G-001..006；首个 P2 Web vertical slice | `04` WSG 矩阵、`05 §4.1`、`08` Sprint-11 草案、`frontend-interaction §9.3` 均已回填；用户确认执行门禁评审 | 逐项检查 App Shell、目录边界、vertical slice、文件膨胀阈值、验证入口、UI 链路是否有文档锚点；确认首个 P2 vertical slice 是否已选定 | WSG-001..006 均有明确证据位置；首个 slice 静态评审建议为 `REQ-012 + REQ-026`；不得跳过 WSG 直接改 `frontend/` | `04/05/08/09/frontend-interaction` 锚点 + 2026-07-14 静态评审记录 | 静态评审条件通过·待实现 smoke |
+| TC-P2-WSG-001 | WSG-001..006；P2-UI-G-001..006；P2 Web vertical slice | `04` WSG 矩阵、`05 §4.1`、`08` Sprint-11 草案、`frontend-interaction §9.3` 均已回填；用户确认执行门禁评审 | 逐项检查 App Shell、目录边界、vertical slice、文件膨胀阈值、验证入口、UI 链路是否有文档锚点；Phase2B 启动前确认是否沿用 / 调整 | WSG-001..006 均有明确证据位置；Phase2A 已由 REQ-026 / 012 / 025 三个 slice 完成 build / smoke；不得跳过 WSG 直接改 `frontend/` | `04/05/08/09/frontend-interaction` 锚点 + 2026-07-14 静态评审记录 + Phase2A closure | 静态评审条件通过；Phase2B 启动前重跑 |
 | TC-P2-UI-001 | PG-P2-001/002/003、P2-UI-G-001/006；REQ-012/025/026 页面入口候选 | 少容器清爽稿暂定按当前稿继续；首个 slice 聚焦 REQ-012/026 | 静态检查 `docs/research/prototypes/2026-07-14-frontend-ui-reference-absorbed-prototype.html` 首页、经典目录、文档工作区的信息层级、首屏入口和视觉密度 | 首屏 2-3 个主信息区；少圆角、少边框、少胶囊、少阴影；层级主要靠留白、细分隔线、文字标签和左侧选中线表达；无卡片墙回退 | 原型路径 + 后续截图 / smoke 记录 | 静态评审条件通过·待实现 smoke |
 | TC-P2-UI-002 | PG-P2-008、CMP-P2-BREADCRUMB、CMP-P2-LAYER-SEARCH；REQ-012/026 候选 | 使用当前空间 mock 数据；首个 slice 聚焦标签与内链 / 反链 | 静态检查面包屑、当前层级搜索、经典目录 / 列表过滤路径 | 路径定位清楚；搜索只过滤当前空间 / 当前层级可见内容；无结果不泄露跨空间或无权限内容 | 原型路径 + 后续 UI smoke | 静态评审条件通过·待实现 smoke |
 | TC-P2-UI-003 | PG-P2-003、CMP-P2-DOC-MODE；REQ-014/026 候选 | 打开示例文档；首个 slice 只用 REQ-026 相关文档工作区能力 | 静态检查预览、编辑、编辑+预览并排、版本 / 来源入口和可调宽说明 | 阅读与预览合并；编辑不破坏阅读；并排预览可用；主要区域可调宽；来源 / 版本可追溯 | 原型路径 + 后续 Chrome / Edge smoke | 静态评审条件通过·待实现 smoke |
@@ -100,7 +100,7 @@
 - **Phase1（Demo）**：覆盖 REQ-001..011、REQ-036（上表）——可演示 + 守产品红线；REQ-009/010 按 `.md` / `.txt` 已提取文本降级验收，真实 Word / PDF 解析与 OCR 不作为 Phase1 Demo 必过。P1A 的 TC-P1-013 是既有 REQ-011 的前端结构体验收口，不新增业务范围
 - **Phase1.5A（个人可用 Alpha）**：覆盖 REQ-037 / REQ-038，对应 TC-P1-015 / 016；目标是批量入库 + 导出备份，优先于 PDF 和 Phase2 编码。
 - **Phase1.5B（个人增强 Beta）**：覆盖 REQ-027，对应 TC-P1-017；受 RG-006 约束，未验证前不得实现。
-- **Phase2A / Phase2B**：P2 UI 实现前门禁 TC-P2-UI-001~005 已原位追加为草案；REQ-026 / 012 / 025 属 Phase2A 个人知识组织优先候选，REQ-014 / 013 / 024 属 Phase2B 团队 MVP 候选，其余 P2 用例待阶段确认后继续细化。
+- **Phase2A / Phase2B**：REQ-026 / 012 / 025 已作为 Phase2A 个人知识组织完成并通过 TC-P2-LINK/TAG/QUICK-001；P2 UI 实现前门禁 TC-P2-UI-001~005 仍作为 Phase2B 启动前门禁草案保留；REQ-014 / 013 / 024 属 Phase2B 团队 MVP 候选，其余 P2 用例待阶段确认后继续细化。
 - **愿景（产品）**：待技术验证后再补用例
 
 ## 4. 本机资源验证

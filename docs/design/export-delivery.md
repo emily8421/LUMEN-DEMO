@@ -10,11 +10,11 @@
 | 文档路径 | `docs/design/export-delivery.md` |
 | 输入来源 | `docs/01-user-requirements.md` U-43 / U-33、`docs/02-srs.md` REQ-038 / REQ-027、`docs/03-prd.md` Phase1.5A/B、`docs/04-architecture.md` Flow-007 / Flow-008、`docs/05-tech-spec.md` TCD-008 / TCD-009 / RG-006、`docs/06-db-design.md`、`docs/07-api-spec.md` API-030 / API-019 |
 | 覆盖 REQ | REQ-038（Phase1.5A）、REQ-027（Phase1.5B） |
-| 所属 Phase | [P1]（Phase1.5A/B 候选） |
+| 所属 Phase | [P1]（Phase1.5A 已完成；Phase1.5B 候选） |
 | 交付物形态 | 个人可用 Alpha / 个人增强 Beta |
-| 当前状态 | Phase1.5A `.md` / ZIP 导出为契约草案·待 Sprint-17；Phase1.5B PDF 受 RG-006，未通过前不得编码 |
+| 当前状态 | Phase1.5A `.md` / ZIP 导出已完成并通过 TC-P1-016；Phase1.5B PDF 受 RG-006，未通过前不得编码 |
 | 流程 ID | Flow-007（`.md` / ZIP 导出备份）/ Flow-008（PDF 导出） |
-| 最后更新 | 2026-07-15 |
+| 最后更新 | 2026-07-30（Phase1.5A `.md` / ZIP 导出完成后状态回写） |
 | 下游影响 | 08 Sprint-17 / Sprint-18、09 TC-P1-016 / TC-P1-017、07 API-030 / API-019 |
 
 ## 1. 职责与边界
@@ -38,7 +38,7 @@
 | `docs/05-tech-spec.md` | TCD-008 / TCD-009 / RG-006 | ZIP 用 `zipfile`，PDF 受 RG-006 | 依赖门禁 |
 | `docs/06-db-design.md` | REQ-038 无新增表结论、`lumen_doc_exports` | `.md` / ZIP 不写导出表；PDF 可用导出任务表 | DB 边界 |
 | `docs/07-api-spec.md` | API-030 / API-019 | 请求 / 响应 / 错误 / 权限契约 | API 实现与测试 |
-| `docs/09-verification.md` | TC-P1-016 / TC-P1-017 | 导出验收路径 | 后端 tests + Chrome smoke |
+| `docs/09-verification.md` | TC-P1-016 / TC-P1-017 | 导出验收路径 | TC-P1-016 已通过后端 tests + 端到端 HTTP smoke；TC-P1-017 待 RG-006 |
 
 ## 3. 核心流程
 
@@ -92,7 +92,7 @@ flowchart TB
 
 | 阶段 | 能力 | 状态 | Gate / 禁止项 |
 |---|---|---|---|
-| Phase1.5A | 单文档 `.md` 下载、空间 ZIP 导出 | 契约草案·待 Sprint-17 | 不引 PDF 库；不写长期导出表；不建公开链接 |
+| Phase1.5A | 单文档 `.md` 下载、空间 ZIP 导出 | 已实现（TC-P1-016 通过） | 不引 PDF 库；不写长期导出表；不建公开链接 |
 | Phase1.5B | 单文档 PDF 导出 | 待 RG-006 | 未验证中文样例 / 字体 / 资源前不得编码 |
 | Phase2B / 后续 | 对外分享链接、团队交付包 | 骨架 | 需重新确认权限、有效期、审计与外部访问边界 |
 
@@ -100,8 +100,8 @@ flowchart TB
 
 | 设计点 | 关联 REQ | 关联 Sprint | 关联 TC | 验证方式 | 状态 |
 |---|---|---|---|---|---|
-| 单文档 `.md` 下载 | REQ-038 | Sprint-17 | TC-P1-016 | 后端 tests + Chrome smoke | Phase1.5A-草案·待编码 |
-| 空间 ZIP 导出 | REQ-038 | Sprint-17 | TC-P1-016 | 权限过滤后端 tests + Chrome smoke | Phase1.5A-草案·待编码 |
+| 单文档 `.md` 下载 | REQ-038 | Sprint-17 | TC-P1-016 | 后端 tests + 端到端 HTTP smoke 已通过 | Phase1.5A-已实现 |
+| 空间 ZIP 导出 | REQ-038 | Sprint-17 | TC-P1-016 | 权限过滤后端 tests + 端到端 HTTP smoke 已通过 | Phase1.5A-已实现 |
 | 单文档 PDF 导出 | REQ-027 | Sprint-18 | TC-P1-017 | RG-006 + PDF 样例 + 后端 tests | Phase1.5B-待 RG-006 |
 
 ## 8. 与其他子系统交互
@@ -115,7 +115,7 @@ flowchart TB
 
 | 偏差 ID | 代码 / 配置事实 | 原设计 | 偏差类型 | 处理结论 | 回写目标 | 验证 / 证据 |
 |---|---|---|---|---|---|---|
-| DEV-EXP-001 | 当前未实现 `.md` / ZIP 导出 | Phase1.5A 目标 | 待编码 | Sprint-17 前置设计已补 | API-030、TC-P1-016 | 待 Sprint-17 |
+| DEV-EXP-001 | `.md` / ZIP 导出已实现 | Phase1.5A 目标 | 已完成 | Sprint-17 已按标准库 zipfile 与权限过滤完成 | API-030、TC-P1-016 | TC-P1-016 通过 |
 | DEV-EXP-002 | 当前未安装 / 验证 PDF 库 | Phase1.5B 目标 | 待 RG | RG-006 未过前不得编码 | API-019、TC-P1-017 | 待 tech-env-eval |
 
 ## 10. 待人工确认项

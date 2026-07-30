@@ -11,11 +11,11 @@
 | 文档路径 | docs/design/ingestion.md |
 | 输入来源 | 02/03、04 §2 / §5.4（MOD-003 / Flow-006）、05（TCD-007、RG-002/003/007）、06（lumen_imports / lumen_chunks）、07（API-011 / API-029） |
 | 覆盖 REQ | REQ-009、REQ-010、REQ-037 |
-| 所属 Phase | [P1] + Phase1.5A 候选 |
+| 所属 Phase | [P1] + Phase1.5A 已完成；Phase1.5B / 后续保留骨架 |
 | 交付物形态 | Demo / 个人可用 Alpha |
-| 当前状态 | P1 已降级实现（`.md`/`.txt` + Embedding/pgvector 已落地；真实 Word/PDF/OCR 未实现）；Phase1.5A 批量 / 文件夹导入为契约草案·待 Sprint-16 |
+| 当前状态 | P1 已降级实现（`.md`/`.txt` + Embedding/pgvector 已落地；真实 Word/PDF/OCR 未实现）；Phase1.5A 批量 / 文件夹导入已完成并通过 TC-P1-015 |
 | 流程 ID | Flow-D-001（单文件导入主流水线）/ Flow-006（批量 / 文件夹导入，见 §2.2） |
-| 最后更新 | 2026-07-15（补 Phase1.5A 批量 / 文件夹导入） |
+| 最后更新 | 2026-07-30（Phase1.5A 批量 / 文件夹导入完成后状态回写） |
 | 下游影响 | 08 Sprint-3、Sprint-16；09 TC-P1-009/010/015；07 API-011 / API-029 |
 
 ## 1. 职责
@@ -78,7 +78,7 @@ flowchart TB
 ## 4. 阶段增量
 
 - `[P1]` 已实现 / 降级：`.md` / `.txt` 已提取文本导入、切块、Embedding / pgvector 入库；真实 Word/PDF/OCR 不作为 P1 必过
-- `Phase1.5A` 待编码：多文件 + 文件夹 `.md` / `.txt` 批量导入（REQ-037 / API-029 / TC-P1-015）
+- `Phase1.5A` 已完成：多文件 + 文件夹 `.md` / `.txt` 批量导入（REQ-037 / API-029 / TC-P1-015 通过）
 - `Phase1.5B` 待 RG-007：真实 Word / PDF 文本提取（python-docx / pdfplumber 候选），不得阻塞 Phase1.5A
 - `后续` 待 RG-003：图片 / 白板 OCR
 - `[愿景]` 待验证：录音转写入库（REQ-019，转写引擎与摘要质量待验证）
@@ -89,7 +89,7 @@ flowchart TB
 - **为** docs/design/rag-retrieval 供 `lumen_chunks`
 - **被** 07 `/api/import`、`/api/import/batch` 调用
 - **写** 06 lumen_imports / lumen_chunks
-- **影响** docs/design/frontend-interaction：Sprint-16 需补 drop zone、多文件 / 文件夹选择、批量进度与逐条结果 UI
+- **影响** docs/design/frontend-interaction：Sprint-16 已补 drop zone、多文件 / 文件夹选择、批量进度与逐条结果 UI
 
 ## 6. 实现偏差 / 设计回写
 
@@ -100,7 +100,7 @@ flowchart TB
 | DEV-001 | `backend/service/imports.py` 仅支持 `.md`/`.txt` 已提取文本 | .docx / .pdf / 图片三路解析 | Mock/降级 | Phase1 接受降级基线；真实 Word/PDF 文本提取移 Phase1.5B（RG-007）；OCR 后续（RG-003） | 06 lumen_imports、05 RG-003/RG-007 | TC-P1-009 |
 | DEV-002 | 未接入 PaddleOCR；无 OCR | 图片 → PaddleOCR 中文 OCR | 后续阶段 | REQ-010 移出 P1 / P1.5A 必过 | 05 RG-003、09 §6 | TC-P1-010 |
 | DEV-003 | ~~未接入 `bge-small-zh`；`lumen_chunks` 无向量落地~~ → **已实现（Sprint-8 T6）**：`pg_repository.replace_document_chunks` 写 `lumen_chunks.embedding`（bge-small-zh 512 维 float32） | 切块 → bge-small-zh 512 维 → embedding/ts_vector | 已实现 | 向量已落地 PG；ts_vector（zhparser 中文分词）留后续。DEV-001（真实 PDF/Word）/ DEV-002（OCR）仍降级 | 06 lumen_chunks、05 RG-001/002 | TC-P1-009 |
-| DEV-004 | API-029 / 批量导入尚未实现 | Flow-006 批量 / 文件夹导入 | 待编码 | Sprint-16 前置详细设计已补；实现时不得新增真实目录表或引新依赖 | 07 API-029、06 REQ-037 | TC-P1-015 |
+| DEV-004 | API-029 / 批量导入已实现 | Flow-006 批量 / 文件夹导入 | 已完成 | Sprint-16 已按不新增真实目录表、不引新依赖完成 | 07 API-029、06 REQ-037 | TC-P1-015 通过 |
 
 ## 7. 验收追溯
 
@@ -109,7 +109,7 @@ flowchart TB
 | 文本导入可检索 | REQ-009 | Sprint-3 | TC-P1-009 | `tests/backend/test_imports.py` | 条件通过（仅 `.md`/`.txt`） |
 | 图片 OCR 导入 | REQ-010 | Sprint-3 | TC-P1-010 | — | 后续阶段（OCR 未实现） |
 | Flow-D-001 导入主流水线 | REQ-009/010 | Sprint-3 | TC-P1-009/010 | 见上 | 降级实现 |
-| Flow-006 批量 / 文件夹导入 | REQ-037 | Sprint-16 | TC-P1-015 | 待 Sprint-16 后端 tests + Chrome smoke | Phase1.5A-草案·待编码 |
+| Flow-006 批量 / 文件夹导入 | REQ-037 | Sprint-16 | TC-P1-015 | 后端 tests + Chrome headless drop-zone smoke 已通过 | Phase1.5A-已实现 |
 
 ## 8. 待人工确认项
 

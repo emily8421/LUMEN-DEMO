@@ -22,7 +22,7 @@
 - check-derived-sync：`powershell -ExecutionPolicy Bypass -File scripts\check-derived-sync.ps1 751ccd3`
 - 是否触发 PowerShell fallback（sync / check）：未触发；Git Bash 路径可用
 - post-sync-cleanup：已执行（本清理提交），处理 README 模板版本、根 CHANGELOG-PLAIN ownership 与 NEXT-STEPS 退役；未修改模板同步清单文件 docs/README.md
-- docs-system-audit（同步后审计）：未执行，仅记录后续建议
+- docs-system-audit（同步后审计）：已执行（2026-07-30，见 `docs/research/2026-07-30-docs-system-audit-post-v1.59.0.md`；本批完成文档状态回写）
 - 项目验证建议 / 已执行验证：仅执行模板同步边界检查；未运行项目测试 / lint / build
 
 ### 命令真实性记录
@@ -33,7 +33,7 @@
 | commit / 同步 | `powershell -ExecutionPolicy Bypass -File scripts\sync-template.ps1 --commit --preserve-project-version` | EXIT=0；生成同步提交 `751ccd3` | 是 | 否 | 不适用 | 保留项目 `VERSION` / `CHANGELOG.md` / `CHANGELOG-PLAIN.md`，更新 `TEMPLATE-BASE.md` 与 `upstream/` |
 | check-derived-sync | `powershell -ExecutionPolicy Bypass -File scripts\check-derived-sync.ps1 751ccd3` | EXIT=0；27 个同步清单内文件合规 | 是 | 否 | 不适用 | 未命中项目专属保护文件；派生项目版本机制已启用 |
 | post-sync-cleanup | 执行本清理任务 | 已完成 | 是 | 否 | 否 | 本次清理与同步提交分离；处理 README / CHANGELOG-PLAIN / NEXT-STEPS；未触碰 docs/README.md 模板同步边界 |
-| docs-system-audit | 未执行 | 未执行 | 未执行 | 否 | 否 | 建议同步 PR 后或单独任务执行同步后审计 |
+| docs-system-audit | 执行同步后文档体系审计与状态回写 | 已完成 | 是 | 否 | 是 | 报告见 `docs/research/2026-07-30-docs-system-audit-post-v1.59.0.md`；本批只改文档状态，不运行项目测试 |
 | 项目验证 | 未运行项目测试 / lint / build | 未验证 | 否 | 否 | 不适用 | 本轮只验证模板同步边界 |
 
 ## A13 完成判据矩阵
@@ -44,11 +44,11 @@
 | dry-run 预览 | summary dry-run EXIT=0；风险路径命中=无 | 完成 |  | 已进入 commit |
 | commit + 边界验证 | Bootstrap `914e3e0`；同步提交 `751ccd3`；`check-derived-sync 751ccd3` EXIT=0 | 完成 |  | 可 push / PR（需单步确认） |
 | post-sync-cleanup | 本清理提交处理 ownership 与陈旧状态 | 完成 |  | 后续仍建议单独执行 docs-system-audit |
-| docs-system-audit | 未执行 | 未执行 | 本轮未展开 PLM 审计 | 另开任务执行 `/run docs-system-audit` 同步后审计模式 |
+| docs-system-audit | `docs/research/2026-07-30-docs-system-audit-post-v1.59.0.md` 与本批文档回写 | 完成 |  | 后续按需执行项目验证 / PR |
 | 提案回流收口 | 只读列出 `_proposals/`，未联网复核 issue / PR | 部分完成 | 远端状态未复核，不能归档 | 后续联网核对模板 issue / PR 后再归档或保留 |
 | 同步报告留痕 | `sync-records/template-sync/2026-07-29-sync-template-v1.59.0.md` | 完成 |  | 同步 PR 一并提交 |
 
-> 结论：同步主链完成，A13 闭环尚有剩余项；不得标记为 A13 完整闭环完成。
+> 结论：同步主链与同步后文档体系审计已完成；A13 完整闭环仍剩项目验证与提案回流复核，不得标记为 A13 完整闭环完成。
 
 ## 同步结果
 
@@ -65,16 +65,16 @@
 - 是否执行 `/run post-sync-cleanup`：是（2026-07-29，分离于同步提交）
 - README / `ai/project-rules.md` / docs 分区是否需整理：README 模板版本状态已修正；`ai/project-rules.md` 未见需改项；`docs/` 根目录结构合规
 - 已处理项：根 `CHANGELOG-PLAIN.md` 改为 LUMEN 自有大白话 changelog；根 README 同步状态更新到 v1.59.0；退役旧临时交接 `NEXT-STEPS.md`
-- 待确认项：`docs-system-audit` 未执行；`docs/references/` 已有项目索引但模板维护的 `docs/README.md` 未改，若需标准化应回流模板
-- 建议回写 / 后续迁移任务：另开同步后 docs-system-audit；按需评估 `docs/references/` 是否作为模板标准子目录提案
+- 待确认项：`docs-system-audit` 已于 2026-07-30 执行并完成状态回写；`docs/references/` 已有项目索引但模板维护的 `docs/README.md` 未改，若需标准化应回流模板
+- 建议回写 / 后续迁移任务：同步后 docs-system-audit 已执行；后续按需评估 `docs/references/` 是否作为模板标准子目录提案
 
 ## 文档体系审计摘要
 
-- 是否执行 `/run docs-system-audit` 同步后审计模式：否
-- 规范基线缺口：未审计
-- 可接受兼容差异：未审计
-- 项目事实风险：未审计
-- 回梳计划摘要：建议同步 PR 后执行轻量 PLM 审计
+- 是否执行 `/run docs-system-audit` 同步后审计模式：是（2026-07-30，轻量 PLM 状态校准）
+- 规范基线缺口：未发现需新增模板规则的阻塞缺口；本批重点为项目事实状态漂移回写
+- 可接受兼容差异：历史 research / open-items 保留原时点结论，通过 2026-07-30 校准说明覆盖最新口径
+- 项目事实风险：已降低；已将 Phase1.5A / Phase2A 已完成事实回写到 00-09 与相关 design 文件
+- 回梳计划摘要：已执行轻量 PLM 审计；后续仅保留 Phase1.5B、Phase2B、项目验证和提案回流复核
 
 ## 项目验证建议
 
@@ -121,8 +121,8 @@
 ## 后续动作
 
 - 是否需要 `/run post-sync-cleanup`：已执行，本清理提交处理 `CHANGELOG-PLAIN.md` ownership、README 旧模板版本与 `NEXT-STEPS.md` 退役
-- 是否需要 `/run docs-system-audit`：建议执行同步后审计模式
-- 是否需要按审计结果回梳 `docs/00-09` / `docs/design` / `docs/env`：待审计判断
+- 是否需要 `/run docs-system-audit`：已执行同步后审计模式（2026-07-30）
+- 是否需要按审计结果回梳 `docs/00-09` / `docs/design` / `docs/env`：已回梳 `docs/00-09` 与相关 `docs/design`；`docs/env` 本次无状态回写需求
 - 是否需要补项目验证入口：待项目测试 / lint / build 入口判断
 - 是否需要人工清理旧目录：无需处理 `docs/_scaffold/`；旧临时交接 `NEXT-STEPS.md` 已退役
 - 是否需要同步回模板仓库：本轮无新增回流提案
