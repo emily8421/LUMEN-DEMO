@@ -64,9 +64,22 @@
 ## 完成记录
 
 - [x] migration 010（`010_ai_drafts.sql`）
-- [ ] ORM（`AiDraftORM`）+ entity（`AiDraft`/`PolishView`/`PolishRequest`）
-- [ ] repository（pg + demo）ai_draft 读写
-- [ ] service/ai_polish.py
-- [ ] API endpoint + 5030
-- [ ] tests/test_ai_polish.py
-- [ ] RG-008 升 Go 回填 05/09
+- [x] ORM（`AiDraftORM`）+ entity（`AiDraft`）；`PolishView`/`PolishRequest`/`PolishSource` 落在 service（`ai_polish.py`）——对齐 quick_entry 的 DTO 拆分（持久化 entity 进 entities.py，view/request 进 service），非 entities.py
+- [x] repository（pg + demo）`create_ai_draft` 读写（双实现，仿 quick_entry）
+- [x] service/ai_polish.py（polish/citation；越权 chunk 不进 prompt/不返回；LLM 不可用→`LlmUnavailableError`→5030 不落库不编造；citation 无来源→「未找到可引用来源」不调 LLM；hash+摘要留存）
+- [x] API endpoint（`POST /api/documents/{id}/polish`）+ 5030（4001/4003/4004/4220/5030 映射）
+- [x] tests/test_ai_polish.py（service 9 例全绿；API 6 例 PG-gated）
+- [x] RG-008 升 Go 回填（用户确认 2026-07-30）：`05` RG-008→Go + TCD-010 / 数据外发过滤行 / 启动准备段；`09` TC-P2-AI-001（状态 + 条件列）/ RISK-P2-005 / §5 Sprint-19 验收记录 / 元信息 / 待确认项 + 行 14/15/79 内部一致性；`design/ai-polish.md` §0 / §6 / §9 同步；**living-doc 涟漪已全量传播**：03（§3 路线图 / 进入标准 / REQ-014 / PRD-C-003）、04（REQ-014 行）、06（REQ-014 行 / 演进段）、07（API-028 状态 / §3.6 / §5）、08（当前 Phase / 当前状态 / Sprint-19 行 ×3）、`ai/project-rules`（§1 / 进度段）。CHANGELOG / research 为历史记录不改
+
+### 验证结果（2026-07-30）
+
+- `compileall` 新/改文件：exit 0。
+- service 测试：`tests.backend.test_ai_polish.AiPolishServiceTest` 9/9 OK（DemoRepository + chat_fn 注入，覆盖 polish 生成 / 越权不进 prompt / hash+摘要留存 / LLM 失败与未配置均不落库 / citation 无来源不调 LLM / 4003 / 4004 / 4220）。
+- 全量后端回归：`discover -s tests/backend` → **Ran 125 tests, OK (skipped=3)**。该轮 PG 为 up（否则 `ApiRouteTest`/`test_pg_repository`/`AiPolishApiTest` 会贡献大量 skip），即 API 层 6 例 + PG 路径（`PgRepository.create_ai_draft`/`AiDraftORM` 落库）当时跑过且绿；无回归。
+- 单独复跑时 PG（Docker Desktop lumen-pg）已停 → `AiPolishApiTest`/`ApiRouteTest` 按 task 设计 SkipTest（PG 不可用即 skip，非缺陷）。需 API 层独立证据时启动 Docker 后重跑 `tests.backend.test_ai_polish.AiPolishApiTest`。
+
+### 实现偏差（待回写 design §9）
+
+- D-impl-1：`PolishView`/`PolishRequest`/`PolishSource` 定义在 service `ai_polish.py`（仿 `quick_entry.py`），非 entities.py；entities.py 只放持久化 `AiDraft`。与既有模式一致。
+- D-impl-2：LLM 不可用走「抛 `LlmUnavailableError`→5030、不落库」而非 Mock 占位（设计 §5「5030 或 Mock」二选一，取更严的 5030）。失败时一行草稿都不存。
+- D-impl-3：citation 复用 `rag._find_candidate_chunks`/`_extract_terms`/`MAX_CANDIDATES`（跨模块 import 私有函数，task 授权复用，不改 rag.py 行为）。

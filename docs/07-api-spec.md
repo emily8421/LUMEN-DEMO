@@ -99,7 +99,7 @@
 | API-027 | Phase2A-已实现 | §3.9 | 4001/4003/4004/4090/4220 | 空间成员；归档不删除历史关联 | TC-P2-TAG-001 | 已实现（Task A 1e4cf48） |
 | API-017 | Phase2A-已实现 | §3.9 | 4001/4003/4004/4220 | 空间成员；draft 默认 owner 私有；转换继承文档权限 | TC-P2-QUICK-001 | 已实现（Task A `f771e02` + Task B `bad8fe5`） |
 | API-018 | Phase2A-已实现 | §3.9 | 4001/4003/4004/4220 | source / target 文档均需权限过滤；无权限反链不泄露 | TC-P2-LINK-001 | 已实现（Task A fc2b869 + Task B 6228f3f） |
-| API-028 | Phase2B·MVP 级已设计 | §3.9 | 4001/4003/4004/4220/5030 | 文档可写权限；引用 chunk 必须当前用户可见；数据外发风险已接受（RG-008） | TC-P2-AI-001 | 待 RG-008 升 Go（Sprint-19） |
+| API-028 | Phase2B·后端已实现（MVP 级） | §3.9 | 4001/4003/4004/4220/5030 | 文档可写权限；引用 chunk 必须当前用户可见；数据外发风险已接受（RG-008 Go） | TC-P2-AI-001 | 后端已实现（RG-008 Go，Sprint-19） |
 | API-033 | Phase2B·第二 slice·骨架 | §3.9（待细化） | 4001/4003/4004 | 空间成员；仅返回当前用户可见文档的事件 | TC-P2-TL-001 | 待 `docs/design/timeline.md` 定稿 |
 
 ### 3.2 请求 / 输入契约（字段级·核心接口）
@@ -279,7 +279,7 @@ sequenceDiagram
 - `/api/documents/{id}/tags`（API-031）+ `/api/tags/{id}/documents`（API-032）：Phase2A 已实现（Task A `1e4cf48`）。文档-标签关联（列 / 打 `link_source=manual` / 移除，需文档可写 + 标签同空间）；标签下可见文档列表（按文档可见性过滤）。
 - `/api/quick-entry`：Phase2A 已实现（Task A `f771e02` + Task B `bad8fe5`）。POST capture（mode=draft/create_document/append_document + `tag_ids` + `source`）+ DELETE discard（仅 draft）；draft 默认 owner 私有，最小版不暴露 list endpoint。
 - `/api/doc-links`：Phase2A 已实现（Task A `fc2b869` + Task B `6228f3f`）。GET 返回 `data` 直接数组（出链 target 不可见→`status=no_access` 且不泄露标题；反链来源不可见过滤）；POST 仅 `link_type=manual`（wikilink 由文档保存时正文解析，拒手动 POST）。
-- `/api/documents/{id}/polish`（API-028）：Phase2B 首批核心，**数据外发风险已接受（RG-008 Conditional Go）**，vertical slice 已定（polish 同步 / citation 首版同步），待 Sprint-19 编码。
+- `/api/documents/{id}/polish`（API-028）：Phase2B 首批核心，**数据外发风险已接受（RG-008 Go）**，vertical slice 已定（polish 同步 / citation 首版同步），后端已实现（Sprint-19）；前端 half 待实现。
 - `/api/spaces/{id}/timeline`（API-033）：Phase2B 第二 slice，待 `docs/design/timeline.md` 定稿数据来源与布局后再实现。
 - `/api/spaces/push`：跨空间推送不进 Phase2B 首批，请求 / 响应待后续细化。
 - `/api/briefs/{token}`：简报隔离与有效期待愿景验证（REQ-022）
@@ -356,4 +356,4 @@ sequenceDiagram
 
 - Phase1.5A API-029 / API-030 已实现并通过 TC-P1-015/016；若后续扩展真实目录表、长期导出产物或新依赖，需同步 `docs/design/ingestion.md`、导出详细设计与 `docs/09-verification.md` TC-P1-015/016。
 - `API-019` PDF 导出属于 Phase1.5B，受 `docs/05-tech-spec.md` RG-006 与 tech-env 草案约束；导出库未安装 / 未验证前不得进入实现。
-- Phase2A 标签 / 快速录入 / 内链 API 已实现；**Phase2B API-028 已推进到 MVP 级已设计**（vertical slice 已定：polish 同步 / citation 首版同步；数据外发风险已接受 RG-008），待 Sprint-19 编码；**API-033 时间轴为第二 slice，待 `docs/design/timeline.md` 定稿**。
+- Phase2A 标签 / 快速录入 / 内链 API 已实现；**Phase2B API-028 后端已实现**（vertical slice 已定：polish 同步 / citation 首版同步；数据外发风险已接受 RG-008 Go）；**API-033 时间轴为第二 slice，待 `docs/design/timeline.md` 定稿**。

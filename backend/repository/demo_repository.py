@@ -6,6 +6,7 @@ from dataclasses import replace
 from datetime import UTC, datetime
 
 from backend.model.entities import (
+    AiDraft,
     DocLink,
     DocLinkDraft,
     Document,
@@ -91,6 +92,8 @@ class DemoRepository:
         self._next_tag_id = 1
         self.quick_entries: list[QuickEntry] = []
         self._next_quick_entry_id = 1
+        self.ai_drafts: list[AiDraft] = []
+        self._next_ai_draft_id = 1
 
     def find_user_by_external_id(self, external_id: str) -> User | None:
         return next((user for user in self.users if user.external_id == external_id), None)
@@ -614,6 +617,37 @@ class DemoRepository:
             self.quick_entries[index] = updated
             return updated
         return None
+
+    # --- ai drafts (REQ-014, API-028) ---
+
+    def create_ai_draft(
+        self,
+        space_id: int,
+        document_id: int,
+        user_id: int,
+        mode: str,
+        input_excerpt_hash: str | None = None,
+        prompt_summary: str = "",
+        output_md: str = "",
+        cited_chunk_ids: tuple[int, ...] = (),
+        status: str = "generated",
+    ) -> AiDraft:
+        draft = AiDraft(
+            id=self._next_ai_draft_id,
+            space_id=space_id,
+            document_id=document_id,
+            user_id=user_id,
+            mode=mode,
+            input_excerpt_hash=input_excerpt_hash,
+            prompt_summary=prompt_summary,
+            output_md=output_md,
+            cited_chunk_ids=cited_chunk_ids,
+            status=status,
+            created_at=_now_iso(),
+        )
+        self._next_ai_draft_id += 1
+        self.ai_drafts.append(draft)
+        return draft
 
     def remove_document_tag(self, tag_id: int, document_id: int) -> bool:
         before = len(self.tag_links)
