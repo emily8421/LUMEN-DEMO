@@ -83,4 +83,3 @@
 - F-impl-1：侧边栏挂 inspector 右栏作常驻 section（仿 backlinks/tags-block），未做「选区时才展开」浮层动效（design CMP-P2-AI-POLISH 推荐「默认折叠选区展开」，minimal 首版取常驻，更稳）。
 - F-impl-2：选区捕获抽成 `useTextareaSelection` hook（WSG 拆分，非 design 要求）。
 - F-impl-3：apply 后立即清本地预览（保存异步由 useVariables 负责）；若保存失败反馈走全局 StatusBar（minimal，未做面板内 applying 态）。
-
