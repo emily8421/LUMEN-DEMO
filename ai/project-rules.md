@@ -133,6 +133,19 @@
 - `CHANGELOG.md` 顶部第一个 `## vX.Y.Z（` 标题等于 `VERSION`（确保项目版本在顶部且与 VERSION 一致）。
 - 不做全文档降序检查——派生 CHANGELOG 顶部为项目版本（如 `v0.1.0`），下方接模板历史版本（`v1.47.1` 等，数值更大），降序不适用。
 
+### 2.9 运行时版本锁定
+
+> 对照 `ai/global-rules.md §5` 运行时版本锁定要求。本项目锁定前后端运行时版本，避免版本漂移导致构建 / 测试失败。
+
+| 运行时 | 锁定版本 | 版本声明文件 | 切换工具 | 锁定原因 |
+|---|---|---|---|---|
+| Node.js（前端） | **22.17.1** | `frontend/package.json` → `volta.node` | Volta（`volta pin` / `volta run --node`） | Vite 5.4.19 需 Node 18+；Node ≤16 触发 `crypto.getRandomValues is not a function` build 崩溃（2026-07-30 发现并 pin） |
+| Python（后端） | 3.14 | `backend/requirements.txt` | venv | 后端实测锁定（见 05） |
+
+- 校验：`cd frontend && node --version` 应为 22.17.1（Volta 项目 pin 生效）；CI 须在 Node 18+ 环境构建。
+- 已知坑：若 shell PATH 把某个 Node image 直接前置（绕过 Volta shim），`volta pin` 不生效，需 `volta run --node 22.17.1 npm run build` 显式指定，或修正 PATH 让 Volta shim（`…/Volta`）优先。Claude Code 的 Bash shell 即此情况（PATH 含 `…/Volta/tools/image/node/16.13.0` 前置），故 AI 跑前端 build 须用 `volta run --node 22.17.1`。
+- CI 校验：`.github/workflows/project-check.yml` 当前只校验 VERSION / CHANGELOG；Node 版本 / build 校验待补。
+
 ## 3. 项目形态与文档裁剪
 
 > 本节用于初始化阶段，决定 docs/06、07 是否保留，以及 frontend/backend/tests/scripts/docker

@@ -6,6 +6,16 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v0.2.6（2026-07-30）
+
+Phase2B 前端交互设计补全 + 构建环境修复（纯文档 / 配置，未切指针、未编码）。
+
+- 补 `docs/design/frontend-interaction.md` Phase2B AI 润色交互设计：FL-P2-008（润色 / 写作引用 Flow）、CMP-P2-AI-POLISH（侧边栏组件）、PATH-P2-007（点击路径）、PG-P2-003 布局补侧边栏、§9.2.3 状态行、阶段表 / UXD 更新。
+- 修复前端 build：根因 Node ≤16 与 Vite 5.4.19 不兼容（`crypto.getRandomValues is not a function`）；`volta pin node@22.17.1` 锁定项目 Node；新增 `ai/project-rules.md §2.9` 运行时版本锁定。
+- 本版本不新增可演示能力、未切阶段、不改对外 API；前端 build 在 Node 22 验证绿。
+
+> PATCH 依据（`ai/project-rules.md` §2.8.1）：纯文档 / 配置修订，不新增可演示能力、未切阶段、不改对外 API 契约。
+
 ## v0.2.5（2026-07-30）
 
 Phase2B 启动范围确认与数据外发风险接受落盘（纯文档 / 决策留痕，未切阶段指针、未编码）。
