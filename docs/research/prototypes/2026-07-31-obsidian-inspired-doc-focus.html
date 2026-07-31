@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LUMEN · 文档阅读为主（极简稿）</title>
+<style>
+  :root{
+    --bg:#f7fbff; --panel:#fff; --ink:#172033; --ink-soft:#5b6b82; --line:#e3e9f2;
+    --blue:#2563eb; --blue-soft:#eaf2ff; --indigo:#4f46e5; --amber:#b45309; --green:#047857;
+    --radius:6px; --shadow:0 1px 2px rgba(16,24,40,.06),0 8px 24px rgba(16,24,40,.08);
+    --topbar-h:48px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{background:var(--bg);color:var(--ink);font:14px/1.75 "Inter","PingFang SC","Microsoft YaHei",sans-serif}
+  .note{background:#0f172a;color:#cbd5e1;font-size:12px;padding:6px 16px;display:flex;gap:12px;align-items:center}
+  .note .tag{background:#1e293b;color:#93c5fd;padding:1px 8px;border-radius:4px}
+  .topbar{height:var(--topbar-h);display:flex;align-items:center;gap:12px;padding:0 14px;background:var(--panel);border-bottom:1px solid var(--line);position:relative;z-index:30}
+  .brand{display:flex;align-items:center;gap:8px;font-weight:600}
+  .brand .logo{width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,var(--blue),var(--indigo));display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700}
+  .space{color:var(--ink-soft);font-size:13px}
+  .space b{color:var(--ink)}
+  .spacer{flex:1}
+  .icon-btn{width:34px;height:34px;border:1px solid var(--line);background:var(--panel);border-radius:var(--radius);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink-soft)}
+  .icon-btn:hover{background:#f1f5fb;color:var(--blue);border-color:#cdd9ea}
+  .icon-btn.active{background:var(--blue-soft);color:var(--blue);border-color:#c7dbff}
+  .icon-btn svg{width:18px;height:18px}
+  .user{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-soft)}
+  .avatar{width:26px;height:26px;border-radius:50%;background:var(--indigo);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px}
+  .stage{display:flex;height:calc(100vh - var(--topbar-h) - 30px);overflow:hidden}
+  .doc-wrap{flex:1;overflow:auto;display:flex;justify-content:center;padding:32px 24px 120px}
+  .doc{width:100%;max-width:720px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:40px 48px;box-shadow:var(--shadow)}
+  .doc h1{font-size:26px;margin:0 0 6px;line-height:1.3}
+  .meta{color:var(--ink-soft);font-size:13px;margin-bottom:24px;display:flex;gap:14px;flex-wrap:wrap}
+  .meta .badge{background:var(--blue-soft);color:var(--blue);padding:1px 8px;border-radius:10px;font-size:12px}
+  .doc p{margin:14px 0}
+  .doc h2{font-size:18px;margin:28px 0 10px;border-bottom:1px solid var(--line);padding-bottom:6px}
+  .doc ul{padding-left:22px}
+  .doc li{margin:6px 0}
+  .doc code{background:#f1f5fb;padding:1px 6px;border-radius:4px;font:13px "Cascadia Code",Consolas,monospace}
+  .term{background:#fff7e6;color:var(--amber);padding:0 4px;border-radius:3px;cursor:help;border-bottom:1px dashed var(--amber)}
+  .drawer{position:fixed;top:78px;bottom:0;width:280px;background:var(--panel);box-shadow:var(--shadow);z-index:25;transition:transform .22s ease;display:flex;flex-direction:column}
+  .drawer.left{left:0;border-right:1px solid var(--line);transform:translateX(-100%)}
+  .drawer.right{right:0;border-left:1px solid var(--line);transform:translateX(100%);width:320px}
+  .drawer.open{transform:translateX(0)}
+  .drawer-head{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;font-weight:600;font-size:13px}
+  .drawer-body{flex:1;overflow:auto;padding:10px 12px}
+  .tree-row{padding-left:6px}
+  .tree-item{font-size:13px;padding:5px 8px;border-radius:5px;cursor:pointer;color:var(--ink)}
+  .tree-item:hover{background:#f1f5fb}
+  .tree-item.cur{background:var(--blue-soft);color:var(--blue)}
+  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);padding:0 10px}
+  .tab{padding:8px 10px;font-size:13px;color:var(--ink-soft);cursor:pointer;border-bottom:2px solid transparent}
+  .tab.active{color:var(--blue);border-color:var(--blue);font-weight:600}
+  .src-row{font-size:13px;padding:8px;border-radius:6px;border:1px solid var(--line);margin-bottom:8px;cursor:pointer}
+  .src-row:hover{border-color:#c7dbff;background:#f8fbff}
+  .ai-panel{border:1px solid var(--line);border-radius:8px;padding:12px;background:#fafcff}
+  .ai-panel .mode{display:flex;gap:6px;margin-bottom:10px}
+  .ai-panel .mode button{flex:1;padding:6px;border:1px solid var(--line);background:#fff;border-radius:5px;cursor:pointer;font-size:12px;color:var(--ink)}
+  .ai-panel .mode button.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+  .hint{font-size:12px;color:var(--ink-soft);margin-top:8px}
+</style>
+</head>
+<body>
+<div class="note">
+  <span class="tag">探索原型 A</span>
+  <span>静态可视化稿，不连接后端 · 用于确认「文档为主、目录/右栏默认隐藏、按需唤出」方向 · 不代表已确认需求或首批实现</span>
+</div>
+
+<div class="topbar">
+  <div class="brand"><span class="logo">L</span>LUMEN</div>
+  <div class="space">/ <b>产品研发空间</b></div>
+  <div class="spacer"></div>
+  <button class="icon-btn" id="btnLeft" title="显示目录" onclick="toggle('left',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="9" y1="4" x2="9" y2="20"/></svg>
+  </button>
+  <button class="icon-btn" id="btnRight" title="显示面板（大纲/反链/AI 润色）" onclick="toggle('right',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="15" y1="4" x2="15" y2="20"/></svg>
+  </button>
+  <div class="user"><span class="avatar">A</span>alice</div>
+</div>
+
+<div class="stage">
+  <div class="doc-wrap">
+    <article class="doc">
+      <h1>REQ-014 AI 润色子系统设计说明</h1>
+      <div class="meta">
+        <span class="badge">团队共享</span>
+        <span>v3 · 2026-07-31</span>
+        <span>作者 alice</span>
+        <span>Markdown</span>
+      </div>
+      <p>本节描述 <span class="term" title="AI 润色：基于当前空间知识库对选中文本改写">AI 润色</span> 子系统的边界。系统支持两种模式：polish（改写优化）与 citation（补充引用来源）。<code>sources[]</code> 仅来自当前用户有权限的 chunk，越权来源不进入 prompt、不返回。</p>
+      <h2>核心流程</h2>
+      <p>用户在文档中选中文本后，右侧 AI 面板被唤出（默认隐藏，选区触发）。生成草稿不会直接改写正文，仅当用户点击「应用」时才写回并保留版本。</p>
+      <ul>
+        <li>选中文本 → 唤出 AI 面板（右栏默认隐藏）</li>
+        <li>选择模式 polish / citation + 可选 instruction</li>
+        <li>预览草稿与来源列表 → 应用 / 丢弃</li>
+        <li>LLM 不可用 → 5030 降级，不编造</li>
+      </ul>
+      <h2>护栏</h2>
+      <p>数据外发风险已人工接受（RG-008）。草稿表只存 <code>input_excerpt_hash</code> 与 <code>prompt_summary</code>，不存完整敏感原文。</p>
+      <p>本界面的核心目的是让正文阅读与写作保持沉浸：左侧目录与右侧面板默认收起，仅在你需要导航或调用 AI 时才被唤出，避免常驻面板挤压阅读区。</p>
+    </article>
+  </div>
+</div>
+
+<aside class="drawer left" id="drawerLeft">
+  <div class="drawer-head">目录 <span style="font-weight:400;color:#5b6b82;font-size:12px">当前空间</span></div>
+  <div class="drawer-body">
+    <div class="tree-row">
+      <div class="tree-item">▾ 产品设计</div>
+      <div class="tree-row" style="padding-left:12px">
+        <div class="tree-item">▾ Phase2B</div>
+        <div class="tree-row" style="padding-left:12px">
+          <div class="tree-item cur">📄 AI 润色设计说明</div>
+          <div class="tree-item">📄 时间轴视图草案</div>
+          <div class="tree-item">📄 RG-008 外发裁决</div>
+        </div>
+        <div class="tree-item">▸ Phase2A</div>
+        <div class="tree-item">▸ Phase1.5A</div>
+      </div>
+    </div>
+    <div class="tree-item">▸ 会议纪要</div>
+    <div class="tree-item">▸ 技术调研</div>
+  </div>
+</aside>
+
+<aside class="drawer right" id="drawerRight">
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab(this,'outline')">大纲</div>
+    <div class="tab" onclick="switchTab(this,'backlinks')">反链</div>
+    <div class="tab" onclick="switchTab(this,'ai')">AI 润色</div>
+  </div>
+  <div class="drawer-body">
+    <div id="panel-outline">
+      <div class="tree-item">核心流程</div>
+      <div class="tree-item">护栏</div>
+    </div>
+    <div id="panel-backlinks" style="display:none">
+      <div class="src-row">📄 时间轴视图草案<br><span style="color:#5b6b82">提到「AI 润色」</span></div>
+      <div class="src-row">📄 Sprint-19 计划<br><span style="color:#5b6b82">引用本页</span></div>
+    </div>
+    <div id="panel-ai" style="display:none">
+      <div class="ai-panel">
+        <div class="mode">
+          <button class="on" onclick="pickMode(this)">polish</button>
+          <button onclick="pickMode(this)">citation</button>
+        </div>
+        <textarea placeholder="选中文本后可附加指令（可选）" style="width:100%;height:48px;border:1px solid var(--line);border-radius:5px;padding:6px;font:13px inherit;resize:none"></textarea>
+        <button style="width:100%;margin-top:8px;padding:7px;background:var(--blue);color:#fff;border:0;border-radius:5px;cursor:pointer">生成草稿</button>
+        <div class="hint">选区触发 · 草稿不改原文 · 应用才写回</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<script>
+  function toggle(side,btn){
+    const d=side==='left'?document.getElementById('drawerLeft'):document.getElementById('drawerRight');
+    d.classList.toggle('open');
+    btn.classList.toggle('active',d.classList.contains('open'));
+  }
+  function switchTab(el,id){
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    el.classList.add('active');
+    ['outline','backlinks','ai'].forEach(p=>document.getElementById('panel-'+p).style.display=(p===id?'block':'none'));
+  }
+  function pickMode(el){
+    el.parentNode.querySelectorAll('button').forEach(b=>b.classList.remove('on'));
+    el.classList.add('on');
+  }
+</script>
+</body>
+</html>

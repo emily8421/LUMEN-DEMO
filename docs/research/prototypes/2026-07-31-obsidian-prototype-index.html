@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LUMEN Obsidian 风格原型索引</title>
+  <style>
+    :root {
+      --bg: #f7f8fb;
+      --paper: #ffffff;
+      --ink: #1f2937;
+      --muted: #6b7280;
+      --line: #d9dee7;
+      --accent: #2563eb;
+      --green: #0f766e;
+      --amber: #b7791f;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 40px 24px;
+    }
+    h1 {
+      margin: 0 0 10px;
+      font-size: 28px;
+      letter-spacing: 0;
+    }
+    p { color: var(--muted); margin: 0 0 24px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+    a {
+      display: block;
+      min-height: 190px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      color: inherit;
+      text-decoration: none;
+    }
+    a:hover { border-color: #adc6ff; box-shadow: 0 14px 30px rgba(31,41,55,.08); }
+    strong { display: block; margin-bottom: 8px; font-size: 17px; }
+    span { display: block; color: var(--muted); }
+    .badge {
+      display: inline-flex;
+      margin-top: 16px;
+      height: 24px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 0 9px;
+      color: #374151;
+      font-size: 12px;
+      background: #fbfcfe;
+    }
+    .blue { color: var(--accent); }
+    .green { color: var(--green); }
+    .amber { color: var(--amber); }
+    @media (max-width: 820px) {
+      .grid { grid-template-columns: 1fr; }
+      main { padding: 28px 18px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>LUMEN Obsidian 风格候选原型</h1>
+    <p>候选稿只用于确认前端交互方向：文档阅读为主，目录和右侧信息按需展开，关系图谱作为独立视图。</p>
+    <section class="grid">
+      <a href="./2026-07-31-obsidian-doc-first-reading.html">
+        <strong class="blue">A. 阅读优先默认稿</strong>
+        <span>默认隐藏目录和右侧栏，正文占据主体空间；浮动按钮按需展开辅助面板。</span>
+        <span class="badge">推荐主方案</span>
+      </a>
+      <a href="./2026-07-31-obsidian-doc-tree-open.html">
+        <strong class="green">B. 目录打开稿</strong>
+        <span>保留 Obsidian 式缩进目录树，适合大量文档定位；右侧栏仍默认隐藏。</span>
+        <span class="badge">目录结构验证</span>
+      </a>
+      <a href="./2026-07-31-obsidian-graph-focus.html">
+        <strong class="amber">C. 关系图谱稿</strong>
+        <span>图谱独立成页，筛选面板默认隐藏；只展示局部、可控规模的关系视图。</span>
+        <span class="badge">图谱体验验证</span>
+      </a>
+    </section>
+  </main>
+</body>
+</html>

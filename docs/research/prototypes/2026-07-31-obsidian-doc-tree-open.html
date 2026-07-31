@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LUMEN 文档目录原型 B</title>
+  <style>
+    :root {
+      --bg: #f6f7fa;
+      --paper: #ffffff;
+      --ink: #202733;
+      --muted: #6d7480;
+      --line: #d9dee7;
+      --line-soft: #e9edf3;
+      --accent: #2563eb;
+      --accent-soft: #eaf1ff;
+      --teal: #0f766e;
+      --amber: #b7791f;
+      --rail: 46px;
+      --tree: 322px;
+      --right: 0px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", system-ui, sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    button, input, textarea { font: inherit; color: inherit; }
+    button { cursor: pointer; border: 0; background: transparent; }
+
+    .layout {
+      height: 100vh;
+      display: grid;
+      grid-template-columns: var(--rail) var(--tree) minmax(0, 1fr) var(--right);
+      grid-template-rows: 39px minmax(0, 1fr) 24px;
+      overflow: hidden;
+      transition: grid-template-columns 180ms ease;
+    }
+
+    .layout.tree-hidden { --tree: 0px; }
+    .layout.right-open { --right: 310px; }
+
+    .rail {
+      grid-row: 1 / 4;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding-top: 6px;
+      border-right: 1px solid var(--line);
+      background: #f1f3f7;
+    }
+
+    .rail button {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+      color: #566171;
+    }
+    .rail button.active {
+      background: var(--paper);
+      color: var(--accent);
+      box-shadow: inset 0 0 0 1px var(--line);
+    }
+    .rail .spacer { flex: 1; }
+
+    .tabs {
+      grid-column: 2 / 5;
+      min-width: 0;
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+      padding: 0 10px;
+      border-bottom: 1px solid var(--line);
+      background: #fbfcfe;
+    }
+
+    .tab {
+      height: 34px;
+      min-width: 214px;
+      max-width: 300px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 11px 0 13px;
+      border: 1px solid var(--line);
+      border-bottom-color: transparent;
+      border-radius: 7px 7px 0 0;
+      background: var(--paper);
+    }
+    .tab span:first-child {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .tree-pane {
+      grid-column: 2;
+      min-width: 0;
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: 42px minmax(0, 1fr) 32px;
+      border-right: 1px solid var(--line);
+      background: #f7f8fb;
+    }
+
+    .layout.tree-hidden .tree-pane { border-right: 0; }
+
+    .pane-toolbar {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      padding: 0 10px;
+      border-bottom: 1px solid var(--line);
+      white-space: nowrap;
+    }
+
+    .pane-toolbar strong {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 13px;
+    }
+
+    .tools { display: flex; gap: 2px; }
+    .tools button,
+    .doc-tools button {
+      width: 29px;
+      height: 29px;
+      border-radius: 6px;
+      color: var(--muted);
+    }
+    .tools button:hover,
+    .doc-tools button:hover { background: #eef2f7; color: var(--ink); }
+
+    .file-tree {
+      overflow: auto;
+      padding: 12px 9px 24px 16px;
+    }
+
+    .node {
+      display: grid;
+      grid-template-columns: 14px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 6px;
+      min-height: 29px;
+      padding: 0 6px;
+      border-radius: 6px;
+      color: #374151;
+    }
+    .node.active { background: var(--accent-soft); color: #123b90; }
+    .node small { color: #9aa3b2; font-size: 11px; }
+    .node-name {
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+    .indent-1 { margin-left: 18px; border-left: 1px solid #dfe4ec; padding-left: 8px; }
+    .indent-2 { margin-left: 34px; border-left: 1px solid #dfe4ec; padding-left: 8px; }
+    .indent-3 { margin-left: 50px; border-left: 1px solid #dfe4ec; padding-left: 8px; }
+
+    .vault-switch {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 12px;
+      border-top: 1px solid var(--line);
+      color: #374151;
+      min-width: 0;
+    }
+
+    .vault-switch span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .reader {
+      grid-column: 3;
+      min-width: 0;
+      display: grid;
+      grid-template-rows: 42px minmax(0, 1fr);
+      background: var(--paper);
+    }
+
+    .docbar {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 10px;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+    }
+
+    .path {
+      min-width: 0;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 13px;
+    }
+    .path b { color: #374151; font-weight: 500; }
+
+    .read-scroll { overflow: auto; }
+
+    .doc {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 48px 42px 100px;
+    }
+    .doc h1 {
+      margin: 0 0 24px;
+      font-size: 32px;
+      line-height: 1.25;
+    }
+    .doc h2 {
+      margin: 34px 0 12px;
+      font-size: 22px;
+      line-height: 1.3;
+    }
+    .doc p { margin: 12px 0; }
+    .doc blockquote {
+      margin: 22px 0;
+      padding: 10px 16px;
+      border-left: 3px solid #8b5cf6;
+      background: #fbf9ff;
+    }
+
+    .mode-row {
+      display: inline-flex;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      overflow: hidden;
+      background: #f8fafc;
+    }
+    .mode-row button {
+      height: 29px;
+      padding: 0 11px;
+      border-right: 1px solid var(--line);
+      color: #475569;
+    }
+    .mode-row button:last-child { border-right: 0; }
+    .mode-row button.active { background: var(--paper); color: var(--accent); }
+
+    .split-demo {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      margin: 22px 0;
+    }
+    .split-demo textarea {
+      width: 100%;
+      min-height: 180px;
+      border: 0;
+      border-right: 1px solid var(--line);
+      resize: vertical;
+      padding: 14px;
+      background: #f8fafc;
+    }
+    .preview {
+      padding: 14px;
+      min-width: 0;
+    }
+    .preview h3 { margin: 0 0 8px; }
+
+    .right-pane {
+      grid-column: 4;
+      min-width: 0;
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: 42px minmax(0, 1fr);
+      border-left: 1px solid var(--line);
+      background: #fbfcfe;
+    }
+
+    .right-content { overflow: auto; padding: 12px; }
+    .side-section {
+      border-bottom: 1px solid var(--line-soft);
+      padding-bottom: 12px;
+      margin-bottom: 12px;
+    }
+    .side-section h3 {
+      margin: 0 0 8px;
+      font-size: 13px;
+    }
+    .item {
+      display: block;
+      padding: 8px 0;
+      color: inherit;
+      text-decoration: none;
+      border-top: 1px solid var(--line-soft);
+    }
+    .item:first-of-type { border-top: 0; }
+    .item strong { display: block; font-size: 13px; }
+    .item span { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+
+    .status {
+      grid-column: 2 / 5;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 10px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      background: #f6f8fb;
+      font-size: 12px;
+    }
+
+    @media (max-width: 1100px) {
+      .layout { --tree: 260px; --right: 0px; }
+      .layout.right-open { --right: 0px; }
+      .doc { padding-inline: 34px; }
+    }
+
+    @media (max-width: 800px) {
+      .layout { --tree: 0px; }
+      .doc { padding: 34px 22px 80px; }
+      .doc h1 { font-size: 27px; }
+      .split-demo { grid-template-columns: 1fr; }
+      .split-demo textarea { border-right: 0; border-bottom: 1px solid var(--line); }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout" id="layout">
+    <nav class="rail" aria-label="左侧工具栏">
+      <button class="active" id="toggleTree" title="显示或隐藏文件目录" aria-label="显示或隐藏文件目录">▤</button>
+      <button title="搜索" aria-label="搜索">⌕</button>
+      <button title="关系图谱" aria-label="关系图谱">⌘</button>
+      <button title="日历" aria-label="日历">□</button>
+      <div class="spacer"></div>
+      <button title="帮助" aria-label="帮助">?</button>
+    </nav>
+
+    <header class="tabs">
+      <button class="tab"><span>指导文档-系统性设计</span><span>×</span></button>
+      <button class="tab"><span>关系图谱</span><span>×</span></button>
+      <button class="tools" title="新标签" aria-label="新标签">＋</button>
+    </header>
+
+    <aside class="tree-pane" aria-label="文档目录">
+      <div class="pane-toolbar">
+        <strong>文件</strong>
+        <div class="tools">
+          <button title="新建笔记" aria-label="新建笔记">✎</button>
+          <button title="新建目录" aria-label="新建目录">＋</button>
+          <button title="排序" aria-label="排序">↕</button>
+          <button id="hideTreeFromPane" title="隐藏目录" aria-label="隐藏目录">×</button>
+        </div>
+      </div>
+      <div class="file-tree">
+        <div class="node"><span>⌄</span><span class="node-name">00-共享基础</span><small></small></div>
+        <div class="indent-1">
+          <div class="node"><span>›</span><span class="node-name">官方文档</span><small></small></div>
+          <div class="node"><span>⌄</span><span class="node-name">From zhjt</span><small></small></div>
+          <div class="indent-2">
+            <div class="node"><span>›</span><span class="node-name">5-插件开发流程</span><small>6</small></div>
+            <div class="node"><span>⌄</span><span class="node-name">插件开发环境安装流程</span><small>9</small></div>
+            <div class="indent-3">
+              <div class="node"><span>⌄</span><span class="node-name">1-使用教程</span><small>4</small></div>
+              <div class="indent-3">
+                <div class="node"><span>›</span><span class="node-name">图片</span><small></small></div>
+                <div class="node active"><span></span><span class="node-name">指导文档-系统性设计</span><small></small></div>
+                <div class="node"><span></span><span class="node-name">米家插件开发环境安装流程</span><small></small></div>
+              </div>
+              <div class="node"><span>›</span><span class="node-name">2-AI自动配置</span><small>3</small></div>
+              <div class="node"><span>›</span><span class="node-name">3-打包上传工具</span><small>2</small></div>
+              <div class="node"><span>›</span><span class="node-name">参考笔记</span><small>8</small></div>
+              <div class="node"><span>›</span><span class="node-name">归档</span><small>11</small></div>
+              <div class="node"><span></span><span class="node-name">所有文件说明(先看我)</span><small></small></div>
+            </div>
+            <div class="node"><span>›</span><span class="node-name">资料</span><small>5</small></div>
+            <div class="node"><span></span><span class="node-name">学习路线图</span><small></small></div>
+          </div>
+        </div>
+        <div class="node"><span>›</span><span class="node-name">00-AI规则</span><small>12</small></div>
+        <div class="node"><span>›</span><span class="node-name">01-学习记录</span><small>31</small></div>
+        <div class="node"><span>›</span><span class="node-name">02-V3.5项目</span><small>18</small></div>
+        <div class="node"><span>›</span><span class="node-name">03-自动化系统</span><small>44</small></div>
+        <div class="node"><span>›</span><span class="node-name">05 米家文档网站</span><small>23</small></div>
+        <div class="node"><span>›</span><span class="node-name">归档</span><small>19</small></div>
+      </div>
+      <div class="vault-switch"><span>⌄</span><span>newer_project</span></div>
+    </aside>
+
+    <main class="reader">
+      <div class="docbar">
+        <div class="doc-tools">
+          <button title="返回" aria-label="返回">‹</button>
+          <button title="前进" aria-label="前进">›</button>
+        </div>
+        <div class="path">03-自动化系统 / 1-需求 / <b>指导文档-系统性设计</b></div>
+        <div class="doc-tools">
+          <button title="显示反链" id="toggleRight" aria-label="显示反链">↗</button>
+          <button title="更多" aria-label="更多">⋮</button>
+        </div>
+      </div>
+      <div class="read-scroll">
+        <article class="doc">
+          <h1>指导文档-系统性设计</h1>
+          <h2>指导文档：如何理解“系统性设计”</h2>
+          <blockquote>适用场景：用于向需求方、产品、管理人员解释为什么“自动化系统”不能只靠拍脑门或让 AI 直接写代码完成。</blockquote>
+          <div class="mode-row" aria-label="文档模式">
+            <button class="active">预览</button>
+            <button>编辑</button>
+            <button>编辑 + 预览</button>
+            <button>版本</button>
+          </div>
+          <h2>一、系统的定义</h2>
+          <p>一个对象只有同时回答清楚组成、关系、过程、行为、功能、环境，才可以被称为一个系统。</p>
+          <p>目录树负责帮助用户定位结构，但阅读正文时不应该形成视觉噪声。右侧信息栏默认隐藏，只在需要处理反链、标签、AI 草稿或元数据时展开。</p>
+          <div class="split-demo">
+            <textarea aria-label="编辑区"># 系统性设计
+
+系统 = 组成 + 关系 + 过程 + 行为 + 功能 + 环境
+
+## 设计提醒
+- 先看文档主体
+- 需要结构时展开目录
+- 需要引用时展开右栏</textarea>
+            <section class="preview">
+              <h3>系统性设计</h3>
+              <p>系统由多个要素协同构成。好的文档工作台应保证阅读主体稳定、层级目录清晰、辅助信息按需出现。</p>
+            </section>
+          </div>
+          <h2>二、文档目录的作用</h2>
+          <p>目录保持 Obsidian 式缩进、折叠与竖线层级，适合用户在大量文件中定位。但 LUMEN 默认不把目录做成首页，不用大卡片替代文件树。</p>
+        </article>
+      </div>
+    </main>
+
+    <aside class="right-pane" aria-label="右侧信息">
+      <div class="pane-toolbar">
+        <strong>反向链接</strong>
+        <div class="tools"><button id="hideRight" title="隐藏右栏" aria-label="隐藏右栏">×</button></div>
+      </div>
+      <div class="right-content">
+        <section class="side-section">
+          <h3>链接到此文档</h3>
+          <a class="item" href="#"><strong>需求评审方法</strong><span>引用“系统性设计”的定义。</span></a>
+          <a class="item" href="#"><strong>自动化系统总览</strong><span>从流程设计章节指向本文。</span></a>
+        </section>
+        <section class="side-section">
+          <h3>文档属性</h3>
+          <a class="item" href="#"><strong>状态：已确认</strong><span>当前空间 · 3,276 个词。</span></a>
+          <a class="item" href="#"><strong>标签</strong><span>系统设计、需求说明、方法论。</span></a>
+        </section>
+      </div>
+    </aside>
+
+    <footer class="status">
+      <span>目录已展开 · 右侧栏默认隐藏</span>
+      <span>阅读视图 · 3,276 词</span>
+    </footer>
+  </div>
+
+  <script>
+    const layout = document.getElementById('layout');
+    const toggleTree = document.getElementById('toggleTree');
+    const hideTreeFromPane = document.getElementById('hideTreeFromPane');
+    const toggleRight = document.getElementById('toggleRight');
+    const hideRight = document.getElementById('hideRight');
+
+    function setTreeHidden(hidden) {
+      layout.classList.toggle('tree-hidden', hidden);
+      toggleTree.classList.toggle('active', !hidden);
+    }
+
+    toggleTree.addEventListener('click', () => {
+      setTreeHidden(!layout.classList.contains('tree-hidden'));
+    });
+    hideTreeFromPane.addEventListener('click', () => setTreeHidden(true));
+    toggleRight.addEventListener('click', () => layout.classList.toggle('right-open'));
+    hideRight.addEventListener('click', () => layout.classList.remove('right-open'));
+  </script>
+</body>
+</html>
