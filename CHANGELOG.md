@@ -6,6 +6,16 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v1.1.0（2026-07-31）
+
+**Phase2B 首个 vertical slice：REQ-014 AI 润色 / 写作引用（后端 + 前端）。** 文档选中片段 → AI 润色 / 带来源引用 → 预览草稿 → 应用（替换选区 + 版本）/ 丢弃；数据外发风险正式通关（RG-008 升 Go）。
+
+- 后端（Sprint-19 / task-019 后端 half，PR #89 / merge `ba78467`）：migration 010 `lumen_ai_drafts`（hash + 摘要留存，不存原文 / key）；entity/ORM/repo + `service/ai_polish.py`（polish / citation，citation 复用 RAG 权限收敛，越权 chunk 不进 prompt / 不返回）；API-028 `POST /api/documents/{id}/polish`（4001/4003/4004/4220/5030）；LLM 不可用 → 5030 不落库不编造；service 测试 9/9 + 全量后端 125 OK。**RG-008 升 Go**（05/09/ai-polish + living-doc 全量传播）；TC-P2-AI-001 后端通过、RISK-P2-005 关闭。
+- 前端（Sprint-19 / task-019 前端 half，PR #90 / merge `f411c30`）：`api/aiPolish.ts` + `useAiPolish` + `AiPolishFeature`（右栏侧边栏：mode 切换 + instruction + 草稿预览 + sources + 应用 / 丢弃）+ `useTextareaSelection`（选区捕获，WSG 拆分）；`useDocuments.handleApplyPolishedContent`（替换选区 + PUT → 版本）；降级文案（5030 / 无来源 / 只读 / 选区失效守卫）；build 绿（Node 22）。
+- 待办：浏览器 UI smoke（TC-P2-AI-001）待 PG+LLM 栈起来（REQ-014 vertical slice 最后闭环）；Sprint-20 时间轴（REQ-013/024）待 `docs/design/timeline.md` 定稿。
+
+> MINOR 依据（`ai/project-rules.md` §2.8.1）：Sprint 验收 / 里程碑交付 + 新增可演示能力 + 新增对外 API endpoint（API-028）；默认向后兼容。
+
 ## v1.0.0（2026-07-30）
 
 **Phase 跨越：Phase2A（个人知识组织）→ Phase2B（团队 MVP）。** 切阶段指针，正式进入团队 MVP 阶段。
