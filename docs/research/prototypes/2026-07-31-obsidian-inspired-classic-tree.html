@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LUMEN · 经典目录树（可隐藏）</title>
+<style>
+  :root{
+    --bg:#f7fbff;--panel:#fff;--ink:#172033;--ink-soft:#5b6b82;--line:#e3e9f2;
+    --blue:#2563eb;--blue-soft:#eaf2ff;--indigo:#4f46e5;
+    --radius:6px;--shadow:0 1px 2px rgba(16,24,40,.06),0 8px 24px rgba(16,24,40,.08);
+    --topbar-h:48px;
+  }
+  *{box-sizing:border-box}html,body{margin:0;height:100%}
+  body{background:var(--bg);color:var(--ink);font:14px/1.75 "Inter","PingFang SC","Microsoft YaHei",sans-serif}
+  .note{background:#0f172a;color:#cbd5e1;font-size:12px;padding:6px 16px;display:flex;gap:12px}
+  .note .tag{background:#1e293b;color:#93c5fd;padding:1px 8px;border-radius:4px}
+  .topbar{height:var(--topbar-h);display:flex;align-items:center;gap:12px;padding:0 14px;background:var(--panel);border-bottom:1px solid var(--line);position:relative;z-index:30}
+  .brand{display:flex;align-items:center;gap:8px;font-weight:600}
+  .logo{width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,var(--blue),var(--indigo));color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+  .space{color:var(--ink-soft);font-size:13px}.space b{color:var(--ink)}
+  .spacer{flex:1}
+  .icon-btn{width:34px;height:34px;border:1px solid var(--line);background:var(--panel);border-radius:var(--radius);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink-soft)}
+  .icon-btn:hover{background:#f1f5fb;color:var(--blue)}
+  .icon-btn.active{background:var(--blue-soft);color:var(--blue);border-color:#c7dbff}
+  .icon-btn svg{width:18px;height:18px}
+  .user{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-soft)}
+  .avatar{width:26px;height:26px;border-radius:50%;background:var(--indigo);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px}
+  .stage{display:flex;height:calc(100vh - var(--topbar-h) - 30px);overflow:hidden;position:relative}
+  .tree-pane{width:264px;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;transition:margin-left .22s ease;flex-shrink:0}
+  .tree-pane.collapsed{margin-left:-264px}
+  .tree-head{padding:10px 12px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;font-weight:600;font-size:13px}
+  .tree-head .mini{border:0;background:#fff;color:var(--ink-soft);cursor:pointer;font-size:12px;display:flex;align-items:center;gap:4px}
+  .tree-head .mini:hover{color:var(--blue)}
+  .tree-body{flex:1;overflow:auto;padding:8px 8px}
+  .node{font-size:13px;padding:4px 6px;border-radius:5px;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
+  .node:hover{background:#f1f5fb}
+  .node.cur{background:var(--blue-soft);color:var(--blue)}
+  .node .arrow{width:12px;color:var(--ink-soft);font-size:10px}
+  .node .ic{width:14px}
+  .children{overflow:hidden}
+  .children.collapsed{display:none}
+  .rail-expand{width:18px;background:var(--panel);border-right:1px solid var(--line);display:none;align-items:center;justify-content:center;cursor:pointer;color:var(--ink-soft);flex-shrink:0}
+  .rail-expand.show{display:flex}
+  .rail-expand:hover{color:var(--blue);background:#f1f5fb}
+  .doc-wrap{flex:1;overflow:auto;display:flex;justify-content:center;padding:28px 24px 100px}
+  .doc{width:100%;max-width:720px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:36px 44px;box-shadow:var(--shadow)}
+  .doc h1{font-size:24px;margin:0 0 6px}
+  .meta{color:var(--ink-soft);font-size:13px;margin-bottom:20px;display:flex;gap:12px;flex-wrap:wrap}
+  .badge{background:var(--blue-soft);color:var(--blue);padding:1px 8px;border-radius:10px;font-size:12px}
+  .doc p{margin:12px 0}
+  .doc h2{font-size:17px;margin:22px 0 8px;border-bottom:1px solid var(--line);padding-bottom:5px}
+  .doc code{background:#f1f5fb;padding:1px 6px;border-radius:4px;font:13px "Cascadia Code",Consolas,monospace}
+  .drawer{position:fixed;top:78px;bottom:0;right:0;width:300px;background:var(--panel);border-left:1px solid var(--line);box-shadow:var(--shadow);transform:translateX(100%);transition:transform .22s;z-index:25;display:flex;flex-direction:column}
+  .drawer.open{transform:translateX(0)}
+  .drawer-head{padding:12px 14px;border-bottom:1px solid var(--line);font-weight:600;font-size:13px}
+  .drawer-body{flex:1;overflow:auto;padding:12px;font-size:13px;color:var(--ink-soft)}
+</style>
+</head>
+<body>
+<div class="note"><span class="tag">探索原型 B</span><span>静态可视化稿，不连后端 · 经典目录树（Obsidian 风格嵌套、可整体隐藏）+ 文档为主、右栏默认隐藏 · 不代表已确认需求</span></div>
+<div class="topbar">
+  <div class="brand"><span class="logo">L</span>LUMEN</div>
+  <div class="space">/ <b>产品研发空间</b></div>
+  <div class="spacer"></div>
+  <button class="icon-btn" title="切换图谱视图（愿景候选，见原型 C）" onclick="alert('图谱视图见原型 C · 当前为愿景候选，Phase2B 不含关联图')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="18" r="2"/><circle cx="19" cy="18" r="2"/><line x1="12" y1="7" x2="6" y2="16"/><line x1="12" y1="7" x2="18" y2="16"/></svg></button>
+  <button class="icon-btn" id="btnRight" title="显示右栏（大纲/反链/AI）" onclick="toggleRight(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="15" y1="4" x2="15" y2="20"/></svg></button>
+  <div class="user"><span class="avatar">A</span>alice</div>
+</div>
+<div class="stage">
+  <div class="rail-expand" id="railExpand" onclick="toggleTree(false)" title="展开目录">›</div>
+  <div class="tree-pane" id="treePane">
+    <div class="tree-head">目录<button class="mini" onclick="toggleTree(true)">隐藏 ⟨</button></div>
+    <div class="tree-body" id="treeBody"></div>
+  </div>
+  <div class="doc-wrap">
+    <article class="doc">
+      <h1>Sprint-20 时间轴视图：数据来源草案</h1>
+      <div class="meta"><span class="badge">团队共享</span><span>v1 · 2026-07-31</span><span>alice</span><span>Markdown</span></div>
+      <p>时间轴按时间维度聚合同空间文档事件（创建 / 更新 / 打标签 / 内链），密度热条反映单位时间事件密度。数据来源待定稿（D-T-001）。</p>
+      <h2>待确认</h2>
+      <p>事件数据来源候选：<code>lumen_documents</code> 时间字段 + <code>lumen_tags</code> / <code>lumen_doc_links</code>。布局算法与色阶（D-T-003）待定。</p>
+      <p>本视图保留「经典列表逃生舱」：当集合过大时先筛选再渲染，避免全空间铺开。左侧目录可整体隐藏以获得沉浸阅读；右栏默认收起，需要时再唤出。</p>
+    </article>
+  </div>
+  <aside class="drawer" id="drawerRight">
+    <div class="drawer-head">大纲 / 反链 / AI 润色</div>
+    <div class="drawer-body">默认隐藏 · 点击顶栏右侧按钮唤出。<br><br>此处承载文档大纲、反向链接列表、AI 润色侧边栏（REQ-014）。</div>
+  </aside>
+</div>
+<script>
+  const data=[
+    {t:"产品设计",dir:true,open:true,ch:[
+      {t:"Phase2B",dir:true,open:true,ch:[
+        {t:"AI 润色设计说明"},
+        {t:"时间轴视图草案",cur:true},
+        {t:"RG-008 数据外发裁决"}
+      ]},
+      {t:"Phase2A",dir:true,open:false,ch:[{t:"标签体系"},{t:"内链反链"},{t:"快速录入"}]},
+      {t:"Phase1.5A",dir:true,open:false,ch:[{t:"批量导入"},{t:"ZIP 导出"}]}
+    ]},
+    {t:"会议纪要",dir:true,open:false,ch:[{t:"2026-07-30 Phase2B 启动"}]},
+    {t:"技术调研",dir:true,open:false,ch:[{t:"Obsidian 交互参考"},{t:"前端框架选型"}]}
+  ];
+  function render(items,depth){
+    return items.map(n=>{
+      const pad=depth*14;
+      if(n.dir){
+        return `<div class="node" style="padding-left:${6+pad}px" onclick="fold(this)"><span class="arrow">${n.open?'▾':'▸'}</span><span class="ic">📁</span>${n.t}</div><div class="children ${n.open?'':'collapsed'}">${render(n.ch||[],depth+1)}</div>`;
+      }
+      return `<div class="node ${n.cur?'cur':''}" style="padding-left:${6+pad+18}px"><span class="ic">📄</span>${n.t}</div>`;
+    }).join("");
+  }
+  function fold(el){
+    const next=el.nextElementSibling;
+    if(!next)return;
+    next.classList.toggle('collapsed');
+    el.querySelector('.arrow').textContent=next.classList.contains('collapsed')?'▸':'▾';
+  }
+  document.getElementById('treeBody').innerHTML=render(data,0);
+  function toggleTree(collapse){
+    const p=document.getElementById('treePane'),r=document.getElementById('railExpand');
+    if(collapse){p.classList.add('collapsed');r.classList.add('show')}
+    else{p.classList.remove('collapsed');r.classList.remove('show')}
+  }
+  function toggleRight(btn){
+    const d=document.getElementById('drawerRight');
+    d.classList.toggle('open');btn.classList.toggle('active',d.classList.contains('open'));
+  }
+</script>
+</body>
+</html>

@@ -133,7 +133,7 @@
 | REQ-011 | F-005 | 桌面浏览器访问 | `[P1]` | Demo | Phase1 必演示 |
 | REQ-012 | F-007 | 标签视图 | `[P2]` | 个人知识组织 | Phase2A 最小版已细化（扁平标签 + 独立视图 + 单标签筛选 + 文档详情打标签；见 02/06/07/09） |
 | REQ-013 | F-008 | 时间轴视图 / 关联图视图 | `[P2]` | 团队 MVP | **Phase2B 首批·第二 slice（紧随 REQ-014）**，先时间轴后关联图；骨架，待 `docs/design/timeline.md` 细化 |
-| REQ-014 | F-008 | AI 润色 + 写作侧边栏引用 | `[P2]` | 团队 MVP | **Phase2B 首批核心·后端已实现（MVP 级）**；数据外发风险已接受（RG-008 Go）；详见 `docs/design/ai-polish.md` |
+| REQ-014 | F-008 | AI 润色 + 写作侧边栏引用 | `[P2]` | 团队 MVP | **Phase2B 首批核心·已实现（MVP 级，前端 vertical slice 闭环：PR#89–95 / v1.1.0 / TC-P2-AI-001 live 通过）**；数据外发风险已接受（RG-008 Go）；详见 `docs/design/ai-polish.md` |
 | REQ-015 | F-008 | 跨空间文档推送 | `[P2]` | 后续 Phase | 不进 Phase2B 首批，重依赖 / 安全敏感 |
 | REQ-016 | F-008 | 多人协作 | `[P2]` | 后续 Phase | 不进 Phase2B 首批，重依赖 / 并发复杂 |
 | REQ-017 | F-008 | 跨设备 / 移动端 | `[P2]` | 后续 Phase | 不进 Phase2B 首批，移动端禁止进入近期 |

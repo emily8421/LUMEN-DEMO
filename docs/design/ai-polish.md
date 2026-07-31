@@ -14,9 +14,9 @@
 | 覆盖 REQ / NFR | REQ-014、NFR-004（数据安全） |
 | 所属 Phase | `[P2]` Phase2B 团队 MVP（首批核心） |
 | 交付物形态 | MVP |
-| 当前状态 | **Phase2B·后端已实现（MVP 级）**（Sprint-19 / task-019 后端通过，RG-008 升 Go，2026-07-30；前端 half 待实现）；数据外发风险已人工接受（2026-07-30） |
+| 当前状态 | **Phase2B·已实现（MVP 级）**（Sprint-19 后端 + 前端 vertical slice 均闭环：PR#89–95 / v1.1.0；RG-008 升 Go 2026-07-30；前端 UI smoke 2026-07-31 live 通过）；数据外发风险已人工接受（2026-07-30） |
 | 流程 ID | Flow-D-POLISH-01（润色）/ Flow-D-POLISH-02（写作引用），见 §3 |
-| 最后更新 | 2026-07-30 |
+| 最后更新 | 2026-07-31（回写前端 vertical slice 闭环） |
 | 下游影响 | `08` Sprint-19、`09` TC-P2-AI-001、`backend/service/ai_polish`、`lumen_ai_drafts` migration 010 |
 
 ## 1. 职责与边界

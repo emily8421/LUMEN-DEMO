@@ -57,7 +57,7 @@
 | Sprint-11（P2-UI-Gate / WSG 候选）实现前门禁 | Sprint-10 + `frontend-interaction` §9.3 + 少容器清爽稿暂定确认 + WSG-001..006 草案 | UI 方向继续返工；跳过 WSG / UI-G 直接编码；范围蔓延到组件库 / router / 新 API / 图谱算法 | Phase2A 已完成；Phase2B 前重新确认 | Phase2A 已按三个 vertical slice 完成；Phase2B 启动前重跑 Page-ID / Flow-ID / TC / WSG 和 UI smoke 范围确认 | M9 P2 UI + WSG 实现前门禁 |
 | Sprint-0′（框架补课·候选） | Phase1 closure（Sprint-8/10）已完成 | 继续往 `App.tsx` / 全局 CSS / 后端 service 堆 P1.5 功能，导致更难拆 | 否（P1.5 全部前置） | 纯结构搬运、逻辑不动、每步 smoke；前端建目录骨架 + 拆 App.tsx / styles.css，后端 repository 独立 + 清单例 hack；**先于所有 P1.5 编码** | M9.5 框架对齐（WSG 闭环） |
 | Sprint-12~15（P1.5 可用性收口·候选） | Phase1 closure（Sprint-8/10）已完成 | 范围蔓延到 Phase2 高级功能；跳过收口直接做 Phase2 编码 | 可与 Phase2 tech-env-eval 并行评估 | 先做低成本收口（Sprint-12 登录持久化 / seed 自索引、Sprint-13 外部只读），再做重依赖项（Sprint-14 Word/PDF 需选型 + RG、Sprint-15 zhparser 可选）；**P1.5 优先于 Phase2 编码** | M10 日常可用（P1.5 收口） |
-| Sprint-19（Phase2B·AI 润色·首个 slice） | Phase2A closure + **RG-008 Go（后端通过）** + Sprint-11 UI/WSG 门禁重跑 | ~~数据外发护栏未落实~~（后端已落实：权限过滤 / 5030 / hash）；前端 half 待续 | 否（首个 slice） | 先后端 polish/citation + migration 010，再前端写作侧边栏；复用 RAG / 术语 / LLM adapter | M11 Phase2B AI 润色可用 |
+| Sprint-19（Phase2B·AI 润色·首个 slice） | Phase2A closure + **RG-008 Go（后端通过）** + Sprint-11 UI/WSG 门禁重跑 | ~~数据外发护栏未落实~~（后端已落实：权限过滤 / 5030 / hash）；~~前端 half 待续~~ 前端已闭环（PR#89–95 / v1.1.0，TC-P2-AI-001 live UI smoke 2026-07-31 通过） | 否（首个 slice） | 先后端 polish/citation + migration 010，再前端写作侧边栏；复用 RAG / 术语 / LLM adapter | M11 Phase2B AI 润色可用 |
 | Sprint-20（Phase2B·时间轴·第二 slice） | Sprint-19 落地 + D-T-001 数据来源定稿 | 时间轴从零设计，范围蔓延到关联图 / 因果推理（愿景） | 可与 Sprint-19 收尾部分并行 | 数据来源选候选 A（不建表）先行；大集合降级本机实测定阈值 | M12 Phase2B 时间轴可用 |
 
 ## 任务拆分规则
