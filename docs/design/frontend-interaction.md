@@ -462,12 +462,12 @@ sequenceDiagram
 
 | 项 | 当前结论 | 进入实现前要求 |
 |---|---|---|
-| Phase2 是否已启动 | 否；当前只是 P2 UI Gate 草案 | 用户明确确认 Phase2 范围、进入 / 退出标准和首个实现任务 |
+| Phase2 是否已启动 | 是（Phase2B 已启动；Sprint-19 AI 润色已完成 v1.1.0）；本节为 UI 实现前门禁口径，按 §9.5 Doc-First 基线每个 UI slice 前重跑（DF-C-001，2026-07-31 已确认） | 用户明确确认 Phase2 范围、进入 / 退出标准和首个实现任务 |
 | 08 / 09 状态 | 已回填 Sprint-11 与 TC-P2-UI-001~005 草案 | 若范围、Page-ID、Flow-ID 或验收口径变化，先同步修订 08/09 |
 | 原型状态 | 少容器清爽稿暂定按当前稿继续 | 若用户再次反馈视觉 / 信息架构问题，先改 HTML 原型与本节默认稿 |
 | 代码边界 | 当前不得修改 `frontend/` | 开实现任务后，优先限制在 `frontend/src/App.tsx`、`frontend/src/styles.css` 与少量轻量组件 |
 | 禁止扩展 | 不新增 API / DB / 权限模型 / 图谱算法 / 冲突检测 / 组件库 / router | 如确需新增，先回到 05 / 06 / 07 / 08 / 09 和依赖确认流程 |
-| WSG 状态 | WSG-001..006 已在 04/05/08/09 与本文形成草案锚点 | TC-P2-WSG-001 已静态评审条件通过；Phase2B 启动前需重跑 UI / WSG 门禁，不得一次性实现全部 P2 UI |
+| WSG 状态 | WSG-001..006 已在 04/05/08/09 与本文形成草案锚点 | TC-P2-WSG-001 已静态评审条件通过；门禁口径（DF-C-001，2026-07-31 已确认）：Phase2B 每个 UI slice 前重跑 UI / WSG 门禁，不得一次性实现全部 P2 UI |
 
 ### 9.5 Doc-First 候选基线（Obsidian-inspired，2026-07-31）
 
@@ -504,6 +504,7 @@ sequenceDiagram
 
 #### 9.5.6 进入实现条件
 - 候选基线，**不授权编码**。
+- **门禁口径（DF-C-001，2026-07-31 已确认）：Phase2B 每个 UI slice 前重跑 Sprint-11 UI/WSG 门禁**；Step 3 拆为 3a（栏隐藏 / 默认收起 / 三路唤出 / 记忆）与 3b（单列阅读 / 编辑切换）两 slice，各自门禁重确认 + Chrome/Edge smoke + TC-P1-014 回归。
 - 窄范围 UX 重构（栏可隐藏 + 默认收起 + 唤出 + 单列编辑切换）启动前：需 Sprint-11 UI/WSG 门禁按此基线重确认 + Chrome/Edge smoke 回归（触及 P1B REQ-011 已验收默认行为，需 TC-P1-014 回归）。
 - 不新增 REQ/API/DB/TC；不动 P1B 三层骨架（在 Context Pane / Inspector 上加可隐藏能力，不重构）。
 
