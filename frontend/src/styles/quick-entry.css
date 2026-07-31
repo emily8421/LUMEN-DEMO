@@ -1,0 +1,158 @@
+/* REQ-025 快速录入抽屉 + 顶部触发胶囊（从 panels.css 拆出，WSG）。 */
+/* REQ-025 快速录入：workspace-main 顶部胶囊 + 侧滑抽屉（QuickEntryFeature） */
+.workspace-action-bar {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  border-bottom: 1px solid var(--line-soft);
+  padding: var(--space-2) var(--space-3);
+}
+
+.quick-entry-trigger {
+  border-color: #93c5fd;
+  background: var(--blue-soft);
+  color: #1d4ed8;
+}
+
+.quick-entry-trigger:hover:not(:disabled) {
+  background: #dbeafe;
+}
+
+.quick-entry-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  justify-content: flex-end;
+  background: rgba(15, 23, 42, 0.35);
+}
+
+.quick-entry-drawer {
+  position: relative;
+  z-index: 1;
+  width: min(420px, 92vw);
+  height: 100%;
+  overflow: auto;
+  border-left: 1px solid var(--line);
+  border-radius: 0;
+  background: var(--panel);
+  padding: var(--space-3);
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+}
+
+.quick-entry-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.quick-entry-close {
+  align-self: flex-start;
+  font-size: 15px;
+  padding: 2px 6px;
+}
+
+.quick-entry-form {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.quick-entry-field {
+  display: grid;
+  gap: 4px;
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+.quick-entry-field > span,
+.quick-entry-field legend {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.quick-entry-field input,
+.quick-entry-field textarea,
+.quick-entry-field select {
+  width: 100%;
+}
+
+.quick-entry-tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  list-style: none;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+}
+
+.quick-entry-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-control);
+  background: #f8fafc;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 3px 8px;
+}
+
+.quick-entry-tag.checked {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+}
+
+.quick-entry-mode-group {
+  display: grid;
+  gap: 6px;
+}
+
+.quick-entry-mode {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-control);
+  background: #ffffff;
+  color: var(--text);
+  cursor: pointer;
+  padding: 7px 9px;
+}
+
+.quick-entry-mode.active {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+}
+
+.quick-entry-mode span {
+  display: grid;
+  gap: 1px;
+}
+
+.quick-entry-mode small {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.quick-entry-result {
+  display: grid;
+  gap: var(--space-2);
+  border-top: 1px solid var(--line-soft);
+  padding-top: var(--space-2);
+}
+
+.quick-entry-result-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.quick-entry-result-row small {
+  color: var(--muted);
+}
