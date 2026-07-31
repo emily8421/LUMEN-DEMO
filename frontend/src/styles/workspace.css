@@ -187,6 +187,15 @@
   min-height: 0;
 }
 
+/* Doc-First §9.5（Sprint-21）：右栏（Inspector）收起 → 列宽 0，编辑器占满。 */
+.document-view-grid.pane-right-collapsed {
+  grid-template-columns: minmax(0, 1fr) 0;
+}
+
+.document-view-grid.pane-right-collapsed > .inspector-pane {
+  display: none;
+}
+
 .editor-panel,
 .editor-pane,
 .inspector-pane,

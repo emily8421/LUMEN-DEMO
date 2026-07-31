@@ -11,6 +11,7 @@ import { useQuery } from './app/useQuery';
 import { useTerms } from './app/useTerms';
 import { useImport } from './app/useImport';
 import { useWorkspace } from './app/useWorkspace';
+import { usePaneLayout } from './app/usePaneLayout';
 import { useSession } from './app/useSession';
 import { useDocuments } from './app/useDocuments';
 import { useAiPolish } from './app/useAiPolish';
@@ -20,6 +21,7 @@ import { WorkspaceMain } from './app/WorkspaceMain';
 
 function App() {
   const workspace = useWorkspace();
+  const paneLayout = usePaneLayout();
   const session = useSession({ runAction, setNotice: workspace.setNotice, onSpaceChanged: handleSpaceChanged });
   const token = session.session?.token;
 
@@ -157,6 +159,10 @@ function App() {
         currentSpace={currentSpace}
         onSpaceChange={session.handleSpaceChange}
         onExportSpace={handleExportSpace}
+        leftPaneOpen={paneLayout.leftPaneOpen}
+        onToggleLeftPane={paneLayout.toggleLeftPane}
+        rightPaneOpen={paneLayout.rightPaneOpen}
+        onToggleRightPane={paneLayout.toggleRightPane}
       />
 
       {!session.session ? (
@@ -172,7 +178,7 @@ function App() {
           </form>
         </section>
       ) : (
-        <div className="workspace-layout workspace-shell">
+        <div className={`workspace-layout workspace-shell${paneLayout.leftPaneOpen ? '' : ' pane-left-collapsed'}`}>
           <WorkspaceViewNav activeView={workspace.activeView} disabled={workspace.isBusy} onChange={workspace.setActiveView} />
 
           <ContextPane
@@ -201,6 +207,7 @@ function App() {
           <WorkspaceMain
             activeView={workspace.activeView}
             isBusy={workspace.isBusy}
+            rightPaneOpen={paneLayout.rightPaneOpen}
             documents={documents}
             search={search}
             query={query}

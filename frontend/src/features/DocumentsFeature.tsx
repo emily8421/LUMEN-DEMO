@@ -43,6 +43,8 @@ type DocumentsFeatureProps = {
   onRemoveTag: (tagId: number) => void;
   /** REQ-014 AI 润色侧边栏状态 + handler（useAiPolish 返回）。 */
   aiPolish: ReturnType<typeof useAiPolish>;
+  /** 右栏（Inspector）可见性（Doc-First §9.5，Sprint-21）。 */
+  rightPaneOpen: boolean;
 };
 
 function markdownExcerpt(content: string, maxLength = 140) {
@@ -76,6 +78,7 @@ export function DocumentsFeature({
   onAddTag,
   onRemoveTag,
   aiPolish,
+  rightPaneOpen,
 }: DocumentsFeatureProps) {
   const { ref: textareaRef, onSelect: handleTextareaSelect } = useTextareaSelection(
     aiPolish.changeSelection,
@@ -98,7 +101,7 @@ export function DocumentsFeature({
           ) : null}
         </div>
       </div>
-      <div className="workspace-body document-view-grid">
+      <div className={`workspace-body document-view-grid${rightPaneOpen ? '' : ' pane-right-collapsed'}`}>
         <section className="editor-panel editor-pane">
           <form className="editor-form" onSubmit={onSave}>
             <div className="editor-toolbar">

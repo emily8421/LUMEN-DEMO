@@ -124,6 +124,15 @@
   overflow: hidden;
 }
 
+/* Doc-First §9.5（Sprint-21）：左目录收起 → 列宽 0，主内容占满。 */
+.workspace-layout.pane-left-collapsed {
+  grid-template-columns: 52px 0 minmax(0, 1fr);
+}
+
+.workspace-layout.pane-left-collapsed > .context-pane {
+  display: none;
+}
+
 .view-nav,
 .nav-rail {
   display: grid;

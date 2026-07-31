@@ -8,9 +8,13 @@ type TopBarProps = {
   currentSpace: Space | null;
   onSpaceChange: (spaceId: number) => void;
   onExportSpace: () => void;
+  leftPaneOpen: boolean;
+  onToggleLeftPane: () => void;
+  rightPaneOpen: boolean;
+  onToggleRightPane: () => void;
 };
 
-export function TopBar({ session, spaces, isBusy, currentSpace, onSpaceChange, onExportSpace }: TopBarProps) {
+export function TopBar({ session, spaces, isBusy, currentSpace, onSpaceChange, onExportSpace, leftPaneOpen, onToggleLeftPane, rightPaneOpen, onToggleRightPane }: TopBarProps) {
   return (
     <header className="topbar app-topbar">
       <div className="brand-block">
@@ -20,6 +24,30 @@ export function TopBar({ session, spaces, isBusy, currentSpace, onSpaceChange, o
           <h1>LUMEN 团队知识库工作台</h1>
         </div>
       </div>
+      {session ? (
+        <div className="pane-toggles">
+          <button
+            type="button"
+            className={`pane-toggle${leftPaneOpen ? ' active' : ''}`}
+            onClick={onToggleLeftPane}
+            aria-label={leftPaneOpen ? '收起目录' : '展开目录'}
+            aria-pressed={leftPaneOpen}
+            title="目录（Ctrl+B）"
+          >
+            ☰
+          </button>
+          <button
+            type="button"
+            className={`pane-toggle${rightPaneOpen ? ' active' : ''}`}
+            onClick={onToggleRightPane}
+            aria-label={rightPaneOpen ? '收起右栏' : '展开右栏'}
+            aria-pressed={rightPaneOpen}
+            title="右栏（Ctrl+R）"
+          >
+            ☰
+          </button>
+        </div>
+      ) : null}
       {session ? (
         <div className="top-context">
           <span>当前空间</span>

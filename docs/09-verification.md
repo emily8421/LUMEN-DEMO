@@ -41,7 +41,7 @@
 | TC-P1-011 | REQ-011 桌面端 | Chrome / Edge 完成上述全部 | [P1] | 条件通过（降级口径·Edge Headless + Chrome 人工 smoke） |
 | TC-P1-012 | REQ-036 术语管理 | 新建空间术语后，文档识别该词，问答优先使用空间定义且不被同名全局术语覆盖 | [P1] | 条件通过（PG 仓储·Sprint-8 起真实化） |
 | TC-P1-013 | REQ-011 P1A 结构聚焦 | 文档 / 搜索 / 问答 / 术语一级视图切换；900px 桌面宽度不横向破版；P0 能力不回退 | [P1] | 通过（构建 + Chrome / Edge 900px smoke） |
-| TC-P1-014 | REQ-011 P1B 工作台重设计 | TopBar + Nav Rail + Context Pane + Workspace 三层布局；Context Pane 随视图变化；900px 桌面宽度不横向破版；信息密度达标；P0/P1A 能力不回退 | [P1] | 通过（构建 + Chrome / Edge 900px smoke） |
+| TC-P1-014 | REQ-011 P1B 工作台重设计 | TopBar + Nav Rail + Context Pane + Workspace 三层布局；Context Pane 随视图变化；900px 桌面宽度不横向破版；信息密度达标；P0/P1A 能力不回退 | [P1] | 通过（构建 + Chrome / Edge 900px smoke）；**Sprint-21 触发回归**（栏默认收起改 REQ-011 默认行为）·待重测 |
 | TC-P1-015 | REQ-037 批量导入 | 拖入文件夹 / 多文件后全部 `.md`/`.txt` 入库可搜可问答；标题保留路径前缀；同名跳过 | [P1] | 通过（Sprint-16 自动化 + Chrome headless drop-zone smoke） |
 | TC-P1-016 | REQ-038 导出备份 | 文档详情下载 `.md`；空间导出 ZIP 含可见文档、权限过滤 | [P1] | 通过（Sprint-17 后端 tests + 端到端 HTTP smoke） |
 | TC-P1-017 | REQ-027 单文档 PDF | 选型 + 中文 PDF 导出验证（RG-006）；文档详情导出 PDF 中文正常 | [P1] | P1.5B 草案·待 RG-006（Sprint-18） |

@@ -13,6 +13,8 @@ import type { useAiPolish } from './useAiPolish';
 interface WorkspaceMainProps {
   activeView: string;
   isBusy: boolean;
+  /** 右栏（Inspector）可见性，透传给 DocumentsFeature（Doc-First §9.5，Sprint-21）。 */
+  rightPaneOpen: boolean;
   documents: ReturnType<typeof useDocuments>;
   search: ReturnType<typeof useSearch>;
   query: ReturnType<typeof useQuery>;
@@ -25,6 +27,7 @@ interface WorkspaceMainProps {
 export function WorkspaceMain({
   activeView,
   isBusy,
+  rightPaneOpen,
   documents,
   search,
   query,
@@ -45,6 +48,7 @@ export function WorkspaceMain({
           isCreating={documents.isCreating}
           selectedDocument={documents.selectedDocument}
           isBusy={isBusy}
+          rightPaneOpen={rightPaneOpen}
           draft={documents.draft}
           onDraftChange={documents.setDraft}
           versions={documents.versions}
