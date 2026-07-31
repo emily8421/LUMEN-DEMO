@@ -1,0 +1,730 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LUMEN 文档优先原型 A</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f8fb;
+      --paper: #ffffff;
+      --ink: #1f2937;
+      --muted: #6b7280;
+      --soft: #eef1f5;
+      --line: #d9dee8;
+      --line-strong: #b9c1d0;
+      --accent: #2563eb;
+      --accent-soft: #e7f0ff;
+      --green: #12805c;
+      --amber: #b7791f;
+      --red: #c24141;
+      --rail: 44px;
+      --tabbar: 39px;
+      --radius: 6px;
+      --shadow: 0 16px 32px rgba(31, 41, 55, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", system-ui, sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    button, input {
+      font: inherit;
+      color: inherit;
+    }
+
+    button {
+      border: 1px solid transparent;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .app {
+      height: 100vh;
+      display: grid;
+      grid-template-columns: var(--rail) minmax(0, 1fr);
+      grid-template-rows: var(--tabbar) minmax(0, 1fr) 24px;
+      overflow: hidden;
+    }
+
+    .rail {
+      grid-row: 1 / 4;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 0;
+      border-right: 1px solid var(--line);
+      background: #f2f4f8;
+    }
+
+    .rail-button {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius);
+      display: grid;
+      place-items: center;
+      color: #4b5563;
+      position: relative;
+    }
+
+    .rail-button.active {
+      background: var(--paper);
+      border-color: var(--line);
+      color: var(--accent);
+      box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
+    }
+
+    .rail-button.active::before {
+      content: "";
+      position: absolute;
+      left: -6px;
+      width: 3px;
+      height: 20px;
+      border-radius: 3px;
+      background: var(--accent);
+    }
+
+    .rail-spacer { flex: 1; }
+
+    .icon {
+      width: 15px;
+      height: 15px;
+      display: block;
+      position: relative;
+    }
+
+    .i-menu::before,
+    .i-menu::after {
+      content: "";
+      position: absolute;
+      left: 1px;
+      right: 1px;
+      height: 2px;
+      background: currentColor;
+      box-shadow: 0 5px 0 currentColor;
+      top: 3px;
+    }
+    .i-menu::after { top: 13px; box-shadow: none; }
+
+    .i-folder {
+      border: 2px solid currentColor;
+      border-radius: 2px;
+      height: 11px;
+      top: 3px;
+    }
+    .i-folder::before {
+      content: "";
+      position: absolute;
+      width: 7px;
+      height: 3px;
+      border: 2px solid currentColor;
+      border-bottom: 0;
+      border-radius: 2px 2px 0 0;
+      left: 0;
+      top: -6px;
+    }
+
+    .i-search {
+      border: 2px solid currentColor;
+      border-radius: 50%;
+      width: 12px;
+      height: 12px;
+      top: 1px;
+      left: 1px;
+    }
+    .i-search::after {
+      content: "";
+      position: absolute;
+      width: 6px;
+      height: 2px;
+      background: currentColor;
+      transform: rotate(45deg);
+      right: -5px;
+      bottom: -3px;
+      border-radius: 2px;
+    }
+
+    .i-graph::before,
+    .i-graph::after {
+      content: "";
+      position: absolute;
+      background: currentColor;
+    }
+    .i-graph::before {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      top: 1px;
+      left: 1px;
+      box-shadow: 8px 4px 0 currentColor, 3px 10px 0 currentColor;
+    }
+    .i-graph::after {
+      width: 14px;
+      height: 1px;
+      left: 1px;
+      top: 8px;
+      transform: rotate(27deg);
+      box-shadow: 0 5px 0 currentColor;
+      opacity: .65;
+    }
+
+    .tabbar {
+      grid-column: 2;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: end;
+      border-bottom: 1px solid var(--line);
+      background: #fbfcfe;
+    }
+
+    .tabs {
+      display: flex;
+      align-items: flex-end;
+      min-width: 0;
+      height: 100%;
+      padding-left: 12px;
+    }
+
+    .tab {
+      max-width: 260px;
+      min-width: 190px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 0 10px 0 12px;
+      border: 1px solid var(--line);
+      border-bottom-color: transparent;
+      border-radius: 7px 7px 0 0;
+      background: var(--paper);
+      color: #111827;
+      white-space: nowrap;
+    }
+
+    .tab span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tab-actions {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      padding: 0 10px;
+      color: var(--muted);
+    }
+
+    .top-icon {
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      border-radius: var(--radius);
+      color: var(--muted);
+    }
+    .top-icon:hover { background: var(--soft); color: var(--ink); }
+
+    .workbench {
+      grid-column: 2;
+      position: relative;
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+      background: var(--paper);
+    }
+
+    .doc-shell {
+      height: 100%;
+      display: grid;
+      grid-template-columns: 0 minmax(0, 1fr) 0;
+      transition: grid-template-columns 180ms ease;
+    }
+
+    .doc-shell.left-open {
+      grid-template-columns: 292px minmax(0, 1fr) 0;
+    }
+
+    .doc-shell.right-open {
+      grid-template-columns: 0 minmax(0, 1fr) 328px;
+    }
+
+    .doc-shell.both-open {
+      grid-template-columns: 292px minmax(0, 1fr) 328px;
+    }
+
+    .sidebar {
+      min-width: 0;
+      overflow: hidden;
+      background: #f7f8fb;
+      border-right: 1px solid var(--line);
+    }
+
+    .rightbar {
+      min-width: 0;
+      overflow: hidden;
+      background: #fbfcfe;
+      border-left: 1px solid var(--line);
+    }
+
+    .sidebar-inner,
+    .rightbar-inner {
+      width: 292px;
+      height: 100%;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+    .rightbar-inner { width: 328px; }
+
+    .pane-tools {
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      padding: 0 10px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .pane-title {
+      min-width: 0;
+      font-size: 13px;
+      font-weight: 650;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tool-row {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .tree {
+      overflow: auto;
+      padding: 12px 10px 28px 18px;
+    }
+
+    .tree ul {
+      list-style: none;
+      margin: 0;
+      padding-left: 18px;
+      border-left: 1px solid #dfe4ec;
+    }
+
+    .tree > ul {
+      border-left: 0;
+      padding-left: 0;
+    }
+
+    .tree li { margin: 4px 0; }
+
+    .tree-row {
+      height: 27px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: var(--radius);
+      padding: 0 7px;
+      color: #374151;
+      white-space: nowrap;
+    }
+
+    .tree-row.active {
+      background: var(--accent-soft);
+      color: #123b90;
+    }
+
+    .twisty {
+      width: 12px;
+      color: #9aa3b2;
+      flex: 0 0 12px;
+    }
+
+    .doc-main {
+      min-width: 0;
+      min-height: 0;
+      display: grid;
+      grid-template-rows: 42px minmax(0, 1fr);
+      background: var(--paper);
+    }
+
+    .doc-toolbar {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 12px;
+      padding: 0 18px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+    }
+
+    .breadcrumbs {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .breadcrumbs b {
+      color: #374151;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .doc-scroll {
+      min-width: 0;
+      overflow: auto;
+    }
+
+    .article {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 54px 42px 96px;
+    }
+
+    .article h1 {
+      margin: 0 0 28px;
+      font-size: 32px;
+      line-height: 1.25;
+      letter-spacing: 0;
+    }
+
+    .article h2 {
+      margin: 36px 0 14px;
+      font-size: 23px;
+      line-height: 1.3;
+      letter-spacing: 0;
+    }
+
+    .article p { margin: 12px 0; }
+
+    .callout {
+      margin: 22px 0;
+      padding: 12px 16px;
+      border-left: 3px solid #8b5cf6;
+      background: #faf8ff;
+      color: #2f2a44;
+    }
+
+    .article table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-size: 13px;
+    }
+    .article th,
+    .article td {
+      border: 1px solid var(--line);
+      text-align: left;
+      padding: 9px 10px;
+      vertical-align: top;
+    }
+    .article th { background: #f5f7fb; }
+
+    .floating-toggle {
+      position: absolute;
+      top: 54px;
+      z-index: 10;
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.92);
+      border-radius: var(--radius);
+      color: var(--muted);
+      box-shadow: 0 8px 18px rgba(31, 41, 55, .08);
+    }
+    .floating-toggle:hover { color: var(--accent); border-color: #adc6ff; }
+    .toggle-left { left: 14px; }
+    .toggle-right { right: 14px; }
+
+    .right-section {
+      padding: 14px 14px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .right-section h3 {
+      margin: 0 0 10px;
+      font-size: 13px;
+      color: #374151;
+    }
+
+    .backlink {
+      display: block;
+      padding: 9px 0;
+      border-top: 1px solid #eceff5;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .backlink:first-of-type { border-top: 0; }
+    .backlink strong { display: block; font-size: 13px; }
+    .backlink span { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding-bottom: 14px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 0 8px;
+      background: var(--paper);
+      color: #4b5563;
+      font-size: 12px;
+    }
+
+    .statusbar {
+      grid-column: 2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 10px;
+      border-top: 1px solid var(--line);
+      background: #f6f8fb;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .muted { color: var(--muted); }
+    .sep { color: #b8bfcc; }
+    .hidden-label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+    }
+
+    @media (max-width: 1020px) {
+      .article { padding-inline: 34px; }
+      .doc-shell.left-open,
+      .doc-shell.both-open {
+        grid-template-columns: 250px minmax(0, 1fr) 0;
+      }
+      .sidebar-inner { width: 250px; }
+      .rightbar { display: none; }
+    }
+
+    @media (max-width: 760px) {
+      .tab { min-width: 150px; }
+      .breadcrumbs { justify-content: flex-start; }
+      .article { padding: 34px 22px 80px; }
+      .article h1 { font-size: 27px; }
+      .doc-shell.left-open,
+      .doc-shell.both-open {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .sidebar { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <nav class="rail" aria-label="LUMEN 导航">
+      <button class="rail-button" id="leftToggleRail" title="文件目录" aria-label="文件目录"><span class="icon i-folder"></span></button>
+      <button class="rail-button active" title="当前文档" aria-label="当前文档"><span class="icon i-menu"></span></button>
+      <button class="rail-button" title="搜索" aria-label="搜索"><span class="icon i-search"></span></button>
+      <button class="rail-button" title="关系图谱" aria-label="关系图谱"><span class="icon i-graph"></span></button>
+      <div class="rail-spacer"></div>
+      <button class="rail-button" title="设置" aria-label="设置">?</button>
+    </nav>
+
+    <header class="tabbar">
+      <div class="tabs">
+        <button class="tab" aria-label="当前标签页"><span>指导文档-系统性设计</span><span class="muted">x</span></button>
+      </div>
+      <div class="tab-actions">
+        <button class="top-icon" title="阅读视图" aria-label="阅读视图">□</button>
+        <button class="top-icon" title="更多" aria-label="更多">⋮</button>
+        <button class="top-icon" title="新建标签" aria-label="新建标签">+</button>
+      </div>
+    </header>
+
+    <main class="workbench">
+      <button class="floating-toggle toggle-left" id="leftToggle" title="显示或隐藏目录" aria-label="显示或隐藏目录"><span class="icon i-folder"></span></button>
+      <button class="floating-toggle toggle-right" id="rightToggle" title="显示或隐藏反链" aria-label="显示或隐藏反链">↗</button>
+
+      <section class="doc-shell" id="docShell">
+        <aside class="sidebar" aria-label="文件目录">
+          <div class="sidebar-inner">
+            <div class="pane-tools">
+              <span class="pane-title">newer_project</span>
+              <div class="tool-row">
+                <button class="top-icon" title="新建笔记" aria-label="新建笔记">＋</button>
+                <button class="top-icon" title="折叠全部" aria-label="折叠全部">⌃</button>
+              </div>
+            </div>
+            <div class="tree">
+              <ul>
+                <li>
+                  <div class="tree-row"><span class="twisty">⌄</span><span>00-共享基础</span></div>
+                  <ul>
+                    <li><div class="tree-row"><span class="twisty">›</span><span>官方文档</span></div></li>
+                    <li>
+                      <div class="tree-row"><span class="twisty">⌄</span><span>From zhjt</span></div>
+                      <ul>
+                        <li><div class="tree-row"><span class="twisty">›</span><span>5-插件开发流程</span></div></li>
+                        <li>
+                          <div class="tree-row"><span class="twisty">⌄</span><span>插件开发环境安装流程</span></div>
+                          <ul>
+                            <li>
+                              <div class="tree-row"><span class="twisty">⌄</span><span>1-使用教程</span></div>
+                              <ul>
+                                <li><div class="tree-row"><span class="twisty">›</span><span>图片</span></div></li>
+                                <li><div class="tree-row active"><span class="twisty"></span><span>指导文档-系统性设计</span></div></li>
+                                <li><div class="tree-row"><span class="twisty"></span><span>米家插件开发环境安装流程</span></div></li>
+                              </ul>
+                            </li>
+                            <li><div class="tree-row"><span class="twisty">›</span><span>2-AI自动配置</span></div></li>
+                            <li><div class="tree-row"><span class="twisty">›</span><span>3-打包上传工具</span></div></li>
+                          </ul>
+                        </li>
+                        <li><div class="tree-row"><span class="twisty">›</span><span>资料</span></div></li>
+                      </ul>
+                    </li>
+                  </ul>
+                </li>
+                <li><div class="tree-row"><span class="twisty">›</span><span>00-AI规则</span></div></li>
+                <li><div class="tree-row"><span class="twisty">›</span><span>01-学习记录</span></div></li>
+                <li><div class="tree-row"><span class="twisty">›</span><span>02-V3.5项目</span></div></li>
+                <li><div class="tree-row"><span class="twisty">›</span><span>03-自动化系统</span></div></li>
+              </ul>
+            </div>
+          </div>
+        </aside>
+
+        <article class="doc-main">
+          <div class="doc-toolbar">
+            <div class="tool-row">
+              <button class="top-icon" title="返回" aria-label="返回">‹</button>
+              <button class="top-icon" title="前进" aria-label="前进">›</button>
+            </div>
+            <div class="breadcrumbs">
+              <span>03-自动化系统</span><span class="sep">/</span><span>1-需求</span><span class="sep">/</span><b>指导文档-系统性设计</b>
+            </div>
+            <div class="tool-row">
+              <button class="top-icon" title="切换阅读/编辑" aria-label="切换阅读编辑">□</button>
+              <button class="top-icon" title="更多" aria-label="更多">⋮</button>
+            </div>
+          </div>
+          <div class="doc-scroll">
+            <section class="article">
+              <h1>指导文档-系统性设计</h1>
+              <h2>指导文档：如何理解“系统性设计”</h2>
+              <div class="callout">
+                适用场景：用于向需求方、产品、管理人员解释为什么“自动化系统”不能只靠拍脑门或让 AI 直接写代码完成。
+              </div>
+              <h2>一、系统的定义</h2>
+              <p>从系统科学角度，可以把系统定义为一个六元组：组成、关系、过程、行为、功能、环境。</p>
+              <table>
+                <thead>
+                  <tr><th>系统要素</th><th>要回答的问题</th><th>通俗解释</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>组成</td><td>系统由哪些部分组成？</td><td>角色、模块、数据、工具和设备。</td></tr>
+                  <tr><td>关系</td><td>各部分之间如何连接？</td><td>谁调用谁、谁依赖谁、数据如何流动。</td></tr>
+                  <tr><td>过程</td><td>系统按什么步骤运行？</td><td>从输入到输出的完整流程。</td></tr>
+                  <tr><td>行为</td><td>系统遇到不同情况时怎样反应？</td><td>正常、异常、失败、回滚、重试。</td></tr>
+                </tbody>
+              </table>
+              <h2>二、为什么先看文档</h2>
+              <p>LUMEN 的主界面应当优先服务阅读、编辑和理解材料。目录和反链是辅助路径，可以快速打开，但不应该默认压缩正文。</p>
+              <p>当用户进入一个笔记时，系统默认展示完整阅读区；需要定位结构时展开左侧目录；需要审查来源、反链或 AI 草稿时再展开右侧栏。</p>
+            </section>
+          </div>
+        </article>
+
+        <aside class="rightbar" aria-label="右侧信息">
+          <div class="rightbar-inner">
+            <div class="pane-tools">
+              <span class="pane-title">反向链接与状态</span>
+              <button class="top-icon" id="rightClose" title="隐藏右栏" aria-label="隐藏右栏">×</button>
+            </div>
+            <div>
+              <section class="right-section">
+                <h3>反向链接</h3>
+                <a class="backlink" href="#"><strong>系统设计评审记录</strong><span>提到“系统性设计”作为评审入口。</span></a>
+                <a class="backlink" href="#"><strong>自动化系统需求说明</strong><span>引用本文解释流程边界。</span></a>
+              </section>
+              <section class="right-section">
+                <h3>标签</h3>
+                <div class="chip-row">
+                  <span class="chip">系统设计</span>
+                  <span class="chip">需求说明</span>
+                  <span class="chip">已确认</span>
+                </div>
+              </section>
+              <section class="right-section">
+                <h3>AI 草稿</h3>
+                <a class="backlink" href="#"><strong>无待应用草稿</strong><span>选中文本后可在这里预览润色结果。</span></a>
+              </section>
+            </div>
+          </div>
+        </aside>
+      </section>
+    </main>
+
+    <footer class="statusbar">
+      <span>0 条反向链接显示中</span>
+      <span>3,276 个词 · 4,934 个字符</span>
+    </footer>
+  </div>
+
+  <script>
+    const shell = document.getElementById('docShell');
+    const leftToggle = document.getElementById('leftToggle');
+    const leftToggleRail = document.getElementById('leftToggleRail');
+    const rightToggle = document.getElementById('rightToggle');
+    const rightClose = document.getElementById('rightClose');
+
+    function syncShell() {
+      const left = shell.classList.contains('left-open');
+      const right = shell.classList.contains('right-open');
+      shell.classList.toggle('both-open', left && right);
+      leftToggleRail.classList.toggle('active', left);
+    }
+
+    function toggleLeft() {
+      shell.classList.toggle('left-open');
+      syncShell();
+    }
+
+    function toggleRight(forceClose) {
+      if (forceClose) shell.classList.remove('right-open');
+      else shell.classList.toggle('right-open');
+      syncShell();
+    }
+
+    leftToggle.addEventListener('click', toggleLeft);
+    leftToggleRail.addEventListener('click', toggleLeft);
+    rightToggle.addEventListener('click', () => toggleRight(false));
+    rightClose.addEventListener('click', () => toggleRight(true));
+  </script>
+</body>
+</html>
