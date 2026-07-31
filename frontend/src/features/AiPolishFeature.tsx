@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import type { PolishMode, PolishView } from '../api';
 import type { AiPolishSelection } from '../app/useAiPolish';
 import { MarkdownBlock } from '../components/MarkdownBlock';
@@ -44,6 +45,12 @@ export function AiPolishFeature({
   onDiscard,
   onOpenDocument,
 }: AiPolishFeatureProps) {
+  // 草稿生成后把「应用 / 丢弃」滚进视野，避免按钮被 inspector-list 折叠遮挡。
+  const actionsRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    actionsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, [result]);
+
   if (!canWrite) {
     return (
       <section className="ai-polish-block" aria-label="AI 润色">
@@ -142,7 +149,7 @@ export function AiPolishFeature({
               </ul>
             </div>
           ) : null}
-          <div className="ai-polish-actions">
+          <div ref={actionsRef} className="ai-polish-actions">
             <button type="button" onClick={onApply} disabled={isBusy}>
               应用（替换选区）
             </button>
