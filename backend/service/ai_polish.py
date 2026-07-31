@@ -29,7 +29,8 @@ from backend.service.document import (
     _ensure_can_write,
     get_visible_document,
 )
-from backend.service.rag import MAX_CANDIDATES, _extract_terms, _find_candidate_chunks
+from backend.service.rag import MAX_CANDIDATES, _find_candidate_chunks
+from backend.service.rag_text import _extract_terms
 from backend.service.term import find_matching_terms
 
 
