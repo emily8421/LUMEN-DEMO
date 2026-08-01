@@ -157,7 +157,7 @@ if __name__ == "__main__":
     Write-Host "Using backend Python: $backendPython"
 
     Start-DemoProcess "backend" $backendPython @($backendScript) $repoRoot
-    Start-DemoProcess "frontend" "npm.cmd" @("run", "dev", "--", "--host", "127.0.0.1", "--port", "$FrontendPort", "--strictPort") $frontendRoot
+    Start-DemoProcess "frontend" "cmd.exe" @("/c", "volta", "run", "--node", "22.17.1", "npm", "run", "dev", "--", "--host", "127.0.0.1", "--port", "$FrontendPort", "--strictPort") $frontendRoot
 
     Wait-HttpOk "http://127.0.0.1:$BackendPort/docs" 30
     Wait-HttpOk "http://127.0.0.1:$FrontendPort" 30
