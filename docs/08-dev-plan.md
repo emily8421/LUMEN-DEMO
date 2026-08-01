@@ -60,7 +60,7 @@
 | Sprint-12~15（P1.5 可用性收口·候选） | Phase1 closure（Sprint-8/10）已完成 | 范围蔓延到 Phase2 高级功能；跳过收口直接做 Phase2 编码 | 可与 Phase2 tech-env-eval 并行评估 | 先做低成本收口（Sprint-12 登录持久化 / seed 自索引、Sprint-13 外部只读），再做重依赖项（Sprint-14 Word/PDF 需选型 + RG、Sprint-15 zhparser 可选）；**P1.5 优先于 Phase2 编码** | M10 日常可用（P1.5 收口） |
 | Sprint-19（Phase2B·AI 润色·首个 slice） | Phase2A closure + **RG-008 Go（后端通过）** + Sprint-11 UI/WSG 门禁重跑 | ~~数据外发护栏未落实~~（后端已落实：权限过滤 / 5030 / hash）；~~前端 half 待续~~ 前端已闭环（PR#89–95 / v1.1.0，TC-P2-AI-001 live UI smoke 2026-07-31 通过） | 否（首个 slice） | 先后端 polish/citation + migration 010，再前端写作侧边栏；复用 RAG / 术语 / LLM adapter | M11 Phase2B AI 润色可用 |
 | Sprint-20（Phase2B·时间轴·第二 slice） | Sprint-19 落地 + D-T-001 数据来源定稿 | 时间轴从零设计，范围蔓延到关联图 / 因果推理（愿景） | 可与 Sprint-19 收尾部分并行 | 数据来源选候选 A（不建表）先行；大集合降级本机实测定阈值 | M12 Phase2B 时间轴可用 |
-| Sprint-21（Phase2B·Doc-First UX·slice 3a） | Phase2B closure（Sprint-19）+ DF-C-001 门禁（每 slice 重跑）+ §9.5 基线用户确认 | 改 REQ-011 已验收默认行为 → 需 TC-P1-014 回归；栏 state 蔓延到全局 | 否（UI 布局 slice） | 顶栏图标唤出 + Ctrl+B/R + 边沿热区 + localStorage 记忆；先左目录后右栏 Inspector；不动骨架/后端/API | M13 Doc-First 布局可用 |
+| Sprint-21（Phase2B·Doc-First UX·slice 3a + 3c） | Phase2B closure（Sprint-19）+ DF-C-001 门禁（每 slice 重跑）+ §9.5 基线用户确认 | 改 REQ-011 已验收默认行为 → 需 TC-P1-014 回归；栏 state 蔓延到全局 | 否（UI 布局 slice） | slice 3a：顶栏图标唤出 + Ctrl+B/R + localStorage 记忆；先左目录后右栏 Inspector。slice 3c：home 欢迎引导页（默认落地）+ 主区少容器视觉收口 + 正文限宽。**进展（2026-08-01）：3a + 3c 编码完成 build 绿（246 modules），smoke + TC-P1-014 回归待跑**；不动骨架/后端/API | M13 Doc-First 布局可用 |
 
 ## 任务拆分规则
 

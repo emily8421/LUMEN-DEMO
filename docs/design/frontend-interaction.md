@@ -482,6 +482,7 @@ sequenceDiagram
 
 #### 9.5.2 默认落地页
 登录后 = **首页 / 空间总览 / 欢迎页**（用户 2026-07-31 决策；不直接进上次文档）。
+> 已实现（Sprint-21 slice 3c，2026-08-01）：`home` 欢迎引导页（欢迎语 + 4 功能卡片 + 轻指引，纯引导无数据——用户 2026-08-01 决策，偏离 §9.5.3 空间总览数据形态，见 §9.5.7 F-impl-5）。
 
 #### 9.5.3 各视图默认密度预设
 | 视图 | 左目录 | 右栏 | 说明 |
@@ -507,6 +508,23 @@ sequenceDiagram
 - **门禁口径（DF-C-001，2026-07-31 已确认）：Phase2B 每个 UI slice 前重跑 Sprint-11 UI/WSG 门禁**；Step 3 拆为 3a（栏隐藏 / 默认收起 / 三路唤出 / 记忆）与 3b（单列阅读 / 编辑切换）两 slice，各自门禁重确认 + Chrome/Edge smoke + TC-P1-014 回归。
 - 窄范围 UX 重构（栏可隐藏 + 默认收起 + 唤出 + 单列编辑切换）启动前：需 Sprint-11 UI/WSG 门禁按此基线重确认 + Chrome/Edge smoke 回归（触及 P1B REQ-011 已验收默认行为，需 TC-P1-014 回归）。
 - 不新增 REQ/API/DB/TC；不动 P1B 三层骨架（在 Context Pane / Inspector 上加可隐藏能力，不重构）。
+
+#### 9.5.7 实现偏差与进展（Sprint-21）
+
+> 编码进展（2026-08-01）：slice 3a（栏显隐机制）+ slice 3c（欢迎页首屏 + 少容器视觉收口）编码完成，`volta run --node 22.17.1 npm run build` 绿（246 modules），WSG-004 行数达标（workspace.css 263 / App.tsx 253 / WorkspaceMain 140 / DocumentsFeature 300 未动）。Chrome/Edge smoke + TC-P1-014 回归待 PG+LLM 栈（本会话起不了完整 demo）。slice 3b（单列阅读/编辑切换，§9.5.4）未启动。
+
+| 偏差 ID | 代码事实 | 原设计（§9.5） | 偏差类型 | 处理结论 | 验证 |
+|---|---|---|---|---|---|
+| F-impl-1 | Ctrl+R 右栏唤出加守卫：input/textarea/contenteditable 聚焦时不拦截（仍走浏览器刷新） | §9.5.1 Ctrl+R 唤右栏 | 部分实现 | smoke 定夺：接受守卫 vs 右栏换键（Alt+R） | 待 smoke |
+| F-impl-2 | 边沿热区唤出未做，只顶栏图标 + 快捷键两路 | §9.5.1 三路唤出（含边沿热区） | 部分实现 | minimal 首版，边沿热区留后续 | 待 smoke |
+| F-impl-3 | 左右栏切换图标均用 ☰，靠 title/aria/位置/active 区分 | — | 实现 | smoke 后如需不同图标再换 | 待 smoke |
+| F-impl-4 | DocumentsFeature 318 行超 WSG-004 阈值（slice 3c 空态 + onExpandLeftPane + onExitToEmpty 后） | — | 技术债 | slice 3b 启动前先抽 inspector（versions-panel）降行数 | 阻塞 3b |
+| F-impl-5 | 首页用「欢迎引导页」（欢迎语 + 4 功能卡片 + 轻指引，无数据列表） | §9.5.2/§9.5.3 空间总览（目录树 + 数据） | 范围调整 | 用户 2026-08-01 决策：纯引导定位；smoke 嫌空再补最近文档 | 待 smoke |
+| F-impl-6 | 首页左目录保持 slice 3a 记忆偏好（默认收起），未展开 | §9.5.3 PG-P2-001 空间总览左目录默认展开 | 部分实现 | 用户决策：3c 不碰 paneLayout；首页展开留 smoke 定夺 | 待 smoke |
+| F-impl-7 | 正文限宽作用于 `.markdown-preview .markdown-body`，双列预览列内层 | §9.5.1 正文限宽 ~800–880px（单列阅读） | 部分实现 | 双列下无害，单列切换（3b）后真正生效 | 待 3b |
+| F-impl-8 | 视觉收口主区：workspace-main 透明底 + editor-panel/inspector-pane/task/term 去卡片框（border+radius+白底）融入主区 + markdown-preview 去框 + 正文限宽；保留 toolbar/inspector-header 分隔线 + textarea 边界。ContextPane/ViewNav/TopBar 未动 | §9.5.1 少容器清爽 | 范围调整 | 用户 Q2「主区为主」+ smoke #3 深化（去两大卡片框）；全局收口留后续 | 待 smoke |
+| F-impl-9 | pane-left-collapsed 显式锁定 grid 列（view-nav/context-pane/workspace-main = 1/2/3） | §9.5 栏显隐（3a 原实现 auto-placement） | bug 修复 | 3a smoke（slice 3c 期间）发现：context-pane 用 display:none 收起移出 grid，auto-placement 把 workspace-main 错填到 0 宽列 2 → 中间区整体消失；已显式 grid-column 修复（layout.css） | 已修复（2026-08-01，build 绿，待 smoke 复核） |
+| F-impl-10 | documents 视图无选中 + 非新建时渲染引导卡；toolbar 加「返回」按钮（新建态/文档页退回引导卡）；reloadDocuments 不再自动选首篇（刷新/登录回引导卡，保留已选） | §9.5.2/§9.5.3 + smoke 反馈 | 范围扩展 | 用户 2026-08-01 决策 A 方案 + 返回能力；避免「主体空」+ 编辑态/文档页回不去 | 待 smoke |
 
 ## 10. 实现偏差 / 设计回写
 
