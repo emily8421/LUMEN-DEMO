@@ -28,6 +28,8 @@ interface WorkspaceMainProps {
   onNavigate: (view: ActiveView) => void;
   /** 新建文档（首页卡片，复用 documents.handleCreateDocument）。 */
   onCreateDocument: () => void;
+  /** 打开导入弹窗（Doc-First §9.5.8，Sprint-21 slice 3d）。 */
+  onOpenImport: () => void;
   /** 展开左目录（documents 空态引导按钮，Sprint-21 slice 3c）。 */
   onExpandLeftPane: () => void;
   /** 返回引导卡（退出新建/取消选中）。 */
@@ -47,6 +49,7 @@ export function WorkspaceMain({
   onQuickEntryOpen,
   onNavigate,
   onCreateDocument,
+  onOpenImport,
   onExpandLeftPane,
   onExitToEmpty,
 }: WorkspaceMainProps) {
@@ -84,6 +87,7 @@ export function WorkspaceMain({
           onSave={documents.handleSave}
           onRestore={documents.handleRestore}
           onDownloadMarkdown={documents.handleDownloadMarkdown}
+          onOpenImport={onOpenImport}
           documentTags={tags.documentTags}
           availableTags={tags.tags}
           addTagSelection={tags.addTagSelection}

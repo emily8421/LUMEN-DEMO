@@ -33,6 +33,7 @@ type DocumentsFeatureProps = {
   onSave: (event: React.FormEvent<HTMLFormElement>) => void;
   onRestore: (versionNo: number) => void;
   onDownloadMarkdown: () => void;
+  onOpenImport: () => void;
   /** 当前文档已打标签。 */
   documentTags: DocumentTagView[];
   /** 当前空间可见标签（打标签下拉用）。 */
@@ -76,6 +77,7 @@ export function DocumentsFeature({
   onSave,
   onRestore,
   onDownloadMarkdown,
+  onOpenImport,
   documentTags,
   availableTags,
   addTagSelection,
@@ -102,6 +104,7 @@ export function DocumentsFeature({
           {selectedDocument || isCreating ? (
             <button type="button" className="secondary" onClick={onExitToEmpty} disabled={isBusy}>返回</button>
           ) : null}
+          <button type="button" className="secondary" onClick={onOpenImport} disabled={isBusy}>导入</button>
           <button type="button" className="secondary" onClick={onCreateDocument} disabled={isBusy}>新建</button>
           {selectedDocument && !isCreating ? (
             <>

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { exportSpaceZip, triggerBrowserDownload } from './api';
 import { StatusBar } from './components/StatusBar';
 import { WorkspaceViewNav } from './app/WorkspaceViewNav';
@@ -17,11 +17,13 @@ import { useDocuments } from './app/useDocuments';
 import { useAiPolish } from './app/useAiPolish';
 import { isAuthTokenError } from './app/session-store';
 import { QuickEntryFeature } from './features/QuickEntryFeature';
+import { ImportFeature } from './features/ImportFeature';
 import { WorkspaceMain } from './app/WorkspaceMain';
 
 function App() {
   const workspace = useWorkspace();
   const paneLayout = usePaneLayout();
+  const [importModalOpen, setImportModalOpen] = useState(false);
   const session = useSession({ runAction, setNotice: workspace.setNotice, onSpaceChanged: handleSpaceChanged });
   const token = session.session?.token;
 
@@ -111,6 +113,7 @@ function App() {
     if (firstDocId) {
       documents.setSelectedId(firstDocId);
     }
+    setImportModalOpen(false);
     workspace.setActiveView('documents');
     documents.setIsCreating(false);
     search.setSearchResult(null);
@@ -190,14 +193,6 @@ function App() {
             isBusy={workspace.isBusy}
             onCreateDocument={documents.handleCreateDocument}
             onSelectDocument={documents.handleSelectDocument}
-            importDraft={imports.importDraft}
-            onImportDraftChange={imports.setImportDraft}
-            importFiles={imports.importFiles}
-            onImportFilesChange={imports.setImportFiles}
-            importInputKey={imports.importInputKey}
-            lastImportSummary={imports.lastImportSummary}
-            lastImportItems={imports.lastImportItems}
-            onImport={imports.handleImport}
             terms={terms.terms}
             selectedTermId={terms.selectedTermId}
             onSelectTerm={terms.selectTerm}
@@ -217,6 +212,7 @@ function App() {
             onQuickEntryOpen={quickEntry.open}
             onNavigate={workspace.setActiveView}
             onCreateDocument={documents.handleCreateDocument}
+            onOpenImport={() => setImportModalOpen(true)}
             onExpandLeftPane={() => paneLayout.setLeftPaneOpen(true)}
             onExitToEmpty={() => { documents.setSelectedId(null); documents.setIsCreating(false); }}
           />
@@ -243,6 +239,20 @@ function App() {
             onDiscard={quickEntry.handleDiscard}
             onClose={quickEntry.close}
             onOpenDocument={documents.handleOpenDocument}
+          />
+
+          <ImportFeature
+            isOpen={importModalOpen}
+            isBusy={workspace.isBusy}
+            importDraft={imports.importDraft}
+            onImportDraftChange={imports.setImportDraft}
+            importFiles={imports.importFiles}
+            onImportFilesChange={imports.setImportFiles}
+            importInputKey={imports.importInputKey}
+            lastImportSummary={imports.lastImportSummary}
+            lastImportItems={imports.lastImportItems}
+            onImport={imports.handleImport}
+            onClose={() => setImportModalOpen(false)}
           />
         </div>
       )}
