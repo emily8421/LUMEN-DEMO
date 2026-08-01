@@ -121,7 +121,8 @@
   min-width: 0;
   min-height: 0;
   overflow: hidden;
-  background: var(--panel-soft);
+  /* Doc-First §9.5.1（Sprint-21 slice 3c）：主区底色减向页面底，沉浸、少容器。 */
+  background: transparent;
 }
 
 .documents-workspace,
@@ -187,6 +188,15 @@
   min-height: 0;
 }
 
+/* Doc-First §9.5（Sprint-21）：右栏（Inspector）收起 → 列宽 0，编辑器占满。 */
+.document-view-grid.pane-right-collapsed {
+  grid-template-columns: minmax(0, 1fr) 0;
+}
+
+.document-view-grid.pane-right-collapsed > .inspector-pane {
+  display: none;
+}
+
 .editor-panel,
 .editor-pane,
 .inspector-pane,
@@ -195,9 +205,9 @@
   min-width: 0;
   min-height: 0;
   overflow: hidden;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-panel);
-  background: var(--panel);
+  /* Doc-First §9.5.1（slice 3c #3 深化）：去卡片框 + 白底，融入主区，靠 toolbar /
+     inspector-header 分隔线 + 列间隙区分结构（少容器清爽）。 */
+  background: transparent;
 }
 
 .editor-form {
@@ -240,8 +250,44 @@
   grid-template-rows: auto minmax(0, 1fr);
   min-height: 0;
   overflow: auto;
-  border: 1px solid var(--line-soft);
-  border-radius: var(--radius-panel);
-  background: var(--panel-soft);
+  /* Doc-First §9.5.1（Sprint-21 slice 3c）：去冗余框 + 底色，融入 editor-panel 白底，少容器。 */
+  background: transparent;
   padding: var(--space-2);
+}
+
+/* Doc-First §9.5.1：正文阅读列限宽 ~840px 居中（双列下无害，单列切换后真正生效）。 */
+.markdown-preview .markdown-body {
+  max-width: 840px;
+  margin-inline: auto;
+}
+
+/* documents 空态引导（Doc-First §9.5，Sprint-21 slice 3c smoke 修复）：无选中时替代空表单。 */
+.document-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  height: 100%;
+  min-height: 0;
+  padding: var(--space-4);
+  text-align: center;
+}
+
+.document-empty-state h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 16px;
+}
+
+.document-empty-state p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.document-empty-state-actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
 }

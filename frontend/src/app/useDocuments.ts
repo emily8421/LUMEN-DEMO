@@ -127,7 +127,7 @@ export function useDocuments({
     }
   }
 
-  // 拉取文档列表 + 保留有效 selectedId（无则选首篇；空列表进新建态）。供 refreshWorkspace 调用。
+  // 拉取文档列表 + 仅保留有效 selectedId（不自动选首篇；无选中由引导卡引导，Doc-First §9.5.7 F-impl-10）。供 refreshWorkspace 调用。
   async function reloadDocuments(loadToken: string) {
     const documentResult = await listDocuments(loadToken);
     setDocuments(documentResult);
@@ -135,14 +135,13 @@ export function useDocuments({
       if (currentId && documentResult.some((document) => document.id === currentId)) {
         return currentId;
       }
-      return documentResult[0]?.id ?? null;
+      return null;
     });
+    setIsCreating(false);
     if (documentResult.length === 0) {
-      setIsCreating(true);
+      // 空间无文档：清空草稿/版本，由 DocumentEmptyState 引导新建（Doc-First §9.5.7 F-impl-10）。
       setDraft(emptyDraft);
       setVersions([]);
-    } else {
-      setIsCreating(false);
     }
   }
 

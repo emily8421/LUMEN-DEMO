@@ -74,6 +74,38 @@
   max-width: 240px;
 }
 
+/* Doc-First §9.5（Sprint-21）：侧栏显隐图标按钮 —— 极简、融顶栏，非方块。 */
+.pane-toggles {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.pane-toggle {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: var(--radius-panel);
+  background: transparent;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+}
+
+.pane-toggle:hover {
+  background: var(--panel-soft);
+  color: var(--text);
+}
+
+.pane-toggle.active {
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+
 .session-card {
   display: grid;
   gap: 2px;
@@ -123,6 +155,21 @@
   min-height: 0;
   overflow: hidden;
 }
+
+/* Doc-First §9.5（Sprint-21）：左目录收起 → 列宽 0，主内容占满。 */
+.workspace-layout.pane-left-collapsed {
+  grid-template-columns: 52px 0 minmax(0, 1fr);
+}
+
+.workspace-layout.pane-left-collapsed > .context-pane {
+  display: none;
+}
+
+/* 显式锁定列：context-pane 收起用 display:none 会移出 grid，auto-placement 把
+   workspace-main 错填到 0 宽的列 2 而整体消失（Sprint-21 slice 3a smoke 修复）。 */
+.workspace-layout > .view-nav { grid-column: 1; }
+.workspace-layout > .context-pane { grid-column: 2; }
+.workspace-layout > .workspace-main { grid-column: 3; }
 
 .view-nav,
 .nav-rail {

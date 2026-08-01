@@ -48,14 +48,14 @@
 
 ## 5. 剩余步骤（待启动）
 
-- **Step 3 窄范围 UX 重构**：在 P1B 底座加「栏可隐藏 + 默认收起 + 三路唤出 + 单列编辑切换」；触及 REQ-011 已验收默认行为，需新 Sprint + Chrome/Edge smoke + TC-P1-014 回归；不改后端 API。
+- **Step 3 窄范围 UX 重构**：在 P1B 底座加「栏可隐藏 + 默认收起 + 三路唤出 + 单列编辑切换」；触及 REQ-011 已验收默认行为，需新 Sprint + Chrome/Edge smoke + TC-P1-014 回归；不改后端 API；**门禁口径 DF-C-001 已确认（2026-07-31）：每 UI slice 前重跑（Step 3 拆 3a/3b 两 slice 各自重跑）**。
 - **Step 4 Sprint-20 时间轴**：独立视图、主体优先、过滤器默认隐藏；先补 `timeline.md` Page-ID/Flow-ID + `frontend-interaction` 时间轴映射 + 确认 D-T-001 数据来源。
 
 ## 6. 待确认项
 
 | ID | 待确认 | AI 建议 | 时机 |
 |---|---|---|---|
-| DF-C-001 | Sprint-11 UI/WSG 门禁口径：草案保留 vs 每 UI slice 重跑 | Phase2B 每个 UI slice 前重跑（Doc-First 改默认行为，需回归） | Step 3 启动前 |
+| DF-C-001 ✅已确认（2026-07-31） | Sprint-11 UI/WSG 门禁口径：草案保留 vs 每 UI slice 重跑 | **采「每 UI slice 前重跑」**（Doc-First 改默认行为，需回归） | Step 3 启动前（已确认） |
 | DF-C-002 | Live Preview（行级实时编辑）是否做、选哪个编辑器 | 远期候选；引富文本编辑器前先 Spike（CodeMirror 6 / Tiptap / Milkdown） | Step 3 之后 |
 | DF-C-003 | 时间轴数据来源（D-T-001）、色阶（D-T-003） | 选候选 A（不建表，复用 lumen_documents + tags/links）先行 | Step 4 启动前 |
 

@@ -10,6 +10,7 @@ import type { Draft } from '../app/types';
 import { permissionLabels } from '../app/constants';
 import { MarkdownBlock } from '../components/MarkdownBlock';
 import { AiPolishFeature } from './AiPolishFeature';
+import { DocumentEmptyState } from './DocumentEmptyState';
 import { useTextareaSelection } from '../app/useTextareaSelection';
 import type { useAiPolish } from '../app/useAiPolish';
 
@@ -43,6 +44,12 @@ type DocumentsFeatureProps = {
   onRemoveTag: (tagId: number) => void;
   /** REQ-014 AI 润色侧边栏状态 + handler（useAiPolish 返回）。 */
   aiPolish: ReturnType<typeof useAiPolish>;
+  /** 右栏（Inspector）可见性（Doc-First §9.5，Sprint-21）。 */
+  rightPaneOpen: boolean;
+  /** 展开左目录（空态引导按钮，Doc-First §9.5，Sprint-21 slice 3c）。 */
+  onExpandLeftPane: () => void;
+  /** 返回引导卡（退出新建态 / 取消选中，Doc-First §9.5.7 F-impl-10）。 */
+  onExitToEmpty: () => void;
 };
 
 function markdownExcerpt(content: string, maxLength = 140) {
@@ -76,6 +83,9 @@ export function DocumentsFeature({
   onAddTag,
   onRemoveTag,
   aiPolish,
+  rightPaneOpen,
+  onExpandLeftPane,
+  onExitToEmpty,
 }: DocumentsFeatureProps) {
   const { ref: textareaRef, onSelect: handleTextareaSelect } = useTextareaSelection(
     aiPolish.changeSelection,
@@ -89,6 +99,9 @@ export function DocumentsFeature({
           <h2>{isCreating ? '新建文档' : selectedDocument?.title ?? '选择文档'}</h2>
         </div>
         <div className="toolbar-actions">
+          {selectedDocument || isCreating ? (
+            <button type="button" className="secondary" onClick={onExitToEmpty} disabled={isBusy}>返回</button>
+          ) : null}
           <button type="button" className="secondary" onClick={onCreateDocument} disabled={isBusy}>新建</button>
           {selectedDocument && !isCreating ? (
             <>
@@ -98,9 +111,16 @@ export function DocumentsFeature({
           ) : null}
         </div>
       </div>
-      <div className="workspace-body document-view-grid">
+      <div className={`workspace-body document-view-grid${rightPaneOpen ? '' : ' pane-right-collapsed'}`}>
         <section className="editor-panel editor-pane">
-          <form className="editor-form" onSubmit={onSave}>
+          {!selectedDocument && !isCreating ? (
+            <DocumentEmptyState
+              isBusy={isBusy}
+              onCreateDocument={onCreateDocument}
+              onExpandLeftPane={onExpandLeftPane}
+            />
+          ) : (
+            <form className="editor-form" onSubmit={onSave}>
             <div className="editor-toolbar">
               <label>
                 标题
@@ -151,7 +171,8 @@ export function DocumentsFeature({
                 />
               </section>
             </div>
-          </form>
+            </form>
+          )}
         </section>
 
         <aside className="versions-panel inspector-pane">

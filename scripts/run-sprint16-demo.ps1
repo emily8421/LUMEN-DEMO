@@ -20,6 +20,24 @@ $oldViteApiBase = $env:VITE_API_BASE
 $hadDemoBackendProxyUrl = Test-Path Env:DEMO_BACKEND_PROXY_URL
 $oldDemoBackendProxyUrl = $env:DEMO_BACKEND_PROXY_URL
 
+function Normalize-ProcessPathEnvironment() {
+    $processEnvironment = [System.Environment]::GetEnvironmentVariables("Process")
+    $pathKeys = @($processEnvironment.Keys | Where-Object { [string]$_ -ieq "Path" })
+    if ($pathKeys.Count -le 1) {
+        return
+    }
+
+    $pathValue = [System.Environment]::GetEnvironmentVariable("Path", "Process")
+    if ([string]::IsNullOrEmpty($pathValue)) {
+        $pathValue = [System.Environment]::GetEnvironmentVariable("PATH", "Process")
+    }
+
+    foreach ($pathKey in $pathKeys) {
+        [System.Environment]::SetEnvironmentVariable([string]$pathKey, $null, "Process")
+    }
+    [System.Environment]::SetEnvironmentVariable("Path", $pathValue, "Process")
+}
+
 function Get-PortOwners([int]$Port) {
     @(Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue |
         Select-Object -ExpandProperty OwningProcess -Unique |
@@ -73,7 +91,7 @@ function Start-DemoProcess([string]$Name, [string]$FilePath, [string[]]$Argument
     $stdout = Join-Path $tempRoot "$Name.out.log"
     $stderr = Join-Path $tempRoot "$Name.err.log"
     Remove-Item $stdout, $stderr -ErrorAction SilentlyContinue
-    $process = Start-Process -FilePath $FilePath -ArgumentList $ArgumentList -WorkingDirectory $WorkingDirectory -RedirectStandardOutput $stdout -RedirectStandardError $stderr -PassThru
+    $process = Start-Process -FilePath $FilePath -ArgumentList $ArgumentList -WorkingDirectory $WorkingDirectory -RedirectStandardOutput $stdout -RedirectStandardError $stderr -WindowStyle Hidden -PassThru
     $script:processes += $process
     Write-Host "Started $Name (PID $($process.Id)); logs: $stdout / $stderr"
 }
@@ -95,6 +113,7 @@ function Find-Browser() {
 }
 
 try {
+    Normalize-ProcessPathEnvironment
     New-Item -ItemType Directory -Force -Path $tempRoot | Out-Null
 
     if ($Stop) {
@@ -157,7 +176,7 @@ if __name__ == "__main__":
     Write-Host "Using backend Python: $backendPython"
 
     Start-DemoProcess "backend" $backendPython @($backendScript) $repoRoot
-    Start-DemoProcess "frontend" "npm.cmd" @("run", "dev", "--", "--host", "127.0.0.1", "--port", "$FrontendPort", "--strictPort") $frontendRoot
+    Start-DemoProcess "frontend" "cmd.exe" @("/c", "volta", "run", "--node", "22.17.1", "npm", "run", "dev", "--", "--host", "127.0.0.1", "--port", "$FrontendPort", "--strictPort") $frontendRoot
 
     Wait-HttpOk "http://127.0.0.1:$BackendPort/docs" 30
     Wait-HttpOk "http://127.0.0.1:$FrontendPort" 30

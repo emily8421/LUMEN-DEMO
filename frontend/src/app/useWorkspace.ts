@@ -19,7 +19,8 @@ type UseWorkspace = {
  * setters 与 useSession.handleAuthError）；本 hook 只暴露 state + setters 供 App 与各域 hook 使用。
  */
 export function useWorkspace(): UseWorkspace {
-  const [activeView, setActiveView] = useState<ActiveView>('documents');
+  // Doc-First §9.5.2（Sprint-21 slice 3c）：默认落地页 = 首页（home 欢迎引导），不直接进 documents。
+  const [activeView, setActiveView] = useState<ActiveView>('home');
   const [notice, setNotice] = useState('请使用 Demo 账号登录。');
   const [isBusy, setIsBusy] = useState(false);
   const [error, setError] = useState('');
