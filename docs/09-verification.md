@@ -12,8 +12,8 @@
 | 当前 Phase | **Phase2B（团队 MVP）进行中**（2026-07-30 切指针；RG-008 → **Go**，Sprint-19 后端 vertical slice 通过 2026-07-30；前端 half 待实现） |
 | 交付物形态 | Demo / 个人可用 Alpha / 个人知识组织 |
 | 覆盖 REQ | Phase1：REQ-001..REQ-011、REQ-036；Phase1.5A：REQ-037/038；Phase1.5B：REQ-027；Phase2A：REQ-026/012/025；**Phase2B：REQ-014 首批核心（后端已实现，RG-008 升 Go，2026-07-30）+ REQ-013/024 第二 slice（待 Sprint-20）**；愿景验证项待升阶段 |
-| 当前状态 | Phase1 全量验收已记录，结论为 Conditional Go（Demo closure）；Phase1.5A 已完成 TC-P1-015/016；Phase2A 已完成 TC-P2-LINK-001 / TC-P2-TAG-001 / TC-P2-QUICK-001，个人知识组织三个 vertical slice 验收通过。Phase1.5B 仍待 RG；**Phase2B 范围已确认（2026-07-30）+ 设计就绪 + 数据外发风险已接受；REQ-014 后端 vertical slice 已通过（RG-008 升 Go，2026-07-30），前端 half + Sprint-11 门禁重跑 + 切指针推进待续**；愿景项待升阶段。 |
-| 最后更新 | 2026-07-30（Sprint-19 / task-019 AI 润色后端实现 + RG-008 升 Go 回写；保留 2026-07-20 Phase2A closure 验收记录） |
+| 当前状态 | Phase1 全量验收已记录，结论为 Conditional Go（Demo closure）；Phase1.5A 已完成 TC-P1-015/016；Phase2A 已完成 TC-P2-LINK-001 / TC-P2-TAG-001 / TC-P2-QUICK-001，个人知识组织三个 vertical slice 验收通过。Phase1.5B 仍待 RG；**Phase2B 范围已确认（2026-07-30）+ 设计就绪 + 数据外发风险已接受；REQ-014 已完成 v1.1.0（TC-P2-AI-001 通过）；Sprint-21 Doc-First UX slice 3a/3c 已完成本地 smoke + TC-P1-014 回归（2026-08-01 用户确认），slice 3d 导入弹窗化待编码后补 TC-P1-015 回归**；愿景项待升阶段。 |
+| 最后更新 | 2026-08-01（Sprint-21 slice 3a/3c 本地 smoke + TC-P1-014 回归通过回写；保留 2026-07-20 Phase2A closure 验收记录） |
 
 ## 1. 测试策略
 
@@ -41,7 +41,7 @@
 | TC-P1-011 | REQ-011 桌面端 | Chrome / Edge 完成上述全部 | [P1] | 条件通过（降级口径·Edge Headless + Chrome 人工 smoke） |
 | TC-P1-012 | REQ-036 术语管理 | 新建空间术语后，文档识别该词，问答优先使用空间定义且不被同名全局术语覆盖 | [P1] | 条件通过（PG 仓储·Sprint-8 起真实化） |
 | TC-P1-013 | REQ-011 P1A 结构聚焦 | 文档 / 搜索 / 问答 / 术语一级视图切换；900px 桌面宽度不横向破版；P0 能力不回退 | [P1] | 通过（构建 + Chrome / Edge 900px smoke） |
-| TC-P1-014 | REQ-011 P1B 工作台重设计 | TopBar + Nav Rail + Context Pane + Workspace 三层布局；Context Pane 随视图变化；900px 桌面宽度不横向破版；信息密度达标；P0/P1A 能力不回退 | [P1] | 通过（构建 + Chrome / Edge 900px smoke）；**Sprint-21 slice 3a + 3c 触发回归**（栏默认收起 + 首页默认落地改 REQ-011 默认行为）·待重测 |
+| TC-P1-014 | REQ-011 P1B 工作台重设计 | TopBar + Nav Rail + Context Pane + Workspace 三层布局；Context Pane 随视图变化；900px 桌面宽度不横向破版；信息密度达标；P0/P1A 能力不回退 | [P1] | 通过（构建 + Chrome / Edge 900px smoke）；**Sprint-21 slice 3a + 3c 回归通过**（栏默认收起 + 首页默认落地 + documents 空态/返回，2026-08-01 用户本地 smoke 确认） |
 | TC-P1-015 | REQ-037 批量导入 | 拖入文件夹 / 多文件后全部 `.md`/`.txt` 入库可搜可问答；标题保留路径前缀；同名跳过 | [P1] | 通过（Sprint-16 自动化 + Chrome headless drop-zone smoke） |
 | TC-P1-016 | REQ-038 导出备份 | 文档详情下载 `.md`；空间导出 ZIP 含可见文档、权限过滤 | [P1] | 通过（Sprint-17 后端 tests + 端到端 HTTP smoke） |
 | TC-P1-017 | REQ-027 单文档 PDF | 选型 + 中文 PDF 导出验证（RG-006）；文档详情导出 PDF 中文正常 | [P1] | P1.5B 草案·待 RG-006（Sprint-18） |
@@ -67,12 +67,12 @@
 | TC-P1-011 | REQ-011 | 桌面端浏览器 | 走查全部 P1 功能 | 全部可用 | Edge Headless + Chrome 人工 smoke（§5） | 条件通过 |
 | TC-P1-012 | REQ-036 | brightlite 空间 | 新建术语 → 文档识别 → 问答 | 识别 + 空间术语优先于全局 | `tests/backend/test_term.py`、`test_rag.py` | 条件通过 |
 | TC-P1-013 | REQ-011 | P1A 前端实现 + Chrome / Edge 桌面 | ① 登录并切换文档 / 搜索 / 问答 / 术语视图；② 在 900px 宽度完成文档、搜索、问答、术语主流程；③ 回归 Markdown 渲染、来源点击、删除 / 恢复二次确认 | 视图切换保持当前空间上下文；各视图主区不被无关面板挤压；900px 无全局横向滚动；P0 能力不回退 | `npm.cmd run build` 通过；Chrome / Edge headless smoke（900px）通过，覆盖登录、四视图切换、文档新建 / 编辑 / 版本恢复 / 删除、Markdown 预览、搜索来源打开、问答、术语新建 / 删除确认 | 通过 |
-| TC-P1-014 | REQ-011 | P1B 工作台重设计实现 + Chrome / Edge 桌面 | ① 登录后检查 TopBar + Nav Rail + Context Pane + Workspace 三层布局；② 切换文档 / 搜索 / 问答 / 术语并确认 Context Pane 随视图变化；③ 在 900px 宽度完成文档、搜索、问答、术语主流程；④ 检查搜索首屏 ≥5 条结果、术语首屏 ≥8 条、编辑区 ≥12 行；⑤ 回归 Markdown 渲染、来源点击、删除 / 恢复二次确认 | 工作台布局与 `frontend-workspace-redesign` 原型一致；任务聚焦，不显示无关大卡片；900px 无全局横向滚动；P0/P1A 能力不回退 | `npm.cmd run build` 通过；Chrome / Edge headless smoke（900px）通过，覆盖登录、四视图切换、文档新建 / 编辑 / 版本恢复 / 删除、Markdown 预览、搜索来源打开、问答、术语新建 / 删除确认 | 通过 |
+| TC-P1-014 | REQ-011 | P1B 工作台重设计实现 + Chrome / Edge 桌面；Sprint-21 slice 3a/3c 回归覆盖栏显隐、首页默认落地、documents 减框、空态引导与返回 | ① 登录后检查 TopBar + Nav Rail + Context Pane + Workspace 三层布局；② 切换文档 / 搜索 / 问答 / 术语并确认 Context Pane 随视图变化；③ 在 900px 宽度完成文档、搜索、问答、术语主流程；④ 检查搜索首屏 ≥5 条结果、术语首屏 ≥8 条、编辑区 ≥12 行；⑤ 回归 Markdown 渲染、来源点击、删除 / 恢复二次确认；⑥ Sprint-21 追加确认首页非空、左目录展开后主区不消失、空态「展开左目录 / 新建文档」可用、文档页 / 新建态「返回」回到空态 | 工作台布局与 `frontend-workspace-redesign` 原型一致；任务聚焦，不显示无关大卡片；900px 无全局横向滚动；P0/P1A 能力不回退；Sprint-21 追加的默认落地与空态能力不造成主体空白或三栏消失 | `npm.cmd run build` 通过；Chrome / Edge headless smoke（900px）通过，覆盖登录、四视图切换、文档新建 / 编辑 / 版本恢复 / 删除、Markdown 预览、搜索来源打开、问答、术语新建 / 删除确认；Sprint-21：用户本地 Chrome/Edge smoke + TC-P1-014 回归通过（2026-08-01） | 通过（含 Sprint-21 回归） |
 | TC-P1-015 | REQ-037 | 多个 `.md` / `.txt` 文件或文件夹 | 拖入文件夹 / 多文件后批量导入 | 全部入库可搜可问答；标题保留路径前缀；同名跳过 | `tests/backend/test_imports.py`（批量成功、失败隔离、同名跳过、可搜可问答）；`tests/backend/test_import_api.py`（API-029 响应契约）；`npm.cmd run build`；Chrome headless drop-zone smoke（登录 → drop 两个带 `webkitRelativePath` 文件 → 导入成功 2 → 搜索 / 问答命中） | 通过 |
 | TC-P1-016 | REQ-038 | 当前空间存在多篇可见 / 不可见文档 | 文档详情下载 `.md`；空间导出 ZIP | 单文档 `.md` 内容正确；ZIP 只含可见文档 | `tests/backend/test_export.py`（13 tests：单文档可见 / 不可见 / 指定版本、ZIP 只含可见 / 空空间 / 路径前缀 / 防穿越 / 非成员）+ FastAPI TestClient 端到端 HTTP smoke（路由注册 / 异常 handler / 二进制 Response / 不可见 4004 / 非法 format 4220 / 无 token 4001） | 通过 |
 | TC-P1-017 | REQ-027 | RG-006 已 Go / Conditional Go；当前用户可读文档 | 对可读文档指定版本发起 PDF 导出；验证中文、失败态、权限态和产物访问 | 导出任务与版本绑定；中文正常；产物继承源文档权限；导出库不可用返回 5030；未验证前不得进入实现 | 待 tech-env 依赖验证 + 后端 tests + 人工 PDF 样例 | 草案·待 RG-006 |
 
-> TC-P1-010 暂为「后续阶段」，待 OCR 落地后补步骤与证据；TC-P1-013 已随 PR #76 合并后完成前端构建与 Chrome / Edge 900px smoke；TC-P1-014 已随 Sprint-10（P1B）完成前端构建与 Chrome / Edge 900px smoke；TC-P1-015 已随 Sprint-16 完成自动化验证与 Chrome headless drop-zone smoke；TC-P1-016 已随 Sprint-17 完成后端 tests + 端到端 HTTP smoke；TC-P1-017 待 Sprint-18（RG-006）编码后补证据；其余 TC 自动化均含于后端测试与既有 smoke 证据（见 §5）。
+> TC-P1-010 暂为「后续阶段」，待 OCR 落地后补步骤与证据；TC-P1-013 已随 PR #76 合并后完成前端构建与 Chrome / Edge 900px smoke；TC-P1-014 已随 Sprint-10（P1B）完成前端构建与 Chrome / Edge 900px smoke，并随 Sprint-21 slice 3a/3c 完成本地回归（2026-08-01 用户确认）；TC-P1-015 已随 Sprint-16 完成自动化验证与 Chrome headless drop-zone smoke，待 Sprint-21 slice 3d 导入弹窗化编码后补入口形态回归；TC-P1-016 已随 Sprint-17 完成后端 tests + 端到端 HTTP smoke；TC-P1-017 待 Sprint-18（RG-006）编码后补证据；其余 TC 自动化均含于后端测试与既有 smoke 证据（见 §5）。
 
 ### Phase2（功能范围 `[P2]` · Phase2A **个人知识组织** / Phase2B **团队 MVP**）
 
@@ -147,6 +147,7 @@
 | 2026-07-20 | Phase2A 个人知识组织整体验收 closure | 通过 | 验收范围：REQ-026 内链 / 反链（TC-P2-LINK-001）、REQ-012 标签（TC-P2-TAG-001）、REQ-025 快速录入（TC-P2-QUICK-001）。证据：后端单测 / service 回归 / API smoke / 前端 build / 浏览器 smoke 均已分别记录在上方 Sprint / Task 验收与 §2 矩阵；`docs/08-dev-plan.md` 已补 Phase2A 完成包。结论：Phase2A「互联 / 组织 / 快录」闭环通过；未进入 Phase2B，REQ-014 AI 润色 / 写作引用与团队 MVP 范围仍待确认。 |
 | 2026-07-30 | Phase2B·REQ-014 AI 润色 / 写作引用后端（Sprint-19 / task-019 后端 half） | 通过（后端单测 + 回归；**RG-008 升 Go**；前端 UI smoke 待前端 half） | migration 010 `lumen_ai_drafts`（hash + 摘要留存，不存原文 / key）；entity `AiDraft` + `AiDraftORM`；`repository` pg/demo `create_ai_draft`；`service/ai_polish.py` polish / citation（citation 复用 `rag._find_candidate_chunks` 权限收敛，越权 chunk 不进 prompt / 不返回）；API-028 `POST /api/documents/{id}/polish`（4001/4003/4004/4220/**5030**）；LLM 不可用→`LlmUnavailableError`→5030 不落库不编造；citation 无可见来源→「未找到可引用来源」不调 LLM。验证：`tests.backend.test_ai_polish` service **9/9 绿**（DemoRepository + chat_fn 注入：polish 生成 / 越权不进 prompt / hash+摘要留存 / LLM 失败与未配置均不落库 / citation 无来源不调 LLM / 4003/4004/4220）+ 全量后端 `discover` **125 OK(skipped=3)**（该轮 PG up，API 层 6 例 + `PgRepository.create_ai_draft`/`AiDraftORM` PG 落库路径跑过）；`compileall` exit 0。**RG-008→Go、RISK-P2-005 关闭（后端）；TC-P2-AI-001 后端通过**。待办：前端 half（侧边栏 + selection + 浏览器 UI smoke）、commit / PR。 |
 | 2026-07-31 | Phase2B·REQ-014 AI 润色前端 UI smoke（task-019 前端 half；live 实跑） | 通过（真 GLM + 真 PG + 交互点击流） | 栈：lumen-pg + 后端 18000（注入 .env GLM）+ 前端 5173（identity + `/api` 代理 ✓）。**后端 live 实跑**（python urllib，UTF-8）：alice 建文档→polish 200（真 GLM 出草稿）→citation 200（sources 仅可见 chunk：Frontend Indexed Note / Semantic Timing Note / Term Source）→应用 PUT 200（版本 v1→v2）→越权 kira→alice 私有 404/4004；RG-008 存储护栏 live 验证（`lumen_ai_drafts`：`input_excerpt_hash`=64 位 sha256、`prompt_summary` 仅摘要无原文/key、`cited_chunk_ids`=可见 chunk）。**交互 UI 点击流**（alice 浏览器实测）：选区→触发 polish→草稿预览出现、citation sources 可见、应用替换选区 + 版本 +1（后端日志 polish×5 / citation×2 / PUT×8 / 版本恢复 全 200）。**TC-P2-AI-001 UI smoke 通过 → REQ-014 vertical slice 闭环。** 面板可见性 UX 缺陷发现并修复，见 §5.1。 |
+| 2026-08-01 | Sprint-21 Doc-First UX slice 3a/3c smoke + TC-P1-014 回归 | 通过（用户本地 Chrome/Edge smoke） | 范围：slice 3a 栏显隐 / 默认收起 / Ctrl+B/R + 3a hotfix（左栏收起不再导致主区消失）；slice 3c 首页默认落地、主区少容器视觉收口、documents 空态引导与返回。验证：`volta run --node 22.17.1 npm run build` 已通过；本轮修复本地 demo 启动脚本后确认前端 `http://127.0.0.1:5173` 与后端 `http://127.0.0.1:18000/docs` HTTP 200；用户确认 Chrome/Edge 本地 smoke + TC-P1-014 回归通过，覆盖 documents 减框、空态「展开左目录 / 新建文档」、文档页 / 新建态「返回」、900px 不破版、文档 / 搜索 / 问答 / 术语主流程。残留：slice 3d 导入弹窗化未编码，需后续补 TC-P1-015 + TC-P1-014 回归；demo 脚本 `Path`/`PATH` 根因已起模板回流提案。 |
 
 ### 5.1 缺陷与回归记录
 
@@ -154,6 +155,7 @@
 |---|---|---|---|---|
 | 新建 / 编辑文档无法被搜索或问答命中 | Sprint-4 实现期发现 | `c5c177e fix: index edited documents for search and rag` | 搜索 + RAG 索引（新建 / 编辑文档入库后被检索召回） | 回归通过；53 后端 tests 含相关用例 |
 | AI 润色侧边栏生成草稿后「生成 / 应用」按钮被折叠遮挡；≤1199px 小屏 `.inspector-pane` `max-height:190px` 容不下整个面板 | task-019 前端 UI smoke（2026-07-31）发现 | `fix/ai-polish-panel-visibility`：`AiPolishFeature` 草稿生成后 `useEffect`+`scrollIntoView` 把「应用 / 丢弃」滚进视野；`responsive.css` `.inspector-pane` max-height 190→360px | 前端 `npm run build` 绿（Node 22）+ 用户 live 复测通过 | 已修复（本次 PR） |
+| 本地 demo 脚本在 Windows PowerShell 下无法后台启动：`Start-Process` 因 `Path` / `PATH` 重复报错；普通 `-Detached` 子进程可能被 AI 执行器回收 | Sprint-21 smoke 启动 demo 时发现（2026-08-01） | `scripts/run-sprint16-demo.ps1` 增加 `Normalize-ProcessPathEnvironment`，服务启动 `Start-Process` 增加 `-WindowStyle Hidden`；实际后台启动通过 WMI / 人工终端方式保持进程 | 本地 demo 启动与 smoke 支撑；不影响业务功能 / API / DB | 前端 / 后端 HTTP 200，用户完成本地 smoke；去项目化模板问题已转 `_proposals/TEMPLATE-UPGRADE-powershell-start-process-path-normalization.md` |
 
 ## 6. 风险与未验证项
 

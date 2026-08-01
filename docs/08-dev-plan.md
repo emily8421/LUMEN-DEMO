@@ -11,8 +11,8 @@
 | 当前 Phase | **Phase2B（团队 MVP）进行中**（2026-07-30 切指针；RG-008 升 Go，Sprint-19 后端通过 2026-07-30；前端 half 待实现） |
 | 交付物形态 | Demo / 个人可用 Alpha / 个人知识组织 |
 | 输入基线 | `docs/03-prd.md` §3、`docs/04-architecture.md`、`docs/05-tech-spec.md`、`docs/09-verification.md` |
-| 当前状态 | Phase1 Demo 已完成并已记录全量验收（Conditional Go）；Phase1.5A 已完成批量 / 文件夹导入（REQ-037）与 `.md` / ZIP 导出备份（REQ-038）；Phase2A 已完成 REQ-026 内链 / 反链、REQ-012 标签、REQ-025 快速录入三个 vertical slice 并通过 `09` 对应用例。Phase1.5B（PDF / Word-PDF / zhparser）仍待后续 RG；**Phase2B（团队 MVP）范围已确认（2026-07-30）：REQ-014 首批核心 + REQ-013/024 时间轴第二 slice，数据外发风险已接受（RG-008 Go），设计已就绪（05 TCD-010 / 06 lumen_ai_drafts / 07 API-028 + API-033 / design/ai-polish + design/timeline），Sprint-19/20 已规划；REQ-014 后端已通过（RG-008 Go，2026-07-30），待前端 half + Sprint-11 UI/WSG 门禁重跑 + 切阶段指针推进**。 |
-| 最后更新 | 2026-07-30（同步后文档体系审计回写；保留 2026-07-20 Phase2A closure 完成包） |
+| 当前状态 | Phase1 Demo 已完成并已记录全量验收（Conditional Go）；Phase1.5A 已完成批量 / 文件夹导入（REQ-037）与 `.md` / ZIP 导出备份（REQ-038）；Phase2A 已完成 REQ-026 内链 / 反链、REQ-012 标签、REQ-025 快速录入三个 vertical slice 并通过 `09` 对应用例。Phase1.5B（PDF / Word-PDF / zhparser）仍待后续 RG；**Phase2B（团队 MVP）范围已确认（2026-07-30）：REQ-014 首批核心已完成 v1.1.0（TC-P2-AI-001 通过），REQ-013/024 时间轴为第二 slice 待启动；Sprint-21 Doc-First UX 进行中，slice 3a/3c 已完成并通过本地 smoke + TC-P1-014 回归（2026-08-01 用户确认），slice 3d 导入弹窗化设计已落盘待编码**。 |
+| 最后更新 | 2026-08-01（Sprint-21 slice 3a/3c 本地 smoke + TC-P1-014 回归通过回写；保留 2026-07-20 Phase2A closure 完成包） |
 
 ## Sprint 总览
 
@@ -41,7 +41,7 @@
 | Sprint-18（P1.5·PDF 导出·候选·需 RG） | 单文档 PDF 导出（Markdown → PDF，中文） | 027（从 Phase2 提前） | 02 REQ-027、07 API-019、05 RG-006 | backend api/export-pdf + PDF 库 + service | 待新增 TC-P1-017 | 候选·待 RG-006 选型（未编码） | — |
 | Sprint-19（Phase2B·AI 润色·首个 vertical slice） | AI 润色 polish + 写作引用 citation（API-028）+ `lumen_ai_drafts` migration 010 | 014 | 02 REQ-014、03 Phase2B、04 Flow-005、05 TCD-010 / RG-004 / RG-008、06 lumen_ai_drafts、07 API-028、design/ai-polish | backend service/ai_polish + api + migration 010；frontend 写作侧边栏 | TC-P2-AI-001（后端 tests + prompt 边界审查 + UI smoke） | **已完成（RG-008 Go，2026-07-30；前端闭环 PR#89–95 / v1.1.0，TC-P2-AI-001 live UI smoke 2026-07-31 通过）** | — |
 | Sprint-20（Phase2B·时间轴·第二 slice） | 时间轴视图 + 密度热条（API-033） | 013/024 | 02 REQ-013/024、04 Flow-009、06 lumen_documents + tags + links、07 API-033、design/timeline | backend service/timeline + api；frontend 时间轴视图 | TC-P2-TL-001（后端 tests + Chrome/Edge smoke） | 待 Sprint-19 落地 + D-T-001 数据来源定稿后启动（未编码） | — |
-| Sprint-21（Phase2B·Doc-First UX） | slice 3a 侧栏可隐藏/默认收起/三路唤出/记忆 + slice 3c 默认落地欢迎页+主区少容器视觉收口+documents 空态引导 + slice 3d 导入入口弹窗化（§9.5 基线） | 011 + 037（P1B 默认行为升级 + 导入入口形态，不新增 REQ） | design/frontend-interaction §9.5（§9.5.8 导入弹窗）、research/prototypes/2026-07-31-obsidian-inspired-*、09 TC-P1-014/TC-P1-015 | frontend App.tsx + app/{usePaneLayout,pane-layout-store,TopBar,ContextPane} + features/{Welcome,DocumentEmptyState,Documents,Import}Feature + styles | TC-P1-014 回归 +（3d）TC-P1-015 回归 + Chrome/Edge smoke | 进行中（feat/step3-doc-first-ux；3a/3c 编码完成待 smoke，3d 设计中待编码，DF-C-001 门禁） | tasks/task-021..025 |
+| Sprint-21（Phase2B·Doc-First UX） | slice 3a 侧栏可隐藏/默认收起/三路唤出/记忆 + slice 3c 默认落地欢迎页+主区少容器视觉收口+documents 空态引导 + slice 3d 导入入口弹窗化（§9.5 基线） | 011 + 037（P1B 默认行为升级 + 导入入口形态，不新增 REQ） | design/frontend-interaction §9.5（§9.5.8 导入弹窗）、research/prototypes/2026-07-31-obsidian-inspired-*、09 TC-P1-014/TC-P1-015 | frontend App.tsx + app/{usePaneLayout,pane-layout-store,TopBar,ContextPane} + features/{Welcome,DocumentEmptyState,Documents,Import}Feature + styles | TC-P1-014 回归 +（3d）TC-P1-015 回归 + Chrome/Edge smoke | 进行中（feat/step3-doc-first-ux；3a/3c 编码完成且 smoke + TC-P1-014 通过，3d 设计已落盘待编码，DF-C-001 门禁） | tasks/task-021..025 |
 
 ## 依赖关系与里程碑
 
@@ -60,7 +60,7 @@
 | Sprint-12~15（P1.5 可用性收口·候选） | Phase1 closure（Sprint-8/10）已完成 | 范围蔓延到 Phase2 高级功能；跳过收口直接做 Phase2 编码 | 可与 Phase2 tech-env-eval 并行评估 | 先做低成本收口（Sprint-12 登录持久化 / seed 自索引、Sprint-13 外部只读），再做重依赖项（Sprint-14 Word/PDF 需选型 + RG、Sprint-15 zhparser 可选）；**P1.5 优先于 Phase2 编码** | M10 日常可用（P1.5 收口） |
 | Sprint-19（Phase2B·AI 润色·首个 slice） | Phase2A closure + **RG-008 Go（后端通过）** + Sprint-11 UI/WSG 门禁重跑 | ~~数据外发护栏未落实~~（后端已落实：权限过滤 / 5030 / hash）；~~前端 half 待续~~ 前端已闭环（PR#89–95 / v1.1.0，TC-P2-AI-001 live UI smoke 2026-07-31 通过） | 否（首个 slice） | 先后端 polish/citation + migration 010，再前端写作侧边栏；复用 RAG / 术语 / LLM adapter | M11 Phase2B AI 润色可用 |
 | Sprint-20（Phase2B·时间轴·第二 slice） | Sprint-19 落地 + D-T-001 数据来源定稿 | 时间轴从零设计，范围蔓延到关联图 / 因果推理（愿景） | 可与 Sprint-19 收尾部分并行 | 数据来源选候选 A（不建表）先行；大集合降级本机实测定阈值 | M12 Phase2B 时间轴可用 |
-| Sprint-21（Phase2B·Doc-First UX·slice 3a + 3c + 3d） | Phase2B closure（Sprint-19）+ DF-C-001 门禁（每 slice 重跑）+ §9.5 基线用户确认 | 改 REQ-011 已验收默认行为 → 需 TC-P1-014 回归；栏 state 蔓延到全局 | 否（UI 布局 slice） | slice 3a：顶栏图标唤出 + Ctrl+B/R + localStorage 记忆；先左目录后右栏 Inspector。slice 3c：home 欢迎引导页（默认落地）+ 主区少容器视觉收口 + 正文限宽。**进展（2026-08-01）：3a + 3c 编码完成 build 绿（246 modules），smoke + TC-P1-014 回归待跑；slice 3d 导入弹窗化设计已补（§9.5.8 / task-025，待 3a/3c smoke 闭环后编码）**；不动骨架/后端/API | M13 Doc-First 布局可用 |
+| Sprint-21（Phase2B·Doc-First UX·slice 3a + 3c + 3d） | Phase2B closure（Sprint-19）+ DF-C-001 门禁（每 slice 重跑）+ §9.5 基线用户确认 | 改 REQ-011 已验收默认行为 → 需 TC-P1-014 回归；栏 state 蔓延到全局 | 否（UI 布局 slice） | slice 3a：顶栏图标唤出 + Ctrl+B/R + localStorage 记忆；先左目录后右栏 Inspector。slice 3c：home 欢迎引导页（默认落地）+ 主区少容器视觉收口 + 正文限宽 + documents 空态引导/返回。**进展（2026-08-01）：3a + 3c 编码完成，build 绿，Chrome/Edge 本地 smoke + TC-P1-014 回归通过（用户确认）；slice 3d 导入弹窗化设计已补（§9.5.8 / task-025），可进入编码前检查**；不动骨架/后端/API | M13 Doc-First 布局可用 |
 
 ## 任务拆分规则
 
@@ -93,6 +93,7 @@
 | Sprint-15 | TC-P1-007 扩展（中文分词） | 集成（PG） | 同上（test_search） | 中文长词精确命中改善 | 无 zhparser 时仍回退 simple（不阻塞） |
 | Sprint-19（Phase2B） | TC-P2-AI-001 | 单元 + 集成 + UI smoke | `.venv\Scripts\python.exe -m unittest discover -s tests/backend`（test_ai_polish）；`npm.cmd run build` | Chrome / Edge：写作侧边栏 polish / citation、来源点击、降级提示 | RG-008 Go（后端通过）；LLM 可 Mock；数据外发护栏（hash / 无 key / sources 权限过滤） |
 | Sprint-20（Phase2B） | TC-P2-TL-001 | 单元 + 集成 + UI smoke | 同上（test_timeline）；`npm.cmd run build` | Chrome / Edge：时间轴渲染、密度热条、大集合降级 / 列表逃生舱 | 数据来源候选 A（不建表）；大集合聚合降级 |
+| Sprint-21（Phase2B·Doc-First UX） | TC-P1-014（3a/3c 回归）+ TC-P1-015（3d 待回归） | 前端构建 + 浏览器 smoke + 回归验收 | `volta run --node 22.17.1 npm run build`（frontend） | Chrome / Edge：栏显隐、首页默认落地、documents 减框、空态引导/返回、900px 不破版、文档 / 搜索 / 问答 / 术语主流程 | 不新增 API / 后端能力；不引 router / 组件库；slice 3d 编码后补 TC-P1-015 导入入口形态回归 |
 
 > 资源 / 环境验证：Sprint-8 起 Docker / pgvector / Embedding **已 Go**（RG-001/002 Go，见 05 §5.1；TE-C-003 闭合）；OCR / 真实 PDF 解析仍 No-Go（RG-003，后续阶段，不在 P1 必过范围）。
 
@@ -535,6 +536,7 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 | Phase2A·REQ-012 Task B（前端） | 2026-07-17 | 012 | 标签前端：`api/tags.ts` + `useTags` + `TagsFeature` 独立标签视图 + 文档详情打标签 / 移除 + 标签下文档筛选入口 | `d07688b` | `npm run build` 通过；浏览器 smoke 通过 | 最小版仅单标签筛选；归档标签不破坏历史关联；批量打标签 / AI 建议留后续 | §5（TC-P2-TAG-001 通过） |
 | Phase2A·REQ-025 Task A（后端） | 2026-07-18 | 025 | 快速录入后端：迁移 009 `lumen_quick_entries` + entities/ORM + Demo/Pg repository（create/get/list/update + _to_quick_entry）+ `service/quick_entry`（capture 三 mode：draft/create_document/append_document + discard）+ `api/quick_entry`（API-017 POST capture + DELETE discard）+ `main.py` 注册 | `f771e02` | `test_quick_entry` 17/17 + service 回归 53 + 迁移 009 PG 建表/PgRepository smoke + test_api_routes 15 passed | 最小版不暴露 list endpoint；draft 默认 owner 私有；`source` 字段 07 草案未列，本次 Task C 回写补 | §5（TC-P2-QUICK-001 后端） |
 | Phase2A·REQ-025 Task B（前端） | 2026-07-19 | 025 | 快速录入前端：`api/quickEntry.ts`（capture/discard + 类型）+ `api.ts` barrel + `app/useQuickEntry.ts`（表单 state + handler）+ `features/QuickEntryFeature.tsx`（顶部胶囊 + 侧滑抽屉：标题/来源/摘要/tag_ids/mode + 结果区丢弃/打开）+ `App.tsx` 集成 + `panels.css` | `bad8fe5` | `npm run build` 通过；API smoke（draft/create/append + discard + 4220）通过；浏览器 smoke 通过 | discard 最小版（后端无 list，会话内保留最近一次草稿）；App.tsx +41 胶水，整体拆分留 APP-SIZE-C-011 | §5（TC-P2-QUICK-001 通过） |
+| Sprint-21 slice 3a/3c 回归 | 2026-08-01 | 011 | Doc-First UX 首批：栏显隐 / 默认收起 / 快捷键唤出、首页默认落地、主区少容器视觉收口、documents 空态引导与返回能力；本地 demo 启动脚本补 Windows `Path`/`PATH` 兼容修复作为 smoke 支撑 | `216fcc3`、`e0b8db5`、`bf0c693`、PR #97（远端未复核）；脚本修复待提交 | `volta run --node 22.17.1 npm run build` 已通过；用户本地 Chrome/Edge smoke + TC-P1-014 回归通过（documents 减框、空态引导/返回、900px 无破版） | slice 3d 导入弹窗化待编码；demo 脚本修复是否纳入 PR 待提交确认；`Path`/`PATH` 根因已另起模板回流提案 | §2 / §5 / §5.1 |
 
 > Sprint-8 后：pgvector / Embedding / LLM 已接入（RG-001/002/004 Go），基础 Web / ORM 栈为 Go（RG-005）。Phase1 全量验收结论为 Conditional Go（Demo closure）；仍移出 P1：真实 PDF 解析、图片 OCR（REQ-010，RG-003 No-Go，后续阶段）。Sprint-9/10/12/13 为已完成 Demo 之上的前端体验与可用性收口；Phase1.5A 已完成批量入库与导出备份。Phase2A 已完成 REQ-026 / REQ-012 / REQ-025 三个 vertical slice；Sprint-11 仅保留为 P2 UI / WSG 实现前门禁草案，Phase2B 启动前需重新确认范围、进入 / 退出标准与验证包。
 
