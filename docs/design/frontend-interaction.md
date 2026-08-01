@@ -505,7 +505,7 @@ sequenceDiagram
 
 #### 9.5.6 进入实现条件
 - 候选基线，**不授权编码**。
-- **门禁口径（DF-C-001，2026-07-31 已确认）：Phase2B 每个 UI slice 前重跑 Sprint-11 UI/WSG 门禁**；Step 3 拆为 3a（栏隐藏 / 默认收起 / 三路唤出 / 记忆）与 3b（单列阅读 / 编辑切换）两 slice，各自门禁重确认 + Chrome/Edge smoke + TC-P1-014 回归。
+- **门禁口径（DF-C-001，2026-07-31 已确认）：Phase2B 每个 UI slice 前重跑 Sprint-11 UI/WSG 门禁**；Step 3 初始拆为 3a（栏隐藏 / 默认收起 / 三路唤出 / 记忆）与 3b（单列阅读 / 编辑切换）两 slice。**执行中追加（用户 2026-08-01 决策）：3c（默认落地欢迎页 + 主区少容器视觉收口 + documents 空态引导）与 3d（导入入口弹窗化，见 §9.5.8）**；每个 slice 各自门禁重确认 + Chrome/Edge smoke + TC-P1-014 回归（3d 另加 TC-P1-015 导入入口形态回归）。
 - 窄范围 UX 重构（栏可隐藏 + 默认收起 + 唤出 + 单列编辑切换）启动前：需 Sprint-11 UI/WSG 门禁按此基线重确认 + Chrome/Edge smoke 回归（触及 P1B REQ-011 已验收默认行为，需 TC-P1-014 回归）。
 - 不新增 REQ/API/DB/TC；不动 P1B 三层骨架（在 Context Pane / Inspector 上加可隐藏能力，不重构）。
 
@@ -525,6 +525,43 @@ sequenceDiagram
 | F-impl-8 | 视觉收口主区：workspace-main 透明底 + editor-panel/inspector-pane/task/term 去卡片框（border+radius+白底）融入主区 + markdown-preview 去框 + 正文限宽；保留 toolbar/inspector-header 分隔线 + textarea 边界。ContextPane/ViewNav/TopBar 未动 | §9.5.1 少容器清爽 | 范围调整 | 用户 Q2「主区为主」+ smoke #3 深化（去两大卡片框）；全局收口留后续 | 待 smoke |
 | F-impl-9 | pane-left-collapsed 显式锁定 grid 列（view-nav/context-pane/workspace-main = 1/2/3） | §9.5 栏显隐（3a 原实现 auto-placement） | bug 修复 | 3a smoke（slice 3c 期间）发现：context-pane 用 display:none 收起移出 grid，auto-placement 把 workspace-main 错填到 0 宽列 2 → 中间区整体消失；已显式 grid-column 修复（layout.css） | 已修复（2026-08-01，build 绿，待 smoke 复核） |
 | F-impl-10 | documents 视图无选中 + 非新建时渲染引导卡；toolbar 加「返回」按钮（新建态/文档页退回引导卡）；reloadDocuments 不再自动选首篇（刷新/登录回引导卡，保留已选） | §9.5.2/§9.5.3 + smoke 反馈 | 范围扩展 | 用户 2026-08-01 决策 A 方案 + 返回能力；避免「主体空」+ 编辑态/文档页回不去 | 待 smoke |
+| F-impl-11 | ContextPane 常驻导入区（import-panel section）抽为按钮触发的居中弹窗（ImportFeature），DocumentsFeature toolbar 加「导入」触发；复用 useImport + api/imports，不改导入契约 | §9.5.8（frontend-workspace-redesign §L90 方向建议） | 范围扩展 | 用户 2026-08-01 决策：modal + toolbar 触发；ContextPane 减负贴合 §9.5.1 少容器；触及 REQ-037/TC-P1-015 已验收入口形态，需回归 | 设计中 / 待编码 |
+
+#### 9.5.8 导入入口弹窗化（Doc-First slice 3d，2026-08-01 设计中）
+
+> 状态：**设计中 / 待编码**（用户 2026-08-01 决策容器形态与触发位置；编码待 slice 3a/3c smoke 闭环后启动）。追溯：REQ-037（Phase1.5A `[P1]`）→ Sprint-16 已实现 → 本 slice 改入口形态 → task-025 → TC-P1-015 回归。
+
+**动机**：ContextPane 当前常驻导入区（`<section className="import-panel context-footer">`：drag/drop + 文件夹选择 + 权限 + 文件列表 + 结果摘要/逐条）使左栏承担「导航 + 文档上下文 + 导入入口」三种角色（`frontend-workspace-redesign` §L28/§L90），与 §9.5.1 少容器清爽冲突；导入是低频操作，常驻抢屏。方向依据：`frontend-workspace-redesign:90`「导入入口不再常驻全局侧栏，建议放文档视图 toolbar 的『导入』次级按钮」。
+
+**交互（用户 2026-08-01 确认）**：
+1. 容器 = **居中弹窗 modal + 半透明遮罩**（遮罩罩住主区，导入聚焦）；放弃右侧抽屉方案。
+2. 触发 = **DocumentsFeature `workspace-toolbar` 加「导入」次级按钮**（与 返回 / 新建 / 下载 / 删除 同列）；放弃 ContextPane 列表底部 / TopBar 全局方案。
+3. 弹窗内容 = 移植现有 import-panel 表单结构（drop-zone + 文件夹选择 + 权限 + 已选文件列表 + 「批量导入」按钮 + 结果摘要 / 逐条）。
+
+**组件与复用**：
+- 新建 `features/ImportFeature.tsx`（modal 容器 + 表单），承载现有导入表单 JSX。
+- **复用 `app/useImport.ts` hook + `api/imports.ts` `importBatchDocuments`**，不改导入逻辑与 API 契约（API-029 / REQ-037 不动）。
+- `ContextPane.tsx` 移除 import-panel section 及其导入相关 props（`importDraft` / `onImportDraftChange` / `importFiles` / `onImportFilesChange` / `importInputKey` / `lastImportSummary` / `lastImportItems` / `onImport`）→ ContextPane 减负。
+- 导入 state/hook 归属随 props 链调整（App → ImportFeature），`onImported` 跨域回调语义不变。
+
+**状态**：modal open/close（toolbar 按钮触发 open；ESC / 点遮罩 / 完成后关闭，AI 建议见待确认）；importing 复用全局 `isBusy`；result 复用 `lastImportSummary` / `lastImportItems`。
+
+**权限可见性**：导入权限仍由表单 `permission` 字段（team / private / external-read）控制，后端 `service/imports` 权限校验不变；**前端 modal 触发可见性不替代后端权限边界**（§5.3）。
+
+**验收路径**：
+- **TC-P1-015 回归**（批量导入入口形态从常驻改为弹窗，导入能力本身不变）：拖拽 / 文件夹选择 / 权限 / 逐条结果 / 同名跳过 全部在 modal 内可用。
+- **TC-P1-014 回归**（ContextPane 结构变更，确认栏显隐行为不受影响）。
+- DF-C-001 门禁：编码前重跑 Sprint-11 UI/WSG；Chrome/Edge smoke。
+
+**不改（越界检查）**：导入 API 契约（`importBatchDocuments` / API-029）、useImport 逻辑、P1B 三层骨架（导入入口从 section 抽成 modal 是组件抽取，非骨架重构）；不新增 REQ/API/DB/TC；不动后端。
+
+**待确认（§6.1）**：
+
+| ID | 待确认 | AI 建议 | 依据 | 取舍 |
+|---|---|---|---|---|
+| F-impl-11-C1 | 导入成功后是否自动关闭 modal | 自动关闭 + toast 摘要（沿用 lastImportSummary） | 导入是离散动作，完成后回主流程 | 不自动关闭则用户手动关，结果停留可复核 |
+| F-impl-11-C2 | 导入进行中（isBusy）是否禁用关闭 | 禁用 ESC / 遮罩关闭，防中断批量写入 | 批量导入中途关闭状态不明 | 不禁用则依赖后端幂等 |
+| F-impl-11-C3 | 与 slice 3b 前置 F-impl-4（拆 inspector 降 DocumentsFeature 行数）的顺序 | 3d 先于 3b；3d 给 toolbar 加按钮（少量增行），3b 拆 inspector 时一并评估 | DocumentsFeature 已 312 行超 WSG-004 | 若 3d 让行数再增，3b 拆分压力加大 |
 
 ## 10. 实现偏差 / 设计回写
 
