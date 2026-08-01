@@ -55,11 +55,6 @@ export function WorkspaceMain({
 }: WorkspaceMainProps) {
   return (
     <section className="workspace-main workspace">
-      <div className="workspace-action-bar">
-        <button type="button" className="quick-entry-trigger" onClick={onQuickEntryOpen} disabled={isBusy}>
-          ＋ 快速录入
-        </button>
-      </div>
       {activeView === 'home' ? (
         <WelcomeFeature
           isBusy={isBusy}
@@ -93,6 +88,7 @@ export function WorkspaceMain({
           addTagSelection={tags.addTagSelection}
           onAddTagSelectionChange={tags.setAddTagSelection}
           onAddTag={tags.handleAddDocumentTag}
+          onCreateAndTag={tags.handleCreateAndTag}
           onRemoveTag={tags.handleRemoveDocumentTag}
           aiPolish={aiPolish}
           onExpandLeftPane={onExpandLeftPane}

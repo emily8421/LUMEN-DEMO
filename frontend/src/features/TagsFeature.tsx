@@ -36,7 +36,7 @@ export function TagsFeature({
           <input
             value={newTagName}
             onChange={(event) => onNewTagNameChange(event.target.value)}
-            placeholder="新标签名"
+            placeholder="输入标签名，回车或点新建"
           />
           <button type="submit" className="secondary" disabled={isBusy || newTagName.trim().length === 0}>
             新建

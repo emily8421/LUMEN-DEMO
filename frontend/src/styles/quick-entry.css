@@ -1,14 +1,10 @@
-/* REQ-025 快速录入抽屉 + 顶部触发胶囊（从 panels.css 拆出，WSG）。 */
-/* REQ-025 快速录入：workspace-main 顶部胶囊 + 侧滑抽屉（QuickEntryFeature） */
-.workspace-action-bar {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--space-2);
-  border-bottom: 1px solid var(--line-soft);
-  padding: var(--space-2) var(--space-3);
-}
+/* REQ-025 快速录入：顶栏触发 + 侧滑抽屉（QuickEntryFeature）。 */
 
 .quick-entry-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
   border-color: #93c5fd;
   background: var(--blue-soft);
   color: #1d4ed8;
@@ -16,6 +12,18 @@
 
 .quick-entry-trigger:hover:not(:disabled) {
   background: #dbeafe;
+}
+
+.top-quick-entry {
+  height: 32px;
+  padding: 0 10px;
+  white-space: nowrap;
+}
+
+.top-quick-entry > span:first-child {
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .quick-entry-overlay {

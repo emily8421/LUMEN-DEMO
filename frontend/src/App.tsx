@@ -162,6 +162,7 @@ function App() {
         currentSpace={currentSpace}
         onSpaceChange={session.handleSpaceChange}
         onExportSpace={handleExportSpace}
+        onQuickEntryOpen={quickEntry.open}
         leftPaneOpen={paneLayout.leftPaneOpen}
         onToggleLeftPane={paneLayout.toggleLeftPane}
         rightPaneOpen={paneLayout.rightPaneOpen}

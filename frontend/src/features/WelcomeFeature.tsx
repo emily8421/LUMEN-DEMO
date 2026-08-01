@@ -46,6 +46,12 @@ export function WelcomeFeature({ isBusy, onNavigate, onCreateDocument, onOpenQui
           <span className="welcome-card-title">快速录入</span>
           <small>随手记一条索引</small>
         </button>
+
+        <button type="button" className="welcome-card" disabled={isBusy} onClick={() => onNavigate('tags')}>
+          <span className="welcome-card-icon" aria-hidden="true">#</span>
+          <span className="welcome-card-title">标签</span>
+          <small>组织与筛选文档</small>
+        </button>
       </div>
 
       <p className="welcome-hint">从左侧目录选择文档开始阅读，或新建一篇。</p>

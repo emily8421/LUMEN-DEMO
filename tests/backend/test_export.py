@@ -2,6 +2,7 @@ import importlib.util
 import io
 import unittest
 import zipfile
+from urllib.parse import quote
 
 
 def _zip_names(archive: bytes) -> list[str]:
@@ -216,6 +217,40 @@ class ExportApiTest(unittest.TestCase):
         self.assertEqual(response.body, b"# Nova\n\nInitial sprint note.")
         self.assertIn("text/markdown", response.media_type)
         self.assertIn('filename="Nova Sprint Notes.md"', response.headers["content-disposition"])
+
+    def test_export_document_api_supports_unicode_filename(self) -> None:
+        from backend.api import export as export_api
+        from backend.api.auth import TOKEN_SIGNING_KEY
+        from backend.model.entities import DocumentPermission
+        from backend.repository.demo_repository import DemoRepository
+        from backend.service.auth import create_demo_token
+
+        repository = DemoRepository()
+        document = repository.create_document(
+            space_id=10,
+            title="中文标题",
+            content_md="中文正文",
+            owner_id=1,
+            permission=DocumentPermission.TEAM,
+        )
+
+        original_repository = export_api.repository
+        export_api.repository = repository
+        try:
+            token = create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
+            response = export_api.export_document_endpoint(
+                document_id=document.id,
+                format="md",
+                version_no=None,
+                authorization=f"Bearer {token}",
+            )
+        finally:
+            export_api.repository = original_repository
+
+        disposition = response.headers["content-disposition"]
+        self.assertEqual(response.body, "中文正文".encode("utf-8"))
+        self.assertIn('filename="____.md"', disposition)
+        self.assertIn(f"filename*=UTF-8''{quote('中文标题.md', safe='')}", disposition)
 
     def test_export_document_api_rejects_invisible_document(self) -> None:
         from fastapi import HTTPException

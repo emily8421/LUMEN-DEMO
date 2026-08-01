@@ -12,7 +12,7 @@
 | 交付物形态 | Demo / 个人可用 Alpha / 个人知识组织 |
 | 输入基线 | `docs/03-prd.md` §3、`docs/04-architecture.md`、`docs/05-tech-spec.md`、`docs/09-verification.md` |
 | 当前状态 | Phase1 Demo 已完成并已记录全量验收（Conditional Go）；Phase1.5A 已完成批量 / 文件夹导入（REQ-037）与 `.md` / ZIP 导出备份（REQ-038）；Phase2A 已完成 REQ-026 内链 / 反链、REQ-012 标签、REQ-025 快速录入三个 vertical slice 并通过 `09` 对应用例。Phase1.5B（PDF / Word-PDF / zhparser）仍待后续 RG；**Phase2B（团队 MVP）范围已确认（2026-07-30）：REQ-014 首批核心已完成 v1.1.0（TC-P2-AI-001 通过），REQ-013/024 时间轴为第二 slice 待启动；Sprint-21 Doc-First UX slice 3a/3c/3d 已完成本地 build + 用户 smoke + TC-P1-014/015 回归（2026-08-01 用户确认）**。 |
-| 最后更新 | 2026-08-01（Sprint-21 slice 3d 导入弹窗化完成本地 build + 用户 smoke + TC-P1-015/014 回归；保留 2026-07-20 Phase2A closure 完成包） |
+| 最后更新 | 2026-08-01（Sprint-21 slice 3b 单列阅读/编辑切换 + 顶栏 + inspector tabs 完成，含 smoke 反馈修复 download 中文标题 / quick-entry A / 标签内联新建；slice 3d 导入弹窗化 + TC-P1-015/014 回归；保留 2026-07-20 Phase2A closure 完成包） |
 
 ## Sprint 总览
 
@@ -538,6 +538,7 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 | Phase2A·REQ-025 Task B（前端） | 2026-07-19 | 025 | 快速录入前端：`api/quickEntry.ts`（capture/discard + 类型）+ `api.ts` barrel + `app/useQuickEntry.ts`（表单 state + handler）+ `features/QuickEntryFeature.tsx`（顶部胶囊 + 侧滑抽屉：标题/来源/摘要/tag_ids/mode + 结果区丢弃/打开）+ `App.tsx` 集成 + `panels.css` | `bad8fe5` | `npm run build` 通过；API smoke（draft/create/append + discard + 4220）通过；浏览器 smoke 通过 | discard 最小版（后端无 list，会话内保留最近一次草稿）；App.tsx +41 胶水，整体拆分留 APP-SIZE-C-011 | §5（TC-P2-QUICK-001 通过） |
 | Sprint-21 slice 3a/3c 回归 | 2026-08-01 | 011 | Doc-First UX 首批：栏显隐 / 默认收起 / 快捷键唤出、首页默认落地、主区少容器视觉收口、documents 空态引导与返回能力；本地 demo 启动脚本补 Windows `Path`/`PATH` 兼容修复作为 smoke 支撑 | `216fcc3`、`e0b8db5`、`bf0c693`、PR #97 | `volta run --node 22.17.1 npm run build` 已通过；用户本地 Chrome/Edge smoke + TC-P1-014 回归通过（documents 减框、空态引导/返回、900px 无破版） | slice 3d 导入弹窗化已另行补完成包；`Path`/`PATH` 根因已另起模板回流提案 | §2 / §5 / §5.1 |
 | Sprint-21 slice 3d 导入弹窗化 | 2026-08-01 | 037/011 | 导入入口从 ContextPane 常驻区迁到 DocumentsFeature toolbar「导入」按钮 + 居中 modal；复用 `useImport` / API-029，保留拖拽、多文件 / 文件夹选择、权限、逐条结果与同名跳过；导入成功后自动关闭 modal 并刷新文档列表 | 本地未提交 | `volta run --node 22.17.1 npm run build` 通过（248 modules）；`git diff --check` 通过（仅 CRLF warning）；用户确认 smoke 通过，覆盖 TC-P1-015 导入入口形态回归与 TC-P1-014 栏显隐 / 900px 布局回归 | 未 bump VERSION / CHANGELOG；未提交 / 未推送；3b 单列阅读/编辑另行启动前需先拆 inspector（DocumentsFeature 313 行） | §2 / §5 |
+| Sprint-21 slice 3b 单列阅读/编辑切换 | 2026-08-01 | 011/025/038 | §9.5.4 单列阅读/编辑/并排三态切换；快速录入迁 TopBar + 用户头像；右栏重构 `DocumentInspectorFeature`（版本/链接/标签/AI tabs）。含 smoke 反馈修复：① download 中文标题 `.md` 导出 500（`export.py` ASCII fallback + `filename*` + 前端解析 + `test_export` 14 OK）② quick-entry A（默认 create_document + 移除 draft 入口，后端 draft 契约保留）③ 标签 inspector 内联「新建并打标签」+ 首页标签卡片 + placeholder | 本地未提交 | `volta run --node 22.17.1 npm run build` 通过（252 modules）；用户本地 Chrome smoke 全过（G1–G26） | 未 bump VERSION / CHANGELOG；未提交 / 未推送；真目录（方案2）作候选另行立项 | §2 / §5 / §5.1 |
 
 > Sprint-8 后：pgvector / Embedding / LLM 已接入（RG-001/002/004 Go），基础 Web / ORM 栈为 Go（RG-005）。Phase1 全量验收结论为 Conditional Go（Demo closure）；仍移出 P1：真实 PDF 解析、图片 OCR（REQ-010，RG-003 No-Go，后续阶段）。Sprint-9/10/12/13 为已完成 Demo 之上的前端体验与可用性收口；Phase1.5A 已完成批量入库与导出备份。Phase2A 已完成 REQ-026 / REQ-012 / REQ-025 三个 vertical slice；Sprint-11 仅保留为 P2 UI / WSG 实现前门禁草案，Phase2B 启动前需重新确认范围、进入 / 退出标准与验证包。
 
