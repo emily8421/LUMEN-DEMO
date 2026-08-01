@@ -5,6 +5,7 @@ import './styles/tokens.css';
 import './styles/base.css';
 import './styles/layout.css';
 import './styles/workspace.css';
+import './styles/welcome.css';
 import './styles/panels.css';
 import './styles/markdown.css';
 import './styles/tags.css';

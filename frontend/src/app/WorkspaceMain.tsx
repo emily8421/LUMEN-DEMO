@@ -3,6 +3,8 @@ import { SearchFeature } from '../features/SearchFeature';
 import { QueryFeature } from '../features/QueryFeature';
 import { TermsFeature } from '../features/TermsFeature';
 import { TagsFeature } from '../features/TagsFeature';
+import { WelcomeFeature } from '../features/WelcomeFeature';
+import type { ActiveView } from './WorkspaceViewNav';
 import { useDocuments } from './useDocuments';
 import { useSearch } from './useSearch';
 import { useQuery } from './useQuery';
@@ -22,6 +24,14 @@ interface WorkspaceMainProps {
   tags: ReturnType<typeof useTags>;
   aiPolish: ReturnType<typeof useAiPolish>;
   onQuickEntryOpen: () => void;
+  /** 视图切换（首页卡片，Doc-First §9.5.2，Sprint-21 slice 3c）。 */
+  onNavigate: (view: ActiveView) => void;
+  /** 新建文档（首页卡片，复用 documents.handleCreateDocument）。 */
+  onCreateDocument: () => void;
+  /** 展开左目录（documents 空态引导按钮，Sprint-21 slice 3c）。 */
+  onExpandLeftPane: () => void;
+  /** 返回引导卡（退出新建/取消选中）。 */
+  onExitToEmpty: () => void;
 }
 
 export function WorkspaceMain({
@@ -35,6 +45,10 @@ export function WorkspaceMain({
   tags,
   aiPolish,
   onQuickEntryOpen,
+  onNavigate,
+  onCreateDocument,
+  onExpandLeftPane,
+  onExitToEmpty,
 }: WorkspaceMainProps) {
   return (
     <section className="workspace-main workspace">
@@ -43,6 +57,15 @@ export function WorkspaceMain({
           ＋ 快速录入
         </button>
       </div>
+      {activeView === 'home' ? (
+        <WelcomeFeature
+          isBusy={isBusy}
+          onNavigate={onNavigate}
+          onCreateDocument={onCreateDocument}
+          onOpenQuickEntry={onQuickEntryOpen}
+        />
+      ) : null}
+
       {activeView === 'documents' ? (
         <DocumentsFeature
           isCreating={documents.isCreating}
@@ -68,6 +91,8 @@ export function WorkspaceMain({
           onAddTag={tags.handleAddDocumentTag}
           onRemoveTag={tags.handleRemoveDocumentTag}
           aiPolish={aiPolish}
+          onExpandLeftPane={onExpandLeftPane}
+          onExitToEmpty={onExitToEmpty}
         />
       ) : null}
 

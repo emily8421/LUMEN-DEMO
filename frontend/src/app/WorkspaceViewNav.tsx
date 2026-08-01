@@ -1,6 +1,7 @@
-export type ActiveView = 'documents' | 'search' | 'query' | 'terms' | 'tags';
+export type ActiveView = 'home' | 'documents' | 'search' | 'query' | 'terms' | 'tags';
 
 const workspaceViews: Array<{ id: ActiveView; label: string; description: string }> = [
+  { id: 'home', label: '首页', description: '欢迎 / 快速入口' },
   { id: 'documents', label: '文档', description: '编辑、预览、版本' },
   { id: 'search', label: '搜索', description: '全文 / 语义检索' },
   { id: 'query', label: '问答', description: 'RAG 答案与来源' },

@@ -100,7 +100,7 @@ function App() {
 
   function handleSpaceChanged() {
     documents.setSelectedId(null);
-    workspace.setActiveView('documents');
+    workspace.setActiveView('home');
     search.setSearchResult(null);
     query.setQueryResult(null);
     terms.newTerm();
@@ -215,6 +215,10 @@ function App() {
             tags={tags}
             aiPolish={aiPolish}
             onQuickEntryOpen={quickEntry.open}
+            onNavigate={workspace.setActiveView}
+            onCreateDocument={documents.handleCreateDocument}
+            onExpandLeftPane={() => paneLayout.setLeftPaneOpen(true)}
+            onExitToEmpty={() => { documents.setSelectedId(null); documents.setIsCreating(false); }}
           />
 
           <QuickEntryFeature

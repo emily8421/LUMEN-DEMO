@@ -165,6 +165,12 @@
   display: none;
 }
 
+/* 显式锁定列：context-pane 收起用 display:none 会移出 grid，auto-placement 把
+   workspace-main 错填到 0 宽的列 2 而整体消失（Sprint-21 slice 3a smoke 修复）。 */
+.workspace-layout > .view-nav { grid-column: 1; }
+.workspace-layout > .context-pane { grid-column: 2; }
+.workspace-layout > .workspace-main { grid-column: 3; }
+
 .view-nav,
 .nav-rail {
   display: grid;
