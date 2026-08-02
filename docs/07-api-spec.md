@@ -9,9 +9,9 @@
 |---|---|
 | 保留 / 省略决策 | 保留 |
 | 接口形态 | REST API |
-| 覆盖 REQ / 模块 | Phase1：REQ-001..REQ-011、REQ-036；Phase1.5A：REQ-037/038（API-029/030）；Phase1.5B：REQ-027（API-019）；Phase2A：REQ-012/025/026；Phase2B / 后续 / 愿景接口保留骨架 |
+| 覆盖 REQ / 模块 | Phase1：REQ-001..REQ-011、REQ-036；Phase1.5A：REQ-037/038（API-029/030）；Phase1.5B：REQ-027（API-019）；Phase2A：REQ-012/025/026；Phase2B：REQ-014（API-028）、REQ-013/024（API-033）、REQ-039（API-034..037，第三 slice 候选）；后续 / 愿景接口保留骨架 |
 | 当前状态 | P1 接口契约已用于 Phase1 Demo；Sprint-8 后 P1 主要接口已接 PostgreSQL 表，RAG 已接 pgvector 向量召回 + GLM LLM；task-009 后 API-009 search 已为 substring + ts_vector + pgvector 语义召回的 hybrid search（zhparser 可选）。API-029/030 已随 Phase1.5A 完成；Phase2A 标签、快速录入、内链 / 反链接口已完成。仍降级：API-011 仅 `.md`/`.txt` 已提取文本；API-019 PDF 待 RG-006；Phase2B API 待后续确认 |
-| 最后更新 | 2026-07-30（Phase1.5A / Phase2A 完成后状态回写，保留 Phase1.5B 与 Phase2B API 边界） |
+| 最后更新 | 2026-08-02（folder-tree 设计回填：API-034..037 文件夹树 + API-029 `preserve_structure` 改造，Phase2B 第三 slice 候选 REQ-039；保留 Phase1.5B 与 Phase2B API 边界） |
 
 ## 1. 统一约定
 
@@ -59,6 +59,10 @@
 | API-027 | GET/PUT/DELETE | /api/tags/{id} | 标签详情 / 更新 / 归档 | [P2] | Phase2A-已实现 | — | REQ-012 |
 | API-028 | POST | /api/documents/{id}/polish | AI 润色 / 写作引用 | [P2] | MVP 级已设计 | — | REQ-014 |
 | API-033 | GET | /api/spaces/{id}/timeline | 时间轴视图 / 密度热条 | [P2] | Phase2B·第二 slice·骨架 | — | REQ-013/024 |
+| API-034 | GET | /api/spaces/{id}/folders | 文件夹树查询（嵌套） | [P2] | Phase2B·第三 slice·骨架 | — | REQ-039 |
+| API-035 | POST | /api/spaces/{id}/folders | 新建文件夹 | [P2] | Phase2B·第三 slice·骨架 | — | REQ-039 |
+| API-036 | PATCH/DELETE | /api/spaces/{id}/folders/{folder_id} | 移动 / 改名 / 删除文件夹 | [P2] | Phase2B·第三 slice·骨架 | — | REQ-039 |
+| API-037 | POST | /api/spaces/{id}/folders/reorder | 文件夹排序 | [P2] | Phase2B·第三 slice·骨架 | — | REQ-039 |
 
 ## 3. 请求 / 响应契约（[P1]）
 
@@ -101,6 +105,10 @@
 | API-018 | Phase2A-已实现 | §3.9 | 4001/4003/4004/4220 | source / target 文档均需权限过滤；无权限反链不泄露 | TC-P2-LINK-001 | 已实现（Task A fc2b869 + Task B 6228f3f） |
 | API-028 | Phase2B·后端已实现（MVP 级） | §3.9 | 4001/4003/4004/4220/5030 | 文档可写权限；引用 chunk 必须当前用户可见；数据外发风险已接受（RG-008 Go） | TC-P2-AI-001 | 后端已实现（RG-008 Go，Sprint-19） |
 | API-033 | Phase2B·第二 slice·骨架 | §3.9（待细化） | 4001/4003/4004 | 空间成员；仅返回当前用户可见文档的事件 | TC-P2-TL-001 | 待 `docs/design/timeline.md` 定稿 |
+| API-034 | Phase2B·第三 slice·骨架 | §3.9（待细化） | 4001/4003 | 空间成员；folder 不独立设权限，文档可见性仍按 permission 过滤 | TC-P2-FOLDER-001 | 待 06/07 回填后立项 |
+| API-035 | Phase2B·第三 slice·骨架 | §3.9（待细化） | 4001/4003/4090/4220 | 空间成员；同 parent 重名→4090 | TC-P2-FOLDER-001 | 待立项 |
+| API-036 | Phase2B·第三 slice·骨架 | §3.9（待细化） | 4001/4003/4004/4090/4220 | 空间成员；防环 / 跨空间→4220；删非空→4090 | TC-P2-FOLDER-001 | 待立项 |
+| API-037 | Phase2B·第三 slice·骨架 | §3.9（待细化） | 4001/4003/4220 | 空间成员 | TC-P2-FOLDER-001 | 待立项 |
 
 ### 3.2 请求 / 输入契约（字段级·核心接口）
 
@@ -121,6 +129,7 @@
 | API-029 | files[] | form | file[] | 是 | `.md` / `.txt`；至少 1 个 | `docs/a.md` | REQ-037 |
 | API-029 | relative_paths[] | form | string[] | 否 | 与 files 顺序对齐；用于标题前缀 | `docs/team/readme.md` | REQ-037 |
 | API-029 | conflict_policy | form | enum | 否 | `skip`（默认）；不支持静默覆盖 | `skip` | REQ-037 |
+| API-029 | preserve_structure | form | bool | 否 | 默认 `true`；Phase2B 扩展（FT-C-008）：保留真实目录结构建/复用 folder；`false` 退回标题前缀向后兼容 | `true` | REQ-037/039 |
 | API-030 | id | path | string | 是（单文档） | 当前空间可见文档 | `123` | REQ-038 |
 | API-030 | format | query | enum | 否 | `md`；P1.5A 不支持 PDF | `md` | REQ-038 |
 | API-030 | include_versions | query | bool | 否 | 默认 false | `false` | REQ-038 |
@@ -148,6 +157,7 @@
 | API-029 | items[].relative_path | string | 否 | 上传相对路径 / 文件名 | 低 | 不含本机绝对路径 |
 | API-029 | items[].status | enum | 是 | done / failed / skipped | 低 | — |
 | API-029 | items[].parsed_doc_id | string | done 时 | lumen_imports.parsed_doc_id | 低 | — |
+| API-029 | items[].folder_id | string | 否 | lumen_documents.folder_id（preserve_structure=true 时回填） | 低 | — |
 | API-030 | content | file/blob | 是（单文档） | lumen_documents / versions | 中 | 仅当前用户可见文档 |
 | API-030 | zip | file/blob | 是（空间） | 当前用户可见 documents | 中 | ZIP 不含不可见文档 |
 | API-012 | term/definition/aliases | string/string[] | 是 | lumen_terms | 中 | definition 会注入 RAG（目标发往 LLM） |
@@ -246,7 +256,7 @@ sequenceDiagram
 
 | API-ID | 请求字段 | 响应字段 | 权限 / 降级 | 关联 DB | 备注 |
 |---|---|---|---|---|---|
-| API-029 `POST /api/import/batch` | multipart：`files[]`、`relative_paths[]?`、`conflict_policy=skip` | `{batch_id,total,success_count,failed_count,skipped_count,items[{filename,relative_path,title,status,import_id?,parsed_doc_id?,error?}]}` | 需当前空间成员；仅支持 `.md` / `.txt`；逐文件处理，部分成功不回滚；同名默认 skipped | `lumen_imports`、`lumen_documents`、`lumen_chunks` | Phase1.5A-已实现；不建真实目录表，relative_path 仅用于标题前缀 / import metadata |
+| API-029 `POST /api/import/batch` | multipart：`files[]`、`relative_paths[]?`、`conflict_policy=skip`、`preserve_structure?=true`（Phase2B 扩展 FT-C-008） | `{batch_id,total,success_count,failed_count,skipped_count,items[{filename,relative_path,title,folder_id?,status,import_id?,parsed_doc_id?,error?}]}` | 需当前空间成员；仅支持 `.md` / `.txt`；逐文件处理，部分成功不回滚；同名默认 skipped | `lumen_imports`、`lumen_documents`、`lumen_chunks`、`lumen_folders`（preserve_structure=true 时） | Phase1.5A-已实现；**Phase2B 扩展（folder-tree，草案）**：`preserve_structure=true` 按 `relative_paths` 建/复用 `lumen_folders`（幂等）并回填 `folder_id`；`=false` 保留标题前缀向后兼容；推翻 ingestion ING-C-001「不建 folder 表」 |
 | API-030 `GET /api/documents/{id}/export` | `format=md`、`version_no?` | file/blob：`text/markdown`，文件名由文档标题安全化 | 需可读文档；不可见返回 4004；P1.5A 不支持 PDF | `lumen_documents`、`lumen_document_versions` | Phase1.5A-已实现；单文档 `.md` 下载，不写 `lumen_doc_exports` |
 | API-030 `GET /api/export/space` | `format=zip`、`include_versions?=false` | file/blob：ZIP，内含当前用户可见文档 `.md` | 仅打包当前空间且当前用户可见文档；不可见文档不进入 ZIP | `lumen_documents`、`lumen_document_versions` | Phase1.5A-已实现；使用 Python `zipfile`，默认流式 / 临时产物，不生成长期公开链接 |
 | API-019 `POST /api/export-pdf` | `document_id`、`version_no?`、`options?{include_sources,theme}` | `{export_id,status,artifact_path?}` | 需可读 / 可导出文档；导出产物继承文档权限，不生成公开长期链接 | `lumen_doc_exports`、`lumen_documents`、`lumen_document_versions` | Phase1.5B；受 RG-006；PDF 库未验证前不得实现 |
@@ -263,13 +273,18 @@ sequenceDiagram
 | API-018 `POST /api/doc-links` | `source_document_id`、`target_document_id?`、`target_title?`、`link_text`、`link_type=manual`（wikilink 由文档正文解析，不接受手动 POST） | `{id,status}` | 需可编辑 source；target 缺失时 `unresolved` | `lumen_doc_links` | 后续可由 Markdown 解析器批量维护 |
 | API-028 `POST /api/documents/{id}/polish` | `mode=polish / citation`、`selection_md?`、`instruction?`、`use_sources?=true` | `{draft_id,output_md,sources[{chunk_id,document_id,title,snippet}],status}` | 需文档可写；sources 必须来自当前用户可见 chunk；LLM 不可用返回 5030 或 Mock 降级 | `lumen_ai_drafts`、`lumen_chunks`、`lumen_documents` | **vertical slice**：`polish` 同步返回；`citation` 复用 RAG 检索 + LLM（首版同步，超时降 5030；若实测延迟过高再补异步 job 状态机）；数据外发风险已接受（RG-008）；不存 API key；草稿只存 hash + 摘要 |
 | API-033 `GET /api/spaces/{id}/timeline` | `from?`、`to?`、`tag_ids?`、`density?=true` | `{items[{date,document_id,title,event_type,permission}],density?[]}` | 空间成员；仅返回当前用户可见文档事件；大集合降级（见 `docs/design/timeline.md`） | `lumen_documents`、`lumen_tags`、`lumen_doc_links`（或 `lumen_doc_timeline_events`） | Phase2B 第二 slice；数据来源与布局待 timeline 设计定稿 |
+| API-034 `GET /api/spaces/{id}/folders` | `parent_id?`（空=整树） | `items[{id,name,parent_id,order,children?}]` | 空间成员；folder 不独立设权限（FT-C-003），文档可见性仍按 `permission` 过滤 | `lumen_folders` | Phase2B 第三 slice·草案（folder-tree）；文档归属 folder 不影响检索 |
+| API-035 `POST /api/spaces/{id}/folders` | `parent_id?`（空=根）、`name` | `{id,name,parent_id,order}` | 空间成员；同 parent 重名→4090；order 取末尾 | `lumen_folders` | Phase2B 第三 slice·草案；`UNIQUE(space_id,parent_id,name)` |
+| API-036 `PATCH /api/spaces/{id}/folders/{folder_id}` | `target_parent_id?`（移动）、`name?`（改名） | `{id,name,parent_id,order}` | 空间成员；防环（target 非源后代）→4220；跨空间→4220；改名重名→4090 | `lumen_folders` | Phase2B 第三 slice·草案；文档归属 folder 经文档 CRUD `folder_id` 字段（API-005/006 扩展，草案） |
+| API-036 `DELETE /api/spaces/{id}/folders/{folder_id}` | — | `{deleted:true}` | 空间成员；**删非空 folder→4090**（FT-C-010：必须先移空，防连带删文档） | `lumen_folders` | Phase2B 第三 slice·草案；只 `active` 无 `archived` |
+| API-037 `POST /api/spaces/{id}/folders/reorder` | `items[{folder_id,order}]` | `{updated:N}` | 空间成员 | `lumen_folders` | Phase2B 第三 slice·草案；文档首版不加 `order`（FT-C-009），folder 内按 `title` 默认排序 |
 
 **Phase1.5 / Phase2 错误码补充**：
 
 | code | 场景 | 适用 API |
 |---|---|---|
-| 4090 | 标签重名、快速录入重复转换、PDF 导出任务重复提交、批量导入同名且策略不允许跳过等业务冲突 | API-014/017/019/027/029/031 |
-| 4220 | 字段缺失、非法状态、无效 tag_ids / document_id / mode、文件类型不支持、relative_paths 与 files 数量不匹配 | 全部 Phase1.5 / Phase2 API |
+| 4090 | 标签重名、快速录入重复转换、PDF 导出任务重复提交、批量导入同名且策略不允许跳过、folder 重名 / 删非空 folder 等业务冲突 | API-014/017/019/027/029/031/035/036 |
+| 4220 | 字段缺失、非法状态、无效 tag_ids / document_id / mode、文件类型不支持、relative_paths 与 files 数量不匹配、folder 防环 / 跨空间移动 | 全部 Phase1.5 / Phase2 API |
 | 5030 | LLM / PDF 导出 / 外部依赖不可用 | API-019/028 |
 
 ### [Phase1.5] / [P2] / [愿景] 接口（骨架·待该阶段细化）
@@ -281,6 +296,7 @@ sequenceDiagram
 - `/api/doc-links`：Phase2A 已实现（Task A `fc2b869` + Task B `6228f3f`）。GET 返回 `data` 直接数组（出链 target 不可见→`status=no_access` 且不泄露标题；反链来源不可见过滤）；POST 仅 `link_type=manual`（wikilink 由文档保存时正文解析，拒手动 POST）。
 - `/api/documents/{id}/polish`（API-028）：Phase2B 首批核心，**数据外发风险已接受（RG-008 Go）**，vertical slice 已定（polish 同步 / citation 首版同步），后端已实现（Sprint-19）；前端 half 待实现。
 - `/api/spaces/{id}/timeline`（API-033）：Phase2B 第二 slice，待 `docs/design/timeline.md` 定稿数据来源与布局后再实现。
+- `/api/spaces/{id}/folders`（API-034..037）：Phase2B 第三 slice 候选（folder-tree，REQ-039），文件夹树查询 / 新建 / 移动·改名·删除 / 排序；folder 不独立设权限（FT-C-003），删非空 folder→4090（FT-C-010）；导入保留结构扩展 API-029 `preserve_structure`；契约草案见 §3.9，待 `docs/design/folder-tree.md` FT-C-* 确认 + 立项编码。
 - `/api/spaces/push`：跨空间推送不进 Phase2B 首批，请求 / 响应待后续细化。
 - `/api/briefs/{token}`：简报隔离与有效期待愿景验证（REQ-022）
 
@@ -298,7 +314,7 @@ sequenceDiagram
 | REQ-009 / 010 | `POST /api/import` | Word / PDF / 图片导入与解析任务 |
 | REQ-011 | 全部 P1 接口 | 桌面端通过浏览器覆盖全部 P1 功能 |
 | REQ-036 | `GET/POST /api/terms`、`GET/PUT/DELETE /api/terms/{id}` | 术语列表、创建、更新、删除 |
-| REQ-037 | `POST /api/import/batch` | Phase1.5A 批量 / 文件夹 `.md` / `.txt` 导入，逐条结果、同名跳过 |
+| REQ-037 | `POST /api/import/batch` | Phase1.5A 批量 / 文件夹 `.md` / `.txt` 导入，逐条结果、同名跳过（Phase2B folder-tree 扩展 `preserve_structure` 建 `lumen_folders`，见 REQ-039 / API-029） |
 | REQ-038 | `GET /api/documents/{id}/export`、`GET /api/export/space` | Phase1.5A 单文档 `.md` 下载与空间 ZIP 导出备份，权限过滤 |
 | REQ-027 | `POST /api/export-pdf` | Phase1.5B 单文档导出 PDF，受 RG-006 与导出库验证约束 |
 | REQ-012 | `GET/POST /api/tags`、`GET/PUT/DELETE /api/tags/{id}`、`GET/POST/DELETE /api/documents/{id}/tags`、`GET /api/tags/{id}/documents` | Phase2A 标签视图（扁平标签 + 独立视图 + 单标签筛选 + 文档详情打标签）已实现 |
@@ -306,6 +322,7 @@ sequenceDiagram
 | REQ-026 | `GET/POST /api/doc-links` | Phase2A 内部链接与反向链接索引，需空间和文档权限过滤 |
 | REQ-014 | `POST /api/documents/{id}/polish` | Phase2B 首批核心 AI 润色 / 写作引用，复用 RAG 来源与 LLM adapter，需权限过滤和降级；数据外发风险已接受（RG-008） |
 | REQ-013 / 024 | `GET /api/spaces/{id}/timeline`（API-033） | Phase2B 首批·第二 slice 时间轴 / 密度热条，待 `docs/design/timeline.md` 定稿契约 |
+| REQ-039 | `GET/POST /api/spaces/{id}/folders`、`PATCH/DELETE /api/spaces/{id}/folders/{folder_id}`、`POST /api/spaces/{id}/folders/reorder`（API-034..037） | Phase2B 第三 slice 候选（folder-tree）文档目录树：嵌套文件夹 CRUD / 移动 / 排序 + 导入保留结构（扩展 REQ-037 / API-029）；契约草案见 §3.9，待立项编码 |
 | REQ-015 / 016 / 017 | 后续 Phase 接口骨架 | 推送 / 协作 / 移动端不进 Phase2B 首批 |
 | REQ-018..023 / 028..035 | 愿景接口骨架 | 技术验证通过后细化契约 |
 
@@ -336,6 +353,10 @@ sequenceDiagram
 | API-017 | quick_entry.capture_quick_entry / discard_quick_entry | lumen_quick_entries, lumen_documents, lumen_tag_links | owner 私有 + 转文档后继承权限 | 4001/4003/4004/4220 | TC-P2-QUICK-001 | Phase2A-已实现 |
 | API-018 | doc_links.list_links / upsert_link | lumen_doc_links, lumen_documents | source / target 双向权限过滤 | 4001/4003/4004/4220 | TC-P2-LINK-001 | Phase2A-已实现 |
 | API-028 | writing.polish_document | lumen_ai_drafts, lumen_chunks, lumen_documents | 文档可写 + 来源 chunk 可见 | 4001/4003/4004/4220/5030 | TC-P2-AI-001 | Phase2B-契约草案 |
+| API-034 | folder.list_folders | lumen_folders | 空间成员；folder 不独立设权限，文档可见性按 permission | 4001/4003 | TC-P2-FOLDER-001 | Phase2B-第三 slice·草案 |
+| API-035 | folder.create_folder | lumen_folders | 空间成员；同 parent 重名→4090 | 4001/4003/4090/4220 | TC-P2-FOLDER-001 | Phase2B-第三 slice·草案 |
+| API-036 | folder.move_folder / rename_folder / delete_folder | lumen_folders | 空间成员；防环 / 跨空间→4220；删非空→4090 | 4001/4003/4004/4090/4220 | TC-P2-FOLDER-001 | Phase2B-第三 slice·草案 |
+| API-037 | folder.reorder_folders | lumen_folders | 空间成员 | 4001/4003/4220 | TC-P2-FOLDER-001 | Phase2B-第三 slice·草案 |
 
 **权限场景矩阵**（权限隔离由 DB 过滤 + service/查询层执行，不依赖前端）：
 
@@ -351,9 +372,10 @@ sequenceDiagram
 | Phase2A 标签统计 | `tag_links -> documents` join 后继续套用文档权限 | 仅统计可见文档 | 不泄露隐藏文档数量 | TC-P2-TAG-001 |
 | Phase2A 反向链接 | target 文档不可见时不返回标题 / 摘要 | 查询层返回 `no_access` 或过滤 | 4003 / 空结果 | TC-P2-LINK-001 |
 | Phase2B AI 润色引用 | sources 仅来自当前用户可见 chunks | LLM 调用前过滤上下文 | 5030 可降级 Mock | TC-P2-AI-001 |
+| Phase2B 文档目录树 | folder 查询过滤 `space_id`；folder 内文档仍按 `permission` 过滤 | folder 不独立设权限（FT-C-003） | 4003 / 不泄露越权文档 | TC-P2-FOLDER-001 |
 
 ## 6. 待人工确认项
 
 - Phase1.5A API-029 / API-030 已实现并通过 TC-P1-015/016；若后续扩展真实目录表、长期导出产物或新依赖，需同步 `docs/design/ingestion.md`、导出详细设计与 `docs/09-verification.md` TC-P1-015/016。
 - `API-019` PDF 导出属于 Phase1.5B，受 `docs/05-tech-spec.md` RG-006 与 tech-env 草案约束；导出库未安装 / 未验证前不得进入实现。
-- Phase2A 标签 / 快速录入 / 内链 API 已实现；**Phase2B API-028 后端已实现**（vertical slice 已定：polish 同步 / citation 首版同步；数据外发风险已接受 RG-008 Go）；**API-033 时间轴为第二 slice，待 `docs/design/timeline.md` 定稿**。
+- Phase2A 标签 / 快速录入 / 内链 API 已实现；**Phase2B API-028 后端已实现**（vertical slice 已定：polish 同步 / citation 首版同步；数据外发风险已接受 RG-008 Go）；**API-033 时间轴为第二 slice，待 `docs/design/timeline.md` 定稿**；**API-034..037 文档目录树为 Phase2B 第三 slice 候选（folder-tree，REQ-039），契约草案已回填，待 `docs/design/folder-tree.md` FT-C-* 确认 + 立项编码；导入保留结构扩展 API-029 `preserve_structure`（推翻 ingestion ING-C-001）；REQ-039 的 U-ID / SC 来源待立项编码前补（open item）**。

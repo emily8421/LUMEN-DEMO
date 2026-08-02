@@ -11,8 +11,8 @@
 | 输入来源 | `docs/00-scenario.md`、`docs/01-user-requirements.md` |
 | 覆盖 U-ID | U-01..U-43（按阶段标签区分 P1 / P1.5 / P2 / 愿景） |
 | 交付物形态 | Phase1 = **Demo**；Phase1.5A = **个人可用 Alpha**；Phase2A = **个人知识组织**；Phase1.5B / Phase2B 为后续候选（与 `docs/03-prd.md §3` 一致） |
-| 当前状态 | 已确认（P1 可验证；Phase1.5A REQ-037/038 已实现并通过 TC-P1-015/016；Phase2A REQ-012/025/026 已实现并通过 TC-P2-TAG/QUICK/LINK-001；REQ-009/010 按 Phase1 Demo 降级口径验收；Phase1.5B / Phase2B / 愿景待对应阶段细化） |
-| 最后更新 | 2026-07-30（同步后文档体系审计回写：校准 Phase1.5A / Phase2A 状态与验证入口） |
+| 当前状态 | 已确认（P1 可验证；Phase1.5A REQ-037/038 已实现并通过 TC-P1-015/016；Phase2A REQ-012/025/026 已实现并通过 TC-P2-TAG/QUICK/LINK-001；REQ-009/010 按 Phase1 Demo 降级口径验收；**Phase2B 第三 slice 候选 REQ-039 文档目录树已回填设计骨架（folder-tree），待 FT-C-* 确认 + 立项编码**；Phase1.5B / Phase2B / 愿景待对应阶段细化） |
+| 最后更新 | 2026-08-02（folder-tree 设计回填：新增 REQ-039 文档目录树 + REQ-037 扩展 `preserve_structure`；REQ-039 来源 U-ID / SC 留 open item） |
 
 ## 0.1 非功能需求 / 约束 / 异常
 
@@ -55,7 +55,7 @@
 | EX-007 | REQ-038 | 空间导出 ZIP 时包含不可见文档 | 不可见文档不得进入 ZIP，导出结果只包含当前用户可见文档 | TC-P1-016 |
 | EX-008 | REQ-027 | PDF 导出库未安装、中文字体缺失或导出任务失败 | 返回依赖不可用 / 导出失败状态，不生成坏文件；未过 RG-006 前不得实现 | TC-P1-017、RG-006 |
 
-## 1. 功能需求（REQ 主表，覆盖 REQ-001..038）
+## 1. 功能需求（REQ 主表，覆盖 REQ-001..039）
 
 | REQ-ID | 系统需求 | 来源 U-ID | 可验证口径 | 初步阶段 | 状态 |
 |---|---|---|---|---|---|
@@ -71,7 +71,7 @@
 | REQ-010 | 以 OCR 预提取文本或人工已提取文本替代真实图片 / 白板 OCR；真实 OCR 留后续阶段 | U-10 | 已提取文本导入后能搜到对应文字；真实 OCR 引擎、图片上传识别不作为 Phase1 必过 | [P1] | 后续阶段（P1 降级移出必过） |
 | REQ-011 | Chrome / Edge 桌面端可用全部 P1 功能 | U-11 | 桌面浏览器完成上述全部操作无阻断 | [P1] | P1-条件通过（Demo） |
 | REQ-036 | 每个空间可维护术语条目，阅读 / 编辑时识别已定义术语，问答时优先采用当前空间术语定义并引用术语来源 | U-42 | 新建「触发延迟」术语后问答优先使用该空间定义，同名全局术语不覆盖空间术语 | [P1] | P1-条件通过（Demo） |
-| REQ-037 | 批量 / 文件夹导入（`.md`/`.txt`）：drop zone + 多文件 + 文件夹拖拽（`webkitdirectory`）批量入库；标题用相对路径前缀保留目录感；批量进度 + 同名跳过 | U-09 扩展 | 拖入文件夹后所有 `.md`/`.txt` 入库可搜可问答，标题保留路径前缀 | [P1] | P1.5A-已实现（TC-P1-015 通过） |
+| REQ-037 | 批量 / 文件夹导入（`.md`/`.txt`）：drop zone + 多文件 + 文件夹拖拽（`webkitdirectory`）批量入库；标题用相对路径前缀保留目录感；批量进度 + 同名跳过 | U-09 扩展 | 拖入文件夹后所有 `.md`/`.txt` 入库可搜可问答，标题保留路径前缀（**Phase2B folder-tree 扩展**：`preserve_structure=true` 保留真实目录结构建 folder，见 REQ-039） | [P1] | P1.5A-已实现（TC-P1-015 通过） |
 | REQ-038 | 文档 / 空间导出：单文档下载 `.md`；空间打包 ZIP 导出所有可见文档 `.md`（权限过滤） | U-43 | 文档详情可下载 `.md`；空间导出 ZIP 含可见文档 | [P1] | P1.5A-已实现（TC-P1-016 通过） |
 | REQ-012 | 标签视图：扁平标签（空间隔离；name + color + description + active/archived）跨目录聚合同标签文档；文档详情打标签 / 移除；标签视图列标签 + 可见文档数，点标签看该标签下可见文档；单标签筛选；document_count 只统计当前用户可见文档 | U-13 | Phase2A 最小版：扁平标签、独立标签视图、单标签筛选、文档详情面板打标签；不做层级 / 组合筛选 / AI 自动打标签（link_source 预留 manual 外的值但不实现） | [P2] | P2-已实现（TC-P2-TAG-001 通过） |
 | REQ-013 | 时间轴视图 / 关联图视图 | U-14 / U-15 | 待该阶段细化（数据来源、布局算法） | [P2] | 骨架 |
@@ -82,6 +82,7 @@
 | REQ-024 | 时间轴密度热条 | U-30 | 待该阶段细化（密度计算、色阶映射） *(v18)* | [P2] | 骨架 |
 | REQ-025 | 快速录入索引条目 | U-31 | 30s 录标题/来源/摘要；mode=draft 保留私有草稿、create_document 转新私有文档、append_document 追加到已有文档；可关联 tag_ids；draft 可丢弃 *(v18)* | [P2] | P2-已实现（TC-P2-QUICK-001 通过） |
 | REQ-026 | 内部链接 + 反向链接 | U-32 | Phase2A 最小版：`[[文件名]]` 解析、resolved / unresolved / no_access 状态、出链 / 反链查询与权限过滤 | [P2] | P2-已实现（TC-P2-LINK-001 通过） |
+| REQ-039 | 文档目录树：空间内嵌套文件夹（CRUD / 移动 / 排序）组织文档；导入保留真实目录结构（扩展 REQ-037）；folder 不独立设权限（继承空间，文档可见性仍看 permission） | 待补 U-ID（open item） | Phase2B 第三 slice 候选：建 / 移动 / 排序文件夹后文档归属正确；导入文件夹后目录结构保留；防环 / 跨空间 / 重名 / 删非空 folder 拒绝 | [P2] | 骨架（folder-tree 设计草案，FT-C-* 待确认） |
 | REQ-027 | 单文档导出 PDF（Markdown → PDF，含中文排版） | U-33 | 选型 weasyprint/reportlab + 中文验证（RG-006）；封面 / 页眉页脚 / 排版 | [P1] | P1.5B-候选·待 RG-006（从 Phase2 提前） |
 | REQ-018 | Obsidian Vault 挂载 | U-21 | 待技术验证（只读索引、账号绑定、不迁移） | [愿景] | 骨架 |
 | REQ-019 | 录音转文字 + 摘要 | U-22 | 待技术验证（转写引擎、摘要质量） | [愿景] | 骨架 |
@@ -141,6 +142,7 @@
 | U-39 | REQ-033 | [愿景] | 假设检验 / 证据地图 | 待验证（骨架） | 高风险 |
 | U-40 | REQ-034 | [愿景] | 信号追踪 | 待验证（骨架） | — |
 | U-41 | REQ-035 | [愿景] | 分析包 A Kit | 待验证（骨架） | — |
+| — | REQ-039 | [P2] | 文档目录树（folder-tree） | 待补 U-ID | 来源 U-ID / SC 待立项编码前补（open item，见 §1 REQ-039 行与 §5 SRS-C-002） |
 
 ## 4.1 验证入口
 
@@ -164,9 +166,12 @@
 | REQ-012 | AC-P2-TAG-001 | TC-P2-TAG-001 | `docs/09-verification.md` §2、标签后端 tests + 浏览器 smoke | P2-已实现 / 通过 |
 | REQ-025 | AC-P2-QUICK-001 | TC-P2-QUICK-001 | `docs/09-verification.md` §2、快速录入后端 tests + API / 浏览器 smoke | P2-已实现 / 通过 |
 | REQ-026 | AC-P2-LINK-001 | TC-P2-LINK-001 | `docs/09-verification.md` §2、内链后端 tests + API / 浏览器 smoke | P2-已实现 / 通过 |
+| REQ-039 | AC-P2-FOLDER-001 | TC-P2-FOLDER-001 | `docs/09-verification.md` §2、folder 后端 tests + 浏览器 smoke（待立项编码） | 骨架·待实现 |
 
 ## 5. 待人工确认项
 
 | ID | 待确认项 | AI 建议 | 建议依据 | 备选方案 | 取舍影响 / 阻塞关系 |
 |---|---|---|---|---|---|
 | SRS-C-001 | 是否确认 P1.5A 以 REQ-037/038 为个人可用 Alpha 退出门槛 | 建议确认 | 用户目标是尽快个人使用；批量导入和导出备份比 PDF / 标签 / AI 润色更能解锁真实使用 | 继续把 PDF 或 Phase2 能力作为下一步 | 会延后个人可用 |
+| SRS-C-002 | REQ-039（文档目录树）的来源 U-ID / SC 追溯锚点 | 待立项编码前在 `docs/01-user-requirements.md` 新建 U-ID + `docs/00-scenario.md` 新建 SC-ID（或在既有 U-ID 扩展） | 追溯链硬规则要求 REQ→U-ID→SC；当前为设计回填 / 草案阶段，先回填核心契约 06/07/08/09/ingestion | 复用既有 U-ID（如 U-13 个人知识组织扩展）；或新建 SC-009 + U-ID | 不阻塞设计回填；阻塞 REQ-039 立项编码 |
+| SRS-C-003 ✅已记录（2026-08-02） | REQ-039 编号占用：office/wps→MD 格式转换原输入材料"建议 REQ-039"已被 folder-tree 正式占用 | **REQ-039 已正式分配给文档目录树（folder-tree）**；`docs/inputs/2026-07-21-doc-format-conversion-requirements.md` 的"建议 REQ-039"需重新编号 | 输入材料自声明"建议编号，不污染正式编号"（FCR-C-005）；02 权威最新 REQ-038 → REQ-039 可用 | office→MD 格式转换若立项用 REQ-041+（REQ-040 亦被输入建议给独立工具） | 不阻塞 folder-tree；office→MD 立项时重新编号 |
