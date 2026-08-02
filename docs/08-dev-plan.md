@@ -11,8 +11,8 @@
 | 当前 Phase | **Phase2B（团队 MVP）进行中**（2026-07-30 切指针；RG-008 升 Go，Sprint-19 后端通过 2026-07-30；前端 half 待实现） |
 | 交付物形态 | Demo / 个人可用 Alpha / 个人知识组织 |
 | 输入基线 | `docs/03-prd.md` §3、`docs/04-architecture.md`、`docs/05-tech-spec.md`、`docs/09-verification.md` |
-| 当前状态 | Phase1 Demo 已完成并已记录全量验收（Conditional Go）；Phase1.5A 已完成批量 / 文件夹导入（REQ-037）与 `.md` / ZIP 导出备份（REQ-038）；Phase2A 已完成 REQ-026 内链 / 反链、REQ-012 标签、REQ-025 快速录入三个 vertical slice 并通过 `09` 对应用例。Phase1.5B（PDF / Word-PDF / zhparser）仍待后续 RG；**Phase2B（团队 MVP）范围已确认（2026-07-30）：REQ-014 首批核心已完成 v1.1.0（TC-P2-AI-001 通过），REQ-013/024 时间轴为第二 slice 待启动；Sprint-21 Doc-First UX slice 3a/3c/3d 已完成本地 build + 用户 smoke + TC-P1-014/015 回归（2026-08-01 用户确认）**。 |
-| 最后更新 | 2026-08-01（Sprint-21 slice 3b 单列阅读/编辑切换 + 顶栏 + inspector tabs 完成，含 smoke 反馈修复 download 中文标题 / quick-entry A / 标签内联新建；slice 3d 导入弹窗化 + TC-P1-015/014 回归；保留 2026-07-20 Phase2A closure 完成包） |
+| 当前状态 | Phase1 Demo 已完成并已记录全量验收（Conditional Go）；Phase1.5A 已完成批量 / 文件夹导入（REQ-037）与 `.md` / ZIP 导出备份（REQ-038）；Phase2A 已完成 REQ-026 内链 / 反链、REQ-012 标签、REQ-025 快速录入三个 vertical slice 并通过 `09` 对应用例。Phase1.5B（PDF / Word-PDF / zhparser）仍待后续 RG；**Phase2B（团队 MVP）范围已确认（2026-07-30）：REQ-014 首批核心已完成 v1.1.0（TC-P2-AI-001 通过），REQ-013/024 时间轴为第二 slice 待启动；Sprint-21 Doc-First UX slice 3a/3c/3d 已完成本地 build + 用户 smoke + TC-P1-014/015 回归（2026-08-01 用户确认）**；**Sprint-22 文档目录树（folder-tree，REQ-039）为 Phase2B 第三 slice 候选，06/07/02/03/09/ingestion 设计骨架已回填，待 FT-C-* 确认 + 立项编码**。 |
+| 最后更新 | 2026-08-02（folder-tree 设计回填：Sprint-22 候选 + REQ-039 文档目录树，06/07/02/03/09/ingestion 设计骨架已回填，待 FT-C-* 确认 + 立项编码；Sprint-21 完成记录见前版） |
 
 ## Sprint 总览
 
@@ -42,6 +42,7 @@
 | Sprint-19（Phase2B·AI 润色·首个 vertical slice） | AI 润色 polish + 写作引用 citation（API-028）+ `lumen_ai_drafts` migration 010 | 014 | 02 REQ-014、03 Phase2B、04 Flow-005、05 TCD-010 / RG-004 / RG-008、06 lumen_ai_drafts、07 API-028、design/ai-polish | backend service/ai_polish + api + migration 010；frontend 写作侧边栏 | TC-P2-AI-001（后端 tests + prompt 边界审查 + UI smoke） | **已完成（RG-008 Go，2026-07-30；前端闭环 PR#89–95 / v1.1.0，TC-P2-AI-001 live UI smoke 2026-07-31 通过）** | — |
 | Sprint-20（Phase2B·时间轴·第二 slice） | 时间轴视图 + 密度热条（API-033） | 013/024 | 02 REQ-013/024、04 Flow-009、06 lumen_documents + tags + links、07 API-033、design/timeline | backend service/timeline + api；frontend 时间轴视图 | TC-P2-TL-001（后端 tests + Chrome/Edge smoke） | 待 Sprint-19 落地 + D-T-001 数据来源定稿后启动（未编码） | — |
 | Sprint-21（Phase2B·Doc-First UX） | slice 3a 侧栏可隐藏/默认收起/三路唤出/记忆 + slice 3c 默认落地欢迎页+主区少容器视觉收口+documents 空态引导 + slice 3d 导入入口弹窗化（§9.5 基线） | 011 + 037（P1B 默认行为升级 + 导入入口形态，不新增 REQ） | design/frontend-interaction §9.5（§9.5.8 导入弹窗）、research/prototypes/2026-07-31-obsidian-inspired-*、09 TC-P1-014/TC-P1-015 | frontend App.tsx + app/{usePaneLayout,pane-layout-store,TopBar,ContextPane} + features/{Welcome,DocumentEmptyState,Documents,Import}Feature + styles | TC-P1-014 回归 +（3d）TC-P1-015 回归 + Chrome/Edge smoke | 已完成（3a/3c 已随 PR #97 合并；3d 本地编码完成并通过 build + 用户 smoke，TC-P1-015/014 回归通过；未 bump 版本 / 未提交） | tasks/task-021..025 |
+| Sprint-22（Phase2B·文档目录树·第三 slice 候选） | `lumen_folders` 嵌套树 + 文档 `folder_id` 归属 + 文件夹 CRUD/移动/排序（API-034..037）+ 导入 API-029 `preserve_structure` 保留结构（Flow-D-010..013）+ 前端文件管理器 | 039（新增）+ 037 扩展 | 02 REQ-039、03 Phase2B 第三 slice、06 lumen_folders/folder_id/migration 011、07 API-034..037 + API-029、design/folder-tree、design/ingestion Flow-006 | backend migration 011 + service/folder + api/folders + import `preserve_structure` 改造；frontend 文件管理器（树渲染 + CRUD + 移动 + 排序） | TC-P2-FOLDER-001 + TC-P1-015 扩展（后端 tests + Chrome/Edge smoke） | 候选·待 FT-C-* 确认 + 立项编码（未编码） | — |
 
 ## 依赖关系与里程碑
 
@@ -61,6 +62,7 @@
 | Sprint-19（Phase2B·AI 润色·首个 slice） | Phase2A closure + **RG-008 Go（后端通过）** + Sprint-11 UI/WSG 门禁重跑 | ~~数据外发护栏未落实~~（后端已落实：权限过滤 / 5030 / hash）；~~前端 half 待续~~ 前端已闭环（PR#89–95 / v1.1.0，TC-P2-AI-001 live UI smoke 2026-07-31 通过） | 否（首个 slice） | 先后端 polish/citation + migration 010，再前端写作侧边栏；复用 RAG / 术语 / LLM adapter | M11 Phase2B AI 润色可用 |
 | Sprint-20（Phase2B·时间轴·第二 slice） | Sprint-19 落地 + D-T-001 数据来源定稿 | 时间轴从零设计，范围蔓延到关联图 / 因果推理（愿景） | 可与 Sprint-19 收尾部分并行 | 数据来源选候选 A（不建表）先行；大集合降级本机实测定阈值 | M12 Phase2B 时间轴可用 |
 | Sprint-21（Phase2B·Doc-First UX·slice 3a + 3c + 3d） | Phase2B closure（Sprint-19）+ DF-C-001 门禁（每 slice 重跑）+ §9.5 基线用户确认 | 改 REQ-011 已验收默认行为 → 需 TC-P1-014 回归；栏 state 蔓延到全局；导入入口形态变化 → 需 TC-P1-015 回归 | 否（UI 布局 slice） | slice 3a：顶栏图标唤出 + Ctrl+B/R + localStorage 记忆；先左目录后右栏 Inspector。slice 3c：home 欢迎引导页（默认落地）+ 主区少容器视觉收口 + 正文限宽 + documents 空态引导/返回。slice 3d：导入区从 ContextPane 常驻 section 迁到 DocumentsFeature toolbar 触发的居中 modal，复用 `useImport` / API-029，不动骨架/后端/API。**进展（2026-08-01）：3a/3c/3d 编码完成，build 绿，用户 smoke + TC-P1-014/015 回归通过**；3b 单列阅读/编辑另行启动前需先拆 inspector | M13 Doc-First 布局可用 |
+| Sprint-22（Phase2B·文档目录树·第三 slice 候选） | folder-tree 设计 FT-C-* 确认 + 06/07 契约回填 + REQ-039 U-ID/SC 追溯补齐 | 引入 folder 表 → migration 范围扩大；改 API-029 已实现契约 → 需 TC-P1-015 回归；folder 权限模型误读（folder 不独立设权限） | 可与 Sprint-20 时间轴部分并行（均基于 `lumen_documents`，互不冲突） | 先后端契约（migration 011 + folder service/API），再导入 `preserve_structure` 改造，最后前端文件管理器；folder 不独立设权限，文档可见性仍按 permission；导入幂等建/复用 folder；推翻 ingestion ING-C-001 | M14 Phase2B 文档目录树可用（候选） |
 
 ## 任务拆分规则
 
@@ -94,6 +96,7 @@
 | Sprint-19（Phase2B） | TC-P2-AI-001 | 单元 + 集成 + UI smoke | `.venv\Scripts\python.exe -m unittest discover -s tests/backend`（test_ai_polish）；`npm.cmd run build` | Chrome / Edge：写作侧边栏 polish / citation、来源点击、降级提示 | RG-008 Go（后端通过）；LLM 可 Mock；数据外发护栏（hash / 无 key / sources 权限过滤） |
 | Sprint-20（Phase2B） | TC-P2-TL-001 | 单元 + 集成 + UI smoke | 同上（test_timeline）；`npm.cmd run build` | Chrome / Edge：时间轴渲染、密度热条、大集合降级 / 列表逃生舱 | 数据来源候选 A（不建表）；大集合聚合降级 |
 | Sprint-21（Phase2B·Doc-First UX） | TC-P1-014（3a/3c/3d 回归）+ TC-P1-015（3d 入口形态回归） | 前端构建 + 浏览器 smoke + 回归验收 | `volta run --node 22.17.1 npm run build`（frontend） | Chrome / Edge：栏显隐、首页默认落地、documents 减框、空态引导/返回、导入 modal 打开 / 关闭 / 文件选择 / 导入成功刷新、900px 不破版、文档 / 搜索 / 问答 / 术语主流程 | 不新增 API / 后端能力；不引 router / 组件库；3d 只迁移导入入口容器，不改导入契约 |
+| Sprint-22（Phase2B·文档目录树·候选） | TC-P2-FOLDER-001 + TC-P1-015 扩展（`preserve_structure` 保留结构） | 单元 + 集成 + UI smoke | `.venv\Scripts\python.exe -m unittest discover -s tests/backend`（test_folder / test_imports）；`volta run --node 22.17.1 npm run build` | Chrome / Edge：文件夹树渲染、新建/移动/排序/删除、导入文件夹后目录结构保留、防环/跨空间/重名/删非空拒绝、文档可见性不因 folder 泄露 | folder 不独立设权限；导入 `preserve_structure` 默认 true、=false 退回标题前缀；现有文档 `folder_id=null` 向后兼容 |
 
 > 资源 / 环境验证：Sprint-8 起 Docker / pgvector / Embedding **已 Go**（RG-001/002 Go，见 05 §5.1；TE-C-003 闭合）；OCR / 真实 PDF 解析仍 No-Go（RG-003，后续阶段，不在 P1 必过范围）。
 
