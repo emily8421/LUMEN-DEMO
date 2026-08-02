@@ -106,6 +106,7 @@ flowchart LR
 - FT-C-010（已确认 2026-08-02）：folder **只 `active`，无 `archived`**；删 folder **必须先移空**（移出 / 删子内容），后端拒绝删非空 folder（防连带删文档）。
 
 权限：folder 不独立设权限（FT-C-003）；文档可见性仍看 `lumen_documents.permission` + `space_id`（folder 查询过滤 space，folder 内文档仍按 permission 过滤，不泄露越权文档）。
+- **树查询口径（API-034，钉死 2026-08-02）**：懒加载为主——`GET /folders?parent_id=` 返回该 parent 的直接子层（folder + 可见文档数）；`parent_id` 空=根层。整树 / 后代查询用 **PG `WITH RECURSIVE`（递归 CTE）** / **demo 内存递归**，**避免 N+1**。Demo 量级（<500 folder）递归 CTE 性能足够。
 
 ## 5. 失败、异常与降级
 
@@ -124,6 +125,8 @@ flowchart LR
 | Phase2B 第三 slice（候选） | `lumen_folders` + 文件夹 CRUD/移动/排序 + 导入保留结构 + 前端文件管理器 | Demo / 个人可用 | 设计骨架 | 未实现 |
 
 readiness gate：DB migration（`lumen_folders` + `folder_id`）+ 向后兼容（现有文档 `folder_id=null`）。无新依赖（PG + 现有栈），无 RG 阻塞。
+
+邻接表性能出口（FT-C-005）：单空间 folder >2000 或树深度 >10 且查后代 >200ms 时，评估升级物化路径（`path` 字段 + `LIKE` 查询）；Demo 量级不触发，递归 CTE 足够（见 §4 树查询口径）。
 
 ## 7. 验证与验收追溯
 
@@ -165,6 +168,7 @@ readiness gate：DB migration（`lumen_folders` + `folder_id`）+ 向后兼容�
 | FT-C-010 ✅已确认（2026-08-02） | folder 生命周期 | **只 `active` 无 `archived`**；删 folder **必须先移空**（防连带删文档） | 文件系统 / Obsidian 删 folder 须空 / 确认；folder 归档语义弱；防误删 | `archived` 状态 | 未来加；不阻塞 |
 | FT-C-011 ✅已确认（2026-08-02） | API-ID 编号 | **API-034..037** + API-029 改造（`preserve_structure`） | 07 现有最大 API-033，顺序递增 | — | 已采；不阻塞 |
 | FT-C-012 ✅已记录（2026-08-02） | REQ-039 编号占用 | **REQ-039 已正式分配给 folder-tree**（02-srs 收录）；`docs/inputs/2026-07-21-doc-format-conversion-requirements.md` / `docs/research/2026-07-21-format-conversion-input-review.md` 原"建议 REQ-039"（office/wps→MD 格式转换）需重新编号 | 输入材料自声明"建议编号，不污染正式编号"（FCR-C-005）；02-srs 权威最新 REQ-038，REQ-039 可用 | office→MD 若立项用 REQ-041+（REQ-040 亦被输入建议给独立工具） | 不阻塞 folder-tree；office→MD 立项时重新编号 |
+| FT-C-013（2026-08-02 记录） | folder 软删除 / 回收站 | **MVP 不做**（维持 `active` 硬删 + 删非空→4090，FT-C-010）；未来加 `archived`/`deleted_at` + 回收站防误删 | 现代 UX（Google Drive / OneDrive）倾向回收站；MVP 克制先硬删 | 现在加 soft delete（扩字段 + service 改造，扩范围） | 不阻塞 MVP；未来增强项 |
 
 ## 11. slice 拆分建议（→ `docs/08-dev-plan.md`）
 
