@@ -9,7 +9,7 @@
 | 项 | 内容 |
 |---|---|
 | 输入来源 | `docs/00-scenario.md`、`docs/01-user-requirements.md` |
-| 覆盖 U-ID | U-01..U-43（按阶段标签区分 P1 / P1.5 / P2 / 愿景） |
+| 覆盖 U-ID | U-01..U-44（按阶段标签区分 P1 / P1.5 / P2 / 愿景） |
 | 交付物形态 | Phase1 = **Demo**；Phase1.5A = **个人可用 Alpha**；Phase2A = **个人知识组织**；Phase1.5B / Phase2B 为后续候选（与 `docs/03-prd.md §3` 一致） |
 | 当前状态 | 已确认（P1 可验证；Phase1.5A REQ-037/038 已实现并通过 TC-P1-015/016；Phase2A REQ-012/025/026 已实现并通过 TC-P2-TAG/QUICK/LINK-001；REQ-009/010 按 Phase1 Demo 降级口径验收；**Phase2B 第三 slice 候选 REQ-039 文档目录树已回填设计骨架（folder-tree），待 FT-C-* 确认 + 立项编码**；Phase1.5B / Phase2B / 愿景待对应阶段细化） |
 | 最后更新 | 2026-08-02（folder-tree 设计回填：新增 REQ-039 文档目录树 + REQ-037 扩展 `preserve_structure`；REQ-039 来源 U-ID / SC 留 open item） |
@@ -82,7 +82,7 @@
 | REQ-024 | 时间轴密度热条 | U-30 | Phase2B 第二 slice·已设计：4 档色阶（0 无 / 1 低 / 2 中 / 3 高）**+ 量化 ratio（相对均值倍数）**；密度按事件数 + 渲染去重；日窗口（>180 天切周）；**传 `q` 时反映主题活跃节奏** *(v18)* | [P2] | Phase2B·已设计（TC-P2-TL-001 待实现） |
 | REQ-025 | 快速录入索引条目 | U-31 | 30s 录标题/来源/摘要；mode=draft 保留私有草稿、create_document 转新私有文档、append_document 追加到已有文档；可关联 tag_ids；draft 可丢弃 *(v18)* | [P2] | P2-已实现（TC-P2-QUICK-001 通过） |
 | REQ-026 | 内部链接 + 反向链接 | U-32 | Phase2A 最小版：`[[文件名]]` 解析、resolved / unresolved / no_access 状态、出链 / 反链查询与权限过滤 | [P2] | P2-已实现（TC-P2-LINK-001 通过） |
-| REQ-039 | 文档目录树：空间内嵌套文件夹（CRUD / 移动 / 排序）组织文档；导入保留真实目录结构（扩展 REQ-037）；folder 不独立设权限（继承空间，文档可见性仍看 permission） | 待补 U-ID（open item） | Phase2B 第三 slice 候选：建 / 移动 / 排序文件夹后文档归属正确；导入文件夹后目录结构保留；防环 / 跨空间 / 重名 / 删非空 folder 拒绝 | [P2] | 骨架（folder-tree 设计草案，FT-C-* 待确认） |
+| REQ-039 | 文档目录树：空间内嵌套文件夹（CRUD / 移动 / 排序）组织文档；导入保留真实目录结构（扩展 REQ-037）；folder 不独立设权限（继承空间，文档可见性仍看 permission） | **U-44** | Phase2B 第三 slice 候选：建 / 移动 / 排序文件夹后文档归属正确；导入文件夹后目录结构保留；防环 / 跨空间 / 重名 / 删非空 folder 拒绝 | [P2] | P2-已设计（folder-tree，FT-C-001..013 已确认，编码进行中） |
 | REQ-027 | 单文档导出 PDF（Markdown → PDF，含中文排版） | U-33 | 选型 weasyprint/reportlab + 中文验证（RG-006）；封面 / 页眉页脚 / 排版 | [P1] | P1.5B-候选·待 RG-006（从 Phase2 提前） |
 | REQ-018 | Obsidian Vault 挂载 | U-21 | 待技术验证（只读索引、账号绑定、不迁移） | [愿景] | 骨架 |
 | REQ-019 | 录音转文字 + 摘要 | U-22 | 待技术验证（转写引擎、摘要质量） | [愿景] | 骨架 |
@@ -142,7 +142,7 @@
 | U-39 | REQ-033 | [愿景] | 假设检验 / 证据地图 | 待验证（骨架） | 高风险 |
 | U-40 | REQ-034 | [愿景] | 信号追踪 | 待验证（骨架） | — |
 | U-41 | REQ-035 | [愿景] | 分析包 A Kit | 待验证（骨架） | — |
-| — | REQ-039 | [P2] | 文档目录树（folder-tree） | 待补 U-ID | 来源 U-ID / SC 待立项编码前补（open item，见 §1 REQ-039 行与 §5 SRS-C-002） |
+| U-44 | REQ-039 | [P2] | 文档目录树（folder-tree） | 是 | SC-009（已补，SRS-C-002 已确认 2026-08-02） |
 
 ## 4.1 验证入口
 
@@ -173,5 +173,5 @@
 | ID | 待确认项 | AI 建议 | 建议依据 | 备选方案 | 取舍影响 / 阻塞关系 |
 |---|---|---|---|---|---|
 | SRS-C-001 | 是否确认 P1.5A 以 REQ-037/038 为个人可用 Alpha 退出门槛 | 建议确认 | 用户目标是尽快个人使用；批量导入和导出备份比 PDF / 标签 / AI 润色更能解锁真实使用 | 继续把 PDF 或 Phase2 能力作为下一步 | 会延后个人可用 |
-| SRS-C-002 | REQ-039（文档目录树）的来源 U-ID / SC 追溯锚点 | 待立项编码前在 `docs/01-user-requirements.md` 新建 U-ID + `docs/00-scenario.md` 新建 SC-ID（或在既有 U-ID 扩展） | 追溯链硬规则要求 REQ→U-ID→SC；当前为设计回填 / 草案阶段，先回填核心契约 06/07/08/09/ingestion | 复用既有 U-ID（如 U-13 个人知识组织扩展）；或新建 SC-009 + U-ID | 不阻塞设计回填；阻塞 REQ-039 立项编码 |
+| SRS-C-002 ✅已确认（2026-08-02） | REQ-039（文档目录树）的来源 U-ID / SC 追溯锚点 | **已补：新建 U-44（01）+ SC-009（00）；02 REQ-039 来源 U-ID=U-44** | 追溯链硬规则要求 REQ→U-ID→SC | 复用 U-13（未采）；新建 SC-009 + U-44（已采） | ~~阻塞 REQ-039 立项编码~~ 已解除 |
 | SRS-C-003 ✅已记录（2026-08-02） | REQ-039 编号占用：office/wps→MD 格式转换原输入材料"建议 REQ-039"已被 folder-tree 正式占用 | **REQ-039 已正式分配给文档目录树（folder-tree）**；`docs/inputs/2026-07-21-doc-format-conversion-requirements.md` 的"建议 REQ-039"需重新编号 | 输入材料自声明"建议编号，不污染正式编号"（FCR-C-005）；02 权威最新 REQ-038 → REQ-039 可用 | office→MD 格式转换若立项用 REQ-041+（REQ-040 亦被输入建议给独立工具） | 不阻塞 folder-tree；office→MD 立项时重新编号 |
