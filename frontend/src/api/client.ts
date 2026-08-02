@@ -75,6 +75,14 @@ function parseContentDispositionFilename(header: string | null): string | null {
   if (!header) {
     return null;
   }
+  const encodedMatch = header.match(/filename\*=UTF-8''([^;]+)/i);
+  if (encodedMatch) {
+    try {
+      return decodeURIComponent(encodedMatch[1]);
+    } catch {
+      return encodedMatch[1];
+    }
+  }
   const match = header.match(/filename="?([^";]+)"?/);
   return match ? match[1] : null;
 }

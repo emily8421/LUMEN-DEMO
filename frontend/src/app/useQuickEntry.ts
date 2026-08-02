@@ -39,7 +39,7 @@ export function useQuickEntry({
   const [source, setSource] = useState('');
   const [contentMd, setContentMd] = useState('');
   const [tagIds, setTagIds] = useState<number[]>([]);
-  const [mode, setMode] = useState<QuickEntryMode>('draft');
+  const [mode, setMode] = useState<QuickEntryMode>('create_document');
   const [targetDocumentId, setTargetDocumentId] = useState<number | null>(null);
   const [lastEntry, setLastEntry] = useState<QuickEntryView | null>(null);
 
@@ -48,7 +48,7 @@ export function useQuickEntry({
     setSource('');
     setContentMd('');
     setTagIds([]);
-    setMode('draft');
+    setMode('create_document');
     setTargetDocumentId(null);
   }, []);
 

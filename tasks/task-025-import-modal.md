@@ -13,7 +13,7 @@
 | Sprint | Sprint-21（Phase2B Doc-First UX，slice 3d） |
 | REQ | REQ-037（批量导入入口形态，不新增 REQ / API / DB / TC） |
 | 设计 | docs/design/frontend-interaction.md §9.5.8（F-impl-11） |
-| 分支 | feat/step3-doc-first-ux |
+| 分支 | main（本地未提交改动） |
 | 前置 | slice 3a/3c smoke + TC-P1-014 回归闭环（PR #97 合并）后再编码 |
 
 ## 修改范围
@@ -49,16 +49,20 @@
 - 不重构 P1B 三层骨架（导入从 section 抽成 modal 是组件抽取）。
 - 不引新依赖（modal 用原生 div + CSS，不引组件库）。
 
-## 待确认（编码前）
+## 待确认（编码前，已按设计推荐默认执行）
 
 见 docs/design/frontend-interaction.md §9.5.8 F-impl-11-C1..C3：导入成功是否自动关闭（C1）、导入中是否禁用关闭（C2）、与 slice 3b 拆 inspector 顺序（C3）。
 
+- C1：已按推荐实现为导入成功后自动关闭 modal，完成摘要继续走全局 notice / lastImportSummary。
+- C2：已按推荐实现为导入中禁用关闭按钮、ESC 与遮罩关闭。
+- C3：已按推荐先做 3d；DocumentsFeature 行数仍超 WSG-004，拆 inspector 留给 3b 前置。
+
 ## 完成记录
 
-- [ ] ImportFeature modal 新建
-- [ ] DocumentsFeature toolbar「导入」按钮
-- [ ] ContextPane 移除 import-panel + 导入 props
-- [ ] App / WorkspaceMain 导入 state 接线调整
-- [ ] workspace.css modal 样式
-- [ ] build 绿
-- [ ] DF-C-001 门禁 + TC-P1-015 / TC-P1-014 回归 + Chrome/Edge smoke（待 PG+LLM 栈）
+- [x] ImportFeature modal 新建
+- [x] DocumentsFeature toolbar「导入」按钮
+- [x] ContextPane 移除 import-panel + 导入 props
+- [x] App / WorkspaceMain 导入 state 接线调整
+- [x] workspace.css modal 样式
+- [x] build 绿（2026-08-01：`volta run --node 22.17.1 npm run build`，248 modules）
+- [x] DF-C-001 门禁 + TC-P1-015 / TC-P1-014 回归 + Chrome/Edge smoke（2026-08-01：用户确认 smoke 通过；08/09 已回写）

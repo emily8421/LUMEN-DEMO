@@ -1,6 +1,6 @@
 @media (max-width: 1199px) {
   .topbar {
-    grid-template-columns: minmax(190px, 1fr) minmax(0, 220px) auto;
+    grid-template-columns: minmax(190px, 240px) minmax(0, 1fr) auto;
   }
 
   .workspace-layout {
@@ -35,7 +35,17 @@
     padding: 0 var(--space-3);
   }
 
+  .topbar-center,
   .top-context {
+    display: none;
+  }
+
+  .top-quick-entry {
+    width: 34px;
+    padding: 0;
+  }
+
+  .quick-entry-label {
     display: none;
   }
 

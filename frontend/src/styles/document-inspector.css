@@ -1,0 +1,48 @@
+.inspector-pane.document-inspector-pane {
+  grid-template-rows: auto auto minmax(0, 1fr);
+}
+
+.inspector-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+  border-bottom: 1px solid var(--line-soft);
+  background: var(--panel);
+  padding: 0 8px 6px;
+}
+
+.inspector-tabs button {
+  min-width: 0;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  padding: 7px 2px 5px;
+}
+
+.inspector-tabs button:hover:not(:disabled),
+.inspector-tabs button:focus-visible:not(:disabled) {
+  background: var(--panel-soft);
+  color: var(--text);
+}
+
+.inspector-tabs button.active {
+  border-bottom-color: var(--blue);
+  background: transparent;
+  color: var(--blue);
+}
+
+.document-inspector-body {
+  display: block;
+}
+
+.inspector-tab-section {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.document-inspector-body .tag-chips {
+  padding-top: 0;
+}

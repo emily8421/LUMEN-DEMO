@@ -8,6 +8,8 @@ Flow-007 对应）。成功路径返回二进制 ``Response``（项目首例，�
 
 from __future__ import annotations
 
+from urllib.parse import quote
+
 from backend.api.auth import TOKEN_SIGNING_KEY
 from backend.repository import repository
 from backend.service.auth import TokenError, extract_bearer_token, parse_demo_token
@@ -56,7 +58,7 @@ if APIRouter is not None:
         return Response(
             content=export.content,
             media_type="text/markdown; charset=utf-8",
-            headers={"Content-Disposition": f'attachment; filename="{export.filename}"'},
+            headers={"Content-Disposition": _content_disposition_attachment(export.filename)},
         )
 
     @router.get("/export/space")
@@ -91,5 +93,13 @@ if APIRouter is not None:
             return parse_demo_token(token, signing_key=TOKEN_SIGNING_KEY)
         except TokenError as exc:
             raise HTTPException(status_code=401, detail={"code": 4001, "msg": "invalid token"}) from exc
+
+    def _content_disposition_attachment(filename: str) -> str:
+        fallback = "".join(
+            char if 32 <= ord(char) <= 126 and char not in {'"', "\\", "/", ";"} else "_"
+            for char in filename
+        ).strip()
+        fallback = fallback or "document.md"
+        return f'attachment; filename="{fallback}"; filename*=UTF-8\'\'{quote(filename, safe="")}'
 else:
     router = None

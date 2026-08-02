@@ -6,6 +6,18 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v1.2.0（2026-08-02）
+
+**Sprint-21 Doc-First UX 收口（slice 3a/3b/3c/3d）+ smoke 反馈修复。** 工作台从「多栏常驻工具台」收敛为「内容为中心、工具边缘化、按需呼出」的阅读器范式；文档阅读 / 编辑 / 并排三态切换，导入弹窗化，单列优先。
+
+- slice 3a/3c（PR #97，merge `5712cef`）：栏显隐 + 默认收起 + Ctrl+B/R 唤出；首页默认落地；主区少容器视觉收口；documents 空态引导与返回；layout grid 显式锁列 hotfix（F-impl-9）。
+- slice 3d（`c4cf867`）：导入入口从 ContextPane 常驻区迁到 DocumentsFeature toolbar「导入」按钮 + 居中 modal（复用 `useImport` / API-029）。
+- slice 3b（`0f90974`）：文档阅读 / 编辑 / 并排三态切换（Doc-First §9.5.4）；快速录入迁 TopBar + 用户头像；右栏重构为 `DocumentInspectorFeature`（版本 / 链接 / 标签 / AI tabs）。
+- smoke 反馈修复：① download 中文标题 `.md` 导出 500（`export.py` ASCII fallback + `filename*=UTF-8''` + `client.ts` 解析 + 单测）② quick-entry 默认 `create_document` + 移除 draft 入口（后端 draft 契约保留）③ 标签 inspector 内联「新建并打标签」+ 首页标签卡片 + placeholder。
+- 验证：`volta run --node 22.17.1 npm run build` 通过（252 modules）；`tests.backend.test_export` 14 OK；用户 Chrome smoke G1–G26 全过；TC-P1-014 / TC-P1-015 / TC-P2-QUICK-001 回归通过。
+
+> MINOR 依据（`ai/project-rules.md` §2.8.1）：Sprint 验收 / 里程碑交付 + 新增可演示能力（Doc-First 阅读器范式 + 文档三态切换）；默认向后兼容（不改后端 API / DB 契约）。
+
 ## v1.1.0（2026-07-31）
 
 **Phase2B 首个 vertical slice：REQ-014 AI 润色 / 写作引用（后端 + 前端）。** 文档选中片段 → AI 润色 / 带来源引用 → 预览草稿 → 应用（替换选区 + 版本）/ 丢弃；数据外发风险正式通关（RG-008 升 Go）。

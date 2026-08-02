@@ -28,6 +28,8 @@ interface WorkspaceMainProps {
   onNavigate: (view: ActiveView) => void;
   /** 新建文档（首页卡片，复用 documents.handleCreateDocument）。 */
   onCreateDocument: () => void;
+  /** 打开导入弹窗（Doc-First §9.5.8，Sprint-21 slice 3d）。 */
+  onOpenImport: () => void;
   /** 展开左目录（documents 空态引导按钮，Sprint-21 slice 3c）。 */
   onExpandLeftPane: () => void;
   /** 返回引导卡（退出新建/取消选中）。 */
@@ -47,16 +49,12 @@ export function WorkspaceMain({
   onQuickEntryOpen,
   onNavigate,
   onCreateDocument,
+  onOpenImport,
   onExpandLeftPane,
   onExitToEmpty,
 }: WorkspaceMainProps) {
   return (
     <section className="workspace-main workspace">
-      <div className="workspace-action-bar">
-        <button type="button" className="quick-entry-trigger" onClick={onQuickEntryOpen} disabled={isBusy}>
-          ＋ 快速录入
-        </button>
-      </div>
       {activeView === 'home' ? (
         <WelcomeFeature
           isBusy={isBusy}
@@ -84,11 +82,13 @@ export function WorkspaceMain({
           onSave={documents.handleSave}
           onRestore={documents.handleRestore}
           onDownloadMarkdown={documents.handleDownloadMarkdown}
+          onOpenImport={onOpenImport}
           documentTags={tags.documentTags}
           availableTags={tags.tags}
           addTagSelection={tags.addTagSelection}
           onAddTagSelectionChange={tags.setAddTagSelection}
           onAddTag={tags.handleAddDocumentTag}
+          onCreateAndTag={tags.handleCreateAndTag}
           onRemoveTag={tags.handleRemoveDocumentTag}
           aiPolish={aiPolish}
           onExpandLeftPane={onExpandLeftPane}

@@ -107,6 +107,23 @@ export function useTags({ token, currentSpaceId, selectedDocumentId, runAction, 
     });
   };
 
+  const handleCreateAndTag = (name: string) => {
+    if (!token || selectedDocumentId == null) {
+      return;
+    }
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      return;
+    }
+    void runAction('正在新建标签并打标签...', async () => {
+      const created = await createTag(token, { name: trimmedName });
+      await addDocumentTag(token, selectedDocumentId, created.id);
+      setTags((current) => [...current, created]);
+      setDocumentTags(await listDocumentTags(token, selectedDocumentId));
+      setNotice(`已新建标签并打给本文：${created.name}`);
+    });
+  };
+
   const handleAddDocumentTag = (tagId: number | null) => {
     if (!token || selectedDocumentId == null || tagId == null) {
       return;
@@ -149,6 +166,7 @@ export function useTags({ token, currentSpaceId, selectedDocumentId, runAction, 
     setAddTagSelection,
     handleSelectTag,
     handleCreateTag,
+    handleCreateAndTag,
     handleAddDocumentTag,
     handleRemoveDocumentTag,
   };

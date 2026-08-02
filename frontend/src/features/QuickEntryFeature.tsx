@@ -3,7 +3,6 @@ import type { FormEvent } from 'react';
 import type { KnowledgeDocument, QuickEntryMode, QuickEntryView, TagView } from '../api';
 
 const MODE_OPTIONS: Array<{ value: QuickEntryMode; label: string; hint: string }> = [
-  { value: 'draft', label: '存为草稿', hint: '仅自己可见，稍后处理' },
   { value: 'create_document', label: '转为新文档', hint: '新建私有文档并入列' },
   { value: 'append_document', label: '追加到已有文档', hint: '拼到目标文档末尾' },
 ];
