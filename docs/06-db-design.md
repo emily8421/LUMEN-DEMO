@@ -12,7 +12,7 @@
 | 决策来源 | `ai/project-rules.md` §3（项目有 PostgreSQL + pgvector 持久化存储） |
 | 覆盖 REQ / 模块 | Phase1：空间 / 权限、文档、版本、导入、检索向量、术语管理；Phase1.5A：批量导入与 `.md` / ZIP 导出备份（REQ-037/038）；Phase1.5B：PDF 导出任务契约（REQ-027）；Phase2A：标签、内链 / 反链、快速录入（REQ-012/025/026）；Phase2B：AI 润色草稿（REQ-014）、时间轴（REQ-013/024）、文档目录树（REQ-039，第三 slice 候选）；愿景保留骨架 |
 | 当前状态 | P1 表结构**已落地 PostgreSQL**（Sprint-8 / task-008 T1–T5：8 张 `lumen_*` 表由 `migrations/001-005` 建，后端切 `PgRepository`；`lumen_chunks.embedding vector(512)` + hnsw + ts_vector 由 T4/T6 启用；migration 006 为 search 增加可选 zhparser / `simple` 回退配置）。内存 `demo_repository` 保留为单测 fake。Phase1.5A 的 REQ-037/038 已复用既有表完成、不新增迁移；Phase2A 的标签、反链与快速录入表已落地；真实 Word/PDF 文本提取与 OCR 仍降级（RG-007 / RG-003）；Phase1.5B PDF 导出表仅为契约草案，待 RG-006 与 Sprint-18。2026-07-21 按 ADR-010 补“DB 权威运行态 + 衍生数据可重建”原则 |
-| 最后更新 | 2026-08-02（folder-tree 设计回填：`lumen_folders` + `lumen_documents.folder_id` 契约，Phase2B 第三 slice 候选 REQ-039；保留 ADR-010 数据权威与派生可重建原则） |
+| 最后更新 | 2026-08-02（folder-tree 设计回填：`lumen_folders` + `lumen_documents.folder_id` 契约，Phase2B 第三 slice 候选 REQ-039；timeline 设计回填：REQ-013/024 数据来源**已定候选 A**（实时聚合不建表）+ `lumen_documents` 时间索引；保留 ADR-010 数据权威与派生可重建原则） |
 
 ## 1. 表清单（完整）
 
@@ -241,7 +241,7 @@ LUMEN 采用 `docs/decisions/ADR-010-db-authority-derived-data-rebuildability.md
 ## 3. 索引设计
 
 - `lumen_chunks`：向量近邻索引 + `ts_vector` GIN（全文）——检索双路召回的基础
-- `lumen_documents`：`(space_id, permission)` 复合——隔离 + 权限过滤
+- `lumen_documents`：`(space_id, permission)` 复合——隔离 + 权限过滤；`(space_id, created_at)`、`(space_id, updated_at)`——Phase2B 时间轴实时聚合（候选 A，REQ-013/024，见 `docs/design/timeline.md`）
 - `lumen_document_versions`：`UNIQUE(document_id, version_no)`
 - `lumen_terms`：`UNIQUE(space_id, term)` + `term` 前缀 / trigram 索引（具体索引待 05 钉）——支撑文档术语识别
 - `lumen_tags`：`UNIQUE(space_id, normalized_name)`；`(space_id, status)` 用于标签视图过滤。
@@ -326,7 +326,7 @@ erDiagram
 | REQ-025 | `lumen_quick_entries`、`lumen_documents`、`lumen_tag_links` | TC-P2-QUICK-001 | Phase2A-已实现（Task A `f771e02` + Task B `bad8fe5`） | 快速录入 draft/转文档/追加/tag_ids/丢弃；API-017 |
 | REQ-026 | `lumen_doc_links`、`lumen_documents` | TC-P2-LINK-001 | Phase2A-已实现（Task A `fc2b869` + Task B `6228f3f`） | `[[wikilink]]` 出链 / 反链索引与权限过滤已落地 |
 | REQ-014 | `lumen_ai_drafts`、`lumen_documents`、`lumen_chunks` | TC-P2-AI-001 | Phase2B 首批核心（Sprint-19，RG-008 升 Go） | AI 润色草稿、写作引用和来源 chunk 追溯；**MVP 级已设计（migration 010 已落地，后端已实现）** |
-| REQ-013 / 024 | 待定（时间轴：基于 `lumen_documents` 时间字段 + 标签 + 内链聚合，或新增轻量 `lumen_doc_timeline_events` 视图表，见 `docs/design/timeline.md`） | TC-P2-TL-001（待细化） | Phase2B 首批·第二 slice（Sprint-20） | 时间轴 / 密度热条，**首批第二 slice**，数据来源待 timeline 设计定稿 |
+| REQ-013 / 024 | `lumen_documents`(created_at/updated_at) + `lumen_tag_links`(created_at) + `lumen_doc_links`(created_at) 实时聚合（**候选 A 已定，不建表**，见 `docs/design/timeline.md` TL-C-001） | TC-P2-TL-001 | Phase2B 首批·第二 slice（Sprint-20） | 时间轴 / 密度热条，**首批第二 slice**，数据来源已定候选 A（实时聚合，符合 ADR-010 派生可重建） |
 | REQ-039 | `lumen_folders`、`lumen_documents`（folder_id） | TC-P2-FOLDER-001 | Phase2B 第三 slice·候选（Sprint-22 候选） | 文档目录树：嵌套文件夹 CRUD / 移动 / 排序 + 导入保留结构（扩展 REQ-037 / API-029）；**契约草案已回填，migration 011 待编码** |
 | REQ-015 / 016 / 017 | 后续 Phase 骨架 | — | — | 推送 / 协作 / 移动端不进 Phase2B 首批 |
 | REQ-018..023 / 028..035 | 愿景表骨架 | — | — | 技术验证通过后细化字段与索引 |
@@ -335,4 +335,4 @@ erDiagram
 
 - Phase1.5A 的 REQ-037 / REQ-038 已按不新增 DB 表完成；若后续需要批次表、目录表或长期导出产物表，必须先回到本文、`07`、`08/09` 修订契约。
 - PDF 导出（REQ-027）属于 Phase1.5B，仍受 RG-006 约束；导出产物存储路径、过期清理和中文排版库选型需结合 tech-env 草案继续确认。
-- Phase2A 标签、反链与快速录入 DB 契约已实现；**Phase2B REQ-014 `lumen_ai_drafts` 已推进到 MVP 级已设计**（字段 / 约束 / 索引草案齐备，数据外发风险已接受 RG-008），migration 010 已落地（Sprint-19），后端 service / API / tests 已实现；**REQ-013/024 时间轴数据来源待 `docs/design/timeline.md` 定稿（第二 slice）**；**REQ-039 文档目录树（Phase2B 第三 slice 候选）已回填 `lumen_folders` + `lumen_documents.folder_id` 契约（migration 011 待编码），导入保留结构扩展 REQ-037 / API-029；REQ-039 的 U-ID / SC 来源待立项编码前补（open item）**。
+- Phase2A 标签、反链与快速录入 DB 契约已实现；**Phase2B REQ-014 `lumen_ai_drafts` 已推进到 MVP 级已设计**（字段 / 约束 / 索引草案齐备，数据外发风险已接受 RG-008），migration 010 已落地（Sprint-19），后端 service / API / tests 已实现；**REQ-013/024 时间轴数据来源已定候选 A（第二 slice，实时聚合不建表，见 `docs/design/timeline.md` TL-C-001）**；**REQ-039 文档目录树（Phase2B 第三 slice 候选）已回填 `lumen_folders` + `lumen_documents.folder_id` 契约（migration 011 待编码），导入保留结构扩展 REQ-037 / API-029；REQ-039 的 U-ID / SC 来源待立项编码前补（open item）**。

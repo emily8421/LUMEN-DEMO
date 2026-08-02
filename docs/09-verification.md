@@ -13,7 +13,7 @@
 | 交付物形态 | Demo / 个人可用 Alpha / 个人知识组织 |
 | 覆盖 REQ | Phase1：REQ-001..REQ-011、REQ-036；Phase1.5A：REQ-037/038；Phase1.5B：REQ-027；Phase2A：REQ-026/012/025；**Phase2B：REQ-014 首批核心（后端已实现，RG-008 升 Go，2026-07-30）+ REQ-013/024 第二 slice（待 Sprint-20）+ REQ-039 文档目录树第三 slice 候选（待 Sprint-22）**；愿景验证项待升阶段 |
 | 当前状态 | Phase1 全量验收已记录，结论为 Conditional Go（Demo closure）；Phase1.5A 已完成 TC-P1-015/016；Phase2A 已完成 TC-P2-LINK-001 / TC-P2-TAG-001 / TC-P2-QUICK-001，个人知识组织三个 vertical slice 验收通过。Phase1.5B 仍待 RG；**Phase2B 范围已确认（2026-07-30）+ 设计就绪 + 数据外发风险已接受；REQ-014 已完成 v1.1.0（TC-P2-AI-001 通过）；Sprint-21 Doc-First UX slice 3a/3c/3d 已完成本地 build + 用户 smoke + TC-P1-014/015 回归（2026-08-01 用户确认）**；**Phase2B 第三 slice 候选 REQ-039 文档目录树 TC-P2-FOLDER-001 已起草（folder-tree），待 Sprint-22 立项编码**；愿景项待升阶段。 |
-| 最后更新 | 2026-08-02（folder-tree 设计回填：新增 TC-P2-FOLDER-001 + 扩展 TC-P1-015 `preserve_structure`，Phase2B 第三 slice 候选 REQ-039；Sprint-21 验收记录见前版） |
+| 最后更新 | 2026-08-02（folder-tree 设计回填：新增 TC-P2-FOLDER-001 + 扩展 TC-P1-015 `preserve_structure`；timeline 设计回填：TC-P2-TL-001 详情补候选 A + 4 档色阶 + TL-C-001..008 已确认，Phase2B 第二 slice REQ-013/024；Sprint-21 验收记录见前版） |
 
 ## 1. 测试策略
 
@@ -92,7 +92,7 @@
 | TC-P2-AI-001 | REQ-014；`lumen_ai_drafts`；API-028；RG-004；**RG-008** | LLM adapter 可用或 Mock 降级；**数据外发风险已接受（RG-008 Go）** | 对可写文档选中文本执行 polish / citation；验证 sources 仅来自可见 chunks；草稿只存 hash + 摘要；LLM 不可用时降级 | 输出保存为 draft；引用可追溯到 chunk / document；库外或无权限来源不进入 prompt / 不返回；草稿不含 API key 与完整敏感原文；5030 / Mock 降级不编造 | 后端 tests（test_ai_polish）+ prompt 边界人工审查 + Chrome/Edge UI smoke（Sprint-19） | 通过（后端 service 9/9 + 全量 125 OK；RG-008 升 Go；**前端 UI smoke 2026-07-31 live 实跑通过**：真 GLM polish/citation + 应用→版本 + 越权 4004 + 交互点击流 alice 实测；面板可见性缺陷已修，见 §5.1） |
 | TC-P2-FOLDER-001 | REQ-039；`lumen_folders` / `lumen_documents.folder_id`；API-034..037；API-029 `preserve_structure` | folder-tree 设计 FT-C-* 确认 + 06/07 契约回填；migration 011 已落地（待编码） | 新建 / 移动 / 排序 / 删除文件夹（API-034..037）；导入文件夹后 `preserve_structure=true` 保留目录结构、`=false` 退回标题前缀；防环 / 跨空间 / 重名 / 删非空 folder 分别验证；文档可见性不因 folder 归属泄露 | folder CRUD / 移动 / 排序正确；`UNIQUE(space_id,parent_id,name)` 重名→4090；防环 / 跨空间→4220；删非空→4090；folder **不独立设权限**，文档可见性仍按 `permission` + `space_id` 过滤；现有文档 `folder_id=null` 向后兼容 | `tests/backend/test_folder.py` + `test_imports.py`（preserve_structure）+ 浏览器 smoke（待 Sprint-22 编码） | 草案·待 Sprint-22 立项编码 |
 - REQ-027 PDF 导出已提前到 Phase1.5B，验证口径见 TC-P1-017。
-- **REQ-013 / 024 时间轴 / 密度热条（Phase2B 首批·第二 slice）**：TC-P2-TL-001（待 Sprint-20 实现）——时间轴渲染仅含当前用户可见文档事件；密度热条色阶正确；大集合聚合 / 采样降级 + 列表逃生舱；越权事件不泄露；详见 `docs/design/timeline.md`。
+- **REQ-013 / 024 时间轴 / 密度热条（Phase2B 首批·第二 slice·已设计）**：TC-P2-TL-001（待 Sprint-20 实现）——候选 A 实时聚合（UNION ALL 4 类事件：created/updated/tagged/linked）；时间轴渲染仅含当前用户可见文档事件；密度热条 4 档色阶（0 无 / 1 低 / 2 中 / 3 高，事件数 + 渲染去重）；大集合聚合 / 采样降级（>500 文档或 >2000 事件）+ 列表逃生舱；越权事件不泄露（红线）；TL-C-001..008 已确认，详见 `docs/design/timeline.md`。
 - **REQ-039 文档目录树（Phase2B 第三 slice 候选）**：TC-P2-FOLDER-001（待 Sprint-22 立项编码）——文件夹树 CRUD / 移动 / 排序 + 导入保留目录结构（`preserve_structure`）；folder 不独立设权限，文档可见性仍按 permission；防环 / 跨空间 / 重名 / 删非空 folder 拒绝；详见 `docs/design/folder-tree.md`。
 - REQ-015 / 016 / 017 其余 P2 后续用例（推送 / 协作 / 移动端）——不进 Phase2B 首批，待后续 Phase 细化。
 
