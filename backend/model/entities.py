@@ -61,6 +61,27 @@ class Document:
     permission: DocumentPermission
     type: str = "markdown"
     current_version: int = 1
+    folder_id: int | None = None
+    created_at: str = ""
+    updated_at: str = ""
+
+
+@dataclass(frozen=True)
+class Folder:
+    """REQ-039 文档目录树（lumen_folders，migration 011）。
+
+    嵌套文件夹（邻接表，parent_id 自引用，空=空间根）。folder 不独立设权限
+    （FT-C-003），文档可见性仍看 ``lumen_documents.permission``。``order`` 为手动
+    排序；文档首版不加 order，folder 内按 ``title`` 排序（FT-C-009）。folder 只
+    ``active`` 无 ``archived``（FT-C-010）。
+    """
+
+    id: int
+    space_id: int
+    parent_id: int | None  # null = 空间根
+    name: str
+    order: int
+    created_by: int
     created_at: str = ""
     updated_at: str = ""
 

@@ -23,6 +23,7 @@ from backend.model.entities import (
     DocumentChunk,
     DocumentPermission,
     DocumentVersion,
+    Folder,
     ImportJob,
     Space,
     SpaceMember,
@@ -40,6 +41,7 @@ from backend.model.orm import (
     DocumentChunkORM,
     DocumentORM,
     DocumentVersionORM,
+    FolderORM,
     ImportJobORM,
     QuickEntryORM,
     SpaceMemberORM,
@@ -206,6 +208,19 @@ def _to_ai_draft(r: AiDraftORM) -> AiDraft:
         cited_chunk_ids=tuple(r.cited_chunk_ids or []),
         status=r.status,
         created_at=_dt_iso(r.created_at),
+    )
+
+
+def _to_folder(r: FolderORM) -> Folder:
+    return Folder(
+        id=r.id,
+        space_id=r.space_id,
+        parent_id=r.parent_id,
+        name=r.name,
+        order=r.order,
+        created_by=r.created_by,
+        created_at=_dt_iso(r.created_at),
+        updated_at=_dt_iso(r.updated_at),
     )
 
 
@@ -895,4 +910,145 @@ class PgRepository:
     def delete_term(self, term_id: int) -> None:
         with SessionLocal() as session:
             session.execute(delete(TermORM).where(TermORM.id == term_id))
+            session.commit()
+
+    # --- folders (REQ-039) ---
+
+    def _next_folder_order(self, session, space_id: int, parent_id: int | None) -> int:
+        query = select(func.max(FolderORM.order)).where(FolderORM.space_id == space_id)
+        if parent_id is None:
+            query = query.where(FolderORM.parent_id.is_(None))
+        else:
+            query = query.where(FolderORM.parent_id == parent_id)
+        max_order = session.scalars(query).first()
+        return (max_order or 0) + 1
+
+    def list_folders(self, space_id: int) -> list[Folder]:
+        with SessionLocal() as session:
+            rows = session.scalars(
+                select(FolderORM)
+                .where(FolderORM.space_id == space_id)
+                .order_by(FolderORM.parent_id, FolderORM.order, FolderORM.name)
+            ).all()
+            return [_to_folder(r) for r in rows]
+
+    def get_folder(self, folder_id: int) -> Folder | None:
+        with SessionLocal() as session:
+            row = session.get(FolderORM, folder_id)
+            return _to_folder(row) if row else None
+
+    def find_folder_by_name(self, space_id: int, parent_id: int | None, name: str) -> Folder | None:
+        with SessionLocal() as session:
+            query = select(FolderORM).where(FolderORM.space_id == space_id, FolderORM.name == name)
+            if parent_id is None:
+                query = query.where(FolderORM.parent_id.is_(None))
+            else:
+                query = query.where(FolderORM.parent_id == parent_id)
+            row = session.scalars(query).first()
+            return _to_folder(row) if row else None
+
+    def create_folder(self, space_id: int, parent_id: int | None, name: str, created_by: int) -> Folder:
+        with SessionLocal() as session:
+            row = FolderORM(
+                space_id=space_id,
+                parent_id=parent_id,
+                name=name,
+                order=self._next_folder_order(session, space_id, parent_id),
+                created_by=created_by,
+            )
+            session.add(row)
+            session.commit()
+            return _to_folder(row)
+
+    def rename_folder(self, folder_id: int, name: str) -> Folder | None:
+        with SessionLocal() as session:
+            row = session.scalars(select(FolderORM).where(FolderORM.id == folder_id)).first()
+            if row is None:
+                return None
+            row.name = name
+            row.updated_at = func.now()
+            session.commit()
+            return _to_folder(row)
+
+    def move_folder(self, folder_id: int, parent_id: int | None) -> Folder | None:
+        with SessionLocal() as session:
+            row = session.scalars(select(FolderORM).where(FolderORM.id == folder_id)).first()
+            if row is None:
+                return None
+            row.parent_id = parent_id
+            row.order = self._next_folder_order(session, row.space_id, parent_id)
+            row.updated_at = func.now()
+            session.commit()
+            return _to_folder(row)
+
+    def delete_folder(self, folder_id: int) -> None:
+        with SessionLocal() as session:
+            session.execute(delete(FolderORM).where(FolderORM.id == folder_id))
+            session.commit()
+
+    def is_folder_empty(self, space_id: int, folder_id: int) -> bool:
+        with SessionLocal() as session:
+            has_child = session.scalars(
+                select(FolderORM.id)
+                .where(FolderORM.space_id == space_id, FolderORM.parent_id == folder_id)
+                .limit(1)
+            ).first()
+            if has_child is not None:
+                return False
+            has_doc = session.scalars(
+                select(DocumentORM.id).where(DocumentORM.folder_id == folder_id).limit(1)
+            ).first()
+            return has_doc is None
+
+    def is_descendant_folder(self, space_id: int, ancestor_id: int, candidate_id: int) -> bool:
+        """``candidate`` 是否是 ``ancestor`` 的后代（含自身）。用 PG ``WITH RECURSIVE`` 递归 CTE 防 N+1。
+
+        用于移动 folder 时的防环校验：移动 folder 到 target 时，若 target 是 folder
+        自身或其后代则拒绝（4220）。
+        """
+        with SessionLocal() as session:
+            result = session.scalars(
+                sql_text(
+                    """
+                    WITH RECURSIVE descendants(id) AS (
+                        SELECT CAST(:ancestor AS BIGINT)
+                        UNION ALL
+                        SELECT f.id FROM lumen_folders f
+                        JOIN descendants d ON f.parent_id = d.id
+                        WHERE f.space_id = CAST(:space AS BIGINT)
+                    )
+                    SELECT 1 FROM descendants WHERE id = CAST(:candidate AS BIGINT) LIMIT 1
+                    """
+                ).params(ancestor=ancestor_id, candidate=candidate_id, space=space_id)
+            ).first()
+            return result is not None
+
+    def list_folder_document_ids(self, space_id: int, folder_id: int) -> list[int]:
+        with SessionLocal() as session:
+            rows = session.scalars(
+                select(DocumentORM.id).where(
+                    DocumentORM.space_id == space_id, DocumentORM.folder_id == folder_id
+                )
+            ).all()
+            return list(rows)
+
+    def set_document_folder(self, document_id: int, folder_id: int | None) -> None:
+        """预留：文档归属写入（Flow-D-012 导入保留结构 / 文档 CRUD 复用）。本轮 service 不调用。"""
+        with SessionLocal() as session:
+            doc = session.get(DocumentORM, document_id)
+            if doc is None:
+                raise KeyError(document_id)
+            doc.folder_id = folder_id
+            doc.updated_at = func.now()
+            session.commit()
+
+    def reorder_folders(self, space_id: int, ordered_folder_ids: list[int]) -> None:
+        with SessionLocal() as session:
+            for order, folder_id in enumerate(ordered_folder_ids, start=1):
+                row = session.scalars(
+                    select(FolderORM).where(FolderORM.id == folder_id, FolderORM.space_id == space_id)
+                ).first()
+                if row is not None:
+                    row.order = order
+                    row.updated_at = func.now()
             session.commit()

@@ -59,10 +59,10 @@
 | API-027 | GET/PUT/DELETE | /api/tags/{id} | 标签详情 / 更新 / 归档 | [P2] | Phase2A-已实现 | — | REQ-012 |
 | API-028 | POST | /api/documents/{id}/polish | AI 润色 / 写作引用 | [P2] | MVP 级已设计 | — | REQ-014 |
 | API-033 | GET | /api/spaces/{id}/timeline | **主题时间线 / 密度热条**（REQ-013a 重定位） | [P2] | Phase2B·第二 slice·已设计（编码移 folder-tree 后） | — | REQ-013a/024 |
-| API-034 | GET | /api/spaces/{id}/folders | 文件夹树查询（嵌套） | [P2] | Phase2B·第三 slice·骨架 | — | REQ-039 |
-| API-035 | POST | /api/spaces/{id}/folders | 新建文件夹 | [P2] | Phase2B·第三 slice·骨架 | — | REQ-039 |
-| API-036 | PATCH/DELETE | /api/spaces/{id}/folders/{folder_id} | 移动 / 改名 / 删除文件夹 | [P2] | Phase2B·第三 slice·骨架 | — | REQ-039 |
-| API-037 | POST | /api/spaces/{id}/folders/reorder | 文件夹排序 | [P2] | Phase2B·第三 slice·骨架 | — | REQ-039 |
+| API-034 | GET | /api/folders | 文件夹树查询（嵌套；token current_space_id；`parent_id` query，空=根层） | [P2] | Phase2B·第三 slice·后端已实现（待 commit） | 后端已实现（task-027；路径裁定 /api/folders，2026-08-02） | REQ-039 |
+| API-035 | POST | /api/folders | 新建文件夹 | [P2] | Phase2B·第三 slice·后端已实现（待 commit） | 后端已实现（task-027） | REQ-039 |
+| API-036 | PATCH/DELETE | /api/folders/{folder_id} | 移动 / 改名 / 删除文件夹（PATCH body `name`/`parent_id`，`parent_id=null`=移到根） | [P2] | Phase2B·第三 slice·后端已实现（待 commit） | 后端已实现（task-027） | REQ-039 |
+| API-037 | POST | /api/folders/reorder | 文件夹排序（body `parent_id`+`ordered_ids`，须等于该层全部子 folder） | [P2] | Phase2B·第三 slice·后端已实现（待 commit） | 后端已实现（task-027） | REQ-039 |
 
 ## 3. 请求 / 响应契约（[P1]）
 
@@ -105,10 +105,10 @@
 | API-018 | Phase2A-已实现 | §3.9 | 4001/4003/4004/4220 | source / target 文档均需权限过滤；无权限反链不泄露 | TC-P2-LINK-001 | 已实现（Task A fc2b869 + Task B 6228f3f） |
 | API-028 | Phase2B·后端已实现（MVP 级） | §3.9 | 4001/4003/4004/4220/5030 | 文档可写权限；引用 chunk 必须当前用户可见；数据外发风险已接受（RG-008 Go） | TC-P2-AI-001 | 后端已实现（RG-008 Go，Sprint-19） |
 | API-033 | Phase2B·第二 slice·已设计（**主题时间线 REQ-013a 重定位**） | §3.9（已定稿，加 `q`/`actor`/`ratio`/`degraded`/`window`） | 4001/4003/4004/4220 | 空间成员；仅返回当前用户可见文档的事件；`q` 命中仅可见集内（候选 A 实时聚合 + 标题 ILIKE/chunk.ts_vector） | TC-P2-TL-001 | **编码移至 folder-tree（Sprint-22）后** |
-| API-034 | Phase2B·第三 slice·骨架 | §3.9（待细化） | 4001/4003 | 空间成员；folder 不独立设权限，文档可见性仍按 permission 过滤 | TC-P2-FOLDER-001 | 待 06/07 回填后立项 |
-| API-035 | Phase2B·第三 slice·骨架 | §3.9（待细化） | 4001/4003/4090/4220 | 空间成员；同 parent 重名→4090 | TC-P2-FOLDER-001 | 待立项 |
-| API-036 | Phase2B·第三 slice·骨架 | §3.9（待细化） | 4001/4003/4004/4090/4220 | 空间成员；防环 / 跨空间→4220；删非空→4090 | TC-P2-FOLDER-001 | 待立项 |
-| API-037 | Phase2B·第三 slice·骨架 | §3.9（待细化） | 4001/4003/4220 | 空间成员 | TC-P2-FOLDER-001 | 待立项 |
+| API-034 | Phase2B·第三 slice·后端已实现（待 commit） | §3.9（待细化；路径已定 /api/folders） | 4001/4003 | 空间成员；folder 不独立设权限，文档可见性仍按 permission 过滤 | TC-P2-FOLDER-001 | 后端已实现（task-027，19 tests OK） |
+| API-035 | Phase2B·第三 slice·后端已实现（待 commit） | §3.9（待细化） | 4001/4003/4090/4220 | 空间成员；同 parent 重名→4090 | TC-P2-FOLDER-001 | 后端已实现（task-027） |
+| API-036 | Phase2B·第三 slice·后端已实现（待 commit） | §3.9（待细化） | 4001/4003/4004/4090/4220 | 空间成员；防环 / 跨空间→4220；删非空→4090 | TC-P2-FOLDER-001 | 后端已实现（task-027） |
+| API-037 | Phase2B·第三 slice·后端已实现（待 commit） | §3.9（待细化） | 4001/4003/4220 | 空间成员 | TC-P2-FOLDER-001 | 后端已实现（task-027） |
 
 ### 3.2 请求 / 输入契约（字段级·核心接口）
 
