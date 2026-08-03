@@ -6,6 +6,16 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v1.5.1（2026-08-04）
+
+**Release 后文档状态收口。** 修正 Sprint-20 在正式进度 / 验证文档中的滞后状态，把已 push、CI 通过和 `v1.5.0` tag 事实同步进项目事实文档。
+
+- 文档：`docs/08-dev-plan.md` 的 Sprint-20 完成包从“本地未提交”更新为 `3e23d78` + `28843cb`，并补充 `origin/main`、`v1.5.0` tag 与 `Project Check` 成功证据；`docs/09-verification.md` 补 release 状态收口验收记录。
+- 版本：同步 `VERSION` / `CHANGELOG.md` / `CHANGELOG-PLAIN.md` 到 `v1.5.1`。
+- 验证：版本一致性检查 + Sprint-20 release 状态文本检查 + `git diff --check`。
+
+> PATCH 依据（`ai/project-rules.md` §2.8.1）：纯文档 / 发布状态修正，不新增可演示能力，不改 API 契约。
+
 ## v1.5.0（2026-08-03）
 
 **Sprint-20 主题时间线可用闭环：关键词 / 标签驱动的时间线视图 + 密度热条。** 在 Phase2B 团队 MVP 范围内完成 REQ-013a / REQ-024 第二 slice，新增 API-033 与前端独立时间线视图，按候选 A 实时聚合，不引入 timeline 事件表。
