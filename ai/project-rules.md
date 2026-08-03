@@ -103,7 +103,7 @@
 ## 2.8 项目版本管理
 
 > 模板仓的版本规则（「影响下游同步判断就 bump VERSION」，见同步来的 `MAINTAINERS.md` / `CONTRIBUTING.md`）面向模板维护者，对本项目不适用——本项目没有下游派生。本节定义 LUMEN-DEMO 自有的版本语义与递增规则。
-> 版本入口：`VERSION`（项目自有版本）+ `CHANGELOG.md` 顶部「项目版本」段；模板继承版本独立记录在 `TEMPLATE-BASE.md`，不与项目版本混淆。
+> 版本入口：`VERSION`（项目自有版本）+ `CHANGELOG.md` 顶部「项目版本」段 + `CHANGELOG-PLAIN.md` 同版本大白话说明；模板继承版本独立记录在 `TEMPLATE-BASE.md`，不与项目版本混淆。
 
 ### 2.8.1 版本语义（三段式 vMAJOR.MINOR.PATCH）
 
@@ -124,14 +124,16 @@
 
 1. 更新根目录 `VERSION` 为新版本号（三段式 `vX.Y.Z`）。
 2. 在 `CHANGELOG.md` 顶部「项目版本」段（即 `## 历史模板同步记录（保留）` 之上）新增 `## vX.Y.Z（YYYY-MM-DD）` 条目，概述本版交付并附 REQ / Sprint / TC 追溯。
-3. 版本递增属于状态变更，按 `ai/global-rules.md` / `ai/rules-core.md` 的写入确认规则先说明范围、风险与验证，AI 给建议、用户确认后再执行。
-4. （可选）打 git tag `vX.Y.Z`；当前阶段不强制，不引入独立 release workflow。
+3. 同步更新 `CHANGELOG-PLAIN.md` 顶部同版本 `## vX.Y.Z（YYYY-MM-DD）` 条目，用大白话解释本版实际改变；版本号、日期、交付范围必须与 `CHANGELOG.md` 对齐。
+4. 版本递增属于状态变更，按 `ai/global-rules.md` / `ai/rules-core.md` 的写入确认规则先说明范围、风险与验证，AI 给建议、用户确认后再执行。
+5. （可选）打 git tag `vX.Y.Z`；当前阶段不强制，不引入独立 release workflow。
 
 ### 2.8.4 CI 校验
 
 `.github/workflows/project-check.yml` 在每次 PR / push 到 main 时校验：
 - `VERSION` 符合三段式 `^v[0-9]+\.[0-9]+\.[0-9]+$`；
 - `CHANGELOG.md` 顶部第一个 `## vX.Y.Z（` 标题等于 `VERSION`（确保项目版本在顶部且与 VERSION 一致）。
+- `CHANGELOG-PLAIN.md` 顶部第一个 `## vX.Y.Z（` 标题也应等于 `VERSION`；若 CI 尚未自动校验，发布自检必须人工核对。
 - 不做全文档降序检查——派生 CHANGELOG 顶部为项目版本（如 `v0.1.0`），下方接模板历史版本（`v1.47.1` 等，数值更大），降序不适用。
 
 ### 2.9 运行时版本锁定

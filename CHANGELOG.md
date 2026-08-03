@@ -6,6 +6,18 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v1.4.0（2026-08-03）
+
+**Sprint-22 文档目录树可用闭环：导入保留结构 + 前端文件管理器 + 单文档移动。** 在 v1.3.0 的 folder-tree 后端核心之上，补齐 API-029 `preserve_structure`、前端 Obsidian 式文件管理器基础能力和 API-038 单篇文档移动。
+
+- 导入保留结构（task-028）：API-029 默认 `preserve_structure=true`，按 `relative_paths[]` 建 / 复用 `lumen_folders` 并回填 `lumen_documents.folder_id`；`false` 保留旧标题前缀兼容；成功项返回 `folder_id`；PgRepository `_to_document` 补映射 `folder_id`。
+- 前端文件管理器（task-029）：新增 `frontend/src/app/FolderTree.tsx` + `useFolders` + folders API client；左侧文件夹树支持受控菜单、点外部 / Esc / 滚动关闭、inline 新建 / 重命名、Obsidian 式简洁树样式。
+- 单文档移动（API-038）：`PATCH /api/documents/{document_id}/folder`，目标 folder 必须属于当前空间；`folder_id=null` 移到根；移动只更新文档归属，不新增版本、不重建索引。前端文档行右键菜单“移动到”已接入并刷新文档列表与已加载 folder 计数。
+- 输入证据：补充 `docs/inputs/images/obsidian-folder-tree-01.png` / `02.png` / `03.png` 与 `welcom page.png` 作为本轮 UI 参考素材。
+- 验证：`tests.backend.test_imports tests.backend.test_import_api` 11/11 OK；folder/import/document/tag/quick/doc_links 回归 75/75 OK；`.venv\Scripts\python.exe -m unittest tests.backend.test_document tests.backend.test_folder tests.backend.test_imports tests.backend.test_import_api` 38/38 OK；`volta run --node 22.17.1 npm run build` 通过（255 modules）；运行态 API smoke 确认 API-038 可用并移动成功；用户浏览器 smoke 确认单篇文档移动无问题；push 到 `main` 后 `Project Check` success（run 30803119643）。
+
+> MINOR 依据（`ai/project-rules.md` §2.8.1）：新增可演示能力 + 新增对外 API endpoint（API-038）+ Sprint-22 前端文件管理器验收；默认向后兼容。
+
 ## v1.3.0（2026-08-03）
 
 **Phase2B 第三 slice：REQ-039 文档目录树（folder-tree）后端核心。** 新增嵌套文件夹（`lumen_folders` 邻接表）+ 文档归属（`folder_id`），文件夹 CRUD / 移动（防环 / 跨空间）/ 改名（重名 4090）/ 删非空 4090 / 排序；folder 不独立设权限，文档可见性仍按 `permission` 过滤。
