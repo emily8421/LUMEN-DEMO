@@ -55,7 +55,7 @@ flowchart TB
 | TCD-007 | 批量 / 文件夹导入按逐文件循环处理，保留相对路径标题前缀，部分成功不回滚，同名默认跳过 | Phase1.5A 要最快解决“资料放不进去”；不建真实目录表可避免 DB 迁移 | 新增 folder 表 / 真实目录树；失败一项回滚全部 | REQ-037、TC-P1-015 | 已实现（Sprint-16，TC-P1-015 通过） |
 | TCD-008 | `.md` / ZIP 导出备份走标准文件流与 Python `zipfile`，导出前统一权限过滤 | Phase1.5A 要可迁出、可备份；标准库不引重依赖 | 先做 PDF；导出数据库整库；长期公开链接 | REQ-038、TC-P1-016 | 已实现（Sprint-17，TC-P1-016 通过） |
 | TCD-009 | PDF 导出受 RG-006 控制，未完成中文最小样例与资源验证前不得编码 | PDF 依赖与字体风险高，不应阻塞个人可用 Alpha | 直接引入 weasyprint / reportlab 编码 | REQ-027、TC-P1-017 | 候选·待 RG-006 |
-| TCD-010 | Phase2B AI 润色 / 写作引用（REQ-014）复用 ADR-002 LLM adapter；polish 同步、citation 复用 RAG 来源检索 + LLM | 厂商解耦、复用既有通道；不引新 LLM SDK | 业务层直连 LLM；新增独立 AI 服务 | AI 润色（REQ-014） | 设计就绪·**RG-008 已升 Go**；后端已实现（Sprint-19，待前端 half） |
+| TCD-010 | Phase2B AI 润色 / 写作引用（REQ-014）复用 ADR-002 LLM adapter；polish 同步、citation 复用 RAG 来源检索 + LLM | 厂商解耦、复用既有通道；不引新 LLM SDK | 业务层直连 LLM；新增独立 AI 服务 | AI 润色（REQ-014） | 已实现；**RG-008 已升 Go**；TC-P2-AI-001 live UI smoke 2026-07-31 通过 |
 
 > 关联详细设计：`docs/design/rag-retrieval.md`、`ingestion.md`、`term-management.md`、`permissions.md`。
 > **错误码**：HTTP 状态码 + `{ code, msg, data }` 双层；`code=0` 成功，业务错误 4 位数字码（详见 `docs/07-api-spec.md` §1）。
@@ -146,7 +146,7 @@ flowchart TB
 | RG-005 | Web / ORM 基础栈（FastAPI/Pydantic/React） | **Go** | 已接入并跑通 74 后端 tests（含 PG 集成 + embedding）+ 前端 build + 浏览器 smoke；requirements.txt drift 已解决（T7 PG-C-001） | — | 74 后端 tests + 前端 build + smoke；TC-P1-001..012 | REQ-001..006/011/036 |
 | RG-006 | Phase1.5B PDF 导出库（候选 weasyprint / reportlab） | **待评估 / 不阻塞 P1.5A** | 新依赖（REQ-027）；中文排版、字体、资源占用未验证 | 选型 + tech-env-eval（中文排版 / 字体 / 内存） | 待 tech-env-eval；TC-P1-017 | REQ-027 |
 | RG-007 | Phase1.5B 真实 Word / PDF 文本提取（候选 python-docx / pdfplumber） | **待评估 / 不阻塞 P1.5A** | 依赖未接入，真实文档隐私与格式兼容性未验证 | 最小样例导入 + 资源 / 隐私边界验证 | 待 tech-env-eval | REQ-009 |
-| RG-008 | Phase2B AI 润色数据外发风险接受（REQ-014） | **Go（Sprint-19 后端 vertical slice 已通过，2026-07-30）** | 数据外发风险已人工接受（2026-07-30，真实外发 + 权限护栏）；sources 权限过滤复用 Phase1 既有查询层过滤（citation 复用 `rag._find_candidate_chunks`，越权 chunk 不进 prompt / 不返回，`test_ai_polish` 验证）；草稿只存 `input_excerpt_hash`（sha256）+ `prompt_summary`（摘要，测试断言不含原文 / key）、不存完整敏感原文；不做敏感字段自动过滤（用户自判）；LLM 不可用→5030、不落库不编造（区别于 RAG 静默降级） | ~~首个 vertical slice 实跑升 Go~~ → **已通过**：`tests.backend.test_ai_polish` service 9/9 绿（权限过滤 / 5030 不落库 / hash 留存）+ 全量后端 125 OK(skipped=3) | TC-P2-AI-001（后端通过；前端 UI smoke 待前端 half） | REQ-014（解锁 AI 润色编码） |
+| RG-008 | Phase2B AI 润色数据外发风险接受（REQ-014） | **Go（Sprint-19 vertical slice 已通过，2026-07-31 前端闭环）** | 数据外发风险已人工接受（2026-07-30，真实外发 + 权限护栏）；sources 权限过滤复用 Phase1 既有查询层过滤（citation 复用 `rag._find_candidate_chunks`，越权 chunk 不进 prompt / 不返回，`test_ai_polish` 验证）；草稿只存 `input_excerpt_hash`（sha256）+ `prompt_summary`（摘要，测试断言不含原文 / key）、不存完整敏感原文；不做敏感字段自动过滤（用户自判）；LLM 不可用→5030、不落库不编造（区别于 RAG 静默降级） | ~~首个 vertical slice 实跑升 Go~~ → **已通过**：`tests.backend.test_ai_polish` service 9/9 绿（权限过滤 / 5030 不落库 / hash 留存）+ 全量后端 125 OK(skipped=3) + 前端 live UI smoke 2026-07-31 通过 | TC-P2-AI-001（已通过） | REQ-014（AI 润色已落地） |
 
 > 风险与验证映射：本表 RG-ID 与 `docs/09-verification.md §6` 风险项对齐（待 09 补 Risk-ID 列后双向链接）。
 
@@ -171,4 +171,4 @@ flowchart TB
 
 - Phase1.5A Sprint-16/17 已完成且未引新依赖；若后续扩展批量导入或 ZIP 导出需要超出标准库 / 既有栈，必须先修订本文与 `06/07/08/09`。
 - Phase1.5B PDF 导出须先完成 RG-006；真实 Word/PDF 文本提取须先完成 RG-007 或独立 tech-env-eval，均不得阻塞 P1.5A。
-- Phase2B 启动准备已完成（2026-07-30）：数据外发风险已接受（**RG-008 已升 Go**，见 §5.1 / `ai/project-rules.md §2.5`）、AI 润色 TCD-010 与 06/07 契约已补、Sprint-19/20 已规划；**Sprint-19 后端 vertical slice 已实现并通过（RG-008→Go，2026-07-30）**，待前端 half + Sprint-11 UI/WSG 门禁重跑后推进切阶段指针。Phase2A 已实现能力如需扩展，按同一门禁补文档与验证。
+- Phase2B 启动准备已完成（2026-07-30）：数据外发风险已接受（**RG-008 已升 Go**，见 §5.1 / `ai/project-rules.md §2.5`）、AI 润色 TCD-010 与 06/07 契约已补；**Sprint-19 已完成（TC-P2-AI-001 live UI smoke 2026-07-31 通过）**；Sprint-20 主题时间线已本地实现（task-030，运行态 API smoke / 浏览器 smoke 待补）。Phase2A 已实现能力如需扩展，按同一门禁补文档与验证。

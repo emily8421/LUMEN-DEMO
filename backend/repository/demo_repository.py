@@ -128,6 +128,7 @@ class DemoRepository:
         owner_id: int,
         permission: DocumentPermission,
     ) -> Document:
+        now = _now_iso()
         document = Document(
             id=self._next_document_id,
             space_id=space_id,
@@ -136,6 +137,8 @@ class DemoRepository:
             owner_id=owner_id,
             permission=permission,
             current_version=1,
+            created_at=now,
+            updated_at=now,
         )
         self._next_document_id += 1
         self.documents.append(document)
@@ -158,6 +161,7 @@ class DemoRepository:
             content_md=content_md,
             permission=permission,
             current_version=next_version,
+            updated_at=_now_iso(),
         )
         self._replace_document(updated_document)
         self._append_version(document_id, next_version, content_md, editor_id)

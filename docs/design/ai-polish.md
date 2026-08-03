@@ -133,13 +133,13 @@ stateDiagram-v2
 
 | 阶段 | 功能范围 | 交付物形态 | 设计状态 | 实现状态 | 备注 |
 |---|---|---|---|---|---|
-| Phase2B | REQ-014 polish + citation | MVP | P2B-已设计 | 后端已实现（Sprint-19，2026-07-30）；前端 half 待实现 | 首批核心 |
+| Phase2B | REQ-014 polish + citation | MVP | P2B-已设计 | 已实现（Sprint-19；前端闭环与 TC-P2-AI-001 live UI smoke 2026-07-31 通过） | 首批核心 |
 
 readiness gate：
 
 | 能力 | 当前状态 | 解锁条件 | 验证证据 | 降级路径 | 阻塞 Sprint |
 |---|---|---|---|---|---|
-| AI 润色数据外发（RG-008） | **Go（后端 vertical slice 通过，2026-07-30）** | ~~Sprint-19 实跑升 Go~~ → 已通过：权限过滤（越权 chunk 不进 prompt / 不返回）、5030 不落库不编造、hash 留存均经 `tests.backend.test_ai_polish` 验证 | TC-P2-AI-001 后端通过；前端 UI smoke 待前端 half | 5030 | ~~阻塞 REQ-014 编码~~ → 已解锁 |
+| AI 润色数据外发（RG-008） | **Go（vertical slice 通过，2026-07-31 前端闭环）** | ~~Sprint-19 实跑升 Go~~ → 已通过：权限过滤（越权 chunk 不进 prompt / 不返回）、5030 不落库不编造、hash 留存均经 `tests.backend.test_ai_polish` 验证；前端 live UI smoke 已通过 | TC-P2-AI-001 通过 | 5030 | ~~阻塞 REQ-014 编码~~ → 已解锁 |
 
 ## 7. 验证与验收追溯
 

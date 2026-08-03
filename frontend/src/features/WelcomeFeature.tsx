@@ -52,6 +52,12 @@ export function WelcomeFeature({ isBusy, onNavigate, onCreateDocument, onOpenQui
           <span className="welcome-card-title">标签</span>
           <small>组织与筛选文档</small>
         </button>
+
+        <button type="button" className="welcome-card" disabled={isBusy} onClick={() => onNavigate('timeline')}>
+          <span className="welcome-card-icon" aria-hidden="true">⌁</span>
+          <span className="welcome-card-title">时间线</span>
+          <small>查看主题演进</small>
+        </button>
       </div>
 
       <p className="welcome-hint">从左侧目录选择文档开始阅读，或新建一篇。</p>

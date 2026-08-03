@@ -6,6 +6,18 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v1.5.0（2026-08-03）
+
+**Sprint-20 主题时间线可用闭环：关键词 / 标签驱动的时间线视图 + 密度热条。** 在 Phase2B 团队 MVP 范围内完成 REQ-013a / REQ-024 第二 slice，新增 API-033 与前端独立时间线视图，按候选 A 实时聚合，不引入 timeline 事件表。
+
+- 后端（task-030）：新增 `GET /api/spaces/{id}/timeline`（API-033），实时聚合 documents / tag_links / doc_links / chunks；支持 `q`、`tag_ids`、`from`、`to`、`density`，仅返回当前用户可见文档事件；`created/updated/tagged/linked` 四类事件与 actor 规则落地。
+- 数据与 demo runtime：migration 012 只增加时间索引，不建事件表；修复 runtime demo 新建 / 更新文档 `created_at/updated_at` 为空导致时间线无事件的问题。
+- 前端：新增独立时间线视图、导航入口、首页入口、关键词搜索、标签入口、密度热条、事件列表和打开文档链路；兼容后端实际返回的 `external` permission 字符串。
+- smoke 基础设施收口：新增运行态 OpenAPI route preflight；`run-sprint16-demo.ps1 -Detached` 改为 WMI/CIM launcher + runtime state，前端直接 `npm exec vite -- --port`，避免 AI 执行器回收后端或双端口参数干扰 smoke。
+- 验证：`tests.backend.test_timeline` 7/7 OK；timeline/document/tag/doc_links 回归 38/38 OK；backend discover 190 OK（skipped=2，embedding torch DLL 权限警告按 text-only fallback 继续）；frontend `npm run build` 通过（259 modules）；运行态 API smoke 通过（OpenAPI 含 API-033，关键词 / 标签 / 空 q 422）；Edge headless CDP 浏览器 smoke 通过；demo detached 启动 / 独立 preflight / stop 回归通过。
+
+> MINOR 依据（`ai/project-rules.md` §2.8.1）：Sprint 验收 / 新增可演示能力 + 新增对外 API endpoint（API-033）；默认向后兼容（不建 timeline 事件表）。
+
 ## v1.4.0（2026-08-03）
 
 **Sprint-22 文档目录树可用闭环：导入保留结构 + 前端文件管理器 + 单文档移动。** 在 v1.3.0 的 folder-tree 后端核心之上，补齐 API-029 `preserve_structure`、前端 Obsidian 式文件管理器基础能力和 API-038 单篇文档移动。

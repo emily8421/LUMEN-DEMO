@@ -2,7 +2,7 @@
 
 > 子系统内部逻辑详细设计。总体定位见 `docs/04-architecture.md`（MOD-006 / Flow-009）；接口见 `docs/07-api-spec.md`（API-033）。
 > 按「完整骨架 + 阶段增量」：本文为 Phase2B 首批·**第二 slice** `[P2]`，承接已确认需求 REQ-013（重定位为主题时间线）/ REQ-024，不新增需求。
-> 对应需求：REQ-013a（主题时间线·P2，重定位中）、REQ-024（时间轴密度热条）；REQ-013b（关联图视图）留愿景，本文不含。
+> 对应需求：REQ-013a（主题时间线·P2）、REQ-024（时间轴密度热条）；REQ-013b（关联图视图）留愿景，本文不含。
 
 > **2026-08-02 重定位说明**：本文前身把「时间轴」设计为**空间活动流**（`GET /spaces/{id}/timeline` 返回整个空间的事件总览）。经评审对照 `docs/vision/product-vision.md` 场景1（「搜索框输入关键词 → 纵向时间线 → 主题发展脉络」）与场景覆盖索引「时间轴视图：按项目/关键词生成事件卡片时间线」，确认原设计偏离了愿景核心——**关键词驱动的主题时间线**。本次重定位为：时间轴 = **关键词 / 标签驱动的主题时间线**；原空间活动流收编为「不传 `q` 时的默认总览形态」（候选 A 聚合 / 密度 / 权限内核全部复用）。详见 §9 实现偏差。
 
@@ -13,14 +13,14 @@
 | 设计对象 | 主题时间线 / 密度热条子系统（MOD-006，Flow-009，REQ-013 重定位） |
 | 文档路径 | `docs/design/timeline.md` |
 | 输入来源 | `02`（REQ-013 重定位 / REQ-024）、`03`（Phase2B 第二 slice）、`04`（MOD-006 / Flow-009）、`05`、`06`（`lumen_documents` 时间字段 / 标签 / 内链 + ADR-010 派生可重建）、`07`（API-033 改造）、`docs/vision/product-vision.md` 场景1 / 场景5、`docs/design/intelligence-analysis.md`（关联图 / 联动愿景） |
-| 覆盖 REQ | REQ-013a（主题时间线·P2，**重定位中·待 02/03 配套修订确认**）、REQ-024（密度热条）；REQ-013b（关联图）愿景，本文不含 |
+| 覆盖 REQ | REQ-013a（主题时间线·P2）、REQ-024（密度热条）；REQ-013b（关联图）愿景，本文不含 |
 | 所属 Phase | `[P2]` Phase2B 团队 MVP（首批·第二 slice，紧随 REQ-014） |
 | 交付物形态 | MVP |
-| 当前状态 | **Phase2B·第二 slice·已设计（重定位：空间活动流 → 主题时间线）**：TL-C-001..008 仍成立（候选 A / 4 类事件 / 密度算法不变）；新增 TL-C-009..011（关键词命中口径 / actor / linked 缺数据）已确认（2026-08-02）；待 02/03/06/07/08/09 配套修订 + folder-tree（Sprint-22）后进入编码 |
+| 当前状态 | **Phase2B·第二 slice·本地实现完成（task-030）**：候选 A 实时聚合、不建 timeline 事件表；API-033 + 前端时间线视图已落地；后端自动化验证 + frontend build 通过，运行态 API smoke / 浏览器 smoke 待补 |
 | 流程 ID | Flow-D-TL-01（主题时间线数据装配）、Flow-D-TL-02（密度热条计算）、Flow-D-TL-03（关键词命中，本次新增） |
 | 图 ID | DIAG-TL-FLOW-01（关键词命中 → 装配 → 降级，见 §3） |
-| 最后更新 | 2026-08-02 |
-| 下游影响 | `02`（REQ-013 重定位）、`03`（第二 slice 表述）、`06`（时间索引 migration 012）、`07`（API-033 加 `q` + `actor`）、`08`（Sprint-20 重定位 + 编码移至 folder-tree 后）、`09`（TC-P2-TL-001 改造）、`frontend-interaction`（PG-P2-008 加搜索框） |
+| 最后更新 | 2026-08-03 |
+| 下游影响 | `02`（REQ-013 重定位）、`03`（第二 slice 表述）、`06`（时间索引 migration 012 已落地）、`07`（API-033 加 `q` + `actor` 并实现）、`08`（Sprint-20 task-030 状态）、`09`（TC-P2-TL-001 本地验证记录）、`frontend-interaction`（PG-P2-008 实现状态） |
 
 ## 1. 职责与边界
 
@@ -28,7 +28,7 @@
 |---|---|
 | 本设计负责 | 按**关键词 / 标签**筛选当前用户可见文档子集 → 聚合 4 类事件（created/updated/tagged/linked）→ 装配主题时间线 items + 密度热条 density；每条事件带 `actor`（数据可得时）；大集合降级；权限过滤 |
 | 本设计不负责 | 关联图视图（REQ-013b，愿景，见 `intelligence-analysis.md`）；因果推理 / 热力矩阵（愿景 REQ-020/021）；时间轴↔关联图多视角联动（愿景 REQ-029）；文档 CRUD（复用既有）；**搜索结果摘要 / 排序 / 向量召回**（搜索页 MOD-004 的职责，时间轴只复用其「可见文档口径」，不抢其搜索结果形态） |
-| 不新增内容 | 不新增 REQ（REQ-013a/b 为既有 REQ-013 的重定位拆分，待 02/03 修订）；**不加 `lumen_doc_links.created_by`**（linked 事件 actor 留 null，TL-C-011）；不建实体表（候选 A，TL-C-001） |
+| 不新增内容 | 不新增 REQ（REQ-013a/b 为既有 REQ-013 的重定位拆分）；**不加 `lumen_doc_links.created_by`**（linked 事件 actor 留 null，TL-C-011）；不建实体表（候选 A，TL-C-001） |
 | 权限边界 | 时间轴 / 密度只含当前用户可见文档事件；前端视图仅展示，权限由 API-033 + service 查询层按 `space_id` + `lumen_documents.permission` 过滤（复用 `visible_document_where_clause`，与 `doc_links` / `search` 同口径） |
 | 依赖前置 | REQ-014 Sprint-19 先行（**已落地**）；事件源表（`lumen_documents` / `lumen_tags` / `lumen_tag_links` / `lumen_doc_links`）均 Phase2A 已实现；关键词命中复用 `search` 的可见文档收敛口径 |
 
@@ -42,9 +42,9 @@
 | `docs/04-architecture.md` | MOD-006 / Flow-009 | 子系统定位 | 04 追溯 |
 | `docs/05-tech-spec.md` | 资源 / 无新依赖（候选 A） | 复用 PG + 现有栈 | 05 无新 Risk |
 | `docs/06-db-design.md` | `lumen_documents`(created_at/updated_at/owner_id)、`lumen_tag_links`(created_at/created_by)、`lumen_doc_links`(created_at，**无 created_by**)；ADR-010 派生可重建；REQ-013/024 行 | 事件数据来源候选 A + actor 可得性 | 已回填 06（数据来源 + 时间索引） |
-| `docs/07-api-spec.md` | API-033（**改造：加 `q` + `actor`**） | 接口契约 | API-033 定稿（待 07 修订） |
-| `docs/08-dev-plan.md` | Sprint-20（重定位为主题时间线；编码移至 folder-tree / Sprint-22 之后） | 第二 slice | 编码 |
-| `docs/09-verification.md` | TC-P2-TL-001（**改造：加关键词命中 + actor + 越权零泄露**） | 验收 | 验证证据 |
+| `docs/07-api-spec.md` | API-033（**改造：加 `q` + `actor`**） | 接口契约 | API-033 已实现（task-030） |
+| `docs/08-dev-plan.md` | Sprint-20（重定位为主题时间线；task-030 本地实现） | 第二 slice | 编码完成记录 |
+| `docs/09-verification.md` | TC-P2-TL-001（**改造：加关键词命中 + actor + 越权零泄露**） | 验收 | 本地验证证据 |
 | `docs/design/intelligence-analysis.md` | REQ-029 多视角联动 / REQ-013b 关联图（愿景） | 主题时间线是关联图 / 联动的**前置视图载体**（共享「关键词 → 文档子集」） | 关联图预留出口 |
 
 最低追溯链：`product-vision 场景1 → REQ-013a / 024 → Phase2B → MOD-006 / Flow-009 → lumen_documents(+tags/tag_links/doc_links) → API-033 → 本设计 → Sprint-20 → TC-P2-TL-001`。
@@ -105,7 +105,7 @@ flowchart TD
   auth -->|否| e4003["4003"]
   auth -->|是| perm["权限收敛: 当前用户可见文档集"]
   perm --> kw{"传 q?"}
-  kw -->|是| match["Flow-D-TL-03 关键词命中<br/>title/content ILIKE → doc_id 子集"]
+  kw -->|是| match["Flow-D-TL-03 关键词命中<br/>title ILIKE + chunk.ts_vector → doc_id 子集"]
   kw -->|否| all["子集 = 全部可见<br/>(空间总览形态)"]
   match --> tagf["标签交集过滤 tag_ids?"]
   all --> tagf
@@ -142,16 +142,16 @@ flowchart TD
 - 关键词命中索引（TL-C-010，**口径修订 2026-08-02**）：**标题命中**=`title ILIKE`（短文本，零新索引）；**正文命中**=复用 `lumen_chunks.ts_vector`（zhparser 中文分词，migration 006 已建，`search` 在用）→ `distinct document_id`。**复用现成全文索引，非新增工作**；纯 `content_md` ILIKE 被否决（中文不分词 + 全表扫，漏命中致主题时间线空）。
 - 优点：零实体表 migration（仅加 2 个时间索引）；ADR-010「派生可重建」天然满足；无写入一致性维护；事件实时；与 folder-tree「能不加表就不加」克制一致。
 - 缺点：每次查询都要 UNION 4 表 + 聚合 + 关键词命中，扫描量随事件数 / 文档正文长度增长；依赖时间范围裁剪 + 索引 + 关键词命中收窄 + 降级阈值四层控制。
-- 性能口径（Demo 本机 PG，候选 A）：单空间 <500 文档 / <2000 事件、带时间范围 + 索引 +（传 `q` 时子集收窄），聚合查询预期 <200ms；超阈值触发窗口聚合 / 采样（TL-C-006）。编码中本机实测确认（不阻塞启动）。
+- 性能口径（Demo 本机 PG，候选 A）：单空间 <500 文档 / <2000 事件、带时间范围 + 索引 +（传 `q` 时子集收窄），聚合查询预期 <200ms；超阈值触发窗口聚合 / 采样（TL-C-006）。task-030 已由单测覆盖 degraded 逻辑；真实 PG 大数据性能实测待后续补。
 
 ### 4.2 接口与权限契约
 
 | 能力 / 流程 | 数据表 / 字段 | API-ID | 权限规则 | 错误码 | 契约状态 |
 |---|---|---|---|---|---|
-| 主题时间线 items（含 `q` 筛选 + `actor`） | 候选 A：`lumen_documents`(created_at/updated_at/owner_id) + `lumen_tag_links`(created_at/created_by) + `lumen_doc_links`(created_at) | API-033 | 空间成员；仅可见文档事件（`space_id` + `permission` 过滤）；`q` 命中仅在可见集内 | 4001/4003/4004/4220 | 已设计·待 07 修订（加 `q` + `actor`） |
-| 密度热条 | 同上事件按时间窗口聚合 | API-033 `density?=true` | 同上 | 同上 | 已设计 |
+| 主题时间线 items（含 `q` 筛选 + `actor`） | 候选 A：`lumen_documents`(created_at/updated_at/owner_id) + `lumen_tag_links`(created_at/created_by) + `lumen_doc_links`(created_at) | API-033 | 空间成员；仅可见文档事件（`space_id` + `permission` 过滤）；`q` 命中仅在可见集内 | 4001/4003/4004/4220 | 已实现（task-030） |
+| 密度热条 | 同上事件按时间窗口聚合 | API-033 `density?=true` | 同上 | 同上 | 已实现（task-030） |
 
-**API-033 响应契约（改造，待回填 07 §3.9）**：
+**API-033 响应契约（task-030 已落地，见 07 §3.9）**：
 
 ```text
 items[{date, document_id, title, event_type, permission, actor}]
@@ -162,7 +162,7 @@ window: "day" | "week"  # 当前密度窗口粒度
 
 - `event_type` enum：`created` / `updated` / `tagged` / `linked`（TL-C-002）。
 - `actor`：操作者 user_id；`created`/`updated` = `owner_id`（updated 近似，TL-C-009）；`tagged` = `tag_link.created_by`；`linked` = **`null`**（数据不可得，TL-C-011）。仅前端展示用。
-- `permission`（TL-C-007 已确认·暴露）：文档权限（`private` / `shared` / `public`），仅展示（图标 / 可见性标记），**不替代后端过滤**。
+- `permission`（TL-C-007 已确认·暴露）：文档权限（`private` / `team` / `external`），仅展示（图标 / 可见性标记），**不替代后端过滤**。
 - `density.level`：0 无 / 1 低 / 2 中 / 3 高（TL-C-003）。
 - `density.ratio`：该窗口 `event_count` ÷ 全空间日均值的倍数（如 3.2 = 高于平均 3.2 倍）；前端悬停量化提示，对齐 product-vision 场景1。
 - `q` 语义：不传 = 空间总览（子集 = 全部可见）；传 = 主题子集（仅命中文档的事件）。
@@ -188,30 +188,30 @@ window: "day" | "week"  # 当前密度窗口粒度
 
 | 阶段 | 功能范围 | 交付物形态 | 设计状态 | 实现状态 | 备注 |
 |---|---|---|---|---|---|
-| Phase2B | REQ-013a 主题时间线（关键词驱动）+ REQ-024 密度热条 | MVP | 已设计（重定位） | 待编码（Sprint-20，folder-tree / Sprint-22 之后） | 依赖 REQ-014 Sprint-19 先行（已落地）；TL-C-001..011 已确认 |
+| Phase2B | REQ-013a 主题时间线（关键词驱动）+ REQ-024 密度热条 | MVP | 已设计（重定位） | 本地实现完成（task-030；API-033 + 前端视图） | 后端自动化验证 + frontend build 通过；运行态 API smoke / 浏览器 smoke 待补 |
 | 愿景 | REQ-013b 关联图视图、REQ-029 多视角联动、REQ-021 因果展开 | 产品 | 骨架（见 `intelligence-analysis.md`） | 不实现 | 主题时间线是其前置视图载体，预留「关键词 → 文档子集」出口 |
 
 readiness gate：
 
 | 能力 | 当前状态 | 解锁条件 | 验证证据 | 降级路径 | 阻塞 Sprint |
 |---|---|---|---|---|---|
-| 时间轴数据来源（TL-C-001） | ✅ 已确认候选 A（2026-08-02） | 已回写 06/07 | — | 大集合聚合 | 不阻塞（仅待 folder-tree 后编码） |
-| 关键词命中口径（TL-C-010） | ✅ 已确认 title ILIKE + chunk.ts_vector（2026-08-02 口径修订） | 复用现成 zhparser 全文索引 | 编码中本机实测 | 降级 + 子集收窄 | 不阻塞 |
-| actor 可得性（TL-C-011） | ✅ 已确认 linked=null（2026-08-02） | 全 actor 需 `lumen_doc_links.created_by`（后续 migration） | — | linked 显示「未知」 | 不阻塞 |
-| REQ-013 重定位（02/03 修订） | ⏳ 待配套修订（2026-08-02） | 02/03 REQ-013 拆分为 REQ-013a（P2）/ REQ-013b（愿景）+ 补用户故事 | 本设计 §9 已记录 | — | 不阻塞设计落盘；编码前需 02/03 修订到位 |
-| 大集合阈值（TL-C-006） | 草案（>500 文档 / >2000 事件） | 本机 Demo 实测渲染性能 → 定阈值 | — | 聚合 / 采样 / 列表 | 不阻塞启动，编码中定 |
+| 时间轴数据来源（TL-C-001） | ✅ 已实现候选 A（task-030） | 已回写 06/07；migration 012 已落地 | `test_timeline` 6/6 OK | 大集合聚合 | 不阻塞 |
+| 关键词命中口径（TL-C-010） | ✅ 已实现 title ILIKE + chunk.ts_vector 路径（2026-08-03） | PG 路径复用 `search_chunks` 全文索引；内存 fake 覆盖 chunk fallback | `test_timeline` 关键词 / 越权用例 | 降级 + 子集收窄 | 不阻塞 |
+| actor 可得性（TL-C-011） | ✅ 已实现 linked=null（task-030） | 全 actor 需 `lumen_doc_links.created_by`（后续 migration） | `test_timeline` 4 类事件 actor 用例 | linked 显示「未知」 | 不阻塞 |
+| REQ-013 重定位（02/03 修订） | ✅ 已完成配套修订（2026-08-02） | 02/03 REQ-013 拆分为 REQ-013a（P2）/ REQ-013b（愿景）+ 补用户故事 | 本设计 §9 已记录 | — | 不阻塞 |
+| 大集合阈值（TL-C-006） | 已固化（>500 文档 / >2000 事件） | 后续真实 PG 大数据性能实测可微调 | `test_timeline` degraded 用例 | 聚合 / 采样 / 列表 | 不阻塞 |
 
-> 时间轴为只读视图，复用既有 PG / 前端栈，**不引入新 RG**（无新真实依赖）；候选 A 仅加 2 个时间索引（migration 012），不建实体表。阻塞项是 REQ-013 重定位的 02/03 配套修订（非 readiness gate 意义上的外部依赖门禁）。
+> 时间轴为只读视图，复用既有 PG / 前端栈，**不引入新 RG**（无新真实依赖）；候选 A 仅加 2 个时间索引（migration 012），不建实体表。task-030 已完成本地实现；剩余验收缺口是运行态 API smoke / Chrome / Edge smoke 与真实 PG 大数据性能实测。
 
 ## 7. 验证与验收追溯
 
 | 设计点 | 关联 REQ | Sprint / Task | TC | 验证方式 | 状态 |
 |---|---|---|---|---|---|
-| 主题时间线渲染 + 权限过滤 | REQ-013a | Sprint-20 | TC-P2-TL-001 | 后端 tests（越权不返回）+ Chrome / Edge smoke | 待实现 |
-| **关键词命中准确**（本次新增） | REQ-013a | Sprint-20 | TC-P2-TL-001 | 后端 tests（title/content 命中、零命中、越权不命中）| 待实现 |
-| **actor 正确 + linked=null**（本次新增） | REQ-013a | Sprint-20 | TC-P2-TL-001 | 后端 tests（4 类事件 actor；linked=null） | 待实现 |
-| 密度热条色阶 | REQ-024 | Sprint-20 | TC-P2-TL-001 | 渲染 + 边界（空 / 满窗口） | 待实现 |
-| 大集合降级 | REQ-013a | Sprint-20 | TC-P2-TL-001 | 超阈值聚合 / 逃生舱 / `degraded=true` | 待实现 |
+| 主题时间线渲染 + 权限过滤 | REQ-013a | Sprint-20 / task-030 | TC-P2-TL-001 | 后端 tests（越权不返回）+ frontend build；Chrome / Edge smoke 待补 | 本地实现完成 |
+| **关键词命中准确**（本次新增） | REQ-013a | Sprint-20 / task-030 | TC-P2-TL-001 | 后端 tests（title/chunk 命中、越权不命中）| 本地实现完成 |
+| **actor 正确 + linked=null**（本次新增） | REQ-013a | Sprint-20 / task-030 | TC-P2-TL-001 | 后端 tests（4 类事件 actor；linked=null） | 本地实现完成 |
+| 密度热条色阶 | REQ-024 | Sprint-20 / task-030 | TC-P2-TL-001 | 后端 density 用例 + frontend build；浏览器渲染 smoke 待补 | 本地实现完成 |
+| 大集合降级 | REQ-013a | Sprint-20 / task-030 | TC-P2-TL-001 | 后端 degraded 用例；真实大数据性能待补 | 本地实现完成 |
 
 正式验收证据以 `09-verification.md` 为准。
 
@@ -231,14 +231,13 @@ readiness gate：
 
 | 偏差 ID | 代码 / 配置事实 | 原设计 | 偏差类型 | 处理结论 | 回写目标 | 验证 |
 |---|---|---|---|---|---|---|
-| TL-DEV-001（本次新增，2026-08-02） | 尚未编码 | 前身设计为「空间活动流」（`GET /spaces/{id}/timeline` 返回整个空间事件总览，无关键词驱动） | 设计滞后（设计偏离 product-vision 场景1 愿景） | **重定位为「主题时间线」**：关键词 / 标签驱动；空间活动流收编为「`q` 不传时的默认总览形态」；候选 A 聚合 / 密度 / 权限内核全部复用 | `02`（REQ-013 重定位）/ `03` / `07`（API-033 加 `q`+`actor`）/ `08`（Sprint-20 重定位 + 编码后移）/ `09`（TC 改造）/ `frontend-interaction`（PG-P2-008 加搜索框） | 本次重定位；编码后回填代码事实 |
-| — | 尚未编码 | — | — | Sprint-20 编码后回填 | — | — |
+| TL-DEV-001（2026-08-02 → 2026-08-03 回填） | task-030 已编码：`backend/service/timeline.py` + `backend/api/timeline.py` + `frontend/src/features/TimelineFeature.tsx` | 前身设计为「空间活动流」（`GET /spaces/{id}/timeline` 返回整个空间事件总览，无关键词驱动） | 设计滞后（设计偏离 product-vision 场景1 愿景） | **已按主题时间线落地**：关键词 / 标签驱动；空间活动流收编为「`q` 不传时的默认总览形态」；候选 A 聚合 / 密度 / 权限内核全部复用；不建事件表 | `06/07/08/09/frontend-interaction` 状态推进；task-030 | `test_timeline` 6/6 OK；timeline/document/tag/doc_links 回归 37/37 OK；frontend build 通过；浏览器 smoke 待补 |
 
 > 重定位依据：`docs/vision/product-vision.md` 场景1（「搜索框输入关键词 → 纵向时间线铺开 → 主题发展脉络」）+ 场景覆盖索引「时间轴视图：按项目/关键词生成事件卡片时间线」。原 REQ-013 拆解时窄化为空间活动流，偏离愿景核心；本次纠正。关联图（REQ-013b）、因果展开（REQ-021）、多视角联动（REQ-029）仍为愿景，不在本 slice。
 
 ## 10. 待人工确认项
 
-> TL-C-001..008 **已确认（2026-08-02 用户"按建议执行"）**：候选 A、4 类事件、密度 4 档、密度口径、时间窗口、大集合阈值、permission 暴露、前端布局 PG-P2-008——重定位后**仍全部成立**（聚合 / 密度 / 权限内核不变，仅加关键词筛选层与 actor）。本次重定位新增 TL-C-009..011 已确认。06/07/02/03/08/09/frontend-interaction 待配套修订。
+> TL-C-001..011 **已确认并随 task-030 本地实现（2026-08-03）**：候选 A、4 类事件、密度 4 档、密度口径、时间窗口、大集合阈值、permission 暴露、前端布局 PG-P2-008、关键词命中口径、actor 与 linked=null 均已进入代码和测试；运行态 API smoke / 浏览器 smoke 待补。
 
 | ID | 待确认项 | AI 建议 | 建议依据 | 备选方案 | 取舍影响 / 阻塞关系 |
 |---|---|---|---|---|---|
@@ -258,13 +257,13 @@ readiness gate：
 
 ## 11. slice 拆分建议（→ `docs/08-dev-plan.md`）
 
-> 编码移至 folder-tree（Sprint-22）之后。候选 slice 划分（不抢做，依赖 REQ-014 Sprint-19 先行——已落地）：
+> task-030 已按以下 slice 合并落地；剩运行态 API smoke / 浏览器 smoke 待补：
 
 1. **后端契约 + service**（候选 A）：关键词命中（Flow-D-TL-03，ILIKE）+ timeline service（UNION ALL 4 类事件 + 子集过滤 + 权限 + actor）+ 索引（migration 012：`lumen_documents(space_id, created_at/updated_at)`）+ API-033 改造（加 `q` + `actor`）+ tests（关键词命中准确 / 越权零泄露 / actor 正确 / linked=null / 空态 / 零命中 / 大集合降级）。
 2. **密度热条**：Flow-D-TL-02 窗口聚合 + 色阶映射 + tests（空 / 满 / 边界窗口）。（可与 slice 1 合并为同一后端 task，因密度即 service 一部分。）
 3. **前端主题时间线视图**：PG-P2-008 搜索框 + 密度热条 + 事件列表 + 经典列表逃生舱（参考 `frontend-interaction` §9.2.1）+ 浏览器 smoke。
-4. **回写**：02（REQ-013 重定位）、03（第二 slice 表述）、06（索引 migration 012 落地）、07（API-033 §3.9 契约定稿 + `q` + `actor`）、08（Sprint-20 状态）、09（TC-P2-TL-001 详情）、frontend-interaction（PG-P2-008 加搜索框）、design（本文 §9 实现偏差回填代码事实）。
+4. **回写**：02（REQ-013 重定位）、03（第二 slice 表述）、06（索引 migration 012 落地）、07（API-033 §3.9 契约定稿 + `q` + `actor`）、08（Sprint-20 状态）、09（TC-P2-TL-001 详情）、frontend-interaction（PG-P2-008 加搜索框）、design（本文 §9 实现偏差回填代码事实）已完成本轮状态推进。
 
 ---
 
-> 本设计已从 **空间活动流** 重定位为 **Phase2B·第二 slice·主题时间线（已设计）**：关键词 / 标签驱动（`q` 可选，不传=空间总览）+ 4 类事件 + actor（linked=null）+ 密度热条 + 大集合降级。TL-C-001..011 已确认（2026-08-02）；候选 A 聚合 / 密度 / 权限内核全部复用。**待 02/03/06/07/08/09 配套修订（TL-C-012）+ folder-tree（Sprint-22）后进入编码**。关联图（REQ-013b）/ 多视角联动（REQ-029）/ 因果展开（REQ-021）仍为愿景，预留「关键词 → 文档子集」出口。
+> 本设计已从 **空间活动流** 重定位为 **Phase2B·第二 slice·主题时间线（task-030 本地实现完成）**：关键词 / 标签驱动（`q` 可选，不传=空间总览）+ 4 类事件 + actor（linked=null）+ 密度热条 + 大集合降级。候选 A 聚合 / 密度 / 权限内核全部复用，不建 timeline 事件表。关联图（REQ-013b）/ 多视角联动（REQ-029）/ 因果展开（REQ-021）仍为愿景，预留「关键词 → 文档子集」出口；剩运行态 API smoke / 浏览器 smoke 待补。

@@ -1,6 +1,6 @@
 import { request } from './client';
 
-export type DocumentPermission = 'private' | 'team' | 'external_readonly';
+export type DocumentPermission = 'private' | 'team' | 'external' | 'external_readonly';
 
 export type KnowledgeDocument = {
   id: number;

@@ -54,6 +54,7 @@ def create_app():
     from backend.api.rag import router as rag_router
     from backend.api.search import router as search_router
     from backend.api.spaces import router as spaces_router
+    from backend.api.timeline import router as timeline_router
     from backend.api.terms import router as terms_router
 
     app = FastAPI(title="LUMEN Knowledge Base API", lifespan=lifespan)
@@ -85,6 +86,8 @@ def create_app():
         app.include_router(folders_router)
     if search_router is not None:
         app.include_router(search_router)
+    if timeline_router is not None:
+        app.include_router(timeline_router)
     if rag_router is not None:
         app.include_router(rag_router)
     if terms_router is not None:

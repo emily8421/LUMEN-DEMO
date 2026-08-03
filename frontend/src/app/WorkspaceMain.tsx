@@ -3,6 +3,7 @@ import { SearchFeature } from '../features/SearchFeature';
 import { QueryFeature } from '../features/QueryFeature';
 import { TermsFeature } from '../features/TermsFeature';
 import { TagsFeature } from '../features/TagsFeature';
+import { TimelineFeature } from '../features/TimelineFeature';
 import { WelcomeFeature } from '../features/WelcomeFeature';
 import type { ActiveView } from './WorkspaceViewNav';
 import { useDocuments } from './useDocuments';
@@ -10,6 +11,7 @@ import { useSearch } from './useSearch';
 import { useQuery } from './useQuery';
 import { useTerms } from './useTerms';
 import { useTags } from './useTags';
+import { useTimeline } from './useTimeline';
 import type { useAiPolish } from './useAiPolish';
 
 interface WorkspaceMainProps {
@@ -22,6 +24,7 @@ interface WorkspaceMainProps {
   query: ReturnType<typeof useQuery>;
   terms: ReturnType<typeof useTerms>;
   tags: ReturnType<typeof useTags>;
+  timeline: ReturnType<typeof useTimeline>;
   aiPolish: ReturnType<typeof useAiPolish>;
   onQuickEntryOpen: () => void;
   /** 视图切换（首页卡片，Doc-First §9.5.2，Sprint-21 slice 3c）。 */
@@ -45,6 +48,7 @@ export function WorkspaceMain({
   query,
   terms,
   tags,
+  timeline,
   aiPolish,
   onQuickEntryOpen,
   onNavigate,
@@ -140,6 +144,21 @@ export function WorkspaceMain({
           onNewTagNameChange={tags.setNewTagName}
           onSelectTag={tags.handleSelectTag}
           onCreateTag={tags.handleCreateTag}
+          onOpenDocument={documents.handleOpenDocument}
+        />
+      ) : null}
+
+      {activeView === 'timeline' ? (
+        <TimelineFeature
+          isBusy={isBusy}
+          timelineQuery={timeline.timelineQuery}
+          selectedTagIds={timeline.selectedTagIds}
+          timelineResult={timeline.timelineResult}
+          tags={tags.tags}
+          onTimelineQueryChange={timeline.setTimelineQuery}
+          onToggleTag={timeline.toggleTimelineTag}
+          onClearFilters={timeline.clearTimelineFilters}
+          onLoadTimeline={timeline.handleLoadTimeline}
           onOpenDocument={documents.handleOpenDocument}
         />
       ) : null}

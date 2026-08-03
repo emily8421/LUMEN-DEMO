@@ -12,6 +12,7 @@ import './styles/panels.css';
 import './styles/import-modal.css';
 import './styles/markdown.css';
 import './styles/tags.css';
+import './styles/timeline.css';
 import './styles/quick-entry.css';
 import './styles/ai-polish.css';
 import './styles/responsive.css';

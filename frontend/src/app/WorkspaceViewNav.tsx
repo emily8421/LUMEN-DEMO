@@ -1,4 +1,4 @@
-export type ActiveView = 'home' | 'documents' | 'search' | 'query' | 'terms' | 'tags';
+export type ActiveView = 'home' | 'documents' | 'search' | 'query' | 'terms' | 'tags' | 'timeline';
 
 const workspaceViews: Array<{ id: ActiveView; label: string; description: string }> = [
   { id: 'home', label: '首页', description: '欢迎 / 快速入口' },
@@ -7,6 +7,7 @@ const workspaceViews: Array<{ id: ActiveView; label: string; description: string
   { id: 'query', label: '问答', description: 'RAG 答案与来源' },
   { id: 'terms', label: '术语', description: '空间术语维护' },
   { id: 'tags', label: '标签', description: '标签视图与筛选' },
+  { id: 'timeline', label: '时间线', description: '主题脉络 / 密度' },
 ];
 
 type WorkspaceViewNavProps = {

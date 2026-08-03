@@ -16,6 +16,7 @@ import { useSession } from './app/useSession';
 import { useDocuments } from './app/useDocuments';
 import { useAiPolish } from './app/useAiPolish';
 import { useFolders } from './app/useFolders';
+import { useTimeline } from './app/useTimeline';
 import { isAuthTokenError } from './app/session-store';
 import { QuickEntryFeature } from './features/QuickEntryFeature';
 import { ImportFeature } from './features/ImportFeature';
@@ -75,6 +76,12 @@ function App() {
   const search = useSearch({ token, runAction, setNotice: workspace.setNotice });
   const query = useQuery({ token, runAction, setNotice: workspace.setNotice });
   const terms = useTerms({ token, runAction, setNotice: workspace.setNotice });
+  const timeline = useTimeline({
+    token,
+    currentSpaceId: session.session?.currentSpaceId,
+    runAction,
+    setNotice: workspace.setNotice,
+  });
   const imports = useImport({ token, runAction, setNotice: workspace.setNotice, onImported: handleImported });
 
   const currentSpace = session.spaces.find((space) => space.id === session.session?.currentSpaceId) ?? null;
@@ -222,6 +229,7 @@ function App() {
             query={query}
             terms={terms}
             tags={tags}
+            timeline={timeline}
             aiPolish={aiPolish}
             onQuickEntryOpen={quickEntry.open}
             onNavigate={workspace.setActiveView}

@@ -16,3 +16,4 @@ export * from './api/tags';
 export * from './api/quickEntry';
 export * from './api/aiPolish';
 export * from './api/folders';
+export * from './api/timeline';
