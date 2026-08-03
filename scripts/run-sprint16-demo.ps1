@@ -4,6 +4,7 @@ param(
     [switch]$NoBrowser,
     [switch]$StopExisting,
     [switch]$Detached,
+    [string[]]$RequiredBackendRoute = @(),
     [switch]$Stop
 )
 
@@ -13,8 +14,11 @@ $ErrorActionPreference = "Stop"
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $frontendRoot = Join-Path $repoRoot "frontend"
 $tempRoot = Join-Path $env:TEMP "lumen-sprint16-demo"
+$runtimeStatePath = Join-Path $tempRoot "runtime.json"
 $processes = @()
+$startedServices = @()
 $leaveRunning = $false
+$suppressFinalStopMessage = $false
 $hadViteApiBase = Test-Path Env:VITE_API_BASE
 $oldViteApiBase = $env:VITE_API_BASE
 $hadDemoBackendProxyUrl = Test-Path Env:DEMO_BACKEND_PROXY_URL
@@ -45,9 +49,27 @@ function Get-PortOwners([int]$Port) {
 }
 
 function Stop-PortOwners([int]$Port) {
-    foreach ($processId in Get-PortOwners $Port) {
+    $owners = Get-PortOwners $Port
+    foreach ($processId in $owners) {
         Stop-Process -Id $processId -Force -ErrorAction SilentlyContinue
     }
+    return $owners.Count
+}
+
+function Quote-CmdArgument([string]$Value) {
+    return '"' + ($Value -replace '"', '""') + '"'
+}
+
+function Join-CmdArguments([string[]]$Arguments) {
+    return ($Arguments | ForEach-Object { Quote-CmdArgument $_ }) -join " "
+}
+
+function Get-VoltaCommand() {
+    $volta = Get-Command "volta" -ErrorAction SilentlyContinue
+    if ($volta -and $volta.Source) {
+        return $volta.Source
+    }
+    return "volta"
 }
 
 function Assert-PortAvailable([int]$Port, [string]$Name) {
@@ -87,13 +109,80 @@ function Get-BackendPython() {
     return "python"
 }
 
-function Start-DemoProcess([string]$Name, [string]$FilePath, [string[]]$ArgumentList, [string]$WorkingDirectory) {
+function Start-DetachedCommandFile([string]$CommandFile, [string]$WorkingDirectory) {
+    $commandLine = "cmd.exe /d /c " + (Quote-CmdArgument $CommandFile)
+    $arguments = @{
+        CommandLine = $commandLine
+        CurrentDirectory = $WorkingDirectory
+    }
+    try {
+        $startup = New-CimInstance -ClassName Win32_ProcessStartup -ClientOnly
+        $startup.ShowWindow = 0
+        $arguments.ProcessStartupInformation = $startup
+    } catch {
+        # ShowWindow is best-effort; the detached launch still works without it.
+    }
+
+    try {
+        $result = Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments $arguments
+    } catch {
+        throw "Detached mode needs permission to call WMI/CIM Win32_Process.Create. Run this script from an elevated terminal, or ask the AI tool to execute this one command with escalation. Original error: $($_.Exception.Message)"
+    }
+    if ($result.ReturnValue -ne 0) {
+        throw "Failed to start detached process with WMI/CIM. ReturnValue=$($result.ReturnValue), command=$commandLine"
+    }
+    return [int]$result.ProcessId
+}
+
+function Test-HttpReachable([string]$Uri) {
+    try {
+        Invoke-WebRequest -Uri $Uri -UseBasicParsing -TimeoutSec 2 | Out-Null
+        return $true
+    } catch {
+        return $false
+    }
+}
+
+function Start-DemoProcess([string]$Name, [string[]]$CommandParts, [string]$WorkingDirectory, [hashtable]$Environment = @{}) {
     $stdout = Join-Path $tempRoot "$Name.out.log"
     $stderr = Join-Path $tempRoot "$Name.err.log"
+    $commandFile = Join-Path $tempRoot "$Name.cmd"
     Remove-Item $stdout, $stderr -ErrorAction SilentlyContinue
-    $process = Start-Process -FilePath $FilePath -ArgumentList $ArgumentList -WorkingDirectory $WorkingDirectory -RedirectStandardOutput $stdout -RedirectStandardError $stderr -WindowStyle Hidden -PassThru
-    $script:processes += $process
-    Write-Host "Started $Name (PID $($process.Id)); logs: $stdout / $stderr"
+
+    $lines = New-Object 'System.Collections.Generic.List[string]'
+    $lines.Add("@echo off")
+    $lines.Add("cd /d " + (Quote-CmdArgument $WorkingDirectory))
+    foreach ($key in ($Environment.Keys | Sort-Object)) {
+        $lines.Add("set " + (Quote-CmdArgument "$key=$($Environment[$key])"))
+    }
+    $lines.Add((Join-CmdArguments $CommandParts) + " > " + (Quote-CmdArgument $stdout) + " 2> " + (Quote-CmdArgument $stderr))
+    $lines | Set-Content -Path $commandFile -Encoding ASCII
+
+    if ($Detached) {
+        $processId = Start-DetachedCommandFile $commandFile $WorkingDirectory
+        Write-Host "Started $Name detached via WMI/CIM (launcher PID $processId); logs: $stdout / $stderr"
+        $script:startedServices += [pscustomobject]@{
+            name = $Name
+            launcher_pid = $processId
+            command_file = $commandFile
+            stdout = $stdout
+            stderr = $stderr
+            mode = "wmi"
+        }
+    } else {
+        $arguments = "/d /c " + (Quote-CmdArgument $commandFile)
+        $process = Start-Process -FilePath "cmd.exe" -ArgumentList $arguments -WorkingDirectory $WorkingDirectory -WindowStyle Hidden -PassThru
+        $script:processes += $process
+        Write-Host "Started $Name (launcher PID $($process.Id)); logs: $stdout / $stderr"
+        $script:startedServices += [pscustomobject]@{
+            name = $Name
+            launcher_pid = $process.Id
+            command_file = $commandFile
+            stdout = $stdout
+            stderr = $stderr
+            mode = "start-process"
+        }
+    }
 }
 
 function Find-Browser() {
@@ -117,15 +206,32 @@ try {
     New-Item -ItemType Directory -Force -Path $tempRoot | Out-Null
 
     if ($Stop) {
-        Stop-PortOwners $BackendPort
-        Stop-PortOwners $FrontendPort
+        if (Test-Path $runtimeStatePath) {
+            $runtimeState = Get-Content -Raw -Encoding UTF8 $runtimeStatePath | ConvertFrom-Json
+            if (-not $PSBoundParameters.ContainsKey("BackendPort") -and $runtimeState.backend_port) {
+                $BackendPort = [int]$runtimeState.backend_port
+            }
+            if (-not $PSBoundParameters.ContainsKey("FrontendPort") -and $runtimeState.frontend_port) {
+                $FrontendPort = [int]$runtimeState.frontend_port
+            }
+        }
+        [void](Stop-PortOwners $BackendPort)
+        [void](Stop-PortOwners $FrontendPort)
+        Start-Sleep -Milliseconds 500
+        $backendStillReachable = Test-HttpReachable "http://127.0.0.1:$BackendPort/docs"
+        $frontendStillReachable = Test-HttpReachable "http://127.0.0.1:$FrontendPort"
+        if ($backendStillReachable -or $frontendStillReachable) {
+            throw "Demo stop could not terminate service(s) on backend port $BackendPort / frontend port $FrontendPort. If they were started through elevated WMI/CIM, rerun -Stop with the same/elevated permission."
+        }
+        Remove-Item $runtimeStatePath -ErrorAction SilentlyContinue
         Write-Host "Demo services stopped for backend port $BackendPort and frontend port $FrontendPort."
+        $suppressFinalStopMessage = $true
         return
     }
 
     if ($StopExisting) {
-        Stop-PortOwners $BackendPort
-        Stop-PortOwners $FrontendPort
+        [void](Stop-PortOwners $BackendPort)
+        [void](Stop-PortOwners $FrontendPort)
         Start-Sleep -Milliseconds 500
     } else {
         Assert-PortAvailable $BackendPort "Backend"
@@ -173,16 +279,25 @@ if __name__ == "__main__":
     Remove-Item Env:VITE_API_BASE -ErrorAction SilentlyContinue
     $env:DEMO_BACKEND_PROXY_URL = "http://127.0.0.1:$BackendPort"
     $backendPython = Get-BackendPython
+    $voltaCommand = Get-VoltaCommand
     Write-Host "Using backend Python: $backendPython"
+    Write-Host "Using Volta command: $voltaCommand"
 
-    Start-DemoProcess "backend" $backendPython @($backendScript) $repoRoot
-    Start-DemoProcess "frontend" "cmd.exe" @("/c", "volta", "run", "--node", "22.17.1", "npm", "run", "dev", "--", "--host", "127.0.0.1", "--port", "$FrontendPort", "--strictPort") $frontendRoot
+    Start-DemoProcess "backend" @($backendPython, $backendScript) $repoRoot
+    Start-DemoProcess "frontend" @($voltaCommand, "run", "--node", "22.17.1", "npm", "exec", "vite", "--", "--host", "127.0.0.1", "--port", "$FrontendPort", "--strictPort") $frontendRoot @{
+        VITE_API_BASE = ""
+        DEMO_BACKEND_PROXY_URL = "http://127.0.0.1:$BackendPort"
+    }
 
     Wait-HttpOk "http://127.0.0.1:$BackendPort/docs" 30
     Wait-HttpOk "http://127.0.0.1:$FrontendPort" 30
 
     $frontendUrl = "http://127.0.0.1:$FrontendPort"
     Assert-FrontendIdentity $frontendUrl
+    if ($RequiredBackendRoute.Count -gt 0) {
+        $runtimeCheckScript = Join-Path $repoRoot "scripts\check-runtime-openapi.ps1"
+        & $runtimeCheckScript -BackendUrl "http://127.0.0.1:$BackendPort" -RequireRoute $RequiredBackendRoute
+    }
     Write-Host ""
     Write-Host "Sprint-16 demo is ready: $frontendUrl"
     Write-Host "Login account: alice"
@@ -200,9 +315,22 @@ if __name__ == "__main__":
 
     if ($Detached) {
         $leaveRunning = $true
+        $runtimeState = [pscustomobject]@{
+            started_at = (Get-Date).ToString("s")
+            backend_port = $BackendPort
+            frontend_port = $FrontendPort
+            backend_url = "http://127.0.0.1:$BackendPort"
+            frontend_url = $frontendUrl
+            backend_port_owners = @(Get-PortOwners $BackendPort)
+            frontend_port_owners = @(Get-PortOwners $FrontendPort)
+            required_backend_routes = $RequiredBackendRoute
+            services = $startedServices
+        }
+        $runtimeState | ConvertTo-Json -Depth 6 | Set-Content -Path $runtimeStatePath -Encoding UTF8
         Write-Host ""
         Write-Host "Demo services are running in background."
-        Write-Host "Stop them with: powershell -ExecutionPolicy Bypass -File scripts/run-sprint16-demo.ps1 -Stop"
+        Write-Host "Runtime state: $runtimeStatePath"
+        Write-Host "Stop them with: powershell -ExecutionPolicy Bypass -File scripts/run-sprint16-demo.ps1 -BackendPort $BackendPort -FrontendPort $FrontendPort -Stop"
         return
     }
 
@@ -215,8 +343,8 @@ if __name__ == "__main__":
                 Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
             }
         }
-        Stop-PortOwners $BackendPort
-        Stop-PortOwners $FrontendPort
+        [void](Stop-PortOwners $BackendPort)
+        [void](Stop-PortOwners $FrontendPort)
     }
     if ($hadViteApiBase) {
         $env:VITE_API_BASE = $oldViteApiBase
@@ -228,7 +356,7 @@ if __name__ == "__main__":
     } else {
         Remove-Item Env:DEMO_BACKEND_PROXY_URL -ErrorAction SilentlyContinue
     }
-    if (-not $leaveRunning) {
+    if ((-not $leaveRunning) -and (-not $suppressFinalStopMessage)) {
         Write-Host "Demo services stopped."
     }
 }

@@ -15,7 +15,7 @@
 - AI 执行流程：先读取本 SOP；说明将启动本地临时后端、前端 dev server 和浏览器；用户确认后运行一键脚本；输出实际 URL、账号、演示路径和降级边界。
 - AI 输出模板：演示入口、登录账号、推荐操作、关闭方式、当前边界。
 - 需用户确认的动作：启动本地进程、打开浏览器、使用 `-StopExisting` 停止占用默认端口的旧进程。
-- AI 启动方式：AI / 非交互环境必须使用 `-Detached`，不能使用默认 `Read-Host` 交互模式，否则脚本会读不到 Enter 并立即清理服务。
+- AI 启动方式：AI / 非交互环境必须使用 `-Detached`，不能使用默认 `Read-Host` 交互模式，否则脚本会读不到 Enter 并立即清理服务。`-Detached` 在 Windows 下通过 WMI/CIM 启动独立进程，避免普通 `Start-Process` 子进程被 AI 执行器回收；若当前 shell 无权调用 WMI/CIM，需要在提权终端或经用户批准的提权命令中运行。
 - 禁止事项：不得安装依赖、不得接真实外部服务、不得把内存 Demo 说成生产可用、不得把临时日志提交进仓库。
 
 ## 3. 启动前提
@@ -46,14 +46,21 @@ powershell -ExecutionPolicy Bypass -File scripts/run-sprint16-demo.ps1 -StopExis
 # AI / 非交互环境后台启动；不会等待 Enter，也不会自动清理服务
 powershell -ExecutionPolicy Bypass -File scripts/run-sprint16-demo.ps1 -StopExisting -Detached
 
-# 停止后台启动的服务
+# 停止后台启动的服务；若刚才用了备用端口，脚本会优先读取 runtime.json 中的实际端口
 powershell -ExecutionPolicy Bypass -File scripts/run-sprint16-demo.ps1 -Stop
 
 # 指定备用端口
 powershell -ExecutionPolicy Bypass -File scripts/run-sprint16-demo.ps1 -BackendPort 28000 -FrontendPort 5174
+
+# 启动后同时确认本次 smoke 依赖的后端 route 已加载
+powershell -ExecutionPolicy Bypass -File scripts/run-sprint16-demo.ps1 -StopExisting -Detached -RequiredBackendRoute "GET /api/spaces/{space_id}/timeline"
+
+# 对已经运行的服务做只读 OpenAPI / 前端身份预检
+powershell -ExecutionPolicy Bypass -File scripts/check-runtime-openapi.ps1 -BackendUrl http://127.0.0.1:18000 -FrontendUrl http://127.0.0.1:5173 -RequireRoute "PATCH /api/documents/{document_id}/folder"
 ```
 
 - 端口策略：脚本预检端口，前端使用 `--strictPort`，最终入口以脚本输出为准。
+- 前端启动：脚本直接用 `npm exec vite -- --host 127.0.0.1 --port <FrontendPort> --strictPort`，不再通过 `npm run dev` 叠加 `package.json` 中的默认 `5173` 参数，避免备用端口 smoke 时出现双端口命令。
 - 后端代理：脚本通过 `DEMO_BACKEND_PROXY_URL=http://127.0.0.1:<BackendPort>` 注入 Vite dev server 代理；浏览器仍同源请求 `/api`，避免 CORS 问题。
 - 关闭方式：交互模式下在脚本窗口按 Enter；后台模式下运行 `powershell -ExecutionPolicy Bypass -File scripts/run-sprint16-demo.ps1 -Stop`。
 
@@ -63,12 +70,14 @@ powershell -ExecutionPolicy Bypass -File scripts/run-sprint16-demo.ps1 -BackendP
 - 登录账号：`alice`。
 - API 入口：默认 `http://127.0.0.1:18000`；仅服务本次内存 Demo。
 - 页面身份标记：`frontend/index.html` 包含 `<meta name="lumen-demo-app" content="knowledge-base-workbench" />`；脚本会检查该 marker，避免端口被其他本地应用占用时误判。
-- 运行产物：临时后端脚本与日志位于 `%TEMP%\lumen-sprint16-demo`，不提交进仓库。
+- 运行产物：临时后端脚本、launcher `.cmd`、日志与 `runtime.json` 位于 `%TEMP%\lumen-sprint16-demo`，不提交进仓库。
 
 ## 6. 检查与验证
 
 - 健康检查：脚本等待 `http://127.0.0.1:<BackendPort>/docs` 与前端 URL 可访问。
 - 页面身份校验：脚本检查 `lumen-demo-app=knowledge-base-workbench` marker；不匹配则停止并报错。
+- 运行态 API 身份门禁：浏览器 smoke 前先用 `scripts/check-runtime-openapi.ps1` 确认当前后端 `/openapi.json` 暴露本次验收依赖的 API path/method；这能防止端口上残留旧 `uvicorn` 时误进入浏览器点击流。
+- 后台运行态记录：`-Detached` 成功后会写 `%TEMP%\lumen-sprint16-demo\runtime.json`，记录实际端口、URL、launcher PID、端口 owner 与日志路径；`-Stop` 未显式传端口时优先读取该文件清理本次服务。
 - 前后端链路：前端同源请求 `/api`，Vite dev server 通过 `DEMO_BACKEND_PROXY_URL` 代理到本次启动的内存后端；登录 `alice` 后可执行批量导入、搜索和问答。
 - 期望结果：页面身份匹配；登录成功；批量导入 `.md` / `.txt` 后文档列表出现路径标题，搜索和问答可命中。
 - 常见失败：端口占用、依赖未安装、浏览器未自动打开、端口被其他项目页面占用。
