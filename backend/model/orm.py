@@ -59,6 +59,25 @@ class DocumentORM(Base):
     permission: Mapped[str] = mapped_column(String)
     type: Mapped[str] = mapped_column(String, default="markdown")
     current_version: Mapped[int] = mapped_column(Integer, default=1)
+    folder_id: Mapped[int | None] = mapped_column(BigInteger, ForeignKey("lumen_folders.id", ondelete="SET NULL"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
+
+
+class FolderORM(Base):
+    """REQ-039 文档目录树（migration 011）。邻接表 parent_id 自引用（空=空间根）。"""
+
+    __tablename__ = "lumen_folders"
+    __table_args__ = (
+        UniqueConstraint("space_id", "parent_id", "name", name="lumen_folders_unique_name"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    space_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("lumen_spaces.id", ondelete="CASCADE"))
+    parent_id: Mapped[int | None] = mapped_column(BigInteger, ForeignKey("lumen_folders.id", ondelete="CASCADE"), nullable=True)
+    name: Mapped[str] = mapped_column(Text)
+    order: Mapped[int] = mapped_column(Integer, default=0)
+    created_by: Mapped[int] = mapped_column(BigInteger, ForeignKey("lumen_users.id"))
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
 

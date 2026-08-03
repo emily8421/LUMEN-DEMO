@@ -13,6 +13,7 @@ from backend.model.entities import (
     DocumentChunk,
     DocumentPermission,
     DocumentVersion,
+    Folder,
     ImportJob,
     Space,
     SpaceMember,
@@ -94,6 +95,8 @@ class DemoRepository:
         self._next_quick_entry_id = 1
         self.ai_drafts: list[AiDraft] = []
         self._next_ai_draft_id = 1
+        self.folders: list[Folder] = []
+        self._next_folder_id = 1
 
     def find_user_by_external_id(self, external_id: str) -> User | None:
         return next((user for user in self.users if user.external_id == external_id), None)
@@ -660,6 +663,114 @@ class DemoRepository:
 
     def list_tag_document_ids(self, tag_id: int) -> list[int]:
         return [link.document_id for link in self.tag_links if link.tag_id == tag_id]
+
+    # --- folders (REQ-039) ---
+
+    def _next_folder_order(self, space_id: int, parent_id: int | None) -> int:
+        siblings = [f for f in self.folders if f.space_id == space_id and f.parent_id == parent_id]
+        return max((f.order for f in siblings), default=0) + 1
+
+    def list_folders(self, space_id: int) -> list[Folder]:
+        return sorted(
+            [f for f in self.folders if f.space_id == space_id],
+            key=lambda f: (f.parent_id is None, f.parent_id or 0, f.order, f.name),
+        )
+
+    def get_folder(self, folder_id: int) -> Folder | None:
+        return next((f for f in self.folders if f.id == folder_id), None)
+
+    def find_folder_by_name(self, space_id: int, parent_id: int | None, name: str) -> Folder | None:
+        return next(
+            (f for f in self.folders if f.space_id == space_id and f.parent_id == parent_id and f.name == name),
+            None,
+        )
+
+    def create_folder(self, space_id: int, parent_id: int | None, name: str, created_by: int) -> Folder:
+        folder = Folder(
+            id=self._next_folder_id,
+            space_id=space_id,
+            parent_id=parent_id,
+            name=name,
+            order=self._next_folder_order(space_id, parent_id),
+            created_by=created_by,
+            created_at=_now_iso(),
+            updated_at=_now_iso(),
+        )
+        self._next_folder_id += 1
+        self.folders.append(folder)
+        return folder
+
+    def rename_folder(self, folder_id: int, name: str) -> Folder | None:
+        for index, f in enumerate(self.folders):
+            if f.id != folder_id:
+                continue
+            updated = replace(f, name=name, updated_at=_now_iso())
+            self.folders[index] = updated
+            return updated
+        return None
+
+    def move_folder(self, folder_id: int, parent_id: int | None) -> Folder | None:
+        for index, f in enumerate(self.folders):
+            if f.id != folder_id:
+                continue
+            updated = replace(
+                f,
+                parent_id=parent_id,
+                order=self._next_folder_order(f.space_id, parent_id),
+                updated_at=_now_iso(),
+            )
+            self.folders[index] = updated
+            return updated
+        return None
+
+    def delete_folder(self, folder_id: int) -> None:
+        self.folders = [f for f in self.folders if f.id != folder_id]
+
+    def is_folder_empty(self, space_id: int, folder_id: int) -> bool:
+        if any(f.space_id == space_id and f.parent_id == folder_id for f in self.folders):
+            return False
+        return not any(d.folder_id == folder_id for d in self.documents)
+
+    def is_descendant_folder(self, space_id: int, ancestor_id: int, candidate_id: int) -> bool:
+        """内存递归：candidate 是否是 ancestor 的后代（含自身）。"""
+        if candidate_id == ancestor_id:
+            return True
+        stack = [ancestor_id]
+        visited: set[int] = set()
+        while stack:
+            current = stack.pop()
+            if current in visited:
+                continue
+            visited.add(current)
+            for f in self.folders:
+                if f.space_id == space_id and f.parent_id == current:
+                    if f.id == candidate_id:
+                        return True
+                    stack.append(f.id)
+        return False
+
+    def list_folder_document_ids(self, space_id: int, folder_id: int) -> list[int]:
+        return [d.id for d in self.documents if d.space_id == space_id and d.folder_id == folder_id]
+
+    def set_document_folder(self, document_id: int, folder_id: int | None) -> None:
+        """预留：文档归属写入（Flow-D-012 / 文档 CRUD 复用）。本轮 service 不调用。"""
+        for index, d in enumerate(self.documents):
+            if d.id == document_id:
+                self.documents[index] = replace(d, folder_id=folder_id, updated_at=_now_iso())
+                return
+        raise KeyError(document_id)
+
+    def reorder_folders(self, space_id: int, ordered_folder_ids: list[int]) -> None:
+        index_by_id = {f.id: i for i, f in enumerate(self.folders)}
+        now = _now_iso()
+        for order, folder_id in enumerate(ordered_folder_ids, start=1):
+            idx = index_by_id.get(folder_id)
+            if idx is None:
+                continue
+            f = self.folders[idx]
+            if f.space_id != space_id:
+                continue
+            self.folders[idx] = replace(f, order=order, updated_at=now)
 
 
 def _now_iso() -> str:

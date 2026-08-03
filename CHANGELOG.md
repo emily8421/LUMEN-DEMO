@@ -6,6 +6,17 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v1.3.0（2026-08-03）
+
+**Phase2B 第三 slice：REQ-039 文档目录树（folder-tree）后端核心。** 新增嵌套文件夹（`lumen_folders` 邻接表）+ 文档归属（`folder_id`），文件夹 CRUD / 移动（防环 / 跨空间）/ 改名（重名 4090）/ 删非空 4090 / 排序；folder 不独立设权限，文档可见性仍按 `permission` 过滤。
+
+- 后端（Sprint-22 / task-027）：migration 011（`lumen_folders` + `lumen_documents.folder_id`）+ `Folder` entity/ORM + pg/demo repository 11 方法（pg `WITH RECURSIVE` 递归 CTE 防环 / demo 内存递归）+ `service/folder.py`（FolderView + 异常 4003/4004/4090/4220 + CRUD/移动/删非空/排序；document_count 按可见性过滤）+ API-034..037 `/api/folders`（token `current_space_id`；PATCH 用 `model_fields_set` 区分未传 / null）。
+- 验证：`tests.backend.test_folder` 19/19 OK（18 service + 1 API）+ 回归 `test_tags/test_document/test_quick_entry/test_doc_links` 45/45 OK + `import backend.main` 通过。
+- API 路径裁定 `/api/folders`（token current_space_id，对齐既有 tags/documents 惯例；07 原草案 `/api/spaces/{id}/folders` 已修订）。
+- 越界（留后续 slice）：导入保留结构 `preserve_structure`（Flow-D-012）/ 前端文件管理器 / folder 独立权限 / 文档 `order` / folder 软删除。
+
+> MINOR 依据（`ai/project-rules.md` §2.8.1）：Sprint 验收 + 新增对外 API endpoint（API-034..037）+ 新增 migration（011）；默认向后兼容（现有文档 `folder_id=null` 空间根）。
+
 ## v1.2.0（2026-08-02）
 
 **Sprint-21 Doc-First UX 收口（slice 3a/3b/3c/3d）+ smoke 反馈修复。** 工作台从「多栏常驻工具台」收敛为「内容为中心、工具边缘化、按需呼出」的阅读器范式；文档阅读 / 编辑 / 并排三态切换，导入弹窗化，单列优先。

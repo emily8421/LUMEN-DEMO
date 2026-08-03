@@ -31,7 +31,7 @@
 | lumen_doc_links | 内部链接与反向链接索引 | [P2] | Phase2A-已实现 | 已落地（migration 007；fc2b869 Task A） | REQ-026 |
 | lumen_quick_entries | 快速录入索引条目 | [P2] | Phase2A-已实现 | 迁移 009 已落地（Task A `f771e02`）；draft 默认 owner 私有 | REQ-025 |
 | lumen_ai_drafts | AI 润色 / 写作引用草稿 | [P2] | Phase2B·MVP 级已设计 | 已落地 PostgreSQL（migration 010；后端 service / API / tests 已实现，见 §6） | REQ-014 |
-| lumen_folders | 文档目录树（嵌套文件夹） | [P2] | Phase2B·第三 slice·骨架（待 migration 011） | 字段 / 约束 / 索引草案已齐（§2/§3）；migration 011 待编码落地 | REQ-039 |
+| lumen_folders | 文档目录树（嵌套文件夹） | [P2] | Phase2B·第三 slice·后端已实现（待 commit） | migration 011 已落地 + 后端 service/API/tests 已实现（task-027，19 folder + 45 回归 tests OK）；前端文件管理器留 slice 3 | REQ-039 |
 | lumen_doc_exports | 单文档导出 PDF 任务 | [P1] | Phase1.5B-契约草案 | — | REQ-027 |
 | lumen_push_copies | 跨空间推送只读副本 | [P2] | 骨架 | — | REQ-015 |
 | lumen_vault_mounts | Vault 挂载配置 | [愿景] | 骨架 | — | REQ-018 |
