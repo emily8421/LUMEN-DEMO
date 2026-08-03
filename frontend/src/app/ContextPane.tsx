@@ -1,16 +1,19 @@
 import type { KnowledgeDocument, Space, Term } from '../api';
 import type { ActiveView } from './WorkspaceViewNav';
-import { permissionLabels } from './constants';
+import { FolderTree } from './FolderTree';
+import type { FolderManager } from './useFolders';
 
 type ContextPaneProps = {
   activeView: ActiveView;
   currentSpace: Space | null;
   documents: KnowledgeDocument[];
+  folders: FolderManager;
   selectedId: number | null;
   isCreating: boolean;
   isBusy: boolean;
   onCreateDocument: () => void;
   onSelectDocument: (documentId: number) => void;
+  onMoveDocument: (document: KnowledgeDocument, targetFolderId: number | null) => void;
   terms: Term[];
   selectedTermId: number | null;
   onSelectTerm: (term: Term) => void;
@@ -21,11 +24,13 @@ export function ContextPane({
   activeView,
   currentSpace,
   documents,
+  folders,
   selectedId,
   isCreating,
   isBusy,
   onCreateDocument,
   onSelectDocument,
+  onMoveDocument,
   terms,
   selectedTermId,
   onSelectTerm,
@@ -35,31 +40,53 @@ export function ContextPane({
     <aside className={`sidebar context-pane context-${activeView}`.trim()}>
       {activeView === 'documents' ? (
         <>
-          <section className="context-header section-title">
+          <section className="context-header section-title folder-header">
             <div>
-              <h2>文档</h2>
+              <h2>文件管理器</h2>
               <p className="empty-state">当前空间 {documents.length} 篇</p>
             </div>
-            <button type="button" onClick={onCreateDocument} disabled={isBusy}>新建</button>
+            <div className="folder-header-actions">
+              <button
+                type="button"
+                className="folder-icon-button"
+                onClick={onCreateDocument}
+                disabled={isBusy}
+                title="新建文档"
+                aria-label="新建文档"
+              >
+                <span aria-hidden="true">✎</span>
+              </button>
+              <button
+                type="button"
+                className="folder-icon-button"
+                onClick={() => folders.beginCreateFolder(null)}
+                disabled={isBusy}
+                title="新建文件夹"
+                aria-label="新建文件夹"
+              >
+                <span aria-hidden="true">▣</span>
+              </button>
+              <button
+                type="button"
+                className="folder-icon-button"
+                onClick={folders.collapseAll}
+                disabled={isBusy}
+                title="收起全部"
+                aria-label="收起全部"
+              >
+                <span aria-hidden="true">⌃</span>
+              </button>
+            </div>
           </section>
-          {documents.length === 0 ? (
-            <p className="empty-state context-empty">当前空间暂无可见文档。</p>
-          ) : (
-            <ul className="document-list context-list">
-              {documents.map((document) => (
-                <li key={document.id}>
-                  <button
-                    type="button"
-                    className={document.id === selectedId && !isCreating ? 'active' : ''}
-                    onClick={() => onSelectDocument(document.id)}
-                  >
-                    <span>{document.title}</span>
-                    <small>{permissionLabels[document.permission]} · v{document.current_version}</small>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
+          <FolderTree
+            documents={documents}
+            selectedId={selectedId}
+            isCreating={isCreating}
+            isBusy={isBusy}
+            folders={folders}
+            onSelectDocument={onSelectDocument}
+            onMoveDocument={onMoveDocument}
+          />
         </>
       ) : null}
 

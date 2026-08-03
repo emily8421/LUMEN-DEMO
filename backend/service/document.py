@@ -18,6 +18,10 @@ class DocumentNotFoundError(Exception):
     pass
 
 
+class DocumentValidationError(Exception):
+    pass
+
+
 class VersionNotFoundError(Exception):
     pass
 
@@ -34,6 +38,11 @@ class DocumentUpdate:
     title: str
     content_md: str
     permission: DocumentPermission
+
+
+@dataclass(frozen=True)
+class DocumentMove:
+    folder_id: int | None
 
 
 def list_visible_documents(
@@ -97,6 +106,31 @@ def update_document(
     sync_document_chunks(repository, updated)
     sync_document_wikilinks(repository, updated)
     return updated
+
+
+def move_document_to_folder(
+    repository,
+    user_id: int,
+    current_space_id: int,
+    document_id: int,
+    request: DocumentMove,
+) -> Document:
+    document = get_visible_document(repository, user_id, current_space_id, document_id)
+    _ensure_can_write(repository, user_id, current_space_id, document)
+
+    if request.folder_id is not None:
+        folder = repository.get_folder(request.folder_id)
+        if folder is None or folder.space_id != current_space_id:
+            raise DocumentValidationError("target folder not found in this space")
+
+    if document.folder_id == request.folder_id:
+        return document
+
+    repository.set_document_folder(document_id, request.folder_id)
+    moved = repository.get_document(document_id)
+    if moved is None:
+        raise DocumentNotFoundError("document not found")
+    return moved
 
 
 def delete_document(repository, user_id: int, current_space_id: int, document_id: int) -> None:

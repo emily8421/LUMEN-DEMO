@@ -46,6 +46,7 @@ class BatchImportRequest:
     files: list[BatchImportFileRequest]
     permission: DocumentPermission = DocumentPermission.TEAM
     conflict_policy: str = "skip"
+    preserve_structure: bool = True
 
 
 @dataclass(frozen=True)
@@ -56,6 +57,7 @@ class BatchImportItemResult:
     status: str
     import_id: int | None = None
     parsed_doc_id: int | None = None
+    folder_id: int | None = None
     chunk_count: int = 0
     error: str | None = None
 
@@ -125,11 +127,28 @@ def import_batch(repository, user_id: int, current_space_id: int, request: Batch
     for file_request in request.files:
         source_filename = _resolve_batch_source_filename(file_request.filename, file_request.relative_path)
         relative_path = _safe_relative_path(source_filename)
-        title = _resolve_title(source_filename, None)
+        folder_id: int | None = None
+        title = _resolve_batch_title(relative_path, preserve_structure=request.preserve_structure)
 
         try:
             _validate_filename(source_filename)
-            if _document_title_exists(repository, user_id, current_space_id, title, memberships):
+            _ensure_importable_content(file_request.content)
+            if request.preserve_structure:
+                folder_id = _ensure_folder_path(
+                    repository,
+                    user_id=user_id,
+                    current_space_id=current_space_id,
+                    relative_path=relative_path,
+                )
+            if _document_title_exists(
+                repository,
+                user_id,
+                current_space_id,
+                title,
+                memberships,
+                folder_id=folder_id if request.preserve_structure else None,
+                scoped_to_folder=request.preserve_structure,
+            ):
                 items.append(_skipped_item(file_request.filename, relative_path, title, "document title already exists"))
                 continue
 
@@ -144,6 +163,8 @@ def import_batch(repository, user_id: int, current_space_id: int, request: Batch
                     permission=request.permission,
                 ),
             )
+            if request.preserve_structure:
+                repository.set_document_folder(result.parsed_doc_id, folder_id)
             items.append(
                 BatchImportItemResult(
                     filename=file_request.filename,
@@ -152,6 +173,7 @@ def import_batch(repository, user_id: int, current_space_id: int, request: Batch
                     status="done",
                     import_id=result.import_job.id,
                     parsed_doc_id=result.parsed_doc_id,
+                    folder_id=folder_id,
                     chunk_count=result.chunk_count,
                 )
             )
@@ -203,6 +225,13 @@ def _resolve_batch_source_filename(filename: str, relative_path: str | None) -> 
     return _safe_relative_path(filename)
 
 
+def _resolve_batch_title(relative_path: str, preserve_structure: bool) -> str:
+    if not preserve_structure:
+        return _resolve_title(relative_path, None)
+    filename = _split_relative_file_path(relative_path)[1]
+    return _resolve_title(filename, None)
+
+
 def _safe_relative_path(path: str) -> str:
     normalized_path = path.replace("\\", "/").strip()
     parts = [part.strip() for part in normalized_path.split("/")]
@@ -210,9 +239,45 @@ def _safe_relative_path(path: str) -> str:
     return "/".join(safe_parts)
 
 
-def _document_title_exists(repository, user_id: int, current_space_id: int, title: str, memberships) -> bool:
+def _split_relative_file_path(relative_path: str) -> tuple[list[str], str]:
+    parts = [part for part in _safe_relative_path(relative_path).split("/") if part]
+    if not parts:
+        return [], ""
+    return parts[:-1], parts[-1]
+
+
+def _ensure_importable_content(content: bytes) -> None:
+    cleaned_text = clean_text(_decode_text(content))
+    if not cleaned_text:
+        raise ImportValidationError("uploaded text is empty")
+
+
+def _ensure_folder_path(repository, user_id: int, current_space_id: int, relative_path: str) -> int | None:
+    directory_parts = _split_relative_file_path(relative_path)[0]
+    parent_id: int | None = None
+    for name in directory_parts:
+        existing = repository.find_folder_by_name(current_space_id, parent_id, name)
+        if existing is not None:
+            parent_id = existing.id
+            continue
+        created = repository.create_folder(current_space_id, parent_id, name, created_by=user_id)
+        parent_id = created.id
+    return parent_id
+
+
+def _document_title_exists(
+    repository,
+    user_id: int,
+    current_space_id: int,
+    title: str,
+    memberships,
+    folder_id: int | None = None,
+    scoped_to_folder: bool = False,
+) -> bool:
     return any(
-        document.title == title and can_view_document(user_id, current_space_id, document, memberships)
+        document.title == title
+        and (not scoped_to_folder or document.folder_id == folder_id)
+        and can_view_document(user_id, current_space_id, document, memberships)
         for document in repository.list_documents()
     )
 

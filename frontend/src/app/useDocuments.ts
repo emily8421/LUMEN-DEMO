@@ -11,6 +11,7 @@ import {
   listDocLinks,
   listDocuments,
   listVersions,
+  moveDocument,
   restoreVersion,
   triggerBrowserDownload,
   updateDocument,
@@ -26,6 +27,7 @@ type UseDocumentsArgs = {
   setNotice: (message: string) => void;
   setError: (message: string) => void;
   onAuthError: () => void;
+  onDocumentsChanged?: (token: string) => Promise<void>;
   setActiveView: (view: ActiveView) => void;
 };
 
@@ -45,6 +47,7 @@ export function useDocuments({
   setNotice,
   setError,
   onAuthError,
+  onDocumentsChanged,
   setActiveView,
 }: UseDocumentsArgs) {
   const [documents, setDocuments] = useState<KnowledgeDocument[]>([]);
@@ -195,6 +198,21 @@ export function useDocuments({
     setIsCreating(false);
   };
 
+  const handleMoveDocument = (document: KnowledgeDocument, targetFolderId: number | null) => {
+    if (!token || document.folder_id === targetFolderId) {
+      return;
+    }
+
+    void runAction('正在移动文档...', async () => {
+      const moved = await moveDocument(token, document.id, targetFolderId);
+      await reloadDocuments(token);
+      await onDocumentsChanged?.(token);
+      setSelectedId(moved.id);
+      setIsCreating(false);
+      setNotice(`已移动文档：${moved.title}`);
+    });
+  };
+
   const handleDelete = () => {
     if (!token || !selectedDocument) {
       return;
@@ -282,6 +300,7 @@ export function useDocuments({
     handleApplyPolishedContent,
     handleCreateDocument,
     handleSelectDocument,
+    handleMoveDocument,
     handleDelete,
     handleRestore,
     handleDownloadMarkdown,

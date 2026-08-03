@@ -82,6 +82,7 @@ def _to_document(r: DocumentORM) -> Document:
         permission=DocumentPermission(r.permission),
         type=r.type,
         current_version=r.current_version,
+        folder_id=r.folder_id,
         created_at=_dt_iso(r.created_at),
         updated_at=_dt_iso(r.updated_at),
     )

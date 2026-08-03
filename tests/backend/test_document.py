@@ -1,15 +1,20 @@
 ﻿import unittest
 
+import importlib.util
+
 from backend.model.entities import Document, DocumentPermission, SpaceMember, SpaceRole
 from backend.service.document import (
     DocumentCreate,
     DocumentAccessError,
+    DocumentMove,
     DocumentNotFoundError,
     DocumentUpdate,
+    DocumentValidationError,
     create_document,
     get_visible_document,
     list_versions,
     list_visible_documents,
+    move_document_to_folder,
     restore_version,
     update_document,
 )
@@ -85,6 +90,52 @@ class DocumentServiceTest(unittest.TestCase):
         self.assertEqual(restored.id, document.id)
         self.assertEqual([chunk.text for chunk in repository.list_document_chunks(restored.id)], ["front search first"])
 
+    def test_move_document_to_folder_and_root_does_not_create_version(self) -> None:
+        from backend.service.folder import FolderCreateRequest, create_folder
+
+        repository = DemoRepository()
+        document = create_document(
+            repository,
+            user_id=1,
+            current_space_id=10,
+            request=DocumentCreate(title="Move me", content_md="body", permission=DocumentPermission.TEAM),
+        )
+        folder = create_folder(repository, 1, 10, FolderCreateRequest(name="Target"))
+
+        moved = move_document_to_folder(
+            repository,
+            user_id=1,
+            current_space_id=10,
+            document_id=document.id,
+            request=DocumentMove(folder_id=folder.id),
+        )
+        rooted = move_document_to_folder(
+            repository,
+            user_id=1,
+            current_space_id=10,
+            document_id=document.id,
+            request=DocumentMove(folder_id=None),
+        )
+
+        self.assertEqual(moved.folder_id, folder.id)
+        self.assertIsNone(rooted.folder_id)
+        self.assertEqual([version.version_no for version in repository.list_document_versions(document.id)], [1])
+
+    def test_move_document_cross_space_folder_rejected(self) -> None:
+        from backend.service.folder import FolderCreateRequest, create_folder
+
+        repository = DemoRepository()
+        folder_in_other_space = create_folder(repository, 1, 20, FolderCreateRequest(name="Other space"))
+
+        with self.assertRaises(DocumentValidationError):
+            move_document_to_folder(
+                repository,
+                user_id=1,
+                current_space_id=10,
+                document_id=100,
+                request=DocumentMove(folder_id=folder_in_other_space.id),
+            )
+
     def test_private_document_looks_not_found_for_other_member(self) -> None:
         repository = DemoRepository()
 
@@ -102,7 +153,41 @@ class DocumentServiceTest(unittest.TestCase):
                 request=DocumentCreate(title="Denied", content_md="", permission=DocumentPermission.TEAM),
             )
 
+
+@unittest.skipIf(importlib.util.find_spec("fastapi") is None, "FastAPI is not installed")
+class DocumentApiTest(unittest.TestCase):
+    def test_move_document_folder_via_api(self) -> None:
+        from backend.api import documents as documents_api
+        from backend.api.auth import TOKEN_SIGNING_KEY
+        from backend.repository.demo_repository import DemoRepository
+        from backend.service.auth import create_demo_token
+        from backend.service.folder import FolderCreateRequest, create_folder
+
+        repository = DemoRepository()
+        original_repository = documents_api.repository
+        documents_api.repository = repository
+        try:
+            token = create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
+            headers = {"authorization": f"Bearer {token}"}
+            folder = create_folder(repository, 1, 10, FolderCreateRequest(name="API Target"))
+
+            moved = documents_api.move_document_folder_endpoint(
+                document_id=100,
+                request=documents_api.DocumentMoveRequest(folder_id=folder.id),
+                **headers,
+            )
+            self.assertEqual(moved["code"], 0)
+            self.assertEqual(moved["data"]["folder_id"], folder.id)
+
+            rooted = documents_api.move_document_folder_endpoint(
+                document_id=100,
+                request=documents_api.DocumentMoveRequest(folder_id=None),
+                **headers,
+            )
+            self.assertIsNone(rooted["data"]["folder_id"])
+        finally:
+            documents_api.repository = original_repository
+
+
 if __name__ == "__main__":
     unittest.main()
-
-

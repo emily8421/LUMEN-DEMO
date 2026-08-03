@@ -15,6 +15,7 @@ import { usePaneLayout } from './app/usePaneLayout';
 import { useSession } from './app/useSession';
 import { useDocuments } from './app/useDocuments';
 import { useAiPolish } from './app/useAiPolish';
+import { useFolders } from './app/useFolders';
 import { isAuthTokenError } from './app/session-store';
 import { QuickEntryFeature } from './features/QuickEntryFeature';
 import { ImportFeature } from './features/ImportFeature';
@@ -27,12 +28,20 @@ function App() {
   const session = useSession({ runAction, setNotice: workspace.setNotice, onSpaceChanged: handleSpaceChanged });
   const token = session.session?.token;
 
+  const folders = useFolders({
+    token,
+    runAction,
+    setNotice: workspace.setNotice,
+  });
   const documents = useDocuments({
     token,
     runAction,
     setNotice: workspace.setNotice,
     setError: workspace.setError,
     onAuthError: session.handleAuthError,
+    onDocumentsChanged: async (refreshToken) => {
+      await folders.reloadLoadedFolders(refreshToken);
+    },
     setActiveView: workspace.setActiveView,
   });
 
@@ -96,12 +105,14 @@ function App() {
     await Promise.all([
       session.reloadSpaces(refreshToken),
       documents.reloadDocuments(refreshToken),
+      folders.reloadLoadedFolders(refreshToken),
       terms.reloadTerms(),
     ]);
   }
 
   function handleSpaceChanged() {
     documents.setSelectedId(null);
+    folders.resetFolders();
     workspace.setActiveView('home');
     search.setSearchResult(null);
     query.setQueryResult(null);
@@ -189,11 +200,13 @@ function App() {
             activeView={workspace.activeView}
             currentSpace={currentSpace}
             documents={documents.documents}
+            folders={folders}
             selectedId={documents.selectedId}
             isCreating={documents.isCreating}
             isBusy={workspace.isBusy}
             onCreateDocument={documents.handleCreateDocument}
             onSelectDocument={documents.handleSelectDocument}
+            onMoveDocument={documents.handleMoveDocument}
             terms={terms.terms}
             selectedTermId={terms.selectedTermId}
             onSelectTerm={terms.selectTerm}

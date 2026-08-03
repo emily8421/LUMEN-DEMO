@@ -68,13 +68,13 @@
 - 验证：folder 19/19 + 回归 45/45 全过，`import backend.main` 通过。
 - 关键设计落定：
   - API 路径裁定为 `/api/folders`（token current_space_id，对齐既有 tags/documents 惯例与设计 §4）；
-    07 原 `/api/spaces/{id}/folders` 待随回写修订。
+    `docs/07-api-spec.md` 已在 task-028 回写为 `/api/folders`。
   - PATCH 用 `model_fields_set` 区分「字段未传」与「字段显式 null」（move 到根 parent=null）。
   - 根层重名（parent_id=null）：PG UNIQUE 对 NULL 不去重，由 service `find_folder_by_name` 兜底。
   - 防环：pg `WITH RECURSIVE` 递归 CTE / demo 内存递归，含自身。
 
 ## 待确认项
 
-- PG 真实库 `WITH RECURSIVE` 行为留 test_pg_repository 可选验证（不阻塞本轮）。
+- PG 真实库 `WITH RECURSIVE` 行为已由 2026-08-03 临时 PG smoke 验证（不触碰现有 `lumen` 库）。
 - 切分支 + 提交 + PR 时机（留用户决定）。
-- 前端文件管理器（slice 3）+ 导入保留结构（slice 2）排在后端落地之后。
+- 导入保留结构已由 task-028 完成；前端文件管理器排在下一 slice。

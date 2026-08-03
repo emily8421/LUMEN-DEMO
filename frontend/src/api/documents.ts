@@ -5,6 +5,7 @@ export type DocumentPermission = 'private' | 'team' | 'external_readonly';
 export type KnowledgeDocument = {
   id: number;
   space_id: number;
+  folder_id: number | null;
   title: string;
   permission: DocumentPermission;
   type: string;
@@ -53,6 +54,18 @@ export async function updateDocument(
     method: 'PUT',
     token,
     body: JSON.stringify(payload),
+  });
+}
+
+export async function moveDocument(
+  token: string,
+  documentId: number,
+  folderId: number | null,
+): Promise<KnowledgeDocument> {
+  return request<KnowledgeDocument>(`/api/documents/${documentId}/folder`, {
+    method: 'PATCH',
+    token,
+    body: JSON.stringify({ folder_id: folderId }),
   });
 }
 

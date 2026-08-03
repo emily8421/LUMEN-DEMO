@@ -75,6 +75,7 @@ if APIRouter is not None:
         files: list[UploadFile] = File(...),
         relative_paths: list[str] | None = Form(default=None),
         conflict_policy: str = Form(default="skip"),
+        preserve_structure: bool = Form(default=True),
         permission: DocumentPermission = Form(default=DocumentPermission.TEAM),
         authorization: str = Header(default=""),
     ) -> dict[str, object]:
@@ -104,6 +105,7 @@ if APIRouter is not None:
                     files=upload_requests,
                     permission=resolved_permission,
                     conflict_policy=conflict_policy,
+                    preserve_structure=preserve_structure,
                 ),
             )
         except ImportValidationError as exc:
@@ -128,6 +130,7 @@ if APIRouter is not None:
                         "status": item.status,
                         "import_id": item.import_id,
                         "parsed_doc_id": item.parsed_doc_id,
+                        "folder_id": item.folder_id,
                         "chunk_count": item.chunk_count,
                         "error": item.error,
                     }

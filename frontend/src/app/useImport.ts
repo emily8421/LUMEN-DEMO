@@ -41,6 +41,7 @@ export function useImport({ token, runAction, setNotice, onImported }: UseImport
       const result = await importBatchDocuments(token, {
         files: importFiles,
         permission: importDraft.permission,
+        preserveStructure: true,
       });
       const firstDocId = result.items.find((item) => item.parsed_doc_id != null)?.parsed_doc_id ?? null;
       setImportDraft(emptyImportDraft);

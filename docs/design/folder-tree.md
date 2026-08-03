@@ -14,9 +14,9 @@
 | 覆盖 REQ | REQ-039（新增候选）、REQ-037（扩展）、REQ-004（文档归属） |
 | 所属 Phase | `[P2]` Phase2B 第三 slice（候选，FT-C-007） |
 | 交付物形态 | Demo / 个人可用 |
-| 当前状态 | **设计骨架 → Phase2B·第三 slice·已设计（候选）**：FT-C-001..011 已确认（2026-08-02），06/07/02/03/08/09/ingestion 设计骨架已回填；待 REQ-039 U-ID/SC 追溯补齐（open item SRS-C-002）+ Sprint-22 立项编码后进 P2B-已实现 |
+| 当前状态 | **Phase2B·第三 slice·基础能力已实现**：FT-C-001..013 已确认；后端核心（API-034..037 + migration 011）已实现并合入 main（task-027 / PR #103）；导入保留结构（API-029 `preserve_structure`）已实现（task-028）；前端文件管理器基础树 / 受控右键菜单 / inline 新建重命名 / 单文档移动（API-038）已本地实现并通过 build、运行态 API smoke 与用户浏览器 smoke（2026-08-03），浏览器自动化 smoke 后续补 |
 | 流程 ID | Flow-D-010..013（建文件夹 / 移动 / 导入保留结构 / 排序） |
-| 最后更新 | 2026-08-02 |
+| 最后更新 | 2026-08-03 |
 | 下游影响 | 08 Sprint（候选）、09 TC（候选 TC-P2-FOLDER-001）、06 lumen_folders + folder_id、07 文件夹 API + API-029 改造、ingestion Flow-006、frontend 文件管理器 |
 | 视觉参考 | `docs/research/prototypes/2026-07-31-obsidian-inspired-classic-tree.html` / `doc-tree-open.html` |
 
@@ -58,7 +58,7 @@
 
 ### Flow-D-011：移动文档 / 子夹
 - 触发：拖拽 / 移动
-- 输入：`document_id` 或 `folder_id`, `target_parent_id`
+- 输入：文档移动为 `document_id` + `target_folder_id`（可空=根）；文件夹移动为 `folder_id` + `target_parent_id`（可空=根）
 - 步骤：校验源 + 目标同 space + **防环**（target 不能是源的后代）→ 更新 `folder_id` / `parent_id`
 - 错误：4003、4004、4220 防环 / 跨空间
 - 关联：REQ-039 / 移动 API / TC
@@ -95,8 +95,8 @@ flowchart LR
 | 新建文件夹 | `lumen_folders` | API-035 `POST /api/folders` | space 成员 | 4003/4090（重名） | 草案 |
 | 移动 / 改名 | `lumen_folders` / `lumen_documents` | API-036 | space 成员 + 防环 | 4003/4004/4090（改名重名）/4220（防环 / 跨空间） | 草案 |
 | 排序 | `lumen_folders.order` | API-037 | space 成员 | 4003 | 草案 |
-| 导入保留结构 | `lumen_folders` + `lumen_documents.folder_id` | API-029 改造 | space 成员 | 同 API-029 | 草案 |
-| 文档归属 | `lumen_documents.folder_id` | （文档 CRUD 复用） | space + permission | — | 草案 |
+| 导入保留结构 | `lumen_folders` + `lumen_documents.folder_id` | API-029 改造 | space 成员 | 同 API-029 | 已实现（task-028） |
+| 文档归属 | `lumen_documents.folder_id` | API-038 `PATCH /api/documents/{document_id}/folder` | 文档可见且可写；目标 folder 同空间；`folder_id=null`=根目录 | 4003/4004/4220 | 已实现（task-029） |
 
 数据契约（待回填 `06`，权威以 06 为准）：
 - **`lumen_folders`（新）**：`id` PK / `space_id` FK→spaces / `parent_id` FK→self（可空=根）/ `name` varchar / `order` int / `created_by` FK→users / `created_at` / `updated_at`；约束 `UNIQUE(space_id, parent_id, name)`；索引 `(space_id, parent_id)`。
@@ -122,7 +122,7 @@ flowchart LR
 
 | 阶段 | 功能范围 | 交付物 | 设计状态 | 实现状态 |
 |---|---|---|---|---|
-| Phase2B 第三 slice（候选） | `lumen_folders` + 文件夹 CRUD/移动/排序 + 导入保留结构 + 前端文件管理器 | Demo / 个人可用 | 设计骨架 | 未实现 |
+| Phase2B 第三 slice | `lumen_folders` + 文件夹 CRUD/移动/排序 + 导入保留结构 + 前端文件管理器 | Demo / 个人可用 | 已设计 | 后端核心 + 导入保留结构 + 前端文件管理器基础能力（含单文档移动）已实现；运行态 API smoke + 用户浏览器 smoke 已通过；浏览器自动化 smoke 后续补 |
 
 readiness gate：DB migration（`lumen_folders` + `folder_id`）+ 向后兼容（现有文档 `folder_id=null`）。无新依赖（PG + 现有栈），无 RG 阻塞。
 
@@ -132,10 +132,10 @@ readiness gate：DB migration（`lumen_folders` + `folder_id`）+ 向后兼容�
 
 | 设计点 | REQ | Sprint（候选） | TC（候选） | 验证 | 状态 |
 |---|---|---|---|---|---|
-| 文件夹树查询 / CRUD | REQ-039 | 候选 | TC-P2-FOLDER-001 | 后端 tests + 浏览器 smoke | 设计骨架 |
-| 移动 / 防环 | REQ-039 | 候选 | TC-P2-FOLDER-001 | tests | 设计骨架 |
-| 导入保留结构 | REQ-037 | 候选 | TC-P1-015 扩展 | tests + smoke | 设计骨架 |
-| 排序 | REQ-039 | 候选 | TC-P2-FOLDER-001 | smoke | 设计骨架 |
+| 文件夹树查询 / CRUD | REQ-039 | Sprint-22 | TC-P2-FOLDER-001 | `tests.backend.test_folder` + 临时 PG smoke；用户浏览器 smoke 2026-08-03 通过 | 后端/API + 前端基础能力已实现 |
+| 移动 / 防环 | REQ-039 | Sprint-22 | TC-P2-FOLDER-001 | `tests.backend.test_folder` + 临时 PG smoke；单文档移动 `tests.backend.test_document` | 文件夹后端/API + 单文档移动 API 已实现 |
+| 导入保留结构 | REQ-037 | Sprint-22 | TC-P1-015 扩展 | `tests.backend.test_imports` / `test_import_api` + 临时 PG import smoke | 后端/API 已实现 |
+| 排序 | REQ-039 | Sprint-22 | TC-P2-FOLDER-001 | `tests.backend.test_folder`；用户浏览器 smoke 2026-08-03 通过 | 后端/API + 前端基础能力已实现 |
 
 ## 8. 与其他子系统交互
 
@@ -166,17 +166,17 @@ readiness gate：DB migration（`lumen_folders` + `folder_id`）+ 向后兼容�
 | FT-C-008 | 导入改造 | API-029 加 `folder_id` + 自动建结构，保留「标题前缀」向后兼容 | 复用 API-029 | 新端点 | 影响 07/ingestion |
 | FT-C-009 ✅已确认（2026-08-02） | 文档排序字段 | **首版不加 `order`**，folder 内按 `title` 默认排序；手动 order 后置 | Obsidian 默认按名称；LUMEN 检索为主；省字段 + 向后兼容 | 加 `order` 字段 | 未来平滑升级；不阻塞 |
 | FT-C-010 ✅已确认（2026-08-02） | folder 生命周期 | **只 `active` 无 `archived`**；删 folder **必须先移空**（防连带删文档） | 文件系统 / Obsidian 删 folder 须空 / 确认；folder 归档语义弱；防误删 | `archived` 状态 | 未来加；不阻塞 |
-| FT-C-011 ✅已确认（2026-08-02） | API-ID 编号 | **API-034..037** + API-029 改造（`preserve_structure`） | 07 现有最大 API-033，顺序递增 | — | 已采；不阻塞 |
+| FT-C-011 ✅已确认（2026-08-02；2026-08-03 扩展） | API-ID 编号 | **API-034..038** + API-029 改造（`preserve_structure`）；API-038 用于单文档移动 | 07 原最大 API-033，顺序递增；单文档移动不适合塞入 folder PATCH | — | 已采；不阻塞 |
 | FT-C-012 ✅已记录（2026-08-02） | REQ-039 编号占用 | **REQ-039 已正式分配给 folder-tree**（02-srs 收录）；`docs/inputs/2026-07-21-doc-format-conversion-requirements.md` / `docs/research/2026-07-21-format-conversion-input-review.md` 原"建议 REQ-039"（office/wps→MD 格式转换）需重新编号 | 输入材料自声明"建议编号，不污染正式编号"（FCR-C-005）；02-srs 权威最新 REQ-038，REQ-039 可用 | office→MD 若立项用 REQ-041+（REQ-040 亦被输入建议给独立工具） | 不阻塞 folder-tree；office→MD 立项时重新编号 |
 | FT-C-013（2026-08-02 记录） | folder 软删除 / 回收站 | **MVP 不做**（维持 `active` 硬删 + 删非空→4090，FT-C-010）；未来加 `archived`/`deleted_at` + 回收站防误删 | 现代 UX（Google Drive / OneDrive）倾向回收站；MVP 克制先硬删 | 现在加 soft delete（扩字段 + service 改造，扩范围） | 不阻塞 MVP；未来增强项 |
 
 ## 11. slice 拆分建议（→ `docs/08-dev-plan.md`）
 
-1. **后端契约**：migration `lumen_folders` + `folder_id`（+ 文档 `order` 若 FT-C-004/009 确认）+ 文件夹 service / API（API-034..037）+ tests；
+1. **后端契约**：migration `lumen_folders` + `folder_id`（+ 文档 `order` 若 FT-C-004/009 确认）+ 文件夹 service / API（API-034..037）+ 单文档移动 API-038 + tests；
 2. **导入改造**：API-029 `preserve_structure` + 建 folder 结构（Flow-D-012）+ tests + TC-P1-015 扩展；
-3. **前端文件管理器**：树渲染 + CRUD + 移动 + 排序（参考 classic-tree / doc-tree-open 原型）+ 浏览器 smoke；
+3. **前端文件管理器**：树渲染 + CRUD + 移动 + 排序（参考 classic-tree / doc-tree-open 原型）+ 浏览器 smoke；基础树 / 受控菜单 / inline 文件夹编辑 / 单文档移动已由 task-029 本地实现，并通过用户浏览器 smoke（2026-08-03）；
 4. **回写**：06（表/字段/migration）+ 07（API）+ 02/03（REQ-039）+ 08（Sprint）+ 09（TC）+ ingestion §9（推翻 ING-C-001）。
 
 ---
 
-> 本设计已从**草案 / 设计骨架**推进到 **Phase2B·第三 slice·已设计（候选）**：FT-C-001..011 已确认（2026-08-02）、`06/07/02/03/08/09` + ingestion 设计骨架已回填；待 REQ-039 U-ID/SC 追溯补齐（SRS-C-002）+ Sprint-22 立项后进入编码。不直接动代码。
+> 本设计已推进到 **Phase2B·第三 slice·基础能力已实现**：后端核心（task-027 / PR #103）、API-029 导入保留结构（task-028）和前端文件管理器基础能力（task-029，含 API-038 单文档移动）已完成本地实现、自动化验证、运行态 API smoke 与用户浏览器 smoke；浏览器自动化 smoke 后续补。folder 不独立设权限、文档可见性按 `permission` 的边界不变。

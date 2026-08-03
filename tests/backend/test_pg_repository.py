@@ -24,7 +24,7 @@ def _truncate_all() -> None:
             text(
                 "TRUNCATE TABLE lumen_users, lumen_spaces, lumen_space_members, "
                 "lumen_documents, lumen_document_versions, lumen_chunks, "
-                "lumen_imports, lumen_terms RESTART IDENTITY CASCADE"
+                "lumen_imports, lumen_terms, lumen_folders RESTART IDENTITY CASCADE"
             )
         )
         conn.commit()
@@ -126,6 +126,15 @@ class PgRepositoryTest(unittest.TestCase):
         self.assertIsNone(self.repo.get_document(doc.id))
         self.assertEqual(self.repo.list_document_chunks(doc.id), [])
         self.assertEqual(self.repo.list_document_versions(doc.id), [])
+
+    def test_set_document_folder_round_trips_folder_id(self) -> None:
+        folder = self.repo.create_folder(self.space_ids[0], None, "Imported", self.user_ids[0])
+        doc = self.repo.create_document(self.space_ids[0], "T", "c1", self.user_ids[0], DocumentPermission.TEAM)
+        self.repo.set_document_folder(doc.id, folder.id)
+
+        fetched = self.repo.require_document(doc.id)
+
+        self.assertEqual(fetched.folder_id, folder.id)
 
     def test_require_document_raises_keyerror(self) -> None:
         with self.assertRaises(KeyError):

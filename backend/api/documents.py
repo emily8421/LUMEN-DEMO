@@ -9,14 +9,17 @@ from backend.repository import repository
 from backend.service.document import (
     DocumentAccessError,
     DocumentCreate,
+    DocumentMove,
     DocumentNotFoundError,
     DocumentUpdate,
+    DocumentValidationError,
     VersionNotFoundError,
     create_document,
     delete_document,
     get_visible_document,
     list_versions,
     list_visible_documents,
+    move_document_to_folder,
     restore_version,
     update_document,
 )
@@ -45,6 +48,9 @@ if APIRouter is not None:
         title: str
         content_md: str
         permission: DocumentPermission = DocumentPermission.TEAM
+
+    class DocumentMoveRequest(BaseModel):
+        folder_id: int | None = None
 
     @router.get("")
     def list_documents(authorization: str = Header(default="")) -> dict[str, object]:
@@ -107,6 +113,29 @@ if APIRouter is not None:
             raise HTTPException(status_code=404, detail={"code": 4004, "msg": "document not found"}) from exc
         except DocumentAccessError as exc:
             raise HTTPException(status_code=403, detail={"code": 4003, "msg": "no write permission on external document"}) from exc
+        return {"code": 0, "msg": "ok", "data": _document_detail(document)}
+
+    @router.patch("/{document_id}/folder")
+    def move_document_folder_endpoint(
+        document_id: int,
+        request: DocumentMoveRequest,
+        authorization: str = Header(default=""),
+    ) -> dict[str, object]:
+        payload = _read_token_payload(authorization)
+        try:
+            document = move_document_to_folder(
+                repository=repository,
+                user_id=payload.user_id,
+                current_space_id=payload.current_space_id,
+                document_id=document_id,
+                request=DocumentMove(folder_id=request.folder_id),
+            )
+        except DocumentNotFoundError as exc:
+            raise HTTPException(status_code=404, detail={"code": 4004, "msg": "document not found"}) from exc
+        except DocumentAccessError as exc:
+            raise HTTPException(status_code=403, detail={"code": 4003, "msg": "no write permission on external document"}) from exc
+        except DocumentValidationError as exc:
+            raise HTTPException(status_code=422, detail={"code": 4220, "msg": str(exc)}) from exc
         return {"code": 0, "msg": "ok", "data": _document_detail(document)}
 
     @router.delete("/{document_id}")
@@ -221,6 +250,7 @@ if APIRouter is not None:
         return {
             "id": document.id,
             "space_id": document.space_id,
+            "folder_id": document.folder_id,
             "title": document.title,
             "permission": document.permission.value,
             "type": document.type,

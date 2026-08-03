@@ -100,6 +100,7 @@ class ImportServiceTest(unittest.TestCase):
                     ),
                 ],
                 permission=DocumentPermission.TEAM,
+                preserve_structure=False,
             ),
         )
 
@@ -111,6 +112,81 @@ class ImportServiceTest(unittest.TestCase):
         self.assertEqual(result.skipped_count, 0)
         self.assertEqual(titles, ["docs/team/readme", "notes"])
         self.assertEqual(result.items[0].relative_path, "docs/team/readme.md")
+
+    def test_import_batch_preserves_folder_structure_by_default(self) -> None:
+        from backend.model.entities import DocumentPermission
+        from backend.repository.demo_repository import DemoRepository
+        from backend.service.imports import BatchImportFileRequest, BatchImportRequest, import_batch
+
+        repository = DemoRepository()
+
+        result = import_batch(
+            repository=repository,
+            user_id=1,
+            current_space_id=10,
+            request=BatchImportRequest(
+                files=[
+                    BatchImportFileRequest(
+                        filename="readme.md",
+                        relative_path="docs/team/readme.md",
+                        content=b"# Readme\n\nAlpha context.",
+                    ),
+                    BatchImportFileRequest(
+                        filename="notes.txt",
+                        relative_path="docs/team/notes.txt",
+                        content=b"Plain text context.",
+                    ),
+                ],
+                permission=DocumentPermission.TEAM,
+            ),
+        )
+
+        docs_folder = repository.find_folder_by_name(10, None, "docs")
+        self.assertIsNotNone(docs_folder)
+        team_folder = repository.find_folder_by_name(10, docs_folder.id, "team")
+        self.assertIsNotNone(team_folder)
+
+        titles = [repository.require_document(item.parsed_doc_id).title for item in result.items if item.parsed_doc_id]
+        folder_ids = {repository.require_document(item.parsed_doc_id).folder_id for item in result.items if item.parsed_doc_id}
+
+        self.assertEqual(result.success_count, 2)
+        self.assertEqual(titles, ["readme", "notes"])
+        self.assertEqual(folder_ids, {team_folder.id})
+        self.assertEqual(result.items[0].folder_id, team_folder.id)
+
+    def test_import_batch_allows_same_filename_in_different_folders(self) -> None:
+        from backend.model.entities import DocumentPermission
+        from backend.repository.demo_repository import DemoRepository
+        from backend.service.imports import BatchImportFileRequest, BatchImportRequest, import_batch
+
+        repository = DemoRepository()
+
+        result = import_batch(
+            repository=repository,
+            user_id=1,
+            current_space_id=10,
+            request=BatchImportRequest(
+                files=[
+                    BatchImportFileRequest(
+                        filename="readme.md",
+                        relative_path="alpha/readme.md",
+                        content=b"# Alpha\n\nFirst readme.",
+                    ),
+                    BatchImportFileRequest(
+                        filename="readme.md",
+                        relative_path="beta/readme.md",
+                        content=b"# Beta\n\nSecond readme.",
+                    ),
+                ],
+                permission=DocumentPermission.TEAM,
+            ),
+        )
+
+        docs = [repository.require_document(item.parsed_doc_id) for item in result.items if item.parsed_doc_id]
+
+        self.assertEqual(result.success_count, 2)
+        self.assertEqual([doc.title for doc in docs], ["readme", "readme"])
+        self.assertEqual(len({doc.folder_id for doc in docs}), 2)
 
     def test_import_batch_documents_are_searchable_and_queryable(self) -> None:
         from backend.model.entities import DocumentPermission
@@ -196,6 +272,7 @@ class ImportServiceTest(unittest.TestCase):
                     )
                 ],
                 permission=DocumentPermission.TEAM,
+                preserve_structure=False,
             ),
         )
         second_result = import_batch(
@@ -211,6 +288,7 @@ class ImportServiceTest(unittest.TestCase):
                     )
                 ],
                 permission=DocumentPermission.TEAM,
+                preserve_structure=False,
             ),
         )
 

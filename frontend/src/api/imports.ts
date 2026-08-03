@@ -16,6 +16,7 @@ export type ImportBatchItem = {
   status: 'done' | 'failed' | 'skipped';
   import_id?: number | null;
   parsed_doc_id?: number | null;
+  folder_id?: number | null;
   chunk_count: number;
   error?: string | null;
 };
@@ -41,6 +42,7 @@ export type ImportBatchDocumentPayload = {
     relativePath: string;
   }>;
   permission: DocumentPermission;
+  preserveStructure?: boolean;
 };
 
 export async function importDocument(token: string, payload: ImportDocumentPayload): Promise<ImportResponse> {
@@ -69,6 +71,7 @@ export async function importBatchDocuments(
   });
   formData.append('permission', payload.permission);
   formData.append('conflict_policy', 'skip');
+  formData.append('preserve_structure', String(payload.preserveStructure ?? true));
 
   return request<ImportBatchResponse>('/api/import/batch', {
     method: 'POST',
