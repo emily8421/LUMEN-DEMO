@@ -6,7 +6,7 @@
 - 关联 REQ：REQ-039（文档目录树）、REQ-004（文档归属）
 - 关联 TC：TC-P2-FOLDER-001
 - 关联 API：API-034..038（新增 API-038 `PATCH /api/documents/{document_id}/folder`）
-- 状态：**本地实现完成，自动化验证 + 运行态 API smoke + 用户浏览器 smoke 通过；浏览器自动化 smoke 后续补**
+- 状态：**已实现并补齐验证，自动化验证 + 运行态 API smoke + 用户浏览器 smoke + 浏览器自动化 smoke 通过**
 
 ## 目标
 

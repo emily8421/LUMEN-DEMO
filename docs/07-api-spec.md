@@ -58,7 +58,7 @@
 | API-026 | POST | /api/kits | 分析包 A Kit | [愿景] | 骨架 | — | REQ-035 |
 | API-027 | GET/PUT/DELETE | /api/tags/{id} | 标签详情 / 更新 / 归档 | [P2] | Phase2A-已实现 | — | REQ-012 |
 | API-028 | POST | /api/documents/{id}/polish | AI 润色 / 写作引用 | [P2] | MVP 级已设计 | — | REQ-014 |
-| API-033 | GET | /api/spaces/{id}/timeline | **主题时间线 / 密度热条**（REQ-013a 重定位） | [P2] | Phase2B·第二 slice·本地实现完成 | task-030；运行态 API smoke / 浏览器 smoke 待补 | REQ-013a/024 |
+| API-033 | GET | /api/spaces/{id}/timeline | **主题时间线 / 密度热条**（REQ-013a 重定位） | [P2] | Phase2B·第二 slice·本地实现完成 | task-030；运行态 API smoke / Edge headless 浏览器 smoke / 真实 PG 大数据性能 smoke 已通过 | REQ-013a/024 |
 | API-034 | GET | /api/folders | 文件夹树查询（嵌套；token current_space_id；`parent_id` query，空=根层） | [P2] | Phase2B·第三 slice·已实现 | 后端已实现（task-027；路径裁定 /api/folders，2026-08-02） | REQ-039 |
 | API-035 | POST | /api/folders | 新建文件夹 | [P2] | Phase2B·第三 slice·已实现 | 后端已实现（task-027） | REQ-039 |
 | API-036 | PATCH/DELETE | /api/folders/{folder_id} | 移动 / 改名 / 删除文件夹（PATCH body `name`/`parent_id`，`parent_id=null`=移到根） | [P2] | Phase2B·第三 slice·已实现 | 后端已实现（task-027） | REQ-039 |
@@ -105,7 +105,7 @@
 | API-017 | Phase2A-已实现 | §3.9 | 4001/4003/4004/4220 | 空间成员；draft 默认 owner 私有；转换继承文档权限 | TC-P2-QUICK-001 | 已实现（Task A `f771e02` + Task B `bad8fe5`） |
 | API-018 | Phase2A-已实现 | §3.9 | 4001/4003/4004/4220 | source / target 文档均需权限过滤；无权限反链不泄露 | TC-P2-LINK-001 | 已实现（Task A fc2b869 + Task B 6228f3f） |
 | API-028 | Phase2B·后端已实现（MVP 级） | §3.9 | 4001/4003/4004/4220/5030 | 文档可写权限；引用 chunk 必须当前用户可见；数据外发风险已接受（RG-008 Go） | TC-P2-AI-001 | 后端已实现（RG-008 Go，Sprint-19） |
-| API-033 | Phase2B·第二 slice·本地实现完成（**主题时间线 REQ-013a 重定位**） | §3.9（已定稿并落地，加 `q`/`actor`/`ratio`/`degraded`/`window`） | 4001/4003/4004/4220 | 空间成员；仅返回当前用户可见文档的事件；`q` 命中仅可见集内（候选 A 实时聚合 + 标题 ILIKE/chunk.ts_vector） | TC-P2-TL-001 | 已实现（task-030，后端自动化 + frontend build 通过；运行态 API smoke / 浏览器 smoke 待补） |
+| API-033 | Phase2B·第二 slice·本地实现完成（**主题时间线 REQ-013a 重定位**） | §3.9（已定稿并落地，加 `q`/`actor`/`ratio`/`degraded`/`window`） | 4001/4003/4004/4220 | 空间成员；仅返回当前用户可见文档的事件；`q` 命中仅可见集内（候选 A 实时聚合 + 标题 ILIKE/chunk.ts_vector） | TC-P2-TL-001 | 已实现（task-030，后端自动化 + frontend build + 运行态 API smoke + Edge headless 浏览器 smoke 通过；v1.5.2 补真实 PG 大数据性能 smoke） |
 | API-034 | Phase2B·第三 slice·已实现 | §3.9（路径已定 /api/folders） | 4001/4003 | 空间成员；folder 不独立设权限，文档可见性仍按 permission 过滤 | TC-P2-FOLDER-001 | 后端已实现（task-027，19 tests OK） |
 | API-035 | Phase2B·第三 slice·已实现 | §3.9 | 4001/4003/4090/4220 | 空间成员；同 parent 重名→4090 | TC-P2-FOLDER-001 | 后端已实现（task-027） |
 | API-036 | Phase2B·第三 slice·已实现 | §3.9 | 4001/4003/4004/4090/4220 | 空间成员；防环 / 跨空间→4220；删非空→4090 | TC-P2-FOLDER-001 | 后端已实现（task-027） |
@@ -274,7 +274,7 @@ sequenceDiagram
 | API-018 `GET /api/doc-links` | `document_id`、`direction=outbound / backlink`、`status?` | `data:[{id,source_document_id,target_document_id?,target_title?,link_text,link_type,status}]` | source / target 均按空间 + 权限过滤；无权限 target 返回 `status=no_access` 且不泄露标题 | `lumen_doc_links`、`lumen_documents` | 支撑内部链接与反向链接 |
 | API-018 `POST /api/doc-links` | `source_document_id`、`target_document_id?`、`target_title?`、`link_text`、`link_type=manual`（wikilink 由文档正文解析，不接受手动 POST） | `{id,status}` | 需可编辑 source；target 缺失时 `unresolved` | `lumen_doc_links` | 后续可由 Markdown 解析器批量维护 |
 | API-028 `POST /api/documents/{id}/polish` | `mode=polish / citation`、`selection_md?`、`instruction?`、`use_sources?=true` | `{draft_id,output_md,sources[{chunk_id,document_id,title,snippet}],status}` | 需文档可写；sources 必须来自当前用户可见 chunk；LLM 不可用返回 5030 或 Mock 降级 | `lumen_ai_drafts`、`lumen_chunks`、`lumen_documents` | **vertical slice**：`polish` 同步返回；`citation` 复用 RAG 检索 + LLM（首版同步，超时降 5030；若实测延迟过高再补异步 job 状态机）；数据外发风险已接受（RG-008）；不存 API key；草稿只存 hash + 摘要 |
-| API-033 `GET /api/spaces/{id}/timeline` | `q?`（关键词，不传=空间总览）、`from?`、`to?`、`tag_ids?`（标签主题入口）、`density?=true` | `{items[{date,document_id,title,event_type,permission,actor}],density?[{window_start,window_end,event_count,level,ratio}],degraded,window}`；`event_type`∈{created,updated,tagged,linked}；`actor`：created/updated=`owner_id`（updated 近似）/ tagged=`created_by` / **linked=`null`**（`lumen_doc_links` 无 created_by）；`density.level`∈{0,1,2,3}；`ratio`=相对均值倍数；`degraded`/`window`=day\|week | 空间成员；仅返回当前用户可见文档事件；**`q` 命中仅可见集内（标题 ILIKE + chunk.ts_vector）**；候选 A 实时聚合 UNION ALL 4 类事件；零命中空态；大集合降级 `degraded=true`（见 `docs/design/timeline.md`） | `lumen_documents`(created_at/updated_at/owner_id) + `lumen_tag_links`(created_at/created_by) + `lumen_doc_links`(created_at) + `lumen_chunks.ts_vector`（命中） | **主题时间线（REQ-013a 重定位）**·Phase2B 第二 slice·已实现（task-030；后端自动化 + frontend build 通过，运行态 API smoke / 浏览器 smoke 待补） |
+| API-033 `GET /api/spaces/{id}/timeline` | `q?`（关键词，不传=空间总览）、`from?`、`to?`、`tag_ids?`（标签主题入口）、`density?=true` | `{items[{date,document_id,title,event_type,permission,actor}],density?[{window_start,window_end,event_count,level,ratio}],degraded,window}`；`event_type`∈{created,updated,tagged,linked}；`actor`：created/updated=`owner_id`（updated 近似）/ tagged=`created_by` / **linked=`null`**（`lumen_doc_links` 无 created_by）；`density.level`∈{0,1,2,3}；`ratio`=相对均值倍数；`degraded`/`window`=day\|week | 空间成员；仅返回当前用户可见文档事件；**`q` 命中仅可见集内（标题 ILIKE + chunk.ts_vector）**；候选 A 实时聚合 UNION ALL 4 类事件；零命中空态；大集合降级 `degraded=true`（见 `docs/design/timeline.md`） | `lumen_documents`(created_at/updated_at/owner_id) + `lumen_tag_links`(created_at/created_by) + `lumen_doc_links`(created_at) + `lumen_chunks.ts_vector`（命中） | **主题时间线（REQ-013a 重定位）**·Phase2B 第二 slice·已实现（task-030；后端自动化 + frontend build + 运行态 API smoke + Edge headless 浏览器 smoke 通过；v1.5.2 真实 PG 大数据性能 smoke 通过） |
 | API-034 `GET /api/folders` | `parent_id?`（空=根层） | `items[{id,name,parent_id,order,document_count,child_folder_count,created_at,updated_at}]` | 空间成员；folder 不独立设权限（FT-C-003），文档可见性仍按 `permission` 过滤 | `lumen_folders` | Phase2B 第三 slice·已实现（task-027）；文档归属 folder 不影响检索 |
 | API-035 `POST /api/folders` | `parent_id?`（空=根）、`name` | `{id,name,parent_id,order,created_at,updated_at}` | 空间成员；同 parent 重名→4090；order 取末尾 | `lumen_folders` | Phase2B 第三 slice·已实现；`UNIQUE(space_id,parent_id,name)` + 根层 service 兜底 |
 | API-036 `PATCH /api/folders/{folder_id}` | `parent_id?`（移动，`null`=根）、`name?`（改名） | `{id,name,parent_id,order,created_at,updated_at}` | 空间成员；防环（target 非源后代）→4220；跨空间→4220；改名重名→4090 | `lumen_folders` | Phase2B 第三 slice·已实现；单文档移动由 API-038 处理 |
@@ -298,7 +298,7 @@ sequenceDiagram
 - `/api/quick-entry`：Phase2A 已实现（Task A `f771e02` + Task B `bad8fe5`）。POST capture（mode=draft/create_document/append_document + `tag_ids` + `source`）+ DELETE discard（仅 draft）；draft 默认 owner 私有，最小版不暴露 list endpoint。
 - `/api/doc-links`：Phase2A 已实现（Task A `fc2b869` + Task B `6228f3f`）。GET 返回 `data` 直接数组（出链 target 不可见→`status=no_access` 且不泄露标题；反链来源不可见过滤）；POST 仅 `link_type=manual`（wikilink 由文档保存时正文解析，拒手动 POST）。
 - `/api/documents/{id}/polish`（API-028）：Phase2B 首批核心，**数据外发风险已接受（RG-008 Go）**，vertical slice 已定（polish 同步 / citation 首版同步），后端 + 前端已实现，TC-P2-AI-001 live UI smoke 2026-07-31 通过。
-- `/api/spaces/{id}/timeline`（API-033）：**主题时间线（REQ-013a 重定位）**·Phase2B 第二 slice·已实现（候选 A 实时聚合不建表；关键词/标签驱动 `q`/`tag_ids` + 标题 ILIKE/chunk.ts_vector 命中 + actor + 密度 ratio；TL-C-001..011 已确认，见 `docs/design/timeline.md`；task-030 本地自动化通过，运行态 API smoke / 浏览器 smoke 待补）。
+- `/api/spaces/{id}/timeline`（API-033）：**主题时间线（REQ-013a 重定位）**·Phase2B 第二 slice·已实现（候选 A 实时聚合不建表；关键词/标签驱动 `q`/`tag_ids` + 标题 ILIKE/chunk.ts_vector 命中 + actor + 密度 ratio；TL-C-001..011 已确认，见 `docs/design/timeline.md`；task-030 本地自动化、运行态 API smoke、Edge headless 浏览器 smoke、真实 PG 大数据性能 smoke 均已通过）。
 - `/api/folders`（API-034..037）+ `/api/documents/{document_id}/folder`（API-038）：Phase2B 第三 slice 已实现（folder-tree，REQ-039），文件夹树查询 / 新建 / 移动·改名·删除 / 排序 + 单文档移动；folder 不独立设权限（FT-C-003），删非空 folder→4090（FT-C-010）；导入保留结构扩展 API-029 `preserve_structure` 已实现。
 - `/api/spaces/push`：跨空间推送不进 Phase2B 首批，请求 / 响应待后续细化。
 - `/api/briefs/{token}`：简报隔离与有效期待愿景验证（REQ-022）
@@ -324,8 +324,8 @@ sequenceDiagram
 | REQ-025 | `POST /api/quick-entry` | Phase2A 快速录入索引条目，可转文档 / 追加文档 / 保留草稿 |
 | REQ-026 | `GET/POST /api/doc-links` | Phase2A 内部链接与反向链接索引，需空间和文档权限过滤 |
 | REQ-014 | `POST /api/documents/{id}/polish` | Phase2B 首批核心 AI 润色 / 写作引用，复用 RAG 来源与 LLM adapter，需权限过滤和降级；数据外发风险已接受（RG-008） |
-| REQ-013 / 024 | `GET /api/spaces/{id}/timeline`（API-033） | Phase2B 首批·第二 slice 主题时间线 / 密度热条·已实现（候选 A + TL-C-001..011 已确认，契约见 §3.9；运行态 API smoke / 浏览器 smoke 待补） |
-| REQ-039 | `GET/POST /api/folders`、`PATCH/DELETE /api/folders/{folder_id}`、`POST /api/folders/reorder`、`PATCH /api/documents/{document_id}/folder`（API-034..038） | Phase2B 第三 slice（folder-tree）文档目录树：嵌套文件夹 CRUD / 移动 / 排序 + 单文档移动 + 导入保留结构（扩展 REQ-037 / API-029）；后端/API + 前端文件管理器基础能力已实现，浏览器自动化 smoke 待补 |
+| REQ-013 / 024 | `GET /api/spaces/{id}/timeline`（API-033） | Phase2B 首批·第二 slice 主题时间线 / 密度热条·已实现（候选 A + TL-C-001..011 已确认，契约见 §3.9；运行态 API smoke / Edge headless 浏览器 smoke / 真实 PG 大数据性能 smoke 已通过） |
+| REQ-039 | `GET/POST /api/folders`、`PATCH/DELETE /api/folders/{folder_id}`、`POST /api/folders/reorder`、`PATCH /api/documents/{document_id}/folder`（API-034..038） | Phase2B 第三 slice（folder-tree）文档目录树：嵌套文件夹 CRUD / 移动 / 排序 + 单文档移动 + 导入保留结构（扩展 REQ-037 / API-029）；后端/API + 前端文件管理器基础能力已实现，浏览器自动化 smoke 已补 |
 | REQ-015 / 016 / 017 | 后续 Phase 接口骨架 | 推送 / 协作 / 移动端不进 Phase2B 首批 |
 | REQ-018..023 / 028..035 | 愿景接口骨架 | 技术验证通过后细化契约 |
 
@@ -382,4 +382,4 @@ sequenceDiagram
 
 - Phase1.5A API-029 / API-030 已实现并通过 TC-P1-015/016；若后续扩展真实目录表、长期导出产物或新依赖，需同步 `docs/design/ingestion.md`、导出详细设计与 `docs/09-verification.md` TC-P1-015/016。
 - `API-019` PDF 导出属于 Phase1.5B，受 `docs/05-tech-spec.md` RG-006 与 tech-env 草案约束；导出库未安装 / 未验证前不得进入实现。
-- Phase2A 标签 / 快速录入 / 内链 API 已实现；**Phase2B API-028 后端已实现**（vertical slice 已定：polish 同步 / citation 首版同步；数据外发风险已接受 RG-008 Go）；**API-033 时间线为第二 slice·已实现（候选 A + TL-C-001..011 已确认，task-030 本地自动化通过，运行态 API smoke / 浏览器 smoke 待补）**；**API-034..038 文档目录树已实现（folder-tree，REQ-039）；导入保留结构扩展 API-029 `preserve_structure` 已实现（推翻 ingestion ING-C-001）；前端文件管理器基础能力已实现，浏览器自动化 smoke 待补**。
+- Phase2A 标签 / 快速录入 / 内链 API 已实现；**Phase2B API-028 后端已实现**（vertical slice 已定：polish 同步 / citation 首版同步；数据外发风险已接受 RG-008 Go）；**API-033 时间线为第二 slice·已实现（候选 A + TL-C-001..011 已确认，task-030 本地自动化、运行态 API smoke、Edge headless 浏览器 smoke、真实 PG 大数据性能 smoke 均已通过）**；**API-034..038 文档目录树已实现（folder-tree，REQ-039）；导入保留结构扩展 API-029 `preserve_structure` 已实现（推翻 ingestion ING-C-001）；前端文件管理器基础能力已实现，浏览器自动化 smoke 已补**。

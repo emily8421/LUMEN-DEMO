@@ -103,7 +103,7 @@
 
 ### Phase2B —— 团队 MVP（功能范围 `[P2]` · 交付物形态 **MVP**）
 - **目标**：从个人可用推进到小团队可真实使用，补写作辅助与团队化体验。
-- **功能范围 `[P2]`**：REQ-014 AI 润色 + 写作引用（**首批核心，已落地**）；**REQ-013a 主题时间线（按关键词/标签生成事件时间线）** + REQ-024 时间轴密度热条（**第二 slice，本地实现完成**：候选 A 实时聚合 + 关键词/标签驱动 + TL-C-001..011 已确认，运行态 API smoke / 浏览器 smoke 待补；**关联图 REQ-013b 愿景**）；REQ-039 文档目录树（**第三 slice**，folder-tree 基础能力已完成，浏览器自动化 smoke 待补）；REQ-015 / 016 / 017 延后确认。
+- **功能范围 `[P2]`**：REQ-014 AI 润色 + 写作引用（**首批核心，已落地**）；**REQ-013a 主题时间线（按关键词/标签生成事件时间线）** + REQ-024 时间轴密度热条（**第二 slice，已实现并补齐验证**：候选 A 实时聚合 + 关键词/标签驱动 + TL-C-001..011 已确认，运行态 API smoke / Edge headless 浏览器 smoke / 真实 PG 大数据性能 smoke 已通过；**关联图 REQ-013b 愿景**）；REQ-039 文档目录树（**第三 slice**，folder-tree 基础能力已完成，浏览器自动化 smoke 已补）；REQ-015 / 016 / 017 延后确认。
 - **交付物形态 MVP**：可真实上线给小团队试用，补齐 Phase1 Demo 缺的生产要素，而非演示原型。
 - **进入标准**：Phase2A 稳定；`04/05` Phase2 设计补强、**RG-008（AI 数据外发风险接受）Go**、`06/07/09` MVP 级契约齐备、Sprint-11 UI/WSG 门禁重跑。
 - **退出标准**：团队使用场景有真实验收 TC；**AI 润色数据外发风险已接受（真实外发 + 权限护栏，见 `ai/project-rules.md` §2.5 / `docs/05-tech-spec.md` RG-008）**；产品红线未被破坏。
@@ -132,7 +132,7 @@
 | REQ-010 | F-004 | 图片 / 白板 OCR | `[P1]` | Demo | Phase1 降级演示：以已提取文本替代；OCR 引擎真实化留后续阶段（RG-003 No-Go） |
 | REQ-011 | F-005 | 桌面浏览器访问 | `[P1]` | Demo | Phase1 必演示 |
 | REQ-012 | F-007 | 标签视图 | `[P2]` | 个人知识组织 | Phase2A 最小版已细化（扁平标签 + 独立视图 + 单标签筛选 + 文档详情打标签；见 02/06/07/09） |
-| REQ-013 | F-008 | **主题时间线（REQ-013a）+ 关联图视图（REQ-013b）** | `[P2]` | 团队 MVP | **REQ-013a 主题时间线·Phase2B 首批·第二 slice（紧随 REQ-014）·本地实现完成**：关键词/标签驱动（API-033 `q`/`tag_ids`）+ 候选 A 实时聚合不建表 + 标题 ILIKE/chunk.ts_vector 命中 + actor（linked=null）+ 密度 ratio + 逃生舱；TC-P2-TL-001 自动化通过，运行态 API smoke / 浏览器 smoke 待补（TL-C-001..011 已确认，见 `docs/design/timeline.md`）。**REQ-013b 关联图愿景**，待主题时间线试用反馈后评估 |
+| REQ-013 | F-008 | **主题时间线（REQ-013a）+ 关联图视图（REQ-013b）** | `[P2]` | 团队 MVP | **REQ-013a 主题时间线·Phase2B 首批·第二 slice（紧随 REQ-014）·已实现并补齐验证**：关键词/标签驱动（API-033 `q`/`tag_ids`）+ 候选 A 实时聚合不建表 + 标题 ILIKE/chunk.ts_vector 命中 + actor（linked=null）+ 密度 ratio + 逃生舱；TC-P2-TL-001 自动化、运行态 API smoke、Edge headless 浏览器 smoke、真实 PG 大数据性能 smoke 已通过（TL-C-001..011 已确认，见 `docs/design/timeline.md`）。**REQ-013b 关联图愿景**，待主题时间线试用反馈后评估 |
 | REQ-014 | F-008 | AI 润色 + 写作侧边栏引用 | `[P2]` | 团队 MVP | **Phase2B 首批核心·已实现（MVP 级，前端 vertical slice 闭环：PR#89–95 / v1.1.0 / TC-P2-AI-001 live 通过）**；数据外发风险已接受（RG-008 Go）；详见 `docs/design/ai-polish.md` |
 | REQ-015 | F-008 | 跨空间文档推送 | `[P2]` | 后续 Phase | 不进 Phase2B 首批，重依赖 / 安全敏感 |
 | REQ-016 | F-008 | 多人协作 | `[P2]` | 后续 Phase | 不进 Phase2B 首批，重依赖 / 并发复杂 |

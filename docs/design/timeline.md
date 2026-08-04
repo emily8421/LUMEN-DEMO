@@ -16,7 +16,7 @@
 | 覆盖 REQ | REQ-013a（主题时间线·P2）、REQ-024（密度热条）；REQ-013b（关联图）愿景，本文不含 |
 | 所属 Phase | `[P2]` Phase2B 团队 MVP（首批·第二 slice，紧随 REQ-014） |
 | 交付物形态 | MVP |
-| 当前状态 | **Phase2B·第二 slice·本地实现完成（task-030）**：候选 A 实时聚合、不建 timeline 事件表；API-033 + 前端时间线视图已落地；后端自动化验证 + frontend build 通过，运行态 API smoke / 浏览器 smoke 待补 |
+| 当前状态 | **Phase2B·第二 slice·已实现并补齐验证（task-030 + v1.5.2）**：候选 A 实时聚合、不建 timeline 事件表；API-033 + 前端时间线视图已落地；后端自动化验证 + frontend build + 运行态 API smoke + Edge headless 浏览器 smoke + 真实 PG 大数据性能 smoke 已通过 |
 | 流程 ID | Flow-D-TL-01（主题时间线数据装配）、Flow-D-TL-02（密度热条计算）、Flow-D-TL-03（关键词命中，本次新增） |
 | 图 ID | DIAG-TL-FLOW-01（关键词命中 → 装配 → 降级，见 §3） |
 | 最后更新 | 2026-08-03 |
@@ -188,7 +188,7 @@ window: "day" | "week"  # 当前密度窗口粒度
 
 | 阶段 | 功能范围 | 交付物形态 | 设计状态 | 实现状态 | 备注 |
 |---|---|---|---|---|---|
-| Phase2B | REQ-013a 主题时间线（关键词驱动）+ REQ-024 密度热条 | MVP | 已设计（重定位） | 本地实现完成（task-030；API-033 + 前端视图） | 后端自动化验证 + frontend build 通过；运行态 API smoke / 浏览器 smoke 待补 |
+| Phase2B | REQ-013a 主题时间线（关键词驱动）+ REQ-024 密度热条 | MVP | 已设计（重定位） | 本地实现完成（task-030；API-033 + 前端视图） | 后端自动化验证 + frontend build + 运行态 API smoke + Edge headless 浏览器 smoke + 真实 PG 大数据性能 smoke 已通过 |
 | 愿景 | REQ-013b 关联图视图、REQ-029 多视角联动、REQ-021 因果展开 | 产品 | 骨架（见 `intelligence-analysis.md`） | 不实现 | 主题时间线是其前置视图载体，预留「关键词 → 文档子集」出口 |
 
 readiness gate：
@@ -231,13 +231,13 @@ readiness gate：
 
 | 偏差 ID | 代码 / 配置事实 | 原设计 | 偏差类型 | 处理结论 | 回写目标 | 验证 |
 |---|---|---|---|---|---|---|
-| TL-DEV-001（2026-08-02 → 2026-08-03 回填） | task-030 已编码：`backend/service/timeline.py` + `backend/api/timeline.py` + `frontend/src/features/TimelineFeature.tsx` | 前身设计为「空间活动流」（`GET /spaces/{id}/timeline` 返回整个空间事件总览，无关键词驱动） | 设计滞后（设计偏离 product-vision 场景1 愿景） | **已按主题时间线落地**：关键词 / 标签驱动；空间活动流收编为「`q` 不传时的默认总览形态」；候选 A 聚合 / 密度 / 权限内核全部复用；不建事件表 | `06/07/08/09/frontend-interaction` 状态推进；task-030 | `test_timeline` 6/6 OK；timeline/document/tag/doc_links 回归 37/37 OK；frontend build 通过；浏览器 smoke 待补 |
+| TL-DEV-001（2026-08-02 → 2026-08-03 回填） | task-030 已编码：`backend/service/timeline.py` + `backend/api/timeline.py` + `frontend/src/features/TimelineFeature.tsx` | 前身设计为「空间活动流」（`GET /spaces/{id}/timeline` 返回整个空间事件总览，无关键词驱动） | 设计滞后（设计偏离 product-vision 场景1 愿景） | **已按主题时间线落地**：关键词 / 标签驱动；空间活动流收编为「`q` 不传时的默认总览形态」；候选 A 聚合 / 密度 / 权限内核全部复用；不建事件表 | `06/07/08/09/frontend-interaction` 状态推进；task-030 | `test_timeline` 7/7 OK；timeline/document/tag/doc_links 回归 38/38 OK；frontend build 通过；运行态 API smoke + Edge headless 浏览器 smoke + 真实 PG 大数据性能 smoke 通过 |
 
 > 重定位依据：`docs/vision/product-vision.md` 场景1（「搜索框输入关键词 → 纵向时间线铺开 → 主题发展脉络」）+ 场景覆盖索引「时间轴视图：按项目/关键词生成事件卡片时间线」。原 REQ-013 拆解时窄化为空间活动流，偏离愿景核心；本次纠正。关联图（REQ-013b）、因果展开（REQ-021）、多视角联动（REQ-029）仍为愿景，不在本 slice。
 
 ## 10. 待人工确认项
 
-> TL-C-001..011 **已确认并随 task-030 本地实现（2026-08-03）**：候选 A、4 类事件、密度 4 档、密度口径、时间窗口、大集合阈值、permission 暴露、前端布局 PG-P2-008、关键词命中口径、actor 与 linked=null 均已进入代码和测试；运行态 API smoke / 浏览器 smoke 待补。
+> TL-C-001..011 **已确认并随 task-030 本地实现（2026-08-03）**：候选 A、4 类事件、密度 4 档、密度口径、时间窗口、大集合阈值、permission 暴露、前端布局 PG-P2-008、关键词命中口径、actor 与 linked=null 均已进入代码和测试；运行态 API smoke、Edge headless 浏览器 smoke 与真实 PG 大数据性能 smoke 已通过。
 
 | ID | 待确认项 | AI 建议 | 建议依据 | 备选方案 | 取舍影响 / 阻塞关系 |
 |---|---|---|---|---|---|
@@ -257,7 +257,7 @@ readiness gate：
 
 ## 11. slice 拆分建议（→ `docs/08-dev-plan.md`）
 
-> task-030 已按以下 slice 合并落地；剩运行态 API smoke / 浏览器 smoke 待补：
+> task-030 已按以下 slice 合并落地；运行态 API smoke、Edge headless 浏览器 smoke 与真实 PG 大数据性能 smoke 已补：
 
 1. **后端契约 + service**（候选 A）：关键词命中（Flow-D-TL-03，ILIKE）+ timeline service（UNION ALL 4 类事件 + 子集过滤 + 权限 + actor）+ 索引（migration 012：`lumen_documents(space_id, created_at/updated_at)`）+ API-033 改造（加 `q` + `actor`）+ tests（关键词命中准确 / 越权零泄露 / actor 正确 / linked=null / 空态 / 零命中 / 大集合降级）。
 2. **密度热条**：Flow-D-TL-02 窗口聚合 + 色阶映射 + tests（空 / 满 / 边界窗口）。（可与 slice 1 合并为同一后端 task，因密度即 service 一部分。）
@@ -266,4 +266,4 @@ readiness gate：
 
 ---
 
-> 本设计已从 **空间活动流** 重定位为 **Phase2B·第二 slice·主题时间线（task-030 本地实现完成）**：关键词 / 标签驱动（`q` 可选，不传=空间总览）+ 4 类事件 + actor（linked=null）+ 密度热条 + 大集合降级。候选 A 聚合 / 密度 / 权限内核全部复用，不建 timeline 事件表。关联图（REQ-013b）/ 多视角联动（REQ-029）/ 因果展开（REQ-021）仍为愿景，预留「关键词 → 文档子集」出口；剩运行态 API smoke / 浏览器 smoke 待补。
+> 本设计已从 **空间活动流** 重定位为 **Phase2B·第二 slice·主题时间线（task-030 本地实现完成）**：关键词 / 标签驱动（`q` 可选，不传=空间总览）+ 4 类事件 + actor（linked=null）+ 密度热条 + 大集合降级。候选 A 聚合 / 密度 / 权限内核全部复用，不建 timeline 事件表。关联图（REQ-013b）/ 多视角联动（REQ-029）/ 因果展开（REQ-021）仍为愿景，预留「关键词 → 文档子集」出口；运行态 API smoke、Edge headless 浏览器 smoke 与真实 PG 大数据性能 smoke 已补。

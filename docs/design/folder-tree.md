@@ -14,7 +14,7 @@
 | 覆盖 REQ | REQ-039（新增候选）、REQ-037（扩展）、REQ-004（文档归属） |
 | 所属 Phase | `[P2]` Phase2B 第三 slice（候选，FT-C-007） |
 | 交付物形态 | Demo / 个人可用 |
-| 当前状态 | **Phase2B·第三 slice·基础能力已实现**：FT-C-001..013 已确认；后端核心（API-034..037 + migration 011）已实现并合入 main（task-027 / PR #103）；导入保留结构（API-029 `preserve_structure`）已实现（task-028）；前端文件管理器基础树 / 受控右键菜单 / inline 新建重命名 / 单文档移动（API-038）已本地实现并通过 build、运行态 API smoke 与用户浏览器 smoke（2026-08-03），浏览器自动化 smoke 后续补 |
+| 当前状态 | **Phase2B·第三 slice·基础能力已实现并补齐浏览器自动化 smoke**：FT-C-001..013 已确认；后端核心（API-034..037 + migration 011）已实现并合入 main（task-027 / PR #103）；导入保留结构（API-029 `preserve_structure`）已实现（task-028）；前端文件管理器基础树 / 受控右键菜单 / inline 新建重命名 / 单文档移动（API-038）已实现并通过 build、运行态 API smoke、用户浏览器 smoke（2026-08-03）与浏览器自动化 smoke（2026-08-04） |
 | 流程 ID | Flow-D-010..013（建文件夹 / 移动 / 导入保留结构 / 排序） |
 | 最后更新 | 2026-08-03 |
 | 下游影响 | 08 Sprint（候选）、09 TC（候选 TC-P2-FOLDER-001）、06 lumen_folders + folder_id、07 文件夹 API + API-029 改造、ingestion Flow-006、frontend 文件管理器 |
@@ -122,7 +122,7 @@ flowchart LR
 
 | 阶段 | 功能范围 | 交付物 | 设计状态 | 实现状态 |
 |---|---|---|---|---|
-| Phase2B 第三 slice | `lumen_folders` + 文件夹 CRUD/移动/排序 + 导入保留结构 + 前端文件管理器 | Demo / 个人可用 | 已设计 | 后端核心 + 导入保留结构 + 前端文件管理器基础能力（含单文档移动）已实现；运行态 API smoke + 用户浏览器 smoke 已通过；浏览器自动化 smoke 后续补 |
+| Phase2B 第三 slice | `lumen_folders` + 文件夹 CRUD/移动/排序 + 导入保留结构 + 前端文件管理器 | Demo / 个人可用 | 已设计 | 后端核心 + 导入保留结构 + 前端文件管理器基础能力（含单文档移动）已实现；运行态 API smoke + 用户浏览器 smoke + 浏览器自动化 smoke 已通过 |
 
 readiness gate：DB migration（`lumen_folders` + `folder_id`）+ 向后兼容（现有文档 `folder_id=null`）。无新依赖（PG + 现有栈），无 RG 阻塞。
 
@@ -179,4 +179,4 @@ readiness gate：DB migration（`lumen_folders` + `folder_id`）+ 向后兼容�
 
 ---
 
-> 本设计已推进到 **Phase2B·第三 slice·基础能力已实现**：后端核心（task-027 / PR #103）、API-029 导入保留结构（task-028）和前端文件管理器基础能力（task-029，含 API-038 单文档移动）已完成本地实现、自动化验证、运行态 API smoke 与用户浏览器 smoke；浏览器自动化 smoke 后续补。folder 不独立设权限、文档可见性按 `permission` 的边界不变。
+> 本设计已推进到 **Phase2B·第三 slice·基础能力已实现**：后端核心（task-027 / PR #103）、API-029 导入保留结构（task-028）和前端文件管理器基础能力（task-029，含 API-038 单文档移动）已完成本地实现、自动化验证、运行态 API smoke、用户浏览器 smoke与浏览器自动化 smoke。folder 不独立设权限、文档可见性按 `permission` 的边界不变。

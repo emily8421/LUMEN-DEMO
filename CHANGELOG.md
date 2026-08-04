@@ -6,6 +6,18 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v1.5.2（2026-08-04）
+
+**Sprint-20 / Sprint-22 验证债收口。** 不新增业务功能，补齐两个 release 后的可复现 smoke：Sprint-22 folder-tree 浏览器自动化点击流，以及 Sprint-20 主题时间线真实 PostgreSQL 大数据性能 smoke。
+
+- 脚本：新增 `scripts/smoke-folder-tree-browser.mjs`，不引入 Playwright 等新依赖，使用 Node 22 内置 `fetch` / `WebSocket` 驱动 Chrome/Edge CDP；先检查运行态 OpenAPI，再创建临时 folder/document fixture，浏览器登录 `alice`，切到 Documents，验证目录树渲染、UI 新建子文件夹、UI 单文档移动，并用 API 后验 `folder_id` 后自动清理。
+- 脚本：新增 `scripts/smoke-timeline-pg-performance.py`，连接真实 `lumen-pg` / `PgRepository` / `get_timeline()` 服务路径，插入隔离临时 space/user/docs/tags/links 后自动清理；620 docs + 240 links 实测 `density_events=2100`、`returned=200`、`degraded=True`、`window=week`、`elapsed_ms=2677.61`。
+- 文档：同步 `docs/08-dev-plan.md` / `docs/09-verification.md` / `docs/06-db-design.md` / `docs/07-api-spec.md` / `docs/design/timeline.md` / `docs/design/folder-tree.md` / `docs/design/frontend-interaction.md` / `tasks/task-029-folder-tree-frontend.md` 中的“待补 / 未实测”状态。
+- 版本：同步 `VERSION` / `CHANGELOG.md` / `CHANGELOG-PLAIN.md` 到 `v1.5.2`。
+- 验证：`volta run --node 22.17.1 node --check scripts/smoke-folder-tree-browser.mjs`；`.venv\Scripts\python.exe -m py_compile scripts\smoke-timeline-pg-performance.py`；运行态 OpenAPI preflight；`scripts/smoke-folder-tree-browser.mjs` 通过；`docker ps` 显示 `lumen-pg` healthy；`.venv\Scripts\python.exe scripts\smoke-timeline-pg-performance.py --documents 620 --links 240 --max-seconds 12` 通过。
+
+> PATCH 依据（`ai/project-rules.md` §2.8.1）：验证脚本 + 文档状态修正，不新增可演示能力，不改 API / DB 契约。
+
 ## v1.5.1（2026-08-04）
 
 **Release 后文档状态收口。** 修正 Sprint-20 在正式进度 / 验证文档中的滞后状态，把已 push、CI 通过和 `v1.5.0` tag 事实同步进项目事实文档。
