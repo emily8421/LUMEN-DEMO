@@ -37,6 +37,7 @@ type DocumentsFeatureProps = {
   onSave: (event: FormEvent<HTMLFormElement>) => void;
   onRestore: (versionNo: number) => void;
   onDownloadMarkdown: () => void;
+  onExportPdf: () => void;
   onOpenImport: () => void;
   /** 当前文档已打标签。 */
   documentTags: DocumentTagView[];
@@ -80,6 +81,7 @@ export function DocumentsFeature({
   onSave,
   onRestore,
   onDownloadMarkdown,
+  onExportPdf,
   onOpenImport,
   documentTags,
   availableTags,
@@ -162,6 +164,7 @@ export function DocumentsFeature({
           {selectedDocument && !isCreating ? (
             <>
               <button type="button" className="secondary" onClick={onDownloadMarkdown} disabled={isBusy}>下载 .md</button>
+              <button type="button" className="secondary" onClick={onExportPdf} disabled={isBusy}>导出 PDF</button>
               <button type="button" className="danger" onClick={onDelete} disabled={isBusy}>删除</button>
             </>
           ) : null}

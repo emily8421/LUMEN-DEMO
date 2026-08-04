@@ -1,9 +1,10 @@
-"""FastAPI router for Sprint-17 document / space export (API-030, REQ-038).
+"""FastAPI router for Sprint-17/18 document / space export.
 
 两个端点横跨 ``/api/documents/{id}/export`` 与 ``/api/export/space``，故 ``router`` 取
 ``/api`` 前缀统一收纳导出子系统（与 ``backend/service/export.py``、``docs/design/export-delivery.md``
-Flow-007 对应）。成功路径返回二进制 ``Response``（项目首例，绕过 ``{code,msg,data}`` JSON 封装）；
-错误路径仍 ``raise HTTPException(detail={"code","msg"})``，由 ``backend/main.py`` 全局 handler 统一封装。
+Flow-007/008 对应）。API-030 成功路径返回二进制 ``Response``（绕过 ``{code,msg,data}`` JSON
+封装）；API-019 返回导出任务 JSON。错误路径仍 ``raise HTTPException(detail={"code","msg"})``，
+由 ``backend/main.py`` 全局 handler 统一封装。
 """
 
 from __future__ import annotations
@@ -14,14 +15,24 @@ from backend.api.auth import TOKEN_SIGNING_KEY
 from backend.repository import repository
 from backend.service.auth import TokenError, extract_bearer_token, parse_demo_token
 from backend.service.document import DocumentNotFoundError, VersionNotFoundError
-from backend.service.export import ExportError, export_document_md, export_space_zip
+from backend.service.export import (
+    ExportError,
+    PdfExportDependencyError,
+    PdfExportOptions,
+    PdfExportValidationError,
+    create_pdf_export,
+    export_document_md,
+    export_space_zip,
+)
 from backend.service.space import SpaceAccessError
 
 try:
     from fastapi import APIRouter, Header, HTTPException, Query
     from fastapi.responses import Response
+    from pydantic import BaseModel
 except ImportError:  # pragma: no cover - allows service tests before dependencies are installed
     APIRouter = None
+    BaseModel = object
     Header = None
     HTTPException = Exception
     Query = None
@@ -30,6 +41,15 @@ except ImportError:  # pragma: no cover - allows service tests before dependenci
 
 if APIRouter is not None:
     router = APIRouter(prefix="/api", tags=["export"])
+
+    class PdfExportOptionsBody(BaseModel):
+        include_sources: bool = False
+        theme: str = "default"
+
+    class PdfExportRequestBody(BaseModel):
+        document_id: int
+        version_no: int | None = None
+        options: PdfExportOptionsBody | None = None
 
     @router.get("/documents/{document_id}/export")
     def export_document_endpoint(
@@ -86,6 +106,50 @@ if APIRouter is not None:
             media_type="application/zip",
             headers={"Content-Disposition": 'attachment; filename="lumen-space-export.zip"'},
         )
+
+    @router.post("/export-pdf")
+    def export_pdf_endpoint(
+        request: PdfExportRequestBody,
+        authorization: str = Header(default=""),
+    ) -> dict:
+        payload = _read_token_payload(authorization)
+        options = request.options or PdfExportOptionsBody()
+
+        try:
+            result = create_pdf_export(
+                repository=repository,
+                user_id=payload.user_id,
+                current_space_id=payload.current_space_id,
+                document_id=request.document_id,
+                version_no=request.version_no,
+                options=PdfExportOptions(
+                    include_sources=options.include_sources,
+                    theme=options.theme,
+                ),
+            )
+        except DocumentNotFoundError as exc:
+            raise HTTPException(status_code=404, detail={"code": 4004, "msg": "document not found"}) from exc
+        except VersionNotFoundError as exc:
+            raise HTTPException(status_code=404, detail={"code": 4004, "msg": "version not found"}) from exc
+        except PdfExportValidationError as exc:
+            raise HTTPException(status_code=422, detail={"code": 4220, "msg": str(exc)}) from exc
+        except PdfExportDependencyError as exc:
+            raise HTTPException(
+                status_code=503,
+                detail={"code": 5030, "msg": str(exc) or "PDF export dependency unavailable"},
+            ) from exc
+        except ExportError as exc:
+            raise HTTPException(status_code=500, detail={"code": 5000, "msg": "failed to export PDF"}) from exc
+
+        return {
+            "code": 0,
+            "msg": "ok",
+            "data": {
+                "export_id": result.export_id,
+                "status": result.status,
+                "artifact_path": result.artifact_path,
+            },
+        }
 
     def _read_token_payload(authorization: str):
         try:

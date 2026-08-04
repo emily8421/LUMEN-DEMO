@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 
 from backend.model.entities import (
     AiDraft,
+    DocExport,
     DocLink,
     DocLinkDraft,
     Document,
@@ -95,6 +96,8 @@ class DemoRepository:
         self._next_quick_entry_id = 1
         self.ai_drafts: list[AiDraft] = []
         self._next_ai_draft_id = 1
+        self.doc_exports: list[DocExport] = []
+        self._next_doc_export_id = 1
         self.folders: list[Folder] = []
         self._next_folder_id = 1
 
@@ -655,6 +658,59 @@ class DemoRepository:
         self._next_ai_draft_id += 1
         self.ai_drafts.append(draft)
         return draft
+
+    # --- document exports (REQ-027, API-019) ---
+
+    def create_doc_export(
+        self,
+        space_id: int,
+        document_id: int,
+        requested_by: int,
+        version_no: int,
+        status: str = "queued",
+        artifact_path: str | None = None,
+        error_message: str | None = None,
+    ) -> DocExport:
+        export = DocExport(
+            id=self._next_doc_export_id,
+            space_id=space_id,
+            document_id=document_id,
+            requested_by=requested_by,
+            format="pdf",
+            status=status,
+            version_no=version_no,
+            artifact_path=artifact_path,
+            error_message=error_message,
+            created_at=_now_iso(),
+            finished_at=_now_iso() if status in {"done", "failed"} else None,
+        )
+        self._next_doc_export_id += 1
+        self.doc_exports.append(export)
+        return export
+
+    def get_doc_export(self, export_id: int) -> DocExport | None:
+        return next((export for export in self.doc_exports if export.id == export_id), None)
+
+    def update_doc_export(
+        self,
+        export_id: int,
+        status: str,
+        artifact_path: str | None = None,
+        error_message: str | None = None,
+    ) -> DocExport:
+        for index, export in enumerate(self.doc_exports):
+            if export.id != export_id:
+                continue
+            updated = replace(
+                export,
+                status=status,
+                artifact_path=artifact_path if artifact_path is not None else export.artifact_path,
+                error_message=error_message,
+                finished_at=_now_iso() if status in {"done", "failed"} else export.finished_at,
+            )
+            self.doc_exports[index] = updated
+            return updated
+        raise KeyError(export_id)
 
     def remove_document_tag(self, tag_id: int, document_id: int) -> bool:
         before = len(self.tag_links)

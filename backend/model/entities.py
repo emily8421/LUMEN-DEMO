@@ -231,3 +231,20 @@ class AiDraft:
     cited_chunk_ids: tuple[int, ...] = ()
     status: str = "generated"
     created_at: str = ""
+
+
+@dataclass(frozen=True)
+class DocExport:
+    """REQ-027 单文档 PDF 导出任务（lumen_doc_exports，migration 013）。"""
+
+    id: int
+    space_id: int
+    document_id: int
+    requested_by: int
+    format: str
+    status: str
+    version_no: int
+    artifact_path: str | None = None
+    error_message: str | None = None
+    created_at: str = ""
+    finished_at: str | None = None

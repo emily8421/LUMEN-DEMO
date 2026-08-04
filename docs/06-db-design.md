@@ -11,8 +11,8 @@
 | 保留 / 省略决策 | 保留 |
 | 决策来源 | `ai/project-rules.md` §3（项目有 PostgreSQL + pgvector 持久化存储） |
 | 覆盖 REQ / 模块 | Phase1：空间 / 权限、文档、版本、导入、检索向量、术语管理；Phase1.5A：批量导入与 `.md` / ZIP 导出备份（REQ-037/038）；Phase1.5B：PDF 导出任务契约（REQ-027）；Phase2A：标签、内链 / 反链、快速录入（REQ-012/025/026）；Phase2B：AI 润色草稿（REQ-014）、**主题时间线（REQ-013a/024）**、文档目录树（REQ-039，第三 slice 候选）；愿景保留骨架 |
-| 当前状态 | P1 表结构**已落地 PostgreSQL**（Sprint-8 / task-008 T1–T5：8 张 `lumen_*` 表由 `migrations/001-005` 建，后端切 `PgRepository`；`lumen_chunks.embedding vector(512)` + hnsw + ts_vector 由 T4/T6 启用；migration 006 为 search 增加可选 zhparser / `simple` 回退配置）。内存 `demo_repository` 保留为单测 fake。Phase1.5A 的 REQ-037/038 已复用既有表完成、不新增迁移；Phase2A 的标签、反链与快速录入表已落地；真实 Word/PDF 文本提取与 OCR 仍降级（RG-007 / RG-003）；Phase1.5B PDF 导出 RG-006 已 Go，`lumen_doc_exports` 仍为 Sprint-18 契约草案。2026-07-21 按 ADR-010 补“DB 权威运行态 + 衍生数据可重建”原则 |
-| 最后更新 | 2026-08-04（RG-006 PDF 导出技术环境通过；DB 契约仍待 Sprint-18 实现验证） |
+| 当前状态 | P1 表结构**已落地 PostgreSQL**（Sprint-8 / task-008 T1–T5：8 张 `lumen_*` 表由 `migrations/001-005` 建，后端切 `PgRepository`；`lumen_chunks.embedding vector(512)` + hnsw + ts_vector 由 T4/T6 启用；migration 006 为 search 增加可选 zhparser / `simple` 回退配置）。内存 `demo_repository` 保留为单测 fake。Phase1.5A 的 REQ-037/038 已复用既有表完成、不新增迁移；Phase1.5B PDF 导出已落地 `lumen_doc_exports`（migration 013 + DocExport entity/ORM + Demo/Pg repository）；Phase2A 的标签、反链与快速录入表已落地；真实 Word/PDF 文本提取与 OCR 仍降级（RG-007 / RG-003）。2026-07-21 按 ADR-010 补“DB 权威运行态 + 衍生数据可重建”原则 |
+| 最后更新 | 2026-08-04（Sprint-18 PDF 导出 DB 契约落地：migration 013 `lumen_doc_exports` + TC-P1-017 通过） |
 
 ## 1. 表清单（完整）
 
@@ -32,7 +32,7 @@
 | lumen_quick_entries | 快速录入索引条目 | [P2] | Phase2A-已实现 | 迁移 009 已落地（Task A `f771e02`）；draft 默认 owner 私有 | REQ-025 |
 | lumen_ai_drafts | AI 润色 / 写作引用草稿 | [P2] | Phase2B·MVP 级已设计 | 已落地 PostgreSQL（migration 010；后端 service / API / tests 已实现，见 §6） | REQ-014 |
 | lumen_folders | 文档目录树（嵌套文件夹） | [P2] | Phase2B·第三 slice·已实现（后端/API + 导入归属 + 单文档移动） | migration 011 已落地 + 后端 service/API/tests 已实现（task-027，19 folder + 45 回归 tests OK）；API-029 `preserve_structure` 已实现建/复用 folder + 回填 `folder_id`（task-028）；API-038 单文档移动 + 前端文件管理器基础能力已实现（task-029，后端 38 tests + frontend build OK；v1.5.2 浏览器自动化 smoke 已补） | REQ-039 |
-| lumen_doc_exports | 单文档导出 PDF 任务 | [P1] | Phase1.5B-契约草案（RG-006 Go，待 Sprint-18 实现） | — | REQ-027 |
+| lumen_doc_exports | 单文档导出 PDF 任务 | [P1] | Phase1.5B-已实现 | migration 013 已落地；DocExport entity/ORM + Demo/Pg repository 已接入 | REQ-027 |
 | lumen_push_copies | 跨空间推送只读副本 | [P2] | 骨架 | — | REQ-015 |
 | lumen_vault_mounts | Vault 挂载配置 | [愿景] | 骨架 | — | REQ-018 |
 | lumen_audio_records | 录音转写记录 | [愿景] | 骨架 | — | REQ-019 |
@@ -207,7 +207,7 @@ LUMEN 采用 `docs/decisions/ADR-010-db-authority-derived-data-rebuildability.md
 
 ### [Phase1.5A/B / Phase2A/B] 导入、导出与后续表契约状态
 
-> 本节记录 Phase1.5A/B 与 Phase2A/B 数据契约状态。Phase1.5A 的 REQ-037 / 038 已复用既有表与标准库 ZIP 完成，不新增 DB 表；Phase2A 的 REQ-012 / 025 / 026 已落地最小表结构与权限过滤；Phase1.5B 与 Phase2B 仍需确认对应 Sprint / vertical slice、迁移 / seed / 回滚策略和 `docs/09-verification.md` 对应用例。
+> 本节记录 Phase1.5A/B 与 Phase2A/B 数据契约状态。Phase1.5A 的 REQ-037 / 038 已复用既有表与标准库 ZIP 完成，不新增 DB 表；Phase1.5B 的 REQ-027 已落地 `lumen_doc_exports` 导出任务表；Phase2A 的 REQ-012 / 025 / 026 已落地最小表结构与权限过滤；后续 Phase2B 扩展仍需确认对应 Sprint / vertical slice、迁移 / seed / 回滚策略和 `docs/09-verification.md` 对应用例。
 
 **Phase1.5A 无新增表实现结论**：
 
@@ -223,7 +223,7 @@ LUMEN 采用 `docs/decisions/ADR-010-db-authority-derived-data-rebuildability.md
 | `lumen_doc_links` | `id`、`space_id`、`source_document_id`、`target_document_id`、`target_title`、`link_text`、`link_type`、`status`、`created_at`、`updated_at` | `link_type in ('wikilink','manual')`；`status in ('resolved','unresolved','no_access')`；`source_document_id != target_document_id` | 反向链接查询必须过滤当前空间与目标文档权限；无权限目标显示为 `no_access` 而不泄露标题 / 摘要 | REQ-026、TC-P2-LINK-001 |
 | `lumen_quick_entries` | `id`、`space_id`、`owner_id`、`title`、`content_md`、`source`、`target_document_id`、`created_document_id`、`status`、`created_at`、`updated_at` | `status in ('draft','converted','discarded')`；转换后写入 `created_document_id` 或追加到 `target_document_id` | 私有草稿默认仅 owner 可见；转成文档后继承目标文档权限 | REQ-025、TC-P2-QUICK-001 |
 | `lumen_ai_drafts` | `id`、`space_id`、`document_id`、`user_id`、`mode`、`input_excerpt_hash`、`prompt_summary`、`output_md`、`cited_chunk_ids`、`status`、`created_at` | `mode in ('polish','citation')`；`status in ('generated','applied','discarded','failed')`；`cited_chunk_ids` 为 JSONB 数组 | 不存真实 API key；**真实文档外发风险已接受（RG-008）**，草稿只存 `input_excerpt_hash` + `prompt_summary`、不存完整敏感原文；引用仅可来自当前用户有权限 chunks | REQ-014、TC-P2-AI-001（Phase2B·MVP 级已设计；migration 010 待编码） |
-| `lumen_doc_exports` | `id`、`space_id`、`document_id`、`requested_by`、`format`、`status`、`version_no`、`artifact_path`、`error_message`、`created_at`、`finished_at` | `format='pdf'`；`status in ('queued','running','done','failed')`；导出任务与文档版本绑定 | 导出前校验文档可见性；导出产物不得绕过文档权限长期公开；不用于 REQ-038 的 `.md` / ZIP 流式导出 | REQ-027、TC-P1-017（Phase1.5B） |
+| `lumen_doc_exports` | `id`、`space_id`、`document_id`、`requested_by`、`format`、`status`、`version_no`、`artifact_path`、`error_message`、`created_at`、`finished_at` | `format='pdf'`；`status in ('queued','running','done','failed')`；导出任务与文档版本绑定；migration 013 已落地 | 导出前校验文档可见性；导出产物不得绕过文档权限长期公开；首版 artifact 落 `tmp/pdf_exports`；不用于 REQ-038 的 `.md` / ZIP 流式导出 | REQ-027、TC-P1-017（Phase1.5B，已通过） |
 | `lumen_folders` | `id`、`space_id`、`parent_id`、`name`、`order`、`created_by`、`created_at`、`updated_at` | `UNIQUE(space_id, parent_id, name)`；`parent_id` FK→self nullable（空=根）；只 `active` 无 `archived`（FT-C-010）；删 folder 必须先移空（防连带删文档）；文档首版不加 `order`，folder 内按 `title` 默认排序（FT-C-009） | folder 属单一空间，**不独立设权限**（FT-C-003）；folder 内文档可见性仍按 `lumen_documents.permission` + `space_id` 过滤，不泄露越权文档；单文档移动只更新 `lumen_documents.folder_id` | REQ-039、TC-P2-FOLDER-001（Phase2B·第三 slice；migration 011 已落地；后端/API + 导入归属 + API-038 单文档移动已实现） |
 
 ### [P2 后续] / [愿景] 表（骨架·待该阶段细化）
@@ -300,7 +300,7 @@ erDiagram
 | lumen_doc_links | 中 | source / target 文档均需权限过滤 | 无权限 target 不显示标题 / 摘要 | 随文档删除 | 不外发，除非作为 RAG / AI 引用上下文且有权限 | TC-P2-LINK-001 |
 | lumen_quick_entries.content_md | 中 | 默认 owner 私有；转文档后按文档权限 | 明文 | discard / 转换后按策略清理 | 不外发，除非用户触发 AI 写作且确认风险 | TC-P2-QUICK-001 |
 | lumen_ai_drafts.output_md / prompt_summary | 中 | space + document 权限 + user | 不存 API key；只存 prompt 摘要（不存完整敏感 prompt）与 `input_excerpt_hash` | 随文档或用户清理 | 可能来自外部 LLM 返回；**真实文档外发风险已接受（RG-008，2026-07-30）** | TC-P2-AI-001 |
-| lumen_doc_exports.artifact_path | 中 | 与源文档权限一致 | 不公开长期链接 | 任务产物过期清理（待确认） | 不外发；导出库本机执行优先 | TC-P1-017 |
+| lumen_doc_exports.artifact_path | 中 | 与源文档权限一致 | 不公开长期链接 | 首版写入 `tmp/pdf_exports`；过期清理 job 待后续 | 不外发；导出库本机执行优先 | TC-P1-017 |
 | API-029 relative_path / source_filename | 低 | space 成员 / 导入者可见 | 不保存本机绝对路径；仅保留相对路径或标题前缀 | 随导入任务 / 文档删除 | 不外发 | TC-P1-015 |
 | lumen_folders / lumen_documents.folder_id | 低 | space 成员；folder **不独立设权限**，文档可见性仍按 permission 过滤 | 不保存路径敏感信息 | 随空间或 folder 删除 | 不外发 | TC-P2-FOLDER-001 |
 | API-030 ZIP 临时产物 | 中 | 与包含文档的可见性一致 | 不公开长期链接；默认流式响应或临时文件 | 响应结束或过期清理 | 不外发；标准库 `zipfile` 本机执行 | TC-P1-016 |
@@ -321,7 +321,7 @@ erDiagram
 | REQ-036 | `lumen_terms`、`lumen_documents`、`lumen_chunks` | TC-P1-012 | Sprint-5 | 空间术语维护、识别与问答口径对齐 |
 | REQ-037 | `lumen_imports`、`lumen_documents`、`lumen_chunks` | TC-P1-015 | Sprint-16（Phase1.5A） | 批量 / 文件夹 `.md` / `.txt` 导入；逐文件结果、同名跳过；默认不新增表（Phase2B·folder-tree 第三 slice 候选扩展 `preserve_structure` 建 `lumen_folders`，见 REQ-039 / API-029） |
 | REQ-038 | `lumen_documents`、`lumen_document_versions` | TC-P1-016 | Sprint-17（Phase1.5A） | 单文档 `.md` 与空间 ZIP 导出备份；默认流式 / 临时产物，不写导出表 |
-| REQ-027 | `lumen_doc_exports`、`lumen_documents`、`lumen_document_versions` | TC-P1-017 | Sprint-18（Phase1.5B·RG-006 Go，待实现） | 单文档 PDF 导出任务、版本绑定和权限继承契约草案 |
+| REQ-027 | `lumen_doc_exports`、`lumen_documents`、`lumen_document_versions` | TC-P1-017 | Sprint-18（Phase1.5B·已实现） | 单文档 PDF 导出任务、版本绑定和权限继承已落地 |
 | REQ-012 | `lumen_tags`、`lumen_tag_links`、`lumen_documents` | TC-P2-TAG-001 | Phase2A-已实现（Task A `1e4cf48`） | 标签视图、标签筛选与标签-文档关联已落地 |
 | REQ-025 | `lumen_quick_entries`、`lumen_documents`、`lumen_tag_links` | TC-P2-QUICK-001 | Phase2A-已实现（Task A `f771e02` + Task B `bad8fe5`） | 快速录入 draft/转文档/追加/tag_ids/丢弃；API-017 |
 | REQ-026 | `lumen_doc_links`、`lumen_documents` | TC-P2-LINK-001 | Phase2A-已实现（Task A `fc2b869` + Task B `6228f3f`） | `[[wikilink]]` 出链 / 反链索引与权限过滤已落地 |
@@ -334,5 +334,5 @@ erDiagram
 ## 7. 待人工确认项
 
 - Phase1.5A 的 REQ-037 / REQ-038 已按不新增 DB 表完成；若后续需要批次表、目录表或长期导出产物表，必须先回到本文、`07`、`08/09` 修订契约。
-- PDF 导出（REQ-027）属于 Phase1.5B，RG-006 已 Go；导出产物存储路径、过期清理和 API-019 写入策略仍需 Sprint-18 编码时确认。
+- PDF 导出（REQ-027）属于 Phase1.5B，已随 Sprint-18 落地 `lumen_doc_exports`、API-019 写入策略和 `tmp/pdf_exports` 首版产物路径；过期清理 job / 下载端点 / 异步队列如需扩展需另行设计。
 - Phase2A 标签、反链与快速录入 DB 契约已实现；**Phase2B REQ-014 `lumen_ai_drafts` 已推进到 MVP 级已设计**（字段 / 约束 / 索引草案齐备，数据外发风险已接受 RG-008），migration 010 已落地（Sprint-19），后端 service / API / tests 已实现；**REQ-013/024 时间轴数据来源已定候选 A并随 task-030 本地实现（实时聚合不建表，migration 012 仅加时间索引，见 `docs/design/timeline.md` TL-C-001），运行态 API / Edge headless 浏览器 / 真实 PG 大数据性能 smoke 已通过**；**REQ-039 文档目录树（Phase2B 第三 slice）已落地 `lumen_folders` + `lumen_documents.folder_id` 契约：folder 后端核心、API-029 导入保留结构、API-038 单文档移动与前端文件管理器基础能力已实现；浏览器自动化 smoke 已补**。

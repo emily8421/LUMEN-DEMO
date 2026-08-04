@@ -7,6 +7,7 @@ import {
   createDocument,
   deleteDocument,
   downloadDocumentMarkdown,
+  exportDocumentPdf,
   getDocument,
   listDocLinks,
   listDocuments,
@@ -256,6 +257,20 @@ export function useDocuments({
     });
   };
 
+  const handleExportPdf = () => {
+    if (!token || !selectedDocument) {
+      return;
+    }
+    void runAction('正在导出 PDF...', async () => {
+      const result = await exportDocumentPdf(token, selectedDocument.id);
+      if (result.status === 'done' && result.artifact_path) {
+        setNotice(`PDF 已生成：${result.artifact_path}`);
+        return;
+      }
+      setNotice(`PDF 导出任务 ${result.export_id}：${result.status}`);
+    });
+  };
+
   const handleOpenDocument = async (documentId: number | null, title: string) => {
     if (!documentId) {
       setNotice('该来源为术语表记录，暂无可打开文档。');
@@ -304,6 +319,7 @@ export function useDocuments({
     handleDelete,
     handleRestore,
     handleDownloadMarkdown,
+    handleExportPdf,
     handleOpenDocument,
   };
 }

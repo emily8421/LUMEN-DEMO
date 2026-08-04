@@ -9,15 +9,15 @@
 |---|---|
 | 输入来源 | `docs/01-user-requirements.md`、`docs/02-srs.md`、`ai/project-rules.md` §1 |
 | 覆盖 REQ | REQ-001..REQ-039（按 Phase1 / Phase1.5A / Phase1.5B / Phase2A / Phase2B / 愿景分阶段） |
-| 当前状态 | 已确认（§3 为阶段标签唯一来源；Phase2A 个人知识组织已完成；**Phase2B 团队 MVP 进行中，2026-07-30 切指针**；Phase2B 第三 slice 候选 REQ-039 文档目录树已回填设计骨架） |
-| 最后更新 | 2026-08-02（folder-tree 设计回填：新增 REQ-039 文档目录树为 Phase2B 第三 slice 候选；Phase2A closure 记录见前版） |
+| 当前状态 | 已确认（§3 为阶段标签唯一来源；Phase1.5B 单文档 PDF 导出已完成；Phase2A 个人知识组织已完成；**Phase2B 团队 MVP 进行中，2026-07-30 切指针**；Phase2B 第三 slice REQ-039 文档目录树基础能力已完成） |
+| 最后更新 | 2026-08-04（Sprint-18 单文档 PDF 导出闭环：REQ-027 / API-019 / TC-P1-017 通过） |
 
 ## 1. 功能范围（完整，对齐 01 / 02）
 
 完整清单见 `docs/01-user-requirements.md`（U-01..U-43）与 `02-srs.md`（REQ-001..REQ-038）。
 
 - 已完成基线：Phase1（U-01..U-12、U-42 / REQ-001..REQ-011、REQ-036）、Phase1.5A（U-43 / REQ-037、REQ-038）、Phase2A（U-13、U-31、U-32 / REQ-012、REQ-025、REQ-026）
-- 个人增强候选（Phase1.5B）：U-33 / REQ-027（RG-006 已 Go，待 Sprint-18 实现）+ 真实 Word/PDF 文本提取、zhparser 中文分词增强
+- 个人增强（Phase1.5B）：U-33 / REQ-027 已实现并通过 TC-P1-017；真实 Word/PDF 文本提取、zhparser 中文分词增强仍为后续候选
 - 团队 MVP（Phase2B）：U-14..U-20、U-30 / REQ-013..REQ-017、REQ-024（其中 U-18..U-20 不进首批团队 MVP）；REQ-039 文档目录树（第三 slice 候选）
 - 远期愿景：U-21..U-29、U-34..U-41 / REQ-018..REQ-023、REQ-028..REQ-035
 
@@ -35,7 +35,7 @@
 | F-005 桌面端体验（REQ-011） | Should | 是（Phase1 Demo） | 浏览器即用，免安装 | — |
 | 私有文档（REQ-003 / U-12） | Should | 是（Phase1 Demo） | 个人草稿不泄露 | — |
 | P1.5A 个人可用 Alpha（REQ-037 / 038） | Should | 已完成 | 解决“资料放不进去、备份不出来”两个真实使用阻塞 | Sprint-16/17 完成，TC-P1-015/016 通过；不引重依赖 |
-| P1.5B 个人增强 Beta（REQ-027 + REQ-009 真实文本提取 / REQ-007 分词增强） | Should | 是（Alpha 后） | PDF、Word/PDF 文本提取、中文搜索改善体验，但不应阻塞 Alpha | REQ-027 已完成 RG-006；真实 Word/PDF 解析需选型验证 |
+| P1.5B 个人增强 Beta（REQ-027 + REQ-009 真实文本提取 / REQ-007 分词增强） | Should | 是（Alpha 后） | PDF、Word/PDF 文本提取、中文搜索改善体验，但不应阻塞 Alpha | REQ-027 已实现并通过 TC-P1-017；真实 Word/PDF 解析需选型验证 |
 | Phase2A 个人知识组织（REQ-012 / 026 / 025） | Could | 已完成 | 资料多起来后需要标签、内链和轻量条目避免变乱 | TC-P2-TAG/LINK/QUICK-001 通过，2026-07-20 closure |
 | Phase2B 团队 MVP（REQ-014 / 013 / 024，后续 015..017；候选 REQ-039 文档目录树） | Could | 否（个人可用后） | 小团队协作和写作辅助增强；文档目录树为第三 slice 候选 | 需 Phase2 重新确认范围 / 进入 / 退出标准 |
 | F-009 / F-010 热力矩阵 / 因果推理 / Vault 挂载 / 对外简报等（REQ-018..023 / 028..035） | 待验证 | 否（愿景） | 依赖未定数据来源或高难度 AI | 需 05 技术验证后再定阶段 |
@@ -54,7 +54,7 @@
 | F-008 | 写作、团队协作与跨端体验 | REQ-013 / REQ-014 / REQ-015 / REQ-016 / REQ-017 / REQ-024 | `[P2]` | 团队 MVP / 后续 | 骨架，Phase2B 时细化 |
 | F-009 | 存量知识源与交付能力 | REQ-018 / REQ-019 / REQ-022 / REQ-023 / REQ-028 / REQ-035 | `[愿景]` | 产品 | 待技术验证 |
 | F-010 | 情报分析与高风险 AI 能力 | REQ-020 / REQ-021 / REQ-029 / REQ-030 / REQ-031 / REQ-032 / REQ-033 / REQ-034 | `[愿景]` | 产品 | 高风险，待技术验证 |
-| F-011 | P1.5 导入 / 导出可用性收口 | REQ-027 / REQ-037 / REQ-038 | `[P1]` | 个人可用增强 | REQ-037/038 为 Alpha；REQ-027 为 Beta·RG-006 Go，待实现 |
+| F-011 | P1.5 导入 / 导出可用性收口 | REQ-027 / REQ-037 / REQ-038 | `[P1]` | 个人可用增强 | REQ-037/038 为 Alpha 已实现；REQ-027 为 Beta 已实现 |
 
 ## 3. 阶段路线图
 
@@ -67,7 +67,7 @@
 |---|---|---|---|---|---|
 | Phase1（已完成 / 当前基线） | `[P1]` · REQ-001..011、REQ-036 | **Demo** | 已完成（Conditional Go） | 项目起点（无前置 Phase） | REQ-001..011、REQ-036 可演示 + REQ-009/010 降级边界清晰 + 产品红线未被破坏 |
 | Phase1.5A（已完成） | `[P1]` · REQ-037、REQ-038 | **个人可用 Alpha** | 已完成（Sprint-16/17，TC-P1-015/016 通过） | Phase1 Demo closure 已完成；Sprint-0′ 框架补课不阻塞 | 批量 / 文件夹 `.md/.txt` 入库可搜可问答；单文档 `.md` 与空间 ZIP 可导出备份；权限过滤正确；产品红线未破坏 |
-| Phase1.5B（Alpha 后） | `[P1]` · REQ-027 + REQ-009 真实文本提取 / REQ-007 搜索增强候选 | **个人增强 Beta** | 候选·PDF RG-006 已 Go | Phase1.5A 可用；PDF 已通过选型与环境验证；Word-PDF 解析 / zhparser 分别通过选型与环境验证 | PDF 中文导出可用；真实 Word/PDF 文本提取可用或明确降级；中文检索体验增强；不得阻塞 Alpha |
+| Phase1.5B（Alpha 后） | `[P1]` · REQ-027 + REQ-009 真实文本提取 / REQ-007 搜索增强候选 | **个人增强 Beta** | PDF 已实现；Word-PDF / zhparser 候选 | Phase1.5A 可用；PDF 已通过选型与环境验证；Word-PDF 解析 / zhparser 分别通过选型与环境验证 | PDF 中文导出可用（已达成）；真实 Word/PDF 文本提取可用或明确降级；中文检索体验增强；不得阻塞 Alpha |
 | Phase2A（个人知识组织 · 已完成） | `[P2]` · REQ-026、REQ-012、REQ-025 | **个人知识组织** | 已完成（REQ-026 / REQ-012 / REQ-025 三个 vertical slice 通过） | Phase1.5A 使真实资料量进入系统；06/07/09 已补最小契约与 TC | 文档可用内链 / 反链互联，可用标签组织，可快速录入轻量条目；权限过滤不泄露 |
 | Phase2B（团队 MVP） | `[P2]` · REQ-014 首批核心 + REQ-013/024 时间轴紧随 + REQ-039 文档目录树（第三 slice 候选）；REQ-015/016/017 延后 | **团队 MVP** | **已启动（2026-07-30 切指针；RG-008 升 Go 2026-07-30，Sprint-19 后端 vertical slice 通过）** | Phase2A 稳定；04/05 Phase2 设计补强；**RG-008（AI 数据外发风险接受）Go**；06/07 契约齐备；Sprint-19/20 已规划 | 小团队可真实使用知识组织与写作辅助；AI 润色数据外发风险已接受（护栏见 `ai/project-rules.md` §2.5 / `docs/05-tech-spec.md` RG-008）；产品红线未破坏 |
 | 远期愿景（不承诺时间） | `[愿景]` · REQ-018..023、REQ-028..035 | **产品** | 骨架 | 05 技术验证高难度 AI 可行 | 不承诺时间 |
@@ -92,7 +92,7 @@
 - **功能范围 `[P1]`**：REQ-027 单文档 PDF 导出；REQ-009 真实 Word/PDF 文本提取候选；REQ-007 zhparser 中文分词增强候选。
 - **交付物形态个人增强 Beta**：PDF 可对外分享、更多存量资料可直接入库、中文搜索更顺手。
 - **进入标准**：Phase1.5A 已可用；PDF / Word-PDF 解析 / zhparser 各自完成选型和环境验证。
-- **退出标准**：Sprint-18 在 RG-006 Go / Conditional Go 后通过 TC-P1-017；真实 Word/PDF 解析和 zhparser 可独立 Go / No-Go，不得反向阻塞 Alpha。
+- **退出标准**：Sprint-18 已在 RG-006 Go 后通过 TC-P1-017；真实 Word/PDF 解析和 zhparser 可独立 Go / No-Go，不得反向阻塞 Alpha。
 
 ### Phase2A —— 已完成（功能范围 `[P2]` · 交付物形态 **个人知识组织**）
 - **目标**：资料量上来后，补标签、内部链接和快速录入，让个人知识库不变成文件堆。
@@ -146,7 +146,7 @@
 | REQ-024 | F-008 | 时间轴密度热条 | `[P2]` | 团队 MVP | **Phase2B 首批·第二 slice（依赖 REQ-013a）**；**已设计（候选 A，4 档色阶 + 量化 ratio + 事件数密度，传 `q` 反映主题活跃节奏，TL-C-001..011 已确认）** |
 | REQ-025 | F-007 | 快速录入索引条目 | `[P2]` | 个人知识组织 | Phase2A 已完成（TC-P2-QUICK-001 通过） |
 | REQ-026 | F-007 | 内部链接 + 反向链接 | `[P2]` | 个人知识组织 | Phase2A 已完成（TC-P2-LINK-001 通过） |
-| REQ-027 | F-011 | 单文档导出 PDF | `[P1]` | 个人增强 Beta | P1.5B 候选·RG-006 Go，待 Sprint-18 实现；从 Phase2 提前 |
+| REQ-027 | F-011 | 单文档导出 PDF | `[P1]` | 个人增强 Beta | P1.5B 已实现（Sprint-18 / TC-P1-017 通过）；从 Phase2 提前 |
 | REQ-028 | F-009 | 飞书自动同步 | `[愿景]` | 产品 | 待技术验证 |
 | REQ-029 | F-010 | 多视角联动闭环 | `[愿景]` | 产品 | 待技术验证 |
 | REQ-030 | F-010 | 路径推理 | `[愿景]` | 产品 | 高风险，待技术验证 |
@@ -168,7 +168,7 @@
 | F-001 / F-002 / F-005 / F-006 | `docs/09-verification.md` §2 / §5 | Sprint-1~6 降级口径验收记录 |
 | F-003 | `docs/09-verification.md` §2 / §5，task-009 | 真实 LLM、pgvector、Embedding 与 hybrid search 已验证 |
 | F-004 | `docs/09-verification.md` §2 / §6 | `.md` / `.txt` 导入条件通过；真实 Word / PDF / OCR 留后续 |
-| F-011（P1.5A/B） | `docs/08-dev-plan.md` Sprint-16~18、`docs/09-verification.md` TC-P1-015~017 | Alpha=REQ-037/038 已完成；Beta=REQ-027 已完成 RG-006 选型 + 中文验证，待 Sprint-18 实现 |
+| F-011（P1.5A/B） | `docs/08-dev-plan.md` Sprint-16~18、`docs/09-verification.md` TC-P1-015~017 | Alpha=REQ-037/038 已完成；Beta=REQ-027 已完成 Sprint-18 产品实现与中文 PDF 验证 |
 | Phase2A closure | `docs/09-verification.md` §2 / §5，`docs/08-dev-plan.md` Phase2A 完成包 | REQ-026 / REQ-012 / REQ-025 三个 vertical slice 已通过；未进入 Phase2B |
 | Phase2B / 愿景 | 本文 §3 / §6 待确认项 | 团队 MVP 首批范围和进入标准待确认；不直接把愿景写入当前阶段 |
 

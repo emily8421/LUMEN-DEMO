@@ -14,10 +14,10 @@
 
 ## 1. Phase边界
 
-当前阶段：**Phase2B（团队 MVP）进行中**；Phase1 Demo + Phase1.5A 可用性收口 + Phase2A（个人知识组织）均已完成；Phase2B 范围已确认（2026-07-30：REQ-014 AI 润色首批核心 + REQ-013/024 时间轴第二 slice），数据外发风险已接受（RG-008 Go，Sprint-19 后端通过），2026-07-30 切指针进入 Phase2B；Phase1.5B（PDF / Word-PDF / zhparser，Sprint-14/15/18）留后续候选
+当前阶段：**Phase2B（团队 MVP）进行中**；Phase1 Demo + Phase1.5A 可用性收口 + Phase1.5B PDF 导出 + Phase2A（个人知识组织）均已完成；Phase2B 范围已确认（2026-07-30：REQ-014 AI 润色首批核心 + REQ-013/024 时间轴第二 slice），数据外发风险已接受（RG-008 Go，Sprint-19 后端通过），2026-07-30 切指针进入 Phase2B；Word-PDF 解析 / zhparser（Sprint-14/15）仍留后续候选
 
 > 双维度（global-rules §8.1）：每个阶段同时声明**功能范围**与**交付物形态**，两者正交、不得混用。
-- **功能范围**：`[P2]`（Phase2A 已完成：REQ-026 内链/反链、REQ-012 标签、REQ-025 快速录入；**Phase2B 进行中：REQ-014 AI 润色/写作引用（首批核心）、REQ-013/024 时间轴（第二 slice）**）；`[P1]`（REQ-001..011、REQ-036、REQ-037/038 已完成；REQ-027 PDF 导出 RG-006 已 Go，Sprint-18 产品实现留后续），见 `docs/03-prd.md` §3 路线图
+- **功能范围**：`[P2]`（Phase2A 已完成：REQ-026 内链/反链、REQ-012 标签、REQ-025 快速录入；**Phase2B 进行中：REQ-014 AI 润色/写作引用（首批核心）、REQ-013/024 时间轴（第二 slice）**）；`[P1]`（REQ-001..011、REQ-036、REQ-037/038 已完成；REQ-027 PDF 导出已随 Sprint-18 完成 API-019 / TC-P1-017），见 `docs/03-prd.md` §3 路线图
 - **交付物形态**：**个人知识组织**（Phase2A 已完成）→ **团队 MVP**（Phase2B 进行中）— 在个人知识组织之上补 AI 润色/写作引用（REQ-014）让小团队可真实写作辅助，时间轴（REQ-013/024）为第二 slice；**保留产品红线**（库外问答回复"未找到"、不编造、权限不泄露；AI 润色数据外发护栏见 §2.5 / `docs/05-tech-spec.md` RG-008）
 
 > 阶段划分的唯一来源是 `docs/03-prd.md` §3 路线图；本节是"当前阶段指针"。
@@ -29,7 +29,7 @@
 - Markdown 文档 CRUD + 全文搜索 + RAG 问答（带来源引用）+ 行内编辑 / 版本历史
 - 内容导入：Phase1 Demo 支持 `.md` / `.txt` 已提取文本导入；真实 Word / PDF 解析与图片 / 白板照片 OCR 按 `docs/05-tech-spec.md` / `docs/09-verification.md` 降级边界留后续真实化
 - Phase1.5A 个人可用候选：批量 / 文件夹 `.md` / `.txt` 导入、单文档 `.md` 下载、空间 ZIP 导出；优先于 Phase2 编码
-- Phase1.5B 个人增强候选：单文档 PDF 导出、真实 Word/PDF 文本提取、zhparser 中文分词增强；其中 PDF 已通过 RG-006 选型 + 中文最小样例验证，可进入 Sprint-18 编码，API-019 / TC-P1-017 尚未闭环
+- Phase1.5B 个人增强：单文档 PDF 导出已随 Sprint-18 完成（API-019 / TC-P1-017）；真实 Word/PDF 文本提取、zhparser 中文分词增强仍为后续候选，需 RG / 选型 / 中文样例验证
 - 空间级术语表 + 文档术语识别 + 问答口径对齐
 - 桌面端浏览器访问
 - Phase2A 个人知识组织：内部链接 / 反向链接（REQ-026）、标签视图（REQ-012）、快速录入索引条目（REQ-025）均已完成；验收见 `docs/09-verification.md` TC-P2-LINK-001 / TC-P2-TAG-001 / TC-P2-QUICK-001

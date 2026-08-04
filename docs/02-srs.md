@@ -10,9 +10,9 @@
 |---|---|
 | 输入来源 | `docs/00-scenario.md`、`docs/01-user-requirements.md` |
 | 覆盖 U-ID | U-01..U-44（按阶段标签区分 P1 / P1.5 / P2 / 愿景） |
-| 交付物形态 | Phase1 = **Demo**；Phase1.5A = **个人可用 Alpha**；Phase2A = **个人知识组织**；Phase1.5B / Phase2B 为后续候选（与 `docs/03-prd.md §3` 一致） |
-| 当前状态 | 已确认（P1 可验证；Phase1.5A REQ-037/038 已实现并通过 TC-P1-015/016；Phase2A REQ-012/025/026 已实现并通过 TC-P2-TAG/QUICK/LINK-001；REQ-009/010 按 Phase1 Demo 降级口径验收；**Phase2B 第三 slice 候选 REQ-039 文档目录树已回填设计骨架（folder-tree），待 FT-C-* 确认 + 立项编码**；Phase1.5B / Phase2B / 愿景待对应阶段细化） |
-| 最后更新 | 2026-08-02（folder-tree 设计回填：新增 REQ-039 文档目录树 + REQ-037 扩展 `preserve_structure`；REQ-039 来源 U-ID / SC 留 open item） |
+| 交付物形态 | Phase1 = **Demo**；Phase1.5A = **个人可用 Alpha**；Phase1.5B = **个人增强 Beta**；Phase2A = **个人知识组织**；Phase2B 为团队 MVP（与 `docs/03-prd.md §3` 一致） |
+| 当前状态 | 已确认（P1 可验证；Phase1.5A REQ-037/038 已实现并通过 TC-P1-015/016；Phase1.5B REQ-027 PDF 导出已实现并通过 TC-P1-017；Phase2A REQ-012/025/026 已实现并通过 TC-P2-TAG/QUICK/LINK-001；REQ-009/010 按 Phase1 Demo 降级口径验收；**Phase2B 第三 slice REQ-039 文档目录树已实现基础能力并补浏览器自动化 smoke**；Phase1.5B 其余候选 / Phase2B / 愿景待对应阶段细化） |
+| 最后更新 | 2026-08-04（Sprint-18 单文档 PDF 导出闭环：REQ-027 / API-019 / TC-P1-017 通过） |
 
 ## 0.1 非功能需求 / 约束 / 异常
 
@@ -53,7 +53,7 @@
 | EX-005 | REQ-007 | 无关键词重叠但语义相关 | 可通过向量召回返回正确文档；无权限文档仍不可见 | TC-P1-007 |
 | EX-006 | REQ-037 | 批量导入中部分文件失败、不支持格式或同名冲突 | 成功项保留并入库；失败项逐条提示；同名默认跳过并提示，不静默覆盖 | TC-P1-015 |
 | EX-007 | REQ-038 | 空间导出 ZIP 时包含不可见文档 | 不可见文档不得进入 ZIP，导出结果只包含当前用户可见文档 | TC-P1-016 |
-| EX-008 | REQ-027 | PDF 导出库未安装、中文字体缺失或导出任务失败 | 返回依赖不可用 / 导出失败状态，不生成坏文件；RG-006 已 Go，Sprint-18 实现仍需覆盖该失败态 | TC-P1-017、RG-006 |
+| EX-008 | REQ-027 | PDF 导出库未安装、中文字体缺失或导出任务失败 | 返回依赖不可用 / 导出失败状态，不生成坏文件；Sprint-18 已覆盖 5030 失败态 | TC-P1-017、RG-006 |
 
 ## 1. 功能需求（REQ 主表，覆盖 REQ-001..039）
 
@@ -83,7 +83,7 @@
 | REQ-025 | 快速录入索引条目 | U-31 | 30s 录标题/来源/摘要；mode=draft 保留私有草稿、create_document 转新私有文档、append_document 追加到已有文档；可关联 tag_ids；draft 可丢弃 *(v18)* | [P2] | P2-已实现（TC-P2-QUICK-001 通过） |
 | REQ-026 | 内部链接 + 反向链接 | U-32 | Phase2A 最小版：`[[文件名]]` 解析、resolved / unresolved / no_access 状态、出链 / 反链查询与权限过滤 | [P2] | P2-已实现（TC-P2-LINK-001 通过） |
 | REQ-039 | 文档目录树：空间内嵌套文件夹（CRUD / 移动 / 排序）组织文档；导入保留真实目录结构（扩展 REQ-037）；folder 不独立设权限（继承空间，文档可见性仍看 permission） | **U-44** | Phase2B 第三 slice 候选：建 / 移动 / 排序文件夹后文档归属正确；导入文件夹后目录结构保留；防环 / 跨空间 / 重名 / 删非空 folder 拒绝 | [P2] | P2-已设计（folder-tree，FT-C-001..013 已确认，编码进行中） |
-| REQ-027 | 单文档导出 PDF（Markdown → PDF，含中文排版） | U-33 | 选型 ReportLab + 中文验证（RG-006 已 Go）；封面 / 页眉页脚 / 排版 | [P1] | P1.5B-候选·RG-006 Go，待 Sprint-18 实现（从 Phase2 提前） |
+| REQ-027 | 单文档导出 PDF（Markdown → PDF，含中文排版） | U-33 | ReportLab 首版：基础 Markdown 子集（标题 / 段落 / 列表 / 表格 / 引用）+ 页眉页脚 + 中文字体；导出任务绑定版本，产物继承权限，依赖不可用返回 5030 | [P1] | P1.5B-已实现（Sprint-18 / TC-P1-017 通过，从 Phase2 提前） |
 | REQ-018 | Obsidian Vault 挂载 | U-21 | 待技术验证（只读索引、账号绑定、不迁移） | [愿景] | 骨架 |
 | REQ-019 | 录音转文字 + 摘要 | U-22 | 待技术验证（转写引擎、摘要质量） | [愿景] | 骨架 |
 | REQ-020 | 问题热力矩阵 | U-23 | 高风险待验证（需稳定文档分类，数据来源未定） | [愿景] | 骨架 |
@@ -126,7 +126,7 @@
 | U-30 | REQ-024 | [P2] | 时间轴密度热条 | 待细化（骨架） | — |
 | U-31 | REQ-025 | [P2] | 快速录入索引条目 | P2-已实现（TC-P2-QUICK-001 通过） | — |
 | U-32 | REQ-026 | [P2] | 内部链接 + 反向链接 | P2-已实现（TC-P2-LINK-001 通过） | — |
-| U-33 | REQ-027 | [P1] | 单文档导出 PDF | P1.5B-候选·RG-006 Go，待 Sprint-18 实现（从 Phase2 提前） | — |
+| U-33 | REQ-027 | [P1] | 单文档导出 PDF | P1.5B-已实现（Sprint-18 / TC-P1-017 通过，从 Phase2 提前） | — |
 | U-43 | REQ-038 | [P1] | 单文档 `.md` + 空间 ZIP 导出备份 | P1.5A-已实现（TC-P1-016 通过） | — |
 | U-21 | REQ-018 | [愿景] | Obsidian Vault 挂载 | 待验证（骨架） | — |
 | U-22 | REQ-019 | [愿景] | 录音转文字 + 摘要 | 待验证（骨架） | — |
@@ -162,7 +162,7 @@
 | REQ-036 | AC-P1-009 | TC-P1-012 | `docs/09-verification.md` §2 / §5、术语验收 | 条件通过 |
 | REQ-037 | AC-P1-010 | TC-P1-015 | `docs/09-verification.md` §2、批量导入后端 tests + Chrome smoke | P1.5A-已实现 / 通过 |
 | REQ-038 | AC-P1-011 | TC-P1-016 | `docs/09-verification.md` §2、导出后端 tests + 端到端 HTTP smoke | P1.5A-已实现 / 通过 |
-| REQ-027 | AC-P1-012 | TC-P1-017 | `docs/09-verification.md` §2、RG-006 + PDF 样例验证 | RG-006 Go；Sprint-18 产品验收待完成 |
+| REQ-027 | AC-P1-012 | TC-P1-017 | `docs/09-verification.md` §2、RG-006 + Sprint-18 PDF 产品样例验证 | P1.5B-已实现 / 通过 |
 | REQ-012 | AC-P2-TAG-001 | TC-P2-TAG-001 | `docs/09-verification.md` §2、标签后端 tests + 浏览器 smoke | P2-已实现 / 通过 |
 | REQ-025 | AC-P2-QUICK-001 | TC-P2-QUICK-001 | `docs/09-verification.md` §2、快速录入后端 tests + API / 浏览器 smoke | P2-已实现 / 通过 |
 | REQ-026 | AC-P2-LINK-001 | TC-P2-LINK-001 | `docs/09-verification.md` §2、内链后端 tests + API / 浏览器 smoke | P2-已实现 / 通过 |

@@ -86,6 +86,7 @@ export function WorkspaceMain({
           onSave={documents.handleSave}
           onRestore={documents.handleRestore}
           onDownloadMarkdown={documents.handleDownloadMarkdown}
+          onExportPdf={documents.handleExportPdf}
           onOpenImport={onOpenImport}
           documentTags={tags.documentTags}
           availableTags={tags.tags}

@@ -6,6 +6,18 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v1.6.0（2026-08-04）
+
+**Sprint-18 单文档 PDF 导出闭环。** 完成 REQ-027 / API-019 / TC-P1-017：文档详情页可以发起 PDF 导出，后端生成绑定具体版本的中文 PDF，并记录导出任务状态。
+
+- 后端：新增 migration 013 `lumen_doc_exports`、`DocExport` entity / ORM、Demo/Pg repository 导出记录；`POST /api/export-pdf` 同步生成 PDF 并返回 `export_id/status/artifact_path`。
+- PDF 渲染：使用 ReportLab 渲染 Markdown 子集（标题、段落、列表、表格、引用、页眉页脚）；artifact 首版写入 `tmp/pdf_exports`；不可见文档不创建任务，依赖 / 字体不可用映射 5030 并标记 failed。
+- 前端：文档详情工具栏新增"导出 PDF"入口，接入 `frontend/src/api/exports.ts` client，成功后提示生成路径。
+- 文档：同步 `docs/00`~`09`、`docs/design/export-delivery.md` 与 `ai/project-rules.md` 中 REQ-027 / API-019 / TC-P1-017 状态。
+- 验证：`py_compile` 通过；`tests.backend.test_export` 20/20 OK；backend discover 196 OK（skipped=2，embedding torch DLL 警告按 text-only fallback 继续）；`volta run --node 22.17.1 npm run build` 通过；产品样例 `tmp/pdf_exports/Sprint18 产品 PDF 验证-v1-export-1.pdf` 经 `pdftoppm` 渲染、人工 PNG 检查、`pdfplumber` 抽文本与 PIL 非白像素检查通过（`non_white_pixels=122856`）。
+
+> MINOR 依据（`ai/project-rules.md` §2.8.1）：Sprint 验收 / 新增可演示能力 + 新增对外 API endpoint（API-019）；默认向后兼容。
+
 ## v1.5.2（2026-08-04）
 
 **Sprint-20 / Sprint-22 验证债收口。** 不新增业务功能，补齐两个 release 后的可复现 smoke：Sprint-22 folder-tree 浏览器自动化点击流，以及 Sprint-20 主题时间线真实 PostgreSQL 大数据性能 smoke。

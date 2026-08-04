@@ -13,7 +13,7 @@
 | 覆盖 REQ | REQ-009、REQ-010、REQ-037（Phase2B folder-tree 扩展 `preserve_structure`，见 REQ-039） |
 | 所属 Phase | [P1] + Phase1.5A 已完成；Phase1.5B / 后续保留骨架 |
 | 交付物形态 | Demo / 个人可用 Alpha |
-| 当前状态 | P1 已降级实现（`.md`/`.txt` + Embedding/pgvector 已落地；真实 Word/PDF/OCR 未实现）；Phase1.5A 批量 / 文件夹导入已完成并通过 TC-P1-015；Phase2B folder-tree 扩展 `preserve_structure=true` 已完成后端/API（task-028，真实 PG smoke 通过），前端文件管理器留下一 slice |
+| 当前状态 | P1 已降级实现（`.md`/`.txt` + Embedding/pgvector 已落地；真实 Word/PDF/OCR 未实现）；Phase1.5A 批量 / 文件夹导入已完成并通过 TC-P1-015；Phase2B folder-tree 扩展 `preserve_structure=true` 已完成后端/API（task-028，真实 PG smoke 通过），前端文件管理器基础能力已由 task-029 补齐 |
 | 流程 ID | Flow-D-001（单文件导入主流水线）/ Flow-006（批量 / 文件夹导入，见 §2.2）/ Flow-D-012（导入保留目录结构，Phase2B 候选，见 `docs/design/folder-tree.md`） |
 | 最后更新 | 2026-08-03（folder-tree 导入扩展实现：API-029 `preserve_structure=true` 默认建/复用 `lumen_folders` + 回填 `folder_id`；`false` 保留标题前缀向后兼容） |
 | 下游影响 | 08 Sprint-3、Sprint-16；09 TC-P1-009/010/015；07 API-011 / API-029 |
@@ -82,7 +82,7 @@ flowchart TB
 
 - `[P1]` 已实现 / 降级：`.md` / `.txt` 已提取文本导入、切块、Embedding / pgvector 入库；真实 Word/PDF/OCR 不作为 P1 必过
 - `Phase1.5A` 已完成：多文件 + 文件夹 `.md` / `.txt` 批量导入（REQ-037 / API-029 / TC-P1-015 通过）
-- `Phase2B 第三 slice`（folder-tree，后端/API 已实现）：导入保留真实目录结构（`preserve_structure` 建/复用 `lumen_folders`），扩展 REQ-037 / API-029；推翻 ING-C-001；详见 `docs/design/folder-tree.md` Flow-D-012。前端文件管理器留下一 slice。
+- `Phase2B 第三 slice`（folder-tree，后端/API + 前端基础能力已实现）：导入保留真实目录结构（`preserve_structure` 建/复用 `lumen_folders`），扩展 REQ-037 / API-029；推翻 ING-C-001；详见 `docs/design/folder-tree.md` Flow-D-012。前端文件管理器基础能力已由 task-029 补齐。
 - `Phase1.5B` 待 RG-007：真实 Word / PDF 文本提取（python-docx / pdfplumber 候选），不得阻塞 Phase1.5A
 - `后续` 待 RG-003：图片 / 白板 OCR
 - `[愿景]` 待验证：录音转写入库（REQ-019，转写引擎与摘要质量待验证）

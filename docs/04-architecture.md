@@ -10,8 +10,8 @@
 |---|---|
 | 输入来源 | `docs/00-scenario.md`、`docs/01-user-requirements.md`、`docs/02-srs.md`、`docs/03-prd.md`、`docs/env/local-env.md`、`ai/project-rules.md`、`docs/research/2026-07-15-overall-design-04-05-audit.md`、`docs/decisions/ADR-010-db-authority-derived-data-rebuildability.md` |
 | 覆盖功能 / REQ | Phase1：REQ-001..REQ-011、REQ-036；Phase1.5A：REQ-037/038；Phase1.5B：REQ-027；Phase2A：REQ-012/025/026；Phase2B / 后续 / 愿景保留架构骨架 |
-| 当前状态 | 目标架构基线已定；Sprint-7/8 后运行时已接入 PostgreSQL+pgvector、`PgRepository`、本机 Embedding 与 GLM LLM。Phase1.5A 批量 / 文件夹导入与 `.md` / ZIP 导出备份已完成；Phase2A 个人知识组织（标签、内链 / 反链、快速录入）已完成。PDF 导出 RG-006 已 Go、API-019 待 Sprint-18 实现；仍降级 / 候选：真实 Word/PDF 解析、OCR、Phase2B 后续团队能力。Web App Structure Profile / WSG 自 P1.5A 起生效；2026-07-21 新增 ADR-010 固化 DB 权威运行态 + 衍生数据可重建原则 |
-| 最后更新 | 2026-08-04（RG-006 PDF 导出技术门禁通过；ReportLab 路线可进入 Sprint-18） |
+| 当前状态 | 目标架构基线已定；Sprint-7/8 后运行时已接入 PostgreSQL+pgvector、`PgRepository`、本机 Embedding 与 GLM LLM。Phase1.5A 批量 / 文件夹导入与 `.md` / ZIP 导出备份已完成；Phase1.5B 单文档 PDF 导出已完成 API-019 + `lumen_doc_exports` + 前端入口并通过 TC-P1-017；Phase2A 个人知识组织（标签、内链 / 反链、快速录入）已完成。仍降级 / 候选：真实 Word/PDF 解析、OCR、Phase2B 后续团队能力。Web App Structure Profile / WSG 自 P1.5A 起生效；2026-07-21 新增 ADR-010 固化 DB 权威运行态 + 衍生数据可重建原则 |
+| 最后更新 | 2026-08-04（Sprint-18 PDF 导出产品闭环：ReportLab 路线 + API-019 + TC-P1-017 通过） |
 
 ### 0.1 架构目标与约束
 
@@ -104,7 +104,7 @@ flowchart LR
 | MOD-004 | 检索问答 | 全文搜索、RAG（向量+全文+引用） | 查询 → 结果 + 来源 | 不负责导入解析 | COMP-002 / 003 / 004 | [P1] | P1-条件通过（hybrid search + RAG） | search=substring + `ts_vector` SQL 候选 + pgvector 语义召回；RAG=关键词 + pgvector 向量召回 + GLM LLM | docs/design/rag-retrieval.md |
 | MOD-005 | 术语管理 | 空间级术语表、文档术语识别、问答口径对齐 | 术语 → 口径注入 | 不负责问答生成 | COMP-002 / 003 / 004 | [P1] | P1-已实现 | PostgreSQL 术语存储已接入；术语定义已注入真实 LLM Prompt | docs/design/term-management.md |
 | MOD-006 | 个人知识组织 | 标签体系、内部链接 + 反向链接、快速录入索引条目；时间轴 / 关联图留 Phase2B / 后续 | 文档 + 标签 / `[[文件名]]` / 轻量条目 → 标签聚合视图、反向链接索引、可检索条目 | 不负责文档内容生成 / 问答；不负责团队协作 | COMP-001 / 002 / 003 | [P2] | P2-已实现（TC-P2-LINK/TAG/QUICK-001 通过） | — | 导航交互见 docs/design/frontend-interaction.md §3 |
-| MOD-007 | 导出交付与写作增强（协作 / 推送延后） | 单文档 `.md` 下载、空间 ZIP 导出备份、单文档 PDF；Phase2B AI 润色 + 写作引用 | 文档 / 空间 → `.md` / ZIP / PDF；选中文本 / 写作上下文 → 润色建议 + 引用块 | 不负责实时协作（延后）、不负责检索 / 问答；P1.5A 不做 PDF | COMP-001 / 002 / 003 / 004（润色走 LLM） | [P1] / [P2] | P1.5A-已实现；P1.5B PDF RG-006 Go、待实现；Phase2B AI 已实现 | `.md` / ZIP 已随 Sprint-17 完成；PDF 可进 Sprint-18；AI 润色已闭环 | docs/design/export-delivery.md；docs/design/ai-polish.md |
+| MOD-007 | 导出交付与写作增强（协作 / 推送延后） | 单文档 `.md` 下载、空间 ZIP 导出备份、单文档 PDF；Phase2B AI 润色 + 写作引用 | 文档 / 空间 → `.md` / ZIP / PDF；选中文本 / 写作上下文 → 润色建议 + 引用块 | 不负责实时协作（延后）、不负责检索 / 问答；P1.5A 不做 PDF | COMP-001 / 002 / 003 / 004（润色走 LLM） | [P1] / [P2] | P1.5A-已实现；P1.5B PDF 已实现；Phase2B AI 已实现 | `.md` / ZIP 已随 Sprint-17 完成；PDF 已随 Sprint-18 完成；AI 润色已闭环 | docs/design/export-delivery.md；docs/design/ai-polish.md |
 | MOD-008 | 存量接入 | Vault 挂载、录音转写、飞书同步 | — | — | — | [愿景] | 骨架 | — | 待技术验证 |
 | MOD-009 | 情报分析（i2 精神） | 关联图↔时间轴联动、路径推理、人物网络、矛盾检测、证据地图、信号追踪 | — | — | — | [愿景] | 骨架 | — | docs/design/intelligence-analysis.md |
 | MOD-010 | 情报交付 | 对外只读简报、管理层摘要、分析包 A Kit | — | — | — | [愿景] | 骨架 | — | 待技术验证 |
@@ -129,7 +129,7 @@ flowchart LR
 | ADR-003 | 导入流水线收敛异构格式为文本→切块→Embedding | 已确认（目标；当前仅 `.md`/`.txt`） | Phase1+ | 检索侧只面对一种数据形态，解析复杂度集中于导入 | 各格式独立检索路径 | 检索侧统一数据形态；解析复杂度集中于导入 | TC-P1-009 / 010（09 §2） |
 | ADR-004 | 权限下沉到 SQL / 检索层（查询时过滤） | 已确认（当前内存等价实现） | Phase1+ | 空间隔离 + 文档权限在查询时过滤，不依赖应用层记忆，防漏过滤 | 应用层记忆当前空间 | 防漏过滤、安全边界强；强依赖查询层正确性 | TC-P1-001 / 003（09 §2） |
 | ADR-005 | RAG / 导入 / 权限独立成 docs/design/ | 已确认 | Phase1+ | 三者非平凡且可独立演进，单列详细设计便于维护 | 全部并入 04 | 子系统可独立演进；多份详细设计需维护 | `docs/design/*` 已存在 |
-| ADR-006 | Phase1.5B PDF 导出方案 | 已采用（ReportLab 首版） | Phase1.5B | 单文档需可排版导出 PDF（REQ-027），但不得阻塞个人可用 Alpha | WeasyPrint / 浏览器打印 | ReportLab 在 Windows + Python 3.14 下依赖链轻，中文样例已通过；仍需 Sprint-18 实现权限 / 失败态 / 清理策略 | RG-006 Go（2026-08-04） |
+| ADR-006 | Phase1.5B PDF 导出方案 | 已采用 / 已实现（ReportLab 首版） | Phase1.5B | 单文档需可排版导出 PDF（REQ-027），但不得阻塞个人可用 Alpha | WeasyPrint / 浏览器打印 | ReportLab 在 Windows + Python 3.14 下依赖链轻；Sprint-18 已实现权限校验、版本绑定、失败态 5030 与本地 artifact 路径 | RG-006 Go + TC-P1-017 通过（2026-08-04） |
 | ADR-007 | 标签 + 反向链接索引用 PG 关系表 + `[[wikilink]]` 解析 | 已采用 / 已实现 | Phase2A | 复用现有 PG，少引图数据库（REQ-012 / 026） | 图数据库 / 全文索引 | 关系表 JOIN 成本；解析规则已按 Phase2A 最小版收敛 | TC-P2-TAG-001 / TC-P2-LINK-001 通过 |
 | ADR-008 | Phase1.5A `.md` / ZIP 导出备份走标准文件流 | 已实现 | Phase1.5A | 个人可用 Alpha 需要可迁出、可备份；标准库 ZIP 风险低、不引重依赖（REQ-038 / U-43） | 直接做 PDF / 数据库整库导出 | 快速落地且权限边界简单；不保留富格式排版 | TC-P1-016 通过 |
 | ADR-009 | Phase1.5A 批量 / 文件夹导入以标题相对路径保留目录感 | 已实现 | Phase1.5A | 用户要快速放入一批资料；不建真实目录表可避免 DB 迁移与范围扩张（REQ-037 / SC-007） | 新增 folder 表与真实目录树 | 低风险、快落地；后续若做真实目录需迁移 | TC-P1-015 通过 |
@@ -214,15 +214,15 @@ flowchart TB
 
 ### 5.4 Phase1.5A/B 与 Phase2A/B 关键流程（骨架）
 
-> Phase1.5A 批量 / 文件夹导入与 `.md` / ZIP 导出备份已闭合；Phase2A 标签、内链 / 反链与快速录入已闭合。Phase1.5B PDF 已通过 RG-006，可进入 Sprint-18；Phase2B 团队 MVP 候选待对应阶段再补详细设计。所有导出 / 检索 / 写作候选均沿用 Flow-002 权限过滤，不得以前端隐藏替代后端过滤。
+> Phase1.5A 批量 / 文件夹导入与 `.md` / ZIP 导出备份已闭合；Phase1.5B PDF 已随 Sprint-18 闭合；Phase2A 标签、内链 / 反链与快速录入已闭合。Phase2B 已完成 AI 润色 / 写作引用、主题时间线与文档目录树首批 slice；关联图等后续团队 MVP 候选待对应阶段再补详细设计。所有导出 / 检索 / 写作候选均沿用 Flow-002 权限过滤，不得以前端隐藏替代后端过滤。
 
 - **Flow-003 标签浏览与内部链接跳转**（REQ-012 / 026，Phase2A）：按标签聚合 → 点击 `[[文件名]]` 跳转 / 反向链接面板；权限沿用 Flow-002 过滤。
 - **Flow-004 快速录入索引条目**（REQ-025，Phase2A）：轻量条目（标题 / 来源 / 摘要）→ draft / 新文档 / 追加文档 → 索引入库参与检索；走 Flow-002 过滤。
 - **Flow-005 AI 润色与写作引用**（REQ-014，Phase2B）：选中文本 → LLM 润色建议 / 检索引用块插入；复用 ADR-002 LLM adapter，候选 chunk 按权限过滤。
-- **Flow-006 批量 / 文件夹导入**（REQ-037，Phase1.5A）：多文件 / 文件夹选择 → 逐文件读取 `.md` / `.txt` → 标题保留相对路径前缀 → 成功项入库并切块 → 逐条返回成功 / 失败 / 同名跳过结果；不建真实目录表。
+- **Flow-006 批量 / 文件夹导入**（REQ-037，Phase1.5A；REQ-039 扩展）：多文件 / 文件夹选择 → 逐文件读取 `.md` / `.txt` → 成功项入库并切块 → 逐条返回成功 / 失败 / 同名跳过结果；Phase1.5A 兼容标题保留相对路径前缀，Phase2B `preserve_structure=true` 建 / 复用真实 folder 并回填 `folder_id`。
 - **Flow-007 `.md` / ZIP 导出备份**（REQ-038，Phase1.5A）：单文档详情 → 下载当前版本 `.md`；空间工具栏 → 查询当前用户可见文档 → 标准 ZIP 打包 `.md` → 下载；不可见文档不进入 ZIP。
-- **Flow-008 单文档导出 PDF**（REQ-027，Phase1.5B）：文档版本 → 渲染 → PDF（ADR-006 已采用 ReportLab 首版路线）；RG-006 已 Go，后续实现仍必须受文档权限约束，导出库不可用时返回失败态，不生成坏文件。
-- **Flow-009 时间轴 / 关联视图候选**（REQ-013 / REQ-024，Phase2B / 后续）：文档时间字段 / 候选事件 → 时间轴与密度提示；关联图仅保留骨架，不进入 Phase2A 首批。
+- **Flow-008 单文档导出 PDF**（REQ-027，Phase1.5B）：文档版本 → 创建导出任务 → ReportLab 渲染 Markdown 子集 → 写入本地 artifact → 返回 `{export_id,status,artifact_path}`；导出前受文档权限约束，导出库 / 字体不可用时返回 5030，不生成坏文件。
+- **Flow-009 主题时间线 / 密度热条**（REQ-013a / REQ-024，Phase2B）：文档时间字段 / 标签 / 链接 / chunk 命中 → 实时聚合时间线与密度提示；关联图 REQ-013b 仅保留骨架，留后续。
 
 ## 6. REQ / 功能 → 模块 / Flow 追溯矩阵
 
@@ -238,7 +238,7 @@ flowchart TB
 | REQ-036 | [P1] | COMP-002 / 003 / 004 | MOD-005（+ MOD-004 / 002） | Flow-002 | `docs/design/term-management.md`、`docs/06-db-design.md`、`docs/07-api-spec.md` | P1-已实现（PG 术语 + LLM 注入） |
 | REQ-037 | [P1] | COMP-001 / 002 / 003 / 004 | MOD-003 | Flow-006 | `docs/08-dev-plan.md` Sprint-16、`docs/07-api-spec.md` API-029、`docs/09-verification.md` TC-P1-015 | Phase1.5A-已实现（TC-P1-015 通过） |
 | REQ-038 | [P1] | COMP-001 / 002 / 003 | MOD-002 / 007 | Flow-007 | `docs/08-dev-plan.md` Sprint-17、`docs/07-api-spec.md` API-030、`docs/09-verification.md` TC-P1-016 | Phase1.5A-已实现（TC-P1-016 通过） |
-| REQ-027 | [P1] | COMP-001 / 002 / 003 | MOD-007 | Flow-008 | ADR-006、`docs/08-dev-plan.md` Sprint-18、`docs/09-verification.md` TC-P1-017 | Phase1.5B-候选·RG-006 Go，待实现 |
+| REQ-027 | [P1] | COMP-001 / 002 / 003 | MOD-007 | Flow-008 | ADR-006、`docs/08-dev-plan.md` Sprint-18、`docs/09-verification.md` TC-P1-017 | Phase1.5B-已实现（TC-P1-017 通过） |
 | REQ-012 / 025 / 026 | [P2] | COMP-001 / 002 / 003 | MOD-006 | Flow-003 / 004 | 导航交互见 `docs/design/frontend-interaction.md` §3 | P2-已实现（TC-P2-LINK/TAG/QUICK-001 通过） |
 | REQ-013 / REQ-024 | [P2] | COMP-001 / 002 / 003 | MOD-006 | Flow-009 | `docs/design/timeline.md`（Phase2B 建） | Phase2B 首批·第二 slice（紧随 REQ-014）；骨架，待设计细化 |
 | REQ-014 | [P2] | COMP-001 / 002 / 003 / 004 | MOD-007 | Flow-005 | `docs/design/ai-polish.md`（Phase2B 建） | Phase2B 首批核心·后端已实现（MVP 级）；数据外发风险已接受（RG-008 Go）；UI 门禁待重跑 |
@@ -248,5 +248,5 @@ flowchart TB
 ## 7. 待人工确认项
 
 - Phase1.5A Sprint-16/17 已完成；若后续扩展真实目录表、长期导出产物或新依赖，必须先同步修订 `05/06/07/08/09` 与对应 design。
-- Phase1.5B PDF 已通过 RG-006；可进入 Sprint-18 编码，但不得把技术样例误标为 REQ-027 / API-019 已实现。
+- Phase1.5B PDF 已通过 RG-006 并随 Sprint-18 完成 REQ-027 / API-019 / TC-P1-017；后续若做异步导出、下载端点、过期清理 job 或水印，须先同步修订 `05/06/07/08/09`。
 - Phase2B 团队 MVP 候选（AI 润色 / 写作引用、时间轴候选）需重新确认范围、进入 / 退出标准、详细设计与 UI / WSG 门禁；Phase2A 已完成能力如需扩展，先同步修订 `06/07/08/09`。

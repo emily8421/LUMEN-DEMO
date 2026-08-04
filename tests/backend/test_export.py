@@ -1,7 +1,10 @@
 import importlib.util
 import io
+import tempfile
 import unittest
 import zipfile
+from pathlib import Path
+from unittest.mock import patch
 from urllib.parse import quote
 
 
@@ -191,6 +194,128 @@ class ExportServiceTest(unittest.TestCase):
             export_space_zip(repository, user_id=3, current_space_id=10)
 
 
+@unittest.skipIf(importlib.util.find_spec("reportlab") is None, "ReportLab is not installed")
+class PdfExportServiceTest(unittest.TestCase):
+    """Sprint-18 REQ-027：单文档 PDF 导出任务、版本绑定与失败态。"""
+
+    def test_create_pdf_export_generates_chinese_pdf_and_records_done(self) -> None:
+        from pdfplumber import open as open_pdf
+        from pypdf import PdfReader
+
+        from backend.model.entities import DocumentPermission
+        from backend.repository.demo_repository import DemoRepository
+        from backend.service.export import create_pdf_export
+
+        repository = DemoRepository()
+        document = repository.create_document(
+            space_id=10,
+            title="中文 PDF 导出样例",
+            content_md=(
+                "# 中文标题\n\n"
+                "关键中文段落：北斗项目复盘与团队知识沉淀。\n\n"
+                "- 第一条行动项\n"
+                "- 第二条行动项\n\n"
+                "| 字段 | 结果 |\n"
+                "| --- | --- |\n"
+                "| 版本 | 当前 |\n\n"
+                "> 引用块保持可读。"
+            ),
+            owner_id=1,
+            permission=DocumentPermission.TEAM,
+        )
+
+        with tempfile.TemporaryDirectory() as directory:
+            result = create_pdf_export(repository, 1, 10, document.id, output_dir=Path(directory))
+
+            artifact_path = Path(result.artifact_path or "")
+            export_record = repository.get_doc_export(result.export_id)
+
+            self.assertEqual(result.status, "done")
+            self.assertTrue(artifact_path.exists(), artifact_path)
+            self.assertEqual(export_record.status if export_record else None, "done")
+            self.assertEqual(export_record.version_no if export_record else None, document.current_version)
+            self.assertGreaterEqual(len(PdfReader(str(artifact_path)).pages), 1)
+            with open_pdf(str(artifact_path)) as pdf:
+                text = "\n".join(page.extract_text() or "" for page in pdf.pages)
+            self.assertIn("关键中文段落", text)
+
+    def test_create_pdf_export_uses_requested_version(self) -> None:
+        from pdfplumber import open as open_pdf
+
+        from backend.model.entities import DocumentPermission
+        from backend.repository.demo_repository import DemoRepository
+        from backend.service.export import create_pdf_export
+
+        repository = DemoRepository()
+        document = repository.create_document(
+            space_id=10,
+            title="版本 PDF",
+            content_md="第一版中文内容",
+            owner_id=1,
+            permission=DocumentPermission.TEAM,
+        )
+        repository.update_document(
+            document.id,
+            title="版本 PDF",
+            content_md="第二版中文内容",
+            permission=DocumentPermission.TEAM,
+            editor_id=1,
+        )
+
+        with tempfile.TemporaryDirectory() as directory:
+            result = create_pdf_export(repository, 1, 10, document.id, version_no=1, output_dir=Path(directory))
+
+            with open_pdf(result.artifact_path or "") as pdf:
+                text = "\n".join(page.extract_text() or "" for page in pdf.pages)
+            export_record = repository.get_doc_export(result.export_id)
+
+            self.assertIn("第一版中文内容", text)
+            self.assertNotIn("第二版中文内容", text)
+            self.assertEqual(export_record.version_no if export_record else None, 1)
+
+    def test_create_pdf_export_rejects_invisible_document(self) -> None:
+        from backend.model.entities import DocumentPermission
+        from backend.repository.demo_repository import DemoRepository
+        from backend.service.document import DocumentNotFoundError
+        from backend.service.export import create_pdf_export
+
+        repository = DemoRepository()
+        document = repository.create_document(
+            space_id=10,
+            title="Kira Secret PDF",
+            content_md="hidden",
+            owner_id=2,
+            permission=DocumentPermission.PRIVATE,
+        )
+
+        with tempfile.TemporaryDirectory() as directory:
+            with self.assertRaises(DocumentNotFoundError):
+                create_pdf_export(repository, 1, 10, document.id, output_dir=Path(directory))
+
+        self.assertEqual(repository.doc_exports, [])
+
+    def test_create_pdf_export_marks_failed_when_font_unavailable(self) -> None:
+        from backend.repository.demo_repository import DemoRepository
+        from backend.service.export import PdfExportDependencyError, create_pdf_export
+
+        repository = DemoRepository()
+        with tempfile.TemporaryDirectory() as directory:
+            missing_font = Path(directory) / "missing.ttf"
+            with self.assertRaises(PdfExportDependencyError):
+                create_pdf_export(
+                    repository,
+                    1,
+                    10,
+                    100,
+                    output_dir=Path(directory),
+                    font_paths=[missing_font],
+                )
+
+            self.assertEqual(len(repository.doc_exports), 1)
+            self.assertEqual(repository.doc_exports[0].status, "failed")
+            self.assertFalse(any(Path(directory).glob("*.pdf")))
+
+
 @unittest.skipIf(importlib.util.find_spec("fastapi") is None, "FastAPI is not installed")
 class ExportApiTest(unittest.TestCase):
     """Sprint-17 API-030：导出端点的二进制响应与错误码（替换 repository 单例）。"""
@@ -331,6 +456,55 @@ class ExportApiTest(unittest.TestCase):
 
         self.assertEqual(context.exception.status_code, 403)
         self.assertEqual(context.exception.detail["code"], 4003)
+
+    def test_export_pdf_api_returns_task_view(self) -> None:
+        from backend.api import export as export_api
+        from backend.api.auth import TOKEN_SIGNING_KEY
+        from backend.repository.demo_repository import DemoRepository
+        from backend.service.auth import create_demo_token
+
+        original_repository = export_api.repository
+        export_api.repository = DemoRepository()
+        with tempfile.TemporaryDirectory() as directory:
+            original_create_pdf_export = export_api.create_pdf_export
+
+            def create_pdf_export_in_temp(**kwargs):
+                return original_create_pdf_export(**kwargs, output_dir=Path(directory))
+
+            try:
+                export_api.create_pdf_export = create_pdf_export_in_temp
+                token = create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
+                response = export_api.export_pdf_endpoint(
+                    request=export_api.PdfExportRequestBody(document_id=100),
+                    authorization=f"Bearer {token}",
+                )
+            finally:
+                export_api.create_pdf_export = original_create_pdf_export
+                export_api.repository = original_repository
+
+            data = response["data"]
+            self.assertEqual(response["code"], 0)
+            self.assertEqual(data["status"], "done")
+            self.assertTrue(Path(data["artifact_path"]).exists())
+
+    def test_export_pdf_api_maps_dependency_error_to_5030(self) -> None:
+        from fastapi import HTTPException
+
+        from backend.api import export as export_api
+        from backend.api.auth import TOKEN_SIGNING_KEY
+        from backend.service.auth import create_demo_token
+        from backend.service.export import PdfExportDependencyError
+
+        token = create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
+        with patch.object(export_api, "create_pdf_export", side_effect=PdfExportDependencyError("missing font")):
+            with self.assertRaises(HTTPException) as context:
+                export_api.export_pdf_endpoint(
+                    request=export_api.PdfExportRequestBody(document_id=100),
+                    authorization=f"Bearer {token}",
+                )
+
+        self.assertEqual(context.exception.status_code, 503)
+        self.assertEqual(context.exception.detail["code"], 5030)
 
 
 if __name__ == "__main__":

@@ -9,8 +9,8 @@
 |---|---|
 | 输入来源 | `docs/03-prd.md`、`docs/04-architecture.md`、`docs/env/local-env.md`、`ai/project-rules.md`、`docs/research/2026-07-15-overall-design-04-05-audit.md` |
 | 覆盖架构组件 | FastAPI 后端、React 前端、PostgreSQL + pgvector、Embedding / LLM 适配、导入解析、导出备份、PDF 候选 |
-| 当前状态 | 目标基线已定（Phase1 技术选型已钉死）。Sprint-7/8 + task-009 真实化后：**PostgreSQL+pgvector / Embedding / LLM 已接入，RAG 与 search 均可走向量召回**（RG-001/002/004 Go，见 §1「当前实现状态」列与 §5.1）；Phase1.5A 批量导入与 `.md` / ZIP 导出备份已完成；Phase2A 标签、反向链接与快速入口已完成。**PDF 导出技术环境 RG-006 已 Go（ReportLab 中文样例通过），但 API-019 / Sprint-18 产品实现尚未编码**；OCR / 真实 Word/PDF 文本提取与搜索增强仍需后续 RG / 选型；Phase2B 实现期变更需先修订本文 |
-| 最后更新 | 2026-08-04（RG-006 PDF 导出技术环境评估通过；ReportLab + Windows 中文字体 + Poppler 渲染样例验证 Go） |
+| 当前状态 | 目标基线已定（Phase1 技术选型已钉死）。Sprint-7/8 + task-009 真实化后：**PostgreSQL+pgvector / Embedding / LLM 已接入，RAG 与 search 均可走向量召回**（RG-001/002/004 Go，见 §1「当前实现状态」列与 §5.1）；Phase1.5A 批量导入与 `.md` / ZIP 导出备份已完成；Phase1.5B PDF 导出已完成 API-019 / Sprint-18 产品实现；Phase2A 标签、反向链接与快速入口已完成。OCR / 真实 Word/PDF 文本提取与 zhparser 搜索增强仍需后续 RG / 选型；Phase2B 实现期变更需先修订本文 |
+| 最后更新 | 2026-08-04（Sprint-18 PDF 导出产品闭环：ReportLab + API-019 + TC-P1-017 通过） |
 
 ## 1. 技术栈与版本
 
@@ -54,14 +54,14 @@ flowchart TB
 | TCD-006 | 鉴权用 Demo Bearer Token（HMAC-SHA256；载荷 `user_id` / `current_space_id` / `exp`，8h）；空间 + 文档两级校验，查询 / 检索 / 问答三层统一过滤 | Demo 可用且权限下沉到查询层 | 真实账号系统（后续） | 权限（REQ-001..003） | 已启用（Demo） |
 | TCD-007 | 批量 / 文件夹导入按逐文件循环处理，保留相对路径标题前缀，部分成功不回滚，同名默认跳过 | Phase1.5A 要最快解决“资料放不进去”；不建真实目录表可避免 DB 迁移 | 新增 folder 表 / 真实目录树；失败一项回滚全部 | REQ-037、TC-P1-015 | 已实现（Sprint-16，TC-P1-015 通过） |
 | TCD-008 | `.md` / ZIP 导出备份走标准文件流与 Python `zipfile`，导出前统一权限过滤 | Phase1.5A 要可迁出、可备份；标准库不引重依赖 | 先做 PDF；导出数据库整库；长期公开链接 | REQ-038、TC-P1-016 | 已实现（Sprint-17，TC-P1-016 通过） |
-| TCD-009 | PDF 导出采用 ReportLab 首版路线，需在 API-019 编码中继续补 Markdown 子集映射、权限过滤和 5030 失败态 | ReportLab 在 Python 3.14 / Windows 下安装顺利，可注册 `simhei.ttf` 并通过中文 PDF 渲染样例；比 WeasyPrint 少系统级依赖 | 直接引入 WeasyPrint / HTML 渲染链；跳过中文样例直接编码 | REQ-027、TC-P1-017 | RG-006 Go；Sprint-18 待编码 |
+| TCD-009 | PDF 导出采用 ReportLab 首版路线，API-019 已实现同步任务返回；覆盖 Markdown 子集映射、权限过滤和 5030 失败态 | ReportLab 在 Python 3.14 / Windows 下安装顺利，可注册 `simhei.ttf` 并通过中文 PDF 渲染样例；比 WeasyPrint 少系统级依赖 | 直接引入 WeasyPrint / HTML 渲染链；跳过中文样例直接编码 | REQ-027、TC-P1-017 | 已实现（Sprint-18 / TC-P1-017 通过） |
 | TCD-010 | Phase2B AI 润色 / 写作引用（REQ-014）复用 ADR-002 LLM adapter；polish 同步、citation 复用 RAG 来源检索 + LLM | 厂商解耦、复用既有通道；不引新 LLM SDK | 业务层直连 LLM；新增独立 AI 服务 | AI 润色（REQ-014） | 已实现；**RG-008 已升 Go**；TC-P2-AI-001 live UI smoke 2026-07-31 通过 |
 
 > 关联详细设计：`docs/design/rag-retrieval.md`、`ingestion.md`、`term-management.md`、`permissions.md`。
 > **错误码**：HTTP 状态码 + `{ code, msg, data }` 双层；`code=0` 成功，业务错误 4 位数字码（详见 `docs/07-api-spec.md` §1）。
 > **切块 / Embedding 参数**：导入侧与检索侧共用同一套；按标题 / 段落优先切分，目标块长 512 tokens、重叠 64 tokens、单块最小 80 字符；模型 `BAAI/bge-small-zh-v1.5`（512 维，pgvector `vector(512)`，写入前归一化）；批量 batch size 32。
 >
-> **Phase1.5 / Phase2 技术决策状态**：Phase1.5A 的批量导入与 `.md` / ZIP 导出已按 TCD-007/008 完成；Phase2A 标签 + 反向链接索引模型（REQ-012 / 026）已采用 PG 关系表 + `[[wikilink]]` 解析并完成最小闭环；Phase1.5B 的 PDF 导出库（REQ-027）已通过 RG-006，首版推荐 ReportLab；真实 Word/PDF 文本提取需另做选型；Phase2B AI 润色（REQ-014）为首批核心，采用 **TCD-010**（复用 ADR-002 LLM adapter）；数据外发边界已确认——风险已人工接受，护栏见 RG-008 与 `ai/project-rules.md §2.5`。
+> **Phase1.5 / Phase2 技术决策状态**：Phase1.5A 的批量导入与 `.md` / ZIP 导出已按 TCD-007/008 完成；Phase1.5B 的 PDF 导出（REQ-027）已按 TCD-009 / ReportLab 首版完成；Phase2A 标签 + 反向链接索引模型（REQ-012 / 026）已采用 PG 关系表 + `[[wikilink]]` 解析并完成最小闭环；真实 Word/PDF 文本提取需另做选型；Phase2B AI 润色（REQ-014）为首批核心，采用 **TCD-010**（复用 ADR-002 LLM adapter）；数据外发边界已确认——风险已人工接受，护栏见 RG-008 与 `ai/project-rules.md §2.5`。
 
 ### 2.1 依赖与配置矩阵
 
@@ -76,7 +76,7 @@ flowchart TB
 | 外部 API | OpenAI 兼容 LLM 中转（GLM `glm-5.2`） | RAG 问答 + 术语注入 | Phase1 | 已启用（可切 Mock） | `.env`（base_url / api_key） | **secret（api_key）** | RG-004 Go；真实问答验证 |
 | Docker 服务 | Docker Compose（lumen-pg） | 本机起 PostgreSQL+pgvector | Phase1 | 已启用 | `docker/compose.yml` | 无 | daemon live（TE-C-003 闭合） |
 | Python 标准库 | `zipfile` | 空间可见文档 `.md` 打包 ZIP 导出备份 | Phase1.5A | 已启用（Sprint-17） | Python runtime | 无 | TC-P1-016 通过 |
-| Python 包 | `reportlab` / `pypdf` / `pdfplumber` / `pillow` | 单文档 PDF 导出与中文排版；产物校验 | Phase1.5B | **已安装 / RG-006 Go；API-019 未实现** | `backend/requirements.txt`；Windows 字体 `simhei.ttf` | 无；导出内容继承文档敏感性 | `scripts/smoke-pdf-rg006.py` 中文样例通过；TC-P1-017 待 Sprint-18 |
+| Python 包 | `reportlab` / `pypdf` / `pdfplumber` / `pillow` | 单文档 PDF 导出与中文排版；产物校验 | Phase1.5B | **已安装 / 已启用（API-019 已实现）** | `backend/requirements.txt`；Windows 字体 `simhei.ttf`，无系统字体时回退 STSong-Light | 无；导出内容继承文档敏感性 | RG-006 样例通过；TC-P1-017 通过 |
 | Python 包 | python-docx / pdfplumber | 真实 Word / PDF 文本提取 | Phase1.5B | **候选（未接入）** | 待选型 / RG | 无；真实文档敏感性需确认 | 待后续 tech-env-eval |
 | Python 包 | PaddleOCR | 图片 / 白板 OCR | 后续 | **降级 / No-Go（RG-003）** | — | 无 | 待环境兼容验证 |
 
@@ -87,7 +87,7 @@ flowchart TB
 - **高风险项不进 P1**：跨文档因果推理、问题热力矩阵——需本文先验证可行（对应 REQ-020/021）。
 - **前端交互设计边界**：UI 型项目，前端交互设计与 UI 原型策略见 `ai/project-rules.md` §2.7 与 `docs/design/frontend-interaction.md`（代码原型 + mock，Sprint-6 Edge/Chrome smoke 已通过）。
 - **Phase1.5A（个人可用 Alpha）**：允许 REQ-037 / 038 低依赖导入导出增强；不得以 PDF、真实 Word/PDF 解析、OCR、标签 / 内链、AI 润色作为退出门槛；新增实现必须遵守 WSG 文件阈值。
-- **Phase1.5B（个人增强 Beta）**：REQ-027 单文档 PDF 已完成 RG-006 选型 + 中文最小样例验证（ReportLab Go），可进入 Sprint-18 编码；真实 Word/PDF 文本提取、zhparser 搜索增强需单独选型 / RG，不阻塞 Alpha。
+- **Phase1.5B（个人增强 Beta）**：REQ-027 单文档 PDF 已完成 RG-006 选型 + Sprint-18 产品实现（ReportLab 首版）；真实 Word/PDF 文本提取、zhparser 搜索增强需单独选型 / RG，不阻塞 Alpha。
 - **Phase2A（个人知识组织）**：已完成 REQ-026 / 012 / 025 三个 vertical slice（TC-P2-LINK/TAG/QUICK-001 通过，2026-07-20 closure）。Phase2B（团队 MVP）契约与首个 vertical slice 待升阶段确认，不得一次性实现全部 P2 UI。
 - **Phase2B（团队 MVP，范围已确认 2026-07-30，未切指针）**：REQ-014 AI 润色为首批核心、REQ-013 / 024 时间轴紧随第二 slice；**AI 润色数据外发风险已接受（真实外发 + 权限护栏，见 RG-008 + `ai/project-rules.md §2.5`），5030 / Mock 可降级**；REQ-015 / 016 / 017（推送 / 协作 / 移动端）不进首批，留后续 Phase。
 
@@ -144,7 +144,7 @@ flowchart TB
 | RG-003 | OCR（PaddleOCR） | **No-Go（降级）** | PaddleOCR 2.8.x 与运行环境不兼容；当前无 OCR | OCR 引擎定版 + 环境兼容验证 | —（未验证） | REQ-010（移至后续阶段） |
 | RG-004 | LLM（OpenAI 兼容） | **Go（GLM-5.2 已验证）** | `llm_adapter.py` 已接入；中转 2026-07-11 迁至 `192.168.15.190:7777/v1`（旧 `47.107.134.2` key 停用），GLM `glm-5.2` 真实问答复测通过（Sprint-7 2026-07-09 首验 + 2026-07-11 迁移复测）；GPT/ollama 配置位就绪未验证 | — | GLM-5.2 真实问答；TC-P1-008 | REQ-008（问答真实化） |
 | RG-005 | Web / ORM 基础栈（FastAPI/Pydantic/React） | **Go** | 已接入并跑通 74 后端 tests（含 PG 集成 + embedding）+ 前端 build + 浏览器 smoke；requirements.txt drift 已解决（T7 PG-C-001） | — | 74 后端 tests + 前端 build + smoke；TC-P1-001..012 | REQ-001..006/011/036 |
-| RG-006 | Phase1.5B PDF 导出库（ReportLab） | **Go（2026-08-04）** | ReportLab / pypdf / pdfplumber / Pillow 已安装并锁入 `backend/requirements.txt`；Windows 中文字体 `simhei.ttf` 可注册；Poppler `pdftoppm` / `pdfinfo` 可用；中文 PDF 样例渲染与文本抽取通过 | Sprint-18 编码时补 API-019、Markdown 子集映射、权限过滤、5030 失败态和 TC-P1-017 | `scripts/smoke-pdf-rg006.py --json-out tmp/pdfs/rg006-summary.json`；`docs/research/2026-08-04-tech-env-evaluation-rg006-pdf-export.md`；TC-P1-017 待编码后完成 | REQ-027 |
+| RG-006 | Phase1.5B PDF 导出库（ReportLab） | **Go + 产品闭环（2026-08-04）** | ReportLab / pypdf / pdfplumber / Pillow 已安装并锁入 `backend/requirements.txt`；Windows 中文字体 `simhei.ttf` 可注册；Poppler `pdftoppm` / `pdfinfo` 可用；中文 PDF 样例渲染与文本抽取通过；Sprint-18 已补 API-019、Markdown 子集映射、权限过滤和 5030 失败态 | 已解锁；后续若需要异步队列、下载端点、过期清理 job 或水印，另开设计 | `scripts/smoke-pdf-rg006.py --json-out tmp/pdfs/rg006-summary.json`；`docs/research/2026-08-04-tech-env-evaluation-rg006-pdf-export.md`；TC-P1-017 通过 | REQ-027 |
 | RG-007 | Phase1.5B 真实 Word / PDF 文本提取（候选 python-docx / pdfplumber） | **待评估 / 不阻塞 P1.5A** | 依赖未接入，真实文档隐私与格式兼容性未验证 | 最小样例导入 + 资源 / 隐私边界验证 | 待 tech-env-eval | REQ-009 |
 | RG-008 | Phase2B AI 润色数据外发风险接受（REQ-014） | **Go（Sprint-19 vertical slice 已通过，2026-07-31 前端闭环）** | 数据外发风险已人工接受（2026-07-30，真实外发 + 权限护栏）；sources 权限过滤复用 Phase1 既有查询层过滤（citation 复用 `rag._find_candidate_chunks`，越权 chunk 不进 prompt / 不返回，`test_ai_polish` 验证）；草稿只存 `input_excerpt_hash`（sha256）+ `prompt_summary`（摘要，测试断言不含原文 / key）、不存完整敏感原文；不做敏感字段自动过滤（用户自判）；LLM 不可用→5030、不落库不编造（区别于 RAG 静默降级） | ~~首个 vertical slice 实跑升 Go~~ → **已通过**：`tests.backend.test_ai_polish` service 9/9 绿（权限过滤 / 5030 不落库 / hash 留存）+ 全量后端 125 OK(skipped=3) + 前端 live UI smoke 2026-07-31 通过 | TC-P2-AI-001（已通过） | REQ-014（AI 润色已落地） |
 
@@ -164,11 +164,11 @@ flowchart TB
 | Demo 数据边界 | 默认虚构 Demo 数据；真实文档按需导入并标注 | Phase1 | 已执行 | `project-rules §2.5` | — |
 | Token 鉴权 | Demo Bearer Token（HMAC-SHA256，8h） | Phase1 | 已实现 | `04 §5.1`、TCD-006 | 登录 / 切换 tests |
 | 批量导入失败隔离 | 多文件 / 文件夹导入逐文件处理；成功项保留，失败 / 不支持 / 同名冲突逐条提示，不静默覆盖 | Phase1.5A | 已实现 | `04 §5.4` Flow-006、TCD-007 | TC-P1-015 通过 |
-| 导出产物权限 | 单文档 `.md`、空间 ZIP 与 PDF 均继承源文档 / 空间权限；ZIP 只包含当前用户可见文档，不生成长期公开链接 | Phase1.5A/B | Phase1.5A 已实现；Phase1.5B 待 RG | `04 §5.4` Flow-007/008、TCD-008/009、`06 §5` | TC-P1-016 通过；TC-P1-017 待 RG |
-| 导出产物清理 | 若导出产物落盘，需限定本地临时路径、过期清理或不落盘直接流式响应 | Phase1.5A/B | Phase1.5A 已实现；Phase1.5B 待 RG | `06` 导出产物边界、`08` Sprint-17/18 | TC-P1-016 通过；TC-P1-017 待 RG |
+| 导出产物权限 | 单文档 `.md`、空间 ZIP 与 PDF 均继承源文档 / 空间权限；ZIP 只包含当前用户可见文档，不生成长期公开链接 | Phase1.5A/B | Phase1.5A 已实现；Phase1.5B PDF 已实现 | `04 §5.4` Flow-007/008、TCD-008/009、`06 §5` | TC-P1-016 通过；TC-P1-017 通过 |
+| 导出产物清理 | 若导出产物落盘，需限定本地临时路径、过期清理或不落盘直接流式响应 | Phase1.5A/B | Phase1.5A 已实现；Phase1.5B PDF 首版落 `tmp/pdf_exports`，无公开链接；过期清理 job 留后续 | `06` 导出产物边界、`08` Sprint-17/18 | TC-P1-016 通过；TC-P1-017 通过 |
 
 ## 6. 待人工确认项
 
 - Phase1.5A Sprint-16/17 已完成且未引新依赖；若后续扩展批量导入或 ZIP 导出需要超出标准库 / 既有栈，必须先修订本文与 `06/07/08/09`。
-- Phase1.5B PDF 导出 RG-006 已 Go，可进入 Sprint-18 编码；真实 Word/PDF 文本提取须先完成 RG-007 或独立 tech-env-eval，均不得阻塞 P1.5A。
+- Phase1.5B PDF 导出已完成 Sprint-18 产品闭环；真实 Word/PDF 文本提取须先完成 RG-007 或独立 tech-env-eval，zhparser 仍为独立候选，均不得阻塞 P1.5A。
 - Phase2B 启动准备已完成（2026-07-30）：数据外发风险已接受（**RG-008 已升 Go**，见 §5.1 / `ai/project-rules.md §2.5`）、AI 润色 TCD-010 与 06/07 契约已补；**Sprint-19 已完成（TC-P2-AI-001 live UI smoke 2026-07-31 通过）**；Sprint-20 主题时间线已实现并补齐运行态 API smoke、Edge headless 浏览器 smoke 与真实 PG 大数据性能 smoke。Phase2A 已实现能力如需扩展，按同一门禁补文档与验证。

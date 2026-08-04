@@ -13,7 +13,7 @@ from __future__ import annotations
 from datetime import datetime
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import BigInteger, ForeignKey, Integer, String, Text, UniqueConstraint, func
+from sqlalchemy import BigInteger, CheckConstraint, ForeignKey, Integer, String, Text, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import JSONB, TIMESTAMP
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -223,3 +223,28 @@ class AiDraftORM(Base):
     cited_chunk_ids: Mapped[list] = mapped_column(JSONB, default=list)
     status: Mapped[str] = mapped_column(String, default="generated")
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
+
+
+class DocExportORM(Base):
+    """REQ-027 单文档 PDF 导出任务（migration 013）。"""
+
+    __tablename__ = "lumen_doc_exports"
+    __table_args__ = (
+        CheckConstraint("format = 'pdf'", name="lumen_doc_exports_format_pdf"),
+        CheckConstraint(
+            "status IN ('queued', 'running', 'done', 'failed')",
+            name="lumen_doc_exports_status_check",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    space_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("lumen_spaces.id", ondelete="CASCADE"))
+    document_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("lumen_documents.id", ondelete="CASCADE"))
+    requested_by: Mapped[int] = mapped_column(BigInteger, ForeignKey("lumen_users.id"))
+    format: Mapped[str] = mapped_column(String, default="pdf")
+    status: Mapped[str] = mapped_column(String, default="queued")
+    version_no: Mapped[int] = mapped_column(Integer)
+    artifact_path: Mapped[str | None] = mapped_column(Text, nullable=True)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
+    finished_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)

@@ -1,7 +1,7 @@
 # 详细设计：前端交互与桌面端界面（frontend-interaction）
 
-> 本文同时承担三层职责：一是记录 Phase1（功能范围 `[P1]` · 交付物形态 Demo）已实现的前端交互基线；二是记录 Phase1.5A 批量导入与导出备份的已实现交互路径；三是记录 Phase2A 已实现基线并沉淀 Phase2B UI 实现前确认稿候选。
-> 当前少容器清爽稿已作为实现前 UI 确认版候选回填到 `docs/08-dev-plan.md` Sprint-11 与 `docs/09-verification.md` TC-P2-WSG / TC-P2-UI 草案；Phase2A 已完成（REQ-026/012/025 vertical slice，TC-P2-LINK/TAG/QUICK-001 通过），Phase2B 尚未正式启动；本文 Phase2A 部分对应已实现基线，Phase2B 部分不直接授权编码。
+> 本文同时承担三层职责：一是记录 Phase1（功能范围 `[P1]` · 交付物形态 Demo）已实现的前端交互基线；二是记录 Phase1.5A 批量导入与导出备份、Phase1.5B PDF 导出的已实现交互路径；三是记录 Phase2A 已实现基线并沉淀 Phase2B UI 实现前确认稿候选。
+> 当前少容器清爽稿已作为实现前 UI 确认版候选回填到 `docs/08-dev-plan.md` Sprint-11 与 `docs/09-verification.md` TC-P2-WSG / TC-P2-UI 草案；Phase2A 已完成（REQ-026/012/025 vertical slice，TC-P2-LINK/TAG/QUICK-001 通过），Phase2B 已完成 AI 润色 / 写作引用首版与主题时间线 slice；本文 Phase2A 部分对应已实现基线，Phase2B 新 UI slice 仍需按门禁另行确认。
 > 交叉引用：`docs/design/frontend-workspace-redesign.md` 已承接并实现 P1B 工作台视觉密度、布局与组件拆分口径；本文仍保留页面职责、UF 用户流、接口依赖与状态边界的权威口径。
 
 ## 0. 文档元信息
@@ -11,10 +11,10 @@
 | 设计对象 | 前端交互与桌面端界面（COMP-001） |
 | 文档路径 | docs/design/frontend-interaction.md |
 | 输入来源 | 03、04 §1.2 / §5（Flow-001/002/006/007/008）、05、07、08、09；`docs/design/ingestion.md`；`docs/design/export-delivery.md`；`docs/design/frontend-experience-brief.md`；`docs/research/2026-07-13-ui-prototype-exploration.md`；`docs/research/prototypes/2026-07-14-frontend-ui-reference-absorbed-prototype.html` |
-| 覆盖 REQ | P1：REQ-001..011、REQ-036；Phase1.5A：REQ-037/038；Phase1.5B：REQ-027（RG-006 已 Go，入口待 Sprint-18 实现）；Phase2A 已实现追溯：REQ-012/025/026；Phase2B UI 候选追溯：REQ-013/014/024（仅作实现前门禁草案，不新增 REQ） |
+| 覆盖 REQ | P1：REQ-001..011、REQ-036；Phase1.5A：REQ-037/038；Phase1.5B：REQ-027（PDF 导出入口已随 Sprint-18 实现）；Phase2A 已实现追溯：REQ-012/025/026；Phase2B UI 候选追溯：REQ-013/014/024（后续新 UI slice 仍需实现前门禁） |
 | 所属 Phase | [P1] 已实现基线 + Phase1.5A 已实现交互 + Phase2A 已实现基线 + Phase2B UI Gate 草案 |
 | 交付物形态 | Demo / 个人可用 Alpha |
-| 当前状态 | P1-已实现；P1A / P1B 前端体验收口已实现并通过构建与 Chrome / Edge 900px smoke；Phase1.5A 批量导入与 `.md` / ZIP 导出交互路径已实现并通过 TC-P1-015/016；P2 少容器清爽稿作为 Phase2B 启动前 UI / WSG 门禁候选保留；Phase2A 已完成（REQ-026/012/025，TC-P2-LINK/TAG/QUICK-001 通过）；**Phase2B 首批 REQ-014 AI 润色/写作引用 vertical slice 已闭环（PR#89–95 / v1.1.0，TC-P2-AI-001 live UI smoke 2026-07-31 通过）**，时间轴（REQ-013/024）为第二 slice 待启动 |
+| 当前状态 | P1-已实现；P1A / P1B 前端体验收口已实现并通过构建与 Chrome / Edge 900px smoke；Phase1.5A 批量导入与 `.md` / ZIP 导出交互路径已实现并通过 TC-P1-015/016；Phase1.5B PDF 导出入口已实现并通过 TC-P1-017；P2 少容器清爽稿作为后续 Phase2B UI / WSG 门禁候选保留；Phase2A 已完成（REQ-026/012/025，TC-P2-LINK/TAG/QUICK-001 通过）；**Phase2B 首批 REQ-014 AI 润色/写作引用 vertical slice 已闭环（PR#89–95 / v1.1.0，TC-P2-AI-001 live UI smoke 2026-07-31 通过）**，主题时间线（REQ-013/024）第二 slice 已完成并通过 smoke |
 | 页面 / 流程 ID | Page-ID（§2.2）/ UF 用户流（§3） |
 | UI 原型策略 | P1 / P1.5A：代码原型 + smoke；P2A/B：静态 HTML 实现前确认稿 + 后续 Chrome / Edge smoke 草案（见 §8 / §9） |
 | 最后更新 | 2026-08-04（**timeline task-030 / v1.5.2：PG-P2-008 主题时间线视图已实现并通过运行态 API smoke、Edge headless 浏览器 smoke 与真实 PG 大数据性能 smoke；folder-tree 浏览器自动化 smoke 已补**）；前版回写 REQ-014 闭环 + §9.5 Doc-First 候选基线 |
@@ -25,11 +25,11 @@
 
 | 阅读目的 | 先看章节 | 当前结论 |
 |---|---|---|
-| 了解已实现前端基线 | §2~§7、§10 | P1 / P1A / P1B 已完成并有 09 smoke 证据；RAG 已真实化，PDF/OCR 仍降级 |
-| 确认 Phase1.5A UI 路径 | §9.0、08 Sprint-16/17、09 TC-P1-015/016 | 批量 / 文件夹导入与 `.md` / ZIP 导出路径已实现并通过 smoke / HTTP 验证 |
+| 了解已实现前端基线 | §2~§7、§10 | P1 / P1A / P1B 已完成并有 09 smoke 证据；RAG 已真实化，Word/PDF 解析与 OCR 仍降级，PDF 导出见 Phase1.5B |
+| 确认 Phase1.5A/B UI 路径 | §9.0、08 Sprint-16/17/18、09 TC-P1-015/016/017 | 批量 / 文件夹导入、`.md` / ZIP 导出与 PDF 导出入口已实现并通过验证 |
 | 确认 Phase2 UI 方向 | §8.1、§9.1~§9.3 | 少容器清爽稿暂定按当前稿继续；Phase2A 聚焦标签 / 反链 / 快速录入，Phase2B 再考虑 AI 润色 / 时间轴 |
-| 判断是否可编码 | §9.4、08 Sprint-16/17 或 Sprint-11、09 TC | Phase1.5A 与 Phase2A 已完成；Phase2B 仍不可直接编码，需另行确认范围、任务和验证包 |
-| 查待确认项 | §11 | Phase1.5B PDF、Phase2B 范围、图谱 / 情报墙等仍需人工确认；Phase1.5A 与 Phase2A 已完成项不得回退为待确认 |
+| 判断是否可编码 | §9.4、08 Sprint-16/17/18 或 Sprint-11、09 TC | Phase1.5A/B 与 Phase2A 已完成；Phase2B 后续新 slice 需另行确认范围、任务和验证包 |
+| 查待确认项 | §11 | Word/PDF 解析、zhparser、后续 Phase2B 范围、图谱 / 情报墙等仍需人工确认；已完成项不得回退为待确认 |
 ## 1. 职责与边界
 
 ### 1.1 职责
@@ -268,17 +268,17 @@ sequenceDiagram
 
 | 阶段 | 状态 | 说明 |
 |---|---|---|
-| Phase1 Demo `[P1]` | P1-已实现 | 覆盖 P1 桌面端页面、核心用户流、状态与权限呈现；RAG 路径已真实化，PDF/OCR 仍按降级提示 |
+| Phase1 Demo `[P1]` | P1-已实现 | 覆盖 P1 桌面端页面、核心用户流、状态与权限呈现；RAG 路径已真实化，Word/PDF 解析与 OCR 仍按降级提示 |
 | P1A 结构优化 `[P1]` | P1A-已实现 | 仅修正既有 P1 前端体验：导航 / 视图聚焦、右栏拆分、桌面 768px+ 不破版、组件拆分；不新增业务 REQ；构建与 Chrome / Edge 900px smoke 通过 |
 | Phase1.5A `[P1]` | UI 路径已实现 | 批量 / 文件夹导入复用 Context Pane 导入区，增加 drop zone、多文件 / 文件夹选择、批量进度与逐条结果；导出复用文档详情 / 空间工具栏，增加 `.md` 下载与空间 ZIP 导出入口；TC-P1-015/016 已通过 |
-| Phase1.5B `[P1]` | 入口候选·RG-006 Go | PDF 导出入口可进入 Sprint-18；实现前仍不得承诺 API-019 已可用，需补中文 PDF、失败态和权限验收 |
+| Phase1.5B `[P1]` | UI 路径已实现 | 文档详情工具栏新增"导出 PDF"入口，调用 API-019 同步生成中文 PDF artifact；TC-P1-017 已通过 |
 | Phase2A `[P2]` | 已实现最小闭环 | 标签、内链 / 反链、快速录入已完成并通过 TC-P2-TAG/LINK/QUICK-001；经典 / 探索双模式等更大 UI 方向仍按候选处理，不自动扩大 Phase2A 范围 |
 | Phase2B `[P2]` | **范围已确认·部分实现（2026-08-04）** | AI 润色 / 写作引用（REQ-014 首批核心，已落地）、**主题时间线 / 密度热条（REQ-013a/024 第二 slice·PG-P2-008 已实现，候选 A + 关键词/标签驱动 + actor + 密度 ratio，TL-C-001..011 已确认；运行态 API smoke / Edge headless 浏览器 smoke / 真实 PG 大数据性能 smoke 已通过）**；数据外发已接受（RG-008）、AI 降级 5030 已定 |
 | 愿景产品 `[愿景]` | 骨架·待技术验证 | 承接 `docs/design/frontend-experience-brief.md`：受限局部情报墙、证据地图、矛盾检测、路径推理等仅作为愿景方向；不得作为全空间默认首页，待情报分析技术验证与权限边界设计后再细化 |
 
-### 9.0 Phase1.5A 已实现交互路径
+### 9.0 Phase1.5A/B 已实现交互路径
 
-> 本节覆盖 Sprint-16 / Sprint-17 已落地的个人可用 Alpha 路径，不新增 API / DB；API 依据 `docs/07-api-spec.md` API-029 / API-030，详细设计依据 `docs/design/ingestion.md` Flow-006 与 `docs/design/export-delivery.md` Flow-007。
+> 本节覆盖 Sprint-16 / Sprint-17 已落地的个人可用 Alpha 路径，以及 Sprint-18 已落地的 PDF 导出路径；API 依据 `docs/07-api-spec.md` API-029 / API-030 / API-019，详细设计依据 `docs/design/ingestion.md` Flow-006 与 `docs/design/export-delivery.md` Flow-007 / Flow-008。
 
 | Path-ID | 关联 REQ / TC | 页面 / 入口 | 用户操作 | 预期结果 | 失败 / 降级口径 | 编码前确认点 |
 |---|---|---|---|---|---|---|
@@ -286,6 +286,7 @@ sequenceDiagram
 | PATH-P15A-002 | REQ-037 / TC-P1-015 | 批量结果面板 | 查看成功 / 失败 / 跳过列表，点击成功项打开文档 | 标题保留相对路径前缀，能定位导入来源 | 失败项显示简短原因，不暴露本机绝对路径 | 结果列表是否可折叠、是否保留最近一次导入结果 |
 | PATH-P15A-003 | REQ-038 / TC-P1-016 | 文档详情 / 工具栏 | 点击“下载 .md” | 下载当前可见文档 Markdown | 无权限或文档不存在显示 4004 等价提示 | 文件名安全化规则；版本下载是否进入首批 |
 | PATH-P15A-004 | REQ-038 / TC-P1-016 | 空间工具栏 | 点击“导出空间 ZIP” | 下载只包含当前用户可见文档的 ZIP | 无可见文档显示空态；导出失败显示可重试 | 入口放在空间工具栏还是设置菜单；是否显示导出范围说明 |
+| PATH-P15B-001 | REQ-027 / TC-P1-017 | 文档详情 / 工具栏 | 点击“导出 PDF” | 生成当前可见文档 PDF artifact 并提示路径 | 无权限或文档不存在显示 4004 等价提示；PDF 依赖 / 字体不可用显示 5030 | 首版同步生成；异步队列、下载端点与清理 job 留后续 |
 
 | 组件 / 状态 | UI 口径 | API / 数据来源 | 验收 |
 |---|---|---|---|
@@ -293,8 +294,9 @@ sequenceDiagram
 | 批量结果列表 | done / failed / skipped 三态，失败不影响成功 | API-029 response `items[]` | TC-P1-015 |
 | 单文档 `.md` 下载 | 文档详情轻量按钮，不占主流程 | API-030 document export | TC-P1-016 |
 | 空间 ZIP 导出 | 明确“仅导出当前可见文档” | API-030 space export | TC-P1-016 |
+| 单文档 PDF 导出 | 文档详情轻量按钮，成功后提示 artifact 路径 | API-019 PDF export | TC-P1-017 |
 
-**P1.5A 编码边界**：默认不引 router / 组件库 / 全局状态库；若批量结果跨组件复用，优先抽 feature state / hook；导出使用 blob 下载，不实现长期公开链接。
+**P1.5A/B 编码边界**：默认不引 router / 组件库 / 全局状态库；若批量结果跨组件复用，优先抽 feature state / hook；导出不实现长期公开链接，PDF 首版不做异步队列 / 下载端点 / 过期清理 job。
 
 ### 9.1 Phase2 / 愿景体验方向池
 

@@ -1,6 +1,6 @@
 # 详细设计：导出交付子系统（export-delivery）
 
-> 对应 MOD-007 的导出交付部分。本文只细化 Phase1.5A 的单文档 `.md` 下载与空间 ZIP 导出备份，以及 Phase1.5B 的 PDF 导出门禁；RG-006 已完成技术验证，但 API-019 产品实现仍待 Sprint-18。
+> 对应 MOD-007 的导出交付部分。本文细化 Phase1.5A 的单文档 `.md` 下载与空间 ZIP 导出备份，以及 Phase1.5B 已落地的单文档 PDF 导出。API-019 已随 Sprint-18 完成；后续若要异步队列、下载端点、过期清理、水印或 Word/PDF 解析，需要另起设计。
 
 ## 0. 文档元信息
 
@@ -10,11 +10,11 @@
 | 文档路径 | `docs/design/export-delivery.md` |
 | 输入来源 | `docs/01-user-requirements.md` U-43 / U-33、`docs/02-srs.md` REQ-038 / REQ-027、`docs/03-prd.md` Phase1.5A/B、`docs/04-architecture.md` Flow-007 / Flow-008、`docs/05-tech-spec.md` TCD-008 / TCD-009 / RG-006、`docs/06-db-design.md`、`docs/07-api-spec.md` API-030 / API-019 |
 | 覆盖 REQ | REQ-038（Phase1.5A）、REQ-027（Phase1.5B） |
-| 所属 Phase | [P1]（Phase1.5A 已完成；Phase1.5B 候选） |
+| 所属 Phase | [P1]（Phase1.5A / Phase1.5B 已完成） |
 | 交付物形态 | 个人可用 Alpha / 个人增强 Beta |
-| 当前状态 | Phase1.5A `.md` / ZIP 导出已完成并通过 TC-P1-016；Phase1.5B PDF 已通过 RG-006（ReportLab 中文样例 Go），可进入 Sprint-18 编码 |
+| 当前状态 | Phase1.5A `.md` / ZIP 导出已完成并通过 TC-P1-016；Phase1.5B PDF 已随 Sprint-18 完成并通过 TC-P1-017 |
 | 流程 ID | Flow-007（`.md` / ZIP 导出备份）/ Flow-008（PDF 导出） |
-| 最后更新 | 2026-08-04（RG-006 PDF 导出技术环境评估通过，API-019 待实现） |
+| 最后更新 | 2026-08-04（API-019 `POST /api/export-pdf` + `lumen_doc_exports` + 前端入口已实现，TC-P1-017 通过） |
 | 下游影响 | 08 Sprint-17 / Sprint-18、09 TC-P1-016 / TC-P1-017、07 API-030 / API-019 |
 
 ## 1. 职责与边界
@@ -25,7 +25,7 @@
 | 本设计不负责 | 真实 Word/PDF 文本提取、OCR、外部分享链接、团队协作、移动端导出、长期公开文件托管 |
 | 不新增内容 | Phase1.5A 不新增 DB 表、不引 PDF 库、不做真实目录树、不做长期公开链接 |
 | 权限边界 | 前端入口只做可见性；后端 API 必须按 token 当前空间、文档权限和空间成员关系过滤 |
-| 依赖前置 | Phase1.5A 仅用既有栈 + Python 标准库 `zipfile`；Phase1.5B PDF 首版依赖 ReportLab，RG-006 已 Go |
+| 依赖前置 | Phase1.5A 仅用既有栈 + Python 标准库 `zipfile`；Phase1.5B PDF 首版依赖 ReportLab，RG-006 已 Go，产物校验使用 `pypdf` / `pdfplumber` / `Pillow` |
 
 ## 2. 上游依据与追溯
 
@@ -38,7 +38,7 @@
 | `docs/05-tech-spec.md` | TCD-008 / TCD-009 / RG-006 | ZIP 用 `zipfile`，PDF 首版采用 ReportLab；RG-006 已 Go | 依赖门禁 |
 | `docs/06-db-design.md` | REQ-038 无新增表结论、`lumen_doc_exports` | `.md` / ZIP 不写导出表；PDF 可用导出任务表 | DB 边界 |
 | `docs/07-api-spec.md` | API-030 / API-019 | 请求 / 响应 / 错误 / 权限契约 | API 实现与测试 |
-| `docs/09-verification.md` | TC-P1-016 / TC-P1-017 | 导出验收路径 | TC-P1-016 已通过后端 tests + 端到端 HTTP smoke；TC-P1-017 前置 RG-006 已 Go，产品验收待 Sprint-18 |
+| `docs/09-verification.md` | TC-P1-016 / TC-P1-017 | 导出验收路径 | TC-P1-016 已通过后端 tests + 端到端 HTTP smoke；TC-P1-017 已通过后端 tests + 前端 build + 产品 PDF 样例 |
 
 ## 3. 核心流程
 
@@ -64,11 +64,12 @@ flowchart TB
 
 ### 3.2 Flow-008：PDF 导出（Phase1.5B）
 
-1. RG-006 已 Go（2026-08-04），允许进入 PDF 编码。
-2. 用户对可读文档指定版本发起 `POST /api/export-pdf`。
-3. 后端创建 `lumen_doc_exports` 任务，绑定 `document_id`、`version_no` 与 `requested_by`。
-4. PDF 渲染库不可用、字体缺失或导出失败时返回 5030 / failed，不生成坏文件。
-5. 导出产物继承源文档权限，不生成公开长期链接；如落盘，必须设置过期清理策略。
+1. 用户对可读文档指定版本发起 `POST /api/export-pdf`。
+2. 后端先按 token 当前空间与文档可见性读取源文档；不可见 / 不存在返回 4004，且不创建导出记录。
+3. 后端读取指定版本或当前版本，创建 `lumen_doc_exports` 任务并绑定 `document_id`、`version_no` 与 `requested_by`，状态进入 `running`。
+4. ReportLab 将 Markdown 子集渲染为 PDF artifact；成功后任务标记 `done` 并写入 `artifact_path`。
+5. PDF 渲染库不可用、字体缺失或导出失败时返回 5030 / failed，不生成坏文件。
+6. 导出产物首版写入 `tmp/pdf_exports`，继承源文档权限，不生成公开长期链接；过期清理 job 留后续。
 
 ## 4. 数据、接口与权限契约
 
@@ -76,7 +77,7 @@ flowchart TB
 |---|---|---|---|---|---|
 | 单文档 `.md` 下载 | API-030 `GET /api/documents/{id}/export` | `lumen_documents`、`lumen_document_versions` | 文档可读；不可见返回 4004 | 直接 file/blob 响应；不写导出表 | TC-P1-016 |
 | 空间 ZIP 导出 | API-030 `GET /api/export/space` | 当前用户可见 `lumen_documents` | ZIP 只含当前用户可见文档；不泄露不可见数量 | `zipfile` 打包；流式 / 临时响应；不长期公开 | TC-P1-016 |
-| 单文档 PDF | API-019 `POST /api/export-pdf` | `lumen_doc_exports`、`lumen_documents`、`lumen_document_versions` | 文档可读 / 可导出；产物继承权限 | 导出任务 + artifact；需过期清理 | TC-P1-017 |
+| 单文档 PDF | API-019 `POST /api/export-pdf` | `lumen_doc_exports`、`lumen_documents`、`lumen_document_versions` | 文档可读 / 可导出；产物继承权限 | 同步导出任务 + artifact 写入 `tmp/pdf_exports`；过期清理 job 留后续 | TC-P1-017 |
 
 ## 5. 失败、异常与降级路径
 
@@ -85,7 +86,7 @@ flowchart TB
 | 文档不存在或不可见 | 4004 | 文档不存在或无权限 | 不区分不存在 / 越权，避免泄露 |
 | 空间无可见文档 | 200 + 空结果提示或空 ZIP | 当前空间暂无可导出文档 | 不提示隐藏文档数量 |
 | ZIP 打包失败 | 5000 | 导出失败，请稍后重试 | 记录错误；不返回半截 ZIP |
-| PDF 依赖不可用 | 5030 | PDF 导出依赖不可用 | Sprint-18 实现时必须检测依赖 / 字体并失败返回 5030 |
+| PDF 依赖不可用 | 5030 | PDF 导出依赖不可用 | 已实现依赖 / 字体检测；失败标记 `failed` 并返回 5030 |
 | PDF 中文字体缺失 | 5030 / failed | PDF 导出失败 | 不生成乱码 PDF |
 
 ## 6. 阶段增量、readiness gate 与实现状态
@@ -93,7 +94,7 @@ flowchart TB
 | 阶段 | 能力 | 状态 | Gate / 禁止项 |
 |---|---|---|---|
 | Phase1.5A | 单文档 `.md` 下载、空间 ZIP 导出 | 已实现（TC-P1-016 通过） | 不引 PDF 库；不写长期导出表；不建公开链接 |
-| Phase1.5B | 单文档 PDF 导出 | RG-006 Go；待 Sprint-18 编码 | 不得把技术样例当作 API-019 已实现；编码需补权限、失败态与产物清理 |
+| Phase1.5B | 单文档 PDF 导出 | 已实现（Sprint-18，TC-P1-017 通过） | 首版同步生成；不含异步队列 / 下载端点 / 过期清理 job / 水印 / Word-PDF 解析 / zhparser |
 | Phase2B / 后续 | 对外分享链接、团队交付包 | 骨架 | 需重新确认权限、有效期、审计与外部访问边界 |
 
 ## 7. 验证与验收追溯
@@ -102,7 +103,7 @@ flowchart TB
 |---|---|---|---|---|---|
 | 单文档 `.md` 下载 | REQ-038 | Sprint-17 | TC-P1-016 | 后端 tests + 端到端 HTTP smoke 已通过 | Phase1.5A-已实现 |
 | 空间 ZIP 导出 | REQ-038 | Sprint-17 | TC-P1-016 | 权限过滤后端 tests + 端到端 HTTP smoke 已通过 | Phase1.5A-已实现 |
-| 单文档 PDF 导出 | REQ-027 | Sprint-18 | TC-P1-017 | RG-006 已通过；待 API-019 后端 tests + 人工 PDF 样例 | Phase1.5B-RG-006 Go，待实现 |
+| 单文档 PDF 导出 | REQ-027 | Sprint-18 | TC-P1-017 | API-019 后端 tests + 前端 build + 产品 PDF 样例渲染 / 抽文本 / 非白像素检查已通过 | Phase1.5B-已实现 |
 
 ## 8. 与其他子系统交互
 
@@ -116,7 +117,8 @@ flowchart TB
 | 偏差 ID | 代码 / 配置事实 | 原设计 | 偏差类型 | 处理结论 | 回写目标 | 验证 / 证据 |
 |---|---|---|---|---|---|---|
 | DEV-EXP-001 | `.md` / ZIP 导出已实现 | Phase1.5A 目标 | 已完成 | Sprint-17 已按标准库 zipfile 与权限过滤完成 | API-030、TC-P1-016 | TC-P1-016 通过 |
-| DEV-EXP-002 | ReportLab / pypdf / pdfplumber / Pillow 已安装并锁入依赖；中文 PDF 样例通过 | Phase1.5B 目标 | RG 已关闭 | 可进入 Sprint-18 编码；API-019 尚未实现 | API-019、TC-P1-017 | `scripts/smoke-pdf-rg006.py` + RG-006 tech-env 报告 |
+| DEV-EXP-002 | ReportLab / pypdf / pdfplumber / Pillow 已安装并锁入依赖；中文 PDF 样例通过 | Phase1.5B 技术前置 | RG 已关闭 | 已进入 Sprint-18 并完成 API-019 产品实现 | API-019、TC-P1-017 | `scripts/smoke-pdf-rg006.py` + RG-006 tech-env 报告 |
+| DEV-EXP-003 | `POST /api/export-pdf`、`lumen_doc_exports`、前端"导出 PDF"入口已实现；artifact 写入 `tmp/pdf_exports` | Phase1.5B 目标 | 已完成 | 首版同步生成并返回任务结果；异步队列 / 下载端点 / 过期清理 job 留后续 | API-019、TC-P1-017 | `tests.backend.test_export` 20/20 OK + backend discover 196 OK + frontend build + 产品 PDF 样例 |
 
 ## 10. 待人工确认项
 
@@ -124,4 +126,4 @@ flowchart TB
 |---|---|---|---|---|---|
 | EXP-C-001 | ZIP 是否长期落盘 | 建议不长期落盘，优先流式 / 临时响应 | P1.5A 目标是低依赖备份，不做分享链接 | 写 `lumen_doc_exports` | 增加清理和权限复杂度 |
 | EXP-C-002 | ZIP 文件内路径规则 | 建议使用安全化标题；若有相对路径前缀则保留目录感 | 与 API-029 标题前缀策略一致 | 全部平铺 | 平铺可能丢目录感；保留路径需防路径穿越 |
-| EXP-C-003 | PDF 是否提前到 Alpha | 不建议；保留 Phase1.5B；RG-006 已 Go 后进入 Sprint-18 | PDF 依赖 / 字体 / 中文排版风险已做最小验证，但产品实现仍需权限 / 失败态 / 清理策略 | 与 Sprint-17 同做 | 会阻塞个人可用 Alpha |
+| EXP-C-003 | PDF 是否提前到 Alpha | 已裁定为 Phase1.5B 并完成 Sprint-18；不回填 Alpha 范围 | PDF 依赖 / 字体 / 中文排版风险已通过 RG-006 与 TC-P1-017 验证 | 与 Sprint-17 同做 | 已避免阻塞个人可用 Alpha；后续只补增强项 |

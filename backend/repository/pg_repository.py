@@ -17,6 +17,7 @@ from sqlalchemy import delete, func, select, text as sql_text
 
 from backend.model.entities import (
     AiDraft,
+    DocExport,
     DocLink,
     DocLinkDraft,
     Document,
@@ -37,6 +38,7 @@ from backend.model.entities import (
 )
 from backend.model.orm import (
     AiDraftORM,
+    DocExportORM,
     DocLinkORM,
     DocumentChunkORM,
     DocumentORM,
@@ -209,6 +211,22 @@ def _to_ai_draft(r: AiDraftORM) -> AiDraft:
         cited_chunk_ids=tuple(r.cited_chunk_ids or []),
         status=r.status,
         created_at=_dt_iso(r.created_at),
+    )
+
+
+def _to_doc_export(r: DocExportORM) -> DocExport:
+    return DocExport(
+        id=r.id,
+        space_id=r.space_id,
+        document_id=r.document_id,
+        requested_by=r.requested_by,
+        format=r.format,
+        status=r.status,
+        version_no=r.version_no,
+        artifact_path=r.artifact_path,
+        error_message=r.error_message,
+        created_at=_dt_iso(r.created_at),
+        finished_at=_dt_iso(r.finished_at) or None,
     )
 
 
@@ -751,6 +769,60 @@ class PgRepository:
             session.add(row)
             session.commit()
             return _to_ai_draft(row)
+
+    # --- document exports (REQ-027, API-019) ---
+
+    def create_doc_export(
+        self,
+        space_id: int,
+        document_id: int,
+        requested_by: int,
+        version_no: int,
+        status: str = "queued",
+        artifact_path: str | None = None,
+        error_message: str | None = None,
+    ) -> DocExport:
+        with SessionLocal() as session:
+            row = DocExportORM(
+                space_id=space_id,
+                document_id=document_id,
+                requested_by=requested_by,
+                format="pdf",
+                status=status,
+                version_no=version_no,
+                artifact_path=artifact_path,
+                error_message=error_message,
+            )
+            if status in {"done", "failed"}:
+                row.finished_at = func.now()
+            session.add(row)
+            session.commit()
+            return _to_doc_export(row)
+
+    def get_doc_export(self, export_id: int) -> DocExport | None:
+        with SessionLocal() as session:
+            row = session.get(DocExportORM, export_id)
+            return _to_doc_export(row) if row else None
+
+    def update_doc_export(
+        self,
+        export_id: int,
+        status: str,
+        artifact_path: str | None = None,
+        error_message: str | None = None,
+    ) -> DocExport:
+        with SessionLocal() as session:
+            row = session.get(DocExportORM, export_id)
+            if row is None:
+                raise KeyError(export_id)
+            row.status = status
+            if artifact_path is not None:
+                row.artifact_path = artifact_path
+            row.error_message = error_message
+            if status in {"done", "failed"}:
+                row.finished_at = func.now()
+            session.commit()
+            return _to_doc_export(row)
 
     def remove_document_tag(self, tag_id: int, document_id: int) -> bool:
         with SessionLocal() as session:
