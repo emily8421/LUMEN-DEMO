@@ -10,8 +10,8 @@
 | 保留 / 省略决策 | 保留 |
 | 接口形态 | REST API |
 | 覆盖 REQ / 模块 | Phase1：REQ-001..REQ-011、REQ-036；Phase1.5A：REQ-037/038（API-029/030）；Phase1.5B：REQ-027（API-019）；Phase2A：REQ-012/025/026；Phase2B：REQ-014（API-028）、REQ-013/024（API-033）、REQ-039（API-034..038，第三 slice）；后续 / 愿景接口保留骨架 |
-| 当前状态 | P1 接口契约已用于 Phase1 Demo；Sprint-8 后 P1 主要接口已接 PostgreSQL 表，RAG 已接 pgvector 向量召回 + GLM LLM；task-009 后 API-009 search 已为 substring + ts_vector + pgvector 语义召回的 hybrid search（zhparser 可选）。API-029/030 已随 Phase1.5A 完成；API-019 已随 Sprint-18 完成；Phase2A 标签、快速录入、内链 / 反链接口已完成；Phase2B API-028、API-033、API-034..038 已进入实现态。仍降级：API-011 仅 `.md`/`.txt` 已提取文本；真实 Word/PDF 解析与 OCR 留后续 |
-| 最后更新 | 2026-08-04（Sprint-18 PDF 导出产品闭环：API-019 / TC-P1-017 通过） |
+| 当前状态 | P1 接口契约已用于 Phase1 Demo；Sprint-8 后 P1 主要接口已接 PostgreSQL 表，RAG 已接 pgvector 向量召回 + GLM LLM；task-009 后 API-009 search 已为 substring + ts_vector + pgvector 语义召回的 hybrid search（zhparser 可选）。API-029/030 已随 Phase1.5A 完成；API-019 已随 Sprint-18 完成并补齐 PDF artifact 下载端点；Phase2A 标签、快速录入、内链 / 反链接口已完成；Phase2B API-028、API-033、API-034..038 已进入实现态。仍降级：API-011 仅 `.md`/`.txt` 已提取文本；真实 Word/PDF 解析与 OCR 留后续 |
+| 最后更新 | 2026-08-04（v1.7.0：API-019 PDF 下载端点 + 前端下载闭环通过） |
 
 ## 1. 统一约定
 
@@ -48,7 +48,7 @@
 | API-016 | GET | /api/briefs/{token} | 对外只读简报 | [愿景] | 骨架 | — | REQ-022 |
 | API-017 | POST/DELETE | /api/quick-entry | 快速录入索引条目（capture / discard） | [P2] | Phase2A-已实现 | — | REQ-025 |
 | API-018 | GET/POST | /api/doc-links | 内部链接 / 反向链接 | [P2] | Phase2A-已实现 | — | REQ-026 |
-| API-019 | POST | /api/export-pdf | 单文档导出 PDF | [P1] | Phase1.5B-已实现 | 已实现（Sprint-18：同步生成任务结果 + artifact_path） | REQ-027 |
+| API-019 | POST/GET | `/api/export-pdf`、`/api/export-pdf/{export_id}/download` | 单文档导出 / 下载 PDF | [P1] | Phase1.5B-已实现 | 已实现（Sprint-18：同步生成任务结果；v1.7.0：artifact 下载闭环） | REQ-027 |
 | API-020 | POST | /api/sync/feishu | 飞书同步（webhook/拉取） | [愿景] | 骨架 | — | REQ-028 |
 | API-021 | POST | /api/path | 路径推理（多跳） | [愿景] | 骨架 | — | REQ-030 |
 | API-022 | GET | /api/people/{name} | 人物关系网络 | [愿景] | 骨架 | — | REQ-031 |
@@ -99,7 +99,7 @@
 |---|---|---|---|---|---|---|
 | API-029 | Phase1.5A-已实现 | §3.9 | 4001/4003/4090/4220 | 空间成员；逐文件写入当前空间；同名默认跳过 | TC-P1-015 | 已实现（Sprint-16） |
 | API-030 | Phase1.5A-已实现 | §3.9 | 4001/4003/4004/4220/5000 | 单文档可读；空间 ZIP 只包含当前用户可见文档 | TC-P1-016 | 已实现（Sprint-17） |
-| API-019 | Phase1.5B-已实现 | §3.9 | 4001/4003/4004/4220/5030 | 导出前校验源文档可见 / 可导出；artifact_path 不公开越权访问 | TC-P1-017 | 已实现（Sprint-18） |
+| API-019 | Phase1.5B-已实现 | §3.9 | 4001/4004/4090/4220/5000/5030 | 导出 / 下载前校验源文档可见；下载端点不公开越权 artifact，任务未完成返回 4090 | TC-P1-017 | 已实现（Sprint-18 + v1.7.0 下载闭环） |
 | API-014 | Phase2A-已实现 | §3.9 | 4001/4003/4090/4220 | 空间成员；标签仅当前空间可见 | TC-P2-TAG-001 | 已实现（Task A 1e4cf48） |
 | API-027 | Phase2A-已实现 | §3.9 | 4001/4003/4004/4090/4220 | 空间成员；归档不删除历史关联 | TC-P2-TAG-001 | 已实现（Task A 1e4cf48） |
 | API-017 | Phase2A-已实现 | §3.9 | 4001/4003/4004/4220 | 空间成员；draft 默认 owner 私有；转换继承文档权限 | TC-P2-QUICK-001 | 已实现（Task A `f771e02` + Task B `bad8fe5`） |
@@ -166,7 +166,7 @@
 
 ### 3.4 错误码与异常处理
 
-> 业务码体系见 §1。「实现状态」据 `backend/api/*.py` 实证：`0/4001/4003/4004/4220` 已实现；`5030` 已由 API-019 / API-028 依赖不可用路径覆盖；`4090/5000` 仍为部分接口声明预留。
+> 业务码体系见 §1。「实现状态」据 `backend/api/*.py` 实证：`0/4001/4003/4004/4090/4220` 已实现；`5030` 已由 API-019 / API-028 依赖不可用路径覆盖；`5000` 为服务端异常兜底。
 
 | 错误码 | HTTP | 触发条件 | 用户可见信息 | 客户端处理 | 日志/审计 | 可重试 | 实现状态 |
 |---|---|---|---|---|---|---|---|
@@ -175,8 +175,8 @@
 | 4003 | 403 | 非空间成员 / 无权限 | 无权限 | 提示无权限 | 记录 | 否 | 已实现（auth/terms/spaces/imports） |
 | 4004 | 404 | 文档 / 版本 / 术语不存在 | 不存在 | — | — | 否 | 已实现（terms/documents） |
 | 4220 | 422 | 参数校验失败（空字段、类型、超长） | 参数错误 | 修正后重试 | — | 是（修正后） | 已实现（terms/rag/imports/search） |
-| 4090 | 409 | 业务冲突（如唯一约束、批量导入同名且策略不允许覆盖） | 冲突 | — | — | — | 声明未实现 / 预留 |
-| 5000 | 500 | 服务端错误 | 服务异常 | 稍后重试 | 记录 | 是 | 声明未实现 / 预留 |
+| 4090 | 409 | 业务冲突（如唯一约束、批量导入同名且策略不允许覆盖、PDF 导出任务未就绪） | 冲突 | — | — | — | 已实现（tags / folders / PDF 下载未就绪） |
+| 5000 | 500 | 服务端错误 | 服务异常 | 稍后重试 | 记录 | 是 | 已实现为部分接口兜底 |
 | 5030 | 503 | 外部 AI / OCR / PDF 导出依赖不可用 | 服务暂不可用 | 稍后重试 | 记录 | 是 | 已实现（API-019 PDF 依赖不可用；API-028 LLM 不可用） |
 
 > 注：文档级越权（`GET/PUT/DELETE /api/documents/{id}`）在查询层吸收为 4004 或空结果，不返回 4003，避免暴露资源存在性（见 `docs/design/permissions.md`）。
@@ -262,6 +262,7 @@ sequenceDiagram
 | API-030 `GET /api/documents/{id}/export` | `format=md`、`version_no?` | file/blob：`text/markdown`，文件名由文档标题安全化 | 需可读文档；不可见返回 4004；P1.5A 不支持 PDF | `lumen_documents`、`lumen_document_versions` | Phase1.5A-已实现；单文档 `.md` 下载，不写 `lumen_doc_exports` |
 | API-030 `GET /api/export/space` | `format=zip`、`include_versions?=false` | file/blob：ZIP，内含当前用户可见文档 `.md` | 仅打包当前空间且当前用户可见文档；不可见文档不进入 ZIP | `lumen_documents`、`lumen_document_versions` | Phase1.5A-已实现；使用 Python `zipfile`，默认流式 / 临时产物，不生成长期公开链接 |
 | API-019 `POST /api/export-pdf` | `document_id`、`version_no?`、`options?{include_sources,theme}` | `{export_id,status,artifact_path?}` | 需可读 / 可导出文档；导出产物继承文档权限，不生成公开长期链接 | `lumen_doc_exports`、`lumen_documents`、`lumen_document_versions` | Phase1.5B；已按 ReportLab 路线实现（Sprint-18，同步生成任务结果） |
+| API-019 `GET /api/export-pdf/{export_id}/download` | path：`export_id` | file/blob：`application/pdf`，文件名由 artifact 文件名安全化并带 `filename*` | 需当前 token 空间匹配导出记录，且源文档当前仍可读；任务未完成 / failed / 无 artifact 返回 4090；artifact 不存在或越界返回 4004 | `lumen_doc_exports`、`lumen_documents` | Phase1.5B；v1.7.0 已实现，前端生成后直接下载 |
 | API-014 `GET /api/tags` | `q?`、`status?=active`、`page?` | `items[{id,name,color,description,document_count,status}]`、`total` | 仅当前空间标签；`document_count` 只统计当前用户可见文档 | `lumen_tags`、`lumen_tag_links`、`lumen_documents` | 支撑标签视图与筛选 |
 | API-014 `POST /api/tags` | `name`、`color?`、`description?` | `{id,name,color,description,status}` | 空间成员可创建；同空间 `normalized_name` 冲突返回 4090 | `lumen_tags` | 不自动跨空间复制 |
 | API-027 `/api/tags/{id}` | `PUT`: `name?`、`color?`、`description?`、`status?`；`DELETE`: 归档 | `{id,name,color,description,status}` | 仅当前空间标签；删除采用 `archived`，不硬删历史 | `lumen_tags` | 避免破坏文档历史关联 |
@@ -286,13 +287,13 @@ sequenceDiagram
 
 | code | 场景 | 适用 API |
 |---|---|---|
-| 4090 | 标签重名、快速录入重复转换、PDF 导出任务重复提交、批量导入同名且策略不允许跳过、folder 重名 / 删非空 folder 等业务冲突 | API-014/017/019/027/029/031/035/036 |
+| 4090 | 标签重名、快速录入重复转换、PDF 导出任务未就绪、批量导入同名且策略不允许跳过、folder 重名 / 删非空 folder 等业务冲突 | API-014/017/019/027/029/031/035/036 |
 | 4220 | 字段缺失、非法状态、无效 tag_ids / document_id / mode、文件类型不支持、relative_paths 与 files 数量不匹配、folder 防环 / 跨空间移动、文档移动目标 folder 不属于当前空间 | 全部 Phase1.5 / Phase2 API |
 | 5030 | LLM / PDF 导出 / 外部依赖不可用 | API-019/028 |
 
 ### [Phase1.5] / [P2] / [愿景] 接口（骨架·待该阶段细化）
 - `/api/import/batch`、`/api/documents/{id}/export`、`/api/export/space`：Phase1.5A 已实现；默认不引新依赖、不建真实目录表。
-- `/api/export-pdf`：Phase1.5B PDF 导出见 §3.9，已随 Sprint-18 实现；首版同步生成任务结果并返回 artifact_path。
+- `/api/export-pdf`：Phase1.5B PDF 导出见 §3.9，已随 Sprint-18 实现；v1.7.0 已补 `GET /api/export-pdf/{export_id}/download`，前端可生成后直接下载。
 - `/api/tags`、`/api/tags/{id}`：Phase2A 已实现（Task A `1e4cf48`）。扁平标签 CRUD（API-014/027）：空间隔离、`UNIQUE(space_id, normalized_name)` 重名 4090、`DELETE` 归档不硬删；`document_count` 只统计当前用户可见文档。
 - `/api/documents/{id}/tags`（API-031）+ `/api/tags/{id}/documents`（API-032）：Phase2A 已实现（Task A `1e4cf48`）。文档-标签关联（列 / 打 `link_source=manual` / 移除，需文档可写 + 标签同空间）；标签下可见文档列表（按文档可见性过滤）。
 - `/api/quick-entry`：Phase2A 已实现（Task A `f771e02` + Task B `bad8fe5`）。POST capture（mode=draft/create_document/append_document + `tag_ids` + `source`）+ DELETE discard（仅 draft）；draft 默认 owner 私有，最小版不暴露 list endpoint。
@@ -319,7 +320,7 @@ sequenceDiagram
 | REQ-036 | `GET/POST /api/terms`、`GET/PUT/DELETE /api/terms/{id}` | 术语列表、创建、更新、删除 |
 | REQ-037 | `POST /api/import/batch` | Phase1.5A 批量 / 文件夹 `.md` / `.txt` 导入，逐条结果、同名跳过（Phase2B folder-tree 扩展 `preserve_structure` 建 `lumen_folders`，见 REQ-039 / API-029） |
 | REQ-038 | `GET /api/documents/{id}/export`、`GET /api/export/space` | Phase1.5A 单文档 `.md` 下载与空间 ZIP 导出备份，权限过滤 |
-| REQ-027 | `POST /api/export-pdf` | Phase1.5B 单文档导出 PDF，已随 Sprint-18 实现并通过 TC-P1-017 |
+| REQ-027 | `POST /api/export-pdf`、`GET /api/export-pdf/{export_id}/download` | Phase1.5B 单文档导出 PDF，已随 Sprint-18 实现并通过 TC-P1-017；v1.7.0 补齐下载闭环 |
 | REQ-012 | `GET/POST /api/tags`、`GET/PUT/DELETE /api/tags/{id}`、`GET/POST/DELETE /api/documents/{id}/tags`、`GET /api/tags/{id}/documents` | Phase2A 标签视图（扁平标签 + 独立视图 + 单标签筛选 + 文档详情打标签）已实现 |
 | REQ-025 | `POST /api/quick-entry` | Phase2A 快速录入索引条目，可转文档 / 追加文档 / 保留草稿 |
 | REQ-026 | `GET/POST /api/doc-links` | Phase2A 内部链接与反向链接索引，需空间和文档权限过滤 |
@@ -350,7 +351,7 @@ sequenceDiagram
 | API-013 | term.get/update/delete_term | lumen_terms | space + owner | 4001/4003/4004 | TC-P1-012 | P1-已实现 |
 | API-029 | imports.import_batch | lumen_imports, lumen_documents, lumen_chunks | 空间成员；逐文件导入当前空间 | 4001/4003/4090/4220 | TC-P1-015 | Phase1.5A-已实现 |
 | API-030 | export.export_document_md / export.export_space_zip | lumen_documents, lumen_document_versions | 文档可读；ZIP 只含当前用户可见文档 | 4001/4003/4004/4220/5000 | TC-P1-016 | Phase1.5A-已实现 |
-| API-019 | export.create_pdf_export | lumen_doc_exports, lumen_documents, lumen_document_versions | 文档可读 / 可导出 | 4001/4003/4004/4220/5030 | TC-P1-017 | Phase1.5B-已实现（Sprint-18） |
+| API-019 | export.create_pdf_export / export.download_pdf_export | lumen_doc_exports, lumen_documents, lumen_document_versions | 文档可读 / 可导出；下载时复验权限与 artifact 目录边界 | 4001/4004/4090/4220/5000/5030 | TC-P1-017 | Phase1.5B-已实现（Sprint-18 + v1.7.0 下载闭环） |
 | API-014 / API-027 | tag.list_tags / create_tag / update_tag / archive_tag | lumen_tags, lumen_tag_links | space 成员 + 文档权限统计 | 4001/4003/4004/4090/4220 | TC-P2-TAG-001 | Phase2A-已实现 |
 | API-031 / API-032 | tag.list_document_tags / add_document_tag / remove_document_tag / list_documents_by_tag | lumen_tag_links, lumen_tags, lumen_documents | 文档可写 + 标签同空间；document_count / 筛选按文档可见性 | 4001/4003/4004/4090/4220 | TC-P2-TAG-001 | Phase2A-已实现 |
 | API-017 | quick_entry.capture_quick_entry / discard_quick_entry | lumen_quick_entries, lumen_documents, lumen_tag_links | owner 私有 + 转文档后继承权限 | 4001/4003/4004/4220 | TC-P2-QUICK-001 | Phase2A-已实现 |
@@ -372,7 +373,7 @@ sequenceDiagram
 | 外部只读 | `permission='external'` | 只读 | — | TC-P1-003 |
 | Phase1.5A 批量导入 | 逐文件写入 current_space_id；默认生成当前空间文档 | 空间成员可导入 | 4003 / 4220 / skipped | TC-P1-015 |
 | Phase1.5A `.md` / ZIP 导出 | 单文档按文档权限过滤；ZIP 查询只取当前用户可见文档 | 不可见文档不进入 ZIP | 4004 / 空 ZIP 提示 | TC-P1-016 |
-| Phase1.5B PDF 导出 | 导出前复用文档可见性校验 | 导出产物继承源文档权限 | 5030 依赖不可用 | TC-P1-017 |
+| Phase1.5B PDF 导出 / 下载 | 导出与下载前复用文档可见性校验 | 导出产物继承源文档权限；下载任务 ID 不作为公开链接 | 4090 未就绪、5030 依赖不可用、4004 不泄露越权 artifact | TC-P1-017 |
 | Phase2A 标签统计 | `tag_links -> documents` join 后继续套用文档权限 | 仅统计可见文档 | 不泄露隐藏文档数量 | TC-P2-TAG-001 |
 | Phase2A 反向链接 | target 文档不可见时不返回标题 / 摘要 | 查询层返回 `no_access` 或过滤 | 4003 / 空结果 | TC-P2-LINK-001 |
 | Phase2B AI 润色引用 | sources 仅来自当前用户可见 chunks | LLM 调用前过滤上下文 | 5030 可降级 Mock | TC-P2-AI-001 |
@@ -381,5 +382,5 @@ sequenceDiagram
 ## 6. 待人工确认项
 
 - Phase1.5A API-029 / API-030 已实现并通过 TC-P1-015/016；若后续扩展真实目录表、长期导出产物或新依赖，需同步 `docs/design/ingestion.md`、导出详细设计与 `docs/09-verification.md` TC-P1-015/016。
-- `API-019` PDF 导出属于 Phase1.5B，已随 Sprint-18 实现；后续若新增异步队列、下载端点、过期清理 job 或水印，需先同步 `05/06/08/09`。
+- `API-019` PDF 导出属于 Phase1.5B，已随 Sprint-18 实现，并在 v1.7.0 补齐下载端点；后续若新增异步队列、过期清理 job 或水印，需先同步 `05/06/08/09`。
 - Phase2A 标签 / 快速录入 / 内链 API 已实现；**Phase2B API-028 后端已实现**（vertical slice 已定：polish 同步 / citation 首版同步；数据外发风险已接受 RG-008 Go）；**API-033 时间线为第二 slice·已实现（候选 A + TL-C-001..011 已确认，task-030 本地自动化、运行态 API smoke、Edge headless 浏览器 smoke、真实 PG 大数据性能 smoke 均已通过）**；**API-034..038 文档目录树已实现（folder-tree，REQ-039）；导入保留结构扩展 API-029 `preserve_structure` 已实现（推翻 ingestion ING-C-001）；前端文件管理器基础能力已实现，浏览器自动化 smoke 已补**。

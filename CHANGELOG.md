@@ -6,6 +6,17 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v1.7.0（2026-08-04）
+
+**PDF 下载端点 + 前端下载闭环。** 在 Sprint-18 已完成的同步 PDF 生成基础上，补齐 REQ-027 / API-019 的 artifact 下载路径：前端点击"导出 PDF"后会生成 PDF 并直接触发浏览器下载，不再只提示本机 artifact 路径。
+
+- 后端：新增 `GET /api/export-pdf/{export_id}/download`，返回 `application/pdf` 二进制；下载时重新校验当前 token 空间、源文档可见性、导出任务状态和 artifact 目录边界。
+- 安全 / 错误：不可见文档或不存在 artifact 仍按 4004 处理；任务未完成 / failed / 无 artifact 映射 4090；读取失败映射 5000；中文 / 空格文件名继续用 ASCII fallback + `filename*=UTF-8''...`。
+- 前端：`frontend/src/api/exports.ts` 新增 PDF artifact 下载 client 和生成后下载组合函数；文档详情"导出 PDF"按钮改为生成后直接下载，并提示下载文件名。
+- 验证：`.venv\Scripts\python.exe -m unittest tests.backend.test_export` 27/27 OK；`.venv\Scripts\python.exe -m unittest discover -s tests/backend -v` 203 OK（skipped=2，既有 embedding torch DLL 权限警告按 text-only fallback 继续）；`volta run --node 22.17.1 npm run build` 通过（259 modules）；运行态 demo API smoke 通过（OpenAPI 含下载路由，`export_id=1` 下载 9145 bytes，prefix `%PDF`）。
+
+> MINOR 依据（`ai/project-rules.md` §2.8.1）：新增对外 API endpoint + 用户可感知下载闭环；默认向后兼容。
+
 ## v1.6.0（2026-08-04）
 
 **Sprint-18 单文档 PDF 导出闭环。** 完成 REQ-027 / API-019 / TC-P1-017：文档详情页可以发起 PDF 导出，后端生成绑定具体版本的中文 PDF，并记录导出任务状态。

@@ -9,7 +9,7 @@
 - 空间 ZIP：``ensure_space_access`` 校验成员（4003），再 ``list_visible_documents`` 只取当前
   用户可见文档；不可见文档不进入 ZIP，也不在响应中泄露隐藏数量。
 - PDF：复用同一文档可见性校验；创建 ``lumen_doc_exports`` 任务记录并绑定版本；产物落
-  gitignored ``tmp/pdf_exports``，不生成公开长期链接。
+  gitignored ``tmp/pdf_exports``；下载时再次复用文档可见性校验，不生成公开长期链接。
 """
 
 from __future__ import annotations
@@ -43,6 +43,14 @@ class PdfExportDependencyError(Exception):
     """Raised when ReportLab/font dependencies are unavailable (API 映射 5030)."""
 
 
+class PdfExportNotFoundError(Exception):
+    """Raised when a PDF export task or artifact cannot be exposed (API 映射 4004)."""
+
+
+class PdfExportNotReadyError(Exception):
+    """Raised when a PDF export task exists but has no downloadable artifact yet (API 映射 4090)."""
+
+
 @dataclass(frozen=True)
 class DocumentExport:
     content: bytes
@@ -66,6 +74,13 @@ class PdfExportResult:
     export_id: int
     status: str
     artifact_path: str | None
+
+
+@dataclass(frozen=True)
+class PdfArtifactDownload:
+    content: bytes
+    filename: str
+    export_id: int
 
 
 DEFAULT_PDF_EXPORT_DIR = Path("tmp/pdf_exports")
@@ -182,6 +197,43 @@ def create_pdf_export(
         error_message=None,
     )
     return PdfExportResult(export_id=done.id, status=done.status, artifact_path=done.artifact_path)
+
+
+def download_pdf_export(
+    repository,
+    user_id: int,
+    current_space_id: int,
+    export_id: int,
+    output_dir: str | Path = DEFAULT_PDF_EXPORT_DIR,
+) -> PdfArtifactDownload:
+    """Read a completed PDF export artifact for the current user's visible document.
+
+    导出记录 ID 不是公开下载链接：每次下载都重新校验空间与源文档可见性，并要求
+    artifact 路径仍在受控导出目录下。
+    """
+
+    if export_id < 1:
+        raise PdfExportValidationError("export_id must be positive")
+
+    export_task = repository.get_doc_export(export_id)
+    if export_task is None or export_task.space_id != current_space_id or export_task.format != "pdf":
+        raise PdfExportNotFoundError("PDF export not found")
+
+    get_visible_document(repository, user_id, current_space_id, export_task.document_id)
+
+    if export_task.status != "done" or not export_task.artifact_path:
+        raise PdfExportNotReadyError("PDF export is not ready")
+
+    artifact_path = _resolve_artifact_path(export_task.artifact_path, Path(output_dir))
+    if not artifact_path.is_file():
+        raise PdfExportNotFoundError("PDF artifact not found")
+
+    try:
+        content = artifact_path.read_bytes()
+    except OSError as exc:
+        raise ExportError("failed to read PDF artifact") from exc
+
+    return PdfArtifactDownload(content=content, filename=artifact_path.name, export_id=export_task.id)
 
 
 def _read_export_version(repository, document: Document, version_no: int | None) -> tuple[int, str]:
@@ -423,6 +475,17 @@ def _build_pdf_artifact_path(output_dir: Path, title: str, version_no: int, expo
 
 def _path_for_artifact(path: Path) -> str:
     return str(path).replace("\\", "/")
+
+
+def _resolve_artifact_path(artifact_path: str, output_dir: Path) -> Path:
+    base_dir = output_dir.resolve()
+    candidate = Path(artifact_path)
+    resolved = candidate.resolve()
+    try:
+        resolved.relative_to(base_dir)
+    except ValueError as exc:
+        raise PdfExportNotFoundError("PDF artifact not found") from exc
+    return resolved
 
 
 def _delete_if_exists(path: Path) -> None:

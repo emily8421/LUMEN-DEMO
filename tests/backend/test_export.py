@@ -273,6 +273,118 @@ class PdfExportServiceTest(unittest.TestCase):
             self.assertNotIn("第二版中文内容", text)
             self.assertEqual(export_record.version_no if export_record else None, 1)
 
+    def test_download_pdf_export_returns_pdf_bytes_for_visible_document(self) -> None:
+        from backend.model.entities import DocumentPermission
+        from backend.repository.demo_repository import DemoRepository
+        from backend.service.export import create_pdf_export, download_pdf_export
+
+        repository = DemoRepository()
+        document = repository.create_document(
+            space_id=10,
+            title="中文下载 PDF",
+            content_md="中文下载内容",
+            owner_id=1,
+            permission=DocumentPermission.TEAM,
+        )
+
+        with tempfile.TemporaryDirectory() as directory:
+            result = create_pdf_export(repository, 1, 10, document.id, output_dir=Path(directory))
+
+            download = download_pdf_export(repository, 1, 10, result.export_id, output_dir=Path(directory))
+
+            self.assertEqual(download.export_id, result.export_id)
+            self.assertTrue(download.content.startswith(b"%PDF"))
+            self.assertEqual(download.filename, Path(result.artifact_path or "").name)
+
+    def test_download_pdf_export_rejects_not_ready_task(self) -> None:
+        from backend.repository.demo_repository import DemoRepository
+        from backend.service.export import PdfExportNotReadyError, download_pdf_export
+
+        repository = DemoRepository()
+        export_task = repository.create_doc_export(
+            space_id=10,
+            document_id=100,
+            requested_by=1,
+            version_no=1,
+            status="running",
+        )
+
+        with tempfile.TemporaryDirectory() as directory:
+            with self.assertRaises(PdfExportNotReadyError):
+                download_pdf_export(repository, 1, 10, export_task.id, output_dir=Path(directory))
+
+    def test_download_pdf_export_rejects_invisible_document(self) -> None:
+        from backend.model.entities import DocumentPermission
+        from backend.repository.demo_repository import DemoRepository
+        from backend.service.document import DocumentNotFoundError
+        from backend.service.export import download_pdf_export
+
+        repository = DemoRepository()
+        document = repository.create_document(
+            space_id=10,
+            title="Kira Private PDF",
+            content_md="hidden",
+            owner_id=2,
+            permission=DocumentPermission.PRIVATE,
+        )
+
+        with tempfile.TemporaryDirectory() as directory:
+            artifact_path = Path(directory) / "secret.pdf"
+            artifact_path.write_bytes(b"%PDF-1.4\n")
+            export_task = repository.create_doc_export(
+                space_id=10,
+                document_id=document.id,
+                requested_by=2,
+                version_no=1,
+                status="done",
+                artifact_path=str(artifact_path),
+            )
+
+            with self.assertRaises(DocumentNotFoundError):
+                download_pdf_export(repository, 1, 10, export_task.id, output_dir=Path(directory))
+
+    def test_download_pdf_export_rejects_missing_artifact(self) -> None:
+        from backend.repository.demo_repository import DemoRepository
+        from backend.service.export import PdfExportNotFoundError, download_pdf_export
+
+        repository = DemoRepository()
+        with tempfile.TemporaryDirectory() as directory:
+            missing_path = Path(directory) / "missing.pdf"
+            export_task = repository.create_doc_export(
+                space_id=10,
+                document_id=100,
+                requested_by=1,
+                version_no=1,
+                status="done",
+                artifact_path=str(missing_path),
+            )
+
+            with self.assertRaises(PdfExportNotFoundError):
+                download_pdf_export(repository, 1, 10, export_task.id, output_dir=Path(directory))
+
+    def test_download_pdf_export_rejects_artifact_outside_export_dir(self) -> None:
+        from backend.repository.demo_repository import DemoRepository
+        from backend.service.export import PdfExportNotFoundError, download_pdf_export
+
+        repository = DemoRepository()
+        with tempfile.TemporaryDirectory() as directory:
+            outside_path = Path(directory).parent / f"outside-{Path(directory).name}.pdf"
+            outside_path.write_bytes(b"%PDF-1.4\n")
+            try:
+                export_task = repository.create_doc_export(
+                    space_id=10,
+                    document_id=100,
+                    requested_by=1,
+                    version_no=1,
+                    status="done",
+                    artifact_path=str(outside_path),
+                )
+
+                with self.assertRaises(PdfExportNotFoundError):
+                    download_pdf_export(repository, 1, 10, export_task.id, output_dir=Path(directory))
+            finally:
+                outside_path.unlink(missing_ok=True)
+
     def test_create_pdf_export_rejects_invisible_document(self) -> None:
         from backend.model.entities import DocumentPermission
         from backend.repository.demo_repository import DemoRepository
@@ -319,6 +431,14 @@ class PdfExportServiceTest(unittest.TestCase):
 @unittest.skipIf(importlib.util.find_spec("fastapi") is None, "FastAPI is not installed")
 class ExportApiTest(unittest.TestCase):
     """Sprint-17 API-030：导出端点的二进制响应与错误码（替换 repository 单例）。"""
+
+    def test_export_pdf_download_route_registered(self) -> None:
+        from backend.main import create_app
+
+        app = create_app()
+        route_paths = {route.path for route in app.routes}
+
+        self.assertIn("/api/export-pdf/{export_id}/download", route_paths)
 
     def test_export_document_api_returns_markdown_blob(self) -> None:
         from backend.api import export as export_api
@@ -457,7 +577,7 @@ class ExportApiTest(unittest.TestCase):
         self.assertEqual(context.exception.status_code, 403)
         self.assertEqual(context.exception.detail["code"], 4003)
 
-    def test_export_pdf_api_returns_task_view(self) -> None:
+    def test_export_pdf_api_returns_task_view_and_download_blob(self) -> None:
         from backend.api import export as export_api
         from backend.api.auth import TOKEN_SIGNING_KEY
         from backend.repository.demo_repository import DemoRepository
@@ -467,25 +587,43 @@ class ExportApiTest(unittest.TestCase):
         export_api.repository = DemoRepository()
         with tempfile.TemporaryDirectory() as directory:
             original_create_pdf_export = export_api.create_pdf_export
+            original_download_pdf_export = export_api.download_pdf_export
 
             def create_pdf_export_in_temp(**kwargs):
                 return original_create_pdf_export(**kwargs, output_dir=Path(directory))
 
+            def download_pdf_export_in_temp(**kwargs):
+                return original_download_pdf_export(**kwargs, output_dir=Path(directory))
+
             try:
                 export_api.create_pdf_export = create_pdf_export_in_temp
+                export_api.download_pdf_export = download_pdf_export_in_temp
                 token = create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
                 response = export_api.export_pdf_endpoint(
                     request=export_api.PdfExportRequestBody(document_id=100),
                     authorization=f"Bearer {token}",
                 )
+                download_response = export_api.download_pdf_endpoint(
+                    export_id=response["data"]["export_id"],
+                    authorization=f"Bearer {token}",
+                )
             finally:
                 export_api.create_pdf_export = original_create_pdf_export
+                export_api.download_pdf_export = original_download_pdf_export
                 export_api.repository = original_repository
 
             data = response["data"]
             self.assertEqual(response["code"], 0)
             self.assertEqual(data["status"], "done")
             self.assertTrue(Path(data["artifact_path"]).exists())
+            self.assertIn("application/pdf", download_response.media_type)
+            self.assertTrue(download_response.body.startswith(b"%PDF"))
+            disposition = download_response.headers["content-disposition"]
+            self.assertIn('filename="Nova Sprint Notes-v1-export-1.pdf"', disposition)
+            self.assertIn(
+                f"filename*=UTF-8''{quote('Nova Sprint Notes-v1-export-1.pdf', safe='')}",
+                disposition,
+            )
 
     def test_export_pdf_api_maps_dependency_error_to_5030(self) -> None:
         from fastapi import HTTPException
@@ -505,6 +643,25 @@ class ExportApiTest(unittest.TestCase):
 
         self.assertEqual(context.exception.status_code, 503)
         self.assertEqual(context.exception.detail["code"], 5030)
+
+    def test_download_pdf_api_maps_not_ready_to_4090(self) -> None:
+        from fastapi import HTTPException
+
+        from backend.api import export as export_api
+        from backend.api.auth import TOKEN_SIGNING_KEY
+        from backend.service.auth import create_demo_token
+        from backend.service.export import PdfExportNotReadyError
+
+        token = create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
+        with patch.object(export_api, "download_pdf_export", side_effect=PdfExportNotReadyError("PDF export is not ready")):
+            with self.assertRaises(HTTPException) as context:
+                export_api.download_pdf_endpoint(
+                    export_id=1,
+                    authorization=f"Bearer {token}",
+                )
+
+        self.assertEqual(context.exception.status_code, 409)
+        self.assertEqual(context.exception.detail["code"], 4090)
 
 
 if __name__ == "__main__":

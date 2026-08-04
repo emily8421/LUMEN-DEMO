@@ -7,7 +7,7 @@ import {
   createDocument,
   deleteDocument,
   downloadDocumentMarkdown,
-  exportDocumentPdf,
+  exportAndDownloadDocumentPdf,
   getDocument,
   listDocLinks,
   listDocuments,
@@ -262,12 +262,9 @@ export function useDocuments({
       return;
     }
     void runAction('正在导出 PDF...', async () => {
-      const result = await exportDocumentPdf(token, selectedDocument.id);
-      if (result.status === 'done' && result.artifact_path) {
-        setNotice(`PDF 已生成：${result.artifact_path}`);
-        return;
-      }
-      setNotice(`PDF 导出任务 ${result.export_id}：${result.status}`);
+      const { blob, filename } = await exportAndDownloadDocumentPdf(token, selectedDocument.id);
+      triggerBrowserDownload(blob, filename);
+      setNotice(`已下载 PDF：${filename}`);
     });
   };
 

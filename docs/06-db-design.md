@@ -334,5 +334,5 @@ erDiagram
 ## 7. 待人工确认项
 
 - Phase1.5A 的 REQ-037 / REQ-038 已按不新增 DB 表完成；若后续需要批次表、目录表或长期导出产物表，必须先回到本文、`07`、`08/09` 修订契约。
-- PDF 导出（REQ-027）属于 Phase1.5B，已随 Sprint-18 落地 `lumen_doc_exports`、API-019 写入策略和 `tmp/pdf_exports` 首版产物路径；过期清理 job / 下载端点 / 异步队列如需扩展需另行设计。
+- PDF 导出（REQ-027）属于 Phase1.5B，已随 Sprint-18 落地 `lumen_doc_exports`、API-019 写入策略和 `tmp/pdf_exports` 首版产物路径；v1.7.0 已补下载端点并复用导出任务记录，不新增 DB 表；过期清理 job / 异步队列如需扩展需另行设计。
 - Phase2A 标签、反链与快速录入 DB 契约已实现；**Phase2B REQ-014 `lumen_ai_drafts` 已推进到 MVP 级已设计**（字段 / 约束 / 索引草案齐备，数据外发风险已接受 RG-008），migration 010 已落地（Sprint-19），后端 service / API / tests 已实现；**REQ-013/024 时间轴数据来源已定候选 A并随 task-030 本地实现（实时聚合不建表，migration 012 仅加时间索引，见 `docs/design/timeline.md` TL-C-001），运行态 API / Edge headless 浏览器 / 真实 PG 大数据性能 smoke 已通过**；**REQ-039 文档目录树（Phase2B 第三 slice）已落地 `lumen_folders` + `lumen_documents.folder_id` 契约：folder 后端核心、API-029 导入保留结构、API-038 单文档移动与前端文件管理器基础能力已实现；浏览器自动化 smoke 已补**。

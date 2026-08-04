@@ -11,8 +11,8 @@
 | 当前 Phase | **Phase2B（团队 MVP）进行中**（2026-07-30 切指针；RG-008 升 Go；Sprint-19 已完成；Sprint-20 已通过运行态 API smoke + Edge headless 浏览器 smoke） |
 | 交付物形态 | Demo / 个人可用 Alpha / 个人知识组织 |
 | 输入基线 | `docs/03-prd.md` §3、`docs/04-architecture.md`、`docs/05-tech-spec.md`、`docs/09-verification.md` |
-| 当前状态 | Phase1 Demo 已完成并已记录全量验收（Conditional Go）；Phase1.5A 已完成批量 / 文件夹导入（REQ-037）与 `.md` / ZIP 导出备份（REQ-038）；Phase2A 已完成 REQ-026 内链 / 反链、REQ-012 标签、REQ-025 快速录入三个 vertical slice 并通过 `09` 对应用例。Phase1.5B：**PDF 导出已随 Sprint-18 完成（API-019 / TC-P1-017 通过，v1.6.0）；Word-PDF / zhparser 仍待后续 RG**。**Phase2B（团队 MVP）范围已确认（2026-07-30）：REQ-014 首批核心已完成 v1.1.0（TC-P2-AI-001 通过；D-C-001 citation 同步延迟量化已补，当前不做异步 job）；REQ-013a/024 主题时间线第二 slice 已完成并发布为 v1.5.0（task-030，后端自动化验证 + frontend build + 运行态 API smoke + Edge headless 浏览器 smoke + push 后 CI 通过 + tag 已推送；真实 PG 大数据性能 smoke 已补）；Sprint-21 Doc-First UX 已完成**；**Sprint-22 文档目录树（folder-tree，REQ-039）后端核心 + API-029 `preserve_structure` 导入保留结构 + 前端文件管理器基础能力（含 API-038 单文档移动）已完成并验证通过；浏览器人工 smoke 已通过（2026-08-03 用户确认），浏览器自动化 smoke 已补（2026-08-04）**。 |
-| 最后更新 | 2026-08-04（Sprint-18 单文档 PDF 导出已完成：migration 013 `lumen_doc_exports` + API-019 `POST /api/export-pdf` + 前端文档详情入口 + TC-P1-017 通过；RG-006 PDF 导出技术环境评估通过；D-C-001 citation 同步延迟量化也已通过，当前不做异步 job） |
+| 当前状态 | Phase1 Demo 已完成并已记录全量验收（Conditional Go）；Phase1.5A 已完成批量 / 文件夹导入（REQ-037）与 `.md` / ZIP 导出备份（REQ-038）；Phase2A 已完成 REQ-026 内链 / 反链、REQ-012 标签、REQ-025 快速录入三个 vertical slice 并通过 `09` 对应用例。Phase1.5B：**PDF 导出已随 Sprint-18 完成（API-019 / TC-P1-017 通过，v1.6.0），并在 v1.7.0 补齐 PDF 下载端点 + 前端下载闭环；Word-PDF / zhparser 仍待后续 RG**。**Phase2B（团队 MVP）范围已确认（2026-07-30）：REQ-014 首批核心已完成 v1.1.0（TC-P2-AI-001 通过；D-C-001 citation 同步延迟量化已补，当前不做异步 job）；REQ-013a/024 主题时间线第二 slice 已完成并发布为 v1.5.0（task-030，后端自动化验证 + frontend build + 运行态 API smoke + Edge headless 浏览器 smoke + push 后 CI 通过 + tag 已推送；真实 PG 大数据性能 smoke 已补）；Sprint-21 Doc-First UX 已完成**；**Sprint-22 文档目录树（folder-tree，REQ-039）后端核心 + API-029 `preserve_structure` 导入保留结构 + 前端文件管理器基础能力（含 API-038 单文档移动）已完成并验证通过；浏览器人工 smoke 已通过（2026-08-03 用户确认），浏览器自动化 smoke 已补（2026-08-04）**。 |
+| 最后更新 | 2026-08-04（v1.7.0：Sprint-18 PDF 下载端点与前端下载闭环已补齐；API-019 `POST /api/export-pdf` + `GET /api/export-pdf/{export_id}/download` 可生成后直接下载；RG-006 PDF 导出技术环境评估通过；D-C-001 citation 同步延迟量化也已通过，当前不做异步 job） |
 
 ## Sprint 总览
 
@@ -38,7 +38,7 @@
 | Sprint-15（P1C·可选·分词·候选） | zhparser 中文分词接入 | 007（搜索质量收口） | 05、09 task-009 记录、docker | docker 镜像 + migration 006 | TC-P1-007 扩展 | 候选·可选·待确认（中成本；未编码） | — |
 | Sprint-16（P1.5·批量导入） | 多文件 + 文件夹拖拽导入（drop zone + 批量进度 + 标题前缀 + 冲突跳过） | 037（新增）+ 009 扩展 | 02 REQ-037、07 API-029 | frontend ContextPane drop zone + backend api/imports 批量 + service | TC-P1-015 | 已完成（自动化 + Chrome headless drop-zone smoke 通过） | — |
 | Sprint-17（P1.5A·导出备份） | 单文档 .md 下载 + 空间 ZIP 打包 | 038（新增） | 02 REQ-038、07 API-030 | frontend 下载入口 + backend api/export（zipfile）+ service | TC-P1-016 | 已完成（后端 tests + 端到端 HTTP smoke 通过） | — |
-| Sprint-18（P1.5B·PDF 导出） | 单文档 PDF 导出（Markdown → PDF，中文） | 027（从 Phase2 提前） | 02 REQ-027、07 API-019、05 RG-006、design/export-delivery | backend migration 013 + DocExport entity/ORM/repository + service + `POST /api/export-pdf`；frontend 文档详情入口 | TC-P1-017 | 已完成（v1.6.0；TC-P1-017 通过） | — |
+| Sprint-18（P1.5B·PDF 导出） | 单文档 PDF 导出（Markdown → PDF，中文）+ 下载闭环 | 027（从 Phase2 提前） | 02 REQ-027、07 API-019、05 RG-006、design/export-delivery | backend migration 013 + DocExport entity/ORM/repository + service + `POST /api/export-pdf` + `GET /api/export-pdf/{export_id}/download`；frontend 文档详情入口生成后直接下载 | TC-P1-017 | 已完成（v1.6.0 生成闭环；v1.7.0 下载闭环） | — |
 | Sprint-19（Phase2B·AI 润色·首个 vertical slice） | AI 润色 polish + 写作引用 citation（API-028）+ `lumen_ai_drafts` migration 010 | 014 | 02 REQ-014、03 Phase2B、04 Flow-005、05 TCD-010 / RG-004 / RG-008、06 lumen_ai_drafts、07 API-028、design/ai-polish | backend service/ai_polish + api + migration 010；frontend 写作侧边栏 | TC-P2-AI-001（后端 tests + prompt 边界审查 + UI smoke + D-C-001 citation 延迟量化） | **已完成（RG-008 Go，2026-07-30；前端闭环 PR#89–95 / v1.1.0，TC-P2-AI-001 live UI smoke 2026-07-31 通过；D-C-001 2026-08-04 量化通过，当前不做异步 job）** | — |
 | Sprint-20（Phase2B·**主题时间线**·第二 slice） | **主题时间线（关键词/标签驱动）** + 密度热条（API-033 `q`/`tag_ids` + actor + ratio） | 013a/024 | 02 REQ-013a/024、04 Flow-009、06 lumen_documents + tags + links、07 API-033、design/timeline | backend service/timeline + api（关键词命中复用 chunk.ts_vector）；frontend 主题时间线视图（搜索框 + 标签入口 + 密度热条 + 事件列表 + 逃生舱） | TC-P2-TL-001（后端 tests + Chrome/Edge smoke） | **已完成（task-030；后端自动化验证 + frontend build + 运行态 API smoke + Edge headless 浏览器 smoke 通过）** | tasks/task-030-timeline.md |
 | Sprint-21（Phase2B·Doc-First UX） | slice 3a 侧栏可隐藏/默认收起/三路唤出/记忆 + slice 3c 默认落地欢迎页+主区少容器视觉收口+documents 空态引导 + slice 3d 导入入口弹窗化（§9.5 基线） | 011 + 037（P1B 默认行为升级 + 导入入口形态，不新增 REQ） | design/frontend-interaction §9.5（§9.5.8 导入弹窗）、research/prototypes/2026-07-31-obsidian-inspired-*、09 TC-P1-014/TC-P1-015 | frontend App.tsx + app/{usePaneLayout,pane-layout-store,TopBar,ContextPane} + features/{Welcome,DocumentEmptyState,Documents,Import}Feature + styles | TC-P1-014 回归 +（3d）TC-P1-015 回归 + Chrome/Edge smoke | 已完成（3a/3c 已随 PR #97 合并；3d 本地编码完成并通过 build + 用户 smoke，TC-P1-015/014 回归通过；未 bump 版本 / 未提交） | tasks/task-021..025 |
@@ -489,7 +489,7 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 
 ## Sprint-18（P1.5B·PDF 导出 · 已完成）：单文档 PDF
 
-> **已完成（2026-08-04）**：REQ-027 单文档 PDF 导出从 Phase2 提前到 P1.5B，已完成 API-019、前端文档详情入口和 TC-P1-017。RG-006 的 ReportLab + 中文字体 + Poppler 渲染前置验证已关闭，产品样例 PDF 也已通过人工 PNG 检查、文本抽取与非白像素检查。
+> **已完成（2026-08-04）**：REQ-027 单文档 PDF 导出从 Phase2 提前到 P1.5B，已完成 API-019、前端文档详情入口和 TC-P1-017。RG-006 的 ReportLab + 中文字体 + Poppler 渲染前置验证已关闭，产品样例 PDF 也已通过人工 PNG 检查、文本抽取与非白像素检查。v1.7.0 已补 `GET /api/export-pdf/{export_id}/download` 和前端浏览器下载闭环。
 
 ### 目标
 单文档导出 PDF（Markdown → PDF，含中文、基础排版 / 页眉页脚）。属 REQ-027（从 Phase2 提前到 P1.5）。文档详情页"导出 PDF"。
@@ -498,18 +498,18 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 - `docs/02-srs.md` REQ-027、`docs/07-api-spec.md` API-019、`docs/05-tech-spec.md` RG-006
 
 ### 修改范围
-- 后端：migration 013 `lumen_doc_exports`、`DocExport` entity / ORM、Demo/Pg repository、`service/export.py` PDF 渲染与失败态、API-019 `POST /api/export-pdf`。
-- 前端：文档详情"导出 PDF"入口与 `exports.ts` API client。
+- 后端：migration 013 `lumen_doc_exports`、`DocExport` entity / ORM、Demo/Pg repository、`service/export.py` PDF 渲染 / 下载读取与失败态、API-019 `POST /api/export-pdf` + `GET /api/export-pdf/{export_id}/download`。
+- 前端：文档详情"导出 PDF"入口与 `exports.ts` API client；v1.7.0 起点击后直接触发浏览器 PDF 下载。
 - PDF 依赖：ReportLab 首版路线；`pypdf` / `pdfplumber` / `Pillow` 用于产物校验与 TC-P1-017。
 
 ### 验收标准
 - RG-006 选型 + 中文最小 PDF 导出验证通过。
-- API-019 可生成绑定指定版本的中文 PDF，失败态写入 `lumen_doc_exports` 并映射 5030。
-- 文档详情可发起 PDF 导出，中文标题 / 正文 / 列表 / 表格 / 引用基础排版正常。
+- API-019 可生成绑定指定版本的中文 PDF，失败态写入 `lumen_doc_exports` 并映射 5030；下载端点复验权限、任务状态与 artifact 目录边界。
+- 文档详情可发起 PDF 导出并直接下载，中文标题 / 正文 / 列表 / 表格 / 引用基础排版正常。
 - 后端 tests、frontend build、产品样例 PDF 人工与机器校验均通过。
 
 ### 禁止事项
-- 不新增未确认 PDF 库；不做异步队列 / 下载端点 / 过期清理 job / 水印 / Word-PDF 解析 / zhparser。
+- 不新增未确认 PDF 库；不做异步队列 / 过期清理 job / 水印 / Word-PDF 解析 / zhparser。
 
 ## Sprint 完成包与进度记录
 
@@ -531,7 +531,8 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 | Sprint-10（P1B）实现 | 2026-07-12 | 011 | 前端工作台系统化重设计：TopBar + Nav Rail + Context Pane + Workspace 三层布局；Context Pane 随文档 / 搜索 / 问答 / 术语变化；CSS token + pane / toolbar / list-row / inspector 分层；新增正式设计文档与 HTML 原型 | 本批 | `git diff --check`；`npm.cmd run build`；Chrome / Edge 900px headless smoke 通过，覆盖登录、四视图切换、文档新建 / 编辑 / 版本恢复 / 删除、Markdown 预览、搜索来源打开、问答、术语新建 / 删除确认；无全局横向滚动 | 不阻塞 Phase1 Demo closure；P1B 仅作为既有 Demo 的前端工作台体验收口；不引 router / 组件库 / 新 API | §2 / §5（TC-P1-014 通过） |
 | Sprint-16（P1.5A）实现 | 2026-07-15 | 037/009 | 批量 / 文件夹 `.md` / `.txt` 导入：`POST /api/import/batch`、逐文件结果、同名跳过、路径标题前缀；前端 drop zone、多文件 / 文件夹选择、批量摘要与逐条结果 | `e958001` | `git diff --check`；`python -m unittest tests.backend.test_imports tests.backend.test_import_api`（9 tests）；非 PG/embedding 后端业务测试 47 tests；`npm.cmd run build`；Chrome headless drop-zone smoke 通过 | 不改 DB schema、不引新依赖、不做 Word/PDF/PDF 导出；全量 PG/embedding 测试受本机环境限制未完成 | §5（TC-P1-015 通过） |
 | Sprint-17（P1.5A）实现 | 2026-07-16 | 038 | 单文档 `.md` 下载 + 空间 ZIP 导出备份：`GET /api/documents/{id}/export`（`text/markdown`）+ `GET /api/export/space`（标准库 `zipfile`，按权限过滤，不可见文档不进 ZIP）；前端文档详情"下载 `.md`" + TopBar"导出空间 ZIP" + `api.ts` blob 下载 | 本批 | `git diff --check`；`python -m unittest tests.backend.test_export`（13 tests）；回归 `test_imports` + `test_import_api`（9 tests）；`npm.cmd run build`；FastAPI TestClient 端到端 HTTP smoke（路由注册 / 异常 handler / 二进制 Response / 权限 4004 / 非法 format 4220 / 无 token 4001） | 不改 DB schema、不引依赖、不做 PDF；全量 PG/embedding 测试受本机环境限制未完成；浏览器按钮下载落盘的人工 smoke 可用 `scripts/run-sprint16-demo.ps1` 补 | §5（TC-P1-016 通过） |
-| Sprint-18（P1.5B）实现 | 2026-08-04 | 027 | 单文档 PDF 导出：migration 013 `lumen_doc_exports` + `DocExport` entity/ORM + Demo/Pg repository；API-019 `POST /api/export-pdf`；ReportLab Markdown 子集渲染（标题 / 段落 / 列表 / 表格 / 引用 / 页眉页脚）；前端文档详情"导出 PDF"入口；artifact 首版写入 `tmp/pdf_exports` | 本批 | `py_compile`；`tests.backend.test_export` 20/20 OK；backend discover 196 OK（skipped=2，embedding torch DLL 警告按 text-only fallback 继续）；`volta run --node 22.17.1 npm run build` 通过；样例 `tmp/pdf_exports/Sprint18 产品 PDF 验证-v1-export-1.pdf` 经 `pdftoppm` 渲染、人工 PNG 检查、`pdfplumber` 抽文本与 PIL 非白像素检查通过（`non_white_pixels=122856`） | 首版同步生成任务结果；不做异步队列 / 下载端点 / 过期清理 job / 水印 / Word-PDF 解析 / zhparser | §2 / §5（TC-P1-017 通过） |
+| Sprint-18（P1.5B）实现 | 2026-08-04 | 027 | 单文档 PDF 导出：migration 013 `lumen_doc_exports` + `DocExport` entity/ORM + Demo/Pg repository；API-019 `POST /api/export-pdf`；ReportLab Markdown 子集渲染（标题 / 段落 / 列表 / 表格 / 引用 / 页眉页脚）；前端文档详情"导出 PDF"入口；artifact 首版写入 `tmp/pdf_exports` | `ee0ba89` | `py_compile`；`tests.backend.test_export` 20/20 OK；backend discover 196 OK（skipped=2，embedding torch DLL 警告按 text-only fallback 继续）；`volta run --node 22.17.1 npm run build` 通过；样例 `tmp/pdf_exports/Sprint18 产品 PDF 验证-v1-export-1.pdf` 经 `pdftoppm` 渲染、人工 PNG 检查、`pdfplumber` 抽文本与 PIL 非白像素检查通过（`non_white_pixels=122856`） | 首版同步生成任务结果；下载端点已由 v1.7.0 补齐；仍不做异步队列 / 过期清理 job / 水印 / Word-PDF 解析 / zhparser | §2 / §5（TC-P1-017 通过） |
+| Sprint-18 PDF 下载闭环收尾 | 2026-08-04 | 027 | 在同步生成任务基础上补 `GET /api/export-pdf/{export_id}/download`；下载前复验 token 当前空间、源文档可见性、任务 done 状态与 artifact 目录边界；前端"导出 PDF"改为生成后直接下载，不再只提示本机路径 | 本批 | `.venv\Scripts\python.exe -m unittest tests.backend.test_export` 27/27 OK；`.venv\Scripts\python.exe -m unittest discover -s tests/backend -v` 203 OK（skipped=2，既有 embedding torch DLL 权限警告按 text-only fallback 继续）；`volta run --node 22.17.1 npm run build` 通过（259 modules）；运行态 demo API smoke 通过（OpenAPI 含下载路由，`export_id=1` 下载 9145 bytes，prefix `%PDF`） | 仍不做异步队列 / 过期清理 job / 水印 / Word-PDF 解析 / zhparser；系统 Python 缺 sqlalchemy，后端验证需用项目 `.venv` | §2 / §5（TC-P1-017 下载闭环补充） |
 | Sprint-12①（P1C）实现 | 2026-07-16 | 011 | 登录态持久化：`App.tsx` 将 `{token,userId,currentSpaceId}` 存 localStorage、启动恢复、切空间同步、token 失效（invalid token / 401）自动清除登出 | 本批 | `npm.cmd run build` 通过；刷新不掉线端到端 smoke 建议用 `scripts/run-sprint16-demo.ps1`（内存后端，不需 Docker）人工验证 | 不改 API / DB / 权限 / 依赖；seed 自索引（Sprint-12②）待做 | §5 |
 | Sprint-12②（P1C）实现 | 2026-07-16 | 011 | seed 自索引：`document.py` 加 `ensure_documents_indexed`（回填无 chunks 文档的分块 + embedding，幂等），`main.py` lifespan `init_db` 后调用 | 本批 | `python -m unittest tests.backend.test_seed_index`（4 tests）；回归 `test_document`（5 tests）；embedding 向量集成验证待本机 PG（沙箱受限，`_safe_embed` 降级时 chunks 仍写入、关键词搜索可用） | 不改 DB schema / 不改 seed SQL / 不引依赖；demo 内存模式 lifespan noop 不触发（PG 生产生效） | §5 |
 | Sprint-13（P1C）实现 | 2026-07-16 | 003 | 外部只读真实化（口径 B）：`permission.py` `can_write_document`（external 仅 owner 可写）+ `document.py` update/delete/restore 写校验（`DocumentAccessError`）+ `documents.py` 端点 403/4003 + `test_permission`/`test_external_write` | 本批 | `python -m unittest tests.backend.test_permission tests.backend.test_external_write`（3 个 can_write + 5 个 service 级拦截）；回归 44 tests 通过 | 不改 DB schema / 权限定义 / 可见性边界 / 依赖；team/private 写权限不变 | §5 |
@@ -549,7 +550,7 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 | Sprint-22 前端文件管理器与单文档移动补齐 | 2026-08-03 | 039/004 | 前端 `FolderTree` 基础树 + 受控右键菜单 + inline 新建/重命名 + 文档右键“移动到”；后端补 API-038 `PATCH /api/documents/{document_id}/folder`，只更新 `lumen_documents.folder_id`，不新增版本 / 不重建索引 | 已随 v1.4.0 发布；浏览器自动化 smoke 已由 v1.5.2 补齐 | `.venv\Scripts\python.exe -m unittest tests.backend.test_document tests.backend.test_folder tests.backend.test_imports tests.backend.test_import_api` 38/38 OK；`volta run --node 22.17.1 npm run build` 通过（255 modules）；运行态 OpenAPI 已出现 API-038，临时文档 API smoke 移动成功并清理；用户浏览器 smoke 确认通过；`scripts/smoke-folder-tree-browser.mjs` 通过（登录 → Documents → 目录树渲染 → UI 新建子文件夹 → UI 单文档移动 → API `folder_id` 后验） | 文档移动目标列表首版仅包含已加载 folder；无新增依赖 | §2 / §5 |
 | Sprint-20 主题时间线（API-033） | 2026-08-03 | 013a/024 | Candidate A 时间线：`backend/service/timeline.py` 实时聚合 documents / tag_links / doc_links / chunks；API-033 `GET /api/spaces/{id}/timeline`；migration 012 时间索引；前端时间线视图（关键词 + 标签入口 + 密度热条 + 事件列表）；修复 demo runtime 新建文档空时间戳导致运行态 timeline 无事件的缺口 | `3e23d78`（demo smoke hardening）+ `28843cb`（Sprint-20，`origin/main` / `v1.5.0` tag）；真实 PG 性能 smoke 已由 v1.5.2 补齐 | `.venv\Scripts\python.exe -m unittest tests.backend.test_timeline` 7/7 OK；`tests.backend.test_timeline tests.backend.test_document tests.backend.test_tags tests.backend.test_doc_links` 38/38 OK；backend discover 190 OK（skipped=2，embedding torch DLL 警告按 text-only fallback 继续）；`npm run build`（frontend）通过（259 modules）；运行态 API smoke 通过（OpenAPI 含 API-033，创建文档/标签，关键词 timeline、tag timeline、空 q 422）；Edge headless CDP 浏览器 smoke 通过（登录、切到时间线、搜索 Phoenix、事件列表命中，density=1）；真实 PG 大数据性能 smoke 通过（620 docs + 240 links，density_events=2100，returned=200，degraded=True，window=week，elapsed_ms=2677.61）；push 后 `Project Check` success（run 30830484733）；`v1.5.0` annotated tag 已推送并解引用到 `28843cb2af431e5fa33f7c8eeeb0ad1dc27dccb3` | `linked` actor 按设计为 `null`；无新增依赖 / 无 timeline 事件表 | §2 / §5 |
 
-> Sprint-8 后：pgvector / Embedding / LLM 已接入（RG-001/002/004 Go），基础 Web / ORM 栈为 Go（RG-005）。Phase1 全量验收结论为 Conditional Go（Demo closure）；仍移出 P1：真实 PDF/Word 解析、图片 OCR（REQ-010，RG-003 No-Go，后续阶段）。Sprint-9/10/12/13 为已完成 Demo 之上的前端体验与可用性收口；Phase1.5A 已完成批量入库与导出备份，Phase1.5B 已完成单文档 PDF 导出。Phase2A 已完成 REQ-026 / REQ-012 / REQ-025 三个 vertical slice；Sprint-11 仅保留为 P2 UI / WSG 实现前门禁草案，Phase2B 启动前需重新确认范围、进入 / 退出标准与验证包。
+> Sprint-8 后：pgvector / Embedding / LLM 已接入（RG-001/002/004 Go），基础 Web / ORM 栈为 Go（RG-005）。Phase1 全量验收结论为 Conditional Go（Demo closure）；仍移出 P1：真实 PDF/Word 解析、图片 OCR（REQ-010，RG-003 No-Go，后续阶段）。Sprint-9/10/12/13 为已完成 Demo 之上的前端体验与可用性收口；Phase1.5A 已完成批量入库与导出备份，Phase1.5B 已完成单文档 PDF 导出并补齐下载闭环。Phase2A 已完成 REQ-026 / REQ-012 / REQ-025 三个 vertical slice；Sprint-11 仅保留为 P2 UI / WSG 实现前门禁草案，Phase2B 启动前需重新确认范围、进入 / 退出标准与验证包。
 
 ---
 
@@ -559,6 +560,6 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 
 - Phase2A closure 已确认：REQ-026 内链/反链（fc2b869/6228f3f）+ REQ-012 标签（1e4cf48/d07688b）+ REQ-025 快速录入（f771e02/bad8fe5）均完成；个人知识组织「互联 / 组织 / 快录」闭环成形。
 - 是否正式进入 Phase2B：团队 MVP 首批范围已确认（REQ-014 AI 润色 / 写作引用 **已落地**；**REQ-013a 主题时间线 + REQ-024 已完成并通过运行态 API smoke + Edge headless 浏览器 smoke**；关联图 REQ-013b 愿景）、进入 / 退出标准、数据外发风险接受方式、`04/05` 设计补强和 `08/09` 验证包需随后续验收继续更新。
-- **P1.5B 收口**：单文档 PDF 导出（Sprint-18 / REQ-027）已完成 API-019 / TC-P1-017；真实 Word/PDF 文本提取、zhparser 中文分词增强仍需 RG / 选型 / 中文样例验证；不阻塞 Phase2A closure。
+- **P1.5B 收口**：单文档 PDF 导出（Sprint-18 / REQ-027）已完成 API-019 / TC-P1-017，v1.7.0 已补 PDF 下载端点 + 前端下载闭环；真实 Word/PDF 文本提取、zhparser 中文分词增强仍需 RG / 选型 / 中文样例验证；不阻塞 Phase2A closure。
 - **Sprint-0′ / APP-SIZE-C-011**：框架补课已完成，后续 App 主应用文件减压也已由 APP-SIZE-C-011 收口（App.tsx 741→306，v0.2.1）；继续保持新功能优先下沉到域 hook / feature。
 - **TC-P1-001~006/012 是否升级为「通过」**：09 已校准为「PG 仓储·Sprint-8 起真实化」（仍标条件通过）；是否进一步升级为「通过」待人工确认。

@@ -3,8 +3,8 @@
 两个端点横跨 ``/api/documents/{id}/export`` 与 ``/api/export/space``，故 ``router`` 取
 ``/api`` 前缀统一收纳导出子系统（与 ``backend/service/export.py``、``docs/design/export-delivery.md``
 Flow-007/008 对应）。API-030 成功路径返回二进制 ``Response``（绕过 ``{code,msg,data}`` JSON
-封装）；API-019 返回导出任务 JSON。错误路径仍 ``raise HTTPException(detail={"code","msg"})``，
-由 ``backend/main.py`` 全局 handler 统一封装。
+封装）；API-019 的创建路径返回导出任务 JSON，下载路径返回 PDF 二进制。错误路径仍
+``raise HTTPException(detail={"code","msg"})``，由 ``backend/main.py`` 全局 handler 统一封装。
 """
 
 from __future__ import annotations
@@ -18,9 +18,12 @@ from backend.service.document import DocumentNotFoundError, VersionNotFoundError
 from backend.service.export import (
     ExportError,
     PdfExportDependencyError,
+    PdfExportNotFoundError,
+    PdfExportNotReadyError,
     PdfExportOptions,
     PdfExportValidationError,
     create_pdf_export,
+    download_pdf_export,
     export_document_md,
     export_space_zip,
 )
@@ -151,6 +154,42 @@ if APIRouter is not None:
             },
         }
 
+    @router.get("/export-pdf/{export_id}/download")
+    def download_pdf_endpoint(
+        export_id: int,
+        authorization: str = Header(default=""),
+    ) -> Response:
+        payload = _read_token_payload(authorization)
+
+        try:
+            artifact = download_pdf_export(
+                repository=repository,
+                user_id=payload.user_id,
+                current_space_id=payload.current_space_id,
+                export_id=export_id,
+            )
+        except DocumentNotFoundError as exc:
+            raise HTTPException(status_code=404, detail={"code": 4004, "msg": "document not found"}) from exc
+        except PdfExportNotFoundError as exc:
+            raise HTTPException(status_code=404, detail={"code": 4004, "msg": str(exc)}) from exc
+        except PdfExportNotReadyError as exc:
+            raise HTTPException(status_code=409, detail={"code": 4090, "msg": str(exc)}) from exc
+        except PdfExportValidationError as exc:
+            raise HTTPException(status_code=422, detail={"code": 4220, "msg": str(exc)}) from exc
+        except ExportError as exc:
+            raise HTTPException(status_code=500, detail={"code": 5000, "msg": "failed to read PDF"}) from exc
+
+        return Response(
+            content=artifact.content,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": _content_disposition_attachment(
+                    artifact.filename,
+                    fallback_filename="document.pdf",
+                )
+            },
+        )
+
     def _read_token_payload(authorization: str):
         try:
             token = extract_bearer_token(authorization)
@@ -158,12 +197,12 @@ if APIRouter is not None:
         except TokenError as exc:
             raise HTTPException(status_code=401, detail={"code": 4001, "msg": "invalid token"}) from exc
 
-    def _content_disposition_attachment(filename: str) -> str:
+    def _content_disposition_attachment(filename: str, fallback_filename: str = "document.md") -> str:
         fallback = "".join(
             char if 32 <= ord(char) <= 126 and char not in {'"', "\\", "/", ";"} else "_"
             for char in filename
         ).strip()
-        fallback = fallback or "document.md"
+        fallback = fallback or fallback_filename
         return f'attachment; filename="{fallback}"; filename*=UTF-8\'\'{quote(filename, safe="")}'
 else:
     router = None

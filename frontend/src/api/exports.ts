@@ -32,6 +32,22 @@ export async function exportDocumentPdf(token: string, documentId: number, versi
   });
 }
 
+export async function downloadPdfExport(token: string, exportId: number): Promise<DownloadResult> {
+  return downloadBlob(`/api/export-pdf/${exportId}/download`, token, 'document.pdf');
+}
+
+export async function exportAndDownloadDocumentPdf(
+  token: string,
+  documentId: number,
+  versionNo?: number,
+): Promise<DownloadResult> {
+  const result = await exportDocumentPdf(token, documentId, versionNo);
+  if (result.status !== 'done') {
+    throw new Error(`PDF 导出任务 ${result.export_id} 尚未完成：${result.status}`);
+  }
+  return downloadPdfExport(token, result.export_id);
+}
+
 export function triggerBrowserDownload(blob: Blob, filename: string): void {
   const objectUrl = URL.createObjectURL(blob);
   const anchor = document.createElement('a');
