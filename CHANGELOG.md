@@ -6,6 +6,18 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v1.7.1（2026-08-04）
+
+**大文件夹导入修复 + REQ-018 Vault 兼容愿景文档落地。** 修掉 1000+ 文件夹导入失败（前端一次性 multipart 请求撞 Starlette `max_files/max_fields=1000`），并把 REQ-018「Obsidian Vault 兼容」愿景文档（双模式：导入数据库 / 仅本地挂载）补入 docs，作为远期 RG-009 立项依据。
+
+- 导入修复（PR #104，REQ-037 / REQ-039）：前端批量导入改为按 `IMPORT_BATCH_SIZE=50` **顺序**分批上传，逐批 try/catch（传输级失败记该批 failed、不中断后续批，部分成功语义），`onProgress` 实时更新进度；结果列表失败/跳过项全显、成功项截断前 50。纯前端，不改后端 API / DB。批大小取 50 而非 100-200：导入路径 embedding 同步（`pg_repository._safe_embed`，bge-small-zh CPU），单批过大有请求超时风险；50 把单批压到几秒级、part 数 ~103 远低于上限。
+- Vault 愿景文档（PR #105，REQ-018，[愿景]/待 RG-009）：采纳 + 精修中断会话草稿——`design/ingestion §2.3` Flow-D-014、`04` ADR-011/Flow-010、`05` RG-009/TCD-011、`06` lumen_vault_mounts、`07` API 口径、`design/frontend-interaction` 分区、`01/02/03` REQ-018 追溯；明确「数据库权威 + 个人本地连接器」双模式，补「浏览器硬天花板」约束（仅本地挂载内容后端读不到、无法进服务端 RAG，要进 RAG 必须 agent/桌面端 或 导入 DB）。
+- 状态同步：`08` Sprint-23A「候选·待编码」→「已编码（PR #104）」；`09` RISK-P1-008「待 Sprint-23A」→「✅ 已解决」。
+- 验证：`volta run --node 22.17.1 npm run build`（259 modules）；`.venv\Scripts\python.exe -m unittest tests.backend.test_imports tests.backend.test_import_api` 11 OK；PR #104 / #105 CI（project-check）通过。
+- 版本：同步 `VERSION` / `CHANGELOG.md` / `CHANGELOG-PLAIN.md` 到 `v1.7.1`。
+
+> PATCH 依据（`ai/project-rules.md` §2.8.1）：bug 修复 + 文档，不新增可演示能力、不改对外 API / DB 契约。
+
 ## v1.7.0（2026-08-04）
 
 **PDF 下载端点 + 前端下载闭环。** 在 Sprint-18 已完成的同步 PDF 生成基础上，补齐 REQ-027 / API-019 的 artifact 下载路径：前端点击"导出 PDF"后会生成 PDF 并直接触发浏览器下载，不再只提示本机 artifact 路径。
