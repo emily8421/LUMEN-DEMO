@@ -38,17 +38,22 @@ export function useImport({ token, runAction, setNotice, onImported }: UseImport
       return;
     }
     void runAction(`正在批量导入 ${importFiles.length} 个文本...`, async () => {
-      const result = await importBatchDocuments(token, {
-        files: importFiles,
-        permission: importDraft.permission,
-        preserveStructure: true,
-      });
+      const result = await importBatchDocuments(
+        token,
+        {
+          files: importFiles,
+          permission: importDraft.permission,
+          preserveStructure: true,
+        },
+        (done, total) => setNotice(`正在批量导入 ${done}/${total} 个文本（分批上传中）...`),
+      );
       const firstDocId = result.items.find((item) => item.parsed_doc_id != null)?.parsed_doc_id ?? null;
       setImportDraft(emptyImportDraft);
       setImportFiles([]);
       setLastImportItems(result.items);
       setImportInputKey((currentKey) => currentKey + 1);
-      const summary = `批量导入完成：成功 ${result.success_count}，失败 ${result.failed_count}，跳过 ${result.skipped_count}`;
+      const headline = result.failed_count > 0 ? '批量导入部分成功' : '批量导入完成';
+      const summary = `${headline}：成功 ${result.success_count}，失败 ${result.failed_count}，跳过 ${result.skipped_count}`;
       setLastImportSummary(summary);
       setNotice(summary);
       await onImported(firstDocId);
