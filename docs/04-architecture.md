@@ -105,7 +105,7 @@ flowchart LR
 | MOD-005 | 术语管理 | 空间级术语表、文档术语识别、问答口径对齐 | 术语 → 口径注入 | 不负责问答生成 | COMP-002 / 003 / 004 | [P1] | P1-已实现 | PostgreSQL 术语存储已接入；术语定义已注入真实 LLM Prompt | docs/design/term-management.md |
 | MOD-006 | 个人知识组织 | 标签体系、内部链接 + 反向链接、快速录入索引条目；时间轴 / 关联图留 Phase2B / 后续 | 文档 + 标签 / `[[文件名]]` / 轻量条目 → 标签聚合视图、反向链接索引、可检索条目 | 不负责文档内容生成 / 问答；不负责团队协作 | COMP-001 / 002 / 003 | [P2] | P2-已实现（TC-P2-LINK/TAG/QUICK-001 通过） | — | 导航交互见 docs/design/frontend-interaction.md §3 |
 | MOD-007 | 导出交付与写作增强（协作 / 推送延后） | 单文档 `.md` 下载、空间 ZIP 导出备份、单文档 PDF；Phase2B AI 润色 + 写作引用 | 文档 / 空间 → `.md` / ZIP / PDF；选中文本 / 写作上下文 → 润色建议 + 引用块 | 不负责实时协作（延后）、不负责检索 / 问答；P1.5A 不做 PDF | COMP-001 / 002 / 003 / 004（润色走 LLM） | [P1] / [P2] | P1.5A-已实现；P1.5B PDF 已实现；Phase2B AI 已实现 | `.md` / ZIP 已随 Sprint-17 完成；PDF 已随 Sprint-18 完成；AI 润色已闭环 | docs/design/export-delivery.md；docs/design/ai-polish.md |
-| MOD-008 | 存量接入 | Vault 挂载、录音转写、飞书同步 | — | — | — | [愿景] | 骨架 | — | 待技术验证 |
+| MOD-008 | 存量接入 | Vault 兼容（导入数据库 / 仅本地挂载）、录音转写、飞书同步 | 本地文件夹 / 外部源 → LUMEN 文档或个人本地来源 | 不把仅本地挂载内容默认写入团队知识库；不绕过文档权限进入共享 RAG | COMP-001 / 002 / 003 / 004 | [愿景] | 已确认方向·待技术验证 | DB 为正式知识库权威；本地挂载为个人连接器 | docs/design/ingestion.md |
 | MOD-009 | 情报分析（i2 精神） | 关联图↔时间轴联动、路径推理、人物网络、矛盾检测、证据地图、信号追踪 | — | — | — | [愿景] | 骨架 | — | docs/design/intelligence-analysis.md |
 | MOD-010 | 情报交付 | 对外只读简报、管理层摘要、分析包 A Kit | — | — | — | [愿景] | 骨架 | — | 待技术验证 |
 
@@ -133,6 +133,7 @@ flowchart LR
 | ADR-007 | 标签 + 反向链接索引用 PG 关系表 + `[[wikilink]]` 解析 | 已采用 / 已实现 | Phase2A | 复用现有 PG，少引图数据库（REQ-012 / 026） | 图数据库 / 全文索引 | 关系表 JOIN 成本；解析规则已按 Phase2A 最小版收敛 | TC-P2-TAG-001 / TC-P2-LINK-001 通过 |
 | ADR-008 | Phase1.5A `.md` / ZIP 导出备份走标准文件流 | 已实现 | Phase1.5A | 个人可用 Alpha 需要可迁出、可备份；标准库 ZIP 风险低、不引重依赖（REQ-038 / U-43） | 直接做 PDF / 数据库整库导出 | 快速落地且权限边界简单；不保留富格式排版 | TC-P1-016 通过 |
 | ADR-009 | Phase1.5A 批量 / 文件夹导入以标题相对路径保留目录感 | 已实现 | Phase1.5A | 用户要快速放入一批资料；不建真实目录表可避免 DB 迁移与范围扩张（REQ-037 / SC-007） | 新增 folder 表与真实目录树 | 低风险、快落地；后续若做真实目录需迁移 | TC-P1-015 通过 |
+| ADR-011 | Vault 兼容采用“数据库权威 + 个人本地连接器”双模式 | 已确认方向 / 待技术验证 | [愿景] | LUMEN 的搜索 / RAG / 权限 / 版本能力依赖 PostgreSQL + chunks；用户也需要低摩擦查看 Obsidian vault | 把本地文件夹直接当团队知识库唯一源；或强制全部导入 DB | 导入数据库获得完整知识库能力；仅本地挂载保留个人 / 当前设备边界，后续需本地授权、索引、同步和冲突设计 | REQ-018；RG-009 待补验证 |
 | ADR-010 | DB 权威运行态 + 衍生数据可重建 | 已接受 | Phase1+ | 保留 PostgreSQL 作为权限 / 版本 / 文档权威，同时要求 chunks / embedding / 反链索引 / 计数等派生数据可从权威内容与元数据重建 | `.md` / frontmatter 唯一权威；DB 全权威不设重建约束 | 避免多头权威并降低索引漂移 / 灾备风险；不声明已实现重建脚本 | `docs/decisions/ADR-010-db-authority-derived-data-rebuildability.md`；06 §1.1 |
 
 ## 4. 部署 / 运行拓扑约束
@@ -220,6 +221,7 @@ flowchart TB
 - **Flow-004 快速录入索引条目**（REQ-025，Phase2A）：轻量条目（标题 / 来源 / 摘要）→ draft / 新文档 / 追加文档 → 索引入库参与检索；走 Flow-002 过滤。
 - **Flow-005 AI 润色与写作引用**（REQ-014，Phase2B）：选中文本 → LLM 润色建议 / 检索引用块插入；复用 ADR-002 LLM adapter，候选 chunk 按权限过滤。
 - **Flow-006 批量 / 文件夹导入**（REQ-037，Phase1.5A；REQ-039 扩展）：多文件 / 文件夹选择 → 逐文件读取 `.md` / `.txt` → 成功项入库并切块 → 逐条返回成功 / 失败 / 同名跳过结果；Phase1.5A 兼容标题保留相对路径前缀，Phase2B `preserve_structure=true` 建 / 复用真实 folder 并回填 `folder_id`。
+- **Flow-010 Vault 兼容来源**（REQ-018，愿景·已确认方向）：用户选择本地 vault / 文件夹 → 二选一：A 导入数据库（复用 API-029 分批入库 + `lumen_folders` 保留目录结构，获得完整 LUMEN 权限 / 搜索 / RAG 能力）；B 仅本地挂载（内容留在本机，只在当前用户 / 当前设备左侧“本地挂载”分区可见，不默认进入团队空间、后端 RAG 或共享权限链）。
 - **Flow-007 `.md` / ZIP 导出备份**（REQ-038，Phase1.5A）：单文档详情 → 下载当前版本 `.md`；空间工具栏 → 查询当前用户可见文档 → 标准 ZIP 打包 `.md` → 下载；不可见文档不进入 ZIP。
 - **Flow-008 单文档导出 PDF**（REQ-027，Phase1.5B）：文档版本 → 创建导出任务 → ReportLab 渲染 Markdown 子集 → 写入本地 artifact → 返回 `{export_id,status,artifact_path}`；导出前受文档权限约束，导出库 / 字体不可用时返回 5030，不生成坏文件。
 - **Flow-009 主题时间线 / 密度热条**（REQ-013a / REQ-024，Phase2B）：文档时间字段 / 标签 / 链接 / chunk 命中 → 实时聚合时间线与密度提示；关联图 REQ-013b 仅保留骨架，留后续。

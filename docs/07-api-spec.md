@@ -301,6 +301,7 @@ sequenceDiagram
 - `/api/documents/{id}/polish`（API-028）：Phase2B 首批核心，**数据外发风险已接受（RG-008 Go）**，vertical slice 已定（polish 同步 / citation 首版同步），后端 + 前端已实现，TC-P2-AI-001 live UI smoke 2026-07-31 通过。
 - `/api/spaces/{id}/timeline`（API-033）：**主题时间线（REQ-013a 重定位）**·Phase2B 第二 slice·已实现（候选 A 实时聚合不建表；关键词/标签驱动 `q`/`tag_ids` + 标题 ILIKE/chunk.ts_vector 命中 + actor + 密度 ratio；TL-C-001..011 已确认，见 `docs/design/timeline.md`；task-030 本地自动化、运行态 API smoke、Edge headless 浏览器 smoke、真实 PG 大数据性能 smoke 均已通过）。
 - `/api/folders`（API-034..037）+ `/api/documents/{document_id}/folder`（API-038）：Phase2B 第三 slice 已实现（folder-tree，REQ-039），文件夹树查询 / 新建 / 移动·改名·删除 / 排序 + 单文档移动；folder 不独立设权限（FT-C-003），删非空 folder→4090（FT-C-010）；导入保留结构扩展 API-029 `preserve_structure` 已实现。
+- REQ-018 Vault 兼容暂无稳定服务端 API：导入数据库路径复用 API-029（建议未来前端分批上传，避免 multipart 1000 files/fields 限制）；仅本地挂载路径优先走浏览器 / 桌面本地连接器，本地内容默认不上传服务端、不进入团队 RAG。若 RG-009 后需要同步元数据，再新增 API。
 - `/api/spaces/push`：跨空间推送不进 Phase2B 首批，请求 / 响应待后续细化。
 - `/api/briefs/{token}`：简报隔离与有效期待愿景验证（REQ-022）
 
@@ -328,7 +329,8 @@ sequenceDiagram
 | REQ-013 / 024 | `GET /api/spaces/{id}/timeline`（API-033） | Phase2B 首批·第二 slice 主题时间线 / 密度热条·已实现（候选 A + TL-C-001..011 已确认，契约见 §3.9；运行态 API smoke / Edge headless 浏览器 smoke / 真实 PG 大数据性能 smoke 已通过） |
 | REQ-039 | `GET/POST /api/folders`、`PATCH/DELETE /api/folders/{folder_id}`、`POST /api/folders/reorder`、`PATCH /api/documents/{document_id}/folder`（API-034..038） | Phase2B 第三 slice（folder-tree）文档目录树：嵌套文件夹 CRUD / 移动 / 排序 + 单文档移动 + 导入保留结构（扩展 REQ-037 / API-029）；后端/API + 前端文件管理器基础能力已实现，浏览器自动化 smoke 已补 |
 | REQ-015 / 016 / 017 | 后续 Phase 接口骨架 | 推送 / 协作 / 移动端不进 Phase2B 首批 |
-| REQ-018..023 / 028..035 | 愿景接口骨架 | 技术验证通过后细化契约 |
+| REQ-018 | 无稳定服务端 API；导入数据库时复用 `POST /api/import/batch` | Vault 兼容：导入数据库走 API-029 并成为正式 LUMEN 文档；仅本地挂载为个人 / 当前设备连接器，默认不上传正文、不进入团队 RAG；技术验证通过后再决定是否新增元数据同步 API |
+| REQ-019..023 / 028..035 | 愿景接口骨架 | 技术验证通过后细化契约 |
 
 ## 5. API ↔ DB / Service / Test 交叉追溯
 

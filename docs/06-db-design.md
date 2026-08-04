@@ -34,7 +34,7 @@
 | lumen_folders | 文档目录树（嵌套文件夹） | [P2] | Phase2B·第三 slice·已实现（后端/API + 导入归属 + 单文档移动） | migration 011 已落地 + 后端 service/API/tests 已实现（task-027，19 folder + 45 回归 tests OK）；API-029 `preserve_structure` 已实现建/复用 folder + 回填 `folder_id`（task-028）；API-038 单文档移动 + 前端文件管理器基础能力已实现（task-029，后端 38 tests + frontend build OK；v1.5.2 浏览器自动化 smoke 已补） | REQ-039 |
 | lumen_doc_exports | 单文档导出 PDF 任务 | [P1] | Phase1.5B-已实现 | migration 013 已落地；DocExport entity/ORM + Demo/Pg repository 已接入 | REQ-027 |
 | lumen_push_copies | 跨空间推送只读副本 | [P2] | 骨架 | — | REQ-015 |
-| lumen_vault_mounts | Vault 挂载配置 | [愿景] | 骨架 | — | REQ-018 |
+| lumen_vault_mounts | Vault 挂载配置 / 本地连接器元数据 | [愿景] | 已确认方向·待技术验证 | 仅记录用户 / 设备 / 来源类型 / 授权状态等元数据候选；本地目录句柄、绝对路径与文件正文默认保留在客户端本地，不作为服务端 DB 权威内容 | REQ-018 |
 | lumen_audio_records | 录音转写记录 | [愿景] | 骨架 | — | REQ-019 |
 | lumen_brief_links | 对外只读简报链接 | [愿景] | 骨架 | — | REQ-022 |
 | lumen_external_sync | 外部源同步配置（飞书等） | [愿景] | 骨架 | — | REQ-028 |
@@ -229,7 +229,7 @@ LUMEN 采用 `docs/decisions/ADR-010-db-authority-derived-data-rebuildability.md
 ### [P2 后续] / [愿景] 表（骨架·待该阶段细化）
 
 - `lumen_push_copies`：跨空间只读副本与权限同步待后续 Phase 细化（REQ-015，不进 Phase2B 首批）。
-- `lumen_vault_mounts`：Vault 挂载（路径、账号绑定、只读索引）待愿景验证（REQ-018）。
+- `lumen_vault_mounts`：Vault 兼容（REQ-018）待愿景验证。设计方向为“数据库权威 + 个人本地连接器”：导入数据库的内容写 `lumen_documents` / `lumen_chunks` / `lumen_folders`；仅本地挂载的内容默认不落服务端正文，不进入团队权限链，服务端最多记录用户 / 设备 / 授权状态等非正文元数据，具体字段待 RG-009。
 - `lumen_audio_records`：录音转写记录待愿景验证（REQ-019）。
 - `lumen_brief_links`：对外简报（token、有效期、AI 可问不可看原文）待愿景验证（REQ-022）。
 - `lumen_external_sync`：外部源（飞书等）同步配置与摘要同步（愿景，REQ-028）。

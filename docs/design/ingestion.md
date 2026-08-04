@@ -10,12 +10,12 @@
 | 设计对象 | 内容导入子系统（MOD-003） |
 | 文档路径 | docs/design/ingestion.md |
 | 输入来源 | 02/03、04 §2 / §5.4（MOD-003 / Flow-006）、05（TCD-007、RG-002/003/007）、06（lumen_imports / lumen_chunks）、07（API-011 / API-029） |
-| 覆盖 REQ | REQ-009、REQ-010、REQ-037（Phase2B folder-tree 扩展 `preserve_structure`，见 REQ-039） |
-| 所属 Phase | [P1] + Phase1.5A 已完成；Phase1.5B / 后续保留骨架 |
+| 覆盖 REQ | REQ-009、REQ-010、REQ-037（Phase2B folder-tree 扩展 `preserve_structure`，见 REQ-039）；REQ-018 Vault 兼容愿景 |
+| 所属 Phase | [P1] + Phase1.5A 已完成；Phase1.5B / 后续 / 愿景保留骨架 |
 | 交付物形态 | Demo / 个人可用 Alpha |
 | 当前状态 | P1 已降级实现（`.md`/`.txt` + Embedding/pgvector 已落地；真实 Word/PDF/OCR 未实现）；Phase1.5A 批量 / 文件夹导入已完成并通过 TC-P1-015；Phase2B folder-tree 扩展 `preserve_structure=true` 已完成后端/API（task-028，真实 PG smoke 通过），前端文件管理器基础能力已由 task-029 补齐 |
-| 流程 ID | Flow-D-001（单文件导入主流水线）/ Flow-006（批量 / 文件夹导入，见 §2.2）/ Flow-D-012（导入保留目录结构，Phase2B 候选，见 `docs/design/folder-tree.md`） |
-| 最后更新 | 2026-08-03（folder-tree 导入扩展实现：API-029 `preserve_structure=true` 默认建/复用 `lumen_folders` + 回填 `folder_id`；`false` 保留标题前缀向后兼容） |
+| 流程 ID | Flow-D-001（单文件导入主流水线）/ Flow-006（批量 / 文件夹导入，见 §2.2）/ Flow-D-012（导入保留目录结构，Phase2B 候选，见 `docs/design/folder-tree.md`）/ Flow-D-014（Vault 兼容双模式，见 §2.3） |
+| 最后更新 | 2026-08-04（REQ-018 Vault 兼容方向确认：导入数据库 / 仅本地挂载双模式；仅本地挂载内容默认个人 / 当前设备可见，不写入团队知识库） |
 | 下游影响 | 08 Sprint-3、Sprint-16；09 TC-P1-009/010/015；07 API-011 / API-029 |
 
 ## 1. 职责
@@ -71,12 +71,40 @@ flowchart TB
   done --> summary
 ```
 
+### 2.3 Flow-D-014：Vault 兼容双模式（[愿景]，REQ-018）
+
+> 状态：已确认方向，待 RG-009 技术验证；不代表当前已实现。
+>
+> 已知天花板：浏览器 File System Access 句柄只活在浏览器进程、后端读不到，仅本地挂载内容无法进服务端 RAG / 全文搜索；要进 RAG 必须 (a) 本地 agent / 桌面端增量索引 或 (b) 导入数据库（见 §3 Vault 兼容策略）。
+
+1. 用户在 LUMEN 选择本地 Obsidian vault / Markdown 文件夹。
+2. 系统先做本地预检：文件数量、支持格式、总大小、目录层级、浏览器 / 桌面授权状态。
+3. 用户选择模式：
+   - **导入数据库**：复用 Flow-006 / API-029，按批次把 `.md` / `.txt` 写入 `lumen_documents`、`lumen_chunks`，并在 `preserve_structure=true` 时写入 `lumen_folders`。导入后获得完整 LUMEN 权限、搜索、RAG、标签、链接、版本与团队共享能力。
+   - **仅本地挂载**：文件正文仍留在本地文件夹；默认只对当前用户 / 当前设备可见；不写入团队空间、不进入服务端 RAG / LLM、不参与团队权限链。LUMEN 前端可在本地连接器中展示目录树、打开文件、做本地索引或按需导入单篇 / 子树。
+4. 左侧文件管理器视觉分区：上层“LUMEN 知识库”（数据库内容），下层“本地挂载”（个人本地来源）。两个区块用标题、图标 / 状态徽标、分隔线和不同空态文案区分；仅本地挂载条目不得伪装成团队文档。
+5. 挂载内容可升级为正式知识：用户可对单篇、文件夹或整 vault 执行“导入到 LUMEN”，此时转入数据库路径并接受权限选择。
+
+```mermaid
+flowchart TB
+  pick[选择本地 vault / 文件夹] --> preflight[本地预检: 数量 / 格式 / 授权]
+  preflight --> mode{用户选择}
+  mode -->|导入数据库| importdb[分批调用 API-029 + preserve_structure]
+  importdb --> dbdocs[lumen_documents + lumen_chunks + lumen_folders]
+  dbdocs --> full[完整权限 / 搜索 / RAG / 团队能力]
+  mode -->|仅本地挂载| local[本地连接器读取目录]
+  local --> personal[个人 / 当前设备可见]
+  personal --> promote[按需导入单篇 / 子树]
+  promote --> importdb
+```
+
 ## 3. 关键决策
 
 - **OCR 引擎**：PaddleOCR 仍为后续候选，当前 RG-003 No-Go；不得阻塞 Phase1.5A
 - **切块 / Embedding 参数与检索侧共用**：避免 train/serve 偏差（块大小、Embedding 维度必须一致）；Phase1 使用本机 `bge-small-zh`，写入 `vector(512)`
 - **批量失败隔离**：单文件解析失败记 `status=failed` + 原因，不阻塞其他文件；同名冲突默认 `skipped`
 - **目录策略**：Phase1.5A 不建真实目录表，`relative_path` 仅用于标题前缀 / API 返回 / 导入记录说明；**Phase2B folder-tree 扩展（推翻 ING-C-001，已实现 task-028）**：`preserve_structure=true` 建/复用 `lumen_folders` 保留真实目录结构，`=false` 退回标题前缀（向后兼容）
+- **Vault 兼容策略**：LUMEN 数据库仍是正式知识库权威；本地 Vault 仅挂载是个人连接器，不默认共享、不默认服务端索引；用户显式选择导入后才进入 DB 权限与 RAG 链。
 
 ## 4. 阶段增量
 
@@ -87,6 +115,7 @@ flowchart TB
 - `后续` 待 RG-003：图片 / 白板 OCR
 - `[愿景]` 待验证：录音转写入库（REQ-019，转写引擎与摘要质量待验证）
 - `[愿景]` 待验证：飞书自动同步（REQ-028）——外部源（飞书）文档更新后自动拉取摘要，原文留外部源，LUMEN 只更新索引条目摘要字段
+- `[愿景]` 已确认方向 / 待 RG-009：Obsidian Vault 兼容（REQ-018）支持“导入数据库”与“仅本地挂载”双模式；仅本地挂载保持个人 / 当前设备边界。
 
 ## 5. 与其他子系统交互
 
@@ -116,6 +145,7 @@ flowchart TB
 | Flow-D-001 导入主流水线 | REQ-009/010 | Sprint-3 | TC-P1-009/010 | 见上 | 降级实现 |
 | Flow-006 批量 / 文件夹导入 | REQ-037 | Sprint-16 | TC-P1-015 | 后端 tests + Chrome headless drop-zone smoke 已通过 | Phase1.5A-已实现 |
 | Flow-D-012 导入保留目录结构（folder-tree） | REQ-037/039 | Sprint-22 | TC-P2-FOLDER-001 + TC-P1-015 扩展 | `tests.backend.test_imports` / `test_import_api` + 临时 PG smoke：`preserve_structure` 建/复用 `lumen_folders` | Phase2B 第三 slice·后端/API 已实现；前端文件管理器待实现 |
+| Flow-D-014 Vault 兼容双模式 | REQ-018 | 后续候选 | TC-VISION-VAULT-001（待定义） | 浏览器 / 桌面本地目录授权 PoC + 1000+ 文件本地树 / 按需导入 smoke | 愿景·已确认方向·待技术验证 |
 
 ## 8. 待人工确认项
 
