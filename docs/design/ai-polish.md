@@ -147,6 +147,7 @@ readiness gate：
 |---|---|---|---|---|---|
 | polish 生成草稿 | REQ-014 | Sprint-19 | TC-P2-AI-001 | 后端 service tests + 2026-07-31 真 GLM live polish 200 | 通过 |
 | citation 引用可追溯 + 权限过滤 | REQ-014 | Sprint-19 | TC-P2-AI-001 | 后端越权过滤 tests + 2026-07-31 真 PG / 真 GLM citation sources 仅可见 chunk | 通过 |
+| citation 同步延迟量化（D-C-001） | REQ-014 | Sprint-19 follow-up | TC-P2-AI-001 | `scripts/smoke-ai-citation-latency.py --runs 3 --max-seconds 15`（真 PG + 真 GLM） | 通过（p50=5041.79ms，max=5914.06ms） |
 | 5030 / Mock 降级不编造 | REQ-014 | Sprint-19 | TC-P2-AI-001 | LLM 失败 / 未配置断路测试，失败不落库不编造 | 通过 |
 | 数据外发护栏（hash / 无 key） | NFR-004 | Sprint-19 | TC-P2-AI-001 | service tests + live DB 检查 `input_excerpt_hash` / `prompt_summary` / `cited_chunk_ids` | 通过 |
 | 侧边栏 UI smoke | REQ-014 | Sprint-19 | TC-P2-AI-001 + TC-P2-UI | 2026-07-31 alice 浏览器交互点击流：选区、草稿、sources、应用、版本 +1 | 通过 |
@@ -174,5 +175,5 @@ readiness gate：
 
 | ID | 待确认项 | AI 建议 | 建议依据 | 备选方案 | 取舍影响 / 阻塞关系 |
 |---|---|---|---|---|---|
-| D-C-001 | citation 是否需要异步 job 状态机 | 首版同步已通过 TC-P2-AI-001；仅当后续 citation 延迟量化显示不可接受再补 | 复用 RAG 已有同步链路；Phase2B 团队规模小；真 PG + 真 GLM live 链路已跑通 | 直接异步（增 `lumen_ai_drafts` job 状态 + `07 §3.6`） | 同步更简单；异步需改 07 状态机，不阻塞 Sprint-19；若后续大数据 / 慢 LLM 量化超阈值，再转独立任务 |
+| D-C-001 | citation 是否需要异步 job 状态机 | **关闭：首版继续同步，不做异步 job**；仅当后续生产级慢 LLM / 大来源集重新量化超阈值再评估 | `scripts/smoke-ai-citation-latency.py --runs 3 --max-seconds 15` 真 PG + 真 GLM 通过：sources=3，p50=5041.79ms，p95/max=5914.06ms；当前团队 MVP 可接受 | 直接异步（增 `lumen_ai_drafts` job 状态 + `07 §3.6`） | 同步链路简单且已量化通过；异步会扩大 API/DB/前端状态机，不值得为当前 MVP 引入 |
 | D-C-002 | polish「应用」是替换选区还是追加 | 替换选区（选中即替换）+ 保留版本可回滚 | 符合常见润色交互；版本历史兜底 | 仅追加 | 影响前端交互与 TC 步骤，Sprint-19 前确认 |
