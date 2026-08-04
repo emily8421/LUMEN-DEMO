@@ -6,6 +6,18 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v1.7.2（2026-08-04）
+
+**导入大规模 PG perf smoke 脚本 + RISK-P1-008 perf 量化。** 补一个可复现的真实 PostgreSQL + embedding 性能 smoke，量化批量导入在 PG 下的真实耗时，回填 `09` RISK-P1-008 的 perf 结论。
+
+- 脚本：新增 `scripts/smoke-import-pg-performance.py`，照 `smoke-timeline-pg-performance.py` 模式——直连 lumen-pg、隔离 fixture、真 `import_batch`（50/批顺序）、warmup embedding 模型、采样确认 `lumen_chunks.embedding` 写入、自动清理。CLI：`--documents`(默认 200) / `--batch-size` / `--preserve-structure` / `--max-seconds` / `--json-out` / `--keep-data`。
+- perf 实测（200 文档）：~41s、~205ms/doc、embedding 已写入；每批随 `list_documents` 去重略增（9.9→10.6s/批，+7%）。1000+ 文档预计数分钟——大规模 vault 的后台异步导入留后续。
+- 文档：`09` RISK-P1-008 把「PG perf 待测」替换为实测结论 + 脚本引用。
+- 验证：`python -m py_compile` 通过；`--documents 5`（逻辑）+ `--documents 200`（perf）两轮跑通，`embedding_written=True`。
+- 版本：同步 `VERSION` / `CHANGELOG.md` / `CHANGELOG-PLAIN.md` 到 `v1.7.2`。
+
+> PATCH 依据（`ai/project-rules.md` §2.8.1）：验证脚本 + 文档状态修正，不新增可演示能力、不改 API / DB 契约。
+
 ## v1.7.1（2026-08-04）
 
 **大文件夹导入修复 + REQ-018 Vault 兼容愿景文档落地。** 修掉 1000+ 文件夹导入失败（前端一次性 multipart 请求撞 Starlette `max_files/max_fields=1000`），并把 REQ-018「Obsidian Vault 兼容」愿景文档（双模式：导入数据库 / 仅本地挂载）补入 docs，作为远期 RG-009 立项依据。
