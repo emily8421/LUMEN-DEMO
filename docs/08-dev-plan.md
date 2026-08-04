@@ -32,8 +32,8 @@
 | Sprint-10（P1B） | 前端工作台系统化重设计 | 011（既有 P1 页面体验修正） | design/frontend-workspace-redesign、frontend-workspace-redesign-prototype | frontend 工作台骨架 + 密度 token + 四视图 Workspace | / TC-P1-014 | 已完成（构建 + Chrome / Edge 900px smoke 通过） | — |
 | Sprint-11（P2-UI-Gate / WSG 候选） | Phase2 前端 UI 实现前确认与计划冻结 | 012/013/014/025/026（P2 骨架候选，不新增 REQ） | 04 WSG 矩阵、05 §4.1、design/frontend-interaction §9.3、research/prototypes/2026-07-14-frontend-ui-reference-absorbed-prototype、09 TC-P2-WSG-001 + TC-P2-UI-001~005 | docs + 后续 frontend 实现范围冻结；Phase2A 已以三个 vertical slice 完成 | / TC-P2-WSG-001 + TC-P2-UI-001~005 | 静态评审条件通过；门禁口径（DF-C-001 已确认）：每个 UI slice 前重跑 UI / WSG 门禁 | — |
 | Sprint-0′（框架补课·候选） | 前端目录骨架 + 拆 App.tsx / styles.css；后端 repository 独立 + 清单例 hack | 011（结构收口，不新增 REQ） | web-fullstack-profile、04 §1.3、05 §4.1、本次审计 §四 / §五 | frontend `src/{app,features,components,api,state,styles}` + backend `repository/` | TC-P1-WSG 重测 + 既有 smoke 全绿；前端 build 绿、后端 42 service tests 过 | 已完成（4b hook 化暂缓·软阈值） | ae51210·3d02bb2·2924df4·0a67cfc·2e34c28·a33c536 |
-| Sprint-12（P1C·可用性 A·候选） | 登录态持久化 + seed 自索引修复 | 011（可用性收口，不新增 REQ） | 09 §5 Sprint-8 记录、本次审计 §三 | frontend `App.tsx` + backend seed / 启动钩子 | 待新增 TC-P1-015/016 | 候选·待确认（未编码） | — |
-| Sprint-13（P1C·权限·候选） | 外部只读权限真实化（EXTERNAL 写操作拦截） | 003（权限收口） | design/permissions、06、07 | backend `service/permission` + api | TC-P1-003 扩展 | 候选·待确认（未编码） | — |
+| Sprint-12（P1C·可用性 A） | 登录态持久化 + seed 自索引修复 | 011（可用性收口，不新增 REQ） | 09 §5 Sprint-8 记录、本次审计 §三 | frontend `App.tsx` + backend seed / 启动钩子 | 09 §5 描述性验收 + build / `test_seed_index` / `test_document` | 已完成（2026-07-16；Sprint-12①/②，见 §5 / `docs/09-verification.md` §5） | §5 |
+| Sprint-13（P1C·权限） | 外部只读权限真实化（EXTERNAL 写操作拦截） | 003（权限收口） | design/permissions、06、07 | backend `service/permission` + api | TC-P1-003 扩展 + `test_permission` / `test_external_write` | 已完成（2026-07-16；见 §5 / `docs/09-verification.md` §5） | §5 |
 | Sprint-14（P1C·导入·候选·需 RG） | 真实 Word/PDF 文本提取（REQ-009 真实化） | 009（导入真实化） | design/ingestion、05（RG 待评估）、本次审计 §二 | backend `service/imports` + 依赖 | TC-P1-009 扩展 | 候选·待确认（需选型 + RG；未编码） | — |
 | Sprint-15（P1C·可选·分词·候选） | zhparser 中文分词接入 | 007（搜索质量收口） | 05、09 task-009 记录、docker | docker 镜像 + migration 006 | TC-P1-007 扩展 | 候选·可选·待确认（中成本；未编码） | — |
 | Sprint-16（P1.5·批量导入） | 多文件 + 文件夹拖拽导入（drop zone + 批量进度 + 标题前缀 + 冲突跳过） | 037（新增）+ 009 扩展 | 02 REQ-037、07 API-029 | frontend ContextPane drop zone + backend api/imports 批量 + service | TC-P1-015 | 已完成（自动化 + Chrome headless drop-zone smoke 通过） | — |
@@ -58,7 +58,7 @@
 | Sprint-10（P1B）前端工作台重设计 | Sprint-9 + `frontend-workspace-redesign` 原型确认 | 继续局部样式微调导致返工；范围蔓延到组件库 / router | 可与 Phase2 tech-env-eval 并行 | 先按原型落地 Nav Rail + Context Pane + Workspace，不引新依赖 | M8 P1B 工作台体验收口 |
 | Sprint-11（P2-UI-Gate / WSG 候选）实现前门禁 | Sprint-10 + `frontend-interaction` §9.3 + 少容器清爽稿暂定确认 + WSG-001..006 草案 | UI 方向继续返工；跳过 WSG / UI-G 直接编码；范围蔓延到组件库 / router / 新 API / 图谱算法 | Phase2A 已完成；Phase2B 每个 UI slice 前重跑（DF-C-001 已确认） | Phase2A 已按三个 vertical slice 完成；门禁口径（DF-C-001 已确认）：每个 UI slice 前重跑 Page-ID / Flow-ID / TC / WSG 和 UI smoke 范围确认 | M9 P2 UI + WSG 实现前门禁 |
 | Sprint-0′（框架补课·候选） | Phase1 closure（Sprint-8/10）已完成 | 继续往 `App.tsx` / 全局 CSS / 后端 service 堆 P1.5 功能，导致更难拆 | 否（P1.5 全部前置） | 纯结构搬运、逻辑不动、每步 smoke；前端建目录骨架 + 拆 App.tsx / styles.css，后端 repository 独立 + 清单例 hack；**先于所有 P1.5 编码** | M9.5 框架对齐（WSG 闭环） |
-| Sprint-12~15（P1.5 可用性收口·候选） | Phase1 closure（Sprint-8/10）已完成 | 范围蔓延到 Phase2 高级功能；跳过收口直接做 Phase2 编码 | 可与 Phase2 tech-env-eval 并行评估 | 先做低成本收口（Sprint-12 登录持久化 / seed 自索引、Sprint-13 外部只读），再做重依赖项（Sprint-14 Word/PDF 需选型 + RG、Sprint-15 zhparser 可选）；**P1.5 优先于 Phase2 编码** | M10 日常可用（P1.5 收口） |
+| Sprint-12~15（P1.5 可用性收口·混合状态） | Phase1 closure（Sprint-8/10）已完成 | 范围蔓延到 Phase2 高级功能；跳过收口直接做 Phase2 编码 | 可与 Phase2 tech-env-eval 并行评估 | 低成本收口已完成（Sprint-12 登录持久化 / seed 自索引、Sprint-13 外部只读）；重依赖项仍为候选（Sprint-14 Word/PDF 需选型 + RG、Sprint-15 zhparser 可选） | M10 日常可用（Sprint-12/13 已完成；Sprint-14/15 候选） |
 | Sprint-19（Phase2B·AI 润色·首个 slice） | Phase2A closure + **RG-008 Go（后端通过）** + Sprint-11 UI/WSG 门禁重跑 | ~~数据外发护栏未落实~~（后端已落实：权限过滤 / 5030 / hash）；~~前端 half 待续~~ 前端已闭环（PR#89–95 / v1.1.0，TC-P2-AI-001 live UI smoke 2026-07-31 通过） | 否（首个 slice） | 先后端 polish/citation + migration 010，再前端写作侧边栏；复用 RAG / 术语 / LLM adapter | M11 Phase2B AI 润色可用 |
 | Sprint-20（Phase2B·**主题时间线**·第二 slice） | **Sprint-19 已落地** + folder-tree（Sprint-22）基础能力已完成 | 范围蔓延到关联图（REQ-013b）/ 因果推理（愿景） | 已完成（后端自动化验证 + frontend build + 运行态 API smoke + Edge headless 浏览器 smoke + 真实 PG 大数据性能 smoke 通过） | 数据来源候选 A 已落地（不建表，migration 012 仅加时间索引）；关键词命中复用 chunk.ts_vector；大集合降级阈值由单测覆盖；真实 PG smoke：620 docs + 240 links，density_events=2100，degraded=true，elapsed_ms=2677.61 | M12 Phase2B 主题时间线可用 |
 | Sprint-21（Phase2B·Doc-First UX·slice 3a + 3c + 3d） | Phase2B closure（Sprint-19）+ DF-C-001 门禁（每 slice 重跑）+ §9.5 基线用户确认 | 改 REQ-011 已验收默认行为 → 需 TC-P1-014 回归；栏 state 蔓延到全局；导入入口形态变化 → 需 TC-P1-015 回归 | 否（UI 布局 slice） | slice 3a：顶栏图标唤出 + Ctrl+B/R + localStorage 记忆；先左目录后右栏 Inspector。slice 3c：home 欢迎引导页（默认落地）+ 主区少容器视觉收口 + 正文限宽 + documents 空态引导/返回。slice 3d：导入区从 ContextPane 常驻 section 迁到 DocumentsFeature toolbar 触发的居中 modal，复用 `useImport` / API-029，不动骨架/后端/API。**进展（2026-08-01）：3a/3c/3d 编码完成，build 绿，用户 smoke + TC-P1-014/015 回归通过**；3b 单列阅读/编辑另行启动前需先拆 inspector | M13 Doc-First 布局可用 |
@@ -338,7 +338,7 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 - 不引入 react-router / 组件库 / 全局状态库 / 新依赖。
 - 不得一次提交全部拆分；按「Shell → features → api / styles → repository」分多个小提交，每个跟 smoke。
 
-## Sprint-12（P1C·可用性收口 A · 候选）：登录态持久化 + seed 自索引修复
+## Sprint-12（P1C·可用性收口 A · 已完成）：登录态持久化 + seed 自索引修复
 
 > **已完成（2026-07-16）**：① 登录态持久化（`App.tsx` localStorage，刷新不掉线、token 失效自动登出）；② seed 自索引（`document.py` `ensure_documents_indexed` 幂等回填 + `main.py` lifespan 启动调用）均已实现并验证。
 
@@ -364,7 +364,7 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 - 不把 token 与敏感信息写入不可控存储；不新增 API / DB / 权限模型。
 - 不扩大到其他 P1.5 项。
 
-## Sprint-13（P1C·可用性收口 B · 候选）：外部只读权限真实化
+## Sprint-13（P1C·可用性收口 B · 已完成）：外部只读权限真实化
 
 > **已完成（2026-07-16）**：口径 B——external 文档仅 owner 可写（update/delete/restore 拦截非 owner，403/4003），team/private 维持"可见即可写"；读/搜/问答不变。`permissions.md` 原仅定义读、未定义写，本 Sprint 按 B 补写口径并回写 `permissions.md §3/§7`。
 

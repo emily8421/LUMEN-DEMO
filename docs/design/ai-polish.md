@@ -145,13 +145,13 @@ readiness gate：
 
 | 设计点 | 关联 REQ | Sprint / Task | TC | 验证方式 | 状态 |
 |---|---|---|---|---|---|
-| polish 生成草稿 | REQ-014 | Sprint-19 | TC-P2-AI-001 | 后端 tests（service + LLM Mock / 真实） | 待实现 |
-| citation 引用可追溯 + 权限过滤 | REQ-014 | Sprint-19 | TC-P2-AI-001 | 后端 tests（越权 chunk 不进 prompt / 不返回） | 待实现 |
-| 5030 / Mock 降级不编造 | REQ-014 | Sprint-19 | TC-P2-AI-001 | LLM 断路测试 | 待实现 |
-| 数据外发护栏（hash / 无 key） | NFR-004 | Sprint-19 | TC-P2-AI-001 | prompt 边界人工审查 + 字段检查 | 待实现 |
-| 侧边栏 UI smoke | REQ-014 | Sprint-19 | TC-P2-AI-001 + TC-P2-UI | Chrome / Edge smoke（Phase2B 门禁重跑后） | 待实现 |
+| polish 生成草稿 | REQ-014 | Sprint-19 | TC-P2-AI-001 | 后端 service tests + 2026-07-31 真 GLM live polish 200 | 通过 |
+| citation 引用可追溯 + 权限过滤 | REQ-014 | Sprint-19 | TC-P2-AI-001 | 后端越权过滤 tests + 2026-07-31 真 PG / 真 GLM citation sources 仅可见 chunk | 通过 |
+| 5030 / Mock 降级不编造 | REQ-014 | Sprint-19 | TC-P2-AI-001 | LLM 失败 / 未配置断路测试，失败不落库不编造 | 通过 |
+| 数据外发护栏（hash / 无 key） | NFR-004 | Sprint-19 | TC-P2-AI-001 | service tests + live DB 检查 `input_excerpt_hash` / `prompt_summary` / `cited_chunk_ids` | 通过 |
+| 侧边栏 UI smoke | REQ-014 | Sprint-19 | TC-P2-AI-001 + TC-P2-UI | 2026-07-31 alice 浏览器交互点击流：选区、草稿、sources、应用、版本 +1 | 通过 |
 
-正式验收证据以 `09-verification.md` 为准。
+正式验收证据以 `09-verification.md` 为准。2026-08-04 状态同步：本节仅把 `09` 已记录的 TC-P2-AI-001 通过事实同步回设计追溯表，不新增验收目标。
 
 ## 8. 与其他子系统交互
 
@@ -174,5 +174,5 @@ readiness gate：
 
 | ID | 待确认项 | AI 建议 | 建议依据 | 备选方案 | 取舍影响 / 阻塞关系 |
 |---|---|---|---|---|---|
-| D-C-001 | citation 是否需要异步 job 状态机 | 首版同步，实测延迟过高再补 | 复用 RAG 已有同步链路；Phase2B 团队规模小 | 直接异步（增 `lumen_ai_drafts` job 状态 + `07 §3.6`） | 同步更简单；异步需改 07 状态机，不阻塞 Sprint-19 启动 |
+| D-C-001 | citation 是否需要异步 job 状态机 | 首版同步已通过 TC-P2-AI-001；仅当后续 citation 延迟量化显示不可接受再补 | 复用 RAG 已有同步链路；Phase2B 团队规模小；真 PG + 真 GLM live 链路已跑通 | 直接异步（增 `lumen_ai_drafts` job 状态 + `07 §3.6`） | 同步更简单；异步需改 07 状态机，不阻塞 Sprint-19；若后续大数据 / 慢 LLM 量化超阈值，再转独立任务 |
 | D-C-002 | polish「应用」是替换选区还是追加 | 替换选区（选中即替换）+ 保留版本可回滚 | 符合常见润色交互；版本历史兜底 | 仅追加 | 影响前端交互与 TC 步骤，Sprint-19 前确认 |

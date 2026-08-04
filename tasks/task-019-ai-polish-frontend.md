@@ -47,7 +47,7 @@
 ## 验证包
 
 - **自动门禁**：`volta run --node 22.17.1 npm run build`（tsc + vite）绿。
-- **浏览器 UI smoke（TC-P2-AI-001）**：选区→polish→草稿、citation→sources、应用→版本回退、5030/无来源/只读提示。**需 PG+LLM 运行栈**（本会话 Docker/PG 已停），列为待跑。
+- **浏览器 UI smoke（TC-P2-AI-001）**：选区→polish→草稿、citation→sources、应用→版本回退、5030/无来源/只读提示。2026-07-31 已用真 PG + 真 GLM live UI smoke 跑通，证据见 `docs/09-verification.md` TC-P2-AI-001 / §5。
 - WSG：App.tsx 231→~234、useDocuments 270→~282、DocumentsFeature 268→~283（均 < 300；重 UI 在独立 AiPolishFeature）。
 
 ## 禁止事项
@@ -70,13 +70,13 @@
 - [x] AiPolishFeature.tsx + ai-polish.css（侧边栏：mode 切换 + instruction + 触发 + 草稿预览 + sources + 应用/丢弃 + 5030/无来源/只读提示）
 - [x] 接线（api.ts / useDocuments.handleApplyPolishedContent / DocumentsFeature / WorkspaceMain / App / main.tsx）+ useTextareaSelection（WSG 抽出）
 - [x] build 验证绿
-- [ ] 浏览器 UI smoke（TC-P2-AI-001，待 PG+LLM 栈起来）
+- [x] 浏览器 UI smoke（TC-P2-AI-001：真 PG + 真 GLM live 实跑通过）
 
 ### 验证结果（2026-07-31）
 
 - `volta run --node 22.17.1 npm run build`（tsc -b + vite build）→ **exit 0**，239 modules，1.06s。类型检查 + 构建均通过。
 - WSG：App.tsx 244 / useDocuments.ts 291 / DocumentsFeature.tsx 297（均 < 300；DocumentsFeature 因接线一度到 306，已抽 `useTextareaSelection` 降回 297）/ 新文件均小（AiPolishFeature 157、useAiPolish 162、aiPolish.ts 53、ai-polish.css 119、useTextareaSelection 24）。
-- **浏览器 UI smoke（TC-P2-AI-001）待跑**：需 PG+LLM 运行栈（本会话 Docker/PG 已停）。启动栈后补：选区→polish→草稿、citation→sources、应用→版本回退、5030/无来源/只读提示。
+- **浏览器 UI smoke（TC-P2-AI-001）通过**：2026-07-31 真 PG + 真 GLM live 实跑通过。覆盖 alice 建文档、polish 200、citation 200 且 sources 仅可见 chunk、应用 PUT 后版本 v1→v2、越权访问 4004、草稿 hash / 摘要留存护栏；交互点击流覆盖选区→polish 草稿预览→citation sources→应用替换选区 + 版本 +1。
 
 ### 实现偏差（待回写 design §9）
 
