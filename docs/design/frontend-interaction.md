@@ -11,7 +11,7 @@
 | 设计对象 | 前端交互与桌面端界面（COMP-001） |
 | 文档路径 | docs/design/frontend-interaction.md |
 | 输入来源 | 03、04 §1.2 / §5（Flow-001/002/006/007/008）、05、07、08、09；`docs/design/ingestion.md`；`docs/design/export-delivery.md`；`docs/design/frontend-experience-brief.md`；`docs/research/2026-07-13-ui-prototype-exploration.md`；`docs/research/prototypes/2026-07-14-frontend-ui-reference-absorbed-prototype.html` |
-| 覆盖 REQ | P1：REQ-001..011、REQ-036；Phase1.5A：REQ-037/038；Phase1.5B：REQ-027（入口待 RG-006）；Phase2A 已实现追溯：REQ-012/025/026；Phase2B UI 候选追溯：REQ-013/014/024（仅作实现前门禁草案，不新增 REQ） |
+| 覆盖 REQ | P1：REQ-001..011、REQ-036；Phase1.5A：REQ-037/038；Phase1.5B：REQ-027（RG-006 已 Go，入口待 Sprint-18 实现）；Phase2A 已实现追溯：REQ-012/025/026；Phase2B UI 候选追溯：REQ-013/014/024（仅作实现前门禁草案，不新增 REQ） |
 | 所属 Phase | [P1] 已实现基线 + Phase1.5A 已实现交互 + Phase2A 已实现基线 + Phase2B UI Gate 草案 |
 | 交付物形态 | Demo / 个人可用 Alpha |
 | 当前状态 | P1-已实现；P1A / P1B 前端体验收口已实现并通过构建与 Chrome / Edge 900px smoke；Phase1.5A 批量导入与 `.md` / ZIP 导出交互路径已实现并通过 TC-P1-015/016；P2 少容器清爽稿作为 Phase2B 启动前 UI / WSG 门禁候选保留；Phase2A 已完成（REQ-026/012/025，TC-P2-LINK/TAG/QUICK-001 通过）；**Phase2B 首批 REQ-014 AI 润色/写作引用 vertical slice 已闭环（PR#89–95 / v1.1.0，TC-P2-AI-001 live UI smoke 2026-07-31 通过）**，时间轴（REQ-013/024）为第二 slice 待启动 |
@@ -271,7 +271,7 @@ sequenceDiagram
 | Phase1 Demo `[P1]` | P1-已实现 | 覆盖 P1 桌面端页面、核心用户流、状态与权限呈现；RAG 路径已真实化，PDF/OCR 仍按降级提示 |
 | P1A 结构优化 `[P1]` | P1A-已实现 | 仅修正既有 P1 前端体验：导航 / 视图聚焦、右栏拆分、桌面 768px+ 不破版、组件拆分；不新增业务 REQ；构建与 Chrome / Edge 900px smoke 通过 |
 | Phase1.5A `[P1]` | UI 路径已实现 | 批量 / 文件夹导入复用 Context Pane 导入区，增加 drop zone、多文件 / 文件夹选择、批量进度与逐条结果；导出复用文档详情 / 空间工具栏，增加 `.md` 下载与空间 ZIP 导出入口；TC-P1-015/016 已通过 |
-| Phase1.5B `[P1]` | 入口候选·待 RG-006 | PDF 导出入口可预留但默认禁用 / 隐藏；RG-006 未通过前不得实现或承诺中文 PDF |
+| Phase1.5B `[P1]` | 入口候选·RG-006 Go | PDF 导出入口可进入 Sprint-18；实现前仍不得承诺 API-019 已可用，需补中文 PDF、失败态和权限验收 |
 | Phase2A `[P2]` | 已实现最小闭环 | 标签、内链 / 反链、快速录入已完成并通过 TC-P2-TAG/LINK/QUICK-001；经典 / 探索双模式等更大 UI 方向仍按候选处理，不自动扩大 Phase2A 范围 |
 | Phase2B `[P2]` | **范围已确认·部分实现（2026-08-04）** | AI 润色 / 写作引用（REQ-014 首批核心，已落地）、**主题时间线 / 密度热条（REQ-013a/024 第二 slice·PG-P2-008 已实现，候选 A + 关键词/标签驱动 + actor + 密度 ratio，TL-C-001..011 已确认；运行态 API smoke / Edge headless 浏览器 smoke / 真实 PG 大数据性能 smoke 已通过）**；数据外发已接受（RG-008）、AI 降级 5030 已定 |
 | 愿景产品 `[愿景]` | 骨架·待技术验证 | 承接 `docs/design/frontend-experience-brief.md`：受限局部情报墙、证据地图、矛盾检测、路径推理等仅作为愿景方向；不得作为全空间默认首页，待情报分析技术验证与权限边界设计后再细化 |

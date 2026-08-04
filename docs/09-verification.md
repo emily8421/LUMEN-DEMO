@@ -44,7 +44,7 @@
 | TC-P1-014 | REQ-011 P1B 工作台重设计 | TopBar + Nav Rail + Context Pane + Workspace 三层布局；Context Pane 随视图变化；900px 桌面宽度不横向破版；信息密度达标；P0/P1A 能力不回退 | [P1] | 通过（构建 + Chrome / Edge 900px smoke）；**Sprint-21 slice 3a/3b/3c/3d 回归通过**（栏默认收起 + 首页默认落地 + documents 空态/返回 + 导入入口迁移 + 3b 单列阅读/编辑/并排 + 顶栏快速录入/头像 + inspector 版本/链接/标签/AI tabs / 900px 不回退，2026-08-01 用户本地 smoke 确认） |
 | TC-P1-015 | REQ-037 批量导入 | 拖入文件夹 / 多文件后全部 `.md`/`.txt` 入库可搜可问答；标题保留路径前缀；同名跳过（**Phase2B folder-tree 扩展**：`preserve_structure=true` 保留真实目录结构，见 TC-P2-FOLDER-001） | [P1] | 通过（Sprint-16 自动化 + Chrome headless drop-zone smoke）；**Sprint-21 slice 3d 导入弹窗入口形态回归通过**（2026-08-01 用户 smoke 确认）；**Phase2B `preserve_structure` 后端/API 扩展通过**（task-028，2026-08-03）；前端文件管理器基础能力已实现并通过用户浏览器 smoke（2026-08-03），浏览器自动化 smoke 已补（2026-08-04，见 TC-P2-FOLDER-001） |
 | TC-P1-016 | REQ-038 导出备份 | 文档详情下载 `.md`；空间导出 ZIP 含可见文档、权限过滤 | [P1] | 通过（Sprint-17 后端 tests + 端到端 HTTP smoke） |
-| TC-P1-017 | REQ-027 单文档 PDF | 选型 + 中文 PDF 导出验证（RG-006）；文档详情导出 PDF 中文正常 | [P1] | P1.5B 草案·待 RG-006（Sprint-18） |
+| TC-P1-017 | REQ-027 单文档 PDF | 选型 + 中文 PDF 导出验证（RG-006）；文档详情导出 PDF 中文正常 | [P1] | RG-006 已 Go；Sprint-18 编码与产品验收待完成 |
 
 > 状态说明：Sprint-2~6 按**降级口径**验收（原内存 `demo_repository`）；Sprint-7/8 真实化后 RAG 已走真实 LLM（GLM-5.2）+ 向量召回（pgvector），存储切到 PostgreSQL（见 §5 Sprint-7/8 记录）。仍降级的：真实 PDF/Word 解析、OCR（RG-003，后续阶段）。search 已在 task-009 升级为 hybrid（关键词 / ts_vector / pgvector 语义召回），zhparser 为可选回退。「条件通过」= 当前实现满足 Demo 级别验收；详见 §6 与 `docs/05-tech-spec.md §5.1`。 TC-P1-013 / TC-P1-014 为 REQ-011 体验收口增量，不改变 Phase1 Demo closure 结论。**2026-07-15 标注校准**：TC-P1-001~006/012 原标「降级口径·内存」，因运行时仓储自 Sprint-8 起为 `repository = PgRepository()`（内存降级已解除），已校准为「PG 仓储·Sprint-8 起真实化」；是否进一步将这些 TC 升级为「通过」待人工确认（见 `08` 待确认项）。
 
@@ -70,9 +70,9 @@
 | TC-P1-014 | REQ-011 | P1B 工作台重设计实现 + Chrome / Edge 桌面；Sprint-21 slice 3a/3c/3d 回归覆盖栏显隐、首页默认落地、documents 减框、空态引导与返回、导入入口迁移后栏显隐 / 900px 不回退 | ① 登录后检查 TopBar + Nav Rail + Context Pane + Workspace 三层布局；② 切换文档 / 搜索 / 问答 / 术语并确认 Context Pane 随视图变化；③ 在 900px 宽度完成文档、搜索、问答、术语主流程；④ 检查搜索首屏 ≥5 条结果、术语首屏 ≥8 条、编辑区 ≥12 行；⑤ 回归 Markdown 渲染、来源点击、删除 / 恢复二次确认；⑥ Sprint-21 追加确认首页非空、左目录展开后主区不消失、空态「展开左目录 / 新建文档」可用、文档页 / 新建态「返回」回到空态；⑦ 3d 追加确认导入入口迁移不破坏栏显隐与 900px 布局 | 工作台布局与 `frontend-workspace-redesign` 原型一致；任务聚焦，不显示无关大卡片；900px 无全局横向滚动；P0/P1A 能力不回退；Sprint-21 追加的默认落地、空态与导入入口迁移不造成主体空白或三栏消失 | `npm.cmd run build` 通过；Chrome / Edge headless smoke（900px）通过，覆盖登录、四视图切换、文档新建 / 编辑 / 版本恢复 / 删除、Markdown 预览、搜索来源打开、问答、术语新建 / 删除确认；Sprint-21：用户本地 Chrome/Edge smoke + TC-P1-014 回归通过（2026-08-01）；3d：`volta run --node 22.17.1 npm run build` 通过 + 用户 smoke 确认导入迁移后回归通过（2026-08-01） | 通过（含 Sprint-21 3a/3c/3d 回归） |
 | TC-P1-015 | REQ-037 | 多个 `.md` / `.txt` 文件或文件夹；Sprint-21 slice 3d 入口形态改为 Documents toolbar「导入」→ 居中 modal | 拖入文件夹 / 多文件后批量导入；3d 追加检查 modal 打开 / 关闭 / 文件选择 / 权限 / 逐条结果 / 导入成功刷新；Phase2B 扩展追加检查 `preserve_structure=true/false` | 全部入库可搜可问答；P1.5A 平铺模式标题保留路径前缀；同名跳过；入口迁移不改变 API-029；Phase2B `preserve_structure=true` 时建/复用真实 folder 并回填 `folder_id`，`false` 保持标题前缀兼容 | `tests/backend/test_imports.py`（批量成功、失败隔离、同名跳过、可搜可问答、preserve_structure 默认保留结构、同名文件跨 folder 共存）；`tests/backend/test_import_api.py`（API-029 响应契约 + folder_id）；`npm.cmd run build`；Chrome headless drop-zone smoke（历史）；Sprint-21 3d：`volta run --node 22.17.1 npm run build` 通过 + 用户 smoke 确认 modal 入口形态回归通过（2026-08-01）；task-028：临时 PG import smoke 通过（2026-08-03）；task-029：用户浏览器 smoke 确认文件管理器基础能力通过（2026-08-03）；v1.5.2：`scripts/smoke-folder-tree-browser.mjs` 通过（2026-08-04） | 通过（含 3d 入口形态回归 + Phase2B 后端/API 扩展 + 前端文件管理器用户 smoke + 浏览器自动化 smoke） |
 | TC-P1-016 | REQ-038 | 当前空间存在多篇可见 / 不可见文档 | 文档详情下载 `.md`；空间导出 ZIP | 单文档 `.md` 内容正确；ZIP 只含可见文档 | `tests/backend/test_export.py`（13 tests：单文档可见 / 不可见 / 指定版本、ZIP 只含可见 / 空空间 / 路径前缀 / 防穿越 / 非成员）+ FastAPI TestClient 端到端 HTTP smoke（路由注册 / 异常 handler / 二进制 Response / 不可见 4004 / 非法 format 4220 / 无 token 4001） | 通过 |
-| TC-P1-017 | REQ-027 | RG-006 已 Go / Conditional Go；当前用户可读文档 | 对可读文档指定版本发起 PDF 导出；验证中文、失败态、权限态和产物访问 | 导出任务与版本绑定；中文正常；产物继承源文档权限；导出库不可用返回 5030；未验证前不得进入实现 | 待 tech-env 依赖验证 + 后端 tests + 人工 PDF 样例 | 草案·待 RG-006 |
+| TC-P1-017 | REQ-027 | RG-006 已 Go；当前用户可读文档 | 对可读文档指定版本发起 PDF 导出；验证中文、失败态、权限态和产物访问 | 导出任务与版本绑定；中文正常；产物继承源文档权限；导出库不可用返回 5030 | RG-006 前置已通过：`scripts/smoke-pdf-rg006.py` 生成 2 页中文 PDF，Poppler 渲染 PNG 非空，pdfplumber 抽取关键中文文本命中，人工视觉检查正常；Sprint-18 仍需补 API-019 后端 tests + 人工 PDF 样例 | 前置 Go；产品验收待 Sprint-18 |
 
-> TC-P1-010 暂为「后续阶段」，待 OCR 落地后补步骤与证据；TC-P1-013 已随 PR #76 合并后完成前端构建与 Chrome / Edge 900px smoke；TC-P1-014 已随 Sprint-10（P1B）完成前端构建与 Chrome / Edge 900px smoke，并随 Sprint-21 slice 3a/3c/3d 完成本地回归（2026-08-01 用户确认）；TC-P1-015 已随 Sprint-16 完成自动化验证与 Chrome headless drop-zone smoke，并随 Sprint-21 slice 3d 补入口形态回归（2026-08-01 用户确认）；TC-P1-016 已随 Sprint-17 完成后端 tests + 端到端 HTTP smoke；TC-P1-017 待 Sprint-18（RG-006）编码后补证据；其余 TC 自动化均含于后端测试与既有 smoke 证据（见 §5）。
+> TC-P1-010 暂为「后续阶段」，待 OCR 落地后补步骤与证据；TC-P1-013 已随 PR #76 合并后完成前端构建与 Chrome / Edge 900px smoke；TC-P1-014 已随 Sprint-10（P1B）完成前端构建与 Chrome / Edge 900px smoke，并随 Sprint-21 slice 3a/3c/3d 完成本地回归（2026-08-01 用户确认）；TC-P1-015 已随 Sprint-16 完成自动化验证与 Chrome headless drop-zone smoke，并随 Sprint-21 slice 3d 补入口形态回归（2026-08-01 用户确认）；TC-P1-016 已随 Sprint-17 完成后端 tests + 端到端 HTTP smoke；TC-P1-017 的 RG-006 技术前置已通过，待 Sprint-18 编码后补 API-019 产品验收证据；其余 TC 自动化均含于后端测试与既有 smoke 证据（见 §5）。
 
 ### Phase2（功能范围 `[P2]` · Phase2A **个人知识组织** / Phase2B **团队 MVP**）
 
@@ -104,7 +104,7 @@
 
 - **Phase1（Demo）**：覆盖 REQ-001..011、REQ-036（上表）——可演示 + 守产品红线；REQ-009/010 按 `.md` / `.txt` 已提取文本降级验收，真实 Word / PDF 解析与 OCR 不作为 Phase1 Demo 必过。P1A 的 TC-P1-013 是既有 REQ-011 的前端结构体验收口，不新增业务范围
 - **Phase1.5A（个人可用 Alpha）**：覆盖 REQ-037 / REQ-038，对应 TC-P1-015 / 016；目标是批量入库 + 导出备份，优先于 PDF 和 Phase2 编码。
-- **Phase1.5B（个人增强 Beta）**：覆盖 REQ-027，对应 TC-P1-017；受 RG-006 约束，未验证前不得实现。
+- **Phase1.5B（个人增强 Beta）**：覆盖 REQ-027，对应 TC-P1-017；RG-006 已 Go，可进入 Sprint-18 编码，但 PDF 导出产品验收尚未完成。
 - **Phase2A / Phase2B**：REQ-026 / 012 / 025 已作为 Phase2A 个人知识组织完成并通过 TC-P2-LINK/TAG/QUICK-001；P2 UI 实现前门禁 TC-P2-UI-001~005 仍作为 Phase2B 启动前门禁草案保留；REQ-014 / 013 / 024 属 Phase2B 团队 MVP 候选，其余 P2 用例待阶段确认后继续细化。
 - **愿景（产品）**：待技术验证后再补用例
 
@@ -188,11 +188,11 @@
 | RISK-P2-003 | WSG-001..006 / P2-UI-G-001..006 | P2 UI 少容器清爽稿通用 gate 未形成独立全量 smoke | Sprint-11、TC-P2-WSG-001、TC-P2-UI-001~005、Phase2B | Phase2A 三个 vertical slice 已分别完成浏览器 smoke / build；Sprint-11 仍作为后续 Phase2B UI gate 草案保留，不阻塞 Phase2A closure | Phase2B 启动前重新确认 UI gate 与 smoke 范围 |
 | RISK-P2-004 | OI-005 / TC-P2-TAG-001..QUICK-001 | ~~Phase2A 核心 DB / API / TC 契约未实现~~ | ~~REQ-012 / 025 / 026~~ | ✅ **已解决**（REQ-026 / REQ-012 / REQ-025 已完成后端 + 前端 vertical slice；TC-P2-LINK-001 / TAG-001 / QUICK-001 通过） | 2026-07-20 Phase2A closure；§2 矩阵与 §5 验收记录 |
 | RISK-P2-005 | RG-004 / 数据外发 / **RG-008** | AI 润色 / 写作引用可能发送真实文档片段到外部 LLM | REQ-014 | **数据外发风险已人工接受（2026-07-30，真实外发 + 权限护栏，见 RG-008 / `ai/project-rules.md §2.5`）**：sources 权限过滤、草稿只存 hash + 摘要、不做自动过滤、5030 降级 | ✅ 已解决 / 关闭：后端权限过滤（越权 chunk 不进 prompt / 不返回）、5030 不落库不编造、hash 留存均经 `tests.backend.test_ai_polish` 验证；RG-008→Go；前端 UI smoke 后续已在 TC-P2-AI-001 通过；D-C-001 citation 同步延迟量化已通过，当前不新增异步 job |
-| RISK-P1-006 | RG-006 | PDF 导出库未验证 | REQ-027 | tech-env 草案标记 `reportlab` / `weasyprint` 未安装；API / DB 仅为契约草案，不得编码导出能力 | 待 PDF 库选型、安装、中文样例和资源验证 |
+| RISK-P1-006 | RG-006 | ~~PDF 导出库未验证~~ | REQ-027 | ✅ **已解决**（2026-08-04）：ReportLab / pypdf / pdfplumber / Pillow 已安装并锁入依赖；`simhei.ttf` 中文样例生成、Poppler 渲染、文本抽取和人工 PNG 检查均通过；API / DB 仍为契约草案，Sprint-18 尚未实现导出能力 | `scripts/smoke-pdf-rg006.py` + `docs/research/2026-08-04-tech-env-evaluation-rg006-pdf-export.md` |
 | RISK-P1-007 | TC-P1-015 | ~~Sprint-16 Chrome 拖拽 / 文件夹 smoke 未补~~ | ~~REQ-037 前端人工验收~~ | ✅ **已解决**（Chrome headless drop-zone smoke 已覆盖批量 drop、路径标题、搜索与问答来源） | Sprint-16 smoke 记录（2026-07-15） |
 
 ## 7. 待人工确认项
 
 - Phase2A 已完成整体验收 closure；不得再把 REQ-026 / REQ-012 / REQ-025 标为待确认或未实现。
 - **Phase2B 范围、进入 / 退出标准、数据外发风险接受方式（RG-008）与验证包均已确认 / 就绪（2026-07-30）**；REQ-014 AI 润色已完成并通过 TC-P2-AI-001，D-C-001 citation 同步延迟量化已关闭（当前不做异步 job）；REQ-013a/024 主题时间线已完成并通过自动化验证、运行态 API smoke 与 Edge headless 浏览器 smoke。
-- Phase1.5B 的 TC-P1-017 受 RG-006 控制；PDF / Word-PDF / zhparser 不阻塞 Phase2A closure。
+- Phase1.5B 的 TC-P1-017 前置 RG-006 已 Go；PDF 导出可进入 Sprint-18 编码，Word-PDF / zhparser 仍不阻塞 Phase2A closure。

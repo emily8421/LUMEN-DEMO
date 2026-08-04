@@ -50,7 +50,7 @@ LUMEN 是面向中小企业（典型：帮客户做 AI Agent 落地的初创公�
 | SC-004 | R-002 / R-003 | 空间中已有可检索文档与术语 | 用户用关键词或语义问题搜索 / 问答，定位项目历史约束（如延迟下限），并按当前空间术语解释客户习惯用语 | 结果带来源，不跨权限边界；术语解释优先使用空间定义 | `docs/vision/product-vision.md` 场景4 / 场景5b / 场景9 |
 | SC-005 | R-001 / R-002 | 存量资料需要进入知识库 | Phase1 Demo 导入 `.md` / `.txt` 或已提取文本；真实 Word / PDF 解析与图片 OCR 作为后续真实化边界 | 导入内容可搜索、可被问答引用；真实解析 / OCR 不作为 Phase1 必过 | `docs/vision/product-vision.md` 场景5 |
 | SC-006 | R-001 / R-002 / R-003 | 用户使用桌面浏览器访问 | 在 Chrome / Edge 中完成导入、检索、问答、编辑、版本和术语流程 | 桌面端主流程无阻断 | `docs/vision/product-vision.md` 场景8 / 场景9 |
-| SC-007 | R-001 / R-002 / R-003 | 用户准备把 LUMEN 作为个人日常知识库使用 | 用户一次拖入多个 `.md` / `.txt` 或整个资料文件夹，系统批量入库并保留相对路径前缀；需要迁出或备份时，可下载单文档 `.md` 或导出当前空间 ZIP；PDF 导出作为增强能力受 RG-006 验证约束 | 个人能快速把资料放进去，之后可搜索、可问答、可编辑、可备份；PDF 导出不阻塞个人可用 Alpha | 2026-07-15 人工新增诉求：尽快实现并投入个人使用；`docs/03-prd.md` P1.5 路线图 |
+| SC-007 | R-001 / R-002 / R-003 | 用户准备把 LUMEN 作为个人日常知识库使用 | 用户一次拖入多个 `.md` / `.txt` 或整个资料文件夹，系统批量入库并保留相对路径前缀；需要迁出或备份时，可下载单文档 `.md` 或导出当前空间 ZIP；PDF 导出作为增强能力已通过 RG-006，待 Sprint-18 实现 | 个人能快速把资料放进去，之后可搜索、可问答、可编辑、可备份；PDF 导出不阻塞个人可用 Alpha | 2026-07-15 人工新增诉求：尽快实现并投入个人使用；`docs/03-prd.md` P1.5 路线图 |
 | SC-008 | R-001 / R-002 / R-003 | 空间资料已积累，需要建立个人知识组织结构 | 用户通过标签聚合同主题文档，在 Markdown 中用 `[[文件名]]` 建立内部链接并查看反向链接，用快速录入记录无原文的轻量条目 | 文档可互联、可组织、可快速沉淀；权限过滤不泄露不可见文档 | `docs/03-prd.md` Phase2A closure；`docs/09-verification.md` TC-P2-LINK/TAG/QUICK-001 |
 | SC-009 | R-001 / R-002 / R-003 | 空间资料积累，需按目录层级组织（标签 / 内链之外） | 用户新建 / 移动 / 排序嵌套文件夹组织文档；导入文件夹保留真实目录结构 | 文档归属 folder 正确；导入保留结构；防环 / 跨空间 / 重名 / 删非空 folder 拒绝；folder 不独立权限，文档可见性仍按 permission 不泄露 | `docs/design/folder-tree.md`；TC-P2-FOLDER-001（待立项） |
 
@@ -88,7 +88,7 @@ LUMEN 是面向中小企业（典型：帮客户做 AI Agent 落地的初创公�
 | SC-004 | U-07 / U-08 / U-42 | REQ-007 / REQ-008 / REQ-036 | MOD-004 检索问答（`docs/design/rag-retrieval.md`）、MOD-005 术语管理（`docs/design/term-management.md`） | TC-P1-007 / 008 / 012 | Sprint-4 / Sprint-5（task-009） | hybrid search、RAG 问答和空间术语对齐 |
 | SC-005 | U-09 / U-10 | REQ-009 / REQ-010 | MOD-003 内容导入（`docs/design/ingestion.md`） | TC-P1-009 / 010 | Sprint-3 | Phase1 已提取文本导入与 OCR 降级边界 |
 | SC-006 | U-11 | REQ-011 | COMP-001 前端 / COMP-002 后端 | TC-P1-011 | Sprint-6 | 桌面浏览器验收入口 |
-| SC-007 | U-09 / U-33 / U-43 | REQ-037 / REQ-038 / REQ-027 | MOD-003 内容导入、MOD-007 写作 / 导出；`docs/07-api-spec.md` API-019/029/030 | TC-P1-015 / 016 / 017 | Sprint-16 / Sprint-17 / Sprint-18 | P1.5 个人可用：批量入库 + 导出备份已完成，PDF 受 RG-006 约束 |
+| SC-007 | U-09 / U-33 / U-43 | REQ-037 / REQ-038 / REQ-027 | MOD-003 内容导入、MOD-007 写作 / 导出；`docs/07-api-spec.md` API-019/029/030 | TC-P1-015 / 016 / 017 | Sprint-16 / Sprint-17 / Sprint-18 | P1.5 个人可用：批量入库 + 导出备份已完成，PDF RG-006 已 Go、待 Sprint-18 实现 |
 | SC-008 | U-13 / U-31 / U-32 | REQ-012 / REQ-025 / REQ-026 | MOD-006 个人知识组织；`docs/07-api-spec.md` API-014/017/018/027/031/032 | TC-P2-TAG-001 / TC-P2-QUICK-001 / TC-P2-LINK-001 | Phase2A Task A/B 完成包 | Phase2A 已完成：标签、快速录入、内链 / 反链 |
 | SC-009 | U-44 | REQ-039 / REQ-037 | MOD-006 个人知识组织（folder-tree）；`docs/07-api-spec.md` API-034..037 + API-029 改造 | TC-P2-FOLDER-001 / TC-P1-015 扩展 | Sprint-22（候选） | 文档目录树组织 + 导入保留结构 |
 

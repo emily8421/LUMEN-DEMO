@@ -48,7 +48,7 @@
 | U-30 | R-002 / R-003 | 时间轴密度热条：可视化信息密集时期，识别项目压力峰值 *(v18)* | 场景1 | 识别压力峰值 | Could | [P2] | 骨架 |
 | U-31 | R-001 / R-002 | 快速录入索引条目：30s 录标题 / 来源 / 摘要，无原文的轻量条目 *(v18)* | 场景5 / SC-008 | 无原文也能快速沉淀 | Could | [P2] | P2-已实现（TC-P2-QUICK-001 通过） |
 | U-32 | R-001 / R-002 | 内部链接 + 反向链接：`[[文件名]]` 互联、自动补全、反向链接面板 *(v18)* | 场景2 / SC-008 | 文档互联 | Could | [P2] | P2-已实现（TC-P2-LINK-001 通过） |
-| U-33 | R-001 / R-002 | 单文档导出 PDF：封面 / 页眉页脚配置，原文留存 LUMEN *(v18；2026-07-15 前移 P1.5)* | 场景6 / SC-007 | 对外分享可排版 | Could | [P1] | P1.5-候选·待 RG-006 |
+| U-33 | R-001 / R-002 | 单文档导出 PDF：封面 / 页眉页脚配置，原文留存 LUMEN *(v18；2026-07-15 前移 P1.5)* | 场景6 / SC-007 | 对外分享可排版 | Could | [P1] | P1.5B-候选·RG-006 Go，待 Sprint-18 实现 |
 | U-43 | R-001 / R-002 / R-003 | 文档 / 空间导出与本地备份：单文档下载 `.md`，当前空间可见文档打包 ZIP 导出 | SC-007 | 个人使用时可迁出、可备份，不被系统锁死 | Should | [P1] | P1.5A-已实现（TC-P1-016 通过） |
 | U-44 | R-001 / R-002 / R-003 | 文档目录树：嵌套文件夹组织文档 + 导入保留目录结构 | SC-009 | 按层级组织、导入保留结构 | Could | [P2] | P2-已设计（folder-tree，REQ-039） |
 | U-21 | R-001 / R-003 | Obsidian Vault 挂载：本地笔记库只读接入，参与检索，不迁移，绑账号 | 场景1 | 复用现有笔记库 | 待验证 | [愿景] | 骨架 |
@@ -134,7 +134,7 @@
 | U-30 | Could | Phase2B 候选 | 识别项目压力峰值 | 依赖时间轴，视精力纳入 |
 | U-31 | Could | Phase2A（个人知识组织） | 无原文快速沉淀 | 已完成（TC-P2-QUICK-001 通过） |
 | U-32 | Could | Phase2A（个人知识组织） | 文档互联 | 已完成（TC-P2-LINK-001 通过） |
-| U-33 | Could | Phase1.5B（个人增强 Beta） | 对外分享可排版，但依赖 PDF 库与中文排版验证 | RG-006 未通过前不得编码；不阻塞 Alpha |
+| U-33 | Could | Phase1.5B（个人增强 Beta） | 对外分享可排版；PDF 库与中文排版验证已通过 RG-006 | 可进入 Sprint-18 编码；不阻塞 Alpha |
 | U-21 | 待验证 | 愿景（产品） | 复用现有笔记库 | 需技术验证与阶段评审后再纳入某 Phase |
 | U-22 | 待验证 | 愿景（产品） | 会议录音可检索 | 同上 |
 | U-23 | 待验证 | 愿景（产品） | 高风险：分类未定 | 同上 |
@@ -196,7 +196,7 @@
 | U-30 | 愿景 v18 场景1 | `docs/vision/product-vision.md` v18 场景1 | REQ-024 | 骨架 |
 | U-31 | 愿景 v18 场景5 / SC-008 | `docs/vision/product-vision.md` v18 场景5；`docs/00-scenario.md` SC-008 | REQ-025 | P2-已实现（TC-P2-QUICK-001 通过） |
 | U-32 | 愿景 v18 场景2 / SC-008 | `docs/vision/product-vision.md` v18 场景2；`docs/00-scenario.md` SC-008 | REQ-026 | P2-已实现（TC-P2-LINK-001 通过） |
-| U-33 | 愿景 v18 场景6 / SC-007 | `docs/vision/product-vision.md` v18 场景6；`docs/00-scenario.md` SC-007 | REQ-027 | P1.5-候选·待 RG-006 |
+| U-33 | 愿景 v18 场景6 / SC-007 | `docs/vision/product-vision.md` v18 场景6；`docs/00-scenario.md` SC-007 | REQ-027 | P1.5B-候选·RG-006 Go，待 Sprint-18 实现 |
 | U-34 | 愿景 v18 场景1 | `docs/vision/product-vision.md` v18 场景1 | REQ-028 | 骨架 |
 | U-35 | 愿景 v18 场景5 | `docs/vision/product-vision.md` v18 场景5 | REQ-029 | 骨架 |
 | U-36 | 愿景 v18 场景5 | `docs/vision/product-vision.md` v18 场景5 | REQ-030 | 骨架 |

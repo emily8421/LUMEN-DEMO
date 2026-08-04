@@ -24,6 +24,9 @@ Thumbs.db
 # 日志
 *.log
 
+# 本地临时验证产物
+tmp/
+
 # AI 会话本地状态（续接点 / token hotspot，不提交；见 ai/session-rules.md）
 .ai/
 

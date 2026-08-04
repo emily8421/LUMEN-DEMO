@@ -11,8 +11,8 @@
 | 当前 Phase | **Phase2B（团队 MVP）进行中**（2026-07-30 切指针；RG-008 升 Go；Sprint-19 已完成；Sprint-20 已通过运行态 API smoke + Edge headless 浏览器 smoke） |
 | 交付物形态 | Demo / 个人可用 Alpha / 个人知识组织 |
 | 输入基线 | `docs/03-prd.md` §3、`docs/04-architecture.md`、`docs/05-tech-spec.md`、`docs/09-verification.md` |
-| 当前状态 | Phase1 Demo 已完成并已记录全量验收（Conditional Go）；Phase1.5A 已完成批量 / 文件夹导入（REQ-037）与 `.md` / ZIP 导出备份（REQ-038）；Phase2A 已完成 REQ-026 内链 / 反链、REQ-012 标签、REQ-025 快速录入三个 vertical slice 并通过 `09` 对应用例。Phase1.5B（PDF / Word-PDF / zhparser）仍待后续 RG；**Phase2B（团队 MVP）范围已确认（2026-07-30）：REQ-014 首批核心已完成 v1.1.0（TC-P2-AI-001 通过；D-C-001 citation 同步延迟量化已补，当前不做异步 job）；REQ-013a/024 主题时间线第二 slice 已完成并发布为 v1.5.0（task-030，后端自动化验证 + frontend build + 运行态 API smoke + Edge headless 浏览器 smoke + push 后 CI 通过 + tag 已推送；真实 PG 大数据性能 smoke 已补）；Sprint-21 Doc-First UX 已完成**；**Sprint-22 文档目录树（folder-tree，REQ-039）后端核心 + API-029 `preserve_structure` 导入保留结构 + 前端文件管理器基础能力（含 API-038 单文档移动）已完成并验证通过；浏览器人工 smoke 已通过（2026-08-03 用户确认），浏览器自动化 smoke 已补（2026-08-04）**。 |
-| 最后更新 | 2026-08-04（D-C-001 citation 同步延迟量化通过：真 PG + 真 GLM `scripts/smoke-ai-citation-latency.py --runs 3 --max-seconds 15`，p50=5041.79ms，max=5914.06ms；当前不做异步 job） |
+| 当前状态 | Phase1 Demo 已完成并已记录全量验收（Conditional Go）；Phase1.5A 已完成批量 / 文件夹导入（REQ-037）与 `.md` / ZIP 导出备份（REQ-038）；Phase2A 已完成 REQ-026 内链 / 反链、REQ-012 标签、REQ-025 快速录入三个 vertical slice 并通过 `09` 对应用例。Phase1.5B：**PDF 导出 RG-006 已 Go，可进入 Sprint-18 编码；Word-PDF / zhparser 仍待后续 RG**。**Phase2B（团队 MVP）范围已确认（2026-07-30）：REQ-014 首批核心已完成 v1.1.0（TC-P2-AI-001 通过；D-C-001 citation 同步延迟量化已补，当前不做异步 job）；REQ-013a/024 主题时间线第二 slice 已完成并发布为 v1.5.0（task-030，后端自动化验证 + frontend build + 运行态 API smoke + Edge headless 浏览器 smoke + push 后 CI 通过 + tag 已推送；真实 PG 大数据性能 smoke 已补）；Sprint-21 Doc-First UX 已完成**；**Sprint-22 文档目录树（folder-tree，REQ-039）后端核心 + API-029 `preserve_structure` 导入保留结构 + 前端文件管理器基础能力（含 API-038 单文档移动）已完成并验证通过；浏览器人工 smoke 已通过（2026-08-03 用户确认），浏览器自动化 smoke 已补（2026-08-04）**。 |
+| 最后更新 | 2026-08-04（RG-006 PDF 导出技术环境评估通过：ReportLab + `simhei.ttf` 中文样例生成、Poppler 渲染、pdfplumber 文本抽取与人工 PNG 检查均通过；Sprint-18 可进入编码。D-C-001 citation 同步延迟量化也已通过：真 PG + 真 GLM p50=5041.79ms，max=5914.06ms；当前不做异步 job） |
 
 ## Sprint 总览
 
@@ -38,7 +38,7 @@
 | Sprint-15（P1C·可选·分词·候选） | zhparser 中文分词接入 | 007（搜索质量收口） | 05、09 task-009 记录、docker | docker 镜像 + migration 006 | TC-P1-007 扩展 | 候选·可选·待确认（中成本；未编码） | — |
 | Sprint-16（P1.5·批量导入） | 多文件 + 文件夹拖拽导入（drop zone + 批量进度 + 标题前缀 + 冲突跳过） | 037（新增）+ 009 扩展 | 02 REQ-037、07 API-029 | frontend ContextPane drop zone + backend api/imports 批量 + service | TC-P1-015 | 已完成（自动化 + Chrome headless drop-zone smoke 通过） | — |
 | Sprint-17（P1.5A·导出备份） | 单文档 .md 下载 + 空间 ZIP 打包 | 038（新增） | 02 REQ-038、07 API-030 | frontend 下载入口 + backend api/export（zipfile）+ service | TC-P1-016 | 已完成（后端 tests + 端到端 HTTP smoke 通过） | — |
-| Sprint-18（P1.5·PDF 导出·候选·需 RG） | 单文档 PDF 导出（Markdown → PDF，中文） | 027（从 Phase2 提前） | 02 REQ-027、07 API-019、05 RG-006 | backend api/export-pdf + PDF 库 + service | 待新增 TC-P1-017 | 候选·待 RG-006 选型（未编码） | — |
+| Sprint-18（P1.5·PDF 导出·候选·RG 已 Go） | 单文档 PDF 导出（Markdown → PDF，中文） | 027（从 Phase2 提前） | 02 REQ-027、07 API-019、05 RG-006 | backend api/export-pdf + PDF 库 + service | TC-P1-017（待实现后执行） | RG-006 Go；可进入编码（未编码） | — |
 | Sprint-19（Phase2B·AI 润色·首个 vertical slice） | AI 润色 polish + 写作引用 citation（API-028）+ `lumen_ai_drafts` migration 010 | 014 | 02 REQ-014、03 Phase2B、04 Flow-005、05 TCD-010 / RG-004 / RG-008、06 lumen_ai_drafts、07 API-028、design/ai-polish | backend service/ai_polish + api + migration 010；frontend 写作侧边栏 | TC-P2-AI-001（后端 tests + prompt 边界审查 + UI smoke + D-C-001 citation 延迟量化） | **已完成（RG-008 Go，2026-07-30；前端闭环 PR#89–95 / v1.1.0，TC-P2-AI-001 live UI smoke 2026-07-31 通过；D-C-001 2026-08-04 量化通过，当前不做异步 job）** | — |
 | Sprint-20（Phase2B·**主题时间线**·第二 slice） | **主题时间线（关键词/标签驱动）** + 密度热条（API-033 `q`/`tag_ids` + actor + ratio） | 013a/024 | 02 REQ-013a/024、04 Flow-009、06 lumen_documents + tags + links、07 API-033、design/timeline | backend service/timeline + api（关键词命中复用 chunk.ts_vector）；frontend 主题时间线视图（搜索框 + 标签入口 + 密度热条 + 事件列表 + 逃生舱） | TC-P2-TL-001（后端 tests + Chrome/Edge smoke） | **已完成（task-030；后端自动化验证 + frontend build + 运行态 API smoke + Edge headless 浏览器 smoke 通过）** | tasks/task-030-timeline.md |
 | Sprint-21（Phase2B·Doc-First UX） | slice 3a 侧栏可隐藏/默认收起/三路唤出/记忆 + slice 3c 默认落地欢迎页+主区少容器视觉收口+documents 空态引导 + slice 3d 导入入口弹窗化（§9.5 基线） | 011 + 037（P1B 默认行为升级 + 导入入口形态，不新增 REQ） | design/frontend-interaction §9.5（§9.5.8 导入弹窗）、research/prototypes/2026-07-31-obsidian-inspired-*、09 TC-P1-014/TC-P1-015 | frontend App.tsx + app/{usePaneLayout,pane-layout-store,TopBar,ContextPane} + features/{Welcome,DocumentEmptyState,Documents,Import}Feature + styles | TC-P1-014 回归 +（3d）TC-P1-015 回归 + Chrome/Edge smoke | 已完成（3a/3c 已随 PR #97 合并；3d 本地编码完成并通过 build + 用户 smoke，TC-P1-015/014 回归通过；未 bump 版本 / 未提交） | tasks/task-021..025 |
@@ -487,9 +487,9 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 ### 禁止事项
 - 不做 PDF 导出（留 Sprint-18）；不引 PDF 库；不改 DB schema。
 
-## Sprint-18（P1.5·PDF 导出 · 候选·需 RG）：单文档 PDF
+## Sprint-18（P1.5·PDF 导出 · 候选·RG 已 Go）：单文档 PDF
 
-> **候选·待 RG-006**：REQ-027 单文档 PDF 导出，从 Phase2 提前到 P1.5。需先选型（weasyprint / reportlab 等）+ 中文排版最小验证（RG-006），未通过不得编码。
+> **RG-006 已 Go（2026-08-04）**：REQ-027 单文档 PDF 导出，从 Phase2 提前到 P1.5。ReportLab + Windows 中文字体 + Poppler 渲染最小样例已通过；可进入 Sprint-18 编码，但 API-019 / TC-P1-017 尚未实现闭环。
 
 ### 目标
 单文档导出 PDF（Markdown → PDF，含中文、基础排版 / 页眉页脚）。属 REQ-027（从 Phase2 提前到 P1.5）。文档详情页"导出 PDF"。
@@ -500,15 +500,15 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 ### 修改范围
 - 后端：`api/export-pdf`（PDF 库渲染 Markdown → PDF）+ service；选型 + 中文验证。
 - 前端：文档详情"导出 PDF"入口。
-- 引 PDF 库（新依赖，须选型 + RG-006 通过）。
+- 引 PDF 库（新依赖，已按 RG-006 选定 ReportLab 首版路线并锁入 `backend/requirements.txt`）。
 
 ### 验收标准
-- 选型 + 中文最小 PDF 导出验证通过（RG-006 Go / Conditional Go）。
+- 选型 + 中文最小 PDF 导出验证通过（RG-006 已 Go）。
 - 文档详情可导出 PDF（中文正常、基础排版）。
 - 后端 tests + 人工 PDF 样例。
 
 ### 禁止事项
-- RG-006 选型 / 中文验证未通过前不得编码；不引未确认 PDF 库；不改 DB schema。
+- 不引未确认 PDF 库；不改 DB schema；不得把 RG-006 技术样例误标为 API-019 已实现。
 
 ## Sprint 完成包与进度记录
 
@@ -557,6 +557,6 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 
 - Phase2A closure 已确认：REQ-026 内链/反链（fc2b869/6228f3f）+ REQ-012 标签（1e4cf48/d07688b）+ REQ-025 快速录入（f771e02/bad8fe5）均完成；个人知识组织「互联 / 组织 / 快录」闭环成形。
 - 是否正式进入 Phase2B：团队 MVP 首批范围已确认（REQ-014 AI 润色 / 写作引用 **已落地**；**REQ-013a 主题时间线 + REQ-024 已完成并通过运行态 API smoke + Edge headless 浏览器 smoke**；关联图 REQ-013b 愿景）、进入 / 退出标准、数据外发风险接受方式、`04/05` 设计补强和 `08/09` 验证包需随后续验收继续更新。
-- **P1.5B 候选**：单文档 PDF 导出（Sprint-18 / REQ-027）、真实 Word/PDF 文本提取、zhparser 中文分词增强仍需 RG / 选型 / 中文样例验证；不阻塞 Phase2A closure。
+- **P1.5B 候选**：单文档 PDF 导出（Sprint-18 / REQ-027）已完成 RG-006，可进入编码；真实 Word/PDF 文本提取、zhparser 中文分词增强仍需 RG / 选型 / 中文样例验证；不阻塞 Phase2A closure。
 - **Sprint-0′ / APP-SIZE-C-011**：框架补课已完成，后续 App 主应用文件减压也已由 APP-SIZE-C-011 收口（App.tsx 741→306，v0.2.1）；继续保持新功能优先下沉到域 hook / feature。
 - **TC-P1-001~006/012 是否升级为「通过」**：09 已校准为「PG 仓储·Sprint-8 起真实化」（仍标条件通过）；是否进一步升级为「通过」待人工确认。
