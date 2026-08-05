@@ -6,6 +6,18 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v1.7.3（2026-08-05）
+
+**REQ-018 模式 A（Obsidian vault 导入）收尾 + 真实 PG 搜索/RAG smoke。** 修两个 Obsidian 导入的小缺口让 vault 导入完整可用，并补一个验证脚本确认导入到真实 PG 的数据能搜、能问答（内存 demo 下搜不出）。
+
+- 缺口①（PR #106，REQ-018 模式 A）：`backend/service/imports.py` 的 `import_batch` 批末回扫整个 space 的 wikilink（`sync_document_wikilinks` 幂等 replace，保留 manual 链接），补建「先导入引用后导入 / 跨批上传」残留——之前按导入顺序逐篇解析，先导文档引用后导文档会 unresolved 且永不回填。
+- 缺口②（PR #106，REQ-018 模式 A）：`frontend/src/features/ImportFeature.tsx` 加纯函数 `filterImportable`，在单文件 / 文件夹 input、拖拽三个入口过滤掉隐藏段（`.` 开头，含 `.obsidian` 元目录、`.DS_Store`）与非白名单附件——之前前端一股脑上传、后端白名单拒，用户看一堆 failed 噪音。
+- 搜索/RAG smoke（`f601ecb`）：新增 `scripts/smoke-search-rag-pg.py`，导入 3 篇含特定关键词的 .md 到真实 PG，断言 embedding 写入、关键词搜索命中、RAG 真实 LLM 带来源引用——验证「内存 demo 搜不出」是演示模式限制，真 PG 下搜索 + RAG 正常工作。
+- 验证：`.venv\Scripts\python.exe -m unittest tests.backend.test_imports tests.backend.test_doc_links` 20/20 OK（缺口① +2 测试）；`volta run --node 22.17.1 npm run build` 通过（缺口②，tsc + vite 259 modules）；`smoke-search-rag-pg.py` 跑通（keyword_hits=3 / rag_sources=3 / llm_real=True）；PR #106 CI（project-check）通过。
+- 版本：同步 `VERSION` / `CHANGELOG.md` / `CHANGELOG-PLAIN.md` 到 `v1.7.3`。
+
+> PATCH 依据（`ai/project-rules.md` §2.8.1）：bug 修复（wikilink 内链）+ 体验修复（前端过滤）+ 验证脚本，不新增可演示能力、不改对外 API / DB 契约。
+
 ## v1.7.2（2026-08-04）
 
 **导入大规模 PG perf smoke 脚本 + RISK-P1-008 perf 量化。** 补一个可复现的真实 PostgreSQL + embedding 性能 smoke，量化批量导入在 PG 下的真实耗时，回填 `09` RISK-P1-008 的 perf 结论。
