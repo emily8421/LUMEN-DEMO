@@ -71,9 +71,9 @@ flowchart TB
   done --> summary
 ```
 
-### 2.3 Flow-D-014：Vault 兼容双模式（[愿景]，REQ-018）
+### 2.3 Flow-D-014：Vault 兼容双模式（[P2]，REQ-018，Phase2C·已设计）
 
-> 状态：已确认方向，待 RG-009 技术验证；不代表当前已实现。
+> 状态：Phase2C·已设计（RG-009 PoC Go 2026-08-05）；模式 B 浏览器 File System Access MVP 路线采纳；不代表当前已实现。
 >
 > 已知天花板：浏览器 File System Access 句柄只活在浏览器进程、后端读不到，仅本地挂载内容无法进服务端 RAG / 全文搜索；要进 RAG 必须 (a) 本地 agent / 桌面端增量索引 或 (b) 导入数据库（见 §3 Vault 兼容策略）。
 
@@ -115,7 +115,7 @@ flowchart TB
 - `后续` 待 RG-003：图片 / 白板 OCR
 - `[愿景]` 待验证：录音转写入库（REQ-019，转写引擎与摘要质量待验证）
 - `[愿景]` 待验证：飞书自动同步（REQ-028）——外部源（飞书）文档更新后自动拉取摘要，原文留外部源，LUMEN 只更新索引条目摘要字段
-- `[愿景]` 已确认方向 / 待 RG-009：Obsidian Vault 兼容（REQ-018）支持“导入数据库”与“仅本地挂载”双模式；仅本地挂载保持个人 / 当前设备边界。
+- `[P2]` Phase2C·已确认（RG-009 Go 2026-08-05）：Obsidian Vault 兼容（REQ-018）模式 B 仅本地挂载浏览器 MVP 路线采纳（File System Access + IndexedDB）；模式 A 导入数据库已随 Phase2B 实现；仅本地挂载保持个人 / 当前设备边界。
 
 ## 5. 与其他子系统交互
 
@@ -145,7 +145,7 @@ flowchart TB
 | Flow-D-001 导入主流水线 | REQ-009/010 | Sprint-3 | TC-P1-009/010 | 见上 | 降级实现 |
 | Flow-006 批量 / 文件夹导入 | REQ-037 | Sprint-16 | TC-P1-015 | 后端 tests + Chrome headless drop-zone smoke 已通过 | Phase1.5A-已实现 |
 | Flow-D-012 导入保留目录结构（folder-tree） | REQ-037/039 | Sprint-22 | TC-P2-FOLDER-001 + TC-P1-015 扩展 | `tests.backend.test_imports` / `test_import_api` + 临时 PG smoke：`preserve_structure` 建/复用 `lumen_folders` | Phase2B 第三 slice·后端/API 已实现；前端文件管理器待实现 |
-| Flow-D-014 Vault 兼容双模式 | REQ-018 | 后续候选 | TC-VISION-VAULT-001（待定义） | 浏览器 / 桌面本地目录授权 PoC + 1000+ 文件本地树 / 按需导入 smoke | 愿景·已确认方向·待技术验证 |
+| Flow-D-014 Vault 兼容双模式 | REQ-018 | Phase2C | TC-P2-VAULT-001 | 浏览器 File System Access 授权 + IndexedDB 本地索引 + 1000+ 文件本地树 / 按需导入 smoke（RG-009 PoC Go 2026-08-05） | Phase2C·已设计（编码 Sprint-23C 待启动） |
 
 ## 8. 待人工确认项
 
