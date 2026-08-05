@@ -299,6 +299,85 @@ class ImportServiceTest(unittest.TestCase):
         self.assertEqual(second_result.items[0].title, "docs/readme")
         self.assertIn("already exists", second_result.items[0].error)
 
+    def test_import_batch_relinks_forward_references_after_rescan(self) -> None:
+        from backend.model.entities import DocumentPermission
+        from backend.repository.demo_repository import DemoRepository
+        from backend.service.imports import BatchImportFileRequest, BatchImportRequest, import_batch
+
+        repository = DemoRepository()
+        # A 先导入、正文引用 B；B 后导入 —— 修复前 A 的 [[b]] 因顺序依赖永远 unresolved。
+        result = import_batch(
+            repository=repository,
+            user_id=1,
+            current_space_id=10,
+            request=BatchImportRequest(
+                files=[
+                    BatchImportFileRequest(
+                        filename="a.md",
+                        relative_path="a.md",
+                        content=b"see [[b]] for details.",
+                    ),
+                    BatchImportFileRequest(
+                        filename="b.md",
+                        relative_path="b.md",
+                        content=b"b body content.",
+                    ),
+                ],
+                permission=DocumentPermission.TEAM,
+                preserve_structure=False,
+            ),
+        )
+
+        a_id = result.items[0].parsed_doc_id
+        b_id = result.items[1].parsed_doc_id
+        links = repository.list_doc_links(10, a_id, "outbound")
+        resolved = [link for link in links if link.target_title == "b"]
+
+        self.assertEqual(result.success_count, 2)
+        self.assertEqual(len(resolved), 1)
+        self.assertEqual(resolved[0].status, "resolved")
+        self.assertEqual(resolved[0].target_document_id, b_id)
+
+    def test_import_batch_rescan_keeps_already_resolved_links(self) -> None:
+        from backend.model.entities import DocumentPermission
+        from backend.repository.demo_repository import DemoRepository
+        from backend.service.imports import BatchImportFileRequest, BatchImportRequest, import_batch
+
+        repository = DemoRepository()
+        # A 先导入；B 后导入且引用 A —— B 导入时 A 已存在，[[a]] 本就 resolved；
+        # 批末回扫不应破坏已 resolved 的链接（防回归）。
+        result = import_batch(
+            repository=repository,
+            user_id=1,
+            current_space_id=10,
+            request=BatchImportRequest(
+                files=[
+                    BatchImportFileRequest(
+                        filename="a.md",
+                        relative_path="a.md",
+                        content=b"a body content.",
+                    ),
+                    BatchImportFileRequest(
+                        filename="b.md",
+                        relative_path="b.md",
+                        content=b"backref [[a]] here.",
+                    ),
+                ],
+                permission=DocumentPermission.TEAM,
+                preserve_structure=False,
+            ),
+        )
+
+        a_id = result.items[0].parsed_doc_id
+        b_id = result.items[1].parsed_doc_id
+        links = repository.list_doc_links(10, b_id, "outbound")
+        resolved = [link for link in links if link.target_title == "a"]
+
+        self.assertEqual(result.success_count, 2)
+        self.assertEqual(len(resolved), 1)
+        self.assertEqual(resolved[0].status, "resolved")
+        self.assertEqual(resolved[0].target_document_id, a_id)
+
 
 if __name__ == "__main__":
     unittest.main()

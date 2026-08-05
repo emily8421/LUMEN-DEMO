@@ -7,7 +7,7 @@ from uuid import uuid4
 
 from backend.model.entities import DocumentPermission, ImportJob
 from backend.service.chunking import clean_text, split_text_into_chunks
-from backend.service.document import DocumentCreate, create_document
+from backend.service.document import DocumentCreate, create_document, sync_document_wikilinks
 from backend.service.permission import can_view_document
 from backend.service.space import SpaceAccessError, ensure_space_access
 
@@ -181,6 +181,13 @@ def import_batch(repository, user_id: int, current_space_id: int, request: Batch
             items.append(_failed_item(file_request.filename, relative_path, title, str(exc)))
         except Exception as exc:
             items.append(_failed_item(file_request.filename, relative_path, title, str(exc)))
+
+    # REQ-018 模式 A: 批末回扫整个 space 的 wikilink，补建「先导入引用后导入 / 跨批上传」
+    # 残留的未解析链接。sync_document_wikilinks 幂等 replace（仅刷该源文档 wikilink 行，
+    # 保留 manual 链接），重复调用安全；list_documents 非按 space 限定，故按 current_space_id 过滤。
+    for existing in repository.list_documents():
+        if existing.space_id == current_space_id:
+            sync_document_wikilinks(repository, existing)
 
     return _batch_result(items)
 
