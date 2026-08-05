@@ -11,6 +11,29 @@ class DocLinkServiceTest(unittest.TestCase):
         self.assertEqual(extract_wikilinks("see [[Alpha]] and [[Beta]]"), ["Alpha", "Beta"])
         self.assertEqual(extract_wikilinks("no links here"), [])
         self.assertEqual(extract_wikilinks("[[A]] [[A]]"), ["A", "A"])
+        self.assertEqual(extract_wikilinks("[[Alpha|alias]]"), ["Alpha"])
+        self.assertEqual(extract_wikilinks("[[Alpha#section]]"), ["Alpha"])
+        self.assertEqual(extract_wikilinks("[[Alpha#section|alias]]"), ["Alpha"])
+    def test_sync_wikilinks_strips_alias_and_anchor(self) -> None:
+        from backend.model.entities import DocumentPermission
+        from backend.repository.demo_repository import DemoRepository
+        from backend.service.document import DocumentCreate, create_document
+
+        repository = DemoRepository()
+        target = create_document(
+            repository, 1, 10,
+            DocumentCreate(title="Alpha", content_md="alpha", permission=DocumentPermission.TEAM),
+        )
+        source = create_document(
+            repository, 1, 10,
+            DocumentCreate(title="Source", content_md="refs [[Alpha|alias]] and [[Alpha#section]]", permission=DocumentPermission.TEAM),
+        )
+
+        links = repository.list_doc_links(10, source.id, "outbound")
+        self.assertEqual(len(links), 1)  # 两种形式剥离后同目标，去重为一条
+        self.assertEqual(links[0].target_document_id, target.id)
+        self.assertEqual(links[0].status, "resolved")
+
 
     def test_sync_wikilinks_resolves_and_unresolves(self) -> None:
         from backend.model.entities import DocumentPermission
