@@ -6,6 +6,18 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v1.7.4（2026-08-05）
+
+**Obsidian wikilink 兼容性修复（别名 / 锚点）+ REQ-018 模式 A 收尾入库。** 让 `[[目标|别名]]` / `[[目标#锚点]]` 两种 Obsidian 常见写法能解析到 `目标` 文档，并把模式 A 评估报告与 vault 导入 smoke 脚本正式入库。
+
+- wikilink 修复（PR #107，REQ-026）：`backend/service/document.py` `_WIKILINK_PATTERN` 改为只捕获标题部分并剥离 `|alias` / `#anchor`——之前 `[[目标|别名]]` / `[[目标#锚点]]` 整段文本作为 target 匹配不到文档，永远 unresolved；现在两种写法（含 `[[目标#锚点|别名]]`）都解析为 `目标`，同目标去重为一条；`[[#锚点]]`（仅当前文件内标题）不再产生伪目标。
+- 测试与验收：`tests/backend/test_doc_links.py` 补 3 条 extract 断言 + `test_sync_wikilinks_strips_alias_and_anchor`；`docs/09-verification.md` §5.1 补缺陷记录、TC-P2-LINK-001 测试数 8→9。
+- 收尾入库：REQ-018 可行性评估报告登记 `docs/research/00-index.md` §1（模式 A 导入链路已交付、模式 B 零代码待 RG-009）；`scripts/smoke-vault-import-demo.py` 作为模式 A 可复用 smoke 入库。
+- 版本收尾：补打 `v1.7.2` / `v1.7.3` 注解 tag（v1.7.0~v1.7.3 现均带 tag 并已推 origin）。
+- 验证：`test_doc_links` 9/9 OK；后端全量 210 OK；`compileall` OK；PR #107 CI（project-check）通过。
+
+> PATCH 依据（`ai/project-rules.md` §2.8.1）：bug 修复（wikilink 解析）+ 文档 / 脚本入库，不新增可演示能力、不改对外 API / DB 契约。
+
 ## v1.7.3（2026-08-05）
 
 **REQ-018 模式 A（Obsidian vault 导入）收尾 + 真实 PG 搜索/RAG smoke。** 修两个 Obsidian 导入的小缺口让 vault 导入完整可用，并补一个验证脚本确认导入到真实 PG 的数据能搜、能问答（内存 demo 下搜不出）。
