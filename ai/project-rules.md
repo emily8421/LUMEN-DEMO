@@ -14,11 +14,11 @@
 
 ## 1. Phase边界
 
-当前阶段：**Phase2B（团队 MVP）进行中**；Phase1 Demo + Phase1.5A 可用性收口 + Phase1.5B PDF 导出 + Phase2A（个人知识组织）均已完成；Phase2B 范围已确认（2026-07-30：REQ-014 AI 润色首批核心 + REQ-013/024 时间轴第二 slice），数据外发风险已接受（RG-008 Go，Sprint-19 后端通过），2026-07-30 切指针进入 Phase2B；Word-PDF 解析 / zhparser（Sprint-14/15）仍留后续候选
+当前阶段：**Phase2B（团队 MVP）已完成（2026-08-05 收口）**；Phase1 Demo + Phase1.5A 可用性收口 + Phase1.5B PDF 导出 + Phase2A（个人知识组织）+ Phase2B（团队 MVP）均已完成；Phase2B 范围（REQ-014 首批核心 + REQ-013/024 时间轴第二 slice + REQ-039 文档目录树第三 slice）已验收通过并收口；数据外发风险已接受（RG-008 Go）；**下一阶段范围未定义（候选：真实团队验证 / RG-009 Vault PoC / 产品化），升 Phase 前需用户确认**；Word-PDF 解析 / zhparser（Sprint-14/15）仍留后续候选
 
 > 双维度（global-rules §8.1）：每个阶段同时声明**功能范围**与**交付物形态**，两者正交、不得混用。
-- **功能范围**：`[P2]`（Phase2A 已完成：REQ-026 内链/反链、REQ-012 标签、REQ-025 快速录入；**Phase2B 进行中：REQ-014 AI 润色/写作引用（首批核心）、REQ-013/024 时间轴（第二 slice）**）；`[P1]`（REQ-001..011、REQ-036、REQ-037/038 已完成；REQ-027 PDF 导出已随 Sprint-18 完成 API-019 / TC-P1-017），见 `docs/03-prd.md` §3 路线图
-- **交付物形态**：**个人知识组织**（Phase2A 已完成）→ **团队 MVP**（Phase2B 进行中）— 在个人知识组织之上补 AI 润色/写作引用（REQ-014）让小团队可真实写作辅助，时间轴（REQ-013/024）为第二 slice；**保留产品红线**（库外问答回复"未找到"、不编造、权限不泄露；AI 润色数据外发护栏见 §2.5 / `docs/05-tech-spec.md` RG-008）
+- **功能范围**：`[P2]`（Phase2A 已完成：REQ-026 内链/反链、REQ-012 标签、REQ-025 快速录入；**Phase2B 已完成：REQ-014 AI 润色/写作引用（首批核心）、REQ-013/024 时间轴（第二 slice）、REQ-039 文档目录树（第三 slice）**）；`[P1]`（REQ-001..011、REQ-036、REQ-037/038 已完成；REQ-027 PDF 导出已随 Sprint-18 完成 API-019 / TC-P1-017），见 `docs/03-prd.md` §3 路线图
+- **交付物形态**：**个人知识组织**（Phase2A 已完成）→ **团队 MVP**（Phase2B 已完成）— 在个人知识组织之上补 AI 润色/写作引用（REQ-014）让小团队可真实写作辅助，时间轴（REQ-013/024）为第二 slice；**保留产品红线**（库外问答回复"未找到"、不编造、权限不泄露；AI 润色数据外发护栏见 §2.5 / `docs/05-tech-spec.md` RG-008）
 
 > 阶段划分的唯一来源是 `docs/03-prd.md` §3 路线图；本节是"当前阶段指针"。
 > 升阶段时只改本节指针 + 在设计文档原位补充新阶段细节（见 global-rules §8），不重写需求。
@@ -33,7 +33,7 @@
 - 空间级术语表 + 文档术语识别 + 问答口径对齐
 - 桌面端浏览器访问
 - Phase2A 个人知识组织：内部链接 / 反向链接（REQ-026）、标签视图（REQ-012）、快速录入索引条目（REQ-025）均已完成；验收见 `docs/09-verification.md` TC-P2-LINK-001 / TC-P2-TAG-001 / TC-P2-QUICK-001
-- **Phase2B 团队 MVP（进行中）**：AI 润色 / 写作引用（REQ-014，首批核心，API-028 / `lumen_ai_drafts`，数据外发护栏见 RG-008）；时间轴视图 + 密度热条（REQ-013/024，第二 slice，API-033）；Sprint-19/20 见 `docs/08-dev-plan.md`
+- **Phase2B 团队 MVP（已完成）**：AI 润色 / 写作引用（REQ-014，首批核心，API-028 / `lumen_ai_drafts`，数据外发护栏见 RG-008）；时间轴视图 + 密度热条（REQ-013/024，第二 slice，API-033）；文档目录树（REQ-039，第三 slice，API-034..038 / API-029 `preserve_structure`）；Sprint-19/20/21/22 见 `docs/08-dev-plan.md`
 
 禁止（Phase2B 首批范围外，不做）：
 - 高级视图：关联图、问题热力矩阵、事件卡片因果展开、气泡图谱（**时间轴已随 Phase2B 首批解锁**；标签视图随 Phase2A 解锁）
@@ -44,7 +44,7 @@
 - 手机端 / 移动适配（demo 先桌面端）
 
 当前阶段内进度：
-- **Phase2B（团队 MVP）进行中**：REQ-014 AI 润色 / 写作引用（首批核心，Sprint-19）、REQ-013/024 时间轴（第二 slice，Sprint-20）；数据外发风险已接受（RG-008 Go，Sprint-19 后端 vertical slice 通过 2026-07-30）；跨空间推送 / 多人协作 / 移动端不进首批
+- **Phase2B（团队 MVP）已完成（2026-08-05 收口）**：REQ-014 AI 润色 / 写作引用（首批核心，Sprint-19）、REQ-013/024 时间轴（第二 slice，Sprint-20）、REQ-039 文档目录树（第三 slice，Sprint-22）均通过验收；数据外发风险已接受（RG-008 Go）；导入规模修复（Sprint-23A，v1.7.1）与 wikilink 兼容修复（v1.7.4）已随补丁发布；跨空间推送 / 多人协作 / 移动端不进 Phase2B 首批（延后）
 - 远期愿景：问题热力矩阵、事件因果推理、对外简报、Obsidian Vault 挂载、移动端——详见 docs/vision/product-vision.md（产品愿景叙事，不直接驱动 Phase 开发）
 
 ## 2. 技术栈约束

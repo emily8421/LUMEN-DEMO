@@ -9,7 +9,7 @@
 
 | 项 | 内容 |
 |---|---|
-| 当前 Phase | **Phase2B（团队 MVP）进行中**（2026-07-30 切指针；RG-008 → **Go**；Sprint-19 已完成；Sprint-20 已通过运行态 API smoke + Edge headless 浏览器 smoke） |
+| 当前 Phase | **Phase2B（团队 MVP）已完成（2026-08-05 收口）**（2026-07-30 切指针；RG-008 → Go；Sprint-19/20/21/22 全部完成验收） |
 | 交付物形态 | Demo / 个人可用 Alpha / 个人知识组织 |
 | 覆盖 REQ | Phase1：REQ-001..REQ-011、REQ-036；Phase1.5A：REQ-037/038；Phase1.5B：REQ-027；Phase2A：REQ-026/012/025；**Phase2B：REQ-014 首批核心（后端已实现，RG-008 升 Go，2026-07-30）+ REQ-013a 主题时间线 / REQ-024 第二 slice（已完成，运行态 API smoke + Edge headless 浏览器 smoke 通过）+ REQ-039 文档目录树第三 slice**；愿景验证项待升阶段 |
 | 当前状态 | Phase1 全量验收已记录，结论为 Conditional Go（Demo closure）；Phase1.5A 已完成 TC-P1-015/016；Phase1.5B 已完成 TC-P1-017（Sprint-18 PDF 导出；v1.7.0 已补下载端点 + 前端下载闭环）；Phase2A 已完成 TC-P2-LINK-001 / TC-P2-TAG-001 / TC-P2-QUICK-001，个人知识组织三个 vertical slice 验收通过。**Phase2B 范围已确认（2026-07-30）+ 设计就绪 + 数据外发风险已接受；REQ-014 已完成 v1.1.0（TC-P2-AI-001 通过，D-C-001 citation 同步延迟量化已补，当前不需要异步 job）；REQ-013a/024 主题时间线 TC-P2-TL-001 已通过本地自动化验证 + frontend build + 运行态 API smoke + Edge headless 浏览器 smoke + 真实 PG 大数据性能 smoke，并已随 v1.5.0 推送 `origin/main`、CI 通过、tag 发布；Sprint-21 Doc-First UX 已完成**；**REQ-039 文档目录树 TC-P2-FOLDER-001 已完成后端核心 + API-029 `preserve_structure` 导入保留结构 + 前端文件管理器基础能力（含 API-038 单文档移动）验证；浏览器人工 smoke 已通过（2026-08-03 用户确认），浏览器自动化 smoke 已补（2026-08-04）**；愿景项待升阶段。 |
@@ -76,7 +76,7 @@
 
 ### Phase2（功能范围 `[P2]` · Phase2A **个人知识组织** / Phase2B **团队 MVP**）
 
-> Phase2A 已完成 REQ-026 / REQ-012 / REQ-025 三个 vertical slice；**Phase2B 范围已确认（2026-07-30）：REQ-014 首批核心（后端 vertical slice 已通过，RG-008 升 Go，2026-07-30）+ REQ-013/024 第二 slice；前端 half + Sprint-11 门禁重跑 + 切指针推进待续**。
+> Phase2A 已完成 REQ-026 / REQ-012 / REQ-025 三个 vertical slice；**Phase2B 已完成并收口（2026-08-05）：REQ-014 首批核心（TC-P2-AI-001）、REQ-013a/024 第二 slice（TC-P2-TL-001）、REQ-039 第三 slice（TC-P2-FOLDER-001）全部验收通过；前端 half 已闭环（2026-07-31 live UI smoke）**。
 
 | TC ID | 覆盖对象 | 前置条件 | 验证步骤 | 预期结果 | 证据要求 | 状态 |
 |---|---|---|---|---|---|---|
@@ -105,7 +105,7 @@
 - **Phase1（Demo）**：覆盖 REQ-001..011、REQ-036（上表）——可演示 + 守产品红线；REQ-009/010 按 `.md` / `.txt` 已提取文本降级验收，真实 Word / PDF 解析与 OCR 不作为 Phase1 Demo 必过。P1A 的 TC-P1-013 是既有 REQ-011 的前端结构体验收口，不新增业务范围
 - **Phase1.5A（个人可用 Alpha）**：覆盖 REQ-037 / REQ-038，对应 TC-P1-015 / 016；目标是批量入库 + 导出备份，优先于 PDF 和 Phase2 编码。
 - **Phase1.5B（个人增强 Beta）**：覆盖 REQ-027，对应 TC-P1-017；RG-006 已 Go，Sprint-18 PDF 导出产品验收已完成。
-- **Phase2A / Phase2B**：REQ-026 / 012 / 025 已作为 Phase2A 个人知识组织完成并通过 TC-P2-LINK/TAG/QUICK-001；P2 UI 实现前门禁 TC-P2-UI-001~005 仍作为 Phase2B 启动前门禁草案保留；REQ-014 / 013 / 024 属 Phase2B 团队 MVP 候选，其余 P2 用例待阶段确认后继续细化。
+- **Phase2A / Phase2B**：REQ-026 / 012 / 025 已作为 Phase2A 个人知识组织完成并通过 TC-P2-LINK/TAG/QUICK-001；**Phase2B 团队 MVP 已完成并收口（2026-08-05）**——REQ-014（TC-P2-AI-001）、REQ-013a/024（TC-P2-TL-001）、REQ-039（TC-P2-FOLDER-001）；P2 UI 门禁 TC-P2-UI-001~005 已由各 slice 的 build + 浏览器 smoke 覆盖；REQ-015/016/017 及愿景用例待后续阶段确认后继续细化。
 - **愿景（产品）**：待技术验证后再补用例
 
 ## 4. 本机资源验证
@@ -162,6 +162,7 @@
 | 2026-08-03 | Sprint-20 主题时间线（task-030；REQ-013a/024） | 通过（后端自动化 + 前端 build + 运行态 API smoke + Edge headless 浏览器 smoke；v1.5.2 补真实 PG 大数据性能 smoke） | Candidate A 时间线不建事件表，API-033 `GET /api/spaces/{id}/timeline` 实时聚合 documents / tag_links / doc_links / chunks；migration 012 仅加时间索引；前端接入独立时间线视图（关键词、标签入口、密度热条、事件列表）。本轮 smoke 发现并修复 demo runtime 新建文档 `created_at/updated_at` 为空导致 timeline 无事件的缺口，补 `DemoRepository.create_document/update_document` 时间戳与回归用例。验证：`tests.backend.test_timeline` **7/7 OK**；timeline/document/tag/doc_links 回归 **38/38 OK**；backend discover **190 OK(skipped=2)**（embedding torch DLL 权限警告按 text-only fallback 继续）；frontend `npm run build` 通过（259 modules）；运行态 API smoke 通过（OpenAPI 含 API-033，创建文档/标签，关键词 timeline、tag timeline、空 q 422）；Edge headless CDP 浏览器 smoke 通过（登录、切到时间线、搜索 `Phoenix`，事件列表命中 `Phoenix Sprint20 Timeline Smoke`，density=1，无错误文本）；真实 PG 大数据性能 smoke 通过（620 docs + 240 links，density_events=2100，returned=200，degraded=True，window=week，elapsed_ms=2677.61）。残留：`linked` actor 按 TL-C-011 返回 `null`；无新增依赖 / 无 timeline 事件表。 |
 | 2026-08-04 | Sprint-20 release 状态收口（v1.5.0 → v1.5.1 patch） | 通过（文档 / 发布状态修正） | Git 事实：`origin/main` 已包含 `3e23d78` + `28843cb`，HEAD 为 `28843cb2af431e5fa33f7c8eeeb0ad1dc27dccb3`；GitHub Actions `Project Check` run 30830484733 为 success；annotated tag `v1.5.0` 已推送，`refs/tags/v1.5.0^{}` 解引用到 `28843cb2af431e5fa33f7c8eeeb0ad1dc27dccb3`。本次 v1.5.1 仅修正 `docs/08-dev-plan.md` / `docs/09-verification.md` 中 release 状态漂移，并同步 `VERSION` / `CHANGELOG.md` / `CHANGELOG-PLAIN.md`；不改业务代码、API、DB 或测试契约。 |
 | 2026-08-04 | v1.5.2 Sprint-20 / Sprint-22 验证债收口 | 通过（验证脚本 + 文档状态修正） | 新增 `scripts/smoke-folder-tree-browser.mjs`：Node 22 内置 fetch/WebSocket + Chrome/Edge CDP，运行态 OpenAPI preflight 后执行登录、Documents 视图、目录树渲染、UI 新建子文件夹、UI 单文档移动、API `folder_id` 后验并清理 fixture；实测通过 `FOLDER_TREE_BROWSER_SMOKE ok root=1 child=2 document=201`。新增 `scripts/smoke-timeline-pg-performance.py`：真实 `lumen-pg` / `PgRepository` / `get_timeline()`，临时写入 620 docs + 240 links 后自动清理；实测 `TIMELINE_PG_PERF_SMOKE ok documents=620 links=240 density_events=2100 returned=200 degraded=True window=week elapsed_ms=2677.61`。不改业务 API / DB 契约。 |
+| 2026-08-05 | **Phase2B 收口（团队 MVP 完成）** | 通过（范围三项全部验收 + 退出标准达成） | 范围：REQ-014 AI 润色 / 写作引用（TC-P2-AI-001：后端 9/9 + RG-008 Go + live UI smoke 2026-07-31 + D-C-001 2026-08-04 量化）；REQ-013a/024 主题时间线 + 密度热条（TC-P2-TL-001：task-030 + 运行态 API smoke + Edge headless + 真实 PG perf smoke）；REQ-039 文档目录树（TC-P2-FOLDER-001：task-027/028/029 + 浏览器自动化 smoke 2026-08-04）；Sprint-21 Doc-First UX（TC-P1-014/015 回归）；导入规模修复（RISK-P1-008，v1.7.1）；wikilink 别名/锚点兼容修复（v1.7.4）。退出标准三条达成：真实验收 TC / RG-008 数据外发风险已接受（真实外发 + 护栏）/ 产品红线未破。未做：多人 / 多空间真实团队端到端场景（残余验证债，见 §6）。 | 收口不升 Phase；下一阶段范围待用户定义（候选：真实团队验证 / RG-009 Vault PoC / 产品化） |
 
 ### 5.1 缺陷与回归记录
 
