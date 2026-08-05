@@ -16,6 +16,7 @@ import './styles/timeline.css';
 import './styles/quick-entry.css';
 import './styles/ai-polish.css';
 import './styles/responsive.css';
+import './styles/local-mount.css';
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>

@@ -2,6 +2,7 @@ import type { KnowledgeDocument, Space, Term } from '../api';
 import type { ActiveView } from './WorkspaceViewNav';
 import { FolderTree } from './FolderTree';
 import type { FolderManager } from './useFolders';
+import { LocalMountPane } from '../features/LocalMountPane';
 
 type ContextPaneProps = {
   activeView: ActiveView;
@@ -19,6 +20,8 @@ type ContextPaneProps = {
   selectedTermId: number | null;
   onSelectTerm: (term: Term) => void;
   onNewTerm: () => void;
+  token: string | undefined;
+  onImported: () => void;
 };
 
 export function ContextPane({
@@ -37,6 +40,8 @@ export function ContextPane({
   selectedTermId,
   onSelectTerm,
   onNewTerm,
+  token,
+  onImported,
 }: ContextPaneProps) {
   const selectedDocument = documents.find((document) => document.id === selectedId) ?? null;
   const anyFolderExpanded = folders.expandedFolderIds.size > 0;
@@ -165,6 +170,7 @@ export function ContextPane({
             onMoveDocument={onMoveDocument}
             onDeleteDocument={onDeleteDocument}
           />
+          <LocalMountPane token={token} onImported={onImported} />
         </>
       ) : null}
 

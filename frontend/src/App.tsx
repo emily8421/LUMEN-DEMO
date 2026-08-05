@@ -226,6 +226,8 @@ function App() {
             selectedTermId={terms.selectedTermId}
             onSelectTerm={terms.selectTerm}
             onNewTerm={terms.newTerm}
+            token={token}
+            onImported={() => handleImported(null)}
           />
 
           {paneLayout.leftPaneOpen ? (

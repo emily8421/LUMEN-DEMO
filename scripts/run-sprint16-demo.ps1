@@ -284,15 +284,15 @@ if __name__ == "__main__":
     Write-Host "Using Volta command: $voltaCommand"
 
     Start-DemoProcess "backend" @($backendPython, $backendScript) $repoRoot
-    Start-DemoProcess "frontend" @($voltaCommand, "run", "--node", "22.17.1", "npm", "exec", "vite", "--", "--host", "127.0.0.1", "--port", "$FrontendPort", "--strictPort") $frontendRoot @{
+    Start-DemoProcess "frontend" @($voltaCommand, "run", "--node", "22.17.1", "npm", "exec", "vite", "--", "--host", "localhost", "--port", "$FrontendPort", "--strictPort") $frontendRoot @{
         VITE_API_BASE = ""
         DEMO_BACKEND_PROXY_URL = "http://127.0.0.1:$BackendPort"
     }
 
     Wait-HttpOk "http://127.0.0.1:$BackendPort/docs" 30
-    Wait-HttpOk "http://127.0.0.1:$FrontendPort" 30
+    Wait-HttpOk "http://localhost:$FrontendPort" 30
 
-    $frontendUrl = "http://127.0.0.1:$FrontendPort"
+    $frontendUrl = "http://localhost:$FrontendPort"
     Assert-FrontendIdentity $frontendUrl
     if ($RequiredBackendRoute.Count -gt 0) {
         $runtimeCheckScript = Join-Path $repoRoot "scripts\check-runtime-openapi.ps1"

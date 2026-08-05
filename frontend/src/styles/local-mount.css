@@ -1,0 +1,255 @@
+/* 本地挂载分区（REQ-018 模式 B）：与上层 LUMEN DB 文件管理器视觉隔离。
+   仅本地浏览 / 搜索 / 预览，内容不上传服务端（TC-P2-VAULT-001 ⑥）。 */
+
+.local-mount-pane {
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  max-height: 45%;
+  min-height: 120px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.local-mount-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #fafcff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.local-mount-header h2 {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.local-mount-collapse {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 2px;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.local-mount-badge {
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  white-space: nowrap;
+}
+
+.local-mount-badge.ok {
+  background: #ecfdf5;
+  color: #047857;
+  border-color: #a7f3d0;
+}
+
+.local-mount-badge.warn {
+  background: #fffbeb;
+  color: #b45309;
+  border-color: #fde68a;
+}
+
+.local-mount-badge.idle {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.local-mount-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.local-mount-actions button {
+  font-size: 11px;
+  padding: 2px 8px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.local-mount-actions button:hover:not(:disabled) {
+  background: #f3f4f6;
+}
+
+.local-mount-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.local-mount-empty {
+  padding: 12px;
+}
+
+.local-mount-search {
+  margin: 8px 12px;
+  padding: 5px 8px;
+  font: inherit;
+  font-size: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  width: calc(100% - 24px);
+  box-sizing: border-box;
+}
+
+.local-mount-tree {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+  padding: 4px 0 8px;
+}
+
+.local-mount-node {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.local-mount-node:hover {
+  background: #f3f4f6;
+}
+
+.local-mount-node.cur {
+  background: #eff6ff;
+}
+
+.local-mount-arrow {
+  width: 10px;
+  color: #6b7280;
+}
+
+.local-mount-ic {
+  font-size: 12px;
+  line-height: 1;
+}
+
+.local-mount-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.local-mount-tag {
+  margin-left: auto;
+  font-size: 10px;
+  padding: 0 5px;
+  border-radius: 6px;
+  background: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+  flex-shrink: 0;
+}
+
+.local-mount-results {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.local-mount-results li button {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  text-align: left;
+  padding: 4px 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+}
+
+.local-mount-results li button:hover {
+  background: #f3f4f6;
+}
+
+.local-mount-results li button.active {
+  background: #eff6ff;
+}
+
+.local-mount-results li button strong {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.local-mount-results li button small {
+  font-size: 10px;
+  color: #6b7280;
+}
+
+.local-mount-preview {
+  border-top: 1px solid #e5e7eb;
+  padding: 6px 12px;
+  max-height: 160px;
+  overflow: auto;
+  background: #fffbeb;
+  flex-shrink: 0;
+}
+
+.local-mount-preview-meta {
+  font-size: 10px;
+  color: #b45309;
+  margin-bottom: 4px;
+}
+
+.local-mount-preview pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: inherit;
+  font-size: 12px;
+  margin: 0;
+}
+
+.local-mount-error {
+  color: #dc2626;
+  font-size: 11px;
+  padding: 4px 12px;
+  margin: 0;
+}
+
+.local-mount-import-bar {
+  display: flex;
+  gap: 4px;
+  padding: 6px 12px;
+  border-top: 1px solid #e5e7eb;
+  flex-shrink: 0;
+}
+
+.local-mount-import {
+  flex: 1;
+  font-size: 11px;
+  padding: 4px 8px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.local-mount-import:hover:not(:disabled) {
+  background: #f3f4f6;
+}
+
+.local-mount-import:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.local-mount-import-msg {
+  font-size: 11px;
+  color: #6b7280;
+  padding: 2px 12px 6px;
+  margin: 0;
+  flex-shrink: 0;
+}

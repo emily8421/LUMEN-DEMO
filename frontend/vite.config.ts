@@ -7,7 +7,7 @@ const backendProxyTarget = runtimeEnv.DEMO_BACKEND_PROXY_URL ?? 'http://127.0.0.
 export default defineConfig({
   plugins: [react()],
   server: {
-    host: '127.0.0.1',
+    host: 'localhost',
     port: 5173,
     proxy: {
       '/api': backendProxyTarget,
