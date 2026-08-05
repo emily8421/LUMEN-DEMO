@@ -22,7 +22,6 @@ export function QueryFeature({
     <section className="query-panel focus-panel task-workspace">
       <div className="workspace-toolbar">
         <div className="view-title">
-          <p className="eyebrow">REQ-008</p>
           <h2>RAG 问答</h2>
         </div>
         <span className="badge success">答案必须带来源</span>

@@ -82,7 +82,7 @@ export function WorkspaceMain({
           documents={documents.documents}
           onOpenDocument={documents.handleOpenDocument}
           onCreateDocument={documents.handleCreateDocument}
-          onDelete={documents.handleDelete}
+          savedRevision={documents.savedRevision}
           onSave={documents.handleSave}
           onRestore={documents.handleRestore}
           onDownloadMarkdown={documents.handleDownloadMarkdown}

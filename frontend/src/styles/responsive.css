@@ -4,10 +4,13 @@
   }
 
   .workspace-layout {
-    grid-template-columns: 52px 220px minmax(0, 1fr);
+    grid-template-columns: 52px var(--left-pane-width, 220px) 6px minmax(0, 1fr);
   }
 
-  .document-view-grid,
+  .document-view-grid {
+    grid-template-columns: minmax(0, 1fr) 6px var(--right-pane-width, 220px);
+  }
+
   .query-workspace-grid {
     grid-template-columns: 1fr;
   }
@@ -54,6 +57,14 @@
   }
 
   .context-pane {
+    display: none;
+  }
+
+  .workspace-layout > .workspace-main {
+    grid-column: 2;
+  }
+
+  .pane-resizer-left {
     display: none;
   }
 

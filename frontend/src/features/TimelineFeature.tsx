@@ -38,7 +38,6 @@ export function TimelineFeature({
     <section className="timeline-panel focus-panel task-workspace">
       <div className="workspace-toolbar timeline-toolbar">
         <div className="view-title">
-          <p className="eyebrow">REQ-013a / REQ-024</p>
           <h2>时间线</h2>
         </div>
         <div className="timeline-toolbar-actions">

@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import type { FormEvent } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { CSSProperties, FormEvent, KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent } from 'react';
 import type {
   DocLinkView,
   DocumentPermission,
@@ -15,6 +15,8 @@ import { DocumentEmptyState } from './DocumentEmptyState';
 import { DocumentInspectorFeature } from './DocumentInspectorFeature';
 import { useTextareaSelection } from '../app/useTextareaSelection';
 import type { useAiPolish } from '../app/useAiPolish';
+import { clampSplitRatio, DEFAULT_SPLIT_RATIO, loadSplitRatio, persistSplitRatio } from '../app/split-layout-store';
+import { usePaneWidth } from '../app/usePaneWidth';
 
 type DocumentMode = 'read' | 'edit' | 'split';
 
@@ -33,7 +35,8 @@ type DocumentsFeatureProps = {
   documents: KnowledgeDocument[];
   onOpenDocument: (documentId: number, title: string) => void;
   onCreateDocument: () => void;
-  onDelete: () => void;
+  /** 保存成功次数（useDocuments 自增），用于保存后自动回到阅读态。 */
+  savedRevision: number;
   onSave: (event: FormEvent<HTMLFormElement>) => void;
   onRestore: (versionNo: number) => void;
   onDownloadMarkdown: () => void;
@@ -77,7 +80,7 @@ export function DocumentsFeature({
   documents,
   onOpenDocument,
   onCreateDocument,
-  onDelete,
+  savedRevision,
   onSave,
   onRestore,
   onDownloadMarkdown,
@@ -95,10 +98,71 @@ export function DocumentsFeature({
   onExpandLeftPane,
   onExitToEmpty,
 }: DocumentsFeatureProps) {
+  const rightPaneWidth = usePaneWidth('right');
   const [documentMode, setDocumentMode] = useState<DocumentMode>('read');
   const { ref: textareaRef, onSelect: handleTextareaSelect } = useTextareaSelection(
     aiPolish.changeSelection,
   );
+
+  const [splitRatio, setSplitRatio] = useState<number>(() => loadSplitRatio());
+  const [splitResizing, setSplitResizing] = useState(false);
+  const splitRatioRef = useRef(splitRatio);
+  const splitGridRef = useRef<HTMLDivElement | null>(null);
+  const splitDragRef = useRef<{ containerLeft: number; containerWidth: number } | null>(null);
+
+  const updateSplitRatio = (ratio: number) => {
+    const clamped = clampSplitRatio(ratio);
+    splitRatioRef.current = clamped;
+    setSplitRatio(clamped);
+  };
+
+  const handleSplitPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const grid = splitGridRef.current;
+    if (!grid) {
+      return;
+    }
+    event.preventDefault();
+    const rect = grid.getBoundingClientRect();
+    splitDragRef.current = { containerLeft: rect.left, containerWidth: rect.width };
+    event.currentTarget.setPointerCapture(event.pointerId);
+    setSplitResizing(true);
+  };
+
+  const handleSplitPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const drag = splitDragRef.current;
+    if (!drag || drag.containerWidth <= 0) {
+      return;
+    }
+    const minEditorPx = 200;
+    const minPreviewPx = 220;
+    const minRatio = Math.min(0.7, minEditorPx / drag.containerWidth);
+    const maxRatio = Math.max(0.3, (drag.containerWidth - minPreviewPx) / drag.containerWidth);
+    const pointerRatio = (event.clientX - drag.containerLeft) / drag.containerWidth;
+    updateSplitRatio(Math.min(maxRatio, Math.max(minRatio, pointerRatio)));
+  };
+
+  const handleSplitPointerEnd = () => {
+    splitDragRef.current = null;
+    setSplitResizing(false);
+    persistSplitRatio(splitRatioRef.current);
+  };
+
+  const handleSplitKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      updateSplitRatio(splitRatioRef.current - 0.02);
+      persistSplitRatio(splitRatioRef.current);
+    } else if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      updateSplitRatio(splitRatioRef.current + 0.02);
+      persistSplitRatio(splitRatioRef.current);
+    }
+  };
+
+  const resetSplitRatio = () => {
+    updateSplitRatio(DEFAULT_SPLIT_RATIO);
+    persistSplitRatio(DEFAULT_SPLIT_RATIO);
+  };
 
   useEffect(() => {
     if (isCreating) {
@@ -109,6 +173,13 @@ export function DocumentsFeature({
       setDocumentMode('read');
     }
   }, [isCreating, selectedDocument?.id]);
+
+  // 保存成功后回到阅读态（编辑/并排保存同一文档时 id 不变，需显式信号）。
+  useEffect(() => {
+    if (savedRevision > 0 && !isCreating) {
+      setDocumentMode('read');
+    }
+  }, [savedRevision, isCreating]);
 
   const canShowModes = Boolean(selectedDocument || isCreating);
   const effectiveMode = isCreating && documentMode === 'read' ? 'edit' : documentMode;
@@ -137,7 +208,6 @@ export function DocumentsFeature({
     <section className="documents-workspace">
       <div className="workspace-toolbar">
         <div className="view-title">
-          <p className="eyebrow">REQ-004 / REQ-005 / REQ-006</p>
           <h2>{isCreating ? '新建文档' : selectedDocument?.title ?? '选择文档'}</h2>
         </div>
         <div className="toolbar-actions">
@@ -165,12 +235,14 @@ export function DocumentsFeature({
             <>
               <button type="button" className="secondary" onClick={onDownloadMarkdown} disabled={isBusy}>下载 .md</button>
               <button type="button" className="secondary" onClick={onExportPdf} disabled={isBusy}>导出 PDF</button>
-              <button type="button" className="danger" onClick={onDelete} disabled={isBusy}>删除</button>
             </>
           ) : null}
         </div>
       </div>
-      <div className={`workspace-body document-view-grid${rightPaneOpen ? '' : ' pane-right-collapsed'}`}>
+      <div
+        className={`workspace-body document-view-grid${rightPaneOpen ? '' : ' pane-right-collapsed'}`}
+        style={{ '--right-pane-width': `${rightPaneWidth.width}px` } as CSSProperties}
+      >
         <section className="editor-panel editor-pane">
           {!selectedDocument && !isCreating ? (
             <DocumentEmptyState
@@ -183,31 +255,32 @@ export function DocumentsFeature({
           ) : (
             <form className="editor-form" onSubmit={onSave}>
               <div className="editor-toolbar">
-                <label>
-                  标题
-                  <input
-                    value={draft.title}
-                    onChange={(event) => onDraftChange({ ...draft, title: event.target.value })}
-                    placeholder="输入 Markdown 文档标题"
-                  />
-                </label>
-                <label>
-                  权限
-                  <select
-                    value={draft.permission}
-                    onChange={(event) => onDraftChange({ ...draft, permission: event.target.value as DocumentPermission })}
-                  >
-                    {Object.entries(permissionLabels).map(([value, label]) => (
-                      <option key={value} value={value}>{label}</option>
-                    ))}
-                  </select>
-                </label>
-                <button type="submit" disabled={isBusy || draft.title.trim().length === 0}>保存</button>
-                {selectedDocument && !isCreating ? (
-                  <button type="button" className="danger" onClick={onDelete} disabled={isBusy}>删除</button>
-                ) : null}
+                <input
+                  className="editor-title-input"
+                  value={draft.title}
+                  onChange={(event) => onDraftChange({ ...draft, title: event.target.value })}
+                  placeholder="输入 Markdown 文档标题"
+                  aria-label="文档标题"
+                />
+                <select
+                  className="editor-permission-select"
+                  value={draft.permission}
+                  onChange={(event) => onDraftChange({ ...draft, permission: event.target.value as DocumentPermission })}
+                  aria-label="文档权限"
+                >
+                  {Object.entries(permissionLabels).map(([value, label]) => (
+                    <option key={value} value={value}>{label}</option>
+                  ))}
+                </select>
+                <div className="editor-toolbar-actions">
+                  <button type="submit" disabled={isBusy || draft.title.trim().length === 0}>保存</button>
+                </div>
               </div>
-              <div className={effectiveMode === 'split' ? 'editor-content-grid' : 'editor-content-grid single-column'}>
+              <div
+                ref={splitGridRef}
+                className={effectiveMode === 'split' ? `editor-content-grid split-mode${splitResizing ? ' resizing' : ''}` : 'editor-content-grid single-column'}
+                style={effectiveMode === 'split' ? { gridTemplateColumns: `minmax(0, ${splitRatio * 100}%) 6px minmax(220px, ${(1 - splitRatio) * 100}%)` } : undefined}
+              >
                 <label className="editor-field">
                   Markdown 内容
                   <textarea
@@ -219,11 +292,45 @@ export function DocumentsFeature({
                     rows={14}
                   />
                 </label>
+                {effectiveMode === 'split' ? (
+                  <div
+                    className={splitResizing ? 'split-resizer resizing' : 'split-resizer'}
+                    role="separator"
+                    aria-orientation="vertical"
+                    aria-label="调整编辑与预览宽度"
+                    aria-valuemin={30}
+                    aria-valuemax={70}
+                    aria-valuenow={Math.round(splitRatio * 100)}
+                    tabIndex={0}
+                    onPointerDown={handleSplitPointerDown}
+                    onPointerMove={handleSplitPointerMove}
+                    onPointerUp={handleSplitPointerEnd}
+                    onPointerCancel={handleSplitPointerEnd}
+                    onDoubleClick={resetSplitRatio}
+                    onKeyDown={handleSplitKeyDown}
+                  />
+                ) : null}
                 {effectiveMode === 'split' ? previewPane : null}
               </div>
             </form>
           )}
         </section>
+
+        {rightPaneOpen ? (
+          <div
+            className={rightPaneWidth.resizing ? 'pane-resizer pane-resizer-right resizing' : 'pane-resizer pane-resizer-right'}
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="调整右侧栏宽度"
+            tabIndex={0}
+            onPointerDown={rightPaneWidth.startResize}
+            onPointerMove={rightPaneWidth.moveResize}
+            onPointerUp={rightPaneWidth.endResize}
+            onPointerCancel={rightPaneWidth.endResize}
+            onDoubleClick={rightPaneWidth.resetWidth}
+            onKeyDown={rightPaneWidth.handleKeyDown}
+          />
+        ) : null}
 
         <DocumentInspectorFeature
           isCreating={isCreating}

@@ -141,6 +141,11 @@
   margin: var(--space-2);
 }
 
+/* 搜索视图三行网格：工具栏 / 输入栏 / 结果区，避免输入栏被 1fr 行压到底部留白。 */
+.search-panel {
+  grid-template-rows: auto auto minmax(0, 1fr);
+}
+
 .task-input,
 .focus-form {
   display: grid;

@@ -1,5 +1,5 @@
 .inspector-pane.document-inspector-pane {
-  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
 }
 
 .inspector-tabs {
@@ -7,7 +7,7 @@
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0;
   border-bottom: 1px solid var(--line-soft);
-  background: var(--panel);
+  background: transparent;
   padding: 0 8px 6px;
 }
 

@@ -24,7 +24,6 @@ export function TermsFeature({
     <section className="term-panel focus-panel task-workspace">
       <div className="workspace-toolbar">
         <div className="view-title">
-          <p className="eyebrow">REQ-036</p>
           <h2>术语管理</h2>
         </div>
         <div className="toolbar-actions">

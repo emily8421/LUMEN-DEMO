@@ -66,7 +66,6 @@ export function DocumentInspectorFeature({
 }: DocumentInspectorFeatureProps) {
   const [activeTab, setActiveTab] = useState<InspectorTab>('versions');
   const [newTagName, setNewTagName] = useState('');
-  const activeTabInfo = INSPECTOR_TABS.find((tab) => tab.value === activeTab) ?? INSPECTOR_TABS[0];
 
   useEffect(() => {
     setActiveTab('versions');
@@ -85,12 +84,6 @@ export function DocumentInspectorFeature({
 
   return (
     <aside className="versions-panel inspector-pane document-inspector-pane">
-      <div className="inspector-header">
-        <div>
-          <p className="eyebrow">文档侧栏</p>
-          <h2>{activeTabInfo.label}</h2>
-        </div>
-      </div>
       <div className="inspector-tabs" role="tablist" aria-label="文档侧栏">
         {INSPECTOR_TABS.map((tab) => (
           <button

@@ -30,24 +30,40 @@
 }
 
 .ai-polish-mode-group {
-  display: flex;
-  gap: var(--space-2);
-}
-
-.ai-polish-mode {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px var(--space-3);
+  display: inline-flex;
+  overflow: hidden;
   border: 1px solid var(--line);
   border-radius: var(--radius-control);
   background: var(--panel);
+}
+
+.ai-polish-mode {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border: 0;
+  border-right: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
   cursor: pointer;
 }
 
+.ai-polish-mode:last-child {
+  border-right: 0;
+}
+
+.ai-polish-mode input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .ai-polish-mode.active {
-  border-color: var(--blue);
   background: var(--blue-soft);
+  color: var(--blue);
 }
 
 .ai-polish-trigger {

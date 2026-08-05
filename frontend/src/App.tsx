@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import type { CSSProperties } from 'react';
 import { exportSpaceZip, triggerBrowserDownload } from './api';
 import { StatusBar } from './components/StatusBar';
 import { WorkspaceViewNav } from './app/WorkspaceViewNav';
@@ -12,6 +13,7 @@ import { useTerms } from './app/useTerms';
 import { useImport } from './app/useImport';
 import { useWorkspace } from './app/useWorkspace';
 import { usePaneLayout } from './app/usePaneLayout';
+import { usePaneWidth } from './app/usePaneWidth';
 import { useSession } from './app/useSession';
 import { useDocuments } from './app/useDocuments';
 import { useAiPolish } from './app/useAiPolish';
@@ -25,7 +27,9 @@ import { WorkspaceMain } from './app/WorkspaceMain';
 function App() {
   const workspace = useWorkspace();
   const paneLayout = usePaneLayout();
+  const leftPaneWidth = usePaneWidth('left');
   const [importModalOpen, setImportModalOpen] = useState(false);
+
   const session = useSession({ runAction, setNotice: workspace.setNotice, onSpaceChanged: handleSpaceChanged });
   const token = session.session?.token;
 
@@ -200,7 +204,10 @@ function App() {
           </form>
         </section>
       ) : (
-        <div className={`workspace-layout workspace-shell${paneLayout.leftPaneOpen ? '' : ' pane-left-collapsed'}`}>
+        <div
+          className={`workspace-layout workspace-shell${paneLayout.leftPaneOpen ? '' : ' pane-left-collapsed'}`}
+          style={{ '--left-pane-width': `${leftPaneWidth.width}px` } as CSSProperties}
+        >
           <WorkspaceViewNav activeView={workspace.activeView} disabled={workspace.isBusy} onChange={workspace.setActiveView} />
 
           <ContextPane
@@ -214,11 +221,28 @@ function App() {
             onCreateDocument={documents.handleCreateDocument}
             onSelectDocument={documents.handleSelectDocument}
             onMoveDocument={documents.handleMoveDocument}
+            onDeleteDocument={documents.handleDeleteDocument}
             terms={terms.terms}
             selectedTermId={terms.selectedTermId}
             onSelectTerm={terms.selectTerm}
             onNewTerm={terms.newTerm}
           />
+
+          {paneLayout.leftPaneOpen ? (
+            <div
+              className={leftPaneWidth.resizing ? 'pane-resizer pane-resizer-left resizing' : 'pane-resizer pane-resizer-left'}
+              role="separator"
+              aria-orientation="vertical"
+              aria-label="调整左侧栏宽度"
+              tabIndex={0}
+              onPointerDown={leftPaneWidth.startResize}
+              onPointerMove={leftPaneWidth.moveResize}
+              onPointerUp={leftPaneWidth.endResize}
+              onPointerCancel={leftPaneWidth.endResize}
+              onDoubleClick={leftPaneWidth.resetWidth}
+              onKeyDown={leftPaneWidth.handleKeyDown}
+            />
+          ) : null}
 
           <WorkspaceMain
             activeView={workspace.activeView}

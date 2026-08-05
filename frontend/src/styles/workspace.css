@@ -326,9 +326,33 @@
 
 .workspace-toolbar {
   min-height: 44px;
-  border-bottom-color: var(--line);
-  background: var(--panel);
+  background: transparent;
   padding: 6px 10px;
+}
+
+/* Doc-First §9.5.1（视觉收口续）：工具栏按钮 ghost 化，避免白底描边小框突兀。 */
+.workspace-toolbar .secondary,
+.workspace-toolbar .danger {
+  border-color: transparent;
+  background: transparent;
+}
+
+.workspace-toolbar .secondary {
+  color: var(--text);
+}
+
+.workspace-toolbar .secondary:hover:not(:disabled) {
+  background: var(--panel-soft);
+  color: var(--text);
+}
+
+.workspace-toolbar .danger {
+  color: var(--red);
+}
+
+.workspace-toolbar .danger:hover:not(:disabled) {
+  background: var(--red-soft);
+  color: var(--red);
 }
 
 .view-title {
@@ -376,6 +400,11 @@
   color: var(--text);
 }
 
+.folder-icon-button svg {
+  width: 15px;
+  height: 15px;
+}
+
 .badge {
   display: inline-flex;
   align-items: center;
@@ -403,17 +432,18 @@
 
 .document-view-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 240px;
-  gap: var(--space-3);
+  grid-template-columns: minmax(0, 1fr) 6px var(--right-pane-width, 240px);
+  gap: 0;
   min-height: 0;
 }
 
 /* Doc-First §9.5（Sprint-21）：右栏（Inspector）收起 → 列宽 0，编辑器占满。 */
 .document-view-grid.pane-right-collapsed {
-  grid-template-columns: minmax(0, 1fr) 0;
+  grid-template-columns: minmax(0, 1fr) 0 0;
 }
 
-.document-view-grid.pane-right-collapsed > .inspector-pane {
+.document-view-grid.pane-right-collapsed > .inspector-pane,
+.document-view-grid.pane-right-collapsed > .pane-resizer-right {
   display: none;
 }
 
@@ -437,12 +467,61 @@
 }
 
 .editor-toolbar {
-  display: grid;
-  grid-template-columns: minmax(180px, 1fr) 150px auto;
-  gap: var(--space-2);
-  align-items: end;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
   border-bottom: 1px solid var(--line-soft);
-  padding: var(--space-2);
+  padding: 6px 0;
+}
+
+/* 视觉收口：标题 / 权限去框融入主区（主流编辑器风格），单行紧凑工具栏。 */
+.editor-toolbar input,
+.editor-toolbar select {
+  border-color: transparent;
+  background: transparent;
+  padding-left: 0;
+}
+
+.editor-title-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.editor-permission-select {
+  flex: 0 0 auto;
+  width: auto;
+  color: var(--muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.editor-permission-select:hover:not(:disabled) {
+  background: var(--panel-soft);
+}
+
+.editor-toolbar-actions {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: var(--space-2);
+}
+
+.editor-toolbar-actions button {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.editor-toolbar .danger {
+  border-color: transparent;
+  background: transparent;
+  color: var(--red);
+}
+
+.editor-toolbar .danger:hover:not(:disabled) {
+  background: var(--red-soft);
+  color: var(--red);
 }
 
 .editor-content-grid {
@@ -454,15 +533,60 @@
   padding: var(--space-2);
 }
 
+/* 并排模式：编辑 | 拖拽分隔条 | 预览；列比例由 DocumentsFeature 拖拽覆盖。 */
+.editor-content-grid.split-mode {
+  grid-template-columns: minmax(0, 1.35fr) 6px minmax(220px, 0.65fr);
+  gap: 0;
+}
+
+.split-resizer {
+  position: relative;
+  cursor: col-resize;
+  touch-action: none;
+  user-select: none;
+  outline: none;
+  background: transparent;
+}
+
+.split-resizer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+  border-radius: 2px;
+  background: transparent;
+}
+
+.split-resizer:hover::after,
+.split-resizer:focus-visible::after,
+.split-resizer.resizing::after {
+  background: var(--blue);
+}
+
+.editor-content-grid.split-mode.resizing {
+  cursor: col-resize;
+  user-select: none;
+}
+
 .editor-field {
   min-height: 0;
+  grid-template-rows: auto minmax(0, 1fr);
 }
 
 .editor-field textarea {
   min-height: 440px;
   height: 100%;
+  border-color: var(--line-soft);
+  background: var(--panel-soft);
   font-family: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
   line-height: 1.48;
+}
+
+.editor-field textarea:focus {
+  border-color: var(--line);
 }
 
 .markdown-preview {

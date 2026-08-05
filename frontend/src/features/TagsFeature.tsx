@@ -29,7 +29,6 @@ export function TagsFeature({
     <section className="tag-panel focus-panel task-workspace">
       <div className="workspace-toolbar">
         <div className="view-title">
-          <p className="eyebrow">REQ-012</p>
           <h2>标签</h2>
         </div>
         <form className="toolbar-actions" onSubmit={onCreateTag}>

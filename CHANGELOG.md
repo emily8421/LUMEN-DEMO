@@ -6,6 +6,19 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v1.7.5（2026-08-05）
+
+**Phase2B 收口后 UI 收口批次。** 修复左右栏宽度不可调 / 不持久、编辑保存后不自动回阅读态（连点易产生多余版本）、左侧目录右键缺「删除文档」入口、快速录入抽屉过窄、搜索视图输入栏大空档；附带编辑器留白、编辑工具栏视觉（去框 / 防按钮竖排）、顶栏面板图标与帮助入口、左侧栏图标语义化 + 收起/展开切换 + 显示当前文件、右栏重复标题去除、AI 润色模式紧凑分段控件、移除 9 处用户可见 REQ 角标（代码注释与 docs 保留追溯）。
+
+- 左右栏拖拽调宽 + 持久化：新增 `frontend/src/app/pane-width-store.ts`（localStorage `lumen-demo-pane-widths`，左 180–420 / 右 220–480，默认 240）与 `usePaneWidth.ts`（pointer capture、←/→ 键盘 10px、双击复位）；App 左栏与文档右栏各加 `.pane-resizer` 分隔条，`.workspace-layout` / `.document-view-grid` 改 4 / 3 列；responsive 小屏隐藏分隔条并修正列位。
+- 保存自动回阅读态：`useDocuments.ts` 保存成功自增 `savedRevision`，`DocumentsFeature` 收到信号且非新建态时 `setDocumentMode('read')`；连点「保存」不再产生多余版本（另有 `isBusy` 守卫防重复提交）。
+- 删除入口迁移：左侧目录文档行右键菜单新增「删除文档」（danger 项，confirm 确认，可删任意树内文档）；编辑工具栏删除按钮移除。
+- 快速录入抽屉：`quick-entry.css` 宽度 `min(420px, 92vw)` → `min(560px, 94vw)`。
+- 搜索视图布局：`panels.css` `.search-panel` 改三行网格（工具栏 / 输入栏 / 结果区），关键词输入栏紧贴标题，消除底部大空档。
+- 验证：`volta run --node 22.17.1 npm run build` → 262 modules 绿；用户本机 Chrome/Edge smoke 覆盖清单全部通过（拖拽变宽 / 刷新保持 / 右栏唤出 / 保存回阅读 / 右键删除 / 抽屉 560px / 搜索紧贴标题）；`docs/09-verification.md` §5 / §5.1 回写验收与缺陷记录。
+
+> PATCH 依据（`ai/project-rules.md` §2.8.1）：bug 修复 + 纯前端 UI 收口，不改 API / DB / 测试契约。
+
 ## v1.7.4（2026-08-05）
 
 **Obsidian wikilink 兼容性修复（别名 / 锚点）+ REQ-018 模式 A 收尾入库。** 让 `[[目标|别名]]` / `[[目标#锚点]]` 两种 Obsidian 常见写法能解析到 `目标` 文档，并把模式 A 评估报告与 vault 导入 smoke 脚本正式入库。

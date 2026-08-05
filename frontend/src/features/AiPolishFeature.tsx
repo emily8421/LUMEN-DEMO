@@ -56,7 +56,6 @@ export function AiPolishFeature({
       <section className="ai-polish-block" aria-label="AI 润色">
         <div className="subsection-heading">
           <strong>AI 润色</strong>
-          <span>REQ-014</span>
         </div>
         <p className="empty-state">只读文档不可润色。</p>
       </section>
@@ -69,7 +68,6 @@ export function AiPolishFeature({
     <section className="ai-polish-block" aria-label="AI 润色">
       <div className="subsection-heading">
         <strong>AI 润色</strong>
-        <span>REQ-014</span>
       </div>
 
       <fieldset className="ai-polish-mode-fieldset">

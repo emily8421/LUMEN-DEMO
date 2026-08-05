@@ -60,7 +60,7 @@ export function WelcomeFeature({ isBusy, onNavigate, onCreateDocument, onOpenQui
         </button>
       </div>
 
-      <p className="welcome-hint">从左侧目录选择文档开始阅读，或新建一篇。</p>
+      <p className="welcome-hint">从顶部「☰」展开目录（Ctrl+B），或从卡片开始。</p>
     </div>
   );
 }

@@ -93,7 +93,6 @@ export function ImportFeature({
       >
         <header className="import-modal-header">
           <div className="view-title">
-            <p className="eyebrow">REQ-037</p>
             <h2 id="import-modal-title">批量导入文本</h2>
           </div>
           <button

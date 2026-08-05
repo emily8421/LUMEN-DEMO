@@ -22,7 +22,6 @@ export function SearchFeature({
     <section className="search-panel focus-panel task-workspace">
       <div className="workspace-toolbar">
         <div className="view-title">
-          <p className="eyebrow">REQ-007</p>
           <h2>搜索</h2>
         </div>
         <span className="badge">Hybrid：关键词 + 语义</span>

@@ -82,6 +82,10 @@ export function useFolders({ token, runAction, setNotice }: UseFoldersArgs) {
     setExpandedFolderIds(new Set());
   }
 
+  function expandAll() {
+    setExpandedFolderIds(new Set(knownFolders.map((folder) => folder.id)));
+  }
+
   function beginCreateFolder(parentId: number | null) {
     if (parentId !== null) {
       setExpandedFolderIds((current) => new Set(current).add(parentId));
@@ -279,6 +283,7 @@ export function useFolders({ token, runAction, setNotice }: UseFoldersArgs) {
     reloadLoadedFolders,
     resetFolders,
     collapseAll,
+    expandAll,
     beginCreateFolder,
     beginRenameFolder,
     cancelInlineEdit,

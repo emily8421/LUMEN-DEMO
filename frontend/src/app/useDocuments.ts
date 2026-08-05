@@ -58,6 +58,7 @@ export function useDocuments({
   const [backlinks, setBacklinks] = useState<DocLinkView[]>([]);
   const [draft, setDraft] = useState<Draft>(emptyDraft);
   const [isCreating, setIsCreating] = useState(false);
+  const [savedRevision, setSavedRevision] = useState(0);
 
   const selectedDocument = useMemo(
     () => documents.find((document) => document.id === selectedId) ?? null,
@@ -165,6 +166,7 @@ export function useDocuments({
       setIsCreating(false);
       await loadVersions(token, savedDocument.id);
       setNotice(`已保存：${savedDocument.title}（版本 ${savedDocument.current_version}）`);
+      setSavedRevision((revision) => revision + 1);
     });
   };
 
@@ -214,16 +216,22 @@ export function useDocuments({
     });
   };
 
-  const handleDelete = () => {
-    if (!token || !selectedDocument) {
+  const handleDeleteDocument = (documentId: number) => {
+    if (!token) {
       return;
     }
-    if (!window.confirm(`确认删除文档「${selectedDocument.title}」？此操作不可撤销。`)) {
+    const target = documents.find((document) => document.id === documentId);
+    if (!target) {
+      return;
+    }
+    if (!window.confirm(`确认删除文档「${target.title}」？此操作不可撤销。`)) {
       return;
     }
     void runAction('正在删除文档...', async () => {
-      await deleteDocument(token, selectedDocument.id);
-      setSelectedId(null);
+      await deleteDocument(token, documentId);
+      if (selectedId === documentId) {
+        setSelectedId(null);
+      }
       setIsCreating(false);
       await reloadDocuments(token);
       setNotice('文档已删除。');
@@ -313,10 +321,11 @@ export function useDocuments({
     handleCreateDocument,
     handleSelectDocument,
     handleMoveDocument,
-    handleDelete,
+    handleDeleteDocument,
     handleRestore,
     handleDownloadMarkdown,
     handleExportPdf,
     handleOpenDocument,
+    savedRevision,
   };
 }

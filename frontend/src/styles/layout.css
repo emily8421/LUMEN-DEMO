@@ -121,6 +121,11 @@
   color: var(--blue);
 }
 
+.pane-toggle-icon {
+  width: 16px;
+  height: 16px;
+}
+
 .user-menu-trigger {
   display: grid;
   place-items: center;
@@ -178,6 +183,72 @@
   white-space: nowrap;
 }
 
+.help-wrap {
+  position: relative;
+}
+
+.help-trigger {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 700;
+  padding: 0;
+}
+
+.help-trigger:hover:not(:disabled),
+.help-trigger:focus-visible:not(:disabled) {
+  border-color: #bfdbfe;
+  background: var(--blue-soft);
+}
+
+.help-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 20;
+  width: 320px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  background: #ffffff;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+  font-size: 12px;
+  padding: 10px 12px;
+}
+
+.help-title {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+}
+
+.help-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+}
+
+.help-list div {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  gap: 8px;
+}
+
+.help-list dt {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.help-list dd {
+  margin: 0;
+  color: var(--text);
+}
+
 .card {
   border: 1px solid var(--line);
   border-radius: var(--radius-panel);
@@ -205,17 +276,18 @@
 
 .workspace-layout {
   display: grid;
-  grid-template-columns: 52px 240px minmax(0, 1fr);
+  grid-template-columns: 52px var(--left-pane-width, 240px) 6px minmax(0, 1fr);
   min-height: 0;
   overflow: hidden;
 }
 
 /* Doc-First §9.5（Sprint-21）：左目录收起 → 列宽 0，主内容占满。 */
 .workspace-layout.pane-left-collapsed {
-  grid-template-columns: 52px 0 minmax(0, 1fr);
+  grid-template-columns: 52px 0 0 minmax(0, 1fr);
 }
 
-.workspace-layout.pane-left-collapsed > .context-pane {
+.workspace-layout.pane-left-collapsed > .context-pane,
+.workspace-layout.pane-left-collapsed > .pane-resizer-left {
   display: none;
 }
 
@@ -223,7 +295,36 @@
    workspace-main 错填到 0 宽的列 2 而整体消失（Sprint-21 slice 3a smoke 修复）。 */
 .workspace-layout > .view-nav { grid-column: 1; }
 .workspace-layout > .context-pane { grid-column: 2; }
-.workspace-layout > .workspace-main { grid-column: 3; }
+.workspace-layout > .pane-resizer-left { grid-column: 3; }
+.workspace-layout > .workspace-main { grid-column: 4; }
+
+/* 侧栏宽度拖拽分隔条（左/右共用，样式同并排分隔条）。 */
+.pane-resizer {
+  position: relative;
+  cursor: col-resize;
+  touch-action: none;
+  user-select: none;
+  outline: none;
+  background: transparent;
+}
+
+.pane-resizer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+  border-radius: 2px;
+  background: transparent;
+}
+
+.pane-resizer:hover::after,
+.pane-resizer:focus-visible::after,
+.pane-resizer.resizing::after {
+  background: var(--blue);
+}
 
 .view-nav,
 .nav-rail {

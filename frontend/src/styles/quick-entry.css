@@ -38,7 +38,7 @@
 .quick-entry-drawer {
   position: relative;
   z-index: 1;
-  width: min(420px, 92vw);
+  width: min(560px, 94vw);
   height: 100%;
   overflow: auto;
   border-left: 1px solid var(--line);
@@ -82,7 +82,7 @@
   font-size: 12px;
 }
 
-.quick-entry-field input,
+.quick-entry-field input:not([type='radio']):not([type='checkbox']),
 .quick-entry-field textarea,
 .quick-entry-field select {
   width: 100%;

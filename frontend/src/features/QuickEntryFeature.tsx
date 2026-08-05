@@ -87,7 +87,6 @@ export function QuickEntryFeature({
       >
         <header className="quick-entry-header">
           <div className="view-title">
-            <p className="eyebrow">REQ-025</p>
             <h2>快速录入</h2>
           </div>
           <button type="button" className="chip-remove quick-entry-close" aria-label="关闭" onClick={onClose}>

@@ -30,6 +30,7 @@ export function TopBar({
   onToggleRightPane,
 }: TopBarProps) {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const userLabel = session ? `#${session.userId}` : '';
 
   return (
@@ -52,7 +53,10 @@ export function TopBar({
               aria-pressed={leftPaneOpen}
               title="目录（Ctrl+B）"
             >
-              ☰
+              <svg className="pane-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <rect width="18" height="18" x="3" y="3" rx="2" />
+                <path d="M9 3v18" />
+              </svg>
             </button>
             <button
               type="button"
@@ -62,7 +66,10 @@ export function TopBar({
               aria-pressed={rightPaneOpen}
               title="右栏（Ctrl+R）"
             >
-              ☰
+              <svg className="pane-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <rect width="18" height="18" x="3" y="3" rx="2" />
+                <path d="M15 3v18" />
+              </svg>
             </button>
           </div>
           <div className="top-context">
@@ -83,6 +90,31 @@ export function TopBar({
       ) : null}
       {session ? (
         <div className="top-actions">
+          <div className="help-wrap">
+            <button
+              type="button"
+              className="help-trigger"
+              aria-label="帮助（操作指引）"
+              aria-expanded={helpOpen}
+              onClick={() => setHelpOpen((current) => !current)}
+              title="帮助（操作指引）"
+            >
+              ?
+            </button>
+            {helpOpen ? (
+              <div className="help-popover" role="region" aria-label="操作指引">
+                <strong className="help-title">操作指引</strong>
+                <dl className="help-list">
+                  <div><dt>视图</dt><dd>左侧导航：首页 / 文档 / 搜索 / 问答 / 术语 / 标签 / 时间线</dd></div>
+                  <div><dt>快捷键</dt><dd>Ctrl+B 目录 · Ctrl+R 右栏</dd></div>
+                  <div><dt>新建</dt><dd>首页「新建文档」卡片，或文档视图「新建」</dd></div>
+                  <div><dt>快速录入</dt><dd>顶栏「快速录入」，随手记一条索引</dd></div>
+                  <div><dt>导入</dt><dd>文档视图「导入」：.md / .txt 文件或文件夹（自动分批）</dd></div>
+                  <div><dt>导出</dt><dd>顶栏「导出空间 ZIP」；文档详情可下载 .md / PDF</dd></div>
+                </dl>
+              </div>
+            ) : null}
+          </div>
           <button
             type="button"
             className="quick-entry-trigger top-quick-entry"

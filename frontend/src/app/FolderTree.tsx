@@ -12,6 +12,7 @@ type FolderTreeProps = {
   folders: FolderManager;
   onSelectDocument: (documentId: number) => void;
   onMoveDocument: (document: KnowledgeDocument, targetFolderId: number | null) => void;
+  onDeleteDocument: (documentId: number) => void;
 };
 
 type TreeMenuState =
@@ -36,6 +37,7 @@ export function FolderTree({
   folders,
   onSelectDocument,
   onMoveDocument,
+  onDeleteDocument,
 }: FolderTreeProps) {
   const [menuState, setMenuState] = useState<TreeMenuState | null>(null);
   const closeMenu = useCallback(() => setMenuState(null), []);
@@ -53,7 +55,7 @@ export function FolderTree({
 
   const openDocumentMenu = useCallback((documentId: number, x: number, y: number) => {
     const menuWidth = 220;
-    const menuHeight = 164;
+    const menuHeight = 200;
     setMenuState({
       type: 'document',
       documentId,
@@ -126,6 +128,7 @@ export function FolderTree({
             menuState={menuState}
             onSelectDocument={onSelectDocument}
             onMoveDocument={onMoveDocument}
+            onDeleteDocument={onDeleteDocument}
             onOpenMenu={openDocumentMenu}
             onCloseMenu={closeMenu}
           />
@@ -336,6 +339,7 @@ type DocumentRowProps = {
   menuState: TreeMenuState | null;
   onSelectDocument: (documentId: number) => void;
   onMoveDocument: (document: KnowledgeDocument, targetFolderId: number | null) => void;
+  onDeleteDocument: (documentId: number) => void;
   onOpenMenu: (documentId: number, x: number, y: number) => void;
   onCloseMenu: () => void;
 };
@@ -349,6 +353,7 @@ function DocumentRow({
   menuState,
   onSelectDocument,
   onMoveDocument,
+  onDeleteDocument,
   onOpenMenu,
   onCloseMenu,
 }: DocumentRowProps) {
@@ -413,6 +418,7 @@ function DocumentRow({
         type="button"
         className={`tree-row tree-document-row${isActive ? ' active' : ''}${isMenuOpen ? ' menu-open' : ''}`}
         style={{ '--tree-depth': depth } as CSSProperties}
+        data-document-id={document.id}
         onClick={() => onSelectDocument(document.id)}
         onKeyDown={handleKeyDown}
         disabled={isBusy}
@@ -451,6 +457,11 @@ function DocumentRow({
               ))}
             </select>
           </label>
+          <div className="tree-menu-separator" role="separator" />
+          <button type="button" role="menuitem" className="danger" onClick={() => runMenuAction(() => onDeleteDocument(document.id))} disabled={isBusy}>
+            <span aria-hidden="true">×</span>
+            <span>删除文档</span>
+          </button>
         </div>
       ) : null}
     </div>
