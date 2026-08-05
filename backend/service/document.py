@@ -194,11 +194,11 @@ def ensure_documents_indexed(repository) -> int:
     return indexed
 
 
-_WIKILINK_PATTERN = re.compile(r"\[\[([^\[\]]+?)\]\]")
+_WIKILINK_PATTERN = re.compile(r"\[\[([^\[\]|#]+?)(?:[|#][^\[\]]*)?\]\]")
 
 
 def extract_wikilinks(content_md: str) -> list[str]:
-    """提取 Markdown 正文中的 ``[[target]]`` wikilink 目标文本（保序）。"""
+    """提取 Markdown 正文中的 ``[[target]]`` wikilink 目标文本（保序；剥离 ``|alias`` 与 ``#anchor``）。"""
     return _WIKILINK_PATTERN.findall(content_md)
 
 
