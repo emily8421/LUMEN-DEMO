@@ -13,6 +13,7 @@
 | `2026-07-20-doc-system-architecture-evaluation.md` | 文档体系内部评估 | 已从 `docs/inputs/` 归位 | P1 采纳索引 / references 分区建议；`kb-*` 迁移建议因仓库无对应文件不执行 |
 | `2026-07-20-obsidian-design-reference-suggestions.md` | 基于外部参考的内部建议 | 已从 `docs/inputs/` 归位 | OB-01 原文不直接采纳，以 ADR-010 为准；OB-06 可后续回填 PRD |
 | `2026-07-21-format-conversion-input-review.md` | 文档格式转换输入评审 | 当前 AI 评审已落盘；Conditional Go | 原始输入保留在 `docs/inputs/2026-07-21-doc-format-conversion-requirements.md`；FC-01/02/03/04 需逐项确认后再回填正式文档 |
+| `2026-08-05-rg009-vault-local-mount-poc.md` | RG-009 Vault PoC 验证（REQ-018 模式 B） | 已落盘；**Go**（八项能力 + 五场景通过，刷新后句柄自动恢复 granted） | 待用户决策是否进入 REQ-018 阶段升级（不在本次落盘范围） |
 
 ## 2. 历史 research 清单
 

@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RG-009 Vault PoC · REQ-018 模式 B 本地挂载技术验证</title>
+<style>
+  :root{
+    --bg:#f7fbff;--panel:#fff;--ink:#172033;--ink-soft:#5b6b82;--line:#e3e9f2;
+    --blue:#2563eb;--blue-soft:#eaf2ff;--indigo:#4f46e5;
+    --green:#16a34a;--green-soft:#dcfce7;--amber:#d97706;--amber-soft:#fef3c7;--red:#dc2626;--red-soft:#fee2e2;
+    --radius:6px;--shadow:0 1px 2px rgba(16,24,40,.06),0 8px 24px rgba(16,24,40,.08);
+  }
+  *{box-sizing:border-box}html,body{margin:0;height:100%}
+  body{background:var(--bg);color:var(--ink);font:14px/1.7 "Inter","PingFang SC","Microsoft YaHei",sans-serif}
+  .note{background:#0f172a;color:#cbd5e1;font-size:12px;padding:6px 16px;display:flex;gap:12px;flex-wrap:wrap}
+  .note .tag{background:#1e293b;color:#93c5fd;padding:1px 8px;border-radius:4px}
+  .topbar{height:52px;display:flex;align-items:center;gap:10px;padding:0 16px;background:var(--panel);border-bottom:1px solid var(--line)}
+  .brand{display:flex;align-items:center;gap:8px;font-weight:600}
+  .logo{width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,var(--blue),var(--indigo));color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+  .spacer{flex:1}
+  .pill{font-size:12px;padding:3px 10px;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--ink-soft);display:flex;align-items:center;gap:6px}
+  .pill .dot{width:8px;height:8px;border-radius:50%;background:var(--ink-soft)}
+  .pill.ok .dot{background:var(--green)}.pill.ok{color:var(--green);border-color:#bbf7d0;background:var(--green-soft)}
+  .pill.warn .dot{background:var(--amber)}.pill.warn{color:var(--amber);border-color:#fcd34d;background:var(--amber-soft)}
+  .pill.bad .dot{background:var(--red)}.pill.bad{color:var(--red);border-color:#fca5a5;background:var(--red-soft)}
+  .stage{display:flex;height:calc(100vh - 52px - 30px);overflow:hidden}
+  .left{width:340px;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;flex-shrink:0}
+  .section-h{padding:10px 12px;border-bottom:1px solid var(--line);font-weight:600;font-size:13px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .section-h .sub{font-weight:400;color:var(--ink-soft);font-size:11px}
+  .section-h + .section-h{border-top:0}
+  .actions{padding:10px 12px;display:flex;flex-wrap:wrap;gap:6px;border-bottom:1px solid var(--line)}
+  button{font:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:var(--radius);padding:5px 10px;font-size:12px}
+  button:hover{background:#f1f5fb;color:var(--blue)}
+  button.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+  button.primary:hover{background:#1d4ed8;color:#fff}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  .tree-body{flex:1;overflow:auto;padding:8px}
+  .node{font-size:13px;padding:3px 6px;border-radius:5px;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
+  .node:hover{background:#f1f5fb}
+  .node.cur{background:var(--blue-soft);color:var(--blue)}
+  .node .arrow{width:12px;color:var(--ink-soft);font-size:10px}
+  .node .ic{width:14px}
+  .badge-db{background:var(--blue-soft);color:var(--blue);padding:0 6px;border-radius:8px;font-size:10px;margin-left:4px}
+  .badge-local{background:var(--amber-soft);color:var(--amber);padding:0 6px;border-radius:8px;font-size:10px;margin-left:4px}
+  .children.collapsed{display:none}
+  .kv{font-size:12px;color:var(--ink-soft);padding:8px 12px}
+  .main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+  .search-row{padding:10px 14px;border-bottom:1px solid var(--line);display:flex;gap:8px;align-items:center;background:#fafcff}
+  .search-row input{flex:1;font:inherit;padding:6px 10px;border:1px solid var(--line);border-radius:var(--radius);font-size:13px}
+  .results{max-height:180px;overflow:auto;border-bottom:1px solid var(--line)}
+  .result{padding:5px 14px;font-size:12px;cursor:pointer;border-bottom:1px solid var(--line)}
+  .result:hover{background:#f1f5fb}
+  .result .path{color:var(--ink-soft);font-size:11px}
+  .preview{flex:1;overflow:auto;padding:24px}
+  .preview .doc{max-width:760px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:28px 36px;box-shadow:var(--shadow);margin:0 auto}
+  .preview h1{font-size:22px;margin:0 0 6px}
+  .preview .meta{color:var(--ink-soft);font-size:12px;margin-bottom:14px}
+  .placeholder{color:var(--ink-soft);font-size:13px;text-align:center;padding:40px}
+  .selfcheck{background:#0f172a;color:#cbd5e1;font-size:12px;padding:6px 16px;height:30px;display:flex;gap:18px;align-items:center;white-space:nowrap;overflow-x:auto}
+  .selfcheck .k{color:#93c5fd}.selfcheck .v{color:#e2e8f0}.selfcheck .v.good{color:#86efac}.selfcheck .v.bad{color:#fca5a5}
+</style>
+</head>
+<body>
+<div class="note">
+  <span class="tag">RG-009 PoC</span>
+  <span>REQ-018 模式 B「仅本地挂载」技术验证 · 纯浏览器 File System Access + IndexedDB · 数据不出本机 · 探索原型·待确认·不直接驱动开发</span>
+</div>
+<div class="topbar">
+  <div class="brand"><span class="logo">L</span>RG-009 Vault PoC</div>
+  <div class="spacer"></div>
+  <div class="pill" id="pillSecure" title="window.isSecureContext（File System Access 硬前提）"><span class="dot"></span><span>secure context…</span></div>
+  <div class="pill" id="pillHandle" title="本地 Vault 句柄状态"><span class="dot"></span><span>未挂载</span></div>
+  <div class="pill" id="pillCount" title="已索引文件数"><span class="dot"></span><span>0 文件</span></div>
+</div>
+<div class="stage">
+  <aside class="left">
+    <div class="section-h">LUMEN 知识库 <span class="sub">数据库内容（mock 占位）</span></div>
+    <div class="kv">
+      <div class="node" style="cursor:default"><span class="ic">📁</span>产品研发空间 <span class="badge-db">DB·已入库</span></div>
+      <div class="node" style="padding-left:24px;color:var(--ink-soft);cursor:default"><span class="ic">📄</span>（占位：DB 文档参与权限 / 搜索 / RAG / 团队共享）</div>
+    </div>
+    <div class="section-h">本地挂载 <span class="sub">未入库 · 不上传</span><span class="badge-local">本地·未入库</span></div>
+    <div class="actions">
+      <button class="primary" id="btnPick">① 选择 Vault 目录</button>
+      <button id="btnSave" disabled>② 保存句柄</button>
+      <button id="btnRestore" disabled>③ 恢复句柄</button>
+      <button id="btnReindex" disabled>重新扫描</button>
+    </div>
+    <div class="tree-body" id="treeBody">
+      <div class="placeholder" style="padding:24px 12px">未挂载本地 Vault。<br><br>点「选择 Vault 目录」授权一个文件夹。<br><br>验证步骤：①选择 → ②保存句柄 → 刷新页面(F5) → ③恢复句柄测重启恢复；改 vault 内容后点「重新扫描」测增量。</div>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="search-row">
+      <input id="searchInput" placeholder="本地关键词搜索（文件名 / 标题 / 正文）· 验证本地索引…" disabled>
+      <button id="btnSearch" disabled>搜索</button>
+      <span class="kv" id="searchStat" style="padding:0"></span>
+    </div>
+    <div class="results" id="results"></div>
+    <div class="preview" id="preview">
+      <div class="placeholder">选择本地文件后在此预览（纯本地读取，不上传服务端）。</div>
+    </div>
+  </main>
+</div>
+<div class="selfcheck" id="selfcheck">
+  <span><span class="k">secure context:</span> <span class="v" id="scSecure">…</span></span>
+  <span><span class="k">host:</span> <span class="v" id="scHost">…</span></span>
+  <span><span class="k">FSA API:</span> <span class="v" id="scFsa">…</span></span>
+  <span><span class="k">IndexedDB:</span> <span class="v" id="scIdb">…</span></span>
+  <span><span class="k">建索引耗时:</span> <span class="v" id="scIndex">—</span></span>
+  <span><span class="k">上次搜索:</span> <span class="v" id="scSearch">—</span></span>
+  <span><span class="k">本页发起网络请求计数(fetch/XHR):</span> <span class="v good" id="scUpload">0</span></span>
+</div>
+
+<script>
+/* ========== RG-009 Vault PoC · REQ-018 模式 B 本地挂载技术验证 ==========
+ * 验证 05-tech-spec.md:151 RG-009 八项能力 + req018 评估 §4 最小 PoC 5 场景。
+ * 全部本地：零网络上传、零第三方依赖。不连 LUMEN 后端，不进服务端 RAG
+ * （硬天花板：浏览器 File System Access 句柄后端读不到）。
+ */
+'use strict';
+
+/* ---- 0. secure context / API 可用性自检（RG-009 前提）---- */
+const scSecure = document.getElementById('scSecure');
+const scHost   = document.getElementById('scHost');
+const scFsa    = document.getElementById('scFsa');
+const scIdb    = document.getElementById('scIdb');
+const pillSecure = document.getElementById('pillSecure');
+
+function setPill(pill, state, label){
+  pill.classList.remove('ok','warn','bad');
+  pill.classList.add(state);
+  pill.querySelector('span:last-child').textContent = label;
+}
+function markV(el, ok, text){ el.textContent = text; el.className = 'v ' + (ok ? 'good' : 'bad'); }
+
+const isSecure = window.isSecureContext;
+markV(scSecure, isSecure, String(isSecure));
+scHost.textContent = location.hostname;
+const hasFsa = typeof window.showDirectoryPicker === 'function';
+markV(scFsa, hasFsa, hasFsa ? '可用' : '不可用');
+setPill(pillSecure, (isSecure && hasFsa) ? 'ok' : 'bad', 'secure=' + isSecure);
+
+/* ---- 0b. 无上传自检：拦截全部 fetch / XHR，证明本页不发任何网络请求 ---- */
+let uploadCount = 0;
+const scUpload = document.getElementById('scUpload');
+const _fetch = window.fetch;
+window.fetch = function(...args){ uploadCount++; scUpload.textContent = uploadCount; scUpload.className='v bad'; return _fetch.apply(this,args); };
+const _xhrOpen = XMLHttpRequest.prototype.open;
+XMLHttpRequest.prototype.open = function(...args){ uploadCount++; scUpload.textContent = uploadCount; scUpload.className='v bad'; return _xhrOpen.apply(this,args); };
+
+/* ---- 1. IndexedDB 句柄 store（RG-009 ② IndexedDB 句柄保存 / ① 授权持久化）---- */
+const DB_NAME = 'rg009-vault-poc', STORE = 'handles', HANDLE_KEY = 'vault-root';
+function openIdb(){
+  return new Promise((resolve)=>{
+    if(!('indexedDB' in window)){ resolve(null); return; }
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = () => { req.result.createObjectStore(STORE); };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror   = () => resolve(null);
+  });
+}
+async function idbPut(key, val){ const db=await openIdb(); if(!db) return false; return new Promise(res=>{ const tx=db.transaction(STORE,'readwrite'); tx.objectStore(STORE).put(val,key); tx.oncomplete=()=>res(true); tx.onerror=()=>res(false); }); }
+async function idbGet(key){ const db=await openIdb(); if(!db) return null; return new Promise(res=>{ const tx=db.transaction(STORE,'readonly'); const r=tx.objectStore(STORE).get(key); r.onsuccess=()=>res(r.result||null); r.onerror=()=>res(null); }); }
+
+(async () => { const db = await openIdb(); markV(scIdb, !!db, db ? '可用' : '不可用'); })();
+
+/* ---- 2. 权限验证（RG-009 ③ 只读/可写 + 重启恢复或明确失效）---- */
+async function verifyPermission(handle, readWrite){
+  const opts = { mode: readWrite ? 'readwrite' : 'read' };
+  if ((await handle.queryPermission(opts)) === 'granted') return true;
+  if ((await handle.requestPermission(opts)) === 'granted') return true;
+  return false;
+}
+
+/* ---- 3. 目录遍历（values() 异步迭代器递归）---- */
+const IMPORTABLE = ['.md','.markdown','.txt'];   // 抄用 ImportFeature.tsx:197
+function isImportable(name){ const l = name.toLowerCase(); return IMPORTABLE.some(ext => l.endsWith(ext)); }
+function isHiddenSeg(path){ return path.split('/').some(seg => seg.startsWith('.')); } // 抄 filterImportable：过滤 .obsidian 等
+
+async function walk(dirHandle, prefix, acc, onProgress){
+  for await (const entry of dirHandle.values()){
+    const path = prefix ? prefix + '/' + entry.name : entry.name;
+    if (entry.kind === 'directory'){
+      await walk(entry, path, acc, onProgress);   // 隐藏目录下的文件由 isHiddenSeg 在文件层过滤
+    } else if (entry.kind === 'file' && isImportable(entry.name) && !isHiddenSeg(path)){
+      acc.push({ path, name: entry.name, handle: entry });
+      if (onProgress && acc.length % 200 === 0) onProgress(acc.length);
+    }
+  }
+  return acc;
+}
+
+/* ---- 4. 本地索引（vanilla 倒排：文件名 + 标题 + 正文关键词）---- */
+let INDEX = [];                 // [{path,name,handle,title,text}]
+let INVERTED = new Map();       // token -> Set(index)
+const scIndex = document.getElementById('scIndex');
+const pillCount = document.getElementById('pillCount');
+
+function tokenize(s){ return (s||'').toLowerCase().split(/[\s,，。.;；:：!！?？()（）\[\]]+/).filter(t => t.length > 1); }
+function buildInverted(){
+  INVERTED = new Map();
+  INDEX.forEach((doc, i) => {
+    const tokens = new Set(tokenize(doc.name + ' ' + doc.title + ' ' + doc.text));
+    tokens.forEach(t => { if (!INVERTED.has(t)) INVERTED.set(t, new Set()); INVERTED.get(t).add(i); });
+  });
+}
+async function buildIndex(rootHandle){
+  const files = [];
+  await walk(rootHandle, '', files, n => { pillCount.querySelector('span:last-child').textContent = n + ' 文件（扫描中）'; });
+  const t0 = performance.now();
+  INDEX = [];
+  for (const f of files){
+    let title = f.name.replace(/\.(md|markdown|txt)$/i, '');
+    let text = '';
+    try { const file = await f.handle.getFile(); text = await file.text(); const m = text.match(/^#\s+(.+)$/m); if (m) title = m[1].trim(); }
+    catch (e) { /* 单文件读取失败跳过正文，不影响整体 */ }
+    INDEX.push({ path: f.path, name: f.name, handle: f.handle, title, text });
+  }
+  buildInverted();
+  const dt = performance.now() - t0;
+  scIndex.textContent = Math.round(dt) + 'ms / ' + INDEX.length + ' 文件';
+  scIndex.className = 'v good';
+  setPill(pillCount, 'ok', INDEX.length + ' 文件');
+}
+
+/* ---- 5. 搜索 ---- */
+const searchInput = document.getElementById('searchInput');
+const btnSearch   = document.getElementById('btnSearch');
+const resultsEl   = document.getElementById('results');
+const searchStat  = document.getElementById('searchStat');
+const scSearch    = document.getElementById('scSearch');
+
+function search(q){
+  const t0 = performance.now();
+  const terms = tokenize(q);
+  if (terms.length === 0){ resultsEl.innerHTML = ''; searchStat.textContent = ''; return; }
+  const score = new Map();
+  INVERTED.forEach((set, token) => {
+    if (terms.some(term => token.includes(term))) set.forEach(i => score.set(i, (score.get(i) || 0) + 1));
+  });
+  const ranked = [...score.entries()].sort((a,b) => b[1] - a[1]).slice(0, 50);
+  const dt = performance.now() - t0;
+  scSearch.textContent = ranked.length + ' 命中 / ' + Math.round(dt * 1000) + 'µs';
+  scSearch.className = 'v ' + (ranked.length ? 'good' : 'bad');
+  searchStat.textContent = ranked.length + ' 命中';
+  resultsEl.innerHTML = ranked.length ? ranked.map(([i]) => {
+    const d = INDEX[i];
+    return `<div class="result" onclick="openDoc(${i})"><div>${escapeHtml(d.title || d.name)}</div><div class="path">${escapeHtml(d.path)}</div></div>`;
+  }).join('') : '<div class="placeholder" style="padding:16px">无命中</div>';
+}
+searchInput.addEventListener('input', () => search(searchInput.value));
+btnSearch.addEventListener('click', () => search(searchInput.value));
+
+/* ---- 6. 文件预览（本地读取，不上传）---- */
+const previewEl = document.getElementById('preview');
+window.openDoc = function(i){
+  const d = INDEX[i];
+  previewEl.innerHTML = `<div class="doc"><h1>${escapeHtml(d.title || d.name)}</h1><div class="meta">${escapeHtml(d.path)} · 本地·未入库·不上传</div><pre style="white-space:pre-wrap;font-family:inherit;margin:0">${escapeHtml(d.text.slice(0,4000))}</pre></div>`;
+};
+function escapeHtml(s){ return (s||'').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+/* ---- 7. 树渲染（由 INDEX 路径聚合，自动排除隐藏目录）---- */
+const treeBody = document.getElementById('treeBody');
+function renderTree(){
+  const root = { name: CURRENT_ROOT || 'vault', children: {}, files: [] };
+  INDEX.forEach(d => {
+    const parts = d.path.split('/');
+    let node = root;
+    for (let i = 0; i < parts.length - 1; i++){ const k = parts[i]; if (!node.children[k]) node.children[k] = { name:k, children:{}, files:[] }; node = node.children[k]; }
+    node.files.push({ name: parts[parts.length - 1], doc: d });
+  });
+  treeBody.innerHTML = renderNode(root, -1);
+  bindTree();
+}
+function renderNode(node, depth){
+  const pad = 6 + depth * 14;
+  const childDirs = Object.values(node.children);
+  let html = '';
+  if (depth >= 0) html += `<div class="node" data-fold style="padding-left:${pad}px"><span class="arrow">▾</span><span class="ic">📁</span>${escapeHtml(node.name)}</div><div class="children">`;
+  childDirs.forEach(d => { html += renderNode(d, depth + 1); });
+  node.files.forEach(f => { html += `<div class="node" data-path="${escapeAttr(f.doc.path)}" style="padding-left:${pad+18}px"><span class="ic">📄</span>${escapeHtml(f.name)}<span class="badge-local">本地</span></div>`; });
+  if (depth >= 0) html += '</div>';
+  return html;
+}
+function escapeAttr(s){ return String(s).replace(/"/g, '&quot;'); }
+function bindTree(){
+  treeBody.querySelectorAll('[data-fold]').forEach(el => {
+    el.addEventListener('click', () => { const next = el.nextElementSibling; if (next){ next.classList.toggle('collapsed'); el.querySelector('.arrow').textContent = next.classList.contains('collapsed') ? '▸' : '▾'; } });
+  });
+  treeBody.querySelectorAll('[data-path]').forEach(el => {
+    el.addEventListener('click', () => {
+      const path = el.getAttribute('data-path'); const i = INDEX.findIndex(d => d.path === path);
+      if (i >= 0){ treeBody.querySelectorAll('.node.cur').forEach(n => n.classList.remove('cur')); el.classList.add('cur'); openDoc(i); }
+    });
+  });
+}
+
+/* ---- 8. 主流程：选择 / 保存 / 恢复 / 重扫 ---- */
+const btnPick = document.getElementById('btnPick');
+const btnSave = document.getElementById('btnSave');
+const btnRestore = document.getElementById('btnRestore');
+const btnReindex = document.getElementById('btnReindex');
+const pillHandle = document.getElementById('pillHandle');
+let CURRENT_ROOT = null;
+let ROOT_HANDLE = null;
+
+function enableAfterMount(){ searchInput.disabled = false; btnSearch.disabled = false; btnSave.disabled = false; btnReindex.disabled = false; }
+
+btnPick.addEventListener('click', async () => {
+  if (!hasFsa){ alert('当前浏览器无 showDirectoryPicker（File System Access API）。\nRG-009 前提失败——请用 Chrome/Edge 经 http://localhost 访问。'); return; }
+  try {
+    const handle = await window.showDirectoryPicker();
+    if (!(await verifyPermission(handle, false))){ setPill(pillHandle, 'bad', '授权被拒'); return; }
+    ROOT_HANDLE = handle; CURRENT_ROOT = handle.name;
+    setPill(pillHandle, 'ok', '已挂载：' + handle.name);
+    await buildIndex(handle); renderTree(); enableAfterMount();
+  } catch (e){ setPill(pillHandle, 'bad', '选择失败：' + ((e && e.message) || e)); }
+});
+
+btnSave.addEventListener('click', async () => {
+  if (!ROOT_HANDLE) return;
+  const ok = await idbPut(HANDLE_KEY, ROOT_HANDLE);
+  alert(ok ? '句柄已存入 IndexedDB。\n\n现在按 F5 刷新页面测「重启恢复」：刷新后会检测到句柄，点「恢复句柄」重新请求授权。' : '存储失败');
+});
+
+btnRestore.addEventListener('click', () => restoreHandle(true));
+
+async function restoreHandle(manual){
+  const handle = await idbGet(HANDLE_KEY);
+  if (!handle){ if (manual) alert('IndexedDB 无已保存句柄。先点「保存句柄」。'); return false; }
+  let granted = false, reason = '';
+  try {
+    const q = await handle.queryPermission({ mode: 'read' });
+    reason = q;
+    if (q === 'granted') granted = true;
+    else if (manual){ const r = await handle.requestPermission({ mode: 'read' }); granted = (r === 'granted'); reason = r; }
+  } catch (e){ reason = 'query 失败'; }
+  if (granted){
+    ROOT_HANDLE = handle; CURRENT_ROOT = handle.name;
+    setPill(pillHandle, 'ok', '已恢复：' + handle.name + '（granted）');
+    await buildIndex(handle); renderTree(); enableAfterMount();
+    return true;
+  }
+  setPill(pillHandle, 'warn', '句柄在但需重授权（' + reason + '）');
+  if (manual) alert('句柄已从 IndexedDB 取回，但权限为「' + reason + '」。\n这正是 RG-009「重启后恢复或明确失效」验证：\n - granted = 自动恢复成功\n - prompt/denied = 明确失效，需重新点「选择 Vault 目录」授权');
+  return false;
+}
+
+btnReindex.addEventListener('click', async () => {
+  if (!ROOT_HANDLE) return;
+  const before = new Set(INDEX.map(d => d.path));
+  await buildIndex(ROOT_HANDLE);
+  const after = new Set(INDEX.map(d => d.path));
+  const added = [...after].filter(p => !before.has(p));
+  const removed = [...before].filter(p => !after.has(p));
+  renderTree();
+  alert('增量扫描完成（RG-009 ④ 增量扫描 / ⑤ 删除·重命名冲突检测）：\n\n新增 ' + added.length + '：' + added.slice(0,5).join(', ') + (added.length>5?' …':'') + '\n移除 ' + removed.length + '：' + removed.slice(0,5).join(', ') + (removed.length>5?' …':''));
+});
+
+/* ---- 9. 页面加载自动探测已保存句柄（不自动弹授权框，让用户点恢复触发）---- */
+(async () => {
+  const handle = await idbGet(HANDLE_KEY);
+  if (handle){ btnRestore.disabled = false; setPill(pillHandle, 'warn', '检测到已保存句柄·点「恢复句柄」重授权'); }
+})();
+</script>
+</body>
+</html>
