@@ -34,7 +34,7 @@
 | lumen_folders | 文档目录树（嵌套文件夹） | [P2] | Phase2B·第三 slice·已实现（后端/API + 导入归属 + 单文档移动） | migration 011 已落地 + 后端 service/API/tests 已实现（task-027，19 folder + 45 回归 tests OK）；API-029 `preserve_structure` 已实现建/复用 folder + 回填 `folder_id`（task-028）；API-038 单文档移动 + 前端文件管理器基础能力已实现（task-029，后端 38 tests + frontend build OK；v1.5.2 浏览器自动化 smoke 已补） | REQ-039 |
 | lumen_doc_exports | 单文档导出 PDF 任务 | [P1] | Phase1.5B-已实现 | migration 013 已落地；DocExport entity/ORM + Demo/Pg repository 已接入 | REQ-027 |
 | lumen_push_copies | 跨空间推送只读副本 | [P2] | 骨架 | — | REQ-015 |
-| lumen_vault_mounts | Vault 挂载配置 / 本地连接器元数据 | [愿景] | 已确认方向·待技术验证 | 仅记录用户 / 设备 / 来源类型 / 授权状态等元数据候选；本地目录句柄、绝对路径与文件正文默认保留在客户端本地，不作为服务端 DB 权威内容 | REQ-018 |
+| lumen_vault_mounts | Vault 挂载配置 / 本地连接器元数据 | [P2] | Phase2C·已设计（字段待 migration） | 仅记录用户 / 设备 / 来源类型 / 授权状态等元数据（MVP 浏览器路线：句柄/路径/正文留客户端 IndexedDB，服务端不存）；不作为服务端 DB 权威内容 | REQ-018 |
 | lumen_audio_records | 录音转写记录 | [愿景] | 骨架 | — | REQ-019 |
 | lumen_brief_links | 对外只读简报链接 | [愿景] | 骨架 | — | REQ-022 |
 | lumen_external_sync | 外部源同步配置（飞书等） | [愿景] | 骨架 | — | REQ-028 |
@@ -229,7 +229,7 @@ LUMEN 采用 `docs/decisions/ADR-010-db-authority-derived-data-rebuildability.md
 ### [P2 后续] / [愿景] 表（骨架·待该阶段细化）
 
 - `lumen_push_copies`：跨空间只读副本与权限同步待后续 Phase 细化（REQ-015，不进 Phase2B 首批）。
-- `lumen_vault_mounts`：Vault 兼容（REQ-018）待愿景验证。设计方向为“数据库权威 + 个人本地连接器”：导入数据库的内容写 `lumen_documents` / `lumen_chunks` / `lumen_folders`；仅本地挂载的内容默认不落服务端正文，不进入团队权限链，服务端最多记录用户 / 设备 / 授权状态等非正文元数据，具体字段待 RG-009。
+- `lumen_vault_mounts`：Vault 兼容（REQ-018）Phase2C·RG-009 Go，字段已细化。设计方向“数据库权威 + 个人本地连接器”：导入数据库的内容写 `lumen_documents` / `lumen_chunks` / `lumen_folders`；仅本地挂载（模式 B 浏览器 MVP）的内容默认不落服务端正文，不进入团队权限链，**服务端只存挂载点元数据**：`id / user_id / device_id（浏览器 UA 或自生 device token）/ mount_name / source_type=obsidian|markdown_folder / auth_status=granted|revoked / last_synced_at / created_at / updated_at`；**不存** directory handle、绝对路径、文件正文（这些留客户端 IndexedDB）。migration 014 留编码 Sprint-23C。
 - `lumen_audio_records`：录音转写记录待愿景验证（REQ-019）。
 - `lumen_brief_links`：对外简报（token、有效期、AI 可问不可看原文）待愿景验证（REQ-022）。
 - `lumen_external_sync`：外部源（飞书等）同步配置与摘要同步（愿景，REQ-028）。
@@ -329,7 +329,8 @@ erDiagram
 | REQ-013a / 024 | `lumen_documents`(created_at/updated_at/owner_id) + `lumen_tag_links`(created_at/created_by) + `lumen_doc_links`(created_at) + `lumen_chunks.ts_vector`（关键词命中）实时聚合（**候选 A 已定，不建表**，见 `docs/design/timeline.md` TL-C-001） | TC-P2-TL-001 | Phase2B 首批·第二 slice（task-030 本地实现完成） | **主题时间线** / 密度热条，关键词/标签驱动 + actor + 密度 ratio；migration 012 已落地 `lumen_documents(space_id, created_at/updated_at)` 时间索引；运行态 API smoke / Edge headless 浏览器 smoke / 真实 PG 大数据性能 smoke 已通过 |
 | REQ-039 | `lumen_folders`、`lumen_documents`（folder_id） | TC-P2-FOLDER-001 | Phase2B 第三 slice（Sprint-22） | 文档目录树：嵌套文件夹 CRUD / 移动 / 排序 + 单文档移动 + 导入保留结构（扩展 REQ-037 / API-029）；migration 011 已落地，后端/API + 导入归属 + 前端文件管理器基础能力已实现，浏览器自动化 smoke 已补 |
 | REQ-015 / 016 / 017 | 后续 Phase 骨架 | — | — | 推送 / 协作 / 移动端不进 Phase2B 首批 |
-| REQ-018..023 / 028..035 | 愿景表骨架 | — | — | 技术验证通过后细化字段与索引 |
+| REQ-018 | `lumen_vault_mounts`（Phase2C·字段已定义，migration 014 待编码） | `id / user_id / device_id / mount_name / source_type / auth_status / last_synced_at / created_at / updated_at` | `user_id` / `device_id` 索引 | 仅元数据，不存句柄/路径/正文 |
+| REQ-019..023 / 028..035 | 愿景表骨架 | — | — | 技术验证通过后细化字段与索引 |
 
 ## 7. 待人工确认项
 
