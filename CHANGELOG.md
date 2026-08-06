@@ -6,6 +6,17 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v2.1.0（2026-08-06）
+
+**Sprint-24 子树导入 UI（REQ-018 模式 B 增强）+ 验收期 2 修复。** 本地挂载目录树支持「导入此文件夹」子树导入（目录 + 子目录 + 文件，`preserveStructure:true` 保留目录结构），补齐 task-033 留的子树导入 UI 尾巴；按主流交互设计（Obsidian / VS Code 目录行 hover 操作、Drive / Dropbox 批量确认 + 进度 + 结果）提升批量导入体验。
+
+- 子树导入（task-035，TC-P2-VAULT-002）：`LocalMountPane` 目录行 hover 浮现「⤓ 导入」按钮（原生 button + aria-label + stopPropagation 不触发折叠），点击导入该子树到 LUMEN，复用 API-029（不改契约）；`useLocalVaultMount` 的 `LocalMountTreeNode` 增加 `path` 字段（`buildLocalMountTree` 填充目录路径前缀，root 为空串），供子树筛选。
+- 导入体验增强：子树 ≥2 文件或「导入全部」时内联确认条「将导入 N 个文件到 LUMEN（保留目录结构）」+ 确认 / 取消；单篇导入不打扰；进度带范围标签（正在导入「xxx」… done/total）；完成后提示去向「已入上层 DB，保留目录结构，可在文档视图查看」+ 成功 / 失败 / 跳过计数；`onImported` 刷新 DB 文档列表。
+- 验收期修复 2 缺陷（`docs/09` §5.1）：上下分隔条拖动方向反转（`useLocalMountHeight` 符号修正）；首页空左栏（`App.tsx` 左栏视图感知）。
+- 验证：`cd frontend && volta run --node 22.17.1 npm run build` → 270 modules 绿（tsc + vite）；TC-P2-VAULT-002 人工 smoke 4 项全过（①子树导入 hover+确认+进度+去向 ②目录结构保留 ③单篇不确认 ④整库+导入中禁用）；`docs/08`（Sprint-24→已完成）/ `docs/09`（§2 矩阵 + §5 验收 + §5.1 缺陷）/ `task-035` 验收落盘。
+
+> MINOR 依据（`ai/project-rules.md` §2.8.1）：Sprint 验收（Sprint-24）+ 新增可演示能力（子树导入）；向后兼容，不改 API-029 / 后端 / DB 契约。
+
 ## v2.0.0（2026-08-06）
 
 **Phase2C 首个能力：REQ-018 模式 B「本地 Vault 仅本地挂载」（Sprint-23C）。** 让涉隐私 / 不愿入库的本地知识库（Obsidian vault / 本地 Markdown 文件夹）在 LUMEN 内以「仅本地挂载」方式一并浏览与本地搜索，数据不出本机；可按需把单篇 / 子树 / 整库导入 LUMEN 获得完整能力。纯前端（浏览器 File System Access + 原生 IndexedDB），后端零新 API。

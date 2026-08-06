@@ -27,6 +27,7 @@ export function LocalMountPane({ token, onImported, onOpenLocalDoc }: LocalMount
   const [collapsed, setCollapsed] = useState(false);
   const [importing, setImporting] = useState(false);
   const [importMsg, setImportMsg] = useState('');
+  const [pendingImport, setPendingImport] = useState<{ path: string; label: string; count: number } | null>(null);
 
   if (vm.status === 'unsupported') {
     return (
@@ -74,13 +75,14 @@ export function LocalMountPane({ token, onImported, onOpenLocalDoc }: LocalMount
         (done, total) => setImportMsg(`正在导入${label}… ${done}/${total}`)
       );
       setImportMsg(
-        `导入完成：成功 ${result.success_count} / 失败 ${result.failed_count} / 跳过 ${result.skipped_count}`
+        `导入完成（已入上层 DB，保留目录结构，可在文档视图查看）：成功 ${result.success_count} / 失败 ${result.failed_count} / 跳过 ${result.skipped_count}`
       );
       if (result.success_count > 0) onImported();
     } catch (e) {
       setImportMsg('导入失败：' + (e instanceof Error ? e.message : String(e)));
     } finally {
       setImporting(false);
+      setPendingImport(null);
     }
   }
 
@@ -89,8 +91,30 @@ export function LocalMountPane({ token, onImported, onOpenLocalDoc }: LocalMount
     const doc = vm.docs.find((d) => d.path === vm.selectedPath);
     if (doc) void importDocs([doc], '此篇');
   };
-  const importAll = () => {
-    if (vm.docs.length > 0) void importDocs(vm.docs, '全部');
+  const subtreeDocs = (dirPath: string) =>
+    vm.docs.filter((d) => d.path === dirPath || d.path.startsWith(dirPath + '/'));
+
+  const requestImportDir = (dirPath: string, label: string) => {
+    if (!canImport) return;
+    const docsToImport = subtreeDocs(dirPath);
+    if (docsToImport.length === 0) return;
+    if (docsToImport.length === 1) {
+      void importDocs(docsToImport, label);
+    } else {
+      setPendingImport({ path: dirPath, label, count: docsToImport.length });
+    }
+  };
+
+  const requestImportAll = () => {
+    if (!canImport || vm.docs.length === 0) return;
+    setPendingImport({ path: '', label: '全部挂载', count: vm.docs.length });
+  };
+
+  const confirmImport = () => {
+    if (!pendingImport) return;
+    const { path, label } = pendingImport;
+    const docsToImport = path === '' ? vm.docs : subtreeDocs(path);
+    void importDocs(docsToImport, label);
   };
 
   return (
@@ -162,12 +186,33 @@ export function LocalMountPane({ token, onImported, onOpenLocalDoc }: LocalMount
                 ))}
               </ul>
             ) : tree ? (
-              <LocalMountTreeView node={tree} depth={-1} selectedPath={vm.selectedPath} onSelect={handleOpen} />
+              <LocalMountTreeView
+                node={tree}
+                depth={-1}
+                selectedPath={vm.selectedPath}
+                onSelect={handleOpen}
+                onImportDir={requestImportDir}
+                importDisabled={!canImport}
+              />
             ) : (
               <p className="empty-state">空 vault</p>
             )}
           </div>
-          {(vm.selectedPath || vm.docs.length > 0) && (
+          {pendingImport ? (
+            <div className="local-mount-confirm-bar">
+              <span>
+                将导入「{pendingImport.label}」的 <strong>{pendingImport.count}</strong> 个文件到 LUMEN（保留目录结构）。
+              </span>
+              <span className="local-mount-confirm-actions">
+                <button type="button" onClick={confirmImport} disabled={importing}>
+                  确认导入
+                </button>
+                <button type="button" onClick={() => setPendingImport(null)} disabled={importing}>
+                  取消
+                </button>
+              </span>
+            </div>
+          ) : (vm.selectedPath || vm.docs.length > 0) ? (
             <div className="local-mount-import-bar">
               <button
                 type="button"
@@ -181,14 +226,14 @@ export function LocalMountPane({ token, onImported, onOpenLocalDoc }: LocalMount
               <button
                 type="button"
                 className="local-mount-import"
-                onClick={importAll}
-                disabled={!canImport}
-                title="把整个本地挂载导入 LUMEN（保留目录结构）"
+                onClick={requestImportAll}
+                disabled={!canImport || vm.docs.length === 0}
+                title="把整个本地挂载导入 LUMEN（保留目录结构；将先确认文件数）"
               >
                 导入全部
               </button>
             </div>
-          )}
+          ) : null}
           {importMsg && <p className="local-mount-import-msg">{importMsg}</p>}
         </>
       )}
@@ -201,11 +246,15 @@ function LocalMountTreeView({
   depth,
   selectedPath,
   onSelect,
+  onImportDir,
+  importDisabled,
 }: {
   node: LocalMountTreeNode;
   depth: number;
   selectedPath: string | null;
   onSelect: (path: string) => void;
+  onImportDir: (path: string, label: string) => void;
+  importDisabled: boolean;
 }) {
   const [open, setOpen] = useState(true);
   const pad = 6 + Math.max(0, depth) * 14;
@@ -222,6 +271,19 @@ function LocalMountTreeView({
           <span className="local-mount-arrow">{open ? '▾' : '▸'}</span>
           <span className="local-mount-ic" aria-hidden="true">📁</span>
           <span className="local-mount-label">{node.name}</span>
+          <button
+            type="button"
+            className="local-mount-import-node"
+            onClick={(e) => {
+              e.stopPropagation();
+              onImportDir(node.path, node.name);
+            }}
+            disabled={importDisabled}
+            title="导入此文件夹（含子文件，保留目录结构）"
+            aria-label={`导入文件夹 ${node.name}`}
+          >
+            ⤓ 导入
+          </button>
         </div>
       )}
       {open && (
@@ -233,6 +295,8 @@ function LocalMountTreeView({
               depth={depth + 1}
               selectedPath={selectedPath}
               onSelect={onSelect}
+              onImportDir={onImportDir}
+              importDisabled={importDisabled}
             />
           ))}
           {node.files.map((f) => (

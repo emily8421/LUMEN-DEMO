@@ -9,7 +9,8 @@ import {
 
 /**
  * 本地挂载分区上下拖拽调高（仿 usePaneWidth 垂直版）：
- * 拖下变高 / 拖上变矮，clamp 后持久化 localStorage；↑/↓ 键盘 20px 步进；双击复位默认。
+ * 分隔条跟随光标：拖下 / ↓ → 分隔条下移 → 下分区变矮；拖上 / ↑ → 分隔条上移 → 下分区变高。
+ * clamp 后持久化 localStorage；↑/↓ 键盘 20px 步进；双击复位默认。
  */
 export function useLocalMountHeight() {
   const [height, setHeight] = useState<number>(() => loadLocalMountHeight());
@@ -39,8 +40,8 @@ export function useLocalMountHeight() {
     if (!drag) {
       return;
     }
-    const delta = event.clientY - drag.clientY; // 拖下 delta>0 → 高度增加
-    updateHeight(drag.height + delta);
+    const delta = event.clientY - drag.clientY; // 拖下 delta>0 → 分隔条下移 → 下分区变矮（高度减少）
+    updateHeight(drag.height - delta);
   }, [updateHeight]);
 
   const endResize = useCallback(() => {
@@ -53,11 +54,11 @@ export function useLocalMountHeight() {
     (event: ReactKeyboardEvent<HTMLDivElement>) => {
       if (event.key === 'ArrowDown') {
         event.preventDefault();
-        updateHeight(heightRef.current + 20);
+        updateHeight(heightRef.current - 20); // ↓ 分隔条下移 → 下分区变矮
         persist();
       } else if (event.key === 'ArrowUp') {
         event.preventDefault();
-        updateHeight(heightRef.current - 20);
+        updateHeight(heightRef.current + 20); // ↑ 分隔条上移 → 下分区变高
         persist();
       }
     },

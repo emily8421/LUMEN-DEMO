@@ -29,6 +29,14 @@ function App() {
   const workspace = useWorkspace();
   const paneLayout = usePaneLayout();
   const leftPaneWidth = usePaneWidth('left');
+  // 左栏仅在「文档/搜索/问答/术语」等有左栏内容的视图显示；
+  // 首页 / 标签 / 时间线无左栏内容，永远收起（toggle / Ctrl+B 只改偏好，无内容视图不显形）。
+  const leftPaneHasContent =
+    workspace.activeView === 'documents' ||
+    workspace.activeView === 'search' ||
+    workspace.activeView === 'query' ||
+    workspace.activeView === 'terms';
+  const leftPaneOpen = leftPaneHasContent && paneLayout.leftPaneOpen;
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [localPreviewDoc, setLocalPreviewDoc] = useState<LocalVaultDoc | null>(null);
 
@@ -198,7 +206,7 @@ function App() {
         onSpaceChange={session.handleSpaceChange}
         onExportSpace={handleExportSpace}
         onQuickEntryOpen={quickEntry.open}
-        leftPaneOpen={paneLayout.leftPaneOpen}
+        leftPaneOpen={leftPaneOpen}
         onToggleLeftPane={paneLayout.toggleLeftPane}
         rightPaneOpen={paneLayout.rightPaneOpen}
         onToggleRightPane={paneLayout.toggleRightPane}
@@ -218,7 +226,7 @@ function App() {
         </section>
       ) : (
         <div
-          className={`workspace-layout workspace-shell${paneLayout.leftPaneOpen ? '' : ' pane-left-collapsed'}`}
+          className={`workspace-layout workspace-shell${leftPaneOpen ? '' : ' pane-left-collapsed'}`}
           style={{ '--left-pane-width': `${leftPaneWidth.width}px` } as CSSProperties}
         >
           <WorkspaceViewNav activeView={workspace.activeView} disabled={workspace.isBusy} onChange={workspace.setActiveView} />
@@ -244,7 +252,7 @@ function App() {
             onOpenLocalDoc={handleOpenLocalDoc}
           />
 
-          {paneLayout.leftPaneOpen ? (
+          {leftPaneOpen ? (
             <div
               className={leftPaneWidth.resizing ? 'pane-resizer pane-resizer-left resizing' : 'pane-resizer pane-resizer-left'}
               role="separator"

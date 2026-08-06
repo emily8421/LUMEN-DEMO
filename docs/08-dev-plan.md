@@ -46,6 +46,7 @@
 | Sprint-23A（候选·导入规模修复） | 1000+ 文件夹导入分批上传 + 汇总结果 | 037/039 | 07 API-029、design/ingestion Flow-006、09 TC-P1-015 | frontend `api/imports.ts` + `app/useImport.ts` + `features/ImportFeature.tsx` | TC-P1-015 回归 + 1000+ 文件夹 smoke | 已完成（PR #104 已合并，v1.7.1 发布）：前端分批 50/批顺序上传 + 逐批失败隔离 + 汇总，失败项全显/成功项截断；纯前端、不改后端 API；1000 文件 smoke 通过（RISK-P1-008 关闭，见 `docs/09-verification.md`） | — |
 | Sprint-23B（Vault 兼容 RG·已完成） | Obsidian Vault 兼容技术验证：RG-009 PoC + 双模式设计 + 左侧分区 | 018/037/039 | 02 REQ-018、04 ADR-011、05 TCD-011 / RG-009、06 `lumen_vault_mounts`、07 REQ-018、design/ingestion Flow-D-014、design/frontend-interaction | PoC / 文档 / 原型 | TC-P2-VAULT-001（已定义待执行） | **已完成（RG-009 Go 2026-08-05，REQ-018 升 Phase2C）**；`docs/research/2026-08-05-rg009-vault-local-mount-poc.{md,html}` | — |
 | Sprint-23C（Phase2C·模式 B 编码·进行中） | REQ-018 模式 B 浏览器 File System Access 编码：句柄持久化 + 本地索引搜索 + 左侧分区 + 按需导入 | 018 | 03 Phase2C、04 Flow-010、05 TCD-011 / RG-009 / TC-P2-VAULT-001、06 `lumen_vault_mounts`（migration 014）、07 模式 B 零后端 API、design/ingestion Flow-D-014、design/frontend-interaction CMP-P2-TREE / PATH-P2-008 | 接 `frontend/src/`（ContextPane 本地挂载分区 + useLocalVaultMount hook）；不引第三方依赖 | TC-P2-VAULT-001 | **已完成**（2026-08-06，task-031..034，TC-P2-VAULT-001 通过） | tasks/task-031..034 |
+| Sprint-24（Phase2C 增强·子树导入 UI·已完成） | REQ-018 模式 B 增强：本地挂载目录树「选子文件夹导入」UI（task-033 留后续），复用 API-029 + `preserveStructure` | 018 扩展（不新增 REQ） | 03 Phase2C、design/ingestion Flow-D-014、07 API-029、09 TC-P2-VAULT-002、tasks/task-033 | frontend `LocalMountPane` + `useLocalVaultMount`（选节点导入入口）；不引第三方依赖 | TC-P2-VAULT-002 | **已完成**（2026-08-06，TC-P2-VAULT-002 通过） | tasks/task-035-subtree-import-ui.md |
 
 ## 依赖关系与里程碑
 
@@ -102,6 +103,8 @@
 | Sprint-20（Phase2B） | TC-P2-TL-001 | 单元 + 集成 + UI smoke | `.venv\Scripts\python.exe -m unittest tests.backend.test_timeline`；`npm run build`（frontend）；运行态 API smoke；Edge headless CDP 浏览器 smoke | Chrome / Edge：**主题时间线（关键词命中 + 标签入口）**、密度热条（含量化 ratio）、actor、零命中空态、大集合降级 / 列表逃生舱 | 数据来源候选 A（不建表）；关键词命中复用 chunk.ts_vector；大集合聚合降级 |
 | Sprint-21（Phase2B·Doc-First UX） | TC-P1-014（3a/3c/3d 回归）+ TC-P1-015（3d 入口形态回归） | 前端构建 + 浏览器 smoke + 回归验收 | `volta run --node 22.17.1 npm run build`（frontend） | Chrome / Edge：栏显隐、首页默认落地、documents 减框、空态引导/返回、导入 modal 打开 / 关闭 / 文件选择 / 导入成功刷新、900px 不破版、文档 / 搜索 / 问答 / 术语主流程 | 不新增 API / 后端能力；不引 router / 组件库；3d 只迁移导入入口容器，不改导入契约 |
 | Sprint-22（Phase2B·文档目录树·候选） | TC-P2-FOLDER-001 + TC-P1-015 扩展（`preserve_structure` 保留结构） | 单元 + 集成 + UI smoke | `.venv\Scripts\python.exe -m unittest discover -s tests/backend`（test_folder / test_document / test_imports）；`volta run --node 22.17.1 npm run build`；`volta run --node 22.17.1 node scripts/smoke-folder-tree-browser.mjs` | Chrome / Edge：文件夹树渲染、新建/移动/排序/删除、单文档移动、导入文件夹后目录结构保留、防环/跨空间/重名/删非空拒绝、文档可见性不因 folder 泄露；2026-08-03 用户浏览器 smoke 已确认通过，2026-08-04 浏览器自动化 smoke 已补 | folder 不独立设权限；导入 `preserve_structure` 默认 true、=false 退回标题前缀；现有文档 `folder_id=null` 向后兼容；单文档移动只改归属、不新增版本 |
+| Sprint-24（Phase2C 增强·子树导入 UI·已完成） | TC-P2-VAULT-002 | 前端构建 + 浏览器 smoke | `volta run --node 22.17.1 npm run build`（frontend） | Chrome / Edge：本地挂载目录树选中子文件夹 → 导入 → 上层 DB 出现且 `preserveStructure` 保留目录；单篇 / 整库入口回归 | 纯前端；复用 API-029 不改契约；不引新依赖 |
+| Sprint-25（帮助手册 L0+L1·规划中） | TC-P2-HELP-001 | 前端构建 + 浏览器 smoke + 内容走查 | `volta run --node 22.17.1 npm run build`（frontend） | 新用户路径：登录 → 首次引导 3 步（建文档 → 搜索 → 问答）→ 各视图空状态有下一步按钮 → 首页提示「示例文档未建索引」；帮助内容源与 UI 单一来源核对 | 不新增 API / 后端能力；不引 help 库；localStorage 不可用时引导降级为普通提示 |
 
 > 资源 / 环境验证：Sprint-8 起 Docker / pgvector / Embedding **已 Go**（RG-001/002 Go，见 05 §5.1；TE-C-003 闭合）；OCR / 真实 PDF 解析仍 No-Go（RG-003，后续阶段，不在 P1 必过范围）。
 
@@ -515,6 +518,51 @@ Chrome / Edge 桌面端跑通全部 P1 功能（REQ-011）—— 本 Sprint 不�
 
 ### 禁止事项
 - 不新增未确认 PDF 库；不做异步队列 / 过期清理 job / 水印 / Word-PDF 解析 / zhparser。
+
+### 目标
+### 目标
+
+### 输入文档
+- docs/03-prd.md §3 Phase2C；docs/design/ingestion.md Flow-D-014；docs/07-api-spec.md API-029
+REQ-018 模式 B 增强：本地挂载目录树支持「选子文件夹导入」，补齐 task-033 留的子树导入尾巴；导入复用 API-029 + `preserveStructure:true` 保留目录结构。
+REQ-018 模式 B 增强：本地挂载目录树支持「选子文件夹导入」，补齐 task-033 留的子树导入尾巴；导入复用 API-029 preserveStructure 保留目录结构。
+## Sprint-24（Phase2C 增强·子树导入 UI·已完成）
+
+### 目标
+REQ-018 模式 B 增强：本地挂载目录树支持「选子文件夹导入」，补齐 task-033 留的「子树（选特定文件夹节点）导入 UI」尾巴；导入复用 API-029 + `preserveStructure:true` 保留目录结构。
+
+### 输入文档
+- docs/03-prd.md §3 Phase2C；docs/design/ingestion.md Flow-D-014；docs/07-api-spec.md API-029
+- docs/09-verification.md TC-P2-VAULT-002；tasks/task-033-local-vault-import-and-host.md（留后续口径）
+
+### 修改范围
+- frontend `LocalMountPane`（本地树节点「导入此子树」入口）+ `useLocalVaultMount`（按需导入复用）
+- 限制 1–3 个文件 / 模块；不引第三方依赖
+
+### 验收标准
+- 本地挂载树任意文件夹节点可「导入到 LUMEN」，走 API-029、`preserveStructure` 保留目录；导入后出现在上层 DB 分区且可搜；单篇 / 整库入口回归不破。
+
+### 禁止事项
+- 不改后端 / API 契约；不新增依赖；不扩展其它 Phase2C 增强项（FileSystemObserver / 跨设备）。
+
+## Sprint-25（帮助手册 L0+L1·规划中）
+
+### 目标
+帮助体系首版：L0 内容源（`docs/env/user-guide.md` 按任务导向重组，作为唯一内容源）+ L1 首次引导（登录后 3 步引导 / 新手清单 / 空状态引导 / 「示例文档未建索引」提示）。设计见 `docs/design/help-onboarding.md`。
+
+### 输入文档
+- docs/design/help-onboarding.md（新增）；docs/env/user-guide.md；frontend-interaction.md §9.5（Doc-First 基线）
+- docs/09-verification.md TC-P2-HELP-001
+
+### 修改范围
+- docs/env/user-guide.md（L0 重组）+ frontend（WelcomeFeature 引导、onboarding store、各视图空状态）
+- 限制 1–3 个文件 / 模块（组件抽独立文件防 WSG-004）
+
+### 验收标准
+- 新用户路径人工 smoke 通过（见 TC-P2-HELP-001）；帮助内容源与 UI 单一来源；tsc build 绿；既有 TC-P1-014 回归。
+
+### 禁止事项
+- 不引第三方 help / onboarding 库；不改后端；不一次性实现 L2-L4（留后续）。
 
 ## Sprint 完成包与进度记录
 
