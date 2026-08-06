@@ -6,6 +6,20 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v2.0.0（2026-08-06）
+
+**Phase2C 首个能力：REQ-018 模式 B「本地 Vault 仅本地挂载」（Sprint-23C）。** 让涉隐私 / 不愿入库的本地知识库（Obsidian vault / 本地 Markdown 文件夹）在 LUMEN 内以「仅本地挂载」方式一并浏览与本地搜索，数据不出本机；可按需把单篇 / 子树 / 整库导入 LUMEN 获得完整能力。纯前端（浏览器 File System Access + 原生 IndexedDB），后端零新 API。
+
+- 数据层（task-031）：`local-vault-fs.ts`（FSA 句柄获取 / 授权 / 递归遍历过滤 / 原生 IndexedDB 持久化句柄 / 刷新 `queryPermission`→granted 自动恢复）+ `local-vault-index.ts`（vanilla 倒排索引 + ranked 本地搜索，中文单字可搜）。零第三方依赖。
+- UI（task-032）：左侧文件管理器 documents 分支新增「本地挂载」分区（下层·未入库），与上层 LUMEN DB 视觉隔离；`LocalMountPane`（目录树 / 本地搜索 / 未入库徽标）+ `useLocalVaultMount` hook（页面加载无感恢复）；上下分区垂直分隔条可拖拽调高（`useLocalMountHeight`，复用 usePaneWidth 垂直版）。
+- 主区本地预览：点本地文件在中间主区渲染 markdown（`LocalDocPreview`，只读，标注本地·未入库·不上传）；左栏不再显示预览，避免遮挡目录；DB / 本地预览互斥联动。
+- 按需导入（task-033，走 API-029）：单篇 / 整库导入到 LUMEN，复用 `importBatchDocuments`（`preserveStructure` 保留目录结构），导入后获完整搜索 / RAG / 团队能力。
+- demo / dev host：前端访问 `127.0.0.1` → `localhost`（FSA secure context 硬前提）。
+- 硬天花板（不变）：浏览器句柄后端读不到，仅本地挂载内容**不进服务端 RAG / 全文搜索**；要 AI 能力须走按需导入（模式 A）。
+- 验证：tsc build 270 modules 绿；`smoke-local-vault-index.mjs` 8 断言（含单字搜索）；`smoke-vault-local-mount-browser.mjs` CDP 验证前提（secure/FSA/IDB）+ 分区 UI；用户人工 smoke（2026-08-06）TC-P2-VAULT-001 六口径全过（①授权+刷新恢复 ②本地树 ③本地搜索含单字 ④分区隔离 ⑤主区预览+按需导入 ⑥Network 零上传）；`docs/09-verification.md` §2/§5/§6 回写。
+
+> MAJOR 依据（`ai/project-rules.md` §2.8.1）：Phase2B（团队 MVP）→ Phase2C（本地知识源接入）交付物形态跨越，同 Phase2A→Phase2B 的 MAJOR 惯例；REQ-018 从 `[愿景]`→`[P2]` 实质性阶段升级。
+
 ## v1.7.5（2026-08-05）
 
 **Phase2B 收口后 UI 收口批次。** 修复左右栏宽度不可调 / 不持久、编辑保存后不自动回阅读态（连点易产生多余版本）、左侧目录右键缺「删除文档」入口、快速录入抽屉过窄、搜索视图输入栏大空档；附带编辑器留白、编辑工具栏视觉（去框 / 防按钮竖排）、顶栏面板图标与帮助入口、左侧栏图标语义化 + 收起/展开切换 + 显示当前文件、右栏重复标题去除、AI 润色模式紧凑分段控件、移除 9 处用户可见 REQ 角标（代码注释与 docs 保留追溯）。
