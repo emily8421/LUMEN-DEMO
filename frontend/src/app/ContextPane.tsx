@@ -2,6 +2,10 @@ import type { KnowledgeDocument, Space, Term } from '../api';
 import type { ActiveView } from './WorkspaceViewNav';
 import { FolderTree } from './FolderTree';
 import type { FolderManager } from './useFolders';
+import { LocalMountPane } from '../features/LocalMountPane';
+import { useLocalMountHeight } from './useLocalMountHeight';
+import type { CSSProperties } from 'react';
+import type { LocalVaultDoc } from './local-vault-index';
 
 type ContextPaneProps = {
   activeView: ActiveView;
@@ -19,6 +23,9 @@ type ContextPaneProps = {
   selectedTermId: number | null;
   onSelectTerm: (term: Term) => void;
   onNewTerm: () => void;
+  token: string | undefined;
+  onImported: () => void;
+  onOpenLocalDoc: (doc: LocalVaultDoc | null) => void;
 };
 
 export function ContextPane({
@@ -37,8 +44,12 @@ export function ContextPane({
   selectedTermId,
   onSelectTerm,
   onNewTerm,
+  token,
+  onImported,
+  onOpenLocalDoc,
 }: ContextPaneProps) {
   const selectedDocument = documents.find((document) => document.id === selectedId) ?? null;
+  const mountHeight = useLocalMountHeight();
   const anyFolderExpanded = folders.expandedFolderIds.size > 0;
 
   const handleToggleAllFolders = () => {
@@ -155,7 +166,12 @@ export function ContextPane({
               </button>
             </div>
           </section>
-          <FolderTree
+          <div
+            className="context-tree-split"
+            style={{ '--local-mount-height': `${mountHeight.height}px` } as CSSProperties}
+          >
+            <div className="context-tree-upper">
+              <FolderTree
             documents={documents}
             selectedId={selectedId}
             isCreating={isCreating}
@@ -165,6 +181,22 @@ export function ContextPane({
             onMoveDocument={onMoveDocument}
             onDeleteDocument={onDeleteDocument}
           />
+            </div>
+            <div
+              className={mountHeight.resizing ? 'pane-resizer pane-resizer-row resizing' : 'pane-resizer pane-resizer-row'}
+              role="separator"
+              aria-orientation="horizontal"
+              aria-label="调整本地挂载分区高度"
+              tabIndex={0}
+              onPointerDown={mountHeight.startResize}
+              onPointerMove={mountHeight.moveResize}
+              onPointerUp={mountHeight.endResize}
+              onPointerCancel={mountHeight.endResize}
+              onDoubleClick={mountHeight.resetHeight}
+              onKeyDown={mountHeight.handleKeyDown}
+            />
+              <LocalMountPane token={token} onImported={onImported} onOpenLocalDoc={onOpenLocalDoc} />
+          </div>
         </>
       ) : null}
 
