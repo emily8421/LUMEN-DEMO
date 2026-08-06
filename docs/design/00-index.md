@@ -16,6 +16,7 @@
 | `frontend-workspace-redesign.md` | LUMEN React 前端工作台系统化 UI / UX 重设计（COMP-001） | REQ-011；承载 REQ-001..010、REQ-036 页面能力 | P1B-已实现 | 视觉密度、组件拆分和工作台布局的已实现口径 |
 | `export-delivery.md` | 导出交付子系统（MOD-007） | REQ-038 / REQ-027 | Phase1.5A `.md` / ZIP 导出已实现；Phase1.5B PDF 导出已实现并通过 TC-P1-017 | Sprint-17/18 已实现设计 |
 | `intelligence-analysis.md` | 情报分析子系统（MOD-009，i2 精神） | REQ-029..034 | 愿景骨架，待技术验证 | P1/P2 不实现，升 Phase 前再评估 |
+| `help-onboarding.md` | 帮助与引导体系（COMP-002） | REQ-011（可用性收口）；不新增 REQ | 规划中（2026-08-06，L0+L1 待实现） | 分层帮助：L0 内容源 / L1 首次引导 / L2 帮助中心 / L3 上下文 / L4 速查 |
 
 ## 2. 原型与辅助材料
 

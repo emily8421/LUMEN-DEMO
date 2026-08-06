@@ -33,21 +33,24 @@ export type LocalMountStatus =
 /** 目录树节点（由扁平 docs 路径聚合，PoC renderTree 同构）。 */
 export interface LocalMountTreeNode {
   name: string;
+  path: string;
   children: Map<string, LocalMountTreeNode>;
   files: { name: string; doc: LocalVaultDoc }[];
 }
 
 /** 由 docs 路径聚合目录树（自动排除隐藏目录文件，已在 walk 阶段过滤）。 */
 export function buildLocalMountTree(docs: LocalVaultDoc[]): LocalMountTreeNode {
-  const root: LocalMountTreeNode = { name: '', children: new Map(), files: [] };
+  const root: LocalMountTreeNode = { name: '', path: '', children: new Map(), files: [] };
   for (const doc of docs) {
     const parts = doc.path.split('/');
     let node = root;
+    let dirPath = '';
     for (let i = 0; i < parts.length - 1; i += 1) {
       const key = parts[i];
+      dirPath = dirPath ? `${dirPath}/${key}` : key;
       let child = node.children.get(key);
       if (!child) {
-        child = { name: key, children: new Map(), files: [] };
+        child = { name: key, path: dirPath, children: new Map(), files: [] };
         node.children.set(key, child);
       }
       node = child;
