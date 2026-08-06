@@ -6,6 +6,19 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v2.2.0（2026-08-06）
+
+**Sprint-25 帮助手册 L0+L1（REQ-011 可用性收口，TC-P2-HELP-001）+ 验收期 2 修复。** 把 `docs/env/user-guide.md` 重组成任务导向的唯一内容源（开始使用 → 把资料放进知识库 → 找到内容 → 组织与维护 → 导出与分享 → 权限 → 能力边界 → FAQ），并把「导入」入口修正为弹窗形态、标注 Phase2B/2C 章节待补；前端补齐首次引导、新手清单、各视图空状态入口与顶栏帮助速查弹层。
+
+- L0 内容源（task-036）：`docs/env/user-guide.md` 任务导向重组为唯一内容源，保留全部既有事实，修正导入入口为弹窗形态。
+- L1 首次引导：`app/onboarding-store.ts`（localStorage `lumen-demo-onboarding`，不可用降级）+ `features/OnboardingGuide.tsx` + `styles/onboarding.css`，登录后一次性 3 步引导（新建文档 → 保存后去搜索 → 去问答提问，可跳过，全部完成持久化不再弹出）。
+- L1 新手清单 / 提示：欢迎页 3 步进度 +「示例文档未建索引」提示；搜索 / 问答空态「去新建文档 / 去导入」按钮；标签 / 时间线空态入口。
+- L1 帮助速查：顶栏「?」弹层分类速查 + 轻量过滤（可检索「导入」）+「查看完整手册」链接（单一来源）。
+- 验收期修复 2 缺陷（`docs/09` §5.1）：帮助弹层无法关闭（新增点击外部 / Esc /「×」三种关闭方式）；搜索 / 问答空态按钮被纵向拉伸（`align-content: start` + `align-items: center`，实测 294px → 30px）。
+- 验证：`volta run --node 22.17.1 npm run build` 273 modules 绿；`node scripts/smoke-help-onboarding-browser.mjs` PASS（登录 → 3 步引导 → 未建索引提示 → 空态按钮 → 帮助过滤 10→3 → 跳过持久化）；CDP 实测修复生效；人工新用户路径 smoke 确认通过（2026-08-06）。`docs/08` / `docs/09`（TC-P2-HELP-001 + §5.1）/ `task-036` 落盘。
+
+> MINOR 依据（`ai/project-rules.md` §2.8.1）：Sprint 验收（Sprint-25）+ 新增可演示能力（首次引导 / 帮助速查）；向后兼容，不改 API / 后端 / DB 契约。
+
 ## v2.1.0（2026-08-06）
 
 **Sprint-24 子树导入 UI（REQ-018 模式 B 增强）+ 验收期 2 修复。** 本地挂载目录树支持「导入此文件夹」子树导入（目录 + 子目录 + 文件，`preserveStructure:true` 保留目录结构），补齐 task-033 留的子树导入 UI 尾巴；按主流交互设计（Obsidian / VS Code 目录行 hover 操作、Drive / Dropbox 批量确认 + 进度 + 结果）提升批量导入体验。
