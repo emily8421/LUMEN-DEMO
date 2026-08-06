@@ -1,14 +1,66 @@
 /* 本地挂载分区（REQ-018 模式 B）：与上层 LUMEN DB 文件管理器视觉隔离。
    仅本地浏览 / 搜索 / 预览，内容不上传服务端（TC-P2-VAULT-001 ⑥）。 */
 
-.local-mount-pane {
-  border-top: 1px solid #e5e7eb;
+/* documents 分支上下分区：上层 LUMEN DB（FolderTree）/ 下层本地挂载，垂直分隔条调高。 */
+.context-tree-split {
   display: flex;
   flex-direction: column;
-  max-height: 45%;
-  min-height: 120px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.context-tree-upper {
+  flex: 1 1 0;
+  min-height: 80px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.pane-resizer-row {
+  position: relative;
+  cursor: row-resize;
+  height: 6px;
+  flex: 0 0 6px;
+  touch-action: none;
+  user-select: none;
+  outline: none;
+  background: transparent;
+}
+
+.pane-resizer-row::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2px;
+  transform: translateY(-50%);
+  border-radius: 2px;
+  background: transparent;
+}
+
+.pane-resizer-row:hover::after,
+.pane-resizer-row:focus-visible::after,
+.pane-resizer-row.resizing::after {
+  background: #2563eb;
+}
+
+.local-mount-pane {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 var(--local-mount-height, 300px);
+  min-height: 0;
   overflow: hidden;
   background: #fff;
+  color: #374151;
+}
+
+/* 覆盖全局按钮白字（本分区为白底，按钮需深色文字） */
+.local-mount-pane button,
+.local-mount-pane input,
+.local-mount-pane pre {
+  color: #374151;
 }
 
 .local-mount-header {
@@ -252,4 +304,62 @@
   padding: 2px 12px 6px;
   margin: 0;
   flex-shrink: 0;
+}
+
+/* 主区本地文档预览（替代 DB DocumentsFeature） */
+.local-doc-preview {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  color: #374151;
+}
+
+.local-doc-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #fffbeb;
+  flex-shrink: 0;
+}
+
+.local-doc-preview-title h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.local-doc-preview-meta {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: #b45309;
+}
+
+.local-doc-preview-close {
+  font-size: 12px;
+  padding: 4px 12px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #374151;
+  border-radius: 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.local-doc-preview-close:hover {
+  background: #f3f4f6;
+}
+
+.local-doc-preview-body {
+  flex: 1;
+  overflow: auto;
+  padding: 20px 28px;
+  max-width: 840px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
 }

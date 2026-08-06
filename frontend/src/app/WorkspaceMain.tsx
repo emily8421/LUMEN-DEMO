@@ -1,4 +1,6 @@
 import { DocumentsFeature } from '../features/DocumentsFeature';
+import { LocalDocPreview } from '../features/LocalDocPreview';
+import type { LocalVaultDoc } from './local-vault-index';
 import { SearchFeature } from '../features/SearchFeature';
 import { QueryFeature } from '../features/QueryFeature';
 import { TermsFeature } from '../features/TermsFeature';
@@ -37,6 +39,8 @@ interface WorkspaceMainProps {
   onExpandLeftPane: () => void;
   /** 返回引导卡（退出新建/取消选中）。 */
   onExitToEmpty: () => void;
+  localPreviewDoc: LocalVaultDoc | null;
+  onCloseLocalDoc: () => void;
 }
 
 export function WorkspaceMain({
@@ -56,6 +60,8 @@ export function WorkspaceMain({
   onOpenImport,
   onExpandLeftPane,
   onExitToEmpty,
+  localPreviewDoc,
+  onCloseLocalDoc,
 }: WorkspaceMainProps) {
   return (
     <section className="workspace-main workspace">
@@ -69,6 +75,9 @@ export function WorkspaceMain({
       ) : null}
 
       {activeView === 'documents' ? (
+        localPreviewDoc ? (
+          <LocalDocPreview doc={localPreviewDoc} onClose={onCloseLocalDoc} />
+        ) : (
         <DocumentsFeature
           isCreating={documents.isCreating}
           selectedDocument={documents.selectedDocument}
@@ -99,6 +108,7 @@ export function WorkspaceMain({
           onExpandLeftPane={onExpandLeftPane}
           onExitToEmpty={onExitToEmpty}
         />
+        )
       ) : null}
 
       {activeView === 'search' ? (

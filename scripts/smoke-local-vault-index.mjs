@@ -28,6 +28,8 @@ const hits2 = searchIndex(index, '叠加 高速');
 assert(hits2.length === 1 && hits2[0].doc.path === 'a/量子计算.md', 'search 多词同篇 score 排序');
 assert(searchIndex(index, '').length === 0, 'search 空查询返回空');
 assert(searchIndex(index, '完全不存在的词xyzqqq').length === 0, 'search 无命中返回空');
+const hitsSingle = searchIndex(index, '量');
+assert(hitsSingle.length === 2, `search 单字「量」命中 2 篇（got ${hitsSingle.length}，中文单字搜索）`);
 
 if (failures === 0) console.log('LOCAL_VAULT_INDEX_SMOKE ok');
 else { console.error(`LOCAL_VAULT_INDEX_SMOKE FAIL (${failures})`); process.exitCode = 1; }

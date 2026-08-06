@@ -20,6 +20,7 @@ import { useAiPolish } from './app/useAiPolish';
 import { useFolders } from './app/useFolders';
 import { useTimeline } from './app/useTimeline';
 import { isAuthTokenError } from './app/session-store';
+import type { LocalVaultDoc } from './app/local-vault-index';
 import { QuickEntryFeature } from './features/QuickEntryFeature';
 import { ImportFeature } from './features/ImportFeature';
 import { WorkspaceMain } from './app/WorkspaceMain';
@@ -29,6 +30,7 @@ function App() {
   const paneLayout = usePaneLayout();
   const leftPaneWidth = usePaneWidth('left');
   const [importModalOpen, setImportModalOpen] = useState(false);
+  const [localPreviewDoc, setLocalPreviewDoc] = useState<LocalVaultDoc | null>(null);
 
   const session = useSession({ runAction, setNotice: workspace.setNotice, onSpaceChanged: handleSpaceChanged });
   const token = session.session?.token;
@@ -142,6 +144,17 @@ function App() {
     query.setQueryResult(null);
   }
 
+  function handleOpenLocalDoc(doc: LocalVaultDoc | null) {
+    setLocalPreviewDoc(doc);
+  }
+
+  // 点 DB 文档时关闭本地预览（主区互斥：本地预览 vs DB 文档）
+  useEffect(() => {
+    if (documents.selectedId !== null) {
+      setLocalPreviewDoc(null);
+    }
+  }, [documents.selectedId]);
+
   async function handleExportSpace() {
     if (!session.session) {
       return;
@@ -228,6 +241,7 @@ function App() {
             onNewTerm={terms.newTerm}
             token={token}
             onImported={() => handleImported(null)}
+            onOpenLocalDoc={handleOpenLocalDoc}
           />
 
           {paneLayout.leftPaneOpen ? (
@@ -263,6 +277,8 @@ function App() {
             onOpenImport={() => setImportModalOpen(true)}
             onExpandLeftPane={() => paneLayout.setLeftPaneOpen(true)}
             onExitToEmpty={() => { documents.setSelectedId(null); documents.setIsCreating(false); }}
+            localPreviewDoc={localPreviewDoc}
+            onCloseLocalDoc={() => setLocalPreviewDoc(null)}
           />
 
           <QuickEntryFeature

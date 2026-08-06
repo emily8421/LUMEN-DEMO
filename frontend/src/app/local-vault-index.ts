@@ -56,7 +56,8 @@ export function buildInvertedIndex(docs: LocalVaultDoc[]): LocalVaultIndex {
  * 空查询返回 []。与 PoC search 行为一致。
  */
 export function searchIndex(index: LocalVaultIndex, query: string, limit = 50): LocalVaultSearchHit[] {
-  const terms = tokenize(query);
+  // 搜索 query 保留单字（中文单字搜索：整词 token includes 单字子串即命中）；建索引仍用 tokenize 过滤短 token。
+  const terms = query.toLowerCase().split(TOKEN_SPLIT).filter((t) => t.length > 0);
   if (terms.length === 0) return [];
   const score = new Map<number, number>();
   index.inverted.forEach((set, token) => {

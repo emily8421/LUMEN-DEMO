@@ -47,7 +47,17 @@
 
 ## 完成记录
 
-（待编码后回写）
+- **2026-08-06 完成（TC-P2-VAULT-001 通过）**。
+- 自动化（CDP）：`scripts/smoke-vault-local-mount-browser.mjs` 验证前提 `host=localhost secure=true fsa=true idb=true` + 本地挂载分区 UI 渲染；`smoke-local-vault-index.mjs` 8 断言（含单字搜索）；tsc build 270 modules 绿。
+- 用户人工 smoke（2026-08-06）TC ①-⑥ 全过：
+  - ① 授权 + F5 刷新无感恢复 granted
+  - ② 1000+ 文件本地树（上下分区 + 垂直分隔条调高）
+  - ③ 本地关键词搜索（含单字，如「米」）
+  - ④ 左侧分区视觉隔离（上层 LUMEN DB / 下层本地挂载·未入库）
+  - ⑤ 主区本地文档预览（markdown 渲染，去左栏预览遮挡）+ 按需导入走 API-029（单篇/全部，preserveStructure）
+  - ⑥ Network 零上传（隐私红线）
+- 验收期 UX 修复（用户反馈）：① 上下分隔条调高（`useLocalMountHeight` + `local-mount-height-store`，复用 usePaneWidth 垂直版）解决本地挂载区被挤压/遮挡；② 按钮深色文字（覆盖全局白字）；③ 单字搜索（`searchIndex` query 保留单字）；④ 主区本地预览（`LocalDocPreview`，点本地文件主区渲染，左栏去预览，DB/本地互斥联动）。
+- 回写：09 §2 TC-P2-VAULT-001→通过 + §5 验收记录 + §6 RISK-VISION-002 关闭；08 Sprint-23C→已完成；project-rules §1 进度。
 
 ## 待确认项
 

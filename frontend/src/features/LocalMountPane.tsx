@@ -1,6 +1,7 @@
 // 左侧「本地挂载」分区（REQ-018 模式 B，CMP-P2-TREE / PG-P2-002 下层）
-// 与上层 LUMEN DB 文件管理器视觉隔离；本地目录树 + 本地搜索 + 本地预览（不上传）+ 按需导入到 LUMEN（走 API-029）。
-// 自管理 useLocalVaultMount hook；token / onImported 由 ContextPane 透传。
+// 与上层 LUMEN DB 文件管理器视觉隔离；本地目录树 + 本地搜索（不上传）+ 按需导入到 LUMEN（走 API-029）。
+// 点文件 → onOpenLocalDoc(doc) 通知主区预览（左栏不再显示预览，避免遮挡目录）。
+// 自管理 useLocalVaultMount hook；token / onImported / onOpenLocalDoc 由 ContextPane 透传。
 
 import { useState } from 'react';
 import {
@@ -18,9 +19,10 @@ const IMPORT_PERMISSION: DocumentPermission = 'private';
 type LocalMountPaneProps = {
   token: string | undefined;
   onImported: () => void;
+  onOpenLocalDoc: (doc: LocalVaultDoc | null) => void;
 };
 
-export function LocalMountPane({ token, onImported }: LocalMountPaneProps) {
+export function LocalMountPane({ token, onImported, onOpenLocalDoc }: LocalMountPaneProps) {
   const vm = useLocalVaultMount();
   const [collapsed, setCollapsed] = useState(false);
   const [importing, setImporting] = useState(false);
@@ -51,6 +53,11 @@ export function LocalMountPane({ token, onImported }: LocalMountPaneProps) {
   const tree = vm.docs.length > 0 ? buildLocalMountTree(vm.docs) : null;
   const searching = vm.query.trim().length > 0;
   const canImport = vm.status === 'mounted' && !!token && !importing;
+
+  function handleOpen(path: string) {
+    vm.openDoc(path);
+    onOpenLocalDoc(vm.docs.find((d) => d.path === path) ?? null);
+  }
 
   async function importDocs(docsToImport: LocalVaultDoc[], label: string) {
     if (!token || importing) return;
@@ -146,7 +153,7 @@ export function LocalMountPane({ token, onImported }: LocalMountPaneProps) {
                     <button
                       type="button"
                       className={h.doc.path === vm.selectedPath ? 'active' : ''}
-                      onClick={() => vm.openDoc(h.doc.path)}
+                      onClick={() => handleOpen(h.doc.path)}
                     >
                       <strong>{h.doc.title || h.doc.name}</strong>
                       <small>{h.doc.path}</small>
@@ -155,7 +162,7 @@ export function LocalMountPane({ token, onImported }: LocalMountPaneProps) {
                 ))}
               </ul>
             ) : tree ? (
-              <LocalMountTreeView node={tree} depth={-1} selectedPath={vm.selectedPath} onSelect={vm.openDoc} />
+              <LocalMountTreeView node={tree} depth={-1} selectedPath={vm.selectedPath} onSelect={handleOpen} />
             ) : (
               <p className="empty-state">空 vault</p>
             )}
@@ -183,12 +190,6 @@ export function LocalMountPane({ token, onImported }: LocalMountPaneProps) {
             </div>
           )}
           {importMsg && <p className="local-mount-import-msg">{importMsg}</p>}
-          {vm.selectedPath && (
-            <div className="local-mount-preview">
-              <div className="local-mount-preview-meta">本地·未入库·不上传</div>
-              <pre>{vm.previewText.slice(0, 4000)}</pre>
-            </div>
-          )}
         </>
       )}
     </section>
