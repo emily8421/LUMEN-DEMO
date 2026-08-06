@@ -1,4 +1,6 @@
 import type { ActiveView } from '../app/WorkspaceViewNav';
+import { ONBOARDING_STEPS } from '../app/onboarding-store';
+import type { OnboardingState, OnboardingStepId } from '../app/onboarding-store';
 
 interface WelcomeFeatureProps {
   isBusy: boolean;
@@ -8,19 +10,67 @@ interface WelcomeFeatureProps {
   onCreateDocument: () => void;
   /** 快速录入（复用 quickEntry.open）。 */
   onOpenQuickEntry: () => void;
+  /** 新手清单进度（Sprint-25 L1）。 */
+  onboardingSteps: OnboardingState['steps'];
+  /** 新手清单条目：标记完成 + 直达对应视图（App 注入）。 */
+  onOnboardingStep: (stepId: OnboardingStepId) => void;
 }
 
 /**
  * 欢迎引导页（Doc-First §9.5.2，Sprint-21 slice 3c）：登录后默认落地页。
  * 纯引导定位——欢迎语 + 功能卡片 + 轻指引，不带数据列表（嫌空再补最近文档）。
+ * Sprint-25 L1：叠加新手清单（3 步）与「示例文档未建索引」提示。
  */
-export function WelcomeFeature({ isBusy, onNavigate, onCreateDocument, onOpenQuickEntry }: WelcomeFeatureProps) {
+export function WelcomeFeature({
+  isBusy,
+  onNavigate,
+  onCreateDocument,
+  onOpenQuickEntry,
+  onboardingSteps,
+  onOnboardingStep,
+}: WelcomeFeatureProps) {
+  const doneCount = ONBOARDING_STEPS.filter((step) => onboardingSteps[step.id] === true).length;
+
   return (
     <div className="welcome">
       <header className="welcome-header">
         <h1>欢迎来到 LUMEN</h1>
         <p>你的团队知识库已就绪。</p>
       </header>
+
+      <aside className="welcome-notice" role="note">
+        ⚠️ 系统示例文档<strong>未建索引</strong>，搜不到、问不到；只有你<strong>新建或导入</strong>的文档才会被搜索 / 问答命中。
+      </aside>
+
+      <section className="welcome-checklist" aria-label="新手清单">
+        <header>
+          <strong>新手清单</strong>
+          <span>
+            {doneCount}/{ONBOARDING_STEPS.length} 已完成
+          </span>
+        </header>
+        <ol>
+          {ONBOARDING_STEPS.map((step) => {
+            const done = onboardingSteps[step.id] === true;
+            return (
+              <li key={step.id} className={done ? 'done' : ''}>
+                <button
+                  type="button"
+                  onClick={() => onOnboardingStep(step.id)}
+                  disabled={isBusy || done}
+                >
+                  <span className="check" aria-hidden="true">{done ? '✓' : '○'}</span>
+                  <span>
+                    <strong>{step.title}</strong>
+                    <small>{step.description}</small>
+                  </span>
+                  {done ? null : <em>去完成 →</em>}
+                </button>
+              </li>
+            );
+          })}
+        </ol>
+      </section>
 
       <div className="welcome-cards">
         <button type="button" className="welcome-card" disabled={isBusy} onClick={onCreateDocument}>

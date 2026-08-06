@@ -13,6 +13,8 @@ type TimelineFeatureProps = {
   onClearFilters: () => void;
   onLoadTimeline: (event?: FormEvent<HTMLFormElement>) => void;
   onOpenDocument: (documentId: number, title: string) => void;
+  /** 空态引导：去文档视图新建 / 导入（Sprint-25 L1）。 */
+  onGoToDocuments: () => void;
 };
 
 const eventLabels: Record<TimelineEventType, string> = {
@@ -33,6 +35,7 @@ export function TimelineFeature({
   onClearFilters,
   onLoadTimeline,
   onOpenDocument,
+  onGoToDocuments,
 }: TimelineFeatureProps) {
   return (
     <section className="timeline-panel focus-panel task-workspace">
@@ -83,7 +86,14 @@ export function TimelineFeature({
       {timelineResult ? <TimelineDensity result={timelineResult} /> : null}
 
       {!timelineResult ? (
-        <p className="empty-state task-empty">输入关键词或选择标签后生成时间线。</p>
+        <div className="empty-state-guide task-empty">
+          <p>输入关键词或选择标签后生成时间线。</p>
+          <div className="empty-state-actions">
+            <button type="button" className="secondary" onClick={onGoToDocuments} disabled={isBusy}>
+              还没有内容？先去新建或导入文档 →
+            </button>
+          </div>
+        </div>
       ) : timelineResult.items.length === 0 ? (
         <p className="empty-state task-empty">
           {timelineQuery.trim() ? `未找到含「${timelineQuery.trim()}」的可见文档事件。` : '当前空间暂无可见事件。'}

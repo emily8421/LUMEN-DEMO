@@ -24,6 +24,9 @@ import type { LocalVaultDoc } from './app/local-vault-index';
 import { QuickEntryFeature } from './features/QuickEntryFeature';
 import { ImportFeature } from './features/ImportFeature';
 import { WorkspaceMain } from './app/WorkspaceMain';
+import { OnboardingGuide } from './features/OnboardingGuide';
+import { ONBOARDING_STEPS, isOnboardingDone, loadOnboardingState, persistOnboardingState } from './app/onboarding-store';
+import type { OnboardingState, OnboardingStepId } from './app/onboarding-store';
 
 function App() {
   const workspace = useWorkspace();
@@ -39,6 +42,9 @@ function App() {
   const leftPaneOpen = leftPaneHasContent && paneLayout.leftPaneOpen;
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [localPreviewDoc, setLocalPreviewDoc] = useState<LocalVaultDoc | null>(null);
+  const [onboarding, setOnboarding] = useState<OnboardingState>(() => loadOnboardingState());
+  // 本次会话引导是否已关闭（未全部完成时下次登录重新弹，Sprint-25 Flow-H-001）。
+  const [guideDismissed, setGuideDismissed] = useState(false);
 
   const session = useSession({ runAction, setNotice: workspace.setNotice, onSpaceChanged: handleSpaceChanged });
   const token = session.session?.token;
@@ -99,6 +105,11 @@ function App() {
   const imports = useImport({ token, runAction, setNotice: workspace.setNotice, onImported: handleImported });
 
   const currentSpace = session.spaces.find((space) => space.id === session.session?.currentSpaceId) ?? null;
+
+  // 登录态变化 → 重置本次会话的首次引导显示（未完成时下次登录重新弹）。
+  useEffect(() => {
+    setGuideDismissed(false);
+  }, [session.session?.token]);
 
   // session / 空间变化 → 刷新工作区（spaces + documents + terms）。
   useEffect(() => {
@@ -173,6 +184,31 @@ function App() {
       triggerBrowserDownload(blob, filename);
       workspace.setNotice(`已导出空间备份：${filename}`);
     });
+  }
+
+  // Sprint-25 首次引导：标记步骤完成；全部完成 → completed（不再弹出）。
+  function handleOnboardingStep(stepId: OnboardingStepId) {
+    setOnboarding((current) => {
+      const steps = { ...current.steps, [stepId]: true };
+      const next: OnboardingState = { completed: isOnboardingDone({ ...current, steps }), steps };
+      persistOnboardingState(next);
+      return next;
+    });
+    const step = ONBOARDING_STEPS.find((item) => item.id === stepId);
+    if (!step) {
+      return;
+    }
+    if (stepId === 'create') {
+      documents.handleCreateDocument();
+    } else {
+      workspace.setActiveView(step.view);
+    }
+  }
+
+  function handleSkipOnboarding() {
+    const next: OnboardingState = { completed: true, steps: { create: true, search: true, query: true } };
+    persistOnboardingState(next);
+    setOnboarding(next);
   }
 
   // cross-cutting：统一忙碌 / 通知 / 错误 + 登录失效处理（组合 workspace setters + session.handleAuthError）。
@@ -287,6 +323,8 @@ function App() {
             onExitToEmpty={() => { documents.setSelectedId(null); documents.setIsCreating(false); }}
             localPreviewDoc={localPreviewDoc}
             onCloseLocalDoc={() => setLocalPreviewDoc(null)}
+            onboardingSteps={onboarding.steps}
+            onOnboardingStep={handleOnboardingStep}
           />
 
           <QuickEntryFeature
@@ -326,6 +364,16 @@ function App() {
             onImport={imports.handleImport}
             onClose={() => setImportModalOpen(false)}
           />
+
+          {session.session && !onboarding.completed && !guideDismissed ? (
+            <OnboardingGuide
+              isBusy={workspace.isBusy}
+              steps={onboarding.steps}
+              onStep={handleOnboardingStep}
+              onSkip={handleSkipOnboarding}
+              onDismiss={() => setGuideDismissed(true)}
+            />
+          ) : null}
         </div>
       )}
 

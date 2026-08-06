@@ -222,9 +222,35 @@
 }
 
 .help-title {
-  display: block;
-  margin-bottom: 6px;
   font-size: 12px;
+}
+
+.help-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.help-close {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1;
+  padding: 0;
+}
+
+.help-close:hover:not(:disabled) {
+  background: var(--panel-soft);
+  color: var(--text);
 }
 
 .help-list {

@@ -1,0 +1,244 @@
+/* Sprint-25 帮助与引导体系 L1：首次引导弹层 / 新手清单 / 空状态引导 / 帮助速查过滤。
+   独立文件——workspace.css / layout.css 已近 WSG-004 阈值，不塞进去。 */
+
+/* --- 首次引导弹层（Flow-H-001） --- */
+.onboarding-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: var(--space-3);
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.onboarding-modal {
+  width: min(560px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  background: #ffffff;
+  box-shadow: 0 20px 48px rgba(15, 23, 42, 0.2);
+  padding: var(--space-4);
+}
+
+.onboarding-header h2 {
+  margin: 0 0 var(--space-1);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.onboarding-header p {
+  margin: 0 0 var(--space-3);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.onboarding-steps {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-3);
+  padding: 0;
+  list-style: none;
+}
+
+.onboarding-step {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  background: var(--panel);
+}
+
+.onboarding-step.done {
+  opacity: 0.72;
+}
+
+.onboarding-step-check {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: var(--blue);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.onboarding-step.done .onboarding-step-check {
+  background: var(--green, #16a34a);
+}
+
+.onboarding-step-body strong {
+  display: block;
+  font-size: 13px;
+}
+
+.onboarding-step-body p {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.onboarding-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* --- 欢迎页新手清单 + 未建索引提示（L1） --- */
+.welcome-notice {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 0 var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid #fde68a;
+  border-radius: var(--radius-panel);
+  background: #fffbeb;
+  color: #92400e;
+  font-size: 13px;
+  text-align: left;
+}
+
+.welcome-checklist {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 0 var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  background: var(--panel);
+  padding: var(--space-3);
+  text-align: left;
+}
+
+.welcome-checklist > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-2);
+  font-size: 13px;
+}
+
+.welcome-checklist > header span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.welcome-checklist ol {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.welcome-checklist li button {
+  display: grid;
+  grid-template-columns: 22px 1fr auto;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-panel);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+}
+
+.welcome-checklist li button:hover:not(:disabled) {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+}
+
+.welcome-checklist li button:disabled {
+  cursor: default;
+  opacity: 0.65;
+}
+
+.welcome-checklist .check {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.welcome-checklist li.done .check {
+  border-color: var(--green, #16a34a);
+  background: var(--green, #16a34a);
+  color: #ffffff;
+}
+
+.welcome-checklist li button strong {
+  display: block;
+  font-size: 13px;
+}
+
+.welcome-checklist li button small {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.welcome-checklist li button em {
+  color: var(--blue);
+  font-size: 12px;
+  font-style: normal;
+}
+
+/* --- 空状态引导（搜索 / 问答等视图） --- */
+.empty-state-guide {
+  display: grid;
+  gap: var(--space-2);
+  align-content: start;
+}
+
+.empty-state-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+/* --- 帮助弹层：过滤 + 完整手册链接（L1 速查） --- */
+.help-filter {
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 5px 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.help-no-result {
+  margin: 6px 0;
+  color: var(--muted);
+}
+
+.help-manual-link {
+  display: block;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.help-manual-link:hover {
+  text-decoration: underline;
+}

@@ -8,6 +8,10 @@ type SearchFeatureProps = {
   isBusy: boolean;
   onSearch: (event: React.FormEvent<HTMLFormElement>) => void;
   onOpenDocument: (documentId: number | null, title: string) => void;
+  /** 空态引导：去新建文档（Sprint-25 L1）。 */
+  onCreateDocument: () => void;
+  /** 空态引导：去导入（Sprint-25 L1）。 */
+  onOpenImport: () => void;
 };
 
 export function SearchFeature({
@@ -17,6 +21,8 @@ export function SearchFeature({
   isBusy,
   onSearch,
   onOpenDocument,
+  onCreateDocument,
+  onOpenImport,
 }: SearchFeatureProps) {
   return (
     <section className="search-panel focus-panel task-workspace">
@@ -38,9 +44,15 @@ export function SearchFeature({
         <button type="submit" disabled={isBusy || searchQuery.trim().length === 0}>搜索</button>
       </form>
       {!searchResult ? (
-        <p className="empty-state task-empty">输入关键词检索当前空间可见文档。</p>
+        <div className="empty-state-guide task-empty">
+          <p>先新建或导入文档——示例文档<strong>未建索引</strong>，只有新建 / 导入的文档才会被搜索命中。</p>
+          <div className="empty-state-actions">
+            <button type="button" className="secondary" onClick={onCreateDocument} disabled={isBusy}>去新建文档</button>
+            <button type="button" className="secondary" onClick={onOpenImport} disabled={isBusy}>去导入</button>
+          </div>
+        </div>
       ) : searchResult.items.length === 0 ? (
-        <p className="empty-state task-empty">未找到匹配文档。</p>
+        <p className="empty-state task-empty">未找到匹配文档。试试换关键词，或先新建 / 导入文档（示例文档未建索引）。</p>
       ) : (
         <ul className="result-list task-result-list">
           {searchResult.items.map((item) => (

@@ -12,6 +12,8 @@ type TagsFeatureProps = {
   onSelectTag: (tagId: number | null) => void;
   onCreateTag: (event: FormEvent<HTMLFormElement>) => void;
   onOpenDocument: (documentId: number, title: string) => void;
+  /** 空态引导：去文档视图新建 / 导入（Sprint-25 L1）。 */
+  onGoToDocuments: () => void;
 };
 
 export function TagsFeature({
@@ -24,6 +26,7 @@ export function TagsFeature({
   onSelectTag,
   onCreateTag,
   onOpenDocument,
+  onGoToDocuments,
 }: TagsFeatureProps) {
   return (
     <section className="tag-panel focus-panel task-workspace">
@@ -49,7 +52,12 @@ export function TagsFeature({
             <span>点击查看该标签下文档</span>
           </div>
           {tags.length === 0 ? (
-            <p className="empty-state">暂无标签，新建一个开始组织文档。</p>
+            <div className="empty-state">
+              <p>暂无标签，新建一个开始组织文档。</p>
+              <button type="button" className="secondary" onClick={onGoToDocuments} disabled={isBusy}>
+                还没有内容？先去新建或导入文档 →
+              </button>
+            </div>
           ) : (
             <ul className="tag-list">
               {tags.map((tag) => (
