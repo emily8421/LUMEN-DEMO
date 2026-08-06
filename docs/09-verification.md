@@ -95,14 +95,14 @@
 | TC-P2-VAULT-001 | REQ-018 模式 B；浏览器 File System Access + IndexedDB；CMP-P2-TREE 左侧分区；API-029 按需导入 | RG-009 PoC Go（2026-08-05）；`lumen_vault_mounts` 仅元数据；模式 B 后端零新 API | ①授权+刷新恢复 granted；②1000+ 文件本地树；③IndexedDB 本地关键词搜索；④左侧分区视觉隔离 + 本地条目不进团队 RAG；⑤按需单篇/子树导入走 API-029；⑥隐私红线不上传（Network 零请求） | 句柄持久化刷新恢复；本地索引命中；分区徽标；不上传；导入获完整能力 | RG-009 PoC 报告 `docs/research/2026-08-05-rg009-vault-local-mount-poc.md`（8 能力 + 5 场景，CDP 自动实测 + 用户人工 smoke）+ PoC 原型 `docs/research/prototypes/2026-08-05-rg009-vault-local-mount-poc.html` | **通过**（2026-08-06，Sprint-23C：CDP 前提 smoke + 用户人工 6 口径全过；验收期修复布局/单字搜索/主区预览/按钮色） |
 | TC-P2-VAULT-002 | REQ-018 模式 B 增强·子树导入 UI；API-029 + `preserveStructure` | task-033 留后续（2026-08-06）；Sprint-24 规划已落 08 | 本地挂载目录树选中任意子文件夹 → 「导入到 LUMEN」→ 上层 DB 出现且目录结构保留；单篇 / 整库入口回归 | 子树导入保留目录；导入后可搜；单篇 / 整库不回归 | build + 浏览器人工 smoke（Sprint-24） | 通过（2026-08-06 人工 smoke，4 项全过） |
 | TC-P2-HELP-001 | 帮助体系 L0+L1（user-guide 内容源 + 首次引导 / 空状态）；REQ-011 可用性收口 | design/help-onboarding（新增 2026-08-06）；Sprint-25 规划已落 08 | 新用户路径：登录 → 首次引导 3 步 → 各视图空状态有下一步 → 首页提示「示例文档未建索引」；帮助可检索到「导入」；内容源单一来源核对 | 3 分钟内可完成首篇可搜文档；引导可跳过；不破既有主流程 | build + 浏览器人工 smoke（Sprint-25）+ 内容走查 | 通过（2026-08-06，Sprint-25：build 273 modules 绿 + scripts/smoke-help-onboarding-browser.mjs 自动化通过；人工浏览器 smoke 待用户确认后补记） |
-| TC-P2-VAULT-003 | REQ-018 模式 B 增强·FileSystemObserver 自动监听 | RG-010 验证 Go 后才立项 | 本地挂载文件夹新增 / 修改 / 删除文件后自动重扫生效（无需手动） | 自动反映变更；手动重扫保留 | 浏览器 smoke（待 RG-010 Go） | 待 RG-010 验证（候选） |
+| TC-P2-VAULT-003 | REQ-018 模式 B 增强·FileSystemObserver 自动监听 | RG-010 Go（2026-08-06，Edge 139 实测） | 本地挂载文件夹新增 / 修改 / 删除文件后自动重扫生效（无需手动） | 自动反映变更；手动重扫保留 | 浏览器 smoke（Wave 3 实现时执行） | 已 Go（2026-08-06）；Wave 3 可立项 |
 | TC-P2-ACC-001 | 账户管理（注册 / 登录 / 用户管理）+ 权限多人化；REQ-001/002/003 扩展 | Wave 2 拍板（2026-08-06）；阶段升级后细化 | 待需求 / 设计细化后定义 | — | 待定 | 已拍板·待 Wave 2 启动 |
 | TC-P2-VAULT-004 | REQ-018 模式 B 增强·跨设备 vault 元数据 `/api/vault-mounts` | 依赖账户体系（Sprint-26）；migration 014 待落地 | 设备 A 挂载 → 元数据入库 → 设备 B 登录可见挂载点列表 | 仅元数据同步，正文不上传 | 后端 tests + API smoke + 浏览器 smoke | 已拍板·待 Wave 3 启动 |
 - REQ-027 PDF 导出已提前到 Phase1.5B 并完成，验证口径见 TC-P1-017。
 - **REQ-013a 主题时间线 / REQ-024 密度热条**：TC-P2-TL-001 已列入上表；task-030 已通过自动化验证、运行态 API smoke、Edge headless 浏览器 smoke 与真实 PG 大数据性能 smoke；详见 `docs/design/timeline.md`。
 - **REQ-039 文档目录树（Phase2B 第三 slice）**：TC-P2-FOLDER-001——文件夹树 CRUD / 移动 / 排序 + 单文档移动 + 导入保留目录结构（`preserve_structure`）后端/API、前端 build、运行态 API smoke、用户浏览器 smoke 与浏览器自动化 smoke 已通过；folder 不独立设权限，文档可见性仍按 permission；防环 / 跨空间 / 重名 / 删非空 folder 拒绝；详见 `docs/design/folder-tree.md`。
 - **REQ-018 Vault 兼容模式 B（Phase2C）**：TC-P2-VAULT-001——浏览器 File System Access 句柄 + IndexedDB 持久化 + 本地索引搜索 + 左侧上下分区（CMP-P2-TREE）+ 按需导入走 API-029；RG-009 PoC Go（2026-08-05，8 能力 + 5 场景，刷新自动恢复 granted、无上传）；硬天花板：仅本地挂载内容不进服务端 RAG；详见 `docs/research/2026-08-05-rg009-vault-local-mount-poc.md` + `docs/design/ingestion.md` Flow-D-014。
-- **Phase2C 增强（Wave 1，2026-08-06 拍板）**：子树导入 UI（TC-P2-VAULT-002）、帮助体系 L0+L1（TC-P2-HELP-001）；FileSystemObserver 自动监听（TC-P2-VAULT-003）待 RG-010 验证。
+- **Phase2C 增强（Wave 1，2026-08-06 拍板）**：子树导入 UI（TC-P2-VAULT-002）、帮助体系 L0+L1（TC-P2-HELP-001）；FileSystemObserver 自动监听（TC-P2-VAULT-003）已 RG-010 Go（2026-08-06）。
 - **Wave 2/3（已拍板）**：账户管理 + 权限多人化（TC-P2-ACC-001）、跨设备 vault 元数据（TC-P2-VAULT-004，migration 014 + `/api/vault-mounts`）；依赖账户体系，排 Wave 2/3。
 - REQ-015 / 016 / 017 其余 P2 后续用例（推送 / 协作 / 移动端）——不进 Phase2B 首批，待后续 Phase 细化。
 
@@ -115,7 +115,7 @@
 - **Phase1.5A（个人可用 Alpha）**：覆盖 REQ-037 / REQ-038，对应 TC-P1-015 / 016；目标是批量入库 + 导出备份，优先于 PDF 和 Phase2 编码。
 - **Phase1.5B（个人增强 Beta）**：覆盖 REQ-027，对应 TC-P1-017；RG-006 已 Go，Sprint-18 PDF 导出产品验收已完成。
 - **Phase2A / Phase2B**：REQ-026 / 012 / 025 已作为 Phase2A 个人知识组织完成并通过 TC-P2-LINK/TAG/QUICK-001；**Phase2B 团队 MVP 已完成并收口（2026-08-05）**——REQ-014（TC-P2-AI-001）、REQ-013a/024（TC-P2-TL-001）、REQ-039（TC-P2-FOLDER-001）；P2 UI 门禁 TC-P2-UI-001~005 已由各 slice 的 build + 浏览器 smoke 覆盖；REQ-015/016/017 及愿景用例待后续阶段确认后继续细化。
-- **Phase2C（本地知识源接入）**：覆盖 REQ-018 模式 B（TC-P2-VAULT-001，Sprint-23C 已完成 2026-08-06）；Wave 1 进行中（Sprint-24 子树导入 UI 已完成 2026-08-06 / TC-P2-VAULT-002 通过；Sprint-25 帮助 L0+L1 已完成（2026-08-06，TC-P2-HELP-001 自动化通过，人工 smoke 待确认））；RG-010 FileSystemObserver 验证候选。
+- **Phase2C（本地知识源接入）**：覆盖 REQ-018 模式 B（TC-P2-VAULT-001，Sprint-23C 已完成 2026-08-06）；Wave 1 进行中（Sprint-24 子树导入 UI 已完成 2026-08-06 / TC-P2-VAULT-002 通过；Sprint-25 帮助 L0+L1 已完成（2026-08-06，TC-P2-HELP-001 自动化 + 人工确认通过））；RG-010 FileSystemObserver 已 Go（2026-08-06），Wave 1 收口。
 - **愿景（产品）**：REQ-019..023、REQ-028..035 待技术验证后再补用例。
 
 ## 4. 本机资源验证
@@ -223,6 +223,7 @@
 | RISK-P1-008 | TC-P1-015 | 1000+ 文件夹导入一次请求可能撞 multipart `max_files/max_fields=1000` 限制 | REQ-037 / REQ-039 大文件夹导入 | ✅ 已解决（编码 PR #104，2026-08-04）：前端分批 50/批顺序上传 + 逐批 try/catch + 汇总，纯前端、不改 API-029；build + 后端 11 测试绿 | ✅ 1000 文件夹 smoke 通过（2026-08-04，内存 demo，非 PG/embedding）：1000 文件 ÷50/批 = 20 批顺序上传，全 HTTP 200、done 997 / skip 3 / fail 0、0.9s；对照「单请求 1000 文件」→ 400 `Too many fields. Maximum number of fields is 1000.`（复现原 bug）。PG + 同步 embedding perf 已测（2026-08-04，scripts/smoke-import-pg-performance.py）：200 文档 ~41s、~205ms/doc（bge embedding 已写入）、每批随 `list_documents` 去重略增（9.9→10.6s/批）；1000+ 文档预计数分钟，大规模 vault 的后台异步导入留后续 |
 | RISK-VISION-002 | RG-009 / TC-P2-VAULT-001 | Obsidian Vault 仅本地挂载的浏览器授权、隐私边界、本地索引和同步冲突 | REQ-018 | RG-009 PoC 已通过（2026-08-05，8 能力 + 5 场景）；导入数据库 = 完整 LUMEN 能力；仅本地挂载 = 个人 / 当前设备来源，左侧下层分区显示，不进入团队搜索 / RAG | ✅ 已关闭（2026-08-06）：Sprint-23C 模式 B 编码完成，TC-P2-VAULT-001 通过（CDP + 用户人工 6 口径；本地不上传、不进 RAG） |
 
+| RISK-P2-VAULT-003 | RG-010 / TC-P2-VAULT-003 | 本地挂载文件变更自动监听依赖实验性 FileSystemObserver，目标浏览器可能不支持 | REQ-018 模式 B 增强 | **已 Go（2026-08-06）**：Edge 139 默认可用（CDP 实测构造 / observe / 变更回调）；手动重扫兜底保留 | `docs/research/2026-08-06-tech-env-evaluation-rg010-file-system-observer.md`；TC-P2-VAULT-003 |
 ## 7. 待人工确认项
 
 - Phase2A 已完成整体验收 closure；不得再把 REQ-026 / REQ-012 / REQ-025 标为待确认或未实现。

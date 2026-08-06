@@ -150,6 +150,7 @@ flowchart TB
 | RG-008 | Phase2B AI 润色数据外发风险接受（REQ-014） | **Go（Sprint-19 vertical slice 已通过，2026-07-31 前端闭环）** | 数据外发风险已人工接受（2026-07-30，真实外发 + 权限护栏）；sources 权限过滤复用 Phase1 既有查询层过滤（citation 复用 `rag._find_candidate_chunks`，越权 chunk 不进 prompt / 不返回，`test_ai_polish` 验证）；草稿只存 `input_excerpt_hash`（sha256）+ `prompt_summary`（摘要，测试断言不含原文 / key）、不存完整敏感原文；不做敏感字段自动过滤（用户自判）；LLM 不可用→5030、不落库不编造（区别于 RAG 静默降级） | ~~首个 vertical slice 实跑升 Go~~ → **已通过**：`tests.backend.test_ai_polish` service 9/9 绿（权限过滤 / 5030 不落库 / hash 留存）+ 全量后端 125 OK(skipped=3) + 前端 live UI smoke 2026-07-31 通过 | TC-P2-AI-001（已通过） | REQ-014（AI 润色已落地） |
 | RG-009 | 本地 Vault 挂载 / 连接器 | **Go（PoC 验证 2026-08-05 通过）/ 不阻塞当前 Phase** | **已知天花板**：浏览器 File System Access 句柄只活在浏览器进程、后端读不到 → 仅本地挂载内容无法进服务端 RAG / 全文搜索；要进 RAG 必须 (a) 本地 agent / 桌面端增量索引 或 (b) 导入 DB。此外浏览器授权持久化、IndexedDB 句柄保存、只读/可写策略、增量扫描、删除/重命名冲突、本地索引规模与隐私边界未验证；若走桌面客户端则需另定运行形态 | 最小 PoC：选择 1000+ 文件 vault，展示本地树、读取/搜索单机索引、重启后权限恢复或明确失效、与 DB 文档分区显示；仅挂载内容不上传服务端 | TC-P2-VAULT-001 | REQ-018 |
 
+| RG-010 | 本地挂载自动监听（FileSystemObserver） | **Go（2026-08-06，Edge 139 实测）** | Edge 139 默认暴露 `window.FileSystemObserver`，构造 + observe(OPFS 目录句柄) + 写入 / 删除变更回调均通过（headless CDP 实测，详见评估报告）；无需 flag；Chrome 同 Blink 可预期一致 | 真实挂载目录（picker 句柄）在 Wave 3 实现时复测；Firefox / Safari 不在 demo 目标 | `docs/research/2026-08-06-tech-env-evaluation-rg010-file-system-observer.md`；TC-P2-VAULT-003 | REQ-018 |
 > 风险与验证映射：本表 RG-ID 与 `docs/09-verification.md §6` 风险项对齐（待 09 补 Risk-ID 列后双向链接）。
 
 ### 5.2 安全、隐私与合规
