@@ -8,6 +8,10 @@ type QueryFeatureProps = {
   isBusy: boolean;
   onQuery: (event: React.FormEvent<HTMLFormElement>) => void;
   onOpenDocument: (documentId: number | null, title: string) => void;
+  /** 空态引导：去新建文档（Sprint-25 L1）。 */
+  onCreateDocument: () => void;
+  /** 空态引导：去导入（Sprint-25 L1）。 */
+  onOpenImport: () => void;
 };
 
 export function QueryFeature({
@@ -17,6 +21,8 @@ export function QueryFeature({
   isBusy,
   onQuery,
   onOpenDocument,
+  onCreateDocument,
+  onOpenImport,
 }: QueryFeatureProps) {
   return (
     <section className="query-panel focus-panel task-workspace">
@@ -42,7 +48,13 @@ export function QueryFeature({
             <button type="submit" disabled={isBusy || question.trim().length === 0}>提问</button>
           </form>
           {!queryResult ? (
-            <p className="empty-state task-empty">输入问题后，会基于当前空间可见文档返回答案。</p>
+            <div className="empty-state-guide task-empty">
+              <p>先新建或导入文档——示例文档<strong>未建索引</strong>，只有新建 / 导入的文档才会进入问答。</p>
+              <div className="empty-state-actions">
+                <button type="button" className="secondary" onClick={onCreateDocument} disabled={isBusy}>去新建文档</button>
+                <button type="button" className="secondary" onClick={onOpenImport} disabled={isBusy}>去导入</button>
+              </div>
+            </div>
           ) : (
             <div className="answer-box answer-body">
               <strong>答案</strong>

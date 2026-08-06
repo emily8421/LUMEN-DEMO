@@ -15,6 +15,7 @@ import { useTerms } from './useTerms';
 import { useTags } from './useTags';
 import { useTimeline } from './useTimeline';
 import type { useAiPolish } from './useAiPolish';
+import type { OnboardingState, OnboardingStepId } from './onboarding-store';
 
 interface WorkspaceMainProps {
   activeView: string;
@@ -41,6 +42,10 @@ interface WorkspaceMainProps {
   onExitToEmpty: () => void;
   localPreviewDoc: LocalVaultDoc | null;
   onCloseLocalDoc: () => void;
+  /** 新手清单进度（Sprint-25 L1）。 */
+  onboardingSteps: OnboardingState['steps'];
+  /** 新手清单条目：标记完成 + 直达对应视图（Sprint-25 L1）。 */
+  onOnboardingStep: (stepId: OnboardingStepId) => void;
 }
 
 export function WorkspaceMain({
@@ -62,6 +67,8 @@ export function WorkspaceMain({
   onExitToEmpty,
   localPreviewDoc,
   onCloseLocalDoc,
+  onboardingSteps,
+  onOnboardingStep,
 }: WorkspaceMainProps) {
   return (
     <section className="workspace-main workspace">
@@ -71,6 +78,8 @@ export function WorkspaceMain({
           onNavigate={onNavigate}
           onCreateDocument={onCreateDocument}
           onOpenQuickEntry={onQuickEntryOpen}
+          onboardingSteps={onboardingSteps}
+          onOnboardingStep={onOnboardingStep}
         />
       ) : null}
 
@@ -119,6 +128,8 @@ export function WorkspaceMain({
           isBusy={isBusy}
           onSearch={search.handleSearch}
           onOpenDocument={documents.handleOpenDocument}
+          onCreateDocument={onCreateDocument}
+          onOpenImport={onOpenImport}
         />
       ) : null}
 
@@ -130,6 +141,8 @@ export function WorkspaceMain({
           isBusy={isBusy}
           onQuery={query.handleQuery}
           onOpenDocument={documents.handleOpenDocument}
+          onCreateDocument={onCreateDocument}
+          onOpenImport={onOpenImport}
         />
       ) : null}
 
@@ -156,6 +169,7 @@ export function WorkspaceMain({
           onSelectTag={tags.handleSelectTag}
           onCreateTag={tags.handleCreateTag}
           onOpenDocument={documents.handleOpenDocument}
+          onGoToDocuments={() => onNavigate('documents')}
         />
       ) : null}
 
@@ -171,6 +185,7 @@ export function WorkspaceMain({
           onClearFilters={timeline.clearTimelineFilters}
           onLoadTimeline={timeline.handleLoadTimeline}
           onOpenDocument={documents.handleOpenDocument}
+          onGoToDocuments={() => onNavigate('documents')}
         />
       ) : null}
     </section>
