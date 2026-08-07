@@ -43,6 +43,9 @@ class DocLinkCreateRequest:
 
 
 def list_links(repository, user_id: int, current_space_id: int, document_id: int, direction: str) -> list[DocLinkView]:
+    # Sprint-27 P0：查询前先校验文档可见性（不可见 → DocumentNotFoundError → API 4004）。
+    # 否则同空间成员可枚举他人 PRIVATE 文档 id，从出链 link_text 泄露私有正文片段。
+    get_visible_document(repository, user_id, current_space_id, document_id)
     memberships = repository.list_memberships()
     links = repository.list_doc_links(current_space_id, document_id, direction)
 
