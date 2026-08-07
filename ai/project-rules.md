@@ -14,16 +14,16 @@
 
 ## 1. Phase边界
 
-当前阶段：**Phase2B（团队 MVP）已完成（2026-08-05 收口）**；Phase1 Demo + Phase1.5A 可用性收口 + Phase1.5B PDF 导出 + Phase2A（个人知识组织）+ Phase2B（团队 MVP）均已完成；Phase2B 范围（REQ-014 首批核心 + REQ-013/024 时间轴第二 slice + REQ-039 文档目录树第三 slice）已验收通过并收口；数据外发风险已接受（RG-008 Go）；**下一阶段已确认 Phase2C（本地知识源接入）：REQ-018 模式 B 仅本地挂载，浏览器 File System Access 路线，RG-009 PoC Go（2026-08-05）；Sprint-23C 编码完成（2026-08-06，TC-P2-VAULT-001 通过）**；Word-PDF 解析 / zhparser（Sprint-14/15）仍留后续候选
+当前阶段：**Phase2D（账户与多人权限·团队验证）已立项·待实现（2026-08-07）**；Phase1 Demo + Phase1.5A 可用性 + Phase1.5B PDF 导出 + Phase2A（个人知识组织）+ Phase2B（团队 MVP）+ Phase2C（本地知识源接入）均已完成；**Phase2C 已完成（2026-08-06，Sprint-23C TC-P2-VAULT-001 通过 / PR#108 v2.0.0）**——前次"待实现"系 Wave 1 收口未回写，本次修正；数据外发风险已接受（RG-008 Go）；**Phase2D 已立项：Sprint-26 先做账号体系基础（注册 / 凭证登录 bcrypt / 登出 / `lumen_users` 扩列 / 统一 `get_current_user` / 不透明 token + `lumen_sessions` / 基础登录·注册页；demo 模式保留 env 开关 + 物理隔离护栏），权限多人化 / 全局角色 / 用户管理 UI 留 Sprint-27/28**；RG-010 FileSystemObserver Go（2026-08-06）解锁 Wave 3 自动监听候选；Word-PDF 解析 / zhparser 仍留后续候选
 
 > 双维度（global-rules §8.1）：每个阶段同时声明**功能范围**与**交付物形态**，两者正交、不得混用。
-- **功能范围**：`[P2]`（Phase2A 已完成：REQ-026 内链/反链、REQ-012 标签、REQ-025 快速录入；**Phase2B 已完成：REQ-014 AI 润色/写作引用（首批核心）、REQ-013/024 时间轴（第二 slice）、REQ-039 文档目录树（第三 slice）**；**Phase2C 已确认：REQ-018 Vault 兼容模式 B（仅本地挂载，浏览器 File System Access）**）；`[P1]`（REQ-001..011、REQ-036、REQ-037/038 已完成；REQ-027 PDF 导出已随 Sprint-18 完成 API-019 / TC-P1-017），见 `docs/03-prd.md` §3 路线图
-- **交付物形态**：**个人知识组织**（Phase2A 已完成）→ **团队 MVP**（Phase2B 已完成）→ **本地知识源接入 MVP**（Phase2C，REQ-018 模式 B）— 在个人知识组织之上补 AI 润色/写作引用（REQ-014）让小团队可真实写作辅助，时间轴（REQ-013/024）为第二 slice；Phase2C 让涉隐私本地库可仅本地挂载浏览/搜索、不上传；**保留产品红线**（库外问答回复"未找到"、不编造、权限不泄露；AI 润色数据外发护栏见 §2.5 / `docs/05-tech-spec.md` RG-008）
+- **功能范围**：`[P2]`（Phase2A 已完成：REQ-026 内链/反链、REQ-012 标签、REQ-025 快速录入；**Phase2B 已完成：REQ-014 AI 润色/写作引用（首批核心）、REQ-013/024 时间轴（第二 slice）、REQ-039 文档目录树（第三 slice）**；**Phase2C 已完成：REQ-018 Vault 兼容模式 B（仅本地挂载，浏览器 File System Access，Sprint-23C TC-P2-VAULT-001 通过）**；**Phase2D 已立项：账号体系基础（REQ-040..，注册 / 凭证登录 / 登出会话），权限多人化 / 角色 / 用户管理 UI 留 Sprint-27/28**）；`[P1]`（REQ-001..011、REQ-036、REQ-037/038 已完成；REQ-027 PDF 导出已随 Sprint-18 完成 API-019 / TC-P1-017），见 `docs/03-prd.md` §3 路线图
+- **交付物形态**：**个人知识组织**（Phase2A 已完成）→ **团队 MVP**（Phase2B 已完成）→ **本地知识源接入 MVP**（Phase2C 已完成，REQ-018 模式 B）→ **团队验证**（Phase2D 已立项，真实多用户账号体系 + 多人权限）— Phase2C 让涉隐私本地库可仅本地挂载浏览/搜索、不上传；Phase2D 把 Demo 占位账号侧（无密码 / seed 用户 / 手撸 token）升级为真实多用户账号体系，为团队验证打基础；**保留产品红线**（库外问答回复"未找到"、不编造、权限不泄露；AI 润色数据外发护栏见 §2.5 / `docs/05-tech-spec.md` RG-008；凭证安全与跨用户隔离护栏见 `docs/design/accounts-auth.md` 待建）
 
 > 阶段划分的唯一来源是 `docs/03-prd.md` §3 路线图；本节是"当前阶段指针"。
 > 升阶段时只改本节指针 + 在设计文档原位补充新阶段细节（见 global-rules §8），不重写需求。
 
-允许（Phase1 / Phase1.5A / Phase2A 已完成能力 + 后续候选）：
+允许（Phase1 / Phase1.5A / Phase2A / Phase2B / Phase2C 已完成能力 + Phase2D 已立项范围 + 后续候选）：
 - 后端 Python + FastAPI；存储 PostgreSQL + pgvector；LLM 走 OpenAI 兼容 API；Embedding 本机运行 `bge-small-zh`（512 维）；前端 React
 - 双空间隔离 + 文档权限三级（私有 / 团队共享 / 外部只读）
 - Markdown 文档 CRUD + 全文搜索 + RAG 问答（带来源引用）+ 行内编辑 / 版本历史
@@ -34,19 +34,24 @@
 - 桌面端浏览器访问
 - Phase2A 个人知识组织：内部链接 / 反向链接（REQ-026）、标签视图（REQ-012）、快速录入索引条目（REQ-025）均已完成；验收见 `docs/09-verification.md` TC-P2-LINK-001 / TC-P2-TAG-001 / TC-P2-QUICK-001
 - **Phase2B 团队 MVP（已完成）**：AI 润色 / 写作引用（REQ-014，首批核心，API-028 / `lumen_ai_drafts`，数据外发护栏见 RG-008）；时间轴视图 + 密度热条（REQ-013/024，第二 slice，API-033）；文档目录树（REQ-039，第三 slice，API-034..038 / API-029 `preserve_structure`）；Sprint-19/20/21/22 见 `docs/08-dev-plan.md`
-- **Phase2C 本地知识源接入（已确认·待实现）**：REQ-018 Vault 兼容模式 B「仅本地挂载」——浏览器 File System Access 句柄 + IndexedDB 持久化 + 本地索引/搜索 + 左侧文件管理器上下分区（上层 LUMEN DB / 下层本地挂载·未入库）+ 按需导入复用 API-029；仅本地挂载内容不上传服务端、不进团队 RAG（硬天花板）；RG-009 PoC Go，Sprint-23C 编码完成（2026-08-06，TC-P2-VAULT-001 通过）
+- **Phase2C 本地知识源接入（已完成）**：REQ-018 Vault 兼容模式 B「仅本地挂载」——浏览器 File System Access 句柄 + IndexedDB 持久化 + 本地索引/搜索 + 左侧文件管理器上下分区（上层 LUMEN DB / 下层本地挂载·未入库）+ 按需导入复用 API-029；仅本地挂载内容不上传服务端、不进团队 RAG（硬天花板）；RG-009 PoC Go；Sprint-23C 已完成（2026-08-06，TC-P2-VAULT-001 通过 / PR#108 v2.0.0）
+- **Phase2D 账户与多人权限（已立项·待实现）**：① **Sprint-26 账号体系基础**——真实账号注册 / 凭证登录（bcrypt 哈希）/ 登出 / `lumen_users` 扩列（password_hash·email·status·last_login_at·failed_login_count·locked_until）/ 统一 `get_current_user`（收敛 13 router 复制）/ **不透明 token + `lumen_sessions` 会话表**（`secrets` 标准库，零新 token 依赖；撤销=删行；TTL+滑动续期+轮换）/ 基础登录·注册页 / 登录失败锁定 + 审计日志 + 密钥 env 注入；**demo 模式（`create_demo_token` + alice/kira/brightlite-member 无密码快速登录）保留为 env 开关 + 物理隔离护栏（PG 仓储强制真实认证，内存仓储 `demo_repository` 允许 demo）**；migration 014（`lumen_users` 扩列 + `lumen_sessions`），vault_mounts 顺延 015；② **Sprint-27 权限多人化**（owner_id 跨用户过滤 + 私有文档按 owner 过滤 + 跨用户隔离回归）/ **Sprint-28 角色分层 + 用户管理 UI**；详见 `docs/design/accounts-auth.md`（待建·设计先行）
 
-禁止（Phase2B 首批范围外，不做）：
+禁止（Phase2D Sprint-26 账号基础范围外，不做）：
 - 高级视图：关联图、问题热力矩阵、事件卡片因果展开、气泡图谱（**时间轴已随 Phase2B 首批解锁**；标签视图随 Phase2A 解锁）
 - 跨空间文档推送（**外部知识源挂载 / Obsidian Vault 路径挂载已随 Phase2C 解锁**）
 - 录音转文字入库、对外只读简报（临时链接）、文档包生成
-- 多人实时协作、AI 撰写管理层摘要（**AI 润色 / 写作侧边栏引用已随 Phase2B 首批解锁**）
+- **权限多人化实质改造（owner_id 跨用户过滤回归）、全局角色分层（系统管理员 / 用户管理权）、用户管理后台 UI、REQ-016 多人实时协作（并发编辑）——均 Sprint-27/28+，不进 Sprint-26 账号基础**
+- AI 撰写管理层摘要（**AI 润色 / 写作侧边栏引用已随 Phase2B 首批解锁**）
 - 情报分析（i2 精神）：关联图↔时间轴联动、路径推理、人物关系网络、矛盾检测、假设检验 / 证据地图、信号追踪——均为远期愿景（v18 新增支柱，见 docs/design/intelligence-analysis.md）
 - 手机端 / 移动适配（demo 先桌面端）
 
 当前阶段内进度：
-- **Phase2B（团队 MVP）已完成（2026-08-05 收口）**：REQ-014 AI 润色 / 写作引用（首批核心，Sprint-19）、REQ-013/024 时间轴（第二 slice，Sprint-20）、REQ-039 文档目录树（第三 slice，Sprint-22）均通过验收；数据外发风险已接受（RG-008 Go）；导入规模修复（Sprint-23A，v1.7.1）与 wikilink 兼容修复（v1.7.4）已随补丁发布；跨空间推送 / 多人协作 / 移动端不进 Phase2B 首批（延后）
-- 远期愿景：问题热力矩阵、事件因果推理、对外简报、移动端（**Obsidian Vault 挂载已升 Phase2C**）——详见 docs/vision/product-vision.md（产品愿景叙事，不直接驱动 Phase 开发）
+- **Phase2B（团队 MVP）已完成（2026-08-05 收口）**：REQ-014 AI 润色 / 写作引用（首批核心，Sprint-19）、REQ-013/024 时间轴（第二 slice，Sprint-20）、REQ-039 文档目录树（第三 slice，Sprint-22）均通过验收；数据外发风险已接受（RG-008 Go）；导入规模修复（Sprint-23A，v1.7.1）与 wikilink 兼容修复（v1.7.4）已随补丁发布
+- **Phase2C（本地知识源接入）已完成（2026-08-06）**：REQ-018 模式 B 仅本地挂载，Sprint-23C TC-P2-VAULT-001 通过 / PR#108 v2.0.0；Sprint-24 子树导入 UI（PR#109 v2.1.0）+ Sprint-25 帮助手册 L0+L1（PR#110 v2.2.0）+ RG-010 FileSystemObserver Go 已随 Wave 1 收口
+- **Phase2D（账户与多人权限）已立项·待实现（2026-08-07）**：Sprint-26 账号体系基础待启动（需求 / 设计先行，`docs/design/accounts-auth.md` 待建）；权限多人化 / 角色 / 用户管理 UI 留 Sprint-27/28
+- 跨空间推送 / 多人实时协作 / 移动端仍愿景，不进 Phase2D 首批
+- 远期愿景：问题热力矩阵、事件因果推理、对外简报、移动端——详见 docs/vision/product-vision.md（产品愿景叙事，不直接驱动 Phase 开发）
 
 ## 2. 技术栈约束
 
