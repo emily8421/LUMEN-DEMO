@@ -245,7 +245,7 @@ CREATE INDEX idx_lumen_sessions_user ON lumen_sessions(user_id) WHERE revoked_at
 
 ## 17. Sprint-27 权限多人化设计（增量·草案）
 
-> 定位：Phase2D「账户与多人权限」Sprint-27 增量设计（2026-08-07 立项·草案待人工确认）。承接 REQ-043 / REQ-044（REQ-001/002/003 扩展，U-48 / U-49），在 Sprint-26 账号体系之上做权限过滤实质改造与回归。编码前需确认 §17.5 待确认项（C-ACC-001..003）。
+> 定位：Phase2D「账户与多人权限」Sprint-27 增量设计（2026-08-07 立项；**已实现 2026-08-07**）。承接 REQ-043 / REQ-044（REQ-001/002/003 扩展，U-48 / U-49），在 Sprint-26 账号体系之上做权限过滤实质改造与回归。C-ACC-001..003 已确认（2026-08-07 按 AI 建议执行）。
 
 ### 17.1 目标与范围
 
@@ -274,11 +274,11 @@ CREATE INDEX idx_lumen_sessions_user ON lumen_sessions(user_id) WHERE revoked_at
 | D-ACC-005 | 团队空间加入机制 | **Sprint-27 不做**，留 Sprint-28 与角色 / 用户管理 UI 一起；Sprint-27 隔离回归使用注册自建个人空间 + seed 同空间成员数据 | C-AUTH-001 备选（邀请码加入 / 管理员分配）；保持 Sprint-27 聚焦隔离可信 |
 | D-ACC-006 | 前端改动 | 预期零前端改动（过滤在 service/SQL 层）；若回归暴露前端可见性问题，最小修复并记录 | 隔离是服务端职责；前端只消费过滤后结果 |
 
-### 17.4 验证方案
+### 17.4 验证方案（已执行 2026-08-07）
 
-- 后端：`tests/backend/test_permission.py` 扩展 + 新增多用户隔离用例；既有权限 TC（TC-P1-001/002/003）回归不破；全量 backend discover 通过。
-- 浏览器 smoke：登录两个真实用户，交叉验证私有文档不可见（Sprint-27 实现时执行）。
-- 零 migration / 零新依赖声明：`06` / `07` 预期无契约变更；若审计发现需补字段 / API，先停下说明并走契约修订。
+- 后端：`tests/backend/test_permission.py` 扩展（MultiUserIsolationTest：注册双用户 10 路径零泄露 + external 只读 4003 + 跨空间）+ `test_doc_links.py` 4004 用例；既有权限 TC（TC-P1-001/002/003）回归不破；backend discover **229 OK（skipped=2）**。
+- 浏览器 smoke：`scripts/smoke-sprint27-isolation-browser.mjs` PASS——注册 A/B 跨空间零泄露（列表/搜索/doc-links 404）；seed alice+kira 同空间 PRIVATE 列表/搜索/读取/导出零命中 + doc-links 404 + external 4003；浏览器 kira 目录树无私有文档 / alice 可见。
+- 零 migration / 零新依赖确认：`06` / `07` 无契约变更；前端零改动。
 
 ### 17.5 待确认项（编码前拍板）
 
@@ -289,3 +289,10 @@ CREATE INDEX idx_lumen_sessions_user ON lumen_sessions(user_id) WHERE revoked_at
 | C-ACC-003 | 是否新增用户列表 / 空间成员类 API（团队空间加入时用） | Sprint-27 不加；预留契约方向（空间成员 CRUD 走 space 域、用户管理走 admin 域），Sprint-28 立项时定稿 | 消费者是 Sprint-28 成员管理 UI（YAGNI）；提前暴露用户信息面有枚举风险；避免两轮破坏性契约变更 | 提前加 | 范围蔓延 |
 
 > **确认记录（2026-08-07）**：用户按 AI 建议执行——C-ACC-001 不进 Sprint-27（留 Sprint-28 与角色 / 用户管理 UI 一起）；C-ACC-002 按 P0/P1/P2 分档修复，P0 阻塞退出标准；C-ACC-003 Sprint-27 不加（契约方向预留：空间成员 CRUD 走 space 域、用户管理走 admin 域）。可选增强（文档列表「创建者」列 / tooltip 强化归属认知）不纳入本 Sprint，另行评估。
+
+### 17.6 实现结果与偏差（2026-08-07）
+
+- **审计结论**：20 条查询路径全检，P0 1 处、P1 0 处、P2 2 处（见下）。
+- **P0 修复（跨用户泄露，已修）**：`GET /api/doc-links` 查询前未校验源文档可见性——同空间成员可枚举他人 PRIVATE 文档 id，从出链 `link_text` 泄露私有正文片段；修复为 `list_links` 先 `get_visible_document`（不可见→4004），API 层映射 4004（提交 `6c293a0`）。
+- **P2 记录（待用户确认接受）**：① `visible_document_where_clause` 全仓仅定义未使用（过滤收敛在 Python 层，无 SQL 下沉；安全无泄露，属事实漂移——`test_permission.py` 同名用例仅断言字符串字面量，测试名与实现不符）；② `upsert_link` 按标题解析目标可指向同空间不可见文档（仅记录链接行，不向请求者返回解析结果，无读泄露）。
+- **实现偏差**：预期零——未新增依赖 / migration / API 契约变更 / 前端改动；P0 修复为 service + API 层最小改动。

@@ -136,6 +136,34 @@ class DocLinkServiceTest(unittest.TestCase):
         # 只返回可见来源；SecretSrc 被过滤，不泄露
         self.assertEqual(len(views), 1)
 
+    def test_outbound_invisible_source_raises_not_found(self) -> None:
+        from backend.model.entities import DocumentPermission
+        from backend.repository.demo_repository import DemoRepository
+        from backend.service.doc_links import list_links
+        from backend.service.document import DocumentNotFoundError
+
+        repository = DemoRepository()
+        private = repository.create_document(
+            space_id=10, title="Secret", content_md="s", owner_id=2, permission=DocumentPermission.PRIVATE,
+        )
+
+        # Sprint-27 P0：源文档不可见 → 按不存在处理（4004），杜绝出链 link_text 泄露
+        with self.assertRaises(DocumentNotFoundError):
+            list_links(repository, user_id=1, current_space_id=10, document_id=private.id, direction="outbound")
+
+    def test_backlink_invisible_target_raises_not_found(self) -> None:
+        from backend.model.entities import DocumentPermission
+        from backend.repository.demo_repository import DemoRepository
+        from backend.service.doc_links import list_links
+        from backend.service.document import DocumentNotFoundError
+
+        repository = DemoRepository()
+        private = repository.create_document(
+            space_id=10, title="Secret", content_md="s", owner_id=2, permission=DocumentPermission.PRIVATE,
+        )
+
+        with self.assertRaises(DocumentNotFoundError):
+            list_links(repository, user_id=1, current_space_id=10, document_id=private.id, direction="backlink")
     def test_upsert_manual_link_resolves_by_title(self) -> None:
         from backend.model.entities import DocumentPermission
         from backend.repository.demo_repository import DemoRepository
@@ -217,6 +245,27 @@ class DocLinkApiTest(unittest.TestCase):
         finally:
             doc_links_api.repository = original_repository
 
+
+    def test_list_links_invisible_source_returns_404(self) -> None:
+        from backend.api import doc_links as doc_links_api
+        from backend.model.entities import DocumentPermission
+        from backend.repository.demo_repository import DemoRepository
+        from fastapi import HTTPException
+
+        repository = DemoRepository()
+        private = repository.create_document(
+            space_id=10, title="Secret", content_md="s", owner_id=2, permission=DocumentPermission.PRIVATE,
+        )
+
+        original_repository = doc_links_api.repository
+        doc_links_api.repository = repository
+        try:
+            with self.assertRaises(HTTPException) as raised:
+                doc_links_api.list_links_endpoint(document_id=private.id, direction="outbound", ctx=_demo_ctx())
+            self.assertEqual(raised.exception.status_code, 404)
+            self.assertEqual(raised.exception.detail["code"], 4004)
+        finally:
+            doc_links_api.repository = original_repository
 
 if __name__ == "__main__":
     unittest.main()

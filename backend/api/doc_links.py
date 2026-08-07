@@ -43,7 +43,10 @@ if APIRouter is not None:
     ) -> dict[str, object]:
         if direction not in ("outbound", "backlink"):
             raise HTTPException(status_code=422, detail={"code": 4220, "msg": "direction must be outbound or backlink"})
-        views = list_links(repository, ctx.user_id, ctx.current_space_id, document_id, direction)
+        try:
+            views = list_links(repository, ctx.user_id, ctx.current_space_id, document_id, direction)
+        except DocumentNotFoundError:
+            raise HTTPException(status_code=404, detail={"code": 4004, "msg": "document not found"})
         return {"code": 0, "msg": "ok", "data": [_link_view(view) for view in views]}
 
     @router.post("")
