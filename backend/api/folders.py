@@ -14,9 +14,8 @@ PATCH 同时支持改名（name）与移动（parent_id，null=移到根）；�
 
 from __future__ import annotations
 
-from backend.api.auth import TOKEN_SIGNING_KEY
 from backend.repository import repository
-from backend.service.auth import TokenError, extract_bearer_token, parse_demo_token
+from backend.service.auth_context import TokenContext, get_current_user
 from backend.service.folder import (
     UNSET,
     FolderAccessError,
@@ -34,12 +33,11 @@ from backend.service.folder import (
 )
 
 try:
-    from fastapi import APIRouter, Header, HTTPException
+    from fastapi import APIRouter, Depends, HTTPException
     from pydantic import BaseModel
 except ImportError:  # pragma: no cover - allows service tests before dependencies are installed
     APIRouter = None
     BaseModel = object
-    Header = None
     HTTPException = Exception
 
 
@@ -61,11 +59,10 @@ if APIRouter is not None:
     @router.get("/api/folders")
     def list_folders_endpoint(
         parent_id: int | None = None,
-        authorization: str = Header(default=""),
+        ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        payload = _read_token_payload(authorization)
         try:
-            views = list_folders(repository, payload.user_id, payload.current_space_id, parent_id)
+            views = list_folders(repository, ctx.user_id, ctx.current_space_id, parent_id)
         except FolderAccessError as exc:
             raise HTTPException(status_code=403, detail={"code": 4003, "msg": str(exc)}) from exc
         items = [_folder_view(v) for v in views]
@@ -74,14 +71,13 @@ if APIRouter is not None:
     @router.post("/api/folders")
     def create_folder_endpoint(
         request: FolderCreateBody,
-        authorization: str = Header(default=""),
+        ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        payload = _read_token_payload(authorization)
         try:
             folder = create_folder(
                 repository,
-                payload.user_id,
-                payload.current_space_id,
+                ctx.user_id,
+                ctx.current_space_id,
                 FolderCreateRequest(name=request.name, parent_id=request.parent_id),
             )
         except FolderAccessError as exc:
@@ -96,17 +92,16 @@ if APIRouter is not None:
     def update_folder_endpoint(
         folder_id: int,
         request: FolderUpdateBody,
-        authorization: str = Header(default=""),
+        ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        payload = _read_token_payload(authorization)
         fields = _fields_set(request)
         name = request.name if "name" in fields else UNSET
         target_parent = request.parent_id if "parent_id" in fields else UNSET
         try:
             folder = update_folder(
                 repository,
-                payload.user_id,
-                payload.current_space_id,
+                ctx.user_id,
+                ctx.current_space_id,
                 folder_id,
                 FolderUpdateRequest(name=name, parent_id=target_parent),
             )
@@ -123,11 +118,10 @@ if APIRouter is not None:
     @router.delete("/api/folders/{folder_id}")
     def delete_folder_endpoint(
         folder_id: int,
-        authorization: str = Header(default=""),
+        ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        payload = _read_token_payload(authorization)
         try:
-            delete_folder(repository, payload.user_id, payload.current_space_id, folder_id)
+            delete_folder(repository, ctx.user_id, ctx.current_space_id, folder_id)
         except FolderAccessError as exc:
             raise HTTPException(status_code=403, detail={"code": 4003, "msg": str(exc)}) from exc
         except FolderNotFoundError as exc:
@@ -139,14 +133,13 @@ if APIRouter is not None:
     @router.post("/api/folders/reorder")
     def reorder_folders_endpoint(
         request: FolderReorderBody,
-        authorization: str = Header(default=""),
+        ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        payload = _read_token_payload(authorization)
         try:
             reorder_folders(
                 repository,
-                payload.user_id,
-                payload.current_space_id,
+                ctx.user_id,
+                ctx.current_space_id,
                 request.parent_id,
                 request.ordered_ids,
             )
@@ -180,11 +173,5 @@ if APIRouter is not None:
             "order": folder.order,
         }
 
-    def _read_token_payload(authorization: str):
-        try:
-            token = extract_bearer_token(authorization)
-            return parse_demo_token(token, signing_key=TOKEN_SIGNING_KEY)
-        except TokenError as exc:
-            raise HTTPException(status_code=401, detail={"code": 4001, "msg": "invalid token"}) from exc
 else:
     router = None

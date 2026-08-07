@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from backend.api.auth import TOKEN_SIGNING_KEY
 from backend.model.entities import DocumentPermission
-from backend.service.auth import TokenError, extract_bearer_token, parse_demo_token
 from backend.repository import repository
+from backend.service.auth_context import TokenContext, get_current_user
 from backend.service.imports import (
     BatchImportFileRequest,
     BatchImportRequest,
@@ -16,12 +15,11 @@ from backend.service.imports import (
 )
 
 try:
-    from fastapi import APIRouter, File, Form, Header, HTTPException, UploadFile
+    from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 except ImportError:  # pragma: no cover - allows service tests before dependencies are installed
     APIRouter = None
     File = None
     Form = None
-    Header = None
     HTTPException = Exception
     UploadFile = object
 
@@ -34,16 +32,15 @@ if APIRouter is not None:
         file: UploadFile = File(...),
         title: str | None = Form(default=None),
         permission: DocumentPermission = Form(default=DocumentPermission.TEAM),
-        authorization: str = Header(default=""),
+        ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        payload = _read_token_payload(authorization)
         content = await file.read()
         try:
             resolved_permission = DocumentPermission(permission)
             result = import_extracted_text(
                 repository=repository,
-                user_id=payload.user_id,
-                current_space_id=payload.current_space_id,
+                user_id=ctx.user_id,
+                current_space_id=ctx.current_space_id,
                 request=ImportTextRequest(
                     filename=file.filename or "",
                     content=content,
@@ -77,9 +74,8 @@ if APIRouter is not None:
         conflict_policy: str = Form(default="skip"),
         preserve_structure: bool = Form(default=True),
         permission: DocumentPermission = Form(default=DocumentPermission.TEAM),
-        authorization: str = Header(default=""),
+        ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        payload = _read_token_payload(authorization)
         try:
             resolved_permission = DocumentPermission(permission)
         except ValueError as exc:
@@ -99,8 +95,8 @@ if APIRouter is not None:
         try:
             result = import_batch(
                 repository=repository,
-                user_id=payload.user_id,
-                current_space_id=payload.current_space_id,
+                user_id=ctx.user_id,
+                current_space_id=ctx.current_space_id,
                 request=BatchImportRequest(
                     files=upload_requests,
                     permission=resolved_permission,
@@ -139,12 +135,6 @@ if APIRouter is not None:
             },
         }
 
-    def _read_token_payload(authorization: str):
-        try:
-            token = extract_bearer_token(authorization)
-            return parse_demo_token(token, signing_key=TOKEN_SIGNING_KEY)
-        except TokenError as exc:
-            raise HTTPException(status_code=401, detail={"code": 4001, "msg": "invalid token"}) from exc
 
     def _relative_path_at(relative_paths: list[str] | None, index: int) -> str | None:
         if relative_paths is None or index >= len(relative_paths):

@@ -246,19 +246,70 @@ function App() {
         onToggleLeftPane={paneLayout.toggleLeftPane}
         rightPaneOpen={paneLayout.rightPaneOpen}
         onToggleRightPane={paneLayout.toggleRightPane}
+        onLogout={session.handleLogout}
       />
 
       {!session.session ? (
         <section className="login-panel card">
-          <h2>Demo 登录</h2>
-          <p>登录后前端会将 Bearer Token 附加到文档与空间接口请求中。</p>
-          <form onSubmit={session.handleLogin}>
-            <label>
-              账号
-              <input value={session.username} onChange={(event) => session.setUsername(event.target.value)} />
-            </label>
-            <button type="submit" disabled={workspace.isBusy || session.username.trim().length === 0}>登录</button>
-          </form>
+          <div className="auth-tabs" role="tablist" aria-label="登录或注册">
+            <button
+              type="button"
+              className={session.authMode === 'login' ? 'active' : ''}
+              onClick={() => session.setAuthMode('login')}
+            >
+              登录
+            </button>
+            <button
+              type="button"
+              className={session.authMode === 'register' ? 'active' : ''}
+              onClick={() => session.setAuthMode('register')}
+            >
+              注册
+            </button>
+          </div>
+          {session.authMode === 'login' ? (
+            <form onSubmit={session.handleLogin}>
+              <h2>登录</h2>
+              <p>演示账号 alice / kira / brightlite-member（密码 demo-pass-1234），或使用注册邮箱登录。</p>
+              <label>
+                账号（邮箱或 external_id）
+                <input value={session.loginId} onChange={(event) => session.setLoginId(event.target.value)} />
+              </label>
+              <label>
+                密码
+                <input type="password" value={session.password} onChange={(event) => session.setPassword(event.target.value)} />
+              </label>
+              <button type="submit" disabled={workspace.isBusy || session.loginId.trim().length === 0}>登录</button>
+            </form>
+          ) : (
+            <form onSubmit={session.handleRegister}>
+              <h2>注册新账号</h2>
+              <p>注册后自动创建个人空间并登录（REQ-040）。</p>
+              <label>
+                邮箱
+                <input type="email" value={session.registerEmail} onChange={(event) => session.setRegisterEmail(event.target.value)} />
+              </label>
+              <label>
+                显示名
+                <input value={session.registerName} onChange={(event) => session.setRegisterName(event.target.value)} />
+              </label>
+              <label>
+                密码（至少 8 位）
+                <input type="password" value={session.registerPassword} onChange={(event) => session.setRegisterPassword(event.target.value)} />
+              </label>
+              <button
+                type="submit"
+                disabled={
+                  workspace.isBusy ||
+                  session.registerEmail.trim().length === 0 ||
+                  session.registerName.trim().length === 0 ||
+                  session.registerPassword.length < 8
+                }
+              >
+                注册并登录
+              </button>
+            </form>
+          )}
         </section>
       ) : (
         <div

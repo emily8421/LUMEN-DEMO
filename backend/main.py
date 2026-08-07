@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+
 try:
     from fastapi import FastAPI, HTTPException, Request
     from fastapi.responses import JSONResponse
@@ -23,6 +25,12 @@ async def lifespan(_app):
     PostgreSQL（不再降级到内存 demo）。init 失败时仅记录、不崩溃启动；此时 API
     查询会在连接时报错，而非走内存兜底。生产/demo 均需 lumen-pg 容器 healthy。
     """
+    # Sprint-26 护栏（accounts-auth §7/§10）：生产环境禁用 demo 仓储，fail-fast
+    from backend.repository import repository
+    from backend.service.auth import is_demo_repository
+
+    if os.environ.get("LUMEN_ENV", "").lower() == "production" and is_demo_repository(repository):
+        raise RuntimeError("[AUTH] LUMEN_ENV=production must not use the demo repository")
     try:
         from backend.service.db import init_db
 

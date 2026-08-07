@@ -1,6 +1,6 @@
 # task-038-account-system-foundation（Sprint-26 账号体系基础）
 
-> Phase2D「账户与多人权限」首个 Sprint。设计权威：`docs/design/accounts-auth.md`。立项 2026-08-07；编码待启动（先过 §执行第一步 RG-011 PoC + 确认 §待确认项）。
+> Phase2D「账户与多人权限」首个 Sprint。设计权威：`docs/design/accounts-auth.md`。立项 2026-08-07；**编码已完成（2026-08-07，后端自动化验收通过，TC-P2-AUTH-001 自动化通过）**；浏览器 smoke 与 demo 启动验证待用户确认。
 
 ## 目标
 把 Demo 占位账号侧（无密码 / 3 seed 用户 / 手撸 token）升级为真实多用户账号体系，为团队验证与 Sprint-27/28 多人权限打基础（REQ-040 / REQ-041 / REQ-042，U-45 / U-46 / U-47）：
@@ -53,5 +53,13 @@
 ## 待确认项（编码前拍板）
 见 `docs/design/accounts-auth.md` §16：C-AUTH-001 注册空间归属 / C-AUTH-002 登录标识（email vs external_id）/ C-AUTH-003 锁定阈值 / C-AUTH-004 审计日志粒度 / C-AUTH-005 密码策略 / C-AUTH-006 bcrypt vs Argon2id。
 
-## 完成记录
-（编码 Sprint-26 后回填：实际表字段 / API 错误码 / get_current_user 落地范围 / demo 开关实测 / 13 router 收敛清单 / TC 结果 / 版本 bump v3.0）
+## 完成记录（2026-08-07，Sprint-26）
+
+- **migration 014**：`lumen_users` 扩列（`email` / `password_hash` / `status` / `last_login_at` / `failed_login_count` / `locked_until` + `idx_lumen_users_email`）+ `lumen_sessions`（`id` / `user_id` FK / `current_space_id` FK / `token_hash` UK / `expires_at` / `created_at` / `revoked_at` / `last_used_at` / `client_ua` / `client_ip`；`token_hash` 为 SHA-256 摘要）；seed 用户统一设 demo 密码 `demo-pass-1234` + email。
+- **后端 auth**：`service/auth.py`（bcrypt cost 12 hash/verify、`secrets.token_urlsafe(32)` 不透明 token、锁定 5 次 / 15min、TTL 8h 滑动续期、结构化审计 register / login_success / login_failed / login_locked / logout、`LUMEN_DEMO_TOKEN_KEY` 兼容旧 HMAC）；`service/auth_context.py`（`get_current_user` / `get_current_user_optional` / `require_space_member`）；`api/auth.py` 六端点（register / login / logout / refresh / sessions GET / sessions DELETE）。
+- **API 错误码**：`4001`（token 无效）/ `4010`（凭证错误 / session 无效，统一防枚举）/ `4030`（锁定 / 禁用）/ `4090`（重复 email）/ `4220`（参数）/ `4004`（会话不存在）。
+- **get_current_user 落地范围**：13 router 收敛——spaces / documents / rag / search / terms / imports / export / folders / doc_links / tags / quick_entry / timeline 等改用 `Depends(get_current_user)`，删除各自 `_read_token_payload`。
+- **demo 开关实测**：demo 模式由仓储类型决定（`DemoRepository.is_demo=True`）；`LUMEN_ENV=production` + demo 仓储 → 启动 fail-fast；PG 强制真实凭证；内存模式保留无密码快捷登录与 HMAC demo token 兼容（偏差 D-3/D-4/D-5，见 accounts-auth §15）。
+- **前端**：登录 / 注册 tab 面板（`App.tsx` + `useSession.ts`）+ 登出菜单（`TopBar.tsx`）；`api/auth.ts` 六 client（login / register / logout / listSessions / revokeSession）。
+- **TC 结果**：RG-011 PoC Go（bcrypt 5.0.0，cost 12 ≈0.21s）；`tests/backend/test_auth.py` **20/20**；backend discover **222 OK（skipped=2）**；RG-012 / RG-013 Go；前端 build 273 modules 绿（2026-08-07）。浏览器 smoke 与 demo 启动验证待用户确认。
+- **版本**：按 accounts-auth §13 与 project-rules §2.8.1，Phase2D 契约破坏性变更 → bump MAJOR **v3.0.0**（随 Sprint-26 验收发布，待用户确认后执行）。

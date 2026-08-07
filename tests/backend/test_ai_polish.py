@@ -210,25 +210,27 @@ class AiPolishApiTest(unittest.TestCase):
         except Exception as exc:  # pragma: no cover - env-dependent
             raise unittest.SkipTest(f"PostgreSQL not available: {exc}") from exc
 
-    def _token(self, external_id: str = "alice", space_id: int = 10) -> str:
+    def _ctx(self, external_id: str = "alice", space_id: int = 10):
         from backend.api.auth import LoginRequest, login
+        from backend.service.auth_context import get_current_user
 
-        return f"Bearer {login(LoginRequest(external_id=external_id, current_space_id=space_id))['data']['token']}"
+        token = login(LoginRequest(login_id=external_id, password="demo-pass-1234", current_space_id=space_id))["data"]["token"]
+        return get_current_user(authorization=f"Bearer {token}")
 
-    def _create_doc(self, authorization: str, title: str, permission: str) -> int:
+    def _create_doc(self, ctx, title: str, permission: str) -> int:
         from backend.api.documents import DocumentWriteRequest, create_document_endpoint
 
         return create_document_endpoint(
             DocumentWriteRequest(title=title, content_md="正文片段", permission=permission),
-            authorization=authorization,
+            ctx=ctx,
         )["data"]["id"]
 
     def test_polish_api_happy_path_with_mocked_llm(self) -> None:
         from backend.api.documents import PolishRequestBody, polish_document_endpoint
         from backend.service import llm_adapter
 
-        authorization = self._token()
-        document_id = self._create_doc(authorization, "Polish Happy", "team")
+        ctx = self._ctx()
+        document_id = self._create_doc(ctx, "Polish Happy", "team")
         enabled = llm_adapter.LlmConfig(provider="glm", base_url="http://x/v1", api_key="k", model="glm-5.2")
 
         with patch.object(llm_adapter, "load_config", return_value=enabled), patch.object(
@@ -237,7 +239,7 @@ class AiPolishApiTest(unittest.TestCase):
             response = polish_document_endpoint(
                 document_id,
                 PolishRequestBody(mode="polish", selection_md="原文片段"),
-                authorization=authorization,
+                ctx=ctx,
             )
 
         self.assertEqual(response["code"], 0)
@@ -251,14 +253,14 @@ class AiPolishApiTest(unittest.TestCase):
 
         from backend.api.documents import PolishRequestBody, polish_document_endpoint
 
-        authorization = self._token()
-        document_id = self._create_doc(authorization, "Polish 5030", "team")
+        ctx = self._ctx()
+        document_id = self._create_doc(ctx, "Polish 5030", "team")
 
         with self.assertRaises(HTTPException) as context:
             polish_document_endpoint(
                 document_id,
                 PolishRequestBody(mode="polish", selection_md="原文片段"),
-                authorization=authorization,
+                ctx=ctx,
             )
 
         self.assertEqual(context.exception.status_code, 503)
@@ -269,14 +271,14 @@ class AiPolishApiTest(unittest.TestCase):
 
         from backend.api.documents import PolishRequestBody, polish_document_endpoint
 
-        authorization = self._token()
-        document_id = self._create_doc(authorization, "Polish 4220", "team")
+        ctx = self._ctx()
+        document_id = self._create_doc(ctx, "Polish 4220", "team")
 
         with self.assertRaises(HTTPException) as context:
             polish_document_endpoint(
                 document_id,
                 PolishRequestBody(mode="polish", selection_md="   "),
-                authorization=authorization,
+                ctx=ctx,
             )
 
         self.assertEqual(context.exception.status_code, 422)
@@ -286,12 +288,13 @@ class AiPolishApiTest(unittest.TestCase):
         from fastapi import HTTPException
 
         from backend.api.documents import PolishRequestBody, polish_document_endpoint
+        from backend.service.auth_context import get_current_user
 
         with self.assertRaises(HTTPException) as context:
             polish_document_endpoint(
                 1,
                 PolishRequestBody(mode="polish", selection_md="片段"),
-                authorization="Bearer not-a-token",
+                ctx=get_current_user(authorization="Bearer not-a-token"),
             )
 
         self.assertEqual(context.exception.status_code, 401)
@@ -302,12 +305,12 @@ class AiPolishApiTest(unittest.TestCase):
 
         from backend.api.documents import PolishRequestBody, polish_document_endpoint
 
-        alice = self._token("alice", 10)
+        alice = self._ctx("alice", 10)
         document_id = self._create_doc(alice, "Alice Private", "private")
-        kira = self._token("kira", 10)  # kira 看不到 alice 的 private → 4004
+        kira = self._ctx("kira", 10)  # kira 看不到 alice 的 private → 4004
 
         with self.assertRaises(HTTPException) as context:
-            polish_document_endpoint(document_id, PolishRequestBody(mode="polish", selection_md="片段"), authorization=kira)
+            polish_document_endpoint(document_id, PolishRequestBody(mode="polish", selection_md="片段"), ctx=kira)
 
         self.assertEqual(context.exception.status_code, 404)
         self.assertEqual(context.exception.detail["code"], 4004)
@@ -317,12 +320,12 @@ class AiPolishApiTest(unittest.TestCase):
 
         from backend.api.documents import PolishRequestBody, polish_document_endpoint
 
-        alice = self._token("alice", 10)
+        alice = self._ctx("alice", 10)
         document_id = self._create_doc(alice, "Alice External", "external")
-        kira = self._token("kira", 10)  # kira 可看 external 但不可写（owner-only）→ 4003
+        kira = self._ctx("kira", 10)  # kira 可看 external 但不可写（owner-only）→ 4003
 
         with self.assertRaises(HTTPException) as context:
-            polish_document_endpoint(document_id, PolishRequestBody(mode="polish", selection_md="片段"), authorization=kira)
+            polish_document_endpoint(document_id, PolishRequestBody(mode="polish", selection_md="片段"), ctx=kira)
 
         self.assertEqual(context.exception.status_code, 403)
         self.assertEqual(context.exception.detail["code"], 4003)

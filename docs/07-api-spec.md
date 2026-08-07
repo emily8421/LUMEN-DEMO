@@ -9,16 +9,16 @@
 |---|---|
 | 保留 / 省略决策 | 保留 |
 | 接口形态 | REST API |
-| 覆盖 REQ / 模块 | Phase1：REQ-001..REQ-011、REQ-036；Phase1.5A：REQ-037/038（API-029/030）；Phase1.5B：REQ-027（API-019）；Phase2A：REQ-012/025/026；Phase2B：REQ-014（API-028）、REQ-013/024（API-033）、REQ-039（API-034..038，第三 slice）；后续 / 愿景接口保留骨架 |
-| 当前状态 | P1 接口契约已用于 Phase1 Demo；Sprint-8 后 P1 主要接口已接 PostgreSQL 表，RAG 已接 pgvector 向量召回 + GLM LLM；task-009 后 API-009 search 已为 substring + ts_vector + pgvector 语义召回的 hybrid search（zhparser 可选）。API-029/030 已随 Phase1.5A 完成；API-019 已随 Sprint-18 完成并补齐 PDF artifact 下载端点；Phase2A 标签、快速录入、内链 / 反链接口已完成；Phase2B API-028、API-033、API-034..038 已进入实现态。仍降级：API-011 仅 `.md`/`.txt` 已提取文本；真实 Word/PDF 解析与 OCR 留后续 |
-| 最后更新 | 2026-08-04（v1.7.0：API-019 PDF 下载端点 + 前端下载闭环通过） |
+| 覆盖 REQ / 模块 | Phase1：REQ-001..REQ-011、REQ-036；Phase1.5A：REQ-037/038（API-029/030）；Phase1.5B：REQ-027（API-019）；Phase2A：REQ-012/025/026；Phase2B：REQ-014（API-028）、REQ-013/024（API-033）、REQ-039（API-034..038，第三 slice）；Phase2D：REQ-040/041/042（API-039..043，账号体系）；后续 / 愿景接口保留骨架 |
+| 当前状态 | P1 接口契约已用于 Phase1 Demo；Sprint-8 后 P1 主要接口已接 PostgreSQL 表，RAG 已接 pgvector 向量召回 + GLM LLM；task-009 后 API-009 search 已为 substring + ts_vector + pgvector 语义召回的 hybrid search（zhparser 可选）。API-029/030 已随 Phase1.5A 完成；API-019 已随 Sprint-18 完成并补齐 PDF artifact 下载端点；Phase2A 标签、快速录入、内链 / 反链接口已完成；Phase2B API-028、API-033、API-034..038 已进入实现态；**Phase2D 账号体系已实现（Sprint-26）：API-001 login 契约变更（凭证登录 + 不透明 token session）+ 新增 API-039..043（register / logout / refresh / sessions）**。仍降级：API-011 仅 `.md`/`.txt` 已提取文本；真实 Word/PDF 解析与 OCR 留后续 |
+| 最后更新 | 2026-08-07（Sprint-26 账号体系：API-001 契约变更 + API-039..043 已实现，TC-P2-AUTH-001 自动化通过） |
 
 ## 1. 统一约定
 
-- **鉴权**：Phase1 使用 Demo Bearer Token；`POST /api/auth/login` 返回 HMAC-SHA256 签名 token，前端通过 `Authorization: Bearer <token>` 传递；token 载荷包含 `user_id`、`current_space_id`、`exp`，默认有效期 8 小时。`POST /api/spaces/switch` 校验成员关系后返回带新 `current_space_id` 的 token。
+- **鉴权**：Phase1 使用 Demo Bearer Token；Sprint-26（Phase2D，REQ-041/042）起 `POST /api/auth/login` 改为**凭证登录**（bcrypt verify），返回**不透明 token**（`secrets.token_urlsafe(32)`），`lumen_sessions` 只存 SHA-256 摘要（TTL 8h / 撤销 / 滑动续期 / 多设备会话），前端通过 `Authorization: Bearer <token>` 传递；`POST /api/auth/refresh` 轮换 token，`GET/DELETE /api/auth/sessions` 管理多设备会话；demo 内存仓储兼容旧 HMAC demo token（无密码快捷登录），PG 仓储强制真实凭证。
 - **权限**：空间 + 文档两级校验；列表 / 搜索 / RAG 均按 `current_space_id` 与文档 `permission` 过滤。
 - **响应**：统一 `{ code, msg, data }`；成功 `code=0`；列表分页 `{ items, total, page }`。
-- **错误码体系**：HTTP 状态码表达协议层结果，`code` 表达业务结果：`0` 成功，`4001` 未登录 / token 无效，`4003` 无权限，`4004` 资源不存在，`4090` 业务冲突，`4220` 参数校验失败，`5000` 服务端错误，`5030` 外部 AI / OCR 服务不可用。
+- **错误码体系**：HTTP 状态码表达协议层结果，`code` 表达业务结果：`0` 成功，`4001` 未登录 / token 无效，`4003` 无权限，`4004` 资源不存在，`4010` 凭证错误 / session 无效（统一防枚举），`4030` 账号锁定 / 禁用，`4090` 业务冲突，`4220` 参数校验失败，`5000` 服务端错误，`5030` 外部 AI / OCR 服务不可用。
 
 ## 2. 接口清单（完整）
 
@@ -26,7 +26,12 @@
 
 | API-ID | 方法 | 路径 | 用途 | 阶段 | 设计状态 | 当前实现状态 | 追溯 REQ |
 |---|---|---|---|---|---|---|---|
-| API-001 | POST | /api/auth/login | 登录 | [P1] | P1-已实现 | 已实现（PG 用户 / 空间关系；Demo token） | REQ-001 基础 |
+| API-001 | POST | /api/auth/login | 凭证登录 | [P1] | P1-已实现；**Phase2D 契约变更**（Sprint-26：`login_id`/`password` + bcrypt verify；返回不透明 token session） | 已实现（PG 用户 / `lumen_sessions`；demo 兼容） | REQ-001 基础；REQ-041 |
+| API-039 | POST | /api/auth/register | 注册（建用户 + 默认个人空间） | [P2] | Phase2D-已实现 | 已实现（Sprint-26，REQ-040；bcrypt 哈希 + C-AUTH-001 个人空间） | REQ-040 |
+| API-040 | POST | /api/auth/logout | 登出（撤销当前会话） | [P2] | Phase2D-已实现 | 已实现（Sprint-26，REQ-042） | REQ-042 |
+| API-041 | POST | /api/auth/refresh | 续期轮换（旧 token 作废） | [P2] | Phase2D-已实现 | 已实现（Sprint-26，REQ-042） | REQ-042 |
+| API-042 | GET | /api/auth/sessions | 列当前用户活跃会话 | [P2] | Phase2D-已实现 | 已实现（Sprint-26，REQ-042；多设备） | REQ-042 |
+| API-043 | DELETE | /api/auth/sessions/{id} | 撤销指定会话 | [P2] | Phase2D-已实现 | 已实现（Sprint-26，REQ-042；owner；重复撤销幂等 200，不存在/非本人 404） | REQ-042 |
 | API-002 | GET | /api/spaces | 列出我的空间 | [P1] | P1-已实现 | 已实现（PG 空间 / 成员） | REQ-001/002 |
 | API-003 | POST | /api/spaces/switch | 切换当前空间 | [P1] | P1-已实现 | 已实现（PG 成员校验） | REQ-002 |
 | API-004 | GET | /api/documents | 文档列表 | [P1] | P1-已实现 | 已实现（PG 文档 + 权限过滤） | REQ-004 |
@@ -111,6 +116,9 @@
 | API-036 | Phase2B·第三 slice·已实现 | §3.9 | 4001/4003/4004/4090/4220 | 空间成员；防环 / 跨空间→4220；删非空→4090 | TC-P2-FOLDER-001 | 后端已实现（task-027） |
 | API-037 | Phase2B·第三 slice·已实现 | §3.9 | 4001/4003/4220 | 空间成员 | TC-P2-FOLDER-001 | 后端已实现（task-027） |
 | API-038 | Phase2B·第三 slice·已实现 | §3.9 | 4001/4003/4004/4220 | 文档可见且可写；目标 folder 必须属于当前空间；`folder_id=null` 移到根目录 | TC-P2-FOLDER-001 | 已实现（task-029） |
+| API-039 | Phase2D-已实现（Sprint-26） | §3.2/§3.3 | 4090/4220 | 公开；重复 email→4090；密码 8–64 字符 | TC-P2-AUTH-001 | 已实现（task-038） |
+| API-001 | Phase2D 契约变更（Sprint-26） | §3.2/§3.3 | 4001/4010/4030/4220 | 凭证校验 + 锁定（5 次 / 15min）/ 禁用；统一错误防枚举 | TC-P2-AUTH-001 | 已实现（task-038） |
+| API-040/041/042/043 | Phase2D-已实现（Sprint-26） | §3.2/§3.3 | 4001/4010/4004 | logout 撤销当前会话；refresh 轮换旧 token 作废；sessions 仅本人；撤销幂等（重复 200 / 不存在或非本人 404，不泄露存在性） | TC-P2-AUTH-001 | 已实现（task-038） |
 
 ### 3.2 请求 / 输入契约（字段级·核心接口）
 
@@ -118,8 +126,15 @@
 
 | API-ID | 字段 / 参数 | 位置 | 类型 | 必填 | 校验 | 示例 | 来源 REQ |
 |---|---|---|---|---|---|---|---|
-| API-001 | account | body | string | 是 | 非空 | `"nova"` | REQ-001 |
-| API-001 | password | body | string | 是 | 非空 | `"***"` | REQ-001 |
+| API-001 | login_id | body | string | 是 | email（小写归一化）或 external_id；非空 | `"alice@example.com"` | REQ-001/041 |
+| API-001 | password | body | string | 是 | 非空；≤64 字符 | `"***"` | REQ-001/041 |
+| API-001 | external_id | body | string | 否 | demo 兼容别名（login_id 为空时） | `"alice"` | REQ-041 |
+| API-001 | current_space_id | body | int | 否 | 登录后会话当前空间（须为成员） | `10` | REQ-002 |
+| API-039 | email | body | string | 是 | 合法邮箱；注册后小写归一化 | `"new@example.com"` | REQ-040 |
+| API-039 | name | body | string | 是 | 非空显示名 | `"新用户"` | REQ-040 |
+| API-039 | password | body | string | 是 | 8–64 字符（NIST 长度优先，C-AUTH-005） | `"***"` | REQ-040 |
+| API-040/041/042 | （无 body） | header | Bearer | 是 | 当前会话 token | — | REQ-042 |
+| API-043 | session_id | path | int | 是 | 目标会话 id | `12` | REQ-042 |
 | API-005 | space_id | token | string | 是 | 当前空间 | `"brightlite-team"` | REQ-004 |
 | API-005 | title | body | string | 是 | 非空 | `"场景联动分析"` | REQ-004 |
 | API-005 | content_md | body | string | 是 | Markdown | `"# …"` | REQ-004 |
@@ -146,8 +161,13 @@
 
 | API-ID | 字段 | 类型 | 必填 | 数据来源 / 表字段 | 敏感性 | 脱敏 / 过滤 |
 |---|---|---|---|---|---|---|
-| API-001 | token | string | 是 | HMAC 签名生成 | 高 | 仅返回一次，前端内存保存 |
-| API-001 | current_space_id | string | 是 | token 载荷 | 中 | — |
+| API-001 | token | string | 是 | 不透明 token（`secrets.token_urlsafe(32)`；`lumen_sessions` 只存 SHA-256 摘要） | 高 | 仅返回一次，前端内存保存 |
+| API-001 | user_id | int | 是 | `lumen_users.id` | 中 | — |
+| API-001 | current_space_id | int | 是 | `lumen_sessions.current_space_id` | 中 | — |
+| API-039 | user_id / name / email | int/string | 是 | 注册结果（不含 password_hash） | 低 | 密码哈希不外返 |
+| API-040/043 | data | null | 是 | 登出 / 撤销结果 | — | — |
+| API-041 | token / user_id / current_space_id | — | 是 | 新 token + 新 session（旧 token 已撤销） | 高 | 新 token 仅返回一次 |
+| API-042 | data[].id / created_at / expires_at / last_used_at / client_ua / client_ip / current | — | 是 | `lumen_sessions` 活跃行 | 中 | 不返回 token_hash |
 | API-010 | answer | string | 是 | adapter（配 .env → LLM 生成；默认降级模板） | 中 | 库外返回「未找到」，不编造 |
 | API-010 | sources[].doc_id | string | 是 | lumen_documents.id | 低 | 权限过滤后返回 |
 | API-010 | sources[].snippet | string | 是 | lumen_chunks.text（目标）/ content_md 切片 | 中 | 仅当前空间、权限可见文档 |
@@ -166,14 +186,16 @@
 
 ### 3.4 错误码与异常处理
 
-> 业务码体系见 §1。「实现状态」据 `backend/api/*.py` 实证：`0/4001/4003/4004/4090/4220` 已实现；`5030` 已由 API-019 / API-028 依赖不可用路径覆盖；`5000` 为服务端异常兜底。
+> 业务码体系见 §1。「实现状态」据 `backend/api/*.py` 实证：`0/4001/4003/4004/4010/4030/4090/4220` 已实现；`5030` 已由 API-019 / API-028 依赖不可用路径覆盖；`5000` 为服务端异常兜底。
 
 | 错误码 | HTTP | 触发条件 | 用户可见信息 | 客户端处理 | 日志/审计 | 可重试 | 实现状态 |
 |---|---|---|---|---|---|---|---|
 | 0 | 200 | 成功 | 成功 | — | — | — | 已实现（全接口） |
 | 4001 | 401 | 未登录 / token 无效 / 无可用空间 | 未登录 | 重新登录 | 记录 | 否（重登） | 已实现（auth/terms/rag/spaces/imports/search/documents） |
 | 4003 | 403 | 非空间成员 / 无权限 | 无权限 | 提示无权限 | 记录 | 否 | 已实现（auth/terms/spaces/imports） |
-| 4004 | 404 | 文档 / 版本 / 术语不存在 | 不存在 | — | — | 否 | 已实现（terms/documents） |
+| 4004 | 404 | 文档 / 版本 / 术语 / 会话不存在 | 不存在 | — | — | 否 | 已实现（terms/documents/auth sessions） |
+| 4010 | 401 | 凭证错误 / session 无效或过期（登录与刷新统一错误，防账号枚举） | 登录失败 | 重新登录 | 记录 | 否（重登） | 已实现（auth login/refresh） |
+| 4030 | 403 | 账号锁定（连续失败 5 次 / 15min）或禁用 | 账号锁定 | 等待解锁 / 联系管理员 | 记录 | 否 | 已实现（auth login） |
 | 4220 | 422 | 参数校验失败（空字段、类型、超长） | 参数错误 | 修正后重试 | — | 是（修正后） | 已实现（terms/rag/imports/search） |
 | 4090 | 409 | 业务冲突（如唯一约束、批量导入同名且策略不允许覆盖、PDF 导出任务未就绪） | 冲突 | — | — | — | 已实现（tags / folders / PDF 下载未就绪） |
 | 5000 | 500 | 服务端错误 | 服务异常 | 稍后重试 | 记录 | 是 | 已实现为部分接口兜底 |
@@ -187,7 +209,8 @@
 
 | API-ID | 鉴权 | 空间边界 | 资源权限 | 敏感字段 | 限流 | 审计日志 | 越权失败策略 |
 |---|---|---|---|---|---|---|---|
-| API-001..013 | Bearer Token（HMAC） | current_space_id 过滤 | 文档 permission: private/team/external | content_md / chunks.text / terms.definition（目标发往外部 LLM） | Phase1 不启用 | Phase1 不启用 | 越权吸收为空结果 / 4004 |
+| API-001..013 | Bearer Token（不透明 token session；demo 内存仓储兼容 HMAC demo token） | current_space_id 过滤 | 文档 permission: private/team/external | content_md / chunks.text / terms.definition（目标发往外部 LLM） | Phase1 不启用 | Phase1 不启用 | 越权吸收为空结果 / 4004 |
+| API-039..043 | register/login 公开；logout/refresh/sessions 已认证（owner） | session 归属 user 过滤 | 会话列表 / 撤销仅本人；login 失败锁定 + 统一错误防枚举 | token / password（不落日志） | 登录端点未单独限流（锁定机制兜底，独立 limiter 留 P2） | register / login_success / login_failed / login_locked / logout 结构化日志（C-AUTH-004） | 4010 / 4030 / 4004 |
 | API-029 | Bearer Token（HMAC） | 写入 current_space_id | 仅空间成员可导入；生成文档默认沿用当前导入口径 | 上传文本内容 / relative_path | P1.5A 不启用 | 逐条记录结果 | 单文件失败不影响其他成功项；同名默认 skipped |
 | API-030 | Bearer Token（HMAC） | current_space_id 过滤 | 单文档可读；空间 ZIP 仅打包可见文档 | 导出的 `.md` 内容 / ZIP | P1.5A 不启用 | 可记录下载行为（后续） | 不可见文档返回 4004 或不进入 ZIP |
 | API-016（愿景） | 临时 token（独立） | 简报 token 隔离 | 外部只读 | 简报内容裁剪 | 待愿景验证 | 待愿景验证 | token 失效 → 401 |
@@ -290,6 +313,8 @@ sequenceDiagram
 | 4090 | 标签重名、快速录入重复转换、PDF 导出任务未就绪、批量导入同名且策略不允许跳过、folder 重名 / 删非空 folder 等业务冲突 | API-014/017/019/027/029/031/035/036 |
 | 4220 | 字段缺失、非法状态、无效 tag_ids / document_id / mode、文件类型不支持、relative_paths 与 files 数量不匹配、folder 防环 / 跨空间移动、文档移动目标 folder 不属于当前空间 | 全部 Phase1.5 / Phase2 API |
 | 5030 | LLM / PDF 导出 / 外部依赖不可用 | API-019/028 |
+| 4010 | 凭证错误 / session 无效（登录统一错误防枚举；刷新失败） | API-001/041 |
+| 4030 | 账号锁定（5 次 / 15min）或禁用 | API-001 |
 
 ### [Phase1.5] / [P2] / [愿景] 接口（骨架·待该阶段细化）
 - `/api/import/batch`、`/api/documents/{id}/export`、`/api/export/space`：Phase1.5A 已实现；默认不引新依赖、不建真实目录表。
@@ -303,13 +328,17 @@ sequenceDiagram
 - `/api/folders`（API-034..037）+ `/api/documents/{document_id}/folder`（API-038）：Phase2B 第三 slice 已实现（folder-tree，REQ-039），文件夹树查询 / 新建 / 移动·改名·删除 / 排序 + 单文档移动；folder 不独立设权限（FT-C-003），删非空 folder→4090（FT-C-010）；导入保留结构扩展 API-029 `preserve_structure` 已实现。
 - REQ-018 Vault 兼容（Phase2C MVP）：模式 A 导入数据库复用 API-029（前端分批 50/批，避免 multipart 1000 files/fields 限制）；模式 B 仅本地挂载为**纯前端**（浏览器 File System Access + IndexedDB），**后端零新 API**、本地内容不上传服务端、不进入团队 RAG。仅当需跨设备同步挂载点元数据时新增 `GET/POST /api/vault-mounts`（读写 `lumen_vault_mounts`，视 MVP 后续需要再定）。
 - `/api/spaces/push`：跨空间推送不进 Phase2B 首批，请求 / 响应待后续细化。
+- `/api/auth/register`（API-039）、`/api/auth/logout`（API-040）、`/api/auth/refresh`（API-041）、`/api/auth/sessions`（API-042/043）：**Phase2D 账号体系（Sprint-26，REQ-040/041/042）已实现**——注册建用户 + 默认个人空间（C-AUTH-001，role=admin）；凭证登录 bcrypt + 不透明 token session（TTL 8h / 撤销 / 滑动续期 / 多设备会话）；demo 内存仓储兼容无密码快捷登录，PG 仓储强制真实凭证。契约见 §3.2/§3.3 与 §5。
 - `/api/briefs/{token}`：简报隔离与有效期待愿景验证（REQ-022）
 
 ## 4. REQ → 接口追溯矩阵
 
 | REQ | 接口 | 说明 |
 |---|---|---|
-| REQ-001 | `POST /api/auth/login`、`GET /api/spaces` | 登录后只列出所属空间 |
+| REQ-001 | `POST /api/auth/login`、`GET /api/spaces` | 登录后只列出所属空间（Sprint-26 起 login 为凭证登录契约） |
+| REQ-040 | `POST /api/auth/register`（API-039） | 注册：bcrypt 哈希 + 默认个人空间（C-AUTH-001） |
+| REQ-041 | `POST /api/auth/login`（API-001 契约变更） | 凭证登录：bcrypt verify + 不透明 token session；错误统一防枚举 + 锁定 |
+| REQ-042 | `POST /api/auth/logout`、`POST /api/auth/refresh`、`GET/DELETE /api/auth/sessions`（API-040..043） | 登出撤销 / 续期轮换 / 多设备会话查询与撤销 |
 | REQ-002 | `POST /api/spaces/switch` | 切换当前空间上下文 |
 | REQ-003 | `GET /api/documents`、`POST /api/query`、`GET /api/search` | 文档列表、检索、问答均执行权限过滤 |
 | REQ-004 / 005 | `GET/POST /api/documents`、`GET/PUT/DELETE /api/documents/{id}` | 文档 CRUD 与行内编辑保存 |
@@ -338,7 +367,12 @@ sequenceDiagram
 
 | API-ID | Service | 数据来源 / 表 | 权限规则 | 错误码 | 关联 TC | 状态 |
 |---|---|---|---|---|---|---|
-| API-001 | auth.create_demo_token | lumen_users | 账号校验 | 4001 | TC-P1-001 | P1-已实现 |
+| API-001 | auth.authenticate（bcrypt verify + 不透明 token session；demo 兼容 create_demo_token） | lumen_users, lumen_sessions | 凭证校验 + 锁定 / 禁用；统一错误防枚举 | 4001/4010/4030/4220 | TC-P1-001；TC-P2-AUTH-001 | P1-已实现；Phase2D 契约变更（Sprint-26） |
+| API-039 | auth.register | lumen_users, lumen_spaces, lumen_space_members | 公开；重复 email→4090；密码 8–64 | 4001/4090/4220 | TC-P2-AUTH-001 | Phase2D-已实现 |
+| API-040 | auth.audit_logout / revoke_session | lumen_sessions | 已认证（owner 当前会话） | 4001 | TC-P2-AUTH-001 | Phase2D-已实现 |
+| API-041 | auth.refresh_session | lumen_sessions | 有效 session（旧 token 作废） | 4001/4010 | TC-P2-AUTH-001 | Phase2D-已实现 |
+| API-042 | auth.list_active_sessions | lumen_sessions | 已认证（仅本人） | 4001 | TC-P2-AUTH-001 | Phase2D-已实现 |
+| API-043 | auth.revoke_session | lumen_sessions | 已认证（owner） | 4001/4004 | TC-P2-AUTH-001 | Phase2D-已实现 |
 | API-002 | space.list_user_spaces | lumen_spaces, lumen_space_members | 仅本人所属空间 | 4001 | TC-P1-001/002 | P1-已实现 |
 | API-003 | space.switch_space | lumen_space_members | 成员关系校验 | 4001/4003 | TC-P1-002 | P1-已实现 |
 | API-004 | document.list_visible_documents | lumen_documents | space + permission 过滤 | 4001 | TC-P1-004 | P1-已实现 |
@@ -380,9 +414,11 @@ sequenceDiagram
 | Phase2A 反向链接 | target 文档不可见时不返回标题 / 摘要 | 查询层返回 `no_access` 或过滤 | 4003 / 空结果 | TC-P2-LINK-001 |
 | Phase2B AI 润色引用 | sources 仅来自当前用户可见 chunks | LLM 调用前过滤上下文 | 5030 可降级 Mock | TC-P2-AI-001 |
 | Phase2B 文档目录树 | folder 查询过滤 `space_id`；folder 内文档仍按 `permission` 过滤 | folder 不独立设权限（FT-C-003） | 4003 / 不泄露越权文档 | TC-P2-FOLDER-001 |
+| Phase2D 账号与会话 | session 按 token_hash 查 `lumen_sessions`（未过期未撤销）；跨用户不泄露 | `get_current_user` 统一鉴权；会话列表 / 撤销仅本人 | 4010 / 4030 / 4004 | TC-P2-AUTH-001 |
 
 ## 6. 待人工确认项
 
 - Phase1.5A API-029 / API-030 已实现并通过 TC-P1-015/016；若后续扩展真实目录表、长期导出产物或新依赖，需同步 `docs/design/ingestion.md`、导出详细设计与 `docs/09-verification.md` TC-P1-015/016。
 - `API-019` PDF 导出属于 Phase1.5B，已随 Sprint-18 实现，并在 v1.7.0 补齐下载端点；后续若新增异步队列、过期清理 job 或水印，需先同步 `05/06/08/09`。
 - Phase2A 标签 / 快速录入 / 内链 API 已实现；**Phase2B API-028 后端已实现**（vertical slice 已定：polish 同步 / citation 首版同步；数据外发风险已接受 RG-008 Go）；**API-033 时间线为第二 slice·已实现（候选 A + TL-C-001..011 已确认，task-030 本地自动化、运行态 API smoke、Edge headless 浏览器 smoke、真实 PG 大数据性能 smoke 均已通过）**；**API-034..038 文档目录树已实现（folder-tree，REQ-039）；导入保留结构扩展 API-029 `preserve_structure` 已实现（推翻 ingestion ING-C-001）；前端文件管理器基础能力已实现，浏览器自动化 smoke 已补**。
+- **Sprint-26 账号体系（API-001 契约变更 + API-039..043）已实现并通过后端自动化验收（`tests/backend/test_auth.py` 20/20 + 全量 222 OK）**；浏览器 smoke（登录 / 注册页）与 demo 启动验证待用户确认。

@@ -26,6 +26,7 @@
 | 文档解析 | python-docx / pdfplumber | python-docx 1.1.x；pdfplumber 0.11.x | **未接入（候选）**：当前仅支持 `.md`/`.txt` 已提取文本，无 Word/PDF 解析 |
 | OCR | PaddleOCR（可降级） | PaddleOCR 2.8.x；Phase1 允许关闭 OCR 并降级为已提取文本 | **未实现（降级）**：当前无 OCR；REQ-010 移至后续阶段 |
 | 部署 | Docker Compose（本地起库与依赖） | Docker 29.5.2；Docker Compose v5.1.4；本地 PostgreSQL + pgvector 由 compose 编排 | **已接入**（Sprint-8 T1：`docker/compose.yml` 编排 lumen-pg；daemon live，TE-C-003 闭合） |
+| 认证 / 密码哈希 | Python `bcrypt` 库 + `secrets` 不透明 token | bcrypt 5.0.x（cost 12）；不透明 token session（`lumen_sessions`，TTL / 撤销 / 续期）；demo 物理隔离（PG 强制真实 / 内存允许 demo） | **已接入（Sprint-26 / task-038，RG-011/012/013 Go）** |
 
 > 各技术的用途 / 约束来源 / 密钥敏感性 / 验证方式见 §2.1 依赖与配置矩阵；技术栈禁令见 `ai/project-rules.md` §2 与本文 §3。
 
@@ -57,6 +58,7 @@ flowchart TB
 | TCD-009 | PDF 导出采用 ReportLab 首版路线，API-019 已实现同步任务返回；覆盖 Markdown 子集映射、权限过滤和 5030 失败态 | ReportLab 在 Python 3.14 / Windows 下安装顺利，可注册 `simhei.ttf` 并通过中文 PDF 渲染样例；比 WeasyPrint 少系统级依赖 | 直接引入 WeasyPrint / HTML 渲染链；跳过中文样例直接编码 | REQ-027、TC-P1-017 | 已实现（Sprint-18 / TC-P1-017 通过） |
 | TCD-010 | Phase2B AI 润色 / 写作引用（REQ-014）复用 ADR-002 LLM adapter；polish 同步、citation 复用 RAG 来源检索 + LLM | 厂商解耦、复用既有通道；不引新 LLM SDK | 业务层直连 LLM；新增独立 AI 服务 | AI 润色（REQ-014） | 已实现；**RG-008 已升 Go**；TC-P2-AI-001 live UI smoke 2026-07-31 通过 |
 | TCD-011 | Vault 兼容采用“双入口”：导入数据库走既有 ingestion / folder-tree；仅本地挂载走个人本地连接器 | 数据库内容才能获得完整权限 / 搜索 / RAG / 版本能力；本地挂载满足个人低摩擦查看整理，但不能默认共享或进入服务端 RAG | 只做 Obsidian 式本地文件夹为唯一权威；或强制所有 vault 全量导入 | REQ-018、REQ-037、REQ-039 | Phase2C·已确认（RG-009 Go 2026-08-05）/ 浏览器 File System Access 路线采纳 |
+| TCD-012 | 密码哈希用 `bcrypt` 库（cost 12）+ 登录会话用不透明 token（`secrets.token_urlsafe` + `lumen_sessions`，TTL / 撤销 / 续期轮换）+ 统一 `get_current_user` 收敛 13 router | NIST 800-63B 长度优先 + OWASP 密码存储（bcrypt 可接受，cost≥12）；官方 `bcrypt` 库在 Python 3.14 实测通过，`passlib` 弃维护不采用；不透明 token 免 JWT 依赖、可撤销、支持 demo 物理隔离 | 禁 JWT / python-jose / 自实现 token 协议（project-rules §1） | REQ-040/041/042 | **RG-011/012/013 Go（2026-08-07）**；TC-P2-AUTH-001 自动化通过 |
 
 > 关联详细设计：`docs/design/rag-retrieval.md`、`ingestion.md`、`term-management.md`、`permissions.md`。
 > **错误码**：HTTP 状态码 + `{ code, msg, data }` 双层；`code=0` 成功，业务错误 4 位数字码（详见 `docs/07-api-spec.md` §1）。
@@ -80,6 +82,7 @@ flowchart TB
 | Python 包 | `reportlab` / `pypdf` / `pdfplumber` / `pillow` | 单文档 PDF 导出与中文排版；产物校验 | Phase1.5B | **已安装 / 已启用（API-019 已实现）** | `backend/requirements.txt`；Windows 字体 `simhei.ttf`，无系统字体时回退 STSong-Light | 无；导出内容继承文档敏感性 | RG-006 样例通过；TC-P1-017 通过 |
 | Python 包 | python-docx / pdfplumber | 真实 Word / PDF 文本提取 | Phase1.5B | **候选（未接入）** | 待选型 / RG | 无；真实文档敏感性需确认 | 待后续 tech-env-eval |
 | Python 包 | PaddleOCR | 图片 / 白板 OCR | 后续 | **降级 / No-Go（RG-003）** | — | 无 | 待环境兼容验证 |
+| Python 包 | `bcrypt` 5.0.0 | 注册 / 登录密码哈希（Sprint-26 账号体系） | Phase2D | **已安装 / RG-011 Go（2026-08-07）** | `backend/requirements.txt` | 无（含盐哈希，非明文） | RG-011 PoC：Python 3.14.3 hash/verify 通过（cost 12 ≈0.21s、恒定时序） |
 
 ## 3. Phase 技术约束
 
@@ -151,6 +154,9 @@ flowchart TB
 | RG-009 | 本地 Vault 挂载 / 连接器 | **Go（PoC 验证 2026-08-05 通过）/ 不阻塞当前 Phase** | **已知天花板**：浏览器 File System Access 句柄只活在浏览器进程、后端读不到 → 仅本地挂载内容无法进服务端 RAG / 全文搜索；要进 RAG 必须 (a) 本地 agent / 桌面端增量索引 或 (b) 导入 DB。此外浏览器授权持久化、IndexedDB 句柄保存、只读/可写策略、增量扫描、删除/重命名冲突、本地索引规模与隐私边界未验证；若走桌面客户端则需另定运行形态 | 最小 PoC：选择 1000+ 文件 vault，展示本地树、读取/搜索单机索引、重启后权限恢复或明确失效、与 DB 文档分区显示；仅挂载内容不上传服务端 | TC-P2-VAULT-001 | REQ-018 |
 
 | RG-010 | 本地挂载自动监听（FileSystemObserver） | **Go（2026-08-06，Edge 139 实测）** | Edge 139 默认暴露 `window.FileSystemObserver`，构造 + observe(OPFS 目录句柄) + 写入 / 删除变更回调均通过（headless CDP 实测，详见评估报告）；无需 flag；Chrome 同 Blink 可预期一致 | 真实挂载目录（picker 句柄）在 Wave 3 实现时复测；Firefox / Safari 不在 demo 目标 | `docs/research/2026-08-06-tech-env-evaluation-rg010-file-system-observer.md`；TC-P2-VAULT-003 | REQ-018 |
+| RG-011 | 密码哈希选型（`bcrypt` 库，Python 3.14） | **Go（2026-08-07 PoC）** | bcrypt 5.0.0 在 Python 3.14.3 安装 + hash/verify 通过；cost 12 ≈0.21s；错误 / 正确密码验证耗时一致（恒定时序）；>72B 密码抛 ValueError → 注册密码做 max 长度约束；不采用 passlib（弃维护） | — | RG-011 PoC 脚本输出（hash cost 12 0.21s / verify 0.204s / 72B 边界）；TC-P2-AUTH-001 | REQ-040/041 |
+| RG-012 | token session 安全（密钥 env 注入、TTL、撤销、续期轮换、恒定时序） | **Go（2026-08-07 单测覆盖）** | 设计见 `docs/design/accounts-auth.md` §5 / §10；实现：`secrets.token_urlsafe` + SHA-256 摘要入库、`LUMEN_DEMO_TOKEN_KEY` 兼容旧 demo HMAC | `tests/backend/test_auth.py` 覆盖撤销 / 过期 / 续期后旧 token 失效 / 枚举（20/20 通过） | TC-P2-AUTH-001 | REQ-042 |
+| RG-013 | 跨用户隔离回归 | **Go（2026-08-07）** | 复用既有 owner_id 过滤底座；新增「注册用户私有文档仅 owner 可见」验证（`tests/backend/test_auth.py` 注册用户 + 个人空间隔离断言） | 注册两个真实用户 + 私有文档可见性断言；全量 222 OK | TC-P2-AUTH-001 | REQ-040/041 |
 > 风险与验证映射：本表 RG-ID 与 `docs/09-verification.md §6` 风险项对齐（待 09 补 Risk-ID 列后双向链接）。
 
 ### 5.2 安全、隐私与合规

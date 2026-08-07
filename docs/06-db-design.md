@@ -11,14 +11,15 @@
 | 保留 / 省略决策 | 保留 |
 | 决策来源 | `ai/project-rules.md` §3（项目有 PostgreSQL + pgvector 持久化存储） |
 | 覆盖 REQ / 模块 | Phase1：空间 / 权限、文档、版本、导入、检索向量、术语管理；Phase1.5A：批量导入与 `.md` / ZIP 导出备份（REQ-037/038）；Phase1.5B：PDF 导出任务契约（REQ-027）；Phase2A：标签、内链 / 反链、快速录入（REQ-012/025/026）；Phase2B：AI 润色草稿（REQ-014）、**主题时间线（REQ-013a/024）**、文档目录树（REQ-039，第三 slice 候选）；愿景保留骨架 |
-| 当前状态 | P1 表结构**已落地 PostgreSQL**（Sprint-8 / task-008 T1–T5：8 张 `lumen_*` 表由 `migrations/001-005` 建，后端切 `PgRepository`；`lumen_chunks.embedding vector(512)` + hnsw + ts_vector 由 T4/T6 启用；migration 006 为 search 增加可选 zhparser / `simple` 回退配置）。内存 `demo_repository` 保留为单测 fake。Phase1.5A 的 REQ-037/038 已复用既有表完成、不新增迁移；Phase1.5B PDF 导出已落地 `lumen_doc_exports`（migration 013 + DocExport entity/ORM + Demo/Pg repository）；Phase2A 的标签、反链与快速录入表已落地；真实 Word/PDF 文本提取与 OCR 仍降级（RG-007 / RG-003）。2026-07-21 按 ADR-010 补“DB 权威运行态 + 衍生数据可重建”原则 |
-| 最后更新 | 2026-08-04（Sprint-18 PDF 导出 DB 契约落地：migration 013 `lumen_doc_exports` + TC-P1-017 通过） |
+| 当前状态 | P1 表结构**已落地 PostgreSQL**（Sprint-8 / task-008 T1–T5：8 张 `lumen_*` 表由 `migrations/001-005` 建，后端切 `PgRepository`；`lumen_chunks.embedding vector(512)` + hnsw + ts_vector 由 T4/T6 启用；migration 006 为 search 增加可选 zhparser / `simple` 回退配置）。内存 `demo_repository` 保留为单测 fake。Phase1.5A 的 REQ-037/038 已复用既有表完成、不新增迁移；Phase1.5B PDF 导出已落地 `lumen_doc_exports`（migration 013 + DocExport entity/ORM + Demo/Pg repository）；Phase2A 的标签、反链与快速录入表已落地；真实 Word/PDF 文本提取与 OCR 仍降级（RG-007 / RG-003）。2026-07-21 按 ADR-010 补“DB 权威运行态 + 衍生数据可重建”原则；**Phase2D 账号体系基础已落地（Sprint-26 / task-038，REQ-040/041/042）：migration 014 为 `lumen_users` 扩列（email / password_hash / status / last_login_at / failed_login_count / locked_until）+ 新建 `lumen_sessions`（不透明 token session，token 只存 SHA-256 摘要，TTL 8h 滑动续期 / 撤销 / 多设备）** |
+| 最后更新 | 2026-08-07（Sprint-26 账号体系 DB 契约落地：migration 014 `lumen_users` 扩列 + `lumen_sessions` + TC-P2-AUTH-001 自动化通过） |
 
 ## 1. 表清单（完整）
 
 | 表 | 用途 | 阶段 | 设计状态 | 当前实现状态 | 追溯 |
 |---|---|---|---|---|---|
-| lumen_users | 账号 | [P1] | P1-已实现 | 已落地 PostgreSQL（migration 001；PgRepository 接入） | REQ-001 基础 |
+| lumen_users | 账号 | [P1] | P1-已实现；Phase2D 扩列（migration 014） | 已落地 PostgreSQL（migration 001 + 014 扩列：email / password_hash / status / last_login_at / failed_login_count / locked_until；PgRepository 接入） | REQ-001 基础；REQ-040/041/042 |
+| lumen_sessions | 登录会话（不透明 token） | [P2] | Phase2D-已实现 | 已落地 PostgreSQL（migration 014；token 只存 SHA-256 摘要；TTL / 撤销 / 续期轮换 / 多设备会话） | REQ-041/042 |
 | lumen_spaces | 空间 | [P1] | P1-已实现 | 已落地 PostgreSQL（migration 001；PgRepository 接入） | REQ-001 |
 | lumen_space_members | 成员-空间-角色 | [P1] | P1-已实现 | 已落地 PostgreSQL（migration 001；PgRepository 接入） | REQ-001/002 |
 | lumen_documents | 文档 | [P1] | P1-已实现 | 已落地 PostgreSQL（migration 001；PgRepository 接入） | REQ-003/004 |
@@ -61,9 +62,29 @@ LUMEN 采用 `docs/decisions/ADR-010-db-authority-derived-data-rebuildability.md
 | 字段 | 类型 | 说明 |
 |---|---|---|
 | id | bigint PK | |
-| external_id | varchar | 外部账号标识 |
+| external_id | varchar | 外部账号标识（注册时由 email 前缀派生，冲突自动加序号） |
 | name | varchar | 显示名 |
+| email | varchar | 登录标识（C-AUTH-002；小写归一化由应用层保证） |
+| password_hash | varchar | bcrypt 哈希（cost 12）；seed 用户已设 demo 密码；非 demo 模式 NULL 拒绝登录 |
+| status | varchar | active / disabled / pending（默认 active） |
+| last_login_at | timestamptz | 最近登录时间 |
+| failed_login_count | int | 连续失败次数（锁定阈值 5 次 / 15min） |
+| locked_until | timestamptz | 锁定截止时间（空=未锁定） |
 | created_at | timestamptz | |
+
+### lumen_sessions（Phase2D · migration 014 · 已实现）
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| id | bigint PK | |
+| user_id | bigint FK→users | ON DELETE CASCADE |
+| current_space_id | bigint FK→spaces | ON DELETE SET NULL；会话当前空间（实现偏差：设计 §8.2 缺列，编码补入） |
+| token_hash | varchar UK | SHA-256(token) hex；明文 token 仅返回客户端一次 |
+| expires_at | timestamptz | TTL 8h（沿用现有），滑动续期 |
+| created_at | timestamptz | |
+| revoked_at | timestamptz | NULL=活跃；撤销=置位保留审计行 |
+| last_used_at | timestamptz | |
+| client_ua | text | 审计 / 多设备识别 |
+| client_ip | varchar | |
 
 ### lumen_spaces
 | 字段 | 类型 | 说明 |
@@ -229,7 +250,7 @@ LUMEN 采用 `docs/decisions/ADR-010-db-authority-derived-data-rebuildability.md
 ### [P2 后续] / [愿景] 表（骨架·待该阶段细化）
 
 - `lumen_push_copies`：跨空间只读副本与权限同步待后续 Phase 细化（REQ-015，不进 Phase2B 首批）。
-- `lumen_vault_mounts`：Vault 兼容（REQ-018）Phase2C·RG-009 Go，字段已细化。设计方向“数据库权威 + 个人本地连接器”：导入数据库的内容写 `lumen_documents` / `lumen_chunks` / `lumen_folders`；仅本地挂载（模式 B 浏览器 MVP）的内容默认不落服务端正文，不进入团队权限链，**服务端只存挂载点元数据**：`id / user_id / device_id（浏览器 UA 或自生 device token）/ mount_name / source_type=obsidian|markdown_folder / auth_status=granted|revoked / last_synced_at / created_at / updated_at`；**不存** directory handle、绝对路径、文件正文（这些留客户端 IndexedDB）。migration 014 留编码 Sprint-23C。
+- `lumen_vault_mounts`：Vault 兼容（REQ-018）Phase2C·RG-009 Go，字段已细化。设计方向“数据库权威 + 个人本地连接器”：导入数据库的内容写 `lumen_documents` / `lumen_chunks` / `lumen_folders`；仅本地挂载（模式 B 浏览器 MVP）的内容默认不落服务端正文，不进入团队权限链，**服务端只存挂载点元数据**：`id / user_id / device_id（浏览器 UA 或自生 device token）/ mount_name / source_type=obsidian|markdown_folder / auth_status=granted|revoked / last_synced_at / created_at / updated_at`；**不存** directory handle、绝对路径、文件正文（这些留客户端 IndexedDB）。migration 015 留编码 Wave 3（migration 014 已被 Sprint-26 账户体系占用）。
 - `lumen_audio_records`：录音转写记录待愿景验证（REQ-019）。
 - `lumen_brief_links`：对外简报（token、有效期、AI 可问不可看原文）待愿景验证（REQ-022）。
 - `lumen_external_sync`：外部源（飞书等）同步配置与摘要同步（愿景，REQ-028）。
@@ -252,6 +273,8 @@ LUMEN 采用 `docs/decisions/ADR-010-db-authority-derived-data-rebuildability.md
 - `lumen_doc_exports`：`(space_id, document_id, created_at)` 与 `(status, created_at)` 支撑文档导出历史和任务轮询。
 - `lumen_folders`：`UNIQUE(space_id, parent_id, name)` + `(space_id, parent_id)` 支撑树查询与重名校验；`parent_id` 自引用支撑嵌套（Phase2B·REQ-039）。
 - `lumen_documents.folder_id`：索引 `(folder_id)` 支撑按文件夹过滤文档（Phase2B·REQ-039）。
+- `lumen_users`：`idx_lumen_users_email`（email 唯一，WHERE email IS NOT NULL）——登录标识防重（Phase2D，migration 014）。
+- `lumen_sessions`：`token_hash` 唯一（token 查会话）+ `(user_id) WHERE revoked_at IS NULL` 部分索引（多设备会话列表 / 撤销）。
 - REQ-037 / REQ-038 默认不新增索引；批量导入沿用 `lumen_imports(space_id, created_by, created_at)` / `lumen_documents(space_id, title)` 查询路径；ZIP 导出沿用文档可见性查询。
 
 ## 4. 表间关系
@@ -273,6 +296,7 @@ erDiagram
   lumen_documents ||--o{ lumen_doc_links : source_links
   lumen_documents ||--o{ lumen_doc_links : target_links
   lumen_users ||--o{ lumen_quick_entries : captures
+  lumen_users ||--o{ lumen_sessions : opens
   lumen_documents ||--o{ lumen_ai_drafts : ai_drafts
   lumen_documents ||--o{ lumen_doc_exports : exports
   lumen_spaces ||--o{ lumen_folders : contains
@@ -312,6 +336,7 @@ erDiagram
 | REQ | 相关表 | TC-ID | Sprint | 说明 |
 |---|---|---|---|---|
 | REQ-001 / 002 | `lumen_users`、`lumen_spaces`、`lumen_space_members` | TC-P1-001 / 002 | Sprint-1 | 账号、空间与成员关系支撑隔离和切换 |
+| REQ-040 / 041 / 042 | `lumen_users`（扩列）、`lumen_sessions` | TC-P2-AUTH-001 | Sprint-26（Phase2D，task-038，migration 014） | 注册 / 凭证登录 bcrypt / 登出会话·不透明 token + 多设备 / 锁定与审计 |
 | REQ-003 | `lumen_documents`、`lumen_space_members` | TC-P1-003 | Sprint-1 | 文档权限、作者与空间成员共同决定可见性 |
 | REQ-004 / 005 | `lumen_documents` | TC-P1-004 / 005 | Sprint-2 | 文档 CRUD 与行内编辑持久化 |
 | REQ-006 | `lumen_document_versions` | TC-P1-006 | Sprint-2 | 保存历史版本并支持恢复 |
@@ -329,7 +354,7 @@ erDiagram
 | REQ-013a / 024 | `lumen_documents`(created_at/updated_at/owner_id) + `lumen_tag_links`(created_at/created_by) + `lumen_doc_links`(created_at) + `lumen_chunks.ts_vector`（关键词命中）实时聚合（**候选 A 已定，不建表**，见 `docs/design/timeline.md` TL-C-001） | TC-P2-TL-001 | Phase2B 首批·第二 slice（task-030 本地实现完成） | **主题时间线** / 密度热条，关键词/标签驱动 + actor + 密度 ratio；migration 012 已落地 `lumen_documents(space_id, created_at/updated_at)` 时间索引；运行态 API smoke / Edge headless 浏览器 smoke / 真实 PG 大数据性能 smoke 已通过 |
 | REQ-039 | `lumen_folders`、`lumen_documents`（folder_id） | TC-P2-FOLDER-001 | Phase2B 第三 slice（Sprint-22） | 文档目录树：嵌套文件夹 CRUD / 移动 / 排序 + 单文档移动 + 导入保留结构（扩展 REQ-037 / API-029）；migration 011 已落地，后端/API + 导入归属 + 前端文件管理器基础能力已实现，浏览器自动化 smoke 已补 |
 | REQ-015 / 016 / 017 | 后续 Phase 骨架 | — | — | 推送 / 协作 / 移动端不进 Phase2B 首批 |
-| REQ-018 | `lumen_vault_mounts`（Phase2C·字段已定义，migration 014 待编码） | `id / user_id / device_id / mount_name / source_type / auth_status / last_synced_at / created_at / updated_at` | `user_id` / `device_id` 索引 | 仅元数据，不存句柄/路径/正文 |
+| REQ-018 | `lumen_vault_mounts`（Phase2C·字段已定义，migration 015 待编码——014 已被 Sprint-26 账户体系占用） | `id / user_id / device_id / mount_name / source_type / auth_status / last_synced_at / created_at / updated_at` | `user_id` / `device_id` 索引 | 仅元数据，不存句柄/路径/正文 |
 | REQ-019..023 / 028..035 | 愿景表骨架 | — | — | 技术验证通过后细化字段与索引 |
 
 ## 7. 待人工确认项

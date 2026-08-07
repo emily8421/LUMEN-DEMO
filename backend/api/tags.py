@@ -8,9 +8,8 @@ GET /api/tags/{id}/documents。全部带空间隔离与文档权限过滤（serv
 
 from __future__ import annotations
 
-from backend.api.auth import TOKEN_SIGNING_KEY
 from backend.repository import repository
-from backend.service.auth import TokenError, extract_bearer_token, parse_demo_token
+from backend.service.auth_context import TokenContext, get_current_user
 from backend.service.document import DocumentNotFoundError
 from backend.service.tag import (
     DocumentTagView,
@@ -34,12 +33,11 @@ from backend.service.tag import (
 )
 
 try:
-    from fastapi import APIRouter, Header, HTTPException
+    from fastapi import APIRouter, Depends, HTTPException
     from pydantic import BaseModel
 except ImportError:  # pragma: no cover - allows service tests before dependencies are installed
     APIRouter = None
     BaseModel = object
-    Header = None
     HTTPException = Exception
 
 
@@ -64,11 +62,10 @@ if APIRouter is not None:
     def list_tags_endpoint(
         q: str | None = None,
         status: str | None = "active",
-        authorization: str = Header(default=""),
+        ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        payload = _read_token_payload(authorization)
         try:
-            views = list_tags(repository, payload.user_id, payload.current_space_id, q, status)
+            views = list_tags(repository, ctx.user_id, ctx.current_space_id, q, status)
         except TagAccessError as exc:
             raise HTTPException(status_code=403, detail={"code": 4003, "msg": str(exc)}) from exc
         items = [_tag_view(view) for view in views]
@@ -77,14 +74,13 @@ if APIRouter is not None:
     @router.post("/api/tags")
     def create_tag_endpoint(
         request: TagCreateBody,
-        authorization: str = Header(default=""),
+        ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        payload = _read_token_payload(authorization)
         try:
             tag = create_tag(
                 repository,
-                payload.user_id,
-                payload.current_space_id,
+                ctx.user_id,
+                ctx.current_space_id,
                 TagCreateRequest(name=request.name, color=request.color, description=request.description),
             )
         except TagAccessError as exc:
@@ -96,10 +92,9 @@ if APIRouter is not None:
         return {"code": 0, "msg": "ok", "data": _tag_detail(tag)}
 
     @router.get("/api/tags/{tag_id}")
-    def get_tag_endpoint(tag_id: int, authorization: str = Header(default="")) -> dict[str, object]:
-        payload = _read_token_payload(authorization)
+    def get_tag_endpoint(tag_id: int, ctx: TokenContext = Depends(get_current_user)) -> dict[str, object]:
         try:
-            view = get_tag_detail(repository, payload.user_id, payload.current_space_id, tag_id)
+            view = get_tag_detail(repository, ctx.user_id, ctx.current_space_id, tag_id)
         except TagAccessError as exc:
             raise HTTPException(status_code=403, detail={"code": 4003, "msg": str(exc)}) from exc
         except TagNotFoundError as exc:
@@ -110,14 +105,13 @@ if APIRouter is not None:
     def update_tag_endpoint(
         tag_id: int,
         request: TagUpdateBody,
-        authorization: str = Header(default=""),
+        ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        payload = _read_token_payload(authorization)
         try:
             tag = update_tag(
                 repository,
-                payload.user_id,
-                payload.current_space_id,
+                ctx.user_id,
+                ctx.current_space_id,
                 tag_id,
                 TagUpdateRequest(
                     name=request.name,
@@ -137,10 +131,9 @@ if APIRouter is not None:
         return {"code": 0, "msg": "ok", "data": _tag_detail(tag)}
 
     @router.delete("/api/tags/{tag_id}")
-    def archive_tag_endpoint(tag_id: int, authorization: str = Header(default="")) -> dict[str, object]:
-        payload = _read_token_payload(authorization)
+    def archive_tag_endpoint(tag_id: int, ctx: TokenContext = Depends(get_current_user)) -> dict[str, object]:
         try:
-            tag = archive_tag(repository, payload.user_id, payload.current_space_id, tag_id)
+            tag = archive_tag(repository, ctx.user_id, ctx.current_space_id, tag_id)
         except TagAccessError as exc:
             raise HTTPException(status_code=403, detail={"code": 4003, "msg": str(exc)}) from exc
         except TagNotFoundError as exc:
@@ -150,11 +143,10 @@ if APIRouter is not None:
     @router.get("/api/documents/{document_id}/tags")
     def list_document_tags_endpoint(
         document_id: int,
-        authorization: str = Header(default=""),
+        ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        payload = _read_token_payload(authorization)
         try:
-            views = list_document_tags(repository, payload.user_id, payload.current_space_id, document_id)
+            views = list_document_tags(repository, ctx.user_id, ctx.current_space_id, document_id)
         except DocumentNotFoundError as exc:
             raise HTTPException(status_code=404, detail={"code": 4004, "msg": "document not found"}) from exc
         items = [_document_tag_view(view) for view in views]
@@ -164,12 +156,11 @@ if APIRouter is not None:
     def add_document_tag_endpoint(
         document_id: int,
         request: DocumentTagCreateBody,
-        authorization: str = Header(default=""),
+        ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        payload = _read_token_payload(authorization)
         try:
             link = add_document_tag(
-                repository, payload.user_id, payload.current_space_id, document_id, request.tag_id
+                repository, ctx.user_id, ctx.current_space_id, document_id, request.tag_id
             )
         except DocumentNotFoundError as exc:
             raise HTTPException(status_code=404, detail={"code": 4004, "msg": "document not found"}) from exc
@@ -191,11 +182,10 @@ if APIRouter is not None:
     def remove_document_tag_endpoint(
         document_id: int,
         tag_id: int,
-        authorization: str = Header(default=""),
+        ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        payload = _read_token_payload(authorization)
         try:
-            remove_document_tag(repository, payload.user_id, payload.current_space_id, document_id, tag_id)
+            remove_document_tag(repository, ctx.user_id, ctx.current_space_id, document_id, tag_id)
         except DocumentNotFoundError as exc:
             raise HTTPException(status_code=404, detail={"code": 4004, "msg": "document not found"}) from exc
         except TagAccessError as exc:
@@ -206,12 +196,11 @@ if APIRouter is not None:
     def list_documents_by_tag_endpoint(
         tag_id: int,
         status: str | None = "active",
-        authorization: str = Header(default=""),
+        ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        payload = _read_token_payload(authorization)
         try:
             documents = list_documents_by_tag(
-                repository, payload.user_id, payload.current_space_id, tag_id, status
+                repository, ctx.user_id, ctx.current_space_id, tag_id, status
             )
         except TagAccessError as exc:
             raise HTTPException(status_code=403, detail={"code": 4003, "msg": str(exc)}) from exc
@@ -256,11 +245,5 @@ if APIRouter is not None:
             "updated_at": document.updated_at,
         }
 
-    def _read_token_payload(authorization: str):
-        try:
-            token = extract_bearer_token(authorization)
-            return parse_demo_token(token, signing_key=TOKEN_SIGNING_KEY)
-        except TokenError as exc:
-            raise HTTPException(status_code=401, detail={"code": 4001, "msg": "invalid token"}) from exc
 else:
     router = None

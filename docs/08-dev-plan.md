@@ -12,7 +12,7 @@
 | 交付物形态 | Demo / 个人可用 Alpha / 个人知识组织 |
 | 输入基线 | `docs/03-prd.md` §3、`docs/04-architecture.md`、`docs/05-tech-spec.md`、`docs/09-verification.md` |
 | 当前状态 | Phase1 Demo 已完成并已记录全量验收（Conditional Go）；Phase1.5A 已完成批量 / 文件夹导入（REQ-037）与 `.md` / ZIP 导出备份（REQ-038）；Phase2A 已完成 REQ-026 内链 / 反链、REQ-012 标签、REQ-025 快速录入三个 vertical slice 并通过 `09` 对应用例。Phase1.5B：**PDF 导出已随 Sprint-18 完成（API-019 / TC-P1-017 通过，v1.6.0），并在 v1.7.0 补齐 PDF 下载端点 + 前端下载闭环；Word-PDF / zhparser 仍待后续 RG**。**Phase2B（团队 MVP）范围已确认（2026-07-30）：REQ-014 首批核心已完成 v1.1.0（TC-P2-AI-001 通过；D-C-001 citation 同步延迟量化已补，当前不做异步 job）；REQ-013a/024 主题时间线第二 slice 已完成并发布为 v1.5.0（task-030，后端自动化验证 + frontend build + 运行态 API smoke + Edge headless 浏览器 smoke + push 后 CI 通过 + tag 已推送；真实 PG 大数据性能 smoke 已补）；Sprint-21 Doc-First UX 已完成**；**Sprint-22 文档目录树（folder-tree，REQ-039）后端核心 + API-029 `preserve_structure` 导入保留结构 + 前端文件管理器基础能力（含 API-038 单文档移动）已完成并验证通过；浏览器人工 smoke 已通过（2026-08-03 用户确认），浏览器自动化 smoke 已补（2026-08-04）**。**Phase2B 已收口（2026-08-05）**：范围三项（REQ-014 / REQ-013a+024 / REQ-039）全部验收通过，退出标准达成，详见 `docs/09-verification.md` §5；下一阶段范围待定义。**Sprint-25 帮助手册 L0+L1 已完成（2026-08-06：自动化 build + 浏览器 smoke + 人工 smoke 新用户路径均通过，验收期修复 2 缺陷）**。 |
-| 最后更新 | 2026-08-07（Phase2D 账户与多人权限立项：Sprint-26 账号体系基础已立项待实现，REQ-040/041/042 + design/accounts-auth + task-038；Phase2C 状态修正为已完成；Sprint-25 总览行补登）；前次 2026-08-06（Sprint-25 帮助手册 L0+L1 完成） |
+| 最后更新 | 2026-08-07（Phase2D 账户与多人权限：Sprint-26 账号体系基础**编码完成 + 后端自动化验收通过**，REQ-040/041/042；RG-011/012/013 Go；待用户确认提交）；前次同日（立项）2026-08-06（Sprint-25 帮助手册 L0+L1 完成） |
 
 ## Sprint 总览
 
@@ -48,7 +48,7 @@
 | Sprint-23C（Phase2C·模式 B 编码·进行中） | REQ-018 模式 B 浏览器 File System Access 编码：句柄持久化 + 本地索引搜索 + 左侧分区 + 按需导入 | 018 | 03 Phase2C、04 Flow-010、05 TCD-011 / RG-009 / TC-P2-VAULT-001、06 `lumen_vault_mounts`（migration 014）、07 模式 B 零后端 API、design/ingestion Flow-D-014、design/frontend-interaction CMP-P2-TREE / PATH-P2-008 | 接 `frontend/src/`（ContextPane 本地挂载分区 + useLocalVaultMount hook）；不引第三方依赖 | TC-P2-VAULT-001 | **已完成**（2026-08-06，task-031..034，TC-P2-VAULT-001 通过） | tasks/task-031..034 |
 | Sprint-24（Phase2C 增强·子树导入 UI·已完成） | REQ-018 模式 B 增强：本地挂载目录树「选子文件夹导入」UI（task-033 留后续），复用 API-029 + `preserveStructure` | 018 扩展（不新增 REQ） | 03 Phase2C、design/ingestion Flow-D-014、07 API-029、09 TC-P2-VAULT-002、tasks/task-033 | frontend `LocalMountPane` + `useLocalVaultMount`（选节点导入入口）；不引第三方依赖 | TC-P2-VAULT-002 | **已完成**（2026-08-06，TC-P2-VAULT-002 通过） | tasks/task-035-subtree-import-ui.md |
 | Sprint-25（帮助手册 L0+L1·已完成） | REQ-011 可用性收口：L0 user-guide 任务导向重组 + L1 首次引导 / 新手清单 / 空状态 / 帮助速查 | 011 | design/help-onboarding、09 TC-P2-HELP-001、tasks/task-036 | frontend（onboarding-store / OnboardingGuide / 各视图空状态 / TopBar 帮助速查）+ docs/env/user-guide；不引第三方依赖 | TC-P2-HELP-001 | **已完成**（2026-08-06，TC-P2-HELP-001 通过，PR#110 v2.2.0） | tasks/task-036-help-onboarding.md |
-| Sprint-26（Phase2D·账号体系基础·已立项待实现） | REQ-040/041/042 账号体系基础：注册 + 凭证登录（bcrypt）+ 登出会话（不透明 token + `lumen_sessions`）+ 统一 `get_current_user` + 基础登录/注册页 + demo 模式物理隔离 | 040/041/042 | 03 Phase2D、design/accounts-auth、02 REQ-040..042、01 U-45..47、09 TC-P2-AUTH-001、tasks/task-038 | backend（auth_context / auth service+api / migration 014 / 13 router 收敛）+ frontend（登录/注册页）；+ `passlib[bcrypt]` | TC-P2-AUTH-001 | **已立项·待实现**（2026-08-07）；权限多人化 / 角色 / 用户管理 UI 留 Sprint-27/28 | tasks/task-038-account-system-foundation.md |
+| Sprint-26（Phase2D·账号体系基础·**已完成**） | REQ-040/041/042 账号体系基础：注册 + 凭证登录（bcrypt）+ 登出会话（不透明 token + `lumen_sessions`）+ 统一 `get_current_user` + 基础登录/注册页 + demo 模式物理隔离 | 040/041/042 | 03 Phase2D、design/accounts-auth、02 REQ-040..042、01 U-45..47、09 TC-P2-AUTH-001、tasks/task-038 | backend（auth_context / auth service+api / migration 014 / 13 router 收敛）+ frontend（登录/注册页 + 登出）；+ `bcrypt` 5.0.0（不采用 passlib） | TC-P2-AUTH-001 | **已完成**（2026-08-07，编码 + 后端回归通过 + 浏览器 smoke PASS）；权限多人化 / 角色 / 用户管理 UI 留 Sprint-27/28 | tasks/task-038-account-system-foundation.md |
 
 ## 依赖关系与里程碑
 
@@ -107,7 +107,7 @@
 | Sprint-22（Phase2B·文档目录树·候选） | TC-P2-FOLDER-001 + TC-P1-015 扩展（`preserve_structure` 保留结构） | 单元 + 集成 + UI smoke | `.venv\Scripts\python.exe -m unittest discover -s tests/backend`（test_folder / test_document / test_imports）；`volta run --node 22.17.1 npm run build`；`volta run --node 22.17.1 node scripts/smoke-folder-tree-browser.mjs` | Chrome / Edge：文件夹树渲染、新建/移动/排序/删除、单文档移动、导入文件夹后目录结构保留、防环/跨空间/重名/删非空拒绝、文档可见性不因 folder 泄露；2026-08-03 用户浏览器 smoke 已确认通过，2026-08-04 浏览器自动化 smoke 已补 | folder 不独立设权限；导入 `preserve_structure` 默认 true、=false 退回标题前缀；现有文档 `folder_id=null` 向后兼容；单文档移动只改归属、不新增版本 |
 | Sprint-24（Phase2C 增强·子树导入 UI·已完成） | TC-P2-VAULT-002 | 前端构建 + 浏览器 smoke | `volta run --node 22.17.1 npm run build`（frontend） | Chrome / Edge：本地挂载目录树选中子文件夹 → 导入 → 上层 DB 出现且 `preserveStructure` 保留目录；单篇 / 整库入口回归 | 纯前端；复用 API-029 不改契约；不引新依赖 |
 | Sprint-25（帮助手册 L0+L1·已完成） | TC-P2-HELP-001 | 前端构建 + 浏览器 smoke + 内容走查 | `volta run --node 22.17.1 npm run build`（frontend） | 新用户路径：登录 → 首次引导 3 步（建文档 → 搜索 → 问答）→ 各视图空状态有下一步按钮 → 首页提示「示例文档未建索引」；帮助内容源与 UI 单一来源核对 | 不新增 API / 后端能力；不引 help 库；localStorage 不可用时引导降级为普通提示 |
-| Sprint-26（Phase2D·账号体系基础·已立项待实现） | TC-P2-AUTH-001 | 后端 tests + 浏览器 smoke + RG-011 PoC | `pip install passlib[bcrypt]` PoC；`tests/backend/test_auth.py`；前端 `volta run --node 22.17.1 npm run build` | 注册 → 凭证登录 → 鉴权；错误凭证失败+锁定；登出撤销+TTL+续期轮换+多设备会话；demo 开关 PG 强制/内存允许；跨用户隔离不泄露 | 不做权限多人化/角色/用户管理 UI/REQ-016；不引 JWT；不破 demo 模式 |
+| Sprint-26（Phase2D·账号体系基础·**已完成**） | TC-P2-AUTH-001 | 后端 tests + 浏览器 smoke + RG-011/012/013 | `bcrypt` 5.0.0 PoC（RG-011 Go 2026-08-07）；`tests/backend/test_auth.py` 20/20；backend discover **222 OK（skipped=2）**；前端 `volta run --node 22.17.1 npm run build` 273 modules 绿（2026-08-07） | 注册 → 凭证登录 → 鉴权；错误凭证失败+锁定；登出撤销+TTL+续期轮换+多设备会话；demo 开关 PG 强制/内存允许；跨用户隔离不泄露 | 不做权限多人化/角色/用户管理 UI/REQ-016；不引 JWT；不破 demo 模式 |
 
 > 资源 / 环境验证：Sprint-8 起 Docker / pgvector / Embedding **已 Go**（RG-001/002 Go，见 05 §5.1；TE-C-003 闭合）；OCR / 真实 PDF 解析仍 No-Go（RG-003，后续阶段，不在 P1 必过范围）。
 
@@ -569,6 +569,33 @@ REQ-018 模式 B 增强：本地挂载目录树支持「选子文件夹导入」
 
 > **完成记录（2026-08-06，Sprint-25）**：L0 `docs/env/user-guide.md` 任务导向重组（唯一内容源）；L1 新增 `frontend/src/app/onboarding-store.ts` + `frontend/src/features/OnboardingGuide.tsx` + `styles/onboarding.css`，欢迎页新手清单 + 「示例文档未建索引」提示，搜索 / 问答空态「去新建文档 / 去导入」按钮，标签 / 时间线空态下一步入口，顶栏帮助弹层升级（分类速查 + 轻量过滤 + 完整手册链接）。验证：`volta run --node 22.17.1 npm run build` 绿（273 modules）；`node scripts/smoke-help-onboarding-browser.mjs` 通过（登录 → 3 步引导 → 首页未建索引提示 → 空态按钮 → 帮助过滤 10→3 命中「导入」→ 跳过引导持久化不再弹出）。人工浏览器 smoke 新用户路径确认通过（2026-08-06）；验收期修复 2 缺陷（帮助弹层无法关闭、空态按钮超高，见 docs/09 §5.1）；L2 帮助中心 / L3 / L4 留后续。
 
+## Sprint-26（Phase2D·账号体系基础·已完成）
+
+### 目标
+把 Demo 占位账号侧（无密码 / 3 seed 用户 / 手撸 HMAC token）升级为真实多用户账号体系（REQ-040/041/042，U-45/46/47）：注册（bcrypt 哈希）/ 凭证登录（bcrypt verify + 不透明 token session）/ 登出·会话管理（撤销 + TTL 8h + 滑动续期 + 多设备会话）；`lumen_users` 扩列 + `lumen_sessions`（migration 014）；统一 `get_current_user` 收敛 13 router；基础登录 / 注册页 + 登出；demo 模式物理隔离（PG 强制真实 / 内存允许 demo）；登录失败锁定 + 审计日志 + 密钥 env 注入。
+
+### 输入文档
+- docs/design/accounts-auth.md（§3 流程 / §4 密码哈希 / §5 不透明 token / §6 get_current_user / §7 demo 物理隔离 / §8 migration 014 / §9 auth API / §10 安全 / §11 readiness gate / §16 C-AUTH-001..006）
+- docs/02-srs.md REQ-040/041/042；docs/01 U-45/46/47 + AC-P2-AUTH-001/002/003；docs/03-prd.md §3 Phase2D；ai/project-rules.md §1；docs/09 TC-P2-AUTH-001；tasks/task-038
+
+### 修改范围
+- backend：`service/auth.py`（bcrypt hash/verify + 不透明 token + 锁定/审计）、`service/auth_context.py`（get_current_user / optional / require_space_member）、`api/auth.py`（register/login/logout/refresh/sessions）、migration `014_account_sessions.sql`、repository（Demo/Pg session 与用户方法）、13 router 收敛到 `Depends(get_current_user)`、`main.py` 生产 fail-fast 护栏、`requirements.txt` + `bcrypt==5.0.0`
+- frontend：`api/auth.ts`（login/register/logout/listSessions/revokeSession）、`app/useSession.ts`（登录/注册 tab + 登出）、`App.tsx`（登录面板改造）、`TopBar.tsx`（退出登录菜单）
+- 回写：docs/05（TCD-012 + RG-011/012/013）、docs/06（migration 014）、docs/07（API-001 契约变更 + API-039..043）、docs/08/09、accounts-auth §15
+
+### 验收标准
+- TC-P2-AUTH-001（AC-P2-AUTH-001/002/003）：注册 → 凭证登录 → 鉴权访问；重复标识拒绝；bcrypt 哈希非明文；错误凭证失败 + 连续失败锁定 + 不枚举账号；登出撤销 + TTL 过期 + 续期轮换旧 token 失效 + 多设备会话查询/撤销；demo 开关 PG 强制真实 / 内存允许 demo；跨用户隔离不泄露。
+- RG-011（bcrypt PoC）/ RG-012（token session 单测）/ RG-013（跨用户隔离回归）均 Go。
+- 后端 `tests/backend/test_auth.py` + 既有回归不破（全量 222 OK）；浏览器 smoke PASS（`scripts/smoke-auth-browser.mjs`）+ demo 启动验证通过。
+
+### 禁止事项
+- 不做权限多人化实质改造 / 全局角色分层 / 用户管理后台 UI / REQ-016（Sprint-27/28）。
+- 不引 JWT / python-jose / 自实现 token 协议（不透明 token + `secrets` 标准库）。
+- 不破 demo 模式（`run-sprint16-demo` 内存仓储继续可用；seed id=1/2/3 保留）。
+- 不改 `lumen_space_members.role`（空间级角色保留）；不明文存储 / 日志记录密码。
+
+> **完成记录（2026-08-07，Sprint-26）**：migration 014（`lumen_users` 扩列 email / password_hash / status / last_login_at / failed_login_count / locked_until + `lumen_sessions`，token 只存 SHA-256 摘要）；auth service（bcrypt cost 12、锁定 5 次 / 15min、TTL 8h 滑动续期、结构化审计日志 register / login_success / login_failed / login_locked / logout）；`api/auth.py` 六端点（register / login / logout / refresh / sessions GET+DELETE，错误码 4001/4010/4030/4090/4220/4004）；统一 `get_current_user` 收敛 13 router；`main.py` `LUMEN_ENV=production` + demo 仓储 fail-fast；seed 用户统一设 demo 密码 `demo-pass-1234`（PG 强制凭证，内存模式保留无密码快捷登录）；前端登录/注册 tab 面板 + 退出登录菜单（实现偏差：内联 tab 而非独立路由，见 accounts-auth §15）。验证：`bcrypt` 5.0.0 PoC（RG-011 Go）；`tests/backend/test_auth.py` 20/20；backend discover 222 OK（skipped=2）；RG-012/013 Go。浏览器 smoke：`scripts/smoke-auth-browser.mjs` PASS（注册 / 登录 / 登出 / 凭证登录 / refresh 轮换 / 多设备会话撤销 200 幂等 / 404 / 401 / 409 / 422）+ demo 启动验证通过（`run-sprint16-demo`，18000/5173）；前端 build 273 modules 绿（2026-08-07 复核）。
+
 ## Sprint 完成包与进度记录
 
 > 对照 `ai/doc-standards/08-dev-plan.md` §4（完成包）+ §5（进度记录）。Sprint-1~6 为早期降级实现；Sprint-7/8 已完成真实 LLM、PostgreSQL+pgvector、Embedding 与 RAG 向量召回接入；task-009 已完成 search 向量化 + 可选 zhparser 回退。仍降级：真实 Word / PDF 解析、OCR。验收证据见 `docs/09-verification.md §5`。
@@ -608,6 +635,7 @@ REQ-018 模式 B 增强：本地挂载目录树支持「选子文件夹导入」
 | Sprint-22 前端文件管理器与单文档移动补齐 | 2026-08-03 | 039/004 | 前端 `FolderTree` 基础树 + 受控右键菜单 + inline 新建/重命名 + 文档右键“移动到”；后端补 API-038 `PATCH /api/documents/{document_id}/folder`，只更新 `lumen_documents.folder_id`，不新增版本 / 不重建索引 | 已随 v1.4.0 发布；浏览器自动化 smoke 已由 v1.5.2 补齐 | `.venv\Scripts\python.exe -m unittest tests.backend.test_document tests.backend.test_folder tests.backend.test_imports tests.backend.test_import_api` 38/38 OK；`volta run --node 22.17.1 npm run build` 通过（255 modules）；运行态 OpenAPI 已出现 API-038，临时文档 API smoke 移动成功并清理；用户浏览器 smoke 确认通过；`scripts/smoke-folder-tree-browser.mjs` 通过（登录 → Documents → 目录树渲染 → UI 新建子文件夹 → UI 单文档移动 → API `folder_id` 后验） | 文档移动目标列表首版仅包含已加载 folder；无新增依赖 | §2 / §5 |
 | Sprint-20 主题时间线（API-033） | 2026-08-03 | 013a/024 | Candidate A 时间线：`backend/service/timeline.py` 实时聚合 documents / tag_links / doc_links / chunks；API-033 `GET /api/spaces/{id}/timeline`；migration 012 时间索引；前端时间线视图（关键词 + 标签入口 + 密度热条 + 事件列表）；修复 demo runtime 新建文档空时间戳导致运行态 timeline 无事件的缺口 | `3e23d78`（demo smoke hardening）+ `28843cb`（Sprint-20，`origin/main` / `v1.5.0` tag）；真实 PG 性能 smoke 已由 v1.5.2 补齐 |
 | Sprint-25（帮助手册 L0+L1） | 2026-08-06 | 011（可用性收口，不新增 REQ） | L0 `user-guide.md` 任务导向重组（唯一内容源）+ L1 首次引导 3 步 / 新手清单 / 空状态引导 / 顶栏帮助速查过滤；新增 `onboarding-store.ts` / `OnboardingGuide.tsx` / `onboarding.css` / `scripts/smoke-help-onboarding-browser.mjs`；task-036 | PR #110 squash merge（a025761） | `volta run --node 22.17.1 npm run build` 通过（273 modules）；`node scripts/smoke-help-onboarding-browser.mjs` 通过（登录 → 3 步引导 → 首页未建索引提示 → 搜索/问答空态按钮 → 时间线/标签空态入口 → 帮助过滤 10→3 命中「导入」→ 跳过持久化） | 人工浏览器 smoke 已确认通过（2026-08-06）；验收期修复 2 缺陷（帮助弹层无法关闭 / 空态按钮超高，见 docs/09 §5.1）；L2 帮助中心 / L3 / L4 留后续；Phase2B/2C 功能章节（AI 润色 / 时间线 / 文件夹树 / 本地挂载）待后续补 user-guide | §2 / §5 | `.venv\Scripts\python.exe -m unittest tests.backend.test_timeline` 7/7 OK；`tests.backend.test_timeline tests.backend.test_document tests.backend.test_tags tests.backend.test_doc_links` 38/38 OK；backend discover 190 OK（skipped=2，embedding torch DLL 警告按 text-only fallback 继续）；`npm run build`（frontend）通过（259 modules）；运行态 API smoke 通过（OpenAPI 含 API-033，创建文档/标签，关键词 timeline、tag timeline、空 q 422）；Edge headless CDP 浏览器 smoke 通过（登录、切到时间线、搜索 Phoenix、事件列表命中，density=1）；真实 PG 大数据性能 smoke 通过（620 docs + 240 links，density_events=2100，returned=200，degraded=True，window=week，elapsed_ms=2677.61）；push 后 `Project Check` success（run 30830484733）；`v1.5.0` annotated tag 已推送并解引用到 `28843cb2af431e5fa33f7c8eeeb0ad1dc27dccb3` | `linked` actor 按设计为 `null`；无新增依赖 / 无 timeline 事件表 | §2 / §5 |
+| Sprint-26（Phase2D）实现 | 2026-08-07 | 040/041/042 | 账号体系基础：migration 014（`lumen_users` 扩列 + `lumen_sessions`）+ auth service/API（register/login/logout/refresh/sessions）+ 统一 `get_current_user` 收敛 13 router + 锁定/审计/密钥 env + 前端登录/注册面板与登出 | 本批（待 PR） | `bcrypt` 5.0.0 PoC（RG-011 Go）；`tests/backend/test_auth.py` 20/20；backend discover 222 OK（skipped=2）；前端 build 273 modules 绿（2026-08-07） | 浏览器 smoke（`scripts/smoke-auth-browser.mjs`）PASS + demo 启动验证通过（2026-08-07）；登录/注册为内联 tab 而非独立路由（accounts-auth §15） | §2 / §5（TC-P2-AUTH-001） |
 
 > Sprint-8 后：pgvector / Embedding / LLM 已接入（RG-001/002/004 Go），基础 Web / ORM 栈为 Go（RG-005）。Phase1 全量验收结论为 Conditional Go（Demo closure）；仍移出 P1：真实 PDF/Word 解析、图片 OCR（REQ-010，RG-003 No-Go，后续阶段）。Sprint-9/10/12/13 为已完成 Demo 之上的前端体验与可用性收口；Phase1.5A 已完成批量入库与导出备份，Phase1.5B 已完成单文档 PDF 导出并补齐下载闭环。Phase2A 已完成 REQ-026 / REQ-012 / REQ-025 三个 vertical slice；Sprint-11 仅保留为 P2 UI / WSG 实现前门禁草案，Phase2B 启动前需重新确认范围、进入 / 退出标准与验证包。
 

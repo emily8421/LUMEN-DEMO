@@ -28,7 +28,31 @@ class UserORM(Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     external_id: Mapped[str] = mapped_column(String, unique=True)
     name: Mapped[str] = mapped_column(String)
+    email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    # migration 014（Sprint-26 / Phase2D 账号体系）：password_hash demo seed = NULL
+    password_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    status: Mapped[str] = mapped_column(String(20), default='active')
+    last_login_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
+    failed_login_count: Mapped[int] = mapped_column(Integer, default=0)
+    locked_until: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
+
+
+class SessionORM(Base):
+    '''lumen_sessions（migration 014）：不透明 token session，token 只存 SHA-256 hash。'''
+
+    __tablename__ = 'lumen_sessions'
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey('lumen_users.id', ondelete='CASCADE'))
+    current_space_id: Mapped[int | None] = mapped_column(BigInteger, ForeignKey('lumen_spaces.id', ondelete='SET NULL'), nullable=True)
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    expires_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
+    revoked_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
+    last_used_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
+    client_ua: Mapped[str | None] = mapped_column(Text, nullable=True)
+    client_ip: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
 
 class SpaceORM(Base):

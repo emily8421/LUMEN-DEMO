@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from backend.api.auth import TOKEN_SIGNING_KEY
 from backend.repository import repository
-from backend.service.auth import TokenError, extract_bearer_token, parse_demo_token
+from backend.service.auth_context import TokenContext, get_current_user
 from backend.service.timeline import (
     TimelineAccessError,
     TimelineDensityWindow,
@@ -14,10 +13,9 @@ from backend.service.timeline import (
 )
 
 try:
-    from fastapi import APIRouter, Header, HTTPException, Query
+    from fastapi import APIRouter, Depends, HTTPException, Query
 except ImportError:  # pragma: no cover - allows service tests before dependencies are installed
     APIRouter = None
-    Header = None
     HTTPException = Exception
     Query = None
 
@@ -33,13 +31,12 @@ if APIRouter is not None:
         to: str | None = None,
         tag_ids: list[int] | None = Query(default=None),
         density: bool = True,
-        authorization: str = Header(default=""),
+        ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        payload = _read_token_payload(authorization)
         try:
             view = get_timeline(
                 repository=repository,
-                user_id=payload.user_id,
+                user_id=ctx.user_id,
                 space_id=space_id,
                 q=q,
                 from_date=from_,
@@ -63,12 +60,6 @@ if APIRouter is not None:
             },
         }
 
-    def _read_token_payload(authorization: str):
-        try:
-            token = extract_bearer_token(authorization)
-            return parse_demo_token(token, signing_key=TOKEN_SIGNING_KEY)
-        except TokenError as exc:
-            raise HTTPException(status_code=401, detail={"code": 4001, "msg": "invalid token"}) from exc
 
     def _event_view(event: TimelineEvent) -> dict[str, object]:
         return {

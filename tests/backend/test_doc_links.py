@@ -1,6 +1,18 @@
 import importlib.util
 import unittest
 
+def _demo_ctx(user_id: int = 1, current_space_id: int = 10):
+    from backend.model.entities import User
+    from backend.service.auth_context import TokenContext
+
+    return TokenContext(
+        user_id=user_id,
+        current_space_id=current_space_id,
+        session_id=None,
+        user=User(id=user_id, external_id="demo", name="Demo"),
+    )
+
+
 
 class DocLinkServiceTest(unittest.TestCase):
     """REQ-026 内链 / 反链：wikilink 自动解析、权限折算、手动登记（DemoRepository）。"""
@@ -188,9 +200,9 @@ class DocLinkApiTest(unittest.TestCase):
         doc_links_api.repository = repository
         try:
             token = create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
-            headers = {"authorization": f"Bearer {token}"}
+            ctx = _demo_ctx()
 
-            listed = doc_links_api.list_links_endpoint(document_id=source.id, direction="outbound", **headers)
+            listed = doc_links_api.list_links_endpoint(document_id=source.id, direction="outbound", ctx=ctx)
             self.assertEqual(listed["code"], 0)
             self.assertEqual(len(listed["data"]), 1)
             self.assertEqual(listed["data"][0]["status"], "resolved")
@@ -199,7 +211,7 @@ class DocLinkApiTest(unittest.TestCase):
                 request=doc_links_api.DocLinkCreateBody(
                     source_document_id=source.id, link_text="manual", target_title="Nova Sprint Notes", link_type="manual",
                 ),
-                **headers,
+                ctx=ctx,
             )
             self.assertEqual(created["data"]["status"], "resolved")
         finally:

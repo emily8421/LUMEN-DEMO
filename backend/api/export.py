@@ -11,9 +11,8 @@ from __future__ import annotations
 
 from urllib.parse import quote
 
-from backend.api.auth import TOKEN_SIGNING_KEY
 from backend.repository import repository
-from backend.service.auth import TokenError, extract_bearer_token, parse_demo_token
+from backend.service.auth_context import TokenContext, get_current_user
 from backend.service.document import DocumentNotFoundError, VersionNotFoundError
 from backend.service.export import (
     ExportError,
@@ -30,13 +29,12 @@ from backend.service.export import (
 from backend.service.space import SpaceAccessError
 
 try:
-    from fastapi import APIRouter, Header, HTTPException, Query
+    from fastapi import APIRouter, Depends, HTTPException, Query
     from fastapi.responses import Response
     from pydantic import BaseModel
 except ImportError:  # pragma: no cover - allows service tests before dependencies are installed
     APIRouter = None
     BaseModel = object
-    Header = None
     HTTPException = Exception
     Query = None
     Response = object
@@ -59,17 +57,16 @@ if APIRouter is not None:
         document_id: int,
         format: str = Query(default="md"),
         version_no: int | None = Query(default=None),
-        authorization: str = Header(default=""),
+        ctx: TokenContext = Depends(get_current_user),
     ) -> Response:
-        payload = _read_token_payload(authorization)
         if format != "md":
             raise HTTPException(status_code=422, detail={"code": 4220, "msg": "only markdown export is supported"})
 
         try:
             export = export_document_md(
                 repository=repository,
-                user_id=payload.user_id,
-                current_space_id=payload.current_space_id,
+                user_id=ctx.user_id,
+                current_space_id=ctx.current_space_id,
                 document_id=document_id,
                 version_no=version_no,
             )
@@ -87,17 +84,16 @@ if APIRouter is not None:
     @router.get("/export/space")
     def export_space_endpoint(
         format: str = Query(default="zip"),
-        authorization: str = Header(default=""),
+        ctx: TokenContext = Depends(get_current_user),
     ) -> Response:
-        payload = _read_token_payload(authorization)
         if format != "zip":
             raise HTTPException(status_code=422, detail={"code": 4220, "msg": "only zip space export is supported"})
 
         try:
             export = export_space_zip(
                 repository=repository,
-                user_id=payload.user_id,
-                current_space_id=payload.current_space_id,
+                user_id=ctx.user_id,
+                current_space_id=ctx.current_space_id,
             )
         except SpaceAccessError as exc:
             raise HTTPException(status_code=403, detail={"code": 4003, "msg": "space access denied"}) from exc
@@ -113,16 +109,15 @@ if APIRouter is not None:
     @router.post("/export-pdf")
     def export_pdf_endpoint(
         request: PdfExportRequestBody,
-        authorization: str = Header(default=""),
+        ctx: TokenContext = Depends(get_current_user),
     ) -> dict:
-        payload = _read_token_payload(authorization)
         options = request.options or PdfExportOptionsBody()
 
         try:
             result = create_pdf_export(
                 repository=repository,
-                user_id=payload.user_id,
-                current_space_id=payload.current_space_id,
+                user_id=ctx.user_id,
+                current_space_id=ctx.current_space_id,
                 document_id=request.document_id,
                 version_no=request.version_no,
                 options=PdfExportOptions(
@@ -157,15 +152,14 @@ if APIRouter is not None:
     @router.get("/export-pdf/{export_id}/download")
     def download_pdf_endpoint(
         export_id: int,
-        authorization: str = Header(default=""),
+        ctx: TokenContext = Depends(get_current_user),
     ) -> Response:
-        payload = _read_token_payload(authorization)
 
         try:
             artifact = download_pdf_export(
                 repository=repository,
-                user_id=payload.user_id,
-                current_space_id=payload.current_space_id,
+                user_id=ctx.user_id,
+                current_space_id=ctx.current_space_id,
                 export_id=export_id,
             )
         except DocumentNotFoundError as exc:
@@ -190,12 +184,6 @@ if APIRouter is not None:
             },
         )
 
-    def _read_token_payload(authorization: str):
-        try:
-            token = extract_bearer_token(authorization)
-            return parse_demo_token(token, signing_key=TOKEN_SIGNING_KEY)
-        except TokenError as exc:
-            raise HTTPException(status_code=401, detail={"code": 4001, "msg": "invalid token"}) from exc
 
     def _content_disposition_attachment(filename: str, fallback_filename: str = "document.md") -> str:
         fallback = "".join(

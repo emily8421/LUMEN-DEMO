@@ -40,3 +40,7 @@ reportlab==5.0.0
 pypdf==6.14.2
 pdfplumber==0.11.10
 pillow==12.3.0
+
+# 密码哈希（RG-011，Sprint-26 / task-038 账号体系）：bcrypt 5.0 在 Python 3.14.3 实测通过
+# （cost 12 ≈0.21s，恒定时序）。不采用 passlib（已停止维护，Python 3.13+ 兼容告警）。
+bcrypt==5.0.0

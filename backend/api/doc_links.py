@@ -6,9 +6,8 @@ POST /api/doc-links 手动登记 manual 链接（wikilink 由文档保存时正�
 
 from __future__ import annotations
 
-from backend.api.auth import TOKEN_SIGNING_KEY
 from backend.repository import repository
-from backend.service.auth import TokenError, extract_bearer_token, parse_demo_token
+from backend.service.auth_context import TokenContext, get_current_user
 from backend.service.doc_links import (
     DocLinkCreateRequest,
     DocLinkValidationError,
@@ -18,12 +17,11 @@ from backend.service.doc_links import (
 from backend.service.document import DocumentNotFoundError
 
 try:
-    from fastapi import APIRouter, Header, HTTPException
+    from fastapi import APIRouter, Depends, HTTPException
     from pydantic import BaseModel
 except ImportError:  # pragma: no cover - allows service tests before dependencies are installed
     APIRouter = None
     BaseModel = object
-    Header = None
     HTTPException = Exception
 
 
@@ -41,25 +39,23 @@ if APIRouter is not None:
     def list_links_endpoint(
         document_id: int,
         direction: str = "outbound",
-        authorization: str = Header(default=""),
+        ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        payload = _read_token_payload(authorization)
         if direction not in ("outbound", "backlink"):
             raise HTTPException(status_code=422, detail={"code": 4220, "msg": "direction must be outbound or backlink"})
-        views = list_links(repository, payload.user_id, payload.current_space_id, document_id, direction)
+        views = list_links(repository, ctx.user_id, ctx.current_space_id, document_id, direction)
         return {"code": 0, "msg": "ok", "data": [_link_view(view) for view in views]}
 
     @router.post("")
     def create_link_endpoint(
         request: DocLinkCreateBody,
-        authorization: str = Header(default=""),
+        ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        payload = _read_token_payload(authorization)
         try:
             link = upsert_link(
                 repository,
-                payload.user_id,
-                payload.current_space_id,
+                ctx.user_id,
+                ctx.current_space_id,
                 DocLinkCreateRequest(
                     source_document_id=request.source_document_id,
                     link_text=request.link_text,
@@ -85,11 +81,5 @@ if APIRouter is not None:
             "status": view.status,
         }
 
-    def _read_token_payload(authorization: str):
-        try:
-            token = extract_bearer_token(authorization)
-            return parse_demo_token(token, signing_key=TOKEN_SIGNING_KEY)
-        except TokenError as exc:
-            raise HTTPException(status_code=401, detail={"code": 4001, "msg": "invalid token"}) from exc
 else:
     router = None

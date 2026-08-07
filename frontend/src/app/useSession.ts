@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import type { Session } from './types';
 import type { Space } from '../api';
-import { listSpaces, login, switchSpace } from '../api';
+import { listSpaces, login, logout, register, switchSpace } from '../api';
 import { clearStoredSession, loadStoredSession, persistSession } from './session-store';
 
 type RunAction = (progressMessage: string, action: () => Promise<void>) => Promise<void>;
@@ -22,7 +22,12 @@ type UseSessionArgs = {
  * 写操作经 App 注入的 runAction 包装（登录失效由 runAction 统一处理）。
  */
 export function useSession({ runAction, setNotice, onSpaceChanged }: UseSessionArgs) {
-  const [username, setUsername] = useState('alice');
+  const [loginId, setLoginId] = useState('alice');
+  const [password, setPassword] = useState('demo-pass-1234');
+  const [registerEmail, setRegisterEmail] = useState('');
+  const [registerName, setRegisterName] = useState('');
+  const [registerPassword, setRegisterPassword] = useState('');
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [session, setSession] = useState<Session | null>(() => loadStoredSession());
   const [spaces, setSpaces] = useState<Space[]>([]);
 
@@ -34,7 +39,7 @@ export function useSession({ runAction, setNotice, onSpaceChanged }: UseSessionA
   const handleLogin = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     void runAction('正在登录...', async () => {
-      const result = await login(username.trim());
+      const result = await login(loginId.trim(), password);
       const nextSession = {
         token: result.token,
         userId: result.user_id,
@@ -42,7 +47,40 @@ export function useSession({ runAction, setNotice, onSpaceChanged }: UseSessionA
       };
       setSession(nextSession);
       persistSession(nextSession);
-      setNotice(`已登录：user_id=${result.user_id}`);
+      setNotice(`已登录：${nextSession.userId}`);
+    });
+  };
+
+  /** 注册（REQ-040）后自动登录（C-AUTH-001：自建个人空间）。 */
+  const handleRegister = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    void runAction('正在注册...', async () => {
+      const created = await register(registerEmail.trim(), registerName.trim(), registerPassword);
+      const result = await login(created.email, registerPassword);
+      const nextSession = {
+        token: result.token,
+        userId: result.user_id,
+        currentSpaceId: result.current_space_id,
+      };
+      setSession(nextSession);
+      persistSession(nextSession);
+      setNotice(`注册成功：${created.name}（${created.email}）`);
+    });
+  };
+
+  /** 登出（REQ-042）：撤销当前会话并清空本地登录态。 */
+  const handleLogout = () => {
+    if (!session) {
+      return;
+    }
+    void runAction('正在退出...', async () => {
+      try {
+        await logout(session.token);
+      } finally {
+        clearStoredSession();
+        setSession(null);
+        setNotice('已退出登录。');
+      }
     });
   };
 
@@ -52,7 +90,8 @@ export function useSession({ runAction, setNotice, onSpaceChanged }: UseSessionA
     }
     void runAction('正在切换空间...', async () => {
       const result = await switchSpace(session.token, spaceId);
-      const nextSession = { ...session, token: result.token, currentSpaceId: result.current_space_id };
+      // Sprint-26 契约变更：switch 不再重发 token，session 承载 current_space_id
+      const nextSession = { ...session, currentSpaceId: result.current_space_id };
       setSession(nextSession);
       persistSession(nextSession);
       onSpaceChanged();
@@ -65,11 +104,23 @@ export function useSession({ runAction, setNotice, onSpaceChanged }: UseSessionA
   };
 
   return {
-    username,
-    setUsername,
+    loginId,
+    setLoginId,
+    password,
+    setPassword,
+    registerEmail,
+    setRegisterEmail,
+    registerName,
+    setRegisterName,
+    registerPassword,
+    setRegisterPassword,
+    authMode,
+    setAuthMode,
     session,
     spaces,
     handleLogin,
+    handleRegister,
+    handleLogout,
     handleSpaceChange,
     reloadSpaces,
     handleAuthError,

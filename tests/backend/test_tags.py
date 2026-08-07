@@ -1,6 +1,18 @@
 import importlib.util
 import unittest
 
+def _demo_ctx(user_id: int = 1, current_space_id: int = 10):
+    from backend.model.entities import User
+    from backend.service.auth_context import TokenContext
+
+    return TokenContext(
+        user_id=user_id,
+        current_space_id=current_space_id,
+        session_id=None,
+        user=User(id=user_id, external_id="demo", name="Demo"),
+    )
+
+
 
 class TagServiceTest(unittest.TestCase):
     """REQ-012 标签：CRUD、重名 4090、document_count 权限过滤、空间隔离、幂等、归档（DemoRepository）。"""
@@ -221,17 +233,17 @@ class TagApiTest(unittest.TestCase):
         tags_api.repository = repository
         try:
             token = create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
-            headers = {"authorization": f"Bearer {token}"}
+            ctx = _demo_ctx()
 
             created = tags_api.create_tag_endpoint(
                 request=tags_api.TagCreateBody(name="重要", color="#f00"),
-                **headers,
+                ctx=ctx,
             )
             self.assertEqual(created["code"], 0)
             tag_id = created["data"]["id"]
             self.assertEqual(created["data"]["status"], "active")
 
-            listed = tags_api.list_tags_endpoint(**headers)
+            listed = tags_api.list_tags_endpoint(ctx=ctx)
             self.assertEqual(listed["code"], 0)
             self.assertEqual(listed["data"]["total"], 1)
             self.assertEqual(listed["data"]["items"][0]["name"], "重要")
@@ -240,20 +252,20 @@ class TagApiTest(unittest.TestCase):
             linked = tags_api.add_document_tag_endpoint(
                 document_id=100,
                 request=tags_api.DocumentTagCreateBody(tag_id=tag_id),
-                **headers,
+                ctx=ctx,
             )
             self.assertEqual(linked["data"]["link_source"], "manual")
 
-            doc_tags = tags_api.list_document_tags_endpoint(document_id=100, **headers)
+            doc_tags = tags_api.list_document_tags_endpoint(document_id=100, ctx=ctx)
             self.assertEqual(doc_tags["data"]["total"], 1)
             self.assertEqual(doc_tags["data"]["items"][0]["tag_id"], tag_id)
 
             # document_count 反映
-            listed2 = tags_api.list_tags_endpoint(**headers)
+            listed2 = tags_api.list_tags_endpoint(ctx=ctx)
             self.assertEqual(listed2["data"]["items"][0]["document_count"], 1)
 
             # 标签下文档
-            tag_docs = tags_api.list_documents_by_tag_endpoint(tag_id=tag_id, **headers)
+            tag_docs = tags_api.list_documents_by_tag_endpoint(tag_id=tag_id, ctx=ctx)
             self.assertEqual(tag_docs["data"]["total"], 1)
             self.assertEqual(tag_docs["data"]["items"][0]["id"], 100)
         finally:

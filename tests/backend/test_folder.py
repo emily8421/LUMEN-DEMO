@@ -284,11 +284,11 @@ class FolderApiTest(unittest.TestCase):
         folders_api.repository = repository
         try:
             token = create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
-            headers = {"authorization": f"Bearer {token}"}
+            ctx = _demo_ctx()
 
             created = folders_api.create_folder_endpoint(
                 request=folders_api.FolderCreateBody(name="项目A"),
-                **headers,
+                ctx=ctx,
             )
             self.assertEqual(created["code"], 0)
             folder_id = created["data"]["id"]
@@ -296,40 +296,40 @@ class FolderApiTest(unittest.TestCase):
 
             child = folders_api.create_folder_endpoint(
                 request=folders_api.FolderCreateBody(name="子1", parent_id=folder_id),
-                **headers,
+                ctx=ctx,
             )
             self.assertEqual(child["data"]["parent_id"], folder_id)
 
-            listed = folders_api.list_folders_endpoint(**headers)
+            listed = folders_api.list_folders_endpoint(ctx=ctx)
             self.assertEqual(listed["data"]["total"], 1)
             self.assertEqual(listed["data"]["items"][0]["child_folder_count"], 1)
 
-            child_listed = folders_api.list_folders_endpoint(parent_id=folder_id, **headers)
+            child_listed = folders_api.list_folders_endpoint(parent_id=folder_id, ctx=ctx)
             self.assertEqual(child_listed["data"]["total"], 1)
 
             renamed = folders_api.update_folder_endpoint(
                 folder_id=folder_id,
                 request=folders_api.FolderUpdateBody(name="项目A改名"),
-                **headers,
+                ctx=ctx,
             )
             self.assertEqual(renamed["data"]["name"], "项目A改名")
 
             moved = folders_api.update_folder_endpoint(
                 folder_id=child["data"]["id"],
                 request=folders_api.FolderUpdateBody(parent_id=None),
-                **headers,
+                ctx=ctx,
             )
             self.assertIsNone(moved["data"]["parent_id"])
 
-            root_list = folders_api.list_folders_endpoint(**headers)
+            root_list = folders_api.list_folders_endpoint(ctx=ctx)
             ids = [item["id"] for item in root_list["data"]["items"]]
             reordered = folders_api.reorder_folders_endpoint(
                 request=folders_api.FolderReorderBody(parent_id=None, ordered_ids=list(reversed(ids))),
-                **headers,
+                ctx=ctx,
             )
             self.assertEqual(reordered["code"], 0)
 
-            deleted = folders_api.delete_folder_endpoint(folder_id=child["data"]["id"], **headers)
+            deleted = folders_api.delete_folder_endpoint(folder_id=child["data"]["id"], ctx=ctx)
             self.assertTrue(deleted["data"]["deleted"])
         finally:
             folders_api.repository = original_repository
@@ -337,3 +337,14 @@ class FolderApiTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+def _demo_ctx(user_id: int = 1, current_space_id: int = 10):
+    from backend.model.entities import User
+    from backend.service.auth_context import TokenContext
+
+    return TokenContext(
+        user_id=user_id,
+        current_space_id=current_space_id,
+        session_id=None,
+        user=User(id=user_id, external_id="demo", name="Demo"),
+    )

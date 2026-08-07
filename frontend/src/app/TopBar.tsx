@@ -14,6 +14,7 @@ type TopBarProps = {
   onToggleLeftPane: () => void;
   rightPaneOpen: boolean;
   onToggleRightPane: () => void;
+  onLogout: () => void;
 };
 
 /**
@@ -21,7 +22,7 @@ type TopBarProps = {
  * 与 docs/env/user-guide.md（唯一内容源）保持一致；完整内容以「查看完整手册」为准。
  */
 const HELP_ENTRIES: Array<{ category: string; term: string; detail: string }> = [
-  { category: '快速开始', term: '登录', detail: '输入演示账号（alice / kira / brightlite-member），无密码' },
+  { category: '快速开始', term: '登录', detail: '演示账号 alice / kira / brightlite-member，密码 demo-pass-1234；可注册新账号' },
   { category: '快速开始', term: '30 秒上手', detail: '新建文档 → 保存 → 搜索 / 问答；示例文档未建索引，需新建或导入' },
   { category: '文档', term: '新建', detail: '文档视图「新建」，或首页「新建文档」卡片' },
   { category: '文档', term: '导入', detail: '文档视图「导入」：.md / .txt 文件或文件夹（自动分批）' },
@@ -47,6 +48,7 @@ export function TopBar({
   onToggleLeftPane,
   rightPaneOpen,
   onToggleRightPane,
+  onLogout,
 }: TopBarProps) {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
@@ -229,6 +231,16 @@ export function TopBar({
             <div className="user-menu-popover" role="menu">
               <span>用户 {userLabel}</span>
               <strong>{currentSpace?.name ?? `空间 ${session.currentSpaceId}`}</strong>
+              <button
+                type="button"
+                className="user-menu-logout"
+                onClick={() => {
+                  setUserMenuOpen(false);
+                  onLogout();
+                }}
+              >
+                退出登录
+              </button>
             </div>
           ) : null}
         </div>

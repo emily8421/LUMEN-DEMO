@@ -1,6 +1,18 @@
 import importlib.util
 import unittest
 
+def _demo_ctx(user_id: int = 1, current_space_id: int = 10):
+    from backend.model.entities import User
+    from backend.service.auth_context import TokenContext
+
+    return TokenContext(
+        user_id=user_id,
+        current_space_id=current_space_id,
+        session_id=None,
+        user=User(id=user_id, external_id="demo", name="Demo"),
+    )
+
+
 
 @unittest.skipIf(importlib.util.find_spec("fastapi") is None, "FastAPI is not installed")
 class ImportApiTest(unittest.TestCase):
@@ -20,7 +32,7 @@ class ImportApiTest(unittest.TestCase):
         documents_api.repository = repository
         try:
             token = create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
-            authorization = f"Bearer {token}"
+            ctx = _demo_ctx()
 
             class FakeUploadFile:
                 def __init__(self, filename: str, content: bytes) -> None:
@@ -39,13 +51,13 @@ class ImportApiTest(unittest.TestCase):
                     relative_paths=["docs/team/readme.md", "blocked.pdf"],
                     conflict_policy="skip",
                     permission="team",
-                    authorization=authorization,
+                    ctx=ctx,
                 )
             )
             data = response["data"]
             imported_id = data["items"][0]["parsed_doc_id"]
-            list_response = documents_api.list_documents(authorization=authorization)
-            detail_response = documents_api.get_document_endpoint(imported_id, authorization=authorization)
+            list_response = documents_api.list_documents(ctx=ctx)
+            detail_response = documents_api.get_document_endpoint(imported_id, ctx=ctx)
         finally:
             imports_api.repository = original_repository
             documents_api.repository = original_documents_repository
