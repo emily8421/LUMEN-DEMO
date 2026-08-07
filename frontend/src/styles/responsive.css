@@ -75,8 +75,14 @@
     grid-template-columns: 1fr;
   }
 
-  .task-workspace,
-  .term-workspace-body {
+  .task-workspace {
     margin: var(--space-2);
+  }
+
+  /* 术语双栏在窄屏堆叠为单列（列表在上、编辑在下）。 */
+  .term-workspace-body {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr) minmax(0, 1.4fr);
+    padding: var(--space-2);
   }
 }

@@ -9,7 +9,7 @@
 |---|---|
 | 保留 / 省略决策 | 保留 |
 | 接口形态 | REST API |
-| 覆盖 REQ / 模块 | Phase1：REQ-001..REQ-011、REQ-036；Phase1.5A：REQ-037/038（API-029/030）；Phase1.5B：REQ-027（API-019）；Phase2A：REQ-012/025/026；Phase2B：REQ-014（API-028）、REQ-013/024（API-033）、REQ-039（API-034..038，第三 slice）；Phase2D：REQ-040/041/042（API-039..043，账号体系）+ REQ-045/046/047（API-044..050，角色分层 / 用户管理 / 团队空间加入）；后续 / 愿景接口保留骨架 |
+| 覆盖 REQ / 模块 | Phase1：REQ-001..REQ-011、REQ-036；Phase1.5A：REQ-037/038（API-029/030）；Phase1.5B：REQ-027（API-019）；Phase2A：REQ-012/025/026；Phase2B：REQ-014（API-028）、REQ-013/024（API-033）、REQ-039（API-034..038，第三 slice）；Phase2D：REQ-040/041/042（API-039..043，账号体系）+ REQ-045/046/047（API-044..050，角色分层 / 用户管理 / 团队空间加入）；**维护态增强：REQ-048（API-051..053，术语领域树）+ API-012/013 扩字段**；后续 / 愿景接口保留骨架 |
 | 当前状态 | P1 接口契约已用于 Phase1 Demo；Sprint-8 后 P1 主要接口已接 PostgreSQL 表，RAG 已接 pgvector 向量召回 + GLM LLM；task-009 后 API-009 search 已为 substring + ts_vector + pgvector 语义召回的 hybrid search（zhparser 可选）。API-029/030 已随 Phase1.5A 完成；API-019 已随 Sprint-18 完成并补齐 PDF artifact 下载端点；Phase2A 标签、快速录入、内链 / 反链接口已完成；Phase2B API-028、API-033、API-034..038 已进入实现态；**Phase2D 账号体系已实现（Sprint-26）：API-001 login 契约变更（凭证登录 + 不透明 token session）+ 新增 API-039..043（register / logout / refresh / sessions）**；**Sprint-28 已实现（2026-08-07，task-040）：API-044..050（admin 域用户管理 + space 域成员 CRUD + 用户搜索）+ 登录响应新增 `role`，TC-P2-ACC-002 通过**。仍降级：API-011 仅 `.md`/`.txt` 已提取文本；真实 Word/PDF 解析与 OCR 留后续 |
 | 最后更新 | 2026-08-07（Sprint-28 编码完成：API-044..050 已实现 + 登录响应 `role`，TC-P2-ACC-002 通过 / v3.1.0） |
 
@@ -39,6 +39,9 @@
 | API-048 | PATCH | /api/spaces/{id}/members/{user_id} | 改空间角色 | [P2] | Phase2D·Sprint-28 已实现 | 已实现（空间 admin / 全局 admin；最后一个 admin 降级 4090，C-ROLE-006） | REQ-047 |
 | API-049 | DELETE | /api/spaces/{id}/members/{user_id} | 移除成员 | [P2] | Phase2D·Sprint-28 已实现 | 已实现（空间 admin / 全局 admin；最后一个 admin 4090；文档归属不变） | REQ-047 |
 | API-050 | GET | /api/users/search?q= | 添加成员时的用户搜索（返回 id/name/email 最小字段） | [P2] | Phase2D·Sprint-28 已实现 | 已实现（空间 admin 或全局 admin；member 4030 防枚举） | REQ-047 |
+| API-051 | GET/POST | /api/term-categories | 领域树查询（`parent_id?` 懒加载，空=根层）/ 新建领域 | [P1] | 维护态增强·已实现 | 已实现（REQ-048，migration 017；领域树不独立设权限；同 parent 重名 4090） | REQ-048 |
+| API-052 | PATCH/DELETE | /api/term-categories/{id} | 领域改名 / 移动（`parent_id`，null=移到根，防环 4220）/ 删除（删非空 4090） | [P1] | 维护态增强·已实现 | 已实现（REQ-048，migration 017） | REQ-048 |
+| API-053 | POST | /api/term-categories/reorder | 领域排序（body `parent_id`+`ordered_ids`，须等于该层全部子领域） | [P1] | 维护态增强·已实现 | 已实现（REQ-048，migration 017） | REQ-048 |
 | API-002 | GET | /api/spaces | 列出我的空间 | [P1] | P1-已实现 | 已实现（PG 空间 / 成员） | REQ-001/002 |
 | API-003 | POST | /api/spaces/switch | 切换当前空间 | [P1] | P1-已实现 | 已实现（PG 成员校验） | REQ-002 |
 | API-004 | GET | /api/documents | 文档列表 | [P1] | P1-已实现 | 已实现（PG 文档 + 权限过滤） | REQ-004 |
@@ -49,8 +52,8 @@
 | API-009 | GET | /api/search?q= | 全文 / 语义混合搜索 | [P1] | P1-已实现 | 已实现（substring + ts_vector + pgvector 语义召回；zhparser 可选） | REQ-007 |
 | API-010 | POST | /api/query | RAG 问答 | [P1] | P1-已实现 | 已实现（pgvector 向量召回 + GLM LLM；可配 Mock） | REQ-008 |
 | API-011 | POST | /api/import | 导入文件 | [P1] | P1-已设计 | **降级实现（仅 `.md`/`.txt` 已提取文本；无 PDF/OCR）** | REQ-009/010 |
-| API-012 | GET/POST | /api/terms | 术语列表 / 创建术语 | [P1] | P1-已实现 | 已实现（PG 术语存储） | REQ-036 |
-| API-013 | GET/PUT/DELETE | /api/terms/{id} | 术语详情 / 更新 / 删除 | [P1] | P1-已实现 | 已实现（PG 术语存储） | REQ-036 |
+| API-012 | GET/POST | /api/terms | 术语列表 / 创建术语 | [P1] | P1-已实现 | 已实现（PG 术语存储；REQ-048 扩 `category_id`/`category`/`source` 请求·响应字段，migration 017） | REQ-036 / REQ-048 |
+| API-013 | GET/PUT/DELETE | /api/terms/{id} | 术语详情 / 更新 / 删除 | [P1] | P1-已实现 | 已实现（PG 术语存储；REQ-048 扩 `category_id`/`category`/`source`，`category_id` 跨空间→4220） | REQ-036 / REQ-048 |
 | API-029 | POST | /api/import/batch | 批量导入（多文件 + 文件夹，标题前缀，同名跳过） | [P1] | Phase1.5A-已实现 | — | REQ-037 |
 | API-030 | GET | /api/documents/{id}/export · /api/export/space | 单文档 .md 下载 / 空间 ZIP 导出 | [P1] | Phase1.5A-已实现 | — | REQ-038 |
 | API-014 | GET/POST | /api/tags | 标签列表 / 创建标签 | [P2] | Phase2A-已实现 | — | REQ-012 |
@@ -319,6 +322,9 @@ sequenceDiagram
 | API-048 `PATCH /api/spaces/{id}/members/{user_id}` | `role`（admin/member） | `{code,msg,data:{user_id,name,email,role,joined_at}}` | 空间 admin 或全局 admin（非 admin 4030）；降级最后一个 admin → 4090（C-ROLE-006）；成员不存在 4004 | `lumen_space_members` | **Phase2D·Sprint-28 已实现**（REQ-047，task-040）；响应无 `updated_at`（偏差 §18.9） |
 | API-049 `DELETE /api/spaces/{id}/members/{user_id}` | — | `{code,msg,data:null}` | 空间 admin 或全局 admin（非 admin 4030）；移除最后一个 admin → 4090（C-ROLE-006）；成员不存在 4004；文档归属不变 | `lumen_space_members` | **Phase2D·Sprint-28 已实现**（REQ-047，task-040） |
 | API-050 `GET /api/users/search?q=` | `q`（email/name 前缀匹配） | `{code,msg,data:[{id,name,email}]}` | 空间 admin 或全局 admin（普通 member 4030，防枚举）；仅返回最小字段 | `lumen_users` | **Phase2D·Sprint-28 已实现**（REQ-047，task-040）；添加成员入口依赖 |
+| API-051 `GET/POST /api/term-categories` | GET `parent_id?`（空=根层）；POST `name`、`parent_id?` | `{code,msg,data:{items:[{id,name,parent_id,order_idx,term_count,child_category_count,created_at,updated_at}]}}` / `{id,name,parent_id,order_idx}` | 空间成员（4003）；POST 同 parent 重名 4090；parent 跨空间 4220；name 空 4220 | `lumen_term_categories`、`lumen_terms` | **维护态增强·已实现**（REQ-048，migration 017，2026-08-07）；领域树不独立设权限；term_count 该领域下术语数 |
+| API-052 `PATCH/DELETE /api/term-categories/{id}` | PATCH `name?`（改名）、`parent_id?`（移动，null=移到根）；DELETE 无 body | `{code,msg,data:{id,name,parent_id,order_idx}}` / `{deleted:true}` | 空间成员（4003）；改名重名 4090；防环 / 跨空间 4220；删非空（有子领域或术语）4090；不存在 4004 | `lumen_term_categories` | **维护态增强·已实现**（REQ-048，migration 017）；PATCH 用 `model_fields_set` 区分未传与显式 null |
+| API-053 `POST /api/term-categories/reorder` | `parent_id?`、`ordered_ids[]`（须等于该层全部子领域） | `{code,msg,data:{ok:true}}` | 空间成员（4003）；ordered_ids 不匹配 4220 | `lumen_term_categories` | **维护态增强·已实现**（REQ-048，migration 017） |
 
 **Phase1.5 / Phase2 错误码补充**：
 
@@ -364,6 +370,7 @@ sequenceDiagram
 | REQ-009 / 010 | `POST /api/import` | Word / PDF / 图片导入与解析任务 |
 | REQ-011 | 全部 P1 接口 | 桌面端通过浏览器覆盖全部 P1 功能 |
 | REQ-036 | `GET/POST /api/terms`、`GET/PUT/DELETE /api/terms/{id}` | 术语列表、创建、更新、删除 |
+| REQ-048 | `GET/POST /api/term-categories`、`PATCH/DELETE /api/term-categories/{id}`、`POST /api/term-categories/reorder`（API-051..053）+ API-012/013 扩 `category_id`/`category`/`source` | 术语领域树组织 + 内容分类 + 来源追溯（维护态增强） |
 | REQ-037 | `POST /api/import/batch` | Phase1.5A 批量 / 文件夹 `.md` / `.txt` 导入，逐条结果、同名跳过（Phase2B folder-tree 扩展 `preserve_structure` 建 `lumen_folders`，见 REQ-039 / API-029） |
 | REQ-038 | `GET /api/documents/{id}/export`、`GET /api/export/space` | Phase1.5A 单文档 `.md` 下载与空间 ZIP 导出备份，权限过滤 |
 | REQ-027 | `POST /api/export-pdf`、`GET /api/export-pdf/{export_id}/download` | Phase1.5B 单文档导出 PDF，已随 Sprint-18 实现并通过 TC-P1-017；v1.7.0 补齐下载闭环 |
@@ -439,3 +446,5 @@ sequenceDiagram
 - Phase2A 标签 / 快速录入 / 内链 API 已实现；**Phase2B API-028 后端已实现**（vertical slice 已定：polish 同步 / citation 首版同步；数据外发风险已接受 RG-008 Go）；**API-033 时间线为第二 slice·已实现（候选 A + TL-C-001..011 已确认，task-030 本地自动化、运行态 API smoke、Edge headless 浏览器 smoke、真实 PG 大数据性能 smoke 均已通过）**；**API-034..038 文档目录树已实现（folder-tree，REQ-039）；导入保留结构扩展 API-029 `preserve_structure` 已实现（推翻 ingestion ING-C-001）；前端文件管理器基础能力已实现，浏览器自动化 smoke 已补**。
 - **Sprint-26 账号体系（API-001 契约变更 + API-039..043）已实现并通过后端自动化验收（`tests/backend/test_auth.py` 20/20 + 全量 222 OK）**；浏览器 smoke（登录 / 注册页）与 demo 启动验证待用户确认。
 - **Sprint-28 角色分层 + 用户管理 + 团队空间加入（2026-08-07 已完成，task-040，TC-P2-ACC-002 通过 / v3.1.0）**：API-044..050 已实现并回写本节（admin 域 / space 域 / 用户搜索；C-ROLE-005..007 已确认：last_login_at 展示、最后一个 admin 4090 保护、全局 admin 同权 + 审计）；错误码沿用 4001/4003/4004/4030/4090/4220；实现偏差（未分页 / 响应字段 / refresh role）见 `docs/design/accounts-auth.md` §18.9。
+- **维护态增强（2026-08-07，术语领域树 REQ-048，migration 017）**：API-051..053 已实现并回写本节（`/api/term-categories` 领域树 CRUD / 移动 / 排序，仿 folder-tree API-034..037）+ API-012/013 扩 `category_id`/`category`/`source` 请求·响应字段（`category_id` 跨空间→4220）；领域树不独立设权限（复用 folder 口径）；后端 `tests/backend/test_term_category.py` 18 例 + `test_term.py` 扩字段回归，后端全量 298 OK；前端左栏领域树 + 主区单详情面板 + 阅读/编辑态分离已实现（build 291 modules，运行时 smoke 通过，用户浏览器验收通过）。
+- **批2b 步2 标签 CRUD 前端接线（2026-08-07，API-027）**：后端 `PUT /api/tags/{id}`（重命名/描述/颜色）+ `DELETE /api/tags/{id}`（归档）Phase2A 早已实现，前端 `updateTag`/`archiveTag` 函数此前无人调用；本轮 `useTags` + `TagsFeature` 接线完成（标签项 hover 编辑 → 内联表单改名称/描述/颜色；归档确认后从列表移除、关联文档保留），build 291 modules，运行时 smoke 通过，用户浏览器验收通过。

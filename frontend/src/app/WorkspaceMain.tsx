@@ -14,6 +14,7 @@ import { useDocuments } from './useDocuments';
 import { useSearch } from './useSearch';
 import { useQuery } from './useQuery';
 import { useTerms } from './useTerms';
+import { useTermCategories } from './useTermCategories';
 import { useTags } from './useTags';
 import { useTimeline } from './useTimeline';
 import type { useAiPolish } from './useAiPolish';
@@ -26,10 +27,14 @@ interface WorkspaceMainProps {
   isBusy: boolean;
   /** 右栏（Inspector）可见性，透传给 DocumentsFeature（Doc-First §9.5，Sprint-21）。 */
   rightPaneOpen: boolean;
+  /** 收起右栏（批1，点1），透传给 DocumentsFeature。 */
+  onToggleRightPane: () => void;
   documents: ReturnType<typeof useDocuments>;
   search: ReturnType<typeof useSearch>;
   query: ReturnType<typeof useQuery>;
   terms: ReturnType<typeof useTerms>;
+  /** 术语领域树（REQ-036 增强，migration 017）：knownCategories 供主区下拉。 */
+  termCategories: ReturnType<typeof useTermCategories>;
   tags: ReturnType<typeof useTags>;
   timeline: ReturnType<typeof useTimeline>;
   aiPolish: ReturnType<typeof useAiPolish>;
@@ -60,10 +65,12 @@ export function WorkspaceMain({
   activeView,
   isBusy,
   rightPaneOpen,
+  onToggleRightPane,
   documents,
   search,
   query,
   terms,
+  termCategories,
   tags,
   timeline,
   aiPolish,
@@ -103,6 +110,7 @@ export function WorkspaceMain({
           selectedDocument={documents.selectedDocument}
           isBusy={isBusy}
           rightPaneOpen={rightPaneOpen}
+          onToggleRightPane={onToggleRightPane}
           draft={documents.draft}
           onDraftChange={documents.setDraft}
           versions={documents.versions}
@@ -159,13 +167,17 @@ export function WorkspaceMain({
 
       {activeView === 'terms' ? (
         <TermsFeature
+          terms={terms.terms}
           selectedTermId={terms.selectedTermId}
           isBusy={isBusy}
           termDraft={terms.termDraft}
+          paneMode={terms.paneMode}
+          onBeginEdit={terms.beginEdit}
           onTermDraftChange={terms.setTermDraft}
           onSaveTerm={terms.handleSaveTerm}
           onDeleteTerm={terms.handleDeleteTerm}
           onNewTerm={terms.newTerm}
+          categories={termCategories.knownCategories}
         />
       ) : null}
 
@@ -181,6 +193,13 @@ export function WorkspaceMain({
           onCreateTag={tags.handleCreateTag}
           onOpenDocument={documents.handleOpenDocument}
           onGoToDocuments={() => onNavigate('documents')}
+          editingTagId={tags.editingTagId}
+          editDraft={tags.editDraft}
+          onEditDraftChange={tags.setEditDraft}
+          onBeginEditTag={tags.beginEditTag}
+          onCancelEditTag={tags.cancelEditTag}
+          onUpdateTag={tags.handleUpdateTag}
+          onArchiveTag={tags.handleArchiveTag}
         />
       ) : null}
 

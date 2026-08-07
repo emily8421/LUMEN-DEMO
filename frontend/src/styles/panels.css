@@ -223,19 +223,7 @@
   padding: var(--space-2);
 }
 
-.term-workspace-body {
-  display: grid;
-  align-content: start;
-  gap: var(--space-3);
-  max-width: 760px;
-  margin: var(--space-2);
-  padding: var(--space-3);
-}
-
-.term-form-grid {
-  grid-template-columns: minmax(0, 1fr) 160px;
-  gap: var(--space-3);
-}
+/* .term-workspace-body / .term-form-grid 已迁至 styles/terms.css（术语双栏重构）。 */
 
 .wide-field {
   grid-column: 1 / -1;

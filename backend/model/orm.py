@@ -160,6 +160,28 @@ class TermORM(Base):
     owner_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("lumen_users.id"))
     status: Mapped[str] = mapped_column(String, default="pending")
     source_document_id: Mapped[int | None] = mapped_column(BigInteger, ForeignKey("lumen_documents.id"), nullable=True)
+    # 术语管理增强（migration 017，REQ-036 领域树）。
+    category_id: Mapped[int | None] = mapped_column(BigInteger, ForeignKey("lumen_term_categories.id", ondelete="SET NULL"), nullable=True)
+    category: Mapped[str | None] = mapped_column(Text, nullable=True)
+    source: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
+
+
+class TermCategoryORM(Base):
+    """术语领域树节点（lumen_term_categories，migration 017，REQ-036 增强）。"""
+
+    __tablename__ = "lumen_term_categories"
+    __table_args__ = (
+        UniqueConstraint("space_id", "parent_id", "name", name="lumen_term_categories_unique_name"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    space_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("lumen_spaces.id", ondelete="CASCADE"))
+    parent_id: Mapped[int | None] = mapped_column(BigInteger, ForeignKey("lumen_term_categories.id", ondelete="CASCADE"), nullable=True)
+    name: Mapped[str] = mapped_column(Text)
+    order_idx: Mapped[int] = mapped_column(Integer, default=0)
+    created_by: Mapped[int] = mapped_column(BigInteger, ForeignKey("lumen_users.id"))
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
 

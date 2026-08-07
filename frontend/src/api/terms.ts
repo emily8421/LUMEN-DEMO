@@ -11,6 +11,10 @@ export type Term = {
   owner_id: number;
   status: TermStatus;
   source_document_id: number | null;
+  // 术语管理增强（REQ-036 领域树，migration 017）。
+  category_id: number | null;
+  category: string | null;
+  source: string | null;
 };
 
 export type TermListResponse = {
@@ -25,6 +29,9 @@ export type TermWritePayload = {
   aliases: string[];
   status: TermStatus;
   source_document_id?: number | null;
+  category_id?: number | null;
+  category?: string | null;
+  source?: string | null;
 };
 
 export async function listTerms(token: string): Promise<TermListResponse> {

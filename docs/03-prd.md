@@ -194,6 +194,7 @@
 | REQ-034 | F-010 | 信号追踪 | `[愿景]` | 产品 | 待技术验证 |
 | REQ-035 | F-009 | 分析包 A Kit | `[愿景]` | 产品 | 待技术验证 |
 | REQ-036 | F-006 | 术语管理 | `[P1]` | Demo | Phase1 必演示 |
+| REQ-048 | F-006 | 术语领域树（REQ-036 增强：领域树组织 + 内容分类 + 来源追溯） | `[P1]` | Demo | 维护态增强·已实现（2026-08-07，migration 017，API-051..053，TC-P2-TERM-001） |
 | REQ-037 | F-011 | 批量 / 文件夹导入（`.md` / `.txt`） | `[P1]` | 个人可用 Alpha | P1.5A 已完成（TC-P1-015 通过） |
 | REQ-038 | F-011 | 单文档 `.md` + 空间 ZIP 导出 | `[P1]` | 个人可用 Alpha | P1.5A 已完成（TC-P1-016 通过） |
 | REQ-039 | F-007 | 文档目录树（嵌套文件夹 CRUD / 移动 / 排序 + 导入保留结构） | `[P2]` | 团队 MVP | **Phase2B 第三 slice（folder-tree）已实现**：`lumen_folders` 嵌套树 + 文档 `folder_id` + CRUD / 移动 / 排序（API-034..038）+ 导入 `preserve_structure`（API-029 扩展）+ 前端文件管理器；TC-P2-FOLDER-001 通过；folder 不独立设权限 |

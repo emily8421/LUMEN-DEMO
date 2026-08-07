@@ -35,6 +35,10 @@ if APIRouter is not None:
         aliases: list[str] = []
         status: TermStatus = TermStatus.CONFIRMED
         source_document_id: int | None = None
+        # 术语管理增强（REQ-036 领域树，migration 017）。
+        category_id: int | None = None
+        category: str | None = None
+        source: str | None = None
 
     @router.get("")
     def list_terms_endpoint(
@@ -101,6 +105,9 @@ if APIRouter is not None:
             aliases=request.aliases,
             status=request.status,
             source_document_id=request.source_document_id,
+            category_id=request.category_id,
+            category=request.category,
+            source=request.source,
         )
 
 
@@ -114,6 +121,9 @@ if APIRouter is not None:
             "owner_id": term.owner_id,
             "status": term.status,
             "source_document_id": term.source_document_id,
+            "category_id": term.category_id,
+            "category": term.category,
+            "source": term.source,
         }
 else:
     router = None

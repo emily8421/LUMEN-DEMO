@@ -1,0 +1,172 @@
+/* REQ-036 术语管理双栏（术语列表 | 术语编辑）。
+   从 panels.css / workspace.css / responsive.css 拆出并收拢，对齐 tags.css 的分文件惯例（WSG）。
+   列表项复用 workspace.css 的 .term-list 基础样式（与左栏 ContextPane 术语列表保持一致外观）。 */
+.term-workspace-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  gap: var(--space-3);
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  padding: var(--space-3);
+  background: transparent;
+}
+
+/* 主区单一详情面板（用户 2026-08-07 反馈：左栏树已导航，主区不再双栏列表）。 */
+.term-workspace-body-single {
+  display: block;
+  overflow: auto;
+}
+
+.term-workspace-body-single .term-reader {
+  max-width: 720px;
+}
+
+.term-workspace-body-single .term-form-grid {
+  max-width: 720px;
+  align-content: start;
+}
+
+.term-empty-guide {
+  max-width: 480px;
+  margin: var(--space-5) auto;
+  text-align: center;
+}
+
+.term-list-pane,
+.term-edit-pane {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  background: var(--panel);
+  padding: var(--space-2);
+}
+
+.term-list-pane .term-list {
+  min-height: 0;
+  overflow: auto;
+}
+
+/* 编辑表单在右栏内独立滚动，字段从顶部起排（不被 1fr 行拉伸）。 */
+.term-edit-pane .term-form-grid {
+  align-content: start;
+  min-height: 0;
+  overflow: auto;
+}
+
+.term-form-grid {
+  grid-template-columns: minmax(0, 1fr) 160px;
+  gap: var(--space-3);
+}
+
+/* --- 术语管理增强：阅读态 / 编辑态分离 + 左栏领域树（REQ-036 领域树） --- */
+
+/* 阅读态详情卡片 */
+.term-reader {
+  min-height: 0;
+  overflow: auto;
+  padding: var(--space-2);
+}
+
+.term-reader-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 var(--space-2);
+}
+
+.term-reader-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-bottom: var(--space-3);
+}
+
+.term-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--text);
+}
+
+.term-badge-confirmed {
+  color: var(--blue);
+  border-color: var(--blue-soft, var(--line));
+}
+
+.term-badge-pending {
+  color: var(--text);
+  opacity: 0.85;
+}
+
+.term-badge-global {
+  color: var(--text);
+  opacity: 0.85;
+}
+
+.term-badge-space,
+.term-badge-category {
+  color: var(--blue);
+  border-color: var(--blue-soft, var(--line));
+}
+
+.term-reader-fields {
+  margin: 0;
+}
+
+.term-reader-fields dt {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-top: var(--space-2);
+}
+
+.term-reader-fields dd {
+  margin: 2px 0 0;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+/* 左栏：全局术语固定区 + 空间领域树（上下分区，分隔条调高，仿文档视图本地挂载分区） */
+.context-tree-split .term-categories-zone {
+  flex: 0 0 var(--term-categories-height, 420px);
+  min-height: 0;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.term-categories-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.term-categories-heading .secondary {
+  flex: 0 0 auto;
+  padding: 2px 8px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.term-categories-zone .folder-tree {
+  min-height: 0;
+  overflow: auto;
+}
+
+/* 领域节点计数 */
+.tree-folder-count {
+  margin-left: auto;
+  font-size: 0.72rem;
+  color: var(--text);
+  opacity: 0.8;
+}

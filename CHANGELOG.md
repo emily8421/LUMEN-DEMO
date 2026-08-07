@@ -6,6 +6,19 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.2.0（2026-08-07）
+
+**维护态 UI 改进批次（Sprint-29，REQ-048 术语领域树 + 批2b 步2 标签 CRUD + 批1 顶栏 + 批2a 命令面板，TC-P2-TERM-001）。** 项目收尾进入维护态后的一批前端体验增强：术语管理从平铺列表升级为**领域树组织 + 阅读/编辑态分离**，标签补齐重命名/描述/颜色/归档前端接线，顶栏图标语义化 + 左右栏折叠箭头，全局搜索命令面板（Ctrl+K / ⌘K）。
+
+- 数据契约（migration 017）：新增 `lumen_term_categories` 术语领域树表（嵌套邻接表 `parent_id` 自引用，仿 folder-tree）+ `lumen_terms` 扩 `category_id` / `category`（内容分类） / `source`（术语来源）三可空字段（向后兼容）。
+- API：新增 API-051 `GET/POST /api/term-categories` / API-052 `PATCH/DELETE /api/term-categories/{id}` / API-053 `POST /api/term-categories/reorder`（领域树 CRUD / 移动防环 / 排序 / 删非空 4090 / 同 parent 重名 4090）；API-012/013 扩 `category_id` / `category` / `source` 请求·响应字段（`category_id` 跨空间 → 4220）；领域树不独立设权限（复用 folder 口径）。批2b 步2：`PUT /api/tags/{id}`（重命名/描述/颜色）+ `DELETE /api/tags/{id}`（归档）前端接线（API-027，后端早已实现）。
+- 术语管理（REQ-048）：左栏「全局术语固定区 + 空间领域树」（右键新建领域/子领域/重命名/排序/删除/「在此新建术语」预填领域；上下分区可拖拽调高）；主区单一详情面板（阅读态：名称 + 状态/全局/领域/分类徽标 + 定义/别名/来源；编辑态：领域下拉 + 内容分类 datalist 候选 + 来源字段）；全局术语只读。
+- 标签 CRUD：标签项 hover「✎」→ 内联编辑（名称/描述/颜色 + 保存/取消/归档）；归档确认后从列表移除、关联文档保留（后端 DELETE 实为 archived）。
+- 顶栏（批1）+ 命令面板（批2a）：顶栏图标迁移内联 SVG + 左右栏边缘折叠箭头（PaneEdgeToggle）；`Ctrl+K`/`⌘K` 全局搜索命令面板（即时搜索 + 键盘导航 + 跳转/操作 + 「问 AI」入口）。
+- 验证：`tests/backend/test_term_category.py`（18 例）+ `test_term.py` 扩字段回归（2 例）→ backend discover **298 OK**（skipped=2）；真 PG migration 017 应用（`init_db()` schema 校验）；`volta run --node 22.17.1 npm run build` **291 modules 绿**；运行时 API smoke（领域建树 / 术语挂领域 / term_count / 标签 CRUD）；用户浏览器验收通过（术语领域树 3 轮反馈迭代 + 批2a + 批2b 步2）。
+
+> MINOR 依据（`ai/project-rules.md` §2.8.2）：新增可演示能力（REQ-048 术语领域树）+ 新增 API endpoint（API-051..053）。
+
 ## v3.1.0（2026-08-07）
 
 **Sprint-28 角色分层 + 用户管理 + 团队空间加入（Phase2D 收口，REQ-045/046/047，TC-P2-ACC-002，task-040）。** 在 Sprint-26 账号体系 + Sprint-27 权限底座上补齐团队治理能力：全局角色分层（`lumen_users.role` admin/member）、admin 域用户管理后台、space 域成员管理（按 email 添加 / 改空间角色 / 移除）。

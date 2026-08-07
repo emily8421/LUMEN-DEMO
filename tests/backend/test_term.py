@@ -76,6 +76,50 @@ class TermServiceTest(unittest.TestCase):
                 request=TermWrite(term=" ", definition="definition", aliases=[], status=TermStatus.CONFIRMED),
             )
 
+    def test_term_create_with_category_and_source(self) -> None:
+        from backend.service.term_category import TermCategoryCreateRequest, create_term_category
+
+        repository = DemoRepository()
+        category = create_term_category(repository, 1, 10, TermCategoryCreateRequest(name="研发与开发流程"))
+        created = create_term(
+            repository,
+            user_id=1,
+            current_space_id=10,
+            request=TermWrite(
+                term="需求分析",
+                definition="对用户需求进行归纳。",
+                aliases=["需求整理"],
+                status=TermStatus.CONFIRMED,
+                category_id=category.id,
+                category="操作/过程类",
+                source="行业标准",
+            ),
+        )
+
+        self.assertEqual(created.category_id, category.id)
+        self.assertEqual(created.category, "操作/过程类")
+        self.assertEqual(created.source, "行业标准")
+
+    def test_term_category_cross_space_rejected(self) -> None:
+        from backend.service.term_category import TermCategoryCreateRequest, create_term_category
+
+        repository = DemoRepository()
+        s20 = create_term_category(repository, 1, 20, TermCategoryCreateRequest(name="Space20C"))
+        # 在 space10 建术语，但挂 space20 的领域 → 4220
+        with self.assertRaises(TermValidationError):
+            create_term(
+                repository,
+                user_id=1,
+                current_space_id=10,
+                request=TermWrite(
+                    term="X",
+                    definition="X",
+                    aliases=[],
+                    status=TermStatus.CONFIRMED,
+                    category_id=s20.id,
+                ),
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

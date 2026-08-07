@@ -447,11 +447,15 @@
   display: none;
 }
 
+/* 批1（点1）：inspector-pane 作为右栏边缘折叠按钮（pane-edge-right）的定位锚。 */
+.inspector-pane {
+  position: relative;
+}
+
 .editor-panel,
 .editor-pane,
 .inspector-pane,
-.task-workspace,
-.term-workspace-body {
+.task-workspace {
   min-width: 0;
   min-height: 0;
   overflow: hidden;

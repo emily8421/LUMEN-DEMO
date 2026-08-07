@@ -25,6 +25,7 @@ from backend.model.entities import (
     TagLink,
     QuickEntry,
     Term,
+    TermCategory,
     TermStatus,
     User,
 )
@@ -105,6 +106,8 @@ class DemoRepository:
         self._next_doc_export_id = 1
         self.folders: list[Folder] = []
         self._next_folder_id = 1
+        self.term_categories: list[TermCategory] = []
+        self._next_term_category_id = 1
         self.sessions: list[Session] = []
         self._next_session_id = 1
 
@@ -560,6 +563,9 @@ class DemoRepository:
         owner_id: int,
         status: TermStatus,
         source_document_id: int | None = None,
+        category_id: int | None = None,
+        category: str | None = None,
+        source: str | None = None,
     ) -> Term:
         created_term = Term(
             id=self._next_term_id,
@@ -570,6 +576,9 @@ class DemoRepository:
             owner_id=owner_id,
             status=status,
             source_document_id=source_document_id,
+            category_id=category_id,
+            category=category,
+            source=source,
         )
         self._next_term_id += 1
         self.terms.append(created_term)
@@ -583,6 +592,9 @@ class DemoRepository:
         aliases: list[str],
         status: TermStatus,
         source_document_id: int | None = None,
+        category_id: int | None = None,
+        category: str | None = None,
+        source: str | None = None,
     ) -> Term:
         existing_term = self.require_term(term_id)
         updated_term = replace(
@@ -592,6 +604,9 @@ class DemoRepository:
             aliases=aliases,
             status=status,
             source_document_id=source_document_id,
+            category_id=category_id,
+            category=category,
+            source=source,
         )
         self._replace_term(updated_term)
         return updated_term
@@ -1083,6 +1098,106 @@ class DemoRepository:
             if f.space_id != space_id:
                 continue
             self.folders[idx] = replace(f, order=order, updated_at=now)
+
+    # --- term categories (REQ-036 领域树, migration 017) ---
+
+    def _next_term_category_order(self, space_id: int, parent_id: int | None) -> int:
+        siblings = [c for c in self.term_categories if c.space_id == space_id and c.parent_id == parent_id]
+        return max((c.order_idx for c in siblings), default=0) + 1
+
+    def list_term_categories(self, space_id: int) -> list[TermCategory]:
+        return sorted(
+            [c for c in self.term_categories if c.space_id == space_id],
+            key=lambda c: (c.parent_id is None, c.parent_id or 0, c.order_idx, c.name),
+        )
+
+    def get_term_category(self, category_id: int) -> TermCategory | None:
+        return next((c for c in self.term_categories if c.id == category_id), None)
+
+    def find_term_category_by_name(self, space_id: int, parent_id: int | None, name: str) -> TermCategory | None:
+        return next(
+            (c for c in self.term_categories if c.space_id == space_id and c.parent_id == parent_id and c.name == name),
+            None,
+        )
+
+    def create_term_category(self, space_id: int, parent_id: int | None, name: str, created_by: int) -> TermCategory:
+        category = TermCategory(
+            id=self._next_term_category_id,
+            space_id=space_id,
+            parent_id=parent_id,
+            name=name,
+            order_idx=self._next_term_category_order(space_id, parent_id),
+            created_by=created_by,
+            created_at=_now_iso(),
+            updated_at=_now_iso(),
+        )
+        self._next_term_category_id += 1
+        self.term_categories.append(category)
+        return category
+
+    def rename_term_category(self, category_id: int, name: str) -> TermCategory | None:
+        for index, c in enumerate(self.term_categories):
+            if c.id != category_id:
+                continue
+            updated = replace(c, name=name, updated_at=_now_iso())
+            self.term_categories[index] = updated
+            return updated
+        return None
+
+    def move_term_category(self, category_id: int, parent_id: int | None) -> TermCategory | None:
+        for index, c in enumerate(self.term_categories):
+            if c.id != category_id:
+                continue
+            updated = replace(
+                c,
+                parent_id=parent_id,
+                order_idx=self._next_term_category_order(c.space_id, parent_id),
+                updated_at=_now_iso(),
+            )
+            self.term_categories[index] = updated
+            return updated
+        return None
+
+    def delete_term_category(self, category_id: int) -> None:
+        self.term_categories = [c for c in self.term_categories if c.id != category_id]
+
+    def is_term_category_empty(self, space_id: int, category_id: int) -> bool:
+        if any(c.space_id == space_id and c.parent_id == category_id for c in self.term_categories):
+            return False
+        return not any(t.category_id == category_id for t in self.terms)
+
+    def is_descendant_term_category(self, space_id: int, ancestor_id: int, candidate_id: int) -> bool:
+        """内存递归：candidate 是否是 ancestor 的后代（含自身）。"""
+        if candidate_id == ancestor_id:
+            return True
+        stack = [ancestor_id]
+        visited: set[int] = set()
+        while stack:
+            current = stack.pop()
+            if current in visited:
+                continue
+            visited.add(current)
+            for c in self.term_categories:
+                if c.space_id == space_id and c.parent_id == current:
+                    if c.id == candidate_id:
+                        return True
+                    stack.append(c.id)
+        return False
+
+    def list_term_category_term_ids(self, space_id: int, category_id: int) -> list[int]:
+        return [t.id for t in self.terms if t.space_id == space_id and t.category_id == category_id]
+
+    def reorder_term_categories(self, space_id: int, ordered_category_ids: list[int]) -> None:
+        index_by_id = {c.id: i for i, c in enumerate(self.term_categories)}
+        now = _now_iso()
+        for order, category_id in enumerate(ordered_category_ids, start=1):
+            idx = index_by_id.get(category_id)
+            if idx is None:
+                continue
+            c = self.term_categories[idx]
+            if c.space_id != space_id:
+                continue
+            self.term_categories[idx] = replace(c, order_idx=order, updated_at=now)
 
 
 def _now_iso() -> str:

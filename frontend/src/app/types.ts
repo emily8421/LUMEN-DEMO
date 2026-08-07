@@ -28,4 +28,11 @@ export type TermDraft = {
   definition: string;
   aliases: string;
   status: TermStatus;
+  // 术语管理增强（REQ-036 领域树，migration 017）。
+  category_id: number | null;
+  category: string;
+  source: string;
 };
+
+/** 主区术语面板交互模式：view=阅读态（点术语进入），edit=编辑态（点编辑/新建进入）。 */
+export type TermPaneMode = 'view' | 'edit';

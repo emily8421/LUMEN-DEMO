@@ -14,6 +14,14 @@ type TagsFeatureProps = {
   onOpenDocument: (documentId: number, title: string) => void;
   /** 空态引导：去文档视图新建 / 导入（Sprint-25 L1）。 */
   onGoToDocuments: () => void;
+  /** 标签 CRUD（批2b 步2，API-027）。 */
+  editingTagId: number | null;
+  editDraft: { name: string; description: string; color: string };
+  onEditDraftChange: (draft: { name: string; description: string; color: string }) => void;
+  onBeginEditTag: (tag: TagView) => void;
+  onCancelEditTag: () => void;
+  onUpdateTag: (event: FormEvent<HTMLFormElement>) => void;
+  onArchiveTag: (tag: TagView) => void;
 };
 
 export function TagsFeature({
@@ -27,6 +35,13 @@ export function TagsFeature({
   onCreateTag,
   onOpenDocument,
   onGoToDocuments,
+  editingTagId,
+  editDraft,
+  onEditDraftChange,
+  onBeginEditTag,
+  onCancelEditTag,
+  onUpdateTag,
+  onArchiveTag,
 }: TagsFeatureProps) {
   return (
     <section className="tag-panel focus-panel task-workspace">
@@ -60,18 +75,65 @@ export function TagsFeature({
             </div>
           ) : (
             <ul className="tag-list">
-              {tags.map((tag) => (
-                <li key={tag.id}>
-                  <button
-                    type="button"
-                    className={selectedTagId === tag.id ? 'tag-item active' : 'tag-item'}
-                    onClick={() => onSelectTag(selectedTagId === tag.id ? null : tag.id)}
-                  >
-                    <strong>{tag.name}</strong>
-                    <small>{tag.document_count} 篇文档</small>
-                  </button>
-                </li>
-              ))}
+              {tags.map((tag) =>
+                editingTagId === tag.id ? (
+                  <li key={tag.id} className="tag-edit-row">
+                    <form className="tag-edit-form" onSubmit={onUpdateTag}>
+                      <label>
+                        名称
+                        <input
+                          value={editDraft.name}
+                          onChange={(event) => onEditDraftChange({ ...editDraft, name: event.target.value })}
+                          placeholder="标签名"
+                        />
+                      </label>
+                      <label>
+                        描述
+                        <input
+                          value={editDraft.description}
+                          onChange={(event) => onEditDraftChange({ ...editDraft, description: event.target.value })}
+                          placeholder="标签用途（可选）"
+                        />
+                      </label>
+                      <label>
+                        颜色
+                        <input
+                          type="color"
+                          value={editDraft.color || '#2563eb'}
+                          onChange={(event) => onEditDraftChange({ ...editDraft, color: event.target.value })}
+                          aria-label="标签颜色"
+                        />
+                      </label>
+                      <div className="tag-edit-actions">
+                        <button type="submit" disabled={isBusy || editDraft.name.trim().length === 0}>保存</button>
+                        <button type="button" className="secondary" onClick={onCancelEditTag} disabled={isBusy}>取消</button>
+                        <button type="button" className="danger" onClick={() => onArchiveTag(tag)} disabled={isBusy}>归档</button>
+                      </div>
+                    </form>
+                  </li>
+                ) : (
+                  <li key={tag.id}>
+                    <button
+                      type="button"
+                      className={selectedTagId === tag.id ? 'tag-item active' : 'tag-item'}
+                      onClick={() => onSelectTag(selectedTagId === tag.id ? null : tag.id)}
+                    >
+                      <strong>{tag.name}</strong>
+                      <small>{tag.document_count} 篇文档</small>
+                    </button>
+                    <button
+                      type="button"
+                      className="tag-edit-button"
+                      onClick={() => onBeginEditTag(tag)}
+                      disabled={isBusy}
+                      title="重命名 / 编辑标签"
+                      aria-label={`编辑标签 ${tag.name}`}
+                    >
+                      ✎
+                    </button>
+                  </li>
+                ),
+              )}
             </ul>
           )}
         </div>

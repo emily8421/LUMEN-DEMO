@@ -56,6 +56,8 @@ type DocumentsFeatureProps = {
   aiPolish: ReturnType<typeof useAiPolish>;
   /** 右栏（Inspector）可见性（Doc-First §9.5，Sprint-21）。 */
   rightPaneOpen: boolean;
+  /** 收起右栏（批1，点1），透传给 DocumentInspectorFeature 边缘按钮。 */
+  onToggleRightPane: () => void;
   /** 展开左目录（空态引导按钮，Doc-First §9.5，Sprint-21 slice 3c）。 */
   onExpandLeftPane: () => void;
   /** 返回引导卡（退出新建态 / 取消选中，Doc-First §9.5.7 F-impl-10）。 */
@@ -95,6 +97,7 @@ export function DocumentsFeature({
   onRemoveTag,
   aiPolish,
   rightPaneOpen,
+  onToggleRightPane,
   onExpandLeftPane,
   onExitToEmpty,
 }: DocumentsFeatureProps) {
@@ -347,6 +350,7 @@ export function DocumentsFeature({
           onAddTagSelectionChange={onAddTagSelectionChange}
           onAddTag={onAddTag}
           onCreateAndTag={onCreateAndTag}
+          onToggleRightPane={onToggleRightPane}
           onRemoveTag={onRemoveTag}
           aiPolish={aiPolish}
         />

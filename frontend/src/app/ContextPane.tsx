@@ -1,9 +1,14 @@
 import type { KnowledgeDocument, Space, Term } from '../api';
 import type { ActiveView } from './WorkspaceViewNav';
 import { FolderTree } from './FolderTree';
+import { PaneEdgeToggle } from './PaneEdgeToggle';
 import type { FolderManager } from './useFolders';
+import { TermCategoryTree } from './TermCategoryTree';
+import type { TermCategoryManager } from './useTermCategories';
 import { LocalMountPane } from '../features/LocalMountPane';
 import { useLocalMountHeight } from './useLocalMountHeight';
+import { usePaneSectionHeight } from './usePaneSectionHeight';
+import { TERM_CATEGORIES_HEIGHT_STORAGE_KEY, DEFAULT_TERM_CATEGORIES_HEIGHT } from './pane-section-height-store';
 import type { CSSProperties } from 'react';
 import type { LocalVaultDoc } from './local-vault-index';
 
@@ -22,10 +27,15 @@ type ContextPaneProps = {
   terms: Term[];
   selectedTermId: number | null;
   onSelectTerm: (term: Term) => void;
-  onNewTerm: () => void;
+  /** 新建术语；``categoryId`` 非空时预填到该领域（右键「在此新建术语」）。 */
+  onNewTerm: (categoryId?: number | null) => void;
+  /** 术语领域树（REQ-036 增强，migration 017）。 */
+  termCategories: TermCategoryManager;
   token: string | undefined;
   onImported: () => void;
   onOpenLocalDoc: (doc: LocalVaultDoc | null) => void;
+  /** 收起左目录（批1，点1：左栏右边缘就近折叠）。 */
+  onToggleLeftPane: () => void;
 };
 
 export function ContextPane({
@@ -44,12 +54,15 @@ export function ContextPane({
   selectedTermId,
   onSelectTerm,
   onNewTerm,
+  termCategories,
   token,
   onImported,
   onOpenLocalDoc,
+  onToggleLeftPane,
 }: ContextPaneProps) {
   const selectedDocument = documents.find((document) => document.id === selectedId) ?? null;
   const mountHeight = useLocalMountHeight();
+  const termCategoriesHeight = usePaneSectionHeight(TERM_CATEGORIES_HEIGHT_STORAGE_KEY, DEFAULT_TERM_CATEGORIES_HEIGHT);
   const anyFolderExpanded = folders.expandedFolderIds.size > 0;
 
   const handleToggleAllFolders = () => {
@@ -91,6 +104,7 @@ export function ContextPane({
 
   return (
     <aside className={`sidebar context-pane context-${activeView}`.trim()}>
+      <PaneEdgeToggle side="left" onToggle={onToggleLeftPane} label="收起目录（Ctrl+B）" />
       {activeView === 'documents' ? (
         <>
           <section className="context-header section-title folder-header">
@@ -259,31 +273,86 @@ export function ContextPane({
             </div>
             <button
               type="button"
-              onClick={onNewTerm}
+              className="secondary"
+              onClick={() => onNewTerm()}
               disabled={isBusy}
             >
               新建
             </button>
           </section>
-          {terms.length === 0 ? (
-            <p className="empty-state context-empty">当前空间暂无术语。</p>
-          ) : (
-            <ul className="term-list context-list">
-              {terms.map((term) => (
-                <li key={term.id}>
-                  <button
-                    type="button"
-                    className={term.id === selectedTermId ? 'active' : ''}
-                    onClick={() => onSelectTerm(term)}
-                  >
-                    <strong>{term.term}</strong>
-                    <small>{term.space_id ? '当前空间' : '全局'} · {term.status === 'confirmed' ? '已确认' : '待确认'}</small>
-                    <span>{term.definition}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
+
+          <div className="context-tree-split">
+            <div className="context-tree-upper">
+              {(() => {
+                const globalTerms = terms.filter((term) => term.space_id == null);
+                if (globalTerms.length === 0) {
+                  return <p className="empty-state context-empty">暂无全局术语。</p>;
+                }
+                return (
+                  <>
+                    <div className="subsection-heading">
+                      <strong>全局术语</strong>
+                      <span>{globalTerms.length}</span>
+                    </div>
+                    <ul className="term-list context-list">
+                      {globalTerms.map((term) => (
+                        <li key={term.id}>
+                          <button
+                            type="button"
+                            className={term.id === selectedTermId ? 'active' : ''}
+                            onClick={() => onSelectTerm(term)}
+                          >
+                            <strong>{term.term}</strong>
+                            <small>全局 · {term.status === 'confirmed' ? '已确认' : '待确认'}</small>
+                            <span>{term.definition}</span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                );
+              })()}
+            </div>
+
+            <div
+              className={termCategoriesHeight.resizing ? 'pane-resizer pane-resizer-row resizing' : 'pane-resizer pane-resizer-row'}
+              role="separator"
+              aria-orientation="horizontal"
+              aria-label="调整领域分区高度"
+              tabIndex={0}
+              onPointerDown={termCategoriesHeight.startResize}
+              onPointerMove={termCategoriesHeight.moveResize}
+              onPointerUp={termCategoriesHeight.endResize}
+              onPointerCancel={termCategoriesHeight.endResize}
+              onDoubleClick={termCategoriesHeight.resetHeight}
+              onKeyDown={termCategoriesHeight.handleKeyDown}
+            />
+
+            <div
+              className="term-categories-zone"
+              style={{ '--term-categories-height': `${termCategoriesHeight.height}px` } as CSSProperties}
+            >
+              <div className="subsection-heading term-categories-heading">
+                <strong>空间领域</strong>
+                <button
+                  type="button"
+                  className="secondary"
+                  onClick={() => termCategories.beginCreateCategory(null)}
+                  disabled={isBusy}
+                >
+                  ＋ 新建领域
+                </button>
+              </div>
+              <TermCategoryTree
+                terms={terms.filter((term) => term.space_id != null)}
+                selectedTermId={selectedTermId}
+                isBusy={isBusy}
+                categories={termCategories}
+                onSelectTerm={onSelectTerm}
+                onNewTermInCategory={(categoryId) => onNewTerm(categoryId)}
+              />
+            </div>
+          </div>
         </>
       ) : null}
     </aside>

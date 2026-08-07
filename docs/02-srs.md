@@ -71,6 +71,7 @@
 | REQ-010 | 以 OCR 预提取文本或人工已提取文本替代真实图片 / 白板 OCR；真实 OCR 留后续阶段 | U-10 | 已提取文本导入后能搜到对应文字；真实 OCR 引擎、图片上传识别不作为 Phase1 必过 | [P1] | 后续阶段（P1 降级移出必过） |
 | REQ-011 | Chrome / Edge 桌面端可用全部 P1 功能 | U-11 | 桌面浏览器完成上述全部操作无阻断 | [P1] | P1-条件通过（Demo） |
 | REQ-036 | 每个空间可维护术语条目，阅读 / 编辑时识别已定义术语，问答时优先采用当前空间术语定义并引用术语来源 | U-42 | 新建「触发延迟」术语后问答优先使用该空间定义，同名全局术语不覆盖空间术语 | [P1] | P1-条件通过（Demo） |
+| REQ-048 | 术语领域树（REQ-036 增强）：空间术语按内容领域树组织（`lumen_term_categories` 嵌套领域，全局术语顶部固定区）；术语挂领域叶子 + 内容分类（category）+ 来源追溯（source）；领域树 CRUD / 移动 / 排序 / 删非空拒绝 | U-42 扩展 | 空间内可建「研发与开发流程」等领域，术语挂到领域下并按分类/来源归档；全局术语固定区只读 | [P1] | 维护态增强·已实现（2026-08-07，migration 017，API-051..053） |
 | REQ-037 | 批量 / 文件夹导入（`.md`/`.txt`）：drop zone + 多文件 + 文件夹拖拽（`webkitdirectory`）批量入库；标题用相对路径前缀保留目录感；批量进度 + 同名跳过 | U-09 扩展 | 拖入文件夹后所有 `.md`/`.txt` 入库可搜可问答，标题保留路径前缀（**Phase2B folder-tree 扩展**：`preserve_structure=true` 保留真实目录结构建 folder，见 REQ-039） | [P1] | P1.5A-已实现（TC-P1-015 通过） |
 | REQ-038 | 文档 / 空间导出：单文档下载 `.md`；空间打包 ZIP 导出所有可见文档 `.md`（权限过滤） | U-43 | 文档详情可下载 `.md`；空间导出 ZIP 含可见文档 | [P1] | P1.5A-已实现（TC-P1-016 通过） |
 | REQ-012 | 标签视图：扁平标签（空间隔离；name + color + description + active/archived）跨目录聚合同标签文档；文档详情打标签 / 移除；标签视图列标签 + 可见文档数，点标签看该标签下可见文档；单标签筛选；document_count 只统计当前用户可见文档 | U-13 | Phase2A 最小版：扁平标签、独立标签视图、单标签筛选、文档详情面板打标签；不做层级 / 组合筛选 / AI 自动打标签（link_source 预留 manual 外的值但不实现） | [P2] | P2-已实现（TC-P2-TAG-001 通过） |
@@ -188,6 +189,7 @@
 | REQ-045 | AC-P2-ACC-004 | TC-P2-ACC-002 | `docs/09-verification.md` §2、全局角色 admin/member 权限校验 tests + 浏览器 smoke | 立项·待实现 |
 | REQ-046 | AC-P2-ACC-005 | TC-P2-ACC-002 | `docs/09-verification.md` §2、admin 域用户管理 tests + 浏览器 smoke | 立项·待实现 |
 | REQ-047 | AC-P2-ACC-006 | TC-P2-ACC-002 | `docs/09-verification.md` §2、space 域成员管理 tests + 浏览器 smoke | 立项·待实现 |
+| REQ-048 | AC-P1-009 扩展 | TC-P2-TERM-001 | `docs/09-verification.md` §2、术语领域树后端 tests（`tests/backend/test_term_category.py` 18 例 + `test_term.py` 扩字段，Sprint-29） | 维护态增强·已实现 |
 
 ## 5. 待人工确认项
 

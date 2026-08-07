@@ -34,6 +34,7 @@ from backend.model.entities import (
     TagLink,
     QuickEntry,
     Term,
+    TermCategory,
     Session,
     TermStatus,
     User,
@@ -53,6 +54,7 @@ from backend.model.orm import (
     SpaceORM,
     TagLinkORM,
     TagORM,
+    TermCategoryORM,
     TermORM,
     UserORM,
 )
@@ -178,6 +180,22 @@ def _to_term(r: TermORM) -> Term:
         owner_id=r.owner_id,
         status=TermStatus(r.status),
         source_document_id=r.source_document_id,
+        category_id=r.category_id,
+        category=r.category,
+        source=r.source,
+        created_at=_dt_iso(r.created_at),
+        updated_at=_dt_iso(r.updated_at),
+    )
+
+
+def _to_term_category(r: TermCategoryORM) -> TermCategory:
+    return TermCategory(
+        id=r.id,
+        space_id=r.space_id,
+        parent_id=r.parent_id,
+        name=r.name,
+        order_idx=r.order_idx,
+        created_by=r.created_by,
         created_at=_dt_iso(r.created_at),
         updated_at=_dt_iso(r.updated_at),
     )
@@ -1215,6 +1233,9 @@ class PgRepository:
         owner_id: int,
         status: TermStatus,
         source_document_id: int | None = None,
+        category_id: int | None = None,
+        category: str | None = None,
+        source: str | None = None,
     ) -> Term:
         with SessionLocal() as session:
             t = TermORM(
@@ -1225,6 +1246,9 @@ class PgRepository:
                 owner_id=owner_id,
                 status=status.value,
                 source_document_id=source_document_id,
+                category_id=category_id,
+                category=category,
+                source=source,
             )
             session.add(t)
             session.commit()
@@ -1238,6 +1262,9 @@ class PgRepository:
         aliases: list[str],
         status: TermStatus,
         source_document_id: int | None = None,
+        category_id: int | None = None,
+        category: str | None = None,
+        source: str | None = None,
     ) -> Term:
         with SessionLocal() as session:
             t = session.get(TermORM, term_id)
@@ -1248,6 +1275,9 @@ class PgRepository:
             t.aliases = list(aliases)
             t.status = status.value
             t.source_document_id = source_document_id
+            t.category_id = category_id
+            t.category = category
+            t.source = source
             t.updated_at = func.now()
             session.commit()
             return _to_term(t)
@@ -1395,5 +1425,132 @@ class PgRepository:
                 ).first()
                 if row is not None:
                     row.order = order
+                    row.updated_at = func.now()
+            session.commit()
+
+    # --- term categories (REQ-036 领域树, migration 017) ---
+
+    def _next_term_category_order(self, session, space_id: int, parent_id: int | None) -> int:
+        query = select(func.max(TermCategoryORM.order_idx)).where(TermCategoryORM.space_id == space_id)
+        if parent_id is None:
+            query = query.where(TermCategoryORM.parent_id.is_(None))
+        else:
+            query = query.where(TermCategoryORM.parent_id == parent_id)
+        max_order = session.scalars(query).first()
+        return (max_order or 0) + 1
+
+    def list_term_categories(self, space_id: int) -> list[TermCategory]:
+        with SessionLocal() as session:
+            rows = session.scalars(
+                select(TermCategoryORM)
+                .where(TermCategoryORM.space_id == space_id)
+                .order_by(TermCategoryORM.parent_id, TermCategoryORM.order_idx, TermCategoryORM.name)
+            ).all()
+            return [_to_term_category(r) for r in rows]
+
+    def get_term_category(self, category_id: int) -> TermCategory | None:
+        with SessionLocal() as session:
+            row = session.get(TermCategoryORM, category_id)
+            return _to_term_category(row) if row else None
+
+    def find_term_category_by_name(self, space_id: int, parent_id: int | None, name: str) -> TermCategory | None:
+        with SessionLocal() as session:
+            query = select(TermCategoryORM).where(TermCategoryORM.space_id == space_id, TermCategoryORM.name == name)
+            if parent_id is None:
+                query = query.where(TermCategoryORM.parent_id.is_(None))
+            else:
+                query = query.where(TermCategoryORM.parent_id == parent_id)
+            row = session.scalars(query).first()
+            return _to_term_category(row) if row else None
+
+    def create_term_category(self, space_id: int, parent_id: int | None, name: str, created_by: int) -> TermCategory:
+        with SessionLocal() as session:
+            row = TermCategoryORM(
+                space_id=space_id,
+                parent_id=parent_id,
+                name=name,
+                order_idx=self._next_term_category_order(session, space_id, parent_id),
+                created_by=created_by,
+            )
+            session.add(row)
+            session.commit()
+            return _to_term_category(row)
+
+    def rename_term_category(self, category_id: int, name: str) -> TermCategory | None:
+        with SessionLocal() as session:
+            row = session.scalars(select(TermCategoryORM).where(TermCategoryORM.id == category_id)).first()
+            if row is None:
+                return None
+            row.name = name
+            row.updated_at = func.now()
+            session.commit()
+            return _to_term_category(row)
+
+    def move_term_category(self, category_id: int, parent_id: int | None) -> TermCategory | None:
+        with SessionLocal() as session:
+            row = session.scalars(select(TermCategoryORM).where(TermCategoryORM.id == category_id)).first()
+            if row is None:
+                return None
+            row.parent_id = parent_id
+            row.order_idx = self._next_term_category_order(session, row.space_id, parent_id)
+            row.updated_at = func.now()
+            session.commit()
+            return _to_term_category(row)
+
+    def delete_term_category(self, category_id: int) -> None:
+        with SessionLocal() as session:
+            session.execute(delete(TermCategoryORM).where(TermCategoryORM.id == category_id))
+            session.commit()
+
+    def is_term_category_empty(self, space_id: int, category_id: int) -> bool:
+        with SessionLocal() as session:
+            has_child = session.scalars(
+                select(TermCategoryORM.id)
+                .where(TermCategoryORM.space_id == space_id, TermCategoryORM.parent_id == category_id)
+                .limit(1)
+            ).first()
+            if has_child is not None:
+                return False
+            has_term = session.scalars(
+                select(TermORM.id).where(TermORM.category_id == category_id).limit(1)
+            ).first()
+            return has_term is None
+
+    def is_descendant_term_category(self, space_id: int, ancestor_id: int, candidate_id: int) -> bool:
+        """``candidate`` 是否是 ``ancestor`` 的后代（含自身）。用 PG ``WITH RECURSIVE`` 递归 CTE 防 N+1。"""
+        with SessionLocal() as session:
+            result = session.scalars(
+                sql_text(
+                    """
+                    WITH RECURSIVE descendants(id) AS (
+                        SELECT CAST(:ancestor AS BIGINT)
+                        UNION ALL
+                        SELECT c.id FROM lumen_term_categories c
+                        JOIN descendants d ON c.parent_id = d.id
+                        WHERE c.space_id = CAST(:space AS BIGINT)
+                    )
+                    SELECT 1 FROM descendants WHERE id = CAST(:candidate AS BIGINT) LIMIT 1
+                    """
+                ).params(ancestor=ancestor_id, candidate=candidate_id, space=space_id)
+            ).first()
+            return result is not None
+
+    def list_term_category_term_ids(self, space_id: int, category_id: int) -> list[int]:
+        with SessionLocal() as session:
+            rows = session.scalars(
+                select(TermORM.id).where(
+                    TermORM.space_id == space_id, TermORM.category_id == category_id
+                )
+            ).all()
+            return list(rows)
+
+    def reorder_term_categories(self, space_id: int, ordered_category_ids: list[int]) -> None:
+        with SessionLocal() as session:
+            for order, category_id in enumerate(ordered_category_ids, start=1):
+                row = session.scalars(
+                    select(TermCategoryORM).where(TermCategoryORM.id == category_id, TermCategoryORM.space_id == space_id)
+                ).first()
+                if row is not None:
+                    row.order_idx = order
                     row.updated_at = func.now()
             session.commit()

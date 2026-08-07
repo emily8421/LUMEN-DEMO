@@ -8,6 +8,7 @@ import type {
 } from '../api';
 import { MarkdownBlock } from '../components/MarkdownBlock';
 import { AiPolishFeature } from './AiPolishFeature';
+import { PaneEdgeToggle } from '../app/PaneEdgeToggle';
 import type { useAiPolish } from '../app/useAiPolish';
 
 type InspectorTab = 'versions' | 'links' | 'tags' | 'ai';
@@ -29,6 +30,8 @@ type DocumentInspectorFeatureProps = {
   onCreateAndTag: (name: string) => void;
   onRemoveTag: (tagId: number) => void;
   aiPolish: ReturnType<typeof useAiPolish>;
+  /** 收起右栏（批1，点1：右栏左边缘就近折叠）。 */
+  onToggleRightPane: () => void;
 };
 
 const INSPECTOR_TABS: Array<{ value: InspectorTab; label: string }> = [
@@ -63,6 +66,7 @@ export function DocumentInspectorFeature({
   onCreateAndTag,
   onRemoveTag,
   aiPolish,
+  onToggleRightPane,
 }: DocumentInspectorFeatureProps) {
   const [activeTab, setActiveTab] = useState<InspectorTab>('versions');
   const [newTagName, setNewTagName] = useState('');
@@ -84,6 +88,7 @@ export function DocumentInspectorFeature({
 
   return (
     <aside className="versions-panel inspector-pane document-inspector-pane">
+      <PaneEdgeToggle side="right" onToggle={onToggleRightPane} label="收起右栏（Ctrl+R）" />
       <div className="inspector-tabs" role="tablist" aria-label="文档侧栏">
         {INSPECTOR_TABS.map((tab) => (
           <button

@@ -405,6 +405,7 @@
 }
 
 .context-pane {
+  position: relative;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   min-width: 0;
@@ -412,4 +413,46 @@
   overflow: hidden;
   border-right: 1px solid var(--line);
   background: var(--panel);
+}
+
+/* 侧栏边缘折叠按钮（批1，点1）：栏可见时就近收起，对标 Notion / 语雀。
+   圆形裸箭头 + hover 蓝底；贴栏内边缘（right/left:4px）不溢出，避免被栏 overflow:hidden 裁剪。 */
+.pane-edge-toggle {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0;
+  opacity: 0.7;
+  transition: opacity 0.12s ease, background 0.12s ease, color 0.12s ease;
+}
+
+.pane-edge-toggle svg {
+  width: 20px;
+  height: 20px;
+}
+
+.pane-edge-toggle:hover,
+.pane-edge-toggle:focus-visible {
+  opacity: 1;
+  background: var(--blue-soft);
+  color: var(--blue);
+  outline: none;
+}
+
+.pane-edge-left {
+  right: 4px;
+}
+
+.pane-edge-right {
+  left: 4px;
 }

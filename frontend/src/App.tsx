@@ -10,6 +10,7 @@ import { useQuickEntry } from './app/useQuickEntry';
 import { useSearch } from './app/useSearch';
 import { useQuery } from './app/useQuery';
 import { useTerms } from './app/useTerms';
+import { useTermCategories } from './app/useTermCategories';
 import { useImport } from './app/useImport';
 import { useWorkspace } from './app/useWorkspace';
 import { usePaneLayout } from './app/usePaneLayout';
@@ -26,6 +27,8 @@ import type { LocalVaultDoc } from './app/local-vault-index';
 import { QuickEntryFeature } from './features/QuickEntryFeature';
 import { ImportFeature } from './features/ImportFeature';
 import { WorkspaceMain } from './app/WorkspaceMain';
+import { useCommandPalette } from './app/useCommandPalette';
+import { CommandPalette } from './features/CommandPalette';
 import { OnboardingGuide } from './features/OnboardingGuide';
 import { ONBOARDING_STEPS, isOnboardingDone, loadOnboardingState, persistOnboardingState } from './app/onboarding-store';
 import type { OnboardingState, OnboardingStepId } from './app/onboarding-store';
@@ -98,6 +101,7 @@ function App() {
   const search = useSearch({ token, runAction, setNotice: workspace.setNotice });
   const query = useQuery({ token, runAction, setNotice: workspace.setNotice });
   const terms = useTerms({ token, runAction, setNotice: workspace.setNotice });
+  const termCategories = useTermCategories({ token, runAction, setNotice: workspace.setNotice });
   const timeline = useTimeline({
     token,
     currentSpaceId: session.session?.currentSpaceId,
@@ -113,6 +117,18 @@ function App() {
     globalRole: session.session?.role ?? 'member',
     runAction,
     setNotice: workspace.setNotice,
+  });
+
+  const palette = useCommandPalette({
+    token,
+    onOpenDocument: documents.handleOpenDocument,
+    onNavigate: workspace.setActiveView,
+    onCreateDocument: documents.handleCreateDocument,
+    onOpenImport: () => setImportModalOpen(true),
+    onAskAi: (queryText) => {
+      query.setQuestion(queryText);
+      workspace.setActiveView('query');
+    },
   });
 
   const currentSpace = session.spaces.find((space) => space.id === session.session?.currentSpaceId) ?? null;
@@ -154,12 +170,14 @@ function App() {
       documents.reloadDocuments(refreshToken),
       folders.reloadLoadedFolders(refreshToken),
       terms.reloadTerms(),
+      termCategories.reloadRoot(refreshToken),
     ]);
   }
 
   function handleSpaceChanged() {
     documents.setSelectedId(null);
     folders.resetFolders();
+    termCategories.resetCategories();
     workspace.setActiveView('home');
     search.setSearchResult(null);
     query.setQueryResult(null);
@@ -264,6 +282,7 @@ function App() {
         onLogout={session.handleLogout}
         canManageUsers={session.session?.role === 'admin'}
         onOpenUserManagement={() => workspace.setActiveView('admin-users')}
+        onOpenSearchPalette={palette.open}
       />
 
       {!session.session ? (
@@ -356,9 +375,11 @@ function App() {
             selectedTermId={terms.selectedTermId}
             onSelectTerm={terms.selectTerm}
             onNewTerm={terms.newTerm}
+            termCategories={termCategories}
             token={token}
             onImported={() => handleImported(null)}
             onOpenLocalDoc={handleOpenLocalDoc}
+            onToggleLeftPane={paneLayout.toggleLeftPane}
           />
 
           {leftPaneOpen ? (
@@ -381,10 +402,12 @@ function App() {
             activeView={workspace.activeView}
             isBusy={workspace.isBusy}
             rightPaneOpen={paneLayout.rightPaneOpen}
+            onToggleRightPane={paneLayout.toggleRightPane}
             documents={documents}
             search={search}
             query={query}
             terms={terms}
+            termCategories={termCategories}
             tags={tags}
             timeline={timeline}
             aiPolish={aiPolish}
@@ -453,6 +476,20 @@ function App() {
         </div>
       )}
 
+      {session.session ? (
+        <CommandPalette
+          isOpen={palette.isOpen}
+          query={palette.query}
+          searching={palette.searching}
+          items={palette.items}
+          activeIndex={palette.activeIndex}
+          onQueryChange={palette.setQuery}
+          onActiveIndexChange={palette.setActiveIndex}
+          onKeyDown={palette.onKeyDown}
+          onExecute={palette.execute}
+          onClose={palette.close}
+        />
+      ) : null}
       <StatusBar notice={workspace.notice} error={workspace.error} />
     </main>
   );

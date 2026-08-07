@@ -1,6 +1,6 @@
 # 详细设计：术语管理子系统（term-management）
 
-> 对应 REQ-036。总体定位见 04；数据见 06（lumen_terms）；接口见 07（/api/terms）。
+> 对应 REQ-036（+ REQ-048 领域树增强，2026-08-07）。总体定位见 04；数据见 06（lumen_terms / lumen_term_categories）；接口见 07（/api/terms + /api/term-categories）。
 > 按「完整骨架 + 阶段增量」：`[P1]` 写最小 Demo 能力，后续能力原位追加。
 
 ## 0. 文档元信息
@@ -9,14 +9,37 @@
 |---|---|
 | 设计对象 | 术语管理子系统（MOD-005） |
 | 文档路径 | docs/design/term-management.md |
-| 输入来源 | 02/03、04 §2、06（lumen_terms）、07（API-012 / API-013） |
-| 覆盖 REQ | REQ-036 |
+| 输入来源 | 02/03、04 §2、06（lumen_terms / lumen_term_categories）、07（API-012 / API-013 / API-051..053）、`docs/research/2026-08-07-term-domain-tree-analysis.md` |
+| 覆盖 REQ | REQ-036（+ REQ-048 领域树增强） |
 | 所属 Phase | [P1] |
 | 交付物形态 | Demo |
-| 当前状态 | P1-已实现（Sprint-5 降级实现，Sprint-7/8 后术语存储切 PostgreSQL 且问答口径注入真实 LLM；见 §6） |
+| 当前状态 | P1-已实现（Sprint-5 降级实现，Sprint-7/8 后术语存储切 PostgreSQL 且问答口径注入真实 LLM；见 §6）；**REQ-048 领域树已实现（2026-08-07，migration 017 + API-051..053，TC-P2-TERM-001 通过）** |
 | 流程 ID | Flow-D-005（术语维护）/ Flow-D-006（文档术语识别）/ Flow-D-007（问答口径对齐），见 §2 |
-| 最后更新 | 2026-07-10 |
-| 下游影响 | 08 Sprint-5、09 TC-P1-012 |
+| 最后更新 | 2026-08-07（REQ-048 领域树增强回写） |
+| 下游影响 | 08 Sprint-5 / Sprint-29、09 TC-P1-012 / TC-P2-TERM-001 |
+
+## 0.1 领域树增强（REQ-048，2026-08-07）
+
+> 设计依据：`docs/research/2026-08-07-term-domain-tree-analysis.md`（输入材料评审 + TM-C-001..007 用户确认）。**领域树方向 + 全局术语固定区 + demo 粗粒度 3-4 领域 + 阅读/编辑态分离**。
+
+### 0.1.1 目录形态
+- **左栏**：全局术语固定区（顶部，系统级，仅 admin 可改——本轮保留只读）+ 空间领域树（`lumen_term_categories`，嵌套邻接表 `parent_id` 自引用，仿 folder-tree）。
+- **主区**：单一详情面板（阅读态 / 编辑态），不再有第二栏列表（用户验收反馈，符合「左树导航 + 右详情」主流模式）。
+
+### 0.1.2 数据模型
+- `lumen_term_categories`：`id / space_id / parent_id(self, 空=根) / name / order_idx / created_by / created_at / updated_at`；`UNIQUE(space_id, parent_id, name)`（根层重名 service 兜底）。
+- `lumen_terms` 扩 3 可空字段：`category_id`（FK→lumen_term_categories，空=未分类）、`category`（内容分类，14 类候选自由输入非枚举）、`source`（术语来源）。
+- 领域树**不独立设权限**（复用 folder 口径）；删非空（有子领域或术语）→ 4090；无 archived。
+
+### 0.1.3 API
+- API-051 `GET/POST /api/term-categories`（懒加载 `?parent_id=`，仿 API-034）；API-052 `PATCH/DELETE /api/term-categories/{id}`（改名 / 移动防环 / 删非空 4090）；API-053 `POST /api/term-categories/reorder`。
+- API-012/013 扩 `category_id` / `category` / `source` 请求·响应字段；`category_id` 跨空间 → 4220。
+
+### 0.1.4 交互
+- 右键领域节点：「在此新建术语」（预填该领域）/「新建子领域」/「重命名」/「上移 / 下移」/「删除空领域」。
+- 点术语叶子 → 主区阅读态（名称 + 状态/全局/领域/分类徽标 + 定义/别名/来源 + 编辑按钮）；点「编辑」→ 编辑表单（领域下拉 / 内容分类 datalist / 来源字段）；点「新建」→ 编辑态空表单。
+- 左栏上下分区（全局术语区 / 空间领域树区）可拖拽调高（`usePaneSectionHeight` 通用 hook，独立 storageKey）。
+- 标签 CRUD 前端接线（API-027）：标签项 hover「✎」→ 内联编辑（名称 / 描述 / 颜色 + 保存 / 取消 / 归档），归档确认后移除列表、关联文档保留。
 
 ## 1. 职责
 

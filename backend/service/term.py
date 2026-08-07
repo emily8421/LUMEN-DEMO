@@ -28,6 +28,10 @@ class TermWrite:
     aliases: list[str]
     status: TermStatus
     source_document_id: int | None = None
+    # 术语管理增强（REQ-036 领域树，migration 017）。
+    category_id: int | None = None
+    category: str | None = None
+    source: str | None = None
 
 
 def list_visible_terms(
@@ -52,6 +56,7 @@ def list_visible_terms(
 def create_term(repository, user_id: int, current_space_id: int, request: TermWrite) -> Term:
     _ensure_space_member(repository, user_id, current_space_id)
     _validate_write_request(repository, user_id, current_space_id, request)
+    _validate_category(repository, current_space_id, request.category_id)
     return repository.create_term(
         space_id=current_space_id,
         term=request.term.strip(),
@@ -60,6 +65,9 @@ def create_term(repository, user_id: int, current_space_id: int, request: TermWr
         owner_id=user_id,
         status=request.status,
         source_document_id=request.source_document_id,
+        category_id=request.category_id,
+        category=request.category.strip() if request.category else None,
+        source=request.source.strip() if request.source else None,
     )
 
 
@@ -76,6 +84,7 @@ def update_term(repository, user_id: int, current_space_id: int, term_id: int, r
     if existing_term.space_id is None:
         raise TermAccessError("global terms are read-only in Phase1 demo")
     _validate_write_request(repository, user_id, current_space_id, request)
+    _validate_category(repository, current_space_id, request.category_id)
     return repository.update_term(
         term_id=term_id,
         term=request.term.strip(),
@@ -83,6 +92,9 @@ def update_term(repository, user_id: int, current_space_id: int, term_id: int, r
         aliases=_normalize_aliases(request.aliases),
         status=request.status,
         source_document_id=request.source_document_id,
+        category_id=request.category_id,
+        category=request.category.strip() if request.category else None,
+        source=request.source.strip() if request.source else None,
     )
 
 
@@ -121,6 +133,15 @@ def _validate_write_request(repository, user_id: int, current_space_id: int, req
         document = repository.get_document(request.source_document_id)
         if document is None or not can_view_document(user_id, current_space_id, document, repository.list_memberships()):
             raise TermValidationError("source document not found")
+
+
+def _validate_category(repository, current_space_id: int, category_id: int | None) -> None:
+    """校验 category_id（若提供）属于当前空间的领域树节点；跨空间→4220。"""
+    if category_id is None:
+        return
+    category = repository.get_term_category(category_id)
+    if category is None or category.space_id != current_space_id:
+        raise TermValidationError("category not found in this space")
 
 
 def _matches_query(term: Term, normalized_query: str) -> bool:

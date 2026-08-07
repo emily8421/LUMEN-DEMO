@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Space } from '../api';
 import type { Session } from './types';
+import { GlobalSearchBar } from '../features/GlobalSearchBar';
 
 type TopBarProps = {
   session: Session | null;
@@ -19,6 +20,8 @@ type TopBarProps = {
   canManageUsers: boolean;
   /** 打开用户管理页（全局 admin 可见）。 */
   onOpenUserManagement: () => void;
+  /** 打开命令面板（批2a，点2）。 */
+  onOpenSearchPalette: () => void;
 };
 
 /**
@@ -55,6 +58,7 @@ export function TopBar({
   onLogout,
   canManageUsers,
   onOpenUserManagement,
+  onOpenSearchPalette,
 }: TopBarProps) {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
@@ -108,6 +112,25 @@ export function TopBar({
       </div>
       {session ? (
         <div className="topbar-center">
+          <GlobalSearchBar onOpen={onOpenSearchPalette} />
+          <div className="top-context">
+            <span>当前空间</span>
+            <select
+              value={session.currentSpaceId}
+              onChange={(event) => void onSpaceChange(Number(event.target.value))}
+              disabled={isBusy}
+              aria-label="当前空间"
+            >
+              {spaces.map((space) => (
+                <option key={space.id} value={space.id}>{space.name}</option>
+              ))}
+            </select>
+            <button type="button" className="secondary" onClick={onExportSpace} disabled={isBusy}>导出空间 ZIP</button>
+          </div>
+        </div>
+      ) : null}
+      {session ? (
+        <div className="top-actions">
           <div className="pane-toggles">
             <button
               type="button"
@@ -136,24 +159,6 @@ export function TopBar({
               </svg>
             </button>
           </div>
-          <div className="top-context">
-            <span>当前空间</span>
-            <select
-              value={session.currentSpaceId}
-              onChange={(event) => void onSpaceChange(Number(event.target.value))}
-              disabled={isBusy}
-              aria-label="当前空间"
-            >
-              {spaces.map((space) => (
-                <option key={space.id} value={space.id}>{space.name}</option>
-              ))}
-            </select>
-            <button type="button" className="secondary" onClick={onExportSpace} disabled={isBusy}>导出空间 ZIP</button>
-          </div>
-        </div>
-      ) : null}
-      {session ? (
-        <div className="top-actions">
           <div className="help-wrap" ref={helpWrapRef}>
             <button
               type="button"

@@ -26,7 +26,8 @@
 | lumen_document_versions | 版本历史 | [P1] | P1-已实现 | 已落地 PostgreSQL（migration 002；PgRepository 接入） | REQ-006 |
 | lumen_chunks | 切块 + Embedding 向量 + 全文向量 | [P1] | P1-已实现 | 已落地 PostgreSQL（migration 003；T6 起写入 embedding 并用于 RAG 向量召回） | REQ-007/008 |
 | lumen_imports | 导入任务 | [P1] | P1-已实现；Phase1.5A 复用 | 已落地 PostgreSQL（migration 004；当前导入仅 `.md`/`.txt` 已提取文本；批量导入默认逐文件复用此表） | REQ-009/010/037 |
-| lumen_terms | 空间级术语表 | [P1] | P1-已实现 | 已落地 PostgreSQL（migration 004；PgRepository 接入） | REQ-036 |
+| lumen_terms | 空间级术语表（REQ-048 扩 category_id / category / source，migration 017） | [P1] | P1-已实现 | 已落地 PostgreSQL（migration 004；migration 017 扩字段；PgRepository 接入） | REQ-036 / REQ-048 |
+| lumen_term_categories | 术语领域树（嵌套领域，仿 lumen_folders） | [P1] | 维护态增强·已实现 | migration 017 已落地 + 后端 service/API/tests 已实现（REQ-048） | REQ-048 |
 | lumen_tags | 标签 | [P2] | Phase2A-已实现 | 迁移 008 已落地（Task A `1e4cf48`）；扁平标签（无层级） | REQ-012 |
 | lumen_tag_links | 标签-文档关联 | [P2] | Phase2A-已实现 | 迁移 008 已落地（Task A `1e4cf48`）；最小版仅写入 link_source='manual'，其余值预留 | REQ-012 |
 | lumen_doc_links | 内部链接与反向链接索引 | [P2] | Phase2A-已实现 | 已落地（migration 007；fc2b869 Task A） | REQ-026 |
@@ -51,7 +52,7 @@
 
 LUMEN 采用 `docs/decisions/ADR-010-db-authority-derived-data-rebuildability.md` 定义的 **DB 权威运行态 + 衍生数据可重建** 模型：
 
-- **权威运行态数据**：`lumen_users`、`lumen_spaces`、`lumen_space_members`、`lumen_documents`、`lumen_document_versions`、`lumen_terms`、`lumen_tags`、`lumen_quick_entries` 等承载用户、空间、权限、正文、版本、术语、标签定义和快速录入业务事实，PostgreSQL 是权威来源。
+- **权威运行态数据**：`lumen_users`、`lumen_spaces`、`lumen_space_members`、`lumen_documents`、`lumen_document_versions`、`lumen_terms`、`lumen_term_categories`、`lumen_tags`、`lumen_quick_entries` 等承载用户、空间、权限、正文、版本、术语、领域树、标签定义和快速录入业务事实，PostgreSQL 是权威来源。
 - **可重建派生数据**：`lumen_chunks.text` / `embedding` / `ts_vector`、`lumen_doc_links` 中由 `[[wikilink]]` 解析出的出链 / 反链索引，以及 `document_count` 等计数类结果，必须可从权威文档内容、文档元数据、标签关系和权限边界重新生成或校验。
 - **不采纳项**：不采纳 `.md` / frontmatter 是唯一权威、DB 是可丢弃缓存的原始 OB-01 模型。`.md` 在 LUMEN 中是导入源、导出格式和迁出载体，不替代 DB 权威。
 - **实现边界**：本原则不声明当前已有全量重建脚本；后续新增索引 / 缓存 / 计数字段时，必须在本文件说明来源、重建触发和权限过滤口径。
@@ -166,8 +167,26 @@ LUMEN 采用 `docs/decisions/ADR-010-db-authority-derived-data-rebuildability.md
 | owner_id | bigint FK→users | 负责人 |
 | status | varchar | confirmed / pending |
 | source_document_id | bigint FK→documents, nullable | 术语来源文档 |
+| category_id | bigint FK→lumen_term_categories, nullable | 术语挂到领域树叶子（空=未分类）；REQ-048，migration 017 |
+| category | varchar | 内容分类（14 类候选，自由输入非枚举）；REQ-048，migration 017 |
+| source | varchar | 术语来源（行业标准 / 公司内部 / 外部文献 / 项目背景）；REQ-048，migration 017 |
 | created_at / updated_at | timestamptz | |
 - 约束：`UNIQUE(space_id, term)`；同名术语查询时空间级优先于全局术语
+
+### lumen_term_categories（REQ-048，migration 017）
+> 术语领域树，仿 `lumen_folders`（REQ-039）。嵌套邻接表 `parent_id` 自引用（空=空间根）。
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| id | bigint PK | |
+| space_id | bigint FK→spaces | 领域属单一空间，不独立设权限 |
+| parent_id | bigint FK→self, nullable | 空=空间根领域 |
+| name | varchar | 领域名 |
+| order_idx | integer | 同层手动排序 |
+| created_by | bigint FK→users | 创建人 |
+| created_at / updated_at | timestamptz | |
+- 约束：`UNIQUE(space_id, parent_id, name)`；根层重名由 service `find_term_category_by_name` 兜底（PG UNIQUE 对 NULL 不去重，同 lumen_folders 011 注释）
+- 领域树不独立设权限（复用 folder 口径）；删非空（有子领域或术语）由 service 拒绝（4090）；无 archived 状态
 
 ### 字段级契约矩阵（[P1]）
 
@@ -227,7 +246,17 @@ LUMEN 采用 `docs/decisions/ADR-010-db-authority-derived-data-rebuildability.md
 | lumen_terms | owner_id | bigint FK | 是 | — | FK→users | REQ-036 | 低 | 随术语删除 |
 | lumen_terms | status | varchar | 是 | pending | confirmed / pending | REQ-036 | 低 | 随术语删除 |
 | lumen_terms | source_document_id | bigint FK | 否 | — | FK→documents, nullable | REQ-036 | 低 | 随术语删除 |
+| lumen_terms | category_id | bigint FK | 否 | — | FK→lumen_term_categories, nullable | REQ-048 | 低 | 随术语删除（领域删时 SET NULL） |
+| lumen_terms | category | varchar | 否 | — | 内容分类（自由输入） | REQ-048 | 低 | 随术语删除 |
+| lumen_terms | source | varchar | 否 | — | 术语来源 | REQ-048 | 低 | 随术语删除 |
 | lumen_terms | created_at / updated_at | timestamptz | 是 | now() | — | REQ-036 | 低 | 随术语删除 |
+| lumen_term_categories | id | bigint PK | 是 | — | PK | REQ-048 | 低 | 随领域删除 |
+| lumen_term_categories | space_id | bigint FK | 是 | — | FK→spaces | REQ-048 | 低 | 随领域删除 |
+| lumen_term_categories | parent_id | bigint FK | 否 | — | FK→self, nullable（空=根） | REQ-048 | 低 | 随领域删除 |
+| lumen_term_categories | name | varchar | 是 | — | UNIQUE(space_id, parent_id, name) | REQ-048 | 低 | 随领域删除 |
+| lumen_term_categories | order_idx | int | 是 | 0 | 同层手动排序 | REQ-048 | 低 | 随领域删除 |
+| lumen_term_categories | created_by | bigint FK | 是 | — | FK→users | REQ-048 | 低 | 随领域删除 |
+| lumen_term_categories | created_at / updated_at | timestamptz | 是 | now() | — | REQ-048 | 低 | 随领域删除 |
 
 ### [Phase1.5A/B / Phase2A/B] 导入、导出与后续表契约状态
 

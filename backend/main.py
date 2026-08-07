@@ -65,6 +65,7 @@ def create_app():
     from backend.api.spaces import router as spaces_router
     from backend.api.space_members import router as space_members_router
     from backend.api.timeline import router as timeline_router
+    from backend.api.term_categories import router as term_categories_router
     from backend.api.terms import router as terms_router
     from backend.api.users import router as users_router
 
@@ -105,6 +106,8 @@ def create_app():
         app.include_router(timeline_router)
     if rag_router is not None:
         app.include_router(rag_router)
+    if term_categories_router is not None:
+        app.include_router(term_categories_router)
     if terms_router is not None:
         app.include_router(terms_router)
     if users_router is not None:

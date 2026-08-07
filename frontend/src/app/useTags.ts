@@ -3,11 +3,13 @@ import type { FormEvent } from 'react';
 import type { DocumentTagView, KnowledgeDocument, TagView } from '../api';
 import {
   addDocumentTag,
+  archiveTag,
   createTag,
   listDocumentTags,
   listDocumentsByTag,
   listTags,
   removeDocumentTag,
+  updateTag,
 } from '../api';
 
 type RunAction = (progressMessage: string, action: () => Promise<void>) => Promise<void>;
@@ -38,6 +40,14 @@ export function useTags({ token, currentSpaceId, selectedDocumentId, runAction, 
   const [tagDocuments, setTagDocuments] = useState<KnowledgeDocument[]>([]);
   const [newTagName, setNewTagName] = useState('');
   const [addTagSelection, setAddTagSelection] = useState<number | null>(null);
+
+  // 标签 CRUD（批2b 步2，兑现已批准 API-027 契约）：编辑态 draft + 编辑中 id
+  const [editingTagId, setEditingTagId] = useState<number | null>(null);
+  const [editDraft, setEditDraft] = useState<{ name: string; description: string; color: string }>({
+    name: '',
+    description: '',
+    color: '',
+  });
 
   // 空间切换 / 登录 → 重载标签列表，清空已选标签与其文档
   useEffect(() => {
@@ -107,6 +117,54 @@ export function useTags({ token, currentSpaceId, selectedDocumentId, runAction, 
     });
   };
 
+  const beginEditTag = (tag: TagView) => {
+    setEditingTagId(tag.id);
+    setEditDraft({ name: tag.name, description: tag.description ?? '', color: tag.color ?? '' });
+  };
+
+  const cancelEditTag = () => {
+    setEditingTagId(null);
+  };
+
+  const handleUpdateTag = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!token || editingTagId == null) {
+      return;
+    }
+    const name = editDraft.name.trim();
+    if (!name) {
+      return;
+    }
+    void runAction('正在更新标签...', async () => {
+      const updated = await updateTag(token, editingTagId, {
+        name,
+        description: editDraft.description.trim() || undefined,
+        color: editDraft.color.trim() || undefined,
+      });
+      setTags((current) => current.map((tag) => (tag.id === updated.id ? { ...tag, ...updated } : tag)));
+      setEditingTagId(null);
+      setNotice(`已更新标签：${updated.name}`);
+    });
+  };
+
+  const handleArchiveTag = (tag: TagView) => {
+    if (!token) {
+      return;
+    }
+    if (!window.confirm(`确认归档标签「${tag.name}」？归档后不再出现在标签列表，关联文档保留。`)) {
+      return;
+    }
+    void runAction('正在归档标签...', async () => {
+      await archiveTag(token, tag.id);
+      setTags((current) => current.filter((item) => item.id !== tag.id));
+      if (selectedTagId === tag.id) {
+        setSelectedTagId(null);
+        setTagDocuments([]);
+      }
+      setNotice(`已归档标签：${tag.name}`);
+    });
+  };
+
   const handleCreateAndTag = (name: string) => {
     if (!token || selectedDocumentId == null) {
       return;
@@ -162,6 +220,9 @@ export function useTags({ token, currentSpaceId, selectedDocumentId, runAction, 
     tagDocuments,
     newTagName,
     addTagSelection,
+    editingTagId,
+    editDraft,
+    setEditDraft,
     setNewTagName,
     setAddTagSelection,
     handleSelectTag,
@@ -169,5 +230,9 @@ export function useTags({ token, currentSpaceId, selectedDocumentId, runAction, 
     handleCreateAndTag,
     handleAddDocumentTag,
     handleRemoveDocumentTag,
+    beginEditTag,
+    cancelEditTag,
+    handleUpdateTag,
+    handleArchiveTag,
   };
 }

@@ -193,6 +193,31 @@ class Term:
     owner_id: int
     status: TermStatus
     source_document_id: int | None = None
+    # 术语管理增强（migration 017，REQ-036 领域树）：
+    # category_id 挂到领域树叶子（可空=未分类）；category 内容分类（14 类候选，
+    # 自由输入）；source 术语来源（行业标准 / 公司内部 / 外部文献 / 项目背景）。
+    category_id: int | None = None
+    category: str | None = None
+    source: str | None = None
+    created_at: str = ""
+    updated_at: str = ""
+
+
+@dataclass(frozen=True)
+class TermCategory:
+    """术语领域树节点（lumen_term_categories，migration 017，REQ-036 增强）。
+
+    嵌套邻接表（parent_id 自引用，空=空间根），仿 lumen_folders（REQ-039）。领域树
+    不独立设权限（复用 folder 口径）；重名 UNIQUE(space_id, parent_id, name)，根层
+    由 service 兜底；删非空（有子领域或术语）由 service 拒绝（4090）；无 archived。
+    """
+
+    id: int
+    space_id: int
+    parent_id: int | None  # null = 空间根
+    name: str
+    order_idx: int
+    created_by: int
     created_at: str = ""
     updated_at: str = ""
 

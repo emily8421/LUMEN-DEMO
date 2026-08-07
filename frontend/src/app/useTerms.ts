@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-import type { TermDraft } from './types';
+import type { TermDraft, TermPaneMode } from './types';
 import type { Term, TermWritePayload } from '../api';
 import { createTerm, deleteTerm, listTerms, updateTerm } from '../api';
 
@@ -12,7 +12,15 @@ type UseTermsArgs = {
   setNotice: (message: string) => void;
 };
 
-const emptyTermDraft: TermDraft = { term: '', definition: '', aliases: '', status: 'confirmed' };
+const emptyTermDraft: TermDraft = {
+  term: '',
+  definition: '',
+  aliases: '',
+  status: 'confirmed',
+  category_id: null,
+  category: '',
+  source: '',
+};
 
 function normalizeTermDraft(draft: TermDraft): TermWritePayload {
   return {
@@ -20,11 +28,22 @@ function normalizeTermDraft(draft: TermDraft): TermWritePayload {
     definition: draft.definition.trim(),
     aliases: draft.aliases.split(',').map((alias) => alias.trim()).filter(Boolean),
     status: draft.status,
+    category_id: draft.category_id,
+    category: draft.category.trim() || null,
+    source: draft.source.trim() || null,
   };
 }
 
 function termToDraft(term: Term): TermDraft {
-  return { term: term.term, definition: term.definition, aliases: term.aliases.join(', '), status: term.status };
+  return {
+    term: term.term,
+    definition: term.definition,
+    aliases: term.aliases.join(', '),
+    status: term.status,
+    category_id: term.category_id,
+    category: term.category ?? '',
+    source: term.source ?? '',
+  };
 }
 
 /**
@@ -34,12 +53,16 @@ function termToDraft(term: Term): TermDraft {
  * 并暴露统一的 selectTerm / newTerm（消除 ContextPane 与 TermsFeature 重复的内联闭包）与
  * reloadTerms / setTerms（供 refreshWorkspace 刷新）。
  *
- * 写操作经 App 注入的 runAction 包装，错误处理（含登录失效）与全局 isBusy / notice 一致。
+ * 术语管理增强（REQ-036 领域树，migration 017）：
+ * - TermDraft 扩 category_id / category / source 三字段（读写透传）。
+ * - 阅读/编辑态分离（用户确认）：selectTerm 进入 view（阅读态），beginEdit / newTerm 进入
+ *   edit（编辑态）。view 时表单只读展示，edit 时才可编辑保存。
  */
 export function useTerms({ token, runAction, setNotice }: UseTermsArgs) {
   const [terms, setTerms] = useState<Term[]>([]);
   const [selectedTermId, setSelectedTermId] = useState<number | null>(null);
   const [termDraft, setTermDraft] = useState<TermDraft>(emptyTermDraft);
+  const [paneMode, setPaneMode] = useState<TermPaneMode>('view');
 
   const reloadTerms = async () => {
     if (!token) {
@@ -52,11 +75,18 @@ export function useTerms({ token, runAction, setNotice }: UseTermsArgs) {
   const selectTerm = (term: Term) => {
     setSelectedTermId(term.id);
     setTermDraft(termToDraft(term));
+    setPaneMode('view');
   };
 
-  const newTerm = () => {
+  const beginEdit = () => {
+    setPaneMode('edit');
+  };
+
+  /** 新建术语；``categoryId`` 非空时预填到该领域（左栏「在此新建术语」）。 */
+  const newTerm = (categoryId: number | null = null) => {
     setSelectedTermId(null);
-    setTermDraft(emptyTermDraft);
+    setTermDraft({ ...emptyTermDraft, category_id: categoryId });
+    setPaneMode('edit');
   };
 
   const handleSaveTerm = (event: FormEvent<HTMLFormElement>) => {
@@ -73,6 +103,7 @@ export function useTerms({ token, runAction, setNotice }: UseTermsArgs) {
       setTerms(result.items);
       setSelectedTermId(savedTerm.id);
       setTermDraft(termToDraft(savedTerm));
+      setPaneMode('view');
       setNotice(`术语已保存：${savedTerm.term}`);
     });
   };
@@ -92,6 +123,7 @@ export function useTerms({ token, runAction, setNotice }: UseTermsArgs) {
       setTerms(result.items);
       setSelectedTermId(null);
       setTermDraft(emptyTermDraft);
+      setPaneMode('view');
       setNotice('术语已删除。');
     });
   };
@@ -101,8 +133,10 @@ export function useTerms({ token, runAction, setNotice }: UseTermsArgs) {
     setTerms,
     selectedTermId,
     termDraft,
+    paneMode,
     setTermDraft,
     selectTerm,
+    beginEdit,
     newTerm,
     handleSaveTerm,
     handleDeleteTerm,
