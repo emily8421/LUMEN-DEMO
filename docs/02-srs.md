@@ -55,7 +55,7 @@
 | EX-007 | REQ-038 | 空间导出 ZIP 时包含不可见文档 | 不可见文档不得进入 ZIP，导出结果只包含当前用户可见文档 | TC-P1-016 |
 | EX-008 | REQ-027 | PDF 导出库未安装、中文字体缺失或导出任务失败 | 返回依赖不可用 / 导出失败状态，不生成坏文件；Sprint-18 已覆盖 5030 失败态 | TC-P1-017、RG-006 |
 
-## 1. 功能需求（REQ 主表，覆盖 REQ-001..044；REQ-043/044 为 REQ-001/002/003 的 Sprint-27 扩展）
+## 1. 功能需求（REQ 主表，覆盖 REQ-001..047；REQ-043/044 为 REQ-001/002/003 的 Sprint-27 扩展，REQ-045..047 为 Sprint-28 扩展）
 
 | REQ-ID | 系统需求 | 来源 U-ID | 可验证口径 | 初步阶段 | 状态 |
 |---|---|---|---|---|---|
@@ -98,11 +98,14 @@
 | REQ-033 | 假设检验 / 证据地图 | U-39 | 高风险待验证（正反证据自动搜集与分栏） *(v18)* | [愿景] | 骨架 |
 | REQ-034 | 信号追踪 | U-40 | 待技术验证（主题匹配、增量推送） *(v18)* | [愿景] | 骨架 |
 | REQ-035 | 分析包 A Kit | U-41 | 待技术验证（加密打包、不含原文的脱敏） *(v18)* | [愿景] | 骨架 |
-| REQ-040 | 账户注册：新用户提交登录标识（email / external_id）+ 密码；密码 bcrypt 哈希存储（非明文）；注册成功建 `lumen_users` 行（status=active）+ 默认个人空间；重复标识 / 缺字段拒绝 | U-45 | 注册新账号后可用其凭证登录成功；重复标识拒绝；密码 bcrypt 哈希存储 | [P2] | Phase2D·骨架·待实现（Sprint-26） |
-| REQ-041 | 凭证登录：登录接口校验账号 + 密码（bcrypt verify）；通过则发不透明 token + 建 `lumen_sessions`（TTL，存 token_hash 不存明文）；失败计数达阈值锁定；不泄露账号是否存在 | U-46 | 正确凭证登录成功发 token 且后续请求鉴权通过；错误密码失败；连续失败触发锁定 | [P2] | Phase2D·骨架·待实现（Sprint-26） |
-| REQ-042 | 登出 / 会话管理：登出撤销当前 session（token 立即失效）；session TTL 过期自动失效；续期轮换（发新 token 旧 token 失效）；支持查询 / 撤销多设备会话 | U-47 | 登出后原 token 再用被拒；过期 session 自动失效；续期后旧 token 失效 | [P2] | Phase2D·骨架·待实现（Sprint-26） |
-| REQ-043 | 权限多人化（REQ-001/002/003 扩展）：文档按 owner 归属（owner_id）；所有查询 / 检索 / 问答路径对非 owner 用户的私有文档不可见；外部只读文档仅 owner 可写 | U-48 | 两个真实用户同空间：A 的私有文档 B 列表 / 搜索 / 问答零命中；external 文档 B 只读、写操作被拒（4003） | [P2] | Phase2D·Sprint-27 立项·待实现 |
-| REQ-044 | 跨用户隔离回归（REQ-003 扩展）：真实多用户注册后，私有文档仅 owner 可见，不进入他人检索 / 问答 / 时间线 / 目录 / 导出 | U-49 | 注册多用户 + 默认个人空间；全路径跨用户零泄露断言 | [P2] | Phase2D·Sprint-27 立项·待实现 |
+| REQ-040 | 账户注册：新用户提交登录标识（email / external_id）+ 密码；密码 bcrypt 哈希存储（非明文）；注册成功建 `lumen_users` 行（status=active）+ 默认个人空间；重复标识 / 缺字段拒绝 | U-45 | 注册新账号后可用其凭证登录成功；重复标识拒绝；密码 bcrypt 哈希存储 | [P2] | Phase2D·Sprint-26 已完成（TC-P2-AUTH-001 通过，2026-08-07） |
+| REQ-041 | 凭证登录：登录接口校验账号 + 密码（bcrypt verify）；通过则发不透明 token + 建 `lumen_sessions`（TTL，存 token_hash 不存明文）；失败计数达阈值锁定；不泄露账号是否存在 | U-46 | 正确凭证登录成功发 token 且后续请求鉴权通过；错误密码失败；连续失败触发锁定 | [P2] | Phase2D·Sprint-26 已完成（TC-P2-AUTH-001 通过，2026-08-07） |
+| REQ-042 | 登出 / 会话管理：登出撤销当前 session（token 立即失效）；session TTL 过期自动失效；续期轮换（发新 token 旧 token 失效）；支持查询 / 撤销多设备会话 | U-47 | 登出后原 token 再用被拒；过期 session 自动失效；续期后旧 token 失效 | [P2] | Phase2D·Sprint-26 已完成（TC-P2-AUTH-001 通过，2026-08-07） |
+| REQ-043 | 权限多人化（REQ-001/002/003 扩展）：文档按 owner 归属（owner_id）；所有查询 / 检索 / 问答路径对非 owner 用户的私有文档不可见；外部只读文档仅 owner 可写 | U-48 | 两个真实用户同空间：A 的私有文档 B 列表 / 搜索 / 问答零命中；external 文档 B 只读、写操作被拒（4003） | [P2] | Phase2D·Sprint-27 已完成（TC-P2-ACC-001 通过，2026-08-07） |
+| REQ-044 | 跨用户隔离回归（REQ-003 扩展）：真实多用户注册后，私有文档仅 owner 可见，不进入他人检索 / 问答 / 时间线 / 目录 / 导出 | U-49 | 注册多用户 + 默认个人空间；全路径跨用户零泄露断言 | [P2] | Phase2D·Sprint-27 已完成（TC-P2-ACC-001 通过，2026-08-07） |
+| REQ-045 | 全局角色分层：`lumen_users` 增加全局角色 `role`（admin / member，默认 member）；admin 可访问用户管理后台（用户列表 / 改角色 / 禁用启用）；member 无任何管理权限 | U-50 | 管理接口仅 admin 可调用（member 4030）；新注册用户默认 member | [P2] | Phase2D·Sprint-28 立项·待实现 |
+| REQ-046 | 用户管理后台（admin 域）：管理员查看用户列表（姓名 / email / 角色 / 状态 / 最后登录）、按角色 / 状态过滤、修改全局角色、禁用 / 启用账号；列表与接口不暴露 `password_hash` 等敏感字段 | U-51 | admin 可列用户并改角色 / 禁用启用；禁用后该用户登录被拒（4030）且既有会话失效；非 admin 无此能力；接口不返回 `password_hash` | [P2] | Phase2D·Sprint-28 立项·待实现 |
+| REQ-047 | 团队空间加入机制（space 域成员管理）：空间 admin 按 email 搜索用户并添加为空间成员（分配空间角色 admin / member）、修改成员空间角色、移除成员；普通成员不可管理成员 | U-52 | 空间 admin 添加成员后该用户可访问并切换空间；改角色即时生效；移除后失去空间访问；非空间 admin 调用成员管理接口被拒（4030） | [P2] | Phase2D·Sprint-28 立项·待实现 |
 
 > 阅读索引：上方 REQ 主表已覆盖全部 REQ-001..044 的「系统需求 / 来源 U-ID / 可验证口径 / 初步阶段 / 状态」，不再以分组 bullet 双写（避免与主表漂移）。P1 / P1.5 REQ 可验证口径见上表；P2 / 愿景 REQ 保留骨架，可验证口径写「待该阶段细化 / 待技术验证」，升阶段时再细化。
 
@@ -177,11 +180,14 @@
 | REQ-025 | AC-P2-QUICK-001 | TC-P2-QUICK-001 | `docs/09-verification.md` §2、快速录入后端 tests + API / 浏览器 smoke | P2-已实现 / 通过 |
 | REQ-026 | AC-P2-LINK-001 | TC-P2-LINK-001 | `docs/09-verification.md` §2、内链后端 tests + API / 浏览器 smoke | P2-已实现 / 通过 |
 | REQ-039 | AC-P2-FOLDER-001 | TC-P2-FOLDER-001 | `docs/09-verification.md` §2、folder 后端 tests + 浏览器 smoke（待立项编码） | 骨架·待实现 |
-| REQ-040 | AC-P2-AUTH-001 | TC-P2-AUTH-001 | `docs/09-verification.md` §2、账户注册 + 凭证登录后端 tests（待立项编码） | 骨架·待实现 |
-| REQ-041 | AC-P2-AUTH-002 | TC-P2-AUTH-001 | `docs/09-verification.md` §2、凭证登录 + 失败锁定 tests（待立项编码） | 骨架·待实现 |
-| REQ-042 | AC-P2-AUTH-003 | TC-P2-AUTH-001 | `docs/09-verification.md` §2、登出 / 会话撤销 / 续期 tests（待立项编码） | 骨架·待实现 |
-| REQ-043 | AC-P2-ACC-001 / AC-P2-ACC-002 | TC-P2-ACC-001 | `docs/09-verification.md` §2、权限过滤全路径回归 tests（`tests/backend/test_permission.py` 扩展 + 多用户隔离用例） | 立项·待实现 |
-| REQ-044 | AC-P2-ACC-002 | TC-P2-ACC-001 | `docs/09-verification.md` §2、跨用户隔离回归 tests + 浏览器 smoke | 立项·待实现 |
+| REQ-040 | AC-P2-AUTH-001 | TC-P2-AUTH-001 | `docs/09-verification.md` §2、账户注册 + 凭证登录后端 tests（`tests/backend/test_auth.py` 20/20，Sprint-26） | Sprint-26 已完成 |
+| REQ-041 | AC-P2-AUTH-002 | TC-P2-AUTH-001 | `docs/09-verification.md` §2、凭证登录 + 失败锁定 tests（`tests/backend/test_auth.py`，Sprint-26） | Sprint-26 已完成 |
+| REQ-042 | AC-P2-AUTH-003 | TC-P2-AUTH-001 | `docs/09-verification.md` §2、登出 / 会话撤销 / 续期 tests（`tests/backend/test_auth.py`，Sprint-26） | Sprint-26 已完成 |
+| REQ-043 | AC-P2-ACC-001 / AC-P2-ACC-002 | TC-P2-ACC-001 | `docs/09-verification.md` §2、权限过滤全路径回归 tests（`tests/backend/test_permission.py` MultiUserIsolationTest，Sprint-27） | Sprint-27 已完成 |
+| REQ-044 | AC-P2-ACC-002 | TC-P2-ACC-001 | `docs/09-verification.md` §2、跨用户隔离回归 tests + 浏览器 smoke（Sprint-27） | Sprint-27 已完成 |
+| REQ-045 | AC-P2-ACC-004 | TC-P2-ACC-002 | `docs/09-verification.md` §2、全局角色 admin/member 权限校验 tests + 浏览器 smoke | 立项·待实现 |
+| REQ-046 | AC-P2-ACC-005 | TC-P2-ACC-002 | `docs/09-verification.md` §2、admin 域用户管理 tests + 浏览器 smoke | 立项·待实现 |
+| REQ-047 | AC-P2-ACC-006 | TC-P2-ACC-002 | `docs/09-verification.md` §2、space 域成员管理 tests + 浏览器 smoke | 立项·待实现 |
 
 ## 5. 待人工确认项
 
@@ -189,4 +195,5 @@
 |---|---|---|---|---|---|
 | SRS-C-001 | 是否确认 P1.5A 以 REQ-037/038 为个人可用 Alpha 退出门槛 | 建议确认 | 用户目标是尽快个人使用；批量导入和导出备份比 PDF / 标签 / AI 润色更能解锁真实使用 | 继续把 PDF 或 Phase2 能力作为下一步 | 会延后个人可用 |
 | SRS-C-002 ✅已确认（2026-08-02） | REQ-039（文档目录树）的来源 U-ID / SC 追溯锚点 | **已补：新建 U-44（01）+ SC-009（00）；02 REQ-039 来源 U-ID=U-44** | 追溯链硬规则要求 REQ→U-ID→SC | 复用 U-13（未采）；新建 SC-009 + U-44（已采） | ~~阻塞 REQ-039 立项编码~~ 已解除 |
-| SRS-C-003 ✅已记录（2026-08-02） | REQ-039 编号占用：office/wps→MD 格式转换原输入材料"建议 REQ-039"已被 folder-tree 正式占用 | **REQ-039 已正式分配给文档目录树（folder-tree）**；`docs/inputs/2026-07-21-doc-format-conversion-requirements.md` 的"建议 REQ-039"需重新编号 | 输入材料自声明"建议编号，不污染正式编号"（FCR-C-005）；02 权威最新 REQ-038 → REQ-039 可用 | office→MD 格式转换若立项用 REQ-041+（REQ-040 亦被输入建议给独立工具） | 不阻塞 folder-tree；office→MD 立项时重新编号 |
+| SRS-C-003 ✅已记录（2026-08-02） | REQ-039 编号占用：office/wps→MD 格式转换原输入材料"建议 REQ-039"已被 folder-tree 正式占用 | **REQ-039 已正式分配给文档目录树（folder-tree）**；`docs/inputs/2026-07-21-doc-format-conversion-requirements.md` 的"建议 REQ-039"需重新编号 | 输入材料自声明"建议编号，不污染正式编号"（FCR-C-005）；02 权威最新 REQ-038 → REQ-039 可用 | office→MD 格式转换若立项用 REQ-048+（REQ-040..047 已分别被 Sprint-26/27/28 占用） | 不阻塞 folder-tree；office→MD 立项时重新编号 |
+| SRS-C-004 ✅已记录（2026-08-07） | REQ-045..047 编号占用：Sprint-28（角色分层 + 用户管理后台 + 团队空间加入）占用 REQ-045/046/047 | **REQ-045/046/047 已正式分配给 Sprint-28**（对应 U-50..52）；office→MD 格式转换（SRS-C-003）若立项顺延 REQ-048+ | 02 权威最新 REQ-044 → REQ-045..047 可用；Sprint-28 为已确认立项，优先占用 | office→MD 立项时用 REQ-048+ | 不阻塞 Sprint-28；office→MD 立项时重新编号 |
