@@ -2,16 +2,14 @@
 
 from __future__ import annotations
 
-from backend.api.auth import TOKEN_SIGNING_KEY
-from backend.service.auth import TokenError, extract_bearer_token, parse_demo_token
 from backend.repository import repository
+from backend.service.auth_context import TokenContext, get_current_user
 from backend.service.search import SearchResult, SearchValidationError, search_documents
 
 try:
-    from fastapi import APIRouter, Header, HTTPException
+    from fastapi import APIRouter, Depends, HTTPException
 except ImportError:  # pragma: no cover - allows service tests before dependencies are installed
     APIRouter = None
-    Header = None
     HTTPException = Exception
 
 
@@ -22,14 +20,13 @@ if APIRouter is not None:
     def search_endpoint(
         q: str = "",
         page: int = 1,
-        authorization: str = Header(default=""),
+        ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        payload = _read_token_payload(authorization)
         try:
             result_page = search_documents(
                 repository=repository,
-                user_id=payload.user_id,
-                current_space_id=payload.current_space_id,
+                user_id=ctx.user_id,
+                current_space_id=ctx.current_space_id,
                 query=q,
                 page=page,
             )
@@ -46,12 +43,6 @@ if APIRouter is not None:
             },
         }
 
-    def _read_token_payload(authorization: str):
-        try:
-            token = extract_bearer_token(authorization)
-            return parse_demo_token(token, signing_key=TOKEN_SIGNING_KEY)
-        except TokenError as exc:
-            raise HTTPException(status_code=401, detail={"code": 4001, "msg": "invalid token"}) from exc
 
     def _search_result_item(item: SearchResult) -> dict[str, object]:
         return {

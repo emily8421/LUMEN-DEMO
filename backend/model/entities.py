@@ -34,6 +34,28 @@ class User:
     external_id: str
     name: str
     created_at: str = ""
+    email: str | None = None
+    password_hash: str | None = None
+    status: str = "active"
+    failed_login_count: int = 0
+    locked_until: str = ""
+    last_login_at: str = ""
+
+
+@dataclass(frozen=True)
+class Session:
+    """lumen_sessions（migration 014）：不透明 token session，token 只存 SHA-256 摘要。"""
+
+    id: int
+    user_id: int
+    current_space_id: int | None
+    token_hash: str
+    expires_at: str
+    created_at: str = ""
+    revoked_at: str | None = None
+    last_used_at: str | None = None
+    client_ua: str | None = None
+    client_ip: str | None = None
 
 
 @dataclass(frozen=True)

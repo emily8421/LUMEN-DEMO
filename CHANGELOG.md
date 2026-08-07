@@ -6,6 +6,18 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.0.0（2026-08-07）
+
+**Sprint-26 账号体系基础（Phase2D 首个 vertical slice，REQ-040/041/042，TC-P2-AUTH-001）。** 把 Demo 占位账号侧（无密码 / seed 用户 / 手撸 token）升级为真实多用户账号体系：注册（bcrypt 哈希 + 默认个人空间）、凭证登录（API-001 login 契约变更）、登出 / token 刷新轮换 / 多设备会话管理（不透明 token + `lumen_sessions`，token 只存 SHA-256 摘要，TTL 8h / 滑动续期 / 撤销幂等）。
+
+- 数据契约（migration 014）：`lumen_users` 扩列（email / password_hash / status / last_login_at / failed_login_count / locked_until）+ `lumen_sessions`；`lumen_vault_mounts` 顺延 015。
+- API：新增 API-039 register / API-040 logout / API-041 refresh / API-042 sessions / API-043 revoke；API-001 login 契约变更（`login_id`/`password` + bcrypt verify）；错误码 4010/4030/4090/4220/4004 映射。
+- 安全：bcrypt cost 12（RG-011 Go）；登录失败锁定 5 次 / 15min（RG-012）；统一错误防枚举（RG-013）；结构化审计日志（register / login_success / login_failed / login_locked / logout）；统一 `get_current_user` 收敛 13 router；`LUMEN_ENV=production` 下 demo 仓储 fail-fast。
+- 实现偏差（`docs/design/accounts-auth.md` §15）：`current_space_id` 补列；seed 用户 demo 密码 `demo-pass-1234`；`LUMEN_ENABLE_DEMO_AUTH` 未实现（demo 模式由仓储类型决定）；前端登录/注册为内联 tab 而非独立路由。
+- 验证：`tests/backend/test_auth.py` 20/20 + backend discover 222 OK（skipped=2）；`volta run --node 22.17.1 npm run build` 273 modules 绿；`node scripts/smoke-auth-browser.mjs` PASS（注册 / 登录 / 登出 / refresh 轮换 / 多设备会话撤销）；demo 启动验证通过（18000/5173）。
+
+> MAJOR 依据（`ai/project-rules.md` §2.8.1 / `docs/design/accounts-auth.md` §13）：Phase2C → Phase2D Phase 跨越 + API-001 login 对外契约破坏性变更。
+
 ## v2.2.0（2026-08-06）
 
 **Sprint-25 帮助手册 L0+L1（REQ-011 可用性收口，TC-P2-HELP-001）+ 验收期 2 修复。** 把 `docs/env/user-guide.md` 重组成任务导向的唯一内容源（开始使用 → 把资料放进知识库 → 找到内容 → 组织与维护 → 导出与分享 → 权限 → 能力边界 → FAQ），并把「导入」入口修正为弹窗形态、标注 Phase2B/2C 章节待补；前端补齐首次引导、新手清单、各视图空状态入口与顶栏帮助速查弹层。

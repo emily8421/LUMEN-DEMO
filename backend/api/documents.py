@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from backend.api.auth import TOKEN_SIGNING_KEY
 from backend.model.entities import Document, DocumentPermission, DocumentVersion
-from backend.service.auth import TokenError, extract_bearer_token, parse_demo_token
 from backend.repository import repository
+from backend.service.auth_context import TokenContext, get_current_user
 from backend.service.document import (
     DocumentAccessError,
     DocumentCreate,
@@ -32,12 +31,11 @@ from backend.service.ai_polish import (
 )
 
 try:
-    from fastapi import APIRouter, Header, HTTPException
+    from fastapi import APIRouter, Depends, HTTPException
     from pydantic import BaseModel
 except ImportError:  # pragma: no cover - allows service tests before dependencies are installed
     APIRouter = None
     BaseModel = object
-    Header = None
     HTTPException = Exception
 
 
@@ -53,11 +51,10 @@ if APIRouter is not None:
         folder_id: int | None = None
 
     @router.get("")
-    def list_documents(authorization: str = Header(default="")) -> dict[str, object]:
-        payload = _read_token_payload(authorization)
+    def list_documents(ctx: TokenContext = Depends(get_current_user)) -> dict[str, object]:
         documents = list_visible_documents(
-            user_id=payload.user_id,
-            current_space_id=payload.current_space_id,
+            user_id=ctx.user_id,
+            current_space_id=ctx.current_space_id,
             documents=repository.list_documents(),
             memberships=repository.list_memberships(),
         )
@@ -66,13 +63,12 @@ if APIRouter is not None:
     @router.post("")
     def create_document_endpoint(
         request: DocumentWriteRequest,
-        authorization: str = Header(default=""),
+        ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        payload = _read_token_payload(authorization)
         document = create_document(
             repository=repository,
-            user_id=payload.user_id,
-            current_space_id=payload.current_space_id,
+            user_id=ctx.user_id,
+            current_space_id=ctx.current_space_id,
             request=DocumentCreate(
                 title=request.title,
                 content_md=request.content_md,
@@ -84,24 +80,22 @@ if APIRouter is not None:
     @router.get("/{document_id}")
     def get_document_endpoint(
         document_id: int,
-        authorization: str = Header(default=""),
+        ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        payload = _read_token_payload(authorization)
-        document = _read_document_or_404(payload.user_id, payload.current_space_id, document_id)
+        document = _read_document_or_404(ctx.user_id, ctx.current_space_id, document_id)
         return {"code": 0, "msg": "ok", "data": _document_detail(document)}
 
     @router.put("/{document_id}")
     def update_document_endpoint(
         document_id: int,
         request: DocumentWriteRequest,
-        authorization: str = Header(default=""),
+        ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        payload = _read_token_payload(authorization)
         try:
             document = update_document(
                 repository=repository,
-                user_id=payload.user_id,
-                current_space_id=payload.current_space_id,
+                user_id=ctx.user_id,
+                current_space_id=ctx.current_space_id,
                 document_id=document_id,
                 request=DocumentUpdate(
                     title=request.title,
@@ -119,14 +113,13 @@ if APIRouter is not None:
     def move_document_folder_endpoint(
         document_id: int,
         request: DocumentMoveRequest,
-        authorization: str = Header(default=""),
+        ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        payload = _read_token_payload(authorization)
         try:
             document = move_document_to_folder(
                 repository=repository,
-                user_id=payload.user_id,
-                current_space_id=payload.current_space_id,
+                user_id=ctx.user_id,
+                current_space_id=ctx.current_space_id,
                 document_id=document_id,
                 request=DocumentMove(folder_id=request.folder_id),
             )
@@ -141,11 +134,10 @@ if APIRouter is not None:
     @router.delete("/{document_id}")
     def delete_document_endpoint(
         document_id: int,
-        authorization: str = Header(default=""),
+        ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        payload = _read_token_payload(authorization)
         try:
-            delete_document(repository, payload.user_id, payload.current_space_id, document_id)
+            delete_document(repository, ctx.user_id, ctx.current_space_id, document_id)
         except DocumentNotFoundError as exc:
             raise HTTPException(status_code=404, detail={"code": 4004, "msg": "document not found"}) from exc
         except DocumentAccessError as exc:
@@ -155,11 +147,10 @@ if APIRouter is not None:
     @router.get("/{document_id}/versions")
     def list_document_versions(
         document_id: int,
-        authorization: str = Header(default=""),
+        ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        payload = _read_token_payload(authorization)
         try:
-            versions = list_versions(repository, payload.user_id, payload.current_space_id, document_id)
+            versions = list_versions(repository, ctx.user_id, ctx.current_space_id, document_id)
         except DocumentNotFoundError as exc:
             raise HTTPException(status_code=404, detail={"code": 4004, "msg": "document not found"}) from exc
         return {"code": 0, "msg": "ok", "data": [_version_detail(version) for version in versions]}
@@ -168,11 +159,10 @@ if APIRouter is not None:
     def restore_document_version(
         document_id: int,
         version_no: int,
-        authorization: str = Header(default=""),
+        ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        payload = _read_token_payload(authorization)
         try:
-            document = restore_version(repository, payload.user_id, payload.current_space_id, document_id, version_no)
+            document = restore_version(repository, ctx.user_id, ctx.current_space_id, document_id, version_no)
         except DocumentNotFoundError as exc:
             raise HTTPException(status_code=404, detail={"code": 4004, "msg": "document not found"}) from exc
         except VersionNotFoundError as exc:
@@ -191,14 +181,13 @@ if APIRouter is not None:
     def polish_document_endpoint(
         document_id: int,
         request: PolishRequestBody,
-        authorization: str = Header(default=""),
+        ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        payload = _read_token_payload(authorization)
         try:
             view = polish_selection(
                 repository,
-                payload.user_id,
-                payload.current_space_id,
+                ctx.user_id,
+                ctx.current_space_id,
                 document_id,
                 PolishRequest(
                     mode=request.mode,
@@ -239,12 +228,6 @@ if APIRouter is not None:
         except DocumentNotFoundError as exc:
             raise HTTPException(status_code=404, detail={"code": 4004, "msg": "document not found"}) from exc
 
-    def _read_token_payload(authorization: str):
-        try:
-            token = extract_bearer_token(authorization)
-            return parse_demo_token(token, signing_key=TOKEN_SIGNING_KEY)
-        except TokenError as exc:
-            raise HTTPException(status_code=401, detail={"code": 4001, "msg": "invalid token"}) from exc
 
     def _document_summary(document: Document) -> dict[str, object]:
         return {

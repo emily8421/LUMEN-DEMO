@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from backend.api.auth import TOKEN_SIGNING_KEY
 from backend.model.entities import Term, TermStatus
-from backend.service.auth import TokenError, extract_bearer_token, parse_demo_token
 from backend.repository import repository
+from backend.service.auth_context import TokenContext, get_current_user
 from backend.service.term import (
     TermAccessError,
     TermNotFoundError,
@@ -19,12 +18,11 @@ from backend.service.term import (
 )
 
 try:
-    from fastapi import APIRouter, Header, HTTPException
+    from fastapi import APIRouter, Depends, HTTPException
     from pydantic import BaseModel
 except ImportError:  # pragma: no cover - allows service tests before dependencies are installed
     APIRouter = None
     BaseModel = object
-    Header = None
     HTTPException = Exception
 
 
@@ -42,20 +40,18 @@ if APIRouter is not None:
     def list_terms_endpoint(
         q: str = "",
         status: TermStatus | None = None,
-        authorization: str = Header(default=""),
+        ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        payload = _read_token_payload(authorization)
         try:
-            terms = list_visible_terms(repository, payload.user_id, payload.current_space_id, query=q, status=status)
+            terms = list_visible_terms(repository, ctx.user_id, ctx.current_space_id, query=q, status=status)
         except TermAccessError as exc:
             raise HTTPException(status_code=403, detail={"code": 4003, "msg": str(exc)}) from exc
         return {"code": 0, "msg": "ok", "data": {"items": [_term_detail(term) for term in terms], "total": len(terms), "page": 1}}
 
     @router.post("")
-    def create_term_endpoint(request: TermWriteRequest, authorization: str = Header(default="")) -> dict[str, object]:
-        payload = _read_token_payload(authorization)
+    def create_term_endpoint(request: TermWriteRequest, ctx: TokenContext = Depends(get_current_user)) -> dict[str, object]:
         try:
-            term = create_term(repository, payload.user_id, payload.current_space_id, _term_write(request))
+            term = create_term(repository, ctx.user_id, ctx.current_space_id, _term_write(request))
         except TermAccessError as exc:
             raise HTTPException(status_code=403, detail={"code": 4003, "msg": str(exc)}) from exc
         except TermValidationError as exc:
@@ -63,10 +59,9 @@ if APIRouter is not None:
         return {"code": 0, "msg": "ok", "data": _term_detail(term)}
 
     @router.get("/{term_id}")
-    def get_term_endpoint(term_id: int, authorization: str = Header(default="")) -> dict[str, object]:
-        payload = _read_token_payload(authorization)
+    def get_term_endpoint(term_id: int, ctx: TokenContext = Depends(get_current_user)) -> dict[str, object]:
         try:
-            term = get_visible_term(repository, payload.user_id, payload.current_space_id, term_id)
+            term = get_visible_term(repository, ctx.user_id, ctx.current_space_id, term_id)
         except TermAccessError as exc:
             raise HTTPException(status_code=403, detail={"code": 4003, "msg": str(exc)}) from exc
         except TermNotFoundError as exc:
@@ -77,11 +72,10 @@ if APIRouter is not None:
     def update_term_endpoint(
         term_id: int,
         request: TermWriteRequest,
-        authorization: str = Header(default=""),
+        ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        payload = _read_token_payload(authorization)
         try:
-            term = update_term(repository, payload.user_id, payload.current_space_id, term_id, _term_write(request))
+            term = update_term(repository, ctx.user_id, ctx.current_space_id, term_id, _term_write(request))
         except TermAccessError as exc:
             raise HTTPException(status_code=403, detail={"code": 4003, "msg": str(exc)}) from exc
         except TermNotFoundError as exc:
@@ -91,10 +85,9 @@ if APIRouter is not None:
         return {"code": 0, "msg": "ok", "data": _term_detail(term)}
 
     @router.delete("/{term_id}")
-    def delete_term_endpoint(term_id: int, authorization: str = Header(default="")) -> dict[str, object]:
-        payload = _read_token_payload(authorization)
+    def delete_term_endpoint(term_id: int, ctx: TokenContext = Depends(get_current_user)) -> dict[str, object]:
         try:
-            delete_term(repository, payload.user_id, payload.current_space_id, term_id)
+            delete_term(repository, ctx.user_id, ctx.current_space_id, term_id)
         except TermAccessError as exc:
             raise HTTPException(status_code=403, detail={"code": 4003, "msg": str(exc)}) from exc
         except TermNotFoundError as exc:
@@ -110,12 +103,6 @@ if APIRouter is not None:
             source_document_id=request.source_document_id,
         )
 
-    def _read_token_payload(authorization: str):
-        try:
-            token = extract_bearer_token(authorization)
-            return parse_demo_token(token, signing_key=TOKEN_SIGNING_KEY)
-        except TokenError as exc:
-            raise HTTPException(status_code=401, detail={"code": 4001, "msg": "invalid token"}) from exc
 
     def _term_detail(term: Term) -> dict[str, object]:
         return {

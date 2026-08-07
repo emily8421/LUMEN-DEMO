@@ -1,5 +1,17 @@
 ﻿import unittest
 
+def _demo_ctx(user_id: int = 1, current_space_id: int = 10):
+    from backend.model.entities import User
+    from backend.service.auth_context import TokenContext
+
+    return TokenContext(
+        user_id=user_id,
+        current_space_id=current_space_id,
+        session_id=None,
+        user=User(id=user_id, external_id="demo", name="Demo"),
+    )
+
+
 import importlib.util
 
 from backend.model.entities import Document, DocumentPermission, SpaceMember, SpaceRole
@@ -168,13 +180,13 @@ class DocumentApiTest(unittest.TestCase):
         documents_api.repository = repository
         try:
             token = create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
-            headers = {"authorization": f"Bearer {token}"}
+            ctx = _demo_ctx()
             folder = create_folder(repository, 1, 10, FolderCreateRequest(name="API Target"))
 
             moved = documents_api.move_document_folder_endpoint(
                 document_id=100,
                 request=documents_api.DocumentMoveRequest(folder_id=folder.id),
-                **headers,
+                ctx=ctx,
             )
             self.assertEqual(moved["code"], 0)
             self.assertEqual(moved["data"]["folder_id"], folder.id)
@@ -182,7 +194,7 @@ class DocumentApiTest(unittest.TestCase):
             rooted = documents_api.move_document_folder_endpoint(
                 document_id=100,
                 request=documents_api.DocumentMoveRequest(folder_id=None),
-                **headers,
+                ctx=ctx,
             )
             self.assertIsNone(rooted["data"]["folder_id"])
         finally:

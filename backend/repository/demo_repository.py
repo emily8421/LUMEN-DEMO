@@ -16,6 +16,7 @@ from backend.model.entities import (
     DocumentVersion,
     Folder,
     ImportJob,
+    Session,
     Space,
     SpaceMember,
     SpaceRole,
@@ -29,11 +30,13 @@ from backend.model.entities import (
 
 
 class DemoRepository:
+    is_demo = True  # demo 标识（accounts-auth §7 物理隔离：PG 强制真实认证，内存允许 demo 快捷登录）
+
     def __init__(self) -> None:
         self.users = [
-            User(id=1, external_id="alice", name="Alice"),
-            User(id=2, external_id="kira", name="Kira"),
-            User(id=3, external_id="brightlite-member", name="BrightLite Member"),
+            User(id=1, external_id="alice", name="Alice", email="alice@example.com"),
+            User(id=2, external_id="kira", name="Kira", email="kira@example.com"),
+            User(id=3, external_id="brightlite-member", name="BrightLite Member", email="brightlite-member@example.com"),
         ]
         self.spaces = [
             Space(id=10, code="nova-internal", name="Nova Internal"),
@@ -100,9 +103,125 @@ class DemoRepository:
         self._next_doc_export_id = 1
         self.folders: list[Folder] = []
         self._next_folder_id = 1
+        self.sessions: list[Session] = []
+        self._next_session_id = 1
 
     def find_user_by_external_id(self, external_id: str) -> User | None:
         return next((user for user in self.users if user.external_id == external_id), None)
+
+    def find_user_by_id(self, user_id: int) -> User | None:
+        return next((user for user in self.users if user.id == user_id), None)
+
+    def find_user_by_email(self, email: str) -> User | None:
+        return next((user for user in self.users if user.email == email), None)
+
+    def create_user_with_personal_space(
+        self,
+        email: str,
+        external_id: str,
+        name: str,
+        password_hash: str,
+    ) -> User:
+        user = User(
+            id=self._next_user_id(),
+            external_id=external_id,
+            name=name,
+            email=email,
+            password_hash=password_hash,
+            status="active",
+            failed_login_count=0,
+            created_at=_now_iso(),
+        )
+        self.users.append(user)
+        space = Space(
+            id=self._next_space_id(),
+            code=f"personal-{user.id}",
+            name=f"{name} 的个人空间",
+            created_at=_now_iso(),
+        )
+        self.spaces.append(space)
+        self.memberships.append(SpaceMember(user_id=user.id, space_id=space.id, role=SpaceRole.ADMIN))
+        return user
+
+    def _next_user_id(self) -> int:
+        return max((u.id for u in self.users), default=0) + 1
+
+    def _next_space_id(self) -> int:
+        return max((s.id for s in self.spaces), default=0) + 1
+
+    def record_login_failure(self, user_id: int) -> int:
+        for index, user in enumerate(self.users):
+            if user.id != user_id:
+                continue
+            updated = replace(user, failed_login_count=(user.failed_login_count or 0) + 1)
+            self.users[index] = updated
+            return updated.failed_login_count
+        return 0
+
+    def set_locked_until(self, user_id: int, locked_until: str) -> None:
+        for index, user in enumerate(self.users):
+            if user.id != user_id:
+                continue
+            self.users[index] = replace(user, locked_until=locked_until)
+            return
+
+    def reset_login_failures(self, user_id: int) -> None:
+        for index, user in enumerate(self.users):
+            if user.id != user_id:
+                continue
+            self.users[index] = replace(
+                user,
+                failed_login_count=0,
+                locked_until="",
+                last_login_at=_now_iso(),
+            )
+            return
+
+    def create_session(
+        self,
+        user_id: int,
+        current_space_id: int | None,
+        token_hash: str,
+        expires_at: str,
+        client_ua: str | None = None,
+        client_ip: str | None = None,
+    ) -> Session:
+        session = Session(
+            id=self._next_session_id,
+            user_id=user_id,
+            current_space_id=current_space_id,
+            token_hash=token_hash,
+            expires_at=expires_at,
+            created_at=_now_iso(),
+            client_ua=client_ua,
+            client_ip=client_ip,
+        )
+        self._next_session_id += 1
+        self.sessions.append(session)
+        return session
+
+    def find_session_by_token_hash(self, token_hash: str) -> Session | None:
+        return next((s for s in self.sessions if s.token_hash == token_hash), None)
+
+    def list_sessions(self, user_id: int) -> list[Session]:
+        return [s for s in self.sessions if s.user_id == user_id and s.revoked_at is None]
+
+    def revoke_session(self, session_id: int, user_id: int) -> bool:
+        for index, session in enumerate(self.sessions):
+            if session.id != session_id or session.user_id != user_id:
+                continue
+            self.sessions[index] = replace(session, revoked_at=_now_iso())
+            return True
+        return False
+
+    def update_session_space(self, session_id: int, space_id: int) -> Session:
+        for index, session in enumerate(self.sessions):
+            if session.id != session_id:
+                continue
+            updated = replace(session, current_space_id=space_id, last_used_at=_now_iso())
+            self.sessions[index] = updated
+            return updated
+        raise KeyError(session_id)
 
     def list_memberships(self) -> list[SpaceMember]:
         return list(self.memberships)

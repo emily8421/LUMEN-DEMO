@@ -2,6 +2,18 @@ import importlib.util
 import unittest
 from dataclasses import replace
 
+def _demo_ctx(user_id: int = 1, current_space_id: int = 10):
+    from backend.model.entities import User
+    from backend.service.auth_context import TokenContext
+
+    return TokenContext(
+        user_id=user_id,
+        current_space_id=current_space_id,
+        session_id=None,
+        user=User(id=user_id, external_id="demo", name="Demo"),
+    )
+
+
 
 class TimelineServiceTest(unittest.TestCase):
     """REQ-013a / REQ-024 topic timeline service over DemoRepository."""
@@ -180,7 +192,7 @@ class TimelineApiTest(unittest.TestCase):
         timeline_api.repository = DemoRepository()
         try:
             token = create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
-            headers = {"authorization": f"Bearer {token}"}
+            ctx = _demo_ctx()
             with self.assertRaises(HTTPException) as context:
                 timeline_api.timeline_endpoint(
                     space_id=10,
@@ -189,7 +201,7 @@ class TimelineApiTest(unittest.TestCase):
                     to=None,
                     tag_ids=[],
                     density=True,
-                    **headers,
+                    ctx=ctx,
                 )
             self.assertEqual(context.exception.detail["code"], 4220)
         finally:

@@ -193,6 +193,18 @@ class ExportServiceTest(unittest.TestCase):
         with self.assertRaises(SpaceAccessError):
             export_space_zip(repository, user_id=3, current_space_id=10)
 
+def _demo_ctx(user_id: int = 1, current_space_id: int = 10):
+    from backend.model.entities import User
+    from backend.service.auth_context import TokenContext
+
+    return TokenContext(
+        user_id=user_id,
+        current_space_id=current_space_id,
+        session_id=None,
+        user=User(id=user_id, external_id="demo", name="Demo"),
+    )
+
+
 
 @unittest.skipIf(importlib.util.find_spec("reportlab") is None, "ReportLab is not installed")
 class PdfExportServiceTest(unittest.TestCase):
@@ -454,7 +466,7 @@ class ExportApiTest(unittest.TestCase):
                 document_id=100,
                 format="md",
                 version_no=None,
-                authorization=f"Bearer {token}",
+                ctx=_demo_ctx(),
             )
         finally:
             export_api.repository = original_repository
@@ -487,7 +499,7 @@ class ExportApiTest(unittest.TestCase):
                 document_id=document.id,
                 format="md",
                 version_no=None,
-                authorization=f"Bearer {token}",
+                ctx=_demo_ctx(),
             )
         finally:
             export_api.repository = original_repository
@@ -524,7 +536,7 @@ class ExportApiTest(unittest.TestCase):
                 export_api.export_document_endpoint(
                     document_id=secret_id,
                     format="md",
-                    authorization=f"Bearer {token}",
+                    ctx=_demo_ctx(),
                 )
         finally:
             export_api.repository = original_repository
@@ -544,7 +556,7 @@ class ExportApiTest(unittest.TestCase):
             token = create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
             response = export_api.export_space_endpoint(
                 format="zip",
-                authorization=f"Bearer {token}",
+                ctx=_demo_ctx(),
             )
         finally:
             export_api.repository = original_repository
@@ -569,7 +581,7 @@ class ExportApiTest(unittest.TestCase):
             with self.assertRaises(HTTPException) as context:
                 export_api.export_space_endpoint(
                     format="zip",
-                    authorization=f"Bearer {token}",
+                    ctx=_demo_ctx(user_id=3),
                 )
         finally:
             export_api.repository = original_repository
@@ -601,11 +613,11 @@ class ExportApiTest(unittest.TestCase):
                 token = create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
                 response = export_api.export_pdf_endpoint(
                     request=export_api.PdfExportRequestBody(document_id=100),
-                    authorization=f"Bearer {token}",
+                    ctx=_demo_ctx(),
                 )
                 download_response = export_api.download_pdf_endpoint(
                     export_id=response["data"]["export_id"],
-                    authorization=f"Bearer {token}",
+                    ctx=_demo_ctx(),
                 )
             finally:
                 export_api.create_pdf_export = original_create_pdf_export
@@ -638,7 +650,7 @@ class ExportApiTest(unittest.TestCase):
             with self.assertRaises(HTTPException) as context:
                 export_api.export_pdf_endpoint(
                     request=export_api.PdfExportRequestBody(document_id=100),
-                    authorization=f"Bearer {token}",
+                    ctx=_demo_ctx(),
                 )
 
         self.assertEqual(context.exception.status_code, 503)
@@ -657,7 +669,7 @@ class ExportApiTest(unittest.TestCase):
             with self.assertRaises(HTTPException) as context:
                 export_api.download_pdf_endpoint(
                     export_id=1,
-                    authorization=f"Bearer {token}",
+                    ctx=_demo_ctx(),
                 )
 
         self.assertEqual(context.exception.status_code, 409)

@@ -10,7 +10,7 @@
 | 覆盖 REQ | REQ-040 账户注册 / REQ-041 凭证登录 / REQ-042 登出·会话管理 |
 | 覆盖 U-ID | U-45 / U-46 / U-47 |
 | 验收 | TC-P2-AUTH-001（AC-P2-AUTH-001 / 002 / 003） |
-| 状态 | 设计草案 · 待人工确认 |
+| 状态 | 设计定稿 · Sprint-26 编码完成（2026-08-07）；TC-P2-AUTH-001 自动化通过；偏差见 §15 |
 | 上游依据 | `docs/03-prd.md` §3 Phase2D 子节、`docs/02-srs.md` REQ-040..042、`ai/project-rules.md` §1 |
 | 下游影响 | `docs/05-tech-spec.md` readiness gate（RG 待补）+ 认证技术栈、`docs/06-db-design.md` `lumen_users` 扩列 + `lumen_sessions` + migration 014、`docs/07-api-spec.md` auth API、`docs/08-dev-plan.md` Sprint-26、`docs/09-verification.md` TC-P2-AUTH-001 |
 | 范围外（留 Sprint-27/28） | 权限多人化实质改造（owner_id 跨用户过滤回归）、全局角色分层、用户管理后台 UI、REQ-016 多人实时协作 |
@@ -110,12 +110,13 @@ flowchart TD
 
 ## 7. demo 模式 + 物理隔离护栏
 
-- **env 开关**：`LUMEN_ENABLE_DEMO_AUTH`（默认 `false`）。
+- **实现口径**（偏差 D-3/D-4，见 §15）：demo 模式由**仓储类型**决定（`DemoRepository.is_demo=True`），未实现设计中的 `LUMEN_ENABLE_DEMO_AUTH` env 开关；生产护栏为启动断言 fail-fast。
 - **物理隔离**（最稳，根治生产旁路风险）：
-  - **PG 仓储（`PgRepository`）**：强制真实认证——忽略 `LUMEN_ENABLE_DEMO_AUTH`，所有登录必须 bcrypt 凭证；`create_demo_token` 路径在 PG 仓储下禁用。
-  - **内存仓储（`demo_repository`，`run-sprint16-demo` 用）**：允许 demo 快速登录（`create_demo_token` + 3 seed 用户无密码），用于本地演示 / 测试。
-- **启动护栏**：开启 demo 模式时启动日志显眼告警（`[DEMO AUTH ENABLED — NOT FOR PRODUCTION]`）；生产环境（`LUMEN_ENV=production`）启动断言 `LUMEN_ENABLE_DEMO_AUTH` 必须为 `false`，否则 fail-fast。
-- **seed 用户处置**：alice/kira/brightlite-member（id=1/2/3）的 `password_hash = NULL`（demo-only）；真实认证路径下 `password_hash IS NULL` 的账号拒绝登录（必须先设密码）。
+  - **PG 仓储（`PgRepository`）**：强制真实认证——所有登录必须 bcrypt 凭证；`get_current_user` 不解析 HMAC demo token（仅内存仓储走 demo 快捷分支）。
+  - **内存仓储（`demo_repository`，`run-sprint16-demo` 用）**：允许 demo 快速登录（seed 用户无密码 + 兼容旧 HMAC demo token），用于本地演示 / 测试。
+- **启动护栏**：`main.py` lifespan 断言 `LUMEN_ENV=production` 时不得使用 demo 仓储，否则 fail-fast（`RuntimeError: [AUTH] LUMEN_ENV=production must not use the demo repository`）。
+- **seed 用户处置**（偏差 D-2）：migration 014 统一为 alice/kira/brightlite-member 设置 demo 密码 `demo-pass-1234` + email（PG 强制凭证登录）；内存仓储保留 `password_hash=None` 的无密码快捷登录语义。
+- **密钥**：`LUMEN_DEMO_TOKEN_KEY` 仅用于内存仓储的 HMAC demo token 兼容（保留本地默认值；PG 模式不使用该路径）。
 
 ## 8. 数据契约（migration 014）
 
@@ -185,11 +186,11 @@ CREATE INDEX idx_lumen_sessions_user ON lumen_sessions(user_id) WHERE revoked_at
 
 | 候选 RG | 主题 | 验证方式 | 结论 |
 |---|---|---|---|
-| RG-011（候选） | 密码哈希选型（bcrypt + passlib） | 本机 `pip install passlib[bcrypt]` + hash/verify 最小验证 | 待验证（轻量，编码前做） |
-| RG-012（候选） | token session 安全（密钥 env、TTL、撤销、恒定时序） | 设计审查 + 单测覆盖撤销/过期/枚举 | 设计 Go，待单测 |
-| RG-013（候选） | 跨用户隔离回归 | 注册两个真实用户，验证私有文档仅 owner 可见、跨用户不泄露 | 待 Sprint-26 末回归 |
+| RG-011 | 密码哈希选型（bcrypt，不采用 passlib） | 本机 `pip install bcrypt` + hash/verify 最小验证 | **Go（2026-08-07 PoC）**：bcrypt 5.0.0 / Python 3.14.3，cost 12 ≈0.21s，恒定时序 |
+| RG-012 | token session 安全（密钥 env、TTL、撤销、续期轮换、恒定时序） | 单测覆盖撤销/过期/续期轮换/枚举 | **Go（2026-08-07 单测）**：`tests/backend/test_auth.py` |
+| RG-013 | 跨用户隔离回归 | 注册两个真实用户，验证私有文档仅 owner 可见、跨用户不泄露 | **Go（2026-08-07）**：test_auth.py 注册用户 + 个人空间隔离断言 |
 
-> RG-011 是唯一需要"本机运行验证"的项（依赖安装），建议编码第一步做（类似 collect-env 后的最小 PoC）；RG-012/013 靠单测 + 回归 TC 覆盖，不需要独立 PoC。
+> RG-011 已作为编码第一步完成本机 PoC（2026-08-07）；RG-012/013 靠单测 + 回归 TC 覆盖，均 Go。
 
 ## 12. 失败 / 降级
 
@@ -214,7 +215,20 @@ CREATE INDEX idx_lumen_sessions_user ON lumen_sessions(user_id) WHERE revoked_at
 
 ## 15. 实现偏差 / 设计回写
 
-（编码 Sprint-26 后回填：实际表字段、API 错误码、get_current_user 落地范围、demo 开关实测。）
+> Sprint-26（2026-08-07）编码后回填。偏差均未越出 Phase2D 边界；正式契约以 `docs/06-db-design.md` / `docs/07-api-spec.md` 为准。
+
+| # | 设计（§章节） | 实际实现 | 原因 / 影响 |
+|---|---|---|---|
+| D-1 | §8.2 `lumen_sessions` 无 `current_space_id` 列 | migration 014 补入 `current_space_id BIGINT REFERENCES lumen_spaces(id) ON DELETE SET NULL` | §5 会话载荷需承载当前空间；登录 / 切空间写会话行 |
+| D-2 | §7 seed 用户 `password_hash = NULL`（demo-only） | migration 014 为 3 个 seed 用户统一设置 bcrypt demo 密码（`demo-pass-1234`）并补 email | PG 集成测试 / 真实路径需凭证；NULL 语义仅保留在内存仓储 |
+| D-3 | §7 env 开关 `LUMEN_ENABLE_DEMO_AUTH` | **未实现**；demo 模式由仓储类型决定（`DemoRepository.is_demo=True`） | 更简且更硬的物理隔离：PG 仓储天然强制真实凭证 |
+| D-4 | §7 启动告警日志 `[DEMO AUTH ENABLED — NOT FOR PRODUCTION]` | 未单独实现日志告警；改为启动期断言 fail-fast（`LUMEN_ENV=production` + demo 仓储拒绝启动） | 护栏更硬；demo 可见性靠仓储类型 + 文档标注 |
+| D-5 | §7 密钥「禁默认值」 | `LUMEN_DEMO_TOKEN_KEY` 保留本地默认值（仅内存仓储 HMAC 兼容使用；PG 模式不走该路径） | demo 兼容所需；生产路径不依赖默认密钥 |
+| D-6 | §9 login 入参 `{login_id, password, current_space_id?}` | 实现为 `login_id` + `password` + 可选 `external_id`（demo 别名）+ 可选 `current_space_id`；错误码 4010（凭证）/ 4030（锁定/禁用）/ 4090（重复 email）/ 4220（参数）/ 4004（会话不存在） | `external_id` 兼容旧 demo 客户端；错误码与 §10 对齐 |
+| D-7 | 前端「独立登录/注册页（独立路由）」 | 实现为 `App.tsx` 登录面板内登录/注册 **tab 切换**（`authMode`），未引入 router | 最小改动、不引路由依赖；页面形态留 Sprint-27/28 前端收口 |
+| D-8 | §14「浏览器 smoke 覆盖登录/注册页」 | 后端自动化已通过；浏览器 smoke 与 demo 启动验证**待用户确认**（RISK-P2-AUTH-001） | 本机环境限制；后续补 headless / 人工 smoke |
+| D-9 | §6 收敛 13 router | 已收敛：spaces / documents / rag / search / terms / imports / export / folders / doc_links / tags / quick_entry / timeline 等改用 `Depends(get_current_user)`；内存仓储保留 HMAC demo token 兼容分支 | `get_current_user` 先查 session、demo 仓储再回退 demo token |
+
 
 ## 16. 待确认项（编码前需拍板）
 
@@ -227,4 +241,4 @@ CREATE INDEX idx_lumen_sessions_user ON lumen_sessions(user_id) WHERE revoked_at
 | C-AUTH-005 | 密码策略 | 最小长度 8（NIST 长度优先，不强制复杂度） | NIST 2017 主流 | 长度 12 / 加复杂度 / HIBP breach 检查（P3） | 调参项；不阻塞 |
 | C-AUTH-006 | bcrypt vs Argon2id | bcrypt 起步 | 成熟、生态广；rehash 路径可后续升 Argon2id | 直接 Argon2id | 不阻塞；差异小 |
 
-> 以上均为「AI 建议 · 待人工确认」，编码前确认即可；不阻塞本设计文档定稿。`docs/01 §4` 已标 U-45「注册空间归属待确认」。
+> **确认记录（2026-08-07 编码前）**：C-AUTH-001..006 均按 AI 建议落地——C-AUTH-001 注册自建个人空间（role=admin）；C-AUTH-002 登录标识 email（兼容 external_id 别名）；C-AUTH-003 锁定阈值 5 次 / 15min；C-AUTH-004 审计最小集（register / login_success / login_failed / login_locked / logout，结构化日志，不新建表）；C-AUTH-005 密码策略 8–64 字符；C-AUTH-006 bcrypt（cost 12，不采用 passlib）。`docs/01 §4` 的 U-45「注册空间归属待确认」随之关闭。

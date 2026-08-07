@@ -33,6 +33,7 @@ from backend.model.entities import (
     TagLink,
     QuickEntry,
     Term,
+    Session,
     TermStatus,
     User,
 )
@@ -46,6 +47,7 @@ from backend.model.orm import (
     FolderORM,
     ImportJobORM,
     QuickEntryORM,
+    SessionORM,
     SpaceMemberORM,
     SpaceORM,
     TagLinkORM,
@@ -63,7 +65,33 @@ def _dt_iso(dt: datetime | None) -> str:
 
 
 def _to_user(r: UserORM) -> User:
-    return User(id=r.id, external_id=r.external_id, name=r.name, created_at=_dt_iso(r.created_at))
+    return User(
+        id=r.id,
+        external_id=r.external_id,
+        name=r.name,
+        created_at=_dt_iso(r.created_at),
+        email=r.email,
+        password_hash=r.password_hash,
+        status=r.status,
+        failed_login_count=r.failed_login_count,
+        locked_until=_dt_iso(r.locked_until),
+        last_login_at=_dt_iso(r.last_login_at),
+    )
+
+
+def _to_session(r: SessionORM) -> Session:
+    return Session(
+        id=r.id,
+        user_id=r.user_id,
+        current_space_id=r.current_space_id,
+        token_hash=r.token_hash,
+        expires_at=_dt_iso(r.expires_at),
+        created_at=_dt_iso(r.created_at),
+        revoked_at=_dt_iso(r.revoked_at) or None,
+        last_used_at=_dt_iso(r.last_used_at) or None,
+        client_ua=r.client_ua,
+        client_ip=r.client_ip,
+    )
 
 
 def _to_space(r: SpaceORM) -> Space:
@@ -272,6 +300,124 @@ class PgRepository:
         with SessionLocal() as session:
             row = session.scalars(select(UserORM).where(UserORM.external_id == external_id)).first()
             return _to_user(row) if row else None
+
+    def find_user_by_id(self, user_id: int) -> User | None:
+        with SessionLocal() as session:
+            row = session.get(UserORM, user_id)
+            return _to_user(row) if row else None
+
+    def find_user_by_email(self, email: str) -> User | None:
+        with SessionLocal() as session:
+            row = session.scalars(select(UserORM).where(UserORM.email == email)).first()
+            return _to_user(row) if row else None
+
+    def create_user_with_personal_space(
+        self,
+        email: str,
+        external_id: str,
+        name: str,
+        password_hash: str,
+    ) -> User:
+        """注册用户 + 自动创建个人空间（C-AUTH-001：归属个人空间，role=admin 可管理）。"""
+        with SessionLocal() as session:
+            user = UserORM(
+                external_id=external_id,
+                name=name,
+                email=email,
+                password_hash=password_hash,
+                status="active",
+                failed_login_count=0,
+            )
+            session.add(user)
+            session.flush()
+            space = SpaceORM(code=f"personal-{user.id}", name=f"{name} 的个人空间")
+            session.add(space)
+            session.flush()
+            session.add(SpaceMemberORM(user_id=user.id, space_id=space.id, role="admin"))
+            session.commit()
+            return _to_user(user)
+
+    def record_login_failure(self, user_id: int) -> int:
+        with SessionLocal() as session:
+            row = session.get(UserORM, user_id)
+            if row is None:
+                return 0
+            row.failed_login_count = (row.failed_login_count or 0) + 1
+            session.commit()
+            return row.failed_login_count
+
+    def set_locked_until(self, user_id: int, locked_until: str) -> None:
+        with SessionLocal() as session:
+            row = session.get(UserORM, user_id)
+            if row is None:
+                return
+            row.locked_until = datetime.fromisoformat(locked_until)
+            session.commit()
+
+    def reset_login_failures(self, user_id: int) -> None:
+        with SessionLocal() as session:
+            row = session.get(UserORM, user_id)
+            if row is None:
+                return
+            row.failed_login_count = 0
+            row.locked_until = None
+            row.last_login_at = func.now()
+            session.commit()
+
+    def create_session(
+        self,
+        user_id: int,
+        current_space_id: int | None,
+        token_hash: str,
+        expires_at: str,
+        client_ua: str | None = None,
+        client_ip: str | None = None,
+    ) -> Session:
+        with SessionLocal() as session:
+            row = SessionORM(
+                user_id=user_id,
+                current_space_id=current_space_id,
+                token_hash=token_hash,
+                expires_at=datetime.fromisoformat(expires_at),
+                client_ua=client_ua,
+                client_ip=client_ip,
+            )
+            session.add(row)
+            session.commit()
+            return _to_session(row)
+
+    def find_session_by_token_hash(self, token_hash: str) -> Session | None:
+        with SessionLocal() as session:
+            row = session.scalars(select(SessionORM).where(SessionORM.token_hash == token_hash)).first()
+            return _to_session(row) if row else None
+
+    def list_sessions(self, user_id: int) -> list[Session]:
+        with SessionLocal() as session:
+            rows = session.scalars(
+                select(SessionORM)
+                .where(SessionORM.user_id == user_id, SessionORM.revoked_at.is_(None))
+                .order_by(SessionORM.created_at.desc())
+            ).all()
+            return [_to_session(r) for r in rows]
+
+    def revoke_session(self, session_id: int, user_id: int) -> bool:
+        with SessionLocal() as session:
+            row = session.get(SessionORM, session_id)
+            if row is None or row.user_id != user_id:
+                return False
+            row.revoked_at = func.now()
+            session.commit()
+            return True
+
+    def update_session_space(self, session_id: int, space_id: int) -> Session:
+        with SessionLocal() as session:
+            row = session.get(SessionORM, session_id)
+            if row is None:
+                raise KeyError(session_id)
+            row.current_space_id = space_id
+            row.last_used_at = func.now()
+            session.commit()
+            return _to_session(row)
 
     def list_memberships(self) -> list[SpaceMember]:
         with SessionLocal() as session:

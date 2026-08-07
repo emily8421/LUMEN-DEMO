@@ -7,9 +7,8 @@ DELETE /api/quick-entry/{id}（discard：仅 status=draft → discarded）。
 
 from __future__ import annotations
 
-from backend.api.auth import TOKEN_SIGNING_KEY
 from backend.repository import repository
-from backend.service.auth import TokenError, extract_bearer_token, parse_demo_token
+from backend.service.auth_context import TokenContext, get_current_user
 from backend.service.document import DocumentNotFoundError
 from backend.service.quick_entry import (
     QuickEntryAccessError,
@@ -22,12 +21,11 @@ from backend.service.quick_entry import (
 )
 
 try:
-    from fastapi import APIRouter, Header, HTTPException
+    from fastapi import APIRouter, Depends, HTTPException
     from pydantic import BaseModel
 except ImportError:  # pragma: no cover - allows service tests before dependencies are installed
     APIRouter = None
     BaseModel = object
-    Header = None
     HTTPException = Exception
 
 
@@ -45,14 +43,13 @@ if APIRouter is not None:
     @router.post("/api/quick-entry")
     def capture_quick_entry_endpoint(
         request: QuickEntryCaptureBody,
-        authorization: str = Header(default=""),
+        ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        payload = _read_token_payload(authorization)
         try:
             view = capture_quick_entry(
                 repository,
-                payload.user_id,
-                payload.current_space_id,
+                ctx.user_id,
+                ctx.current_space_id,
                 QuickEntryCaptureRequest(
                     title=request.title,
                     content_md=request.content_md,
@@ -73,11 +70,10 @@ if APIRouter is not None:
     @router.delete("/api/quick-entry/{entry_id}")
     def discard_quick_entry_endpoint(
         entry_id: int,
-        authorization: str = Header(default=""),
+        ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        payload = _read_token_payload(authorization)
         try:
-            view = discard_quick_entry(repository, payload.user_id, payload.current_space_id, entry_id)
+            view = discard_quick_entry(repository, ctx.user_id, ctx.current_space_id, entry_id)
         except QuickEntryAccessError as exc:
             raise HTTPException(status_code=403, detail={"code": 4003, "msg": str(exc)}) from exc
         except QuickEntryNotFoundError as exc:
@@ -96,11 +92,5 @@ if APIRouter is not None:
             "owner_id": view.owner_id,
         }
 
-    def _read_token_payload(authorization: str):
-        try:
-            token = extract_bearer_token(authorization)
-            return parse_demo_token(token, signing_key=TOKEN_SIGNING_KEY)
-        except TokenError as exc:
-            raise HTTPException(status_code=401, detail={"code": 4001, "msg": "invalid token"}) from exc
 else:
     router = None
