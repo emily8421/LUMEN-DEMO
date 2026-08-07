@@ -9,9 +9,9 @@
 |---|---|
 | 保留 / 省略决策 | 保留 |
 | 接口形态 | REST API |
-| 覆盖 REQ / 模块 | Phase1：REQ-001..REQ-011、REQ-036；Phase1.5A：REQ-037/038（API-029/030）；Phase1.5B：REQ-027（API-019）；Phase2A：REQ-012/025/026；Phase2B：REQ-014（API-028）、REQ-013/024（API-033）、REQ-039（API-034..038，第三 slice）；Phase2D：REQ-040/041/042（API-039..043，账号体系）；后续 / 愿景接口保留骨架 |
-| 当前状态 | P1 接口契约已用于 Phase1 Demo；Sprint-8 后 P1 主要接口已接 PostgreSQL 表，RAG 已接 pgvector 向量召回 + GLM LLM；task-009 后 API-009 search 已为 substring + ts_vector + pgvector 语义召回的 hybrid search（zhparser 可选）。API-029/030 已随 Phase1.5A 完成；API-019 已随 Sprint-18 完成并补齐 PDF artifact 下载端点；Phase2A 标签、快速录入、内链 / 反链接口已完成；Phase2B API-028、API-033、API-034..038 已进入实现态；**Phase2D 账号体系已实现（Sprint-26）：API-001 login 契约变更（凭证登录 + 不透明 token session）+ 新增 API-039..043（register / logout / refresh / sessions）**。仍降级：API-011 仅 `.md`/`.txt` 已提取文本；真实 Word/PDF 解析与 OCR 留后续 |
-| 最后更新 | 2026-08-07（Sprint-26 账号体系：API-001 契约变更 + API-039..043 已实现，TC-P2-AUTH-001 自动化通过） |
+| 覆盖 REQ / 模块 | Phase1：REQ-001..REQ-011、REQ-036；Phase1.5A：REQ-037/038（API-029/030）；Phase1.5B：REQ-027（API-019）；Phase2A：REQ-012/025/026；Phase2B：REQ-014（API-028）、REQ-013/024（API-033）、REQ-039（API-034..038，第三 slice）；Phase2D：REQ-040/041/042（API-039..043，账号体系）+ REQ-045/046/047（API-044..050，角色分层 / 用户管理 / 团队空间加入）；后续 / 愿景接口保留骨架 |
+| 当前状态 | P1 接口契约已用于 Phase1 Demo；Sprint-8 后 P1 主要接口已接 PostgreSQL 表，RAG 已接 pgvector 向量召回 + GLM LLM；task-009 后 API-009 search 已为 substring + ts_vector + pgvector 语义召回的 hybrid search（zhparser 可选）。API-029/030 已随 Phase1.5A 完成；API-019 已随 Sprint-18 完成并补齐 PDF artifact 下载端点；Phase2A 标签、快速录入、内链 / 反链接口已完成；Phase2B API-028、API-033、API-034..038 已进入实现态；**Phase2D 账号体系已实现（Sprint-26）：API-001 login 契约变更（凭证登录 + 不透明 token session）+ 新增 API-039..043（register / logout / refresh / sessions）**；**Sprint-28 已立项（2026-08-07）：API-044..050 契约草案落 §3.9（admin 域用户管理 + space 域成员 CRUD + 用户搜索），待编码 Sprint 实现**。仍降级：API-011 仅 `.md`/`.txt` 已提取文本；真实 Word/PDF 解析与 OCR 留后续 |
+| 最后更新 | 2026-08-07（Sprint-28 立项：API-044..050 契约草案落 §3.9，admin / space 域 + 用户搜索） |
 
 ## 1. 统一约定
 
@@ -32,6 +32,13 @@
 | API-041 | POST | /api/auth/refresh | 续期轮换（旧 token 作废） | [P2] | Phase2D-已实现 | 已实现（Sprint-26，REQ-042） | REQ-042 |
 | API-042 | GET | /api/auth/sessions | 列当前用户活跃会话 | [P2] | Phase2D-已实现 | 已实现（Sprint-26，REQ-042；多设备） | REQ-042 |
 | API-043 | DELETE | /api/auth/sessions/{id} | 撤销指定会话 | [P2] | Phase2D-已实现 | 已实现（Sprint-26，REQ-042；owner；重复撤销幂等 200，不存在/非本人 404） | REQ-042 |
+| API-044 | GET | /api/admin/users | 用户列表（`q` / `role` / `status` 过滤；返回 id/name/email/role/status/last_login_at） | [P2] | Phase2D·Sprint-28 已立项 | 待实现（全局 admin；不返回 password_hash） | REQ-045/046 |
+| API-045 | PATCH | /api/admin/users/{id} | 改全局角色 / 禁用启用（`role` / `status`） | [P2] | Phase2D·Sprint-28 已立项 | 待实现（全局 admin；禁用后登录 4030 且既有会话失效） | REQ-045/046 |
+| API-046 | GET | /api/spaces/{id}/members | 空间成员列表 | [P2] | Phase2D·Sprint-28 已立项 | 待实现（空间成员） | REQ-047 |
+| API-047 | POST | /api/spaces/{id}/members | 按 email 添加成员（含空间角色，默认 member） | [P2] | Phase2D·Sprint-28 已立项 | 待实现（空间 admin；用户不存在 4004 / 已是成员 4090） | REQ-047 |
+| API-048 | PATCH | /api/spaces/{id}/members/{user_id} | 改空间角色 | [P2] | Phase2D·Sprint-28 已立项 | 待实现（空间 admin；最后一个 admin 降级 4090，C-ROLE-006） | REQ-047 |
+| API-049 | DELETE | /api/spaces/{id}/members/{user_id} | 移除成员 | [P2] | Phase2D·Sprint-28 已立项 | 待实现（空间 admin；最后一个 admin 4090；文档归属不变） | REQ-047 |
+| API-050 | GET | /api/users/search?q= | 添加成员时的用户搜索（返回 id/name/email 最小字段） | [P2] | Phase2D·Sprint-28 已立项 | 待实现（空间 admin 或全局 admin；防普通用户枚举） | REQ-047 |
 | API-002 | GET | /api/spaces | 列出我的空间 | [P1] | P1-已实现 | 已实现（PG 空间 / 成员） | REQ-001/002 |
 | API-003 | POST | /api/spaces/switch | 切换当前空间 | [P1] | P1-已实现 | 已实现（PG 成员校验） | REQ-002 |
 | API-004 | GET | /api/documents | 文档列表 | [P1] | P1-已实现 | 已实现（PG 文档 + 权限过滤） | REQ-004 |
@@ -305,12 +312,19 @@ sequenceDiagram
 | API-036 `DELETE /api/folders/{folder_id}` | — | `{deleted:true}` | 空间成员；**删非空 folder→4090**（FT-C-010：必须先移空，防连带删文档） | `lumen_folders` | Phase2B 第三 slice·已实现；只 `active` 无 `archived` |
 | API-037 `POST /api/folders/reorder` | `parent_id?`、`ordered_ids[]`（须等于该层全部子 folder） | `{updated:true}` | 空间成员 | `lumen_folders` | Phase2B 第三 slice·已实现；文档首版不加 `order`（FT-C-009），folder 内按 `title` 默认排序 |
 | API-038 `PATCH /api/documents/{document_id}/folder` | `folder_id`（number / `null`，`null`=根目录） | `{id,space_id,folder_id,title,permission,type,current_version,owner_id,content_md}` | 文档需当前用户可见且可写；目标 folder 必须属于当前空间；跨空间 / 不存在目标→4220；文档不存在或不可见→4004；只移动归属，不新增版本 / 不重建索引 | `lumen_documents.folder_id`、`lumen_folders` | Phase2B 第三 slice·已实现（task-029）；支撑前端文档右键“移动到” |
+| API-044 `GET /api/admin/users` | `q?`（name/email 模糊）、`role?`、`status?`、`page?` | `{items[{id,name,email,role,status,last_login_at}],total,page}` | 全局 admin（member 4030）；不返回 `password_hash` / `external_id` 之外的敏感字段；支持按角色 / 状态过滤与 `last_login_at` 排序（C-ROLE-005） | `lumen_users` | **Phase2D·Sprint-28 立项**（REQ-045/046，task-040）；admin 域用户管理 |
+| API-045 `PATCH /api/admin/users/{id}` | `role?`（admin/member）、`status?`（active/disabled） | `{id,name,email,role,status,updated_at}` | 全局 admin（member 4030）；用户不存在 4004；禁用后登录 4030 且既有会话失效（复用 `lumen_sessions` 撤销）；不删除用户 / 不迁移文档 | `lumen_users` | **Phase2D·Sprint-28 立项**（REQ-045/046，task-040） |
+| API-046 `GET /api/spaces/{id}/members` | `page?` | `{items[{user_id,name,email,role,joined_at}],total,page}` | 空间成员可读（非成员 4003）；不返回密码 / 敏感字段 | `lumen_space_members`、`lumen_users` | **Phase2D·Sprint-28 立项**（REQ-047，task-040）；space 域成员管理 |
+| API-047 `POST /api/spaces/{id}/members` | `email`、`role?`（admin/member，默认 member） | `{user_id,name,email,role,joined_at}` | 空间 admin 或全局 admin（非 admin 4030）；用户不存在 4004；已是成员 4090；成员角色即时生效 | `lumen_space_members`、`lumen_users` | **Phase2D·Sprint-28 立项**（REQ-047，task-040）；按 email 添加（C-ROLE-003） |
+| API-048 `PATCH /api/spaces/{id}/members/{user_id}` | `role`（admin/member） | `{user_id,name,email,role,updated_at}` | 空间 admin 或全局 admin（非 admin 4030）；降级最后一个 admin → 4090（C-ROLE-006）；成员不存在 4004 | `lumen_space_members` | **Phase2D·Sprint-28 立项**（REQ-047，task-040） |
+| API-049 `DELETE /api/spaces/{id}/members/{user_id}` | — | `{deleted:true}` | 空间 admin 或全局 admin（非 admin 4030）；移除最后一个 admin → 4090（C-ROLE-006）；成员不存在 4004；文档归属不变 | `lumen_space_members` | **Phase2D·Sprint-28 立项**（REQ-047，task-040） |
+| API-050 `GET /api/users/search?q=` | `q`（email/name 前缀匹配） | `{items[{id,name,email}],total}` | 空间 admin 或全局 admin（普通 member 4030，防枚举）；仅返回最小字段 | `lumen_users` | **Phase2D·Sprint-28 立项**（REQ-047，task-040）；添加成员入口依赖 |
 
 **Phase1.5 / Phase2 错误码补充**：
 
 | code | 场景 | 适用 API |
 |---|---|---|
-| 4090 | 标签重名、快速录入重复转换、PDF 导出任务未就绪、批量导入同名且策略不允许跳过、folder 重名 / 删非空 folder 等业务冲突 | API-014/017/019/027/029/031/035/036 |
+| 4090 | 标签重名、快速录入重复转换、PDF 导出任务未就绪、批量导入同名且策略不允许跳过、folder 重名 / 删非空 folder、已是空间成员、移除 / 降级最后一个空间 admin（C-ROLE-006）等业务冲突 | API-014/017/019/027/029/031/035/036/047/048/049 |
 | 4220 | 字段缺失、非法状态、无效 tag_ids / document_id / mode、文件类型不支持、relative_paths 与 files 数量不匹配、folder 防环 / 跨空间移动、文档移动目标 folder 不属于当前空间 | 全部 Phase1.5 / Phase2 API |
 | 5030 | LLM / PDF 导出 / 外部依赖不可用 | API-019/028 |
 | 4010 | 凭证错误 / session 无效（登录统一错误防枚举；刷新失败） | API-001/041 |
@@ -339,6 +353,8 @@ sequenceDiagram
 | REQ-040 | `POST /api/auth/register`（API-039） | 注册：bcrypt 哈希 + 默认个人空间（C-AUTH-001） |
 | REQ-041 | `POST /api/auth/login`（API-001 契约变更） | 凭证登录：bcrypt verify + 不透明 token session；错误统一防枚举 + 锁定 |
 | REQ-042 | `POST /api/auth/logout`、`POST /api/auth/refresh`、`GET/DELETE /api/auth/sessions`（API-040..043） | 登出撤销 / 续期轮换 / 多设备会话查询与撤销 |
+| REQ-045 / 046 | `GET/PATCH /api/admin/users`（API-044/045） | 全局角色分层 + admin 域用户管理：列表 / 过滤 / 改角色 / 禁用启用；非 admin 4030；不暴露 password_hash |
+| REQ-047 | `GET/POST/PATCH/DELETE /api/spaces/{id}/members`（API-046..049）+ `GET /api/users/search`（API-050） | space 域成员 CRUD + 添加成员用户搜索；非空间 admin 4030；最后一个 admin 4090 |
 | REQ-002 | `POST /api/spaces/switch` | 切换当前空间上下文 |
 | REQ-003 | `GET /api/documents`、`POST /api/query`、`GET /api/search` | 文档列表、检索、问答均执行权限过滤 |
 | REQ-004 / 005 | `GET/POST /api/documents`、`GET/PUT/DELETE /api/documents/{id}` | 文档 CRUD 与行内编辑保存 |
@@ -422,3 +438,4 @@ sequenceDiagram
 - `API-019` PDF 导出属于 Phase1.5B，已随 Sprint-18 实现，并在 v1.7.0 补齐下载端点；后续若新增异步队列、过期清理 job 或水印，需先同步 `05/06/08/09`。
 - Phase2A 标签 / 快速录入 / 内链 API 已实现；**Phase2B API-028 后端已实现**（vertical slice 已定：polish 同步 / citation 首版同步；数据外发风险已接受 RG-008 Go）；**API-033 时间线为第二 slice·已实现（候选 A + TL-C-001..011 已确认，task-030 本地自动化、运行态 API smoke、Edge headless 浏览器 smoke、真实 PG 大数据性能 smoke 均已通过）**；**API-034..038 文档目录树已实现（folder-tree，REQ-039）；导入保留结构扩展 API-029 `preserve_structure` 已实现（推翻 ingestion ING-C-001）；前端文件管理器基础能力已实现，浏览器自动化 smoke 已补**。
 - **Sprint-26 账号体系（API-001 契约变更 + API-039..043）已实现并通过后端自动化验收（`tests/backend/test_auth.py` 20/20 + 全量 222 OK）**；浏览器 smoke（登录 / 注册页）与 demo 启动验证待用户确认。
+- **Sprint-28 角色分层 + 用户管理 + 团队空间加入（2026-08-07 立项，task-040）**：API-044..050 契约草案已落 §3.9（admin 域 / space 域 / 用户搜索；C-ROLE-005..007 已确认：last_login_at 展示、最后一个 admin 4090 保护、全局 admin 同权 + 审计）；错误码沿用 4001/4003/4004/4030/4090/4220；编码 Sprint 启动时按 `docs/design/accounts-auth.md` §18.4 实现并回写本节状态。

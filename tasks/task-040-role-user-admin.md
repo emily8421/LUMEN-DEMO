@@ -1,6 +1,6 @@
 # task-040-role-user-admin（Sprint-28 角色分层 + 用户管理 + 团队空间加入）
 
-> Phase2D「账户与多人权限」Sprint-28。设计权威：`docs/design/accounts-auth.md` §18。**立项 2026-08-07（REQ-045/046/047，U-50/51/52，TC-P2-ACC-002）**：契约已落盘 02/01/03/08/09/accounts-auth §18；C-ROLE-001..004 已确认（2026-08-07 按 AI 建议执行）；**编码 Sprint 待启动**。
+> Phase2D「账户与多人权限」Sprint-28。设计权威：`docs/design/accounts-auth.md` §18。**立项 2026-08-07（REQ-045/046/047，U-50/51/52，TC-P2-ACC-002）**：契约已落盘 02/01/03/08/09/06/07/accounts-auth §18；C-ROLE-001..007 已确认（2026-08-07 按 AI 建议执行）；**编码 Sprint 待启动**。
 
 ## 目标
 在 Sprint-26 账号体系 + Sprint-27 权限过滤底座上补齐团队治理能力，完成「账号 → 权限 → 团队协作」的 Phase2D 闭环：
@@ -32,11 +32,10 @@
 - 不暴露用户敏感字段（password_hash 等）；不删除用户 / 迁移文档（禁用仅 status 置位）
 
 ## 执行第一步（编码前门禁）
-1. §18.8 待确认项拍板（C-ROLE-005/006/007：last_login_at 展示 / 最后一个 admin 保护 / 全局 admin 同权）
-2. 细化 §18.4 API 编号 + 回写 `docs/07`（admin 域 + space 域 + users/search endpoint contract matrix）
-3. 回写 `docs/06`（migration 016 字段契约 + REQ-045..047 追溯）
-4. 按子步骤推进：migration + service/仓储 → admin API + 成员 API → 前端页面 → 自动化 tests → 浏览器 smoke → 回写 08/09/accounts-auth §18
+1. ✅ §18.8 已拍板（2026-08-07 按 AI 建议执行）：C-ROLE-005 显示 last_login_at（admin 域只读列）；C-ROLE-006 最后一个 admin 4090 保护；C-ROLE-007 全局 admin 同权 + 审计事件
+2. ✅ `docs/06` 已回写（migration 016 `lumen_users.role` 字段契约 + REQ-045..047 追溯）；✅ `docs/07` 已回写（API-044..050 endpoint contract matrix + 错误码）
+3. 按子步骤推进：migration + service/仓储 → admin API + 成员 API → 前端页面 → 自动化 tests → 浏览器 smoke → 回写 08/09/accounts-auth §18
 
 ## 待确认项
 - **已确认（2026-08-07，按 AI 建议执行）**：C-ROLE-001 单列角色（admin/member，默认 member）；C-ROLE-002 最小集（列表 / 过滤 / 改角色 / 禁用启用；移除与重置密码留候选）；C-ROLE-003 管理员按 email 添加成员（邀请码 / 邀请链接留候选）；C-ROLE-004 seed alice=admin / kira·brightlite-member=member（内存 / PG 一致，管理入口显隐 + 后端强制鉴权）
-- **编码前拍板**：C-ROLE-005 last_login_at 展示；C-ROLE-006 最后一个空间 admin 保护；C-ROLE-007 全局 admin 对任意空间成员管理同权
+- **已确认（2026-08-07，按 AI 建议执行）**：C-ROLE-005 用户列表显示 `last_login_at`（admin 域只读列，可排序）；C-ROLE-006 禁止移除 / 降级最后一个空间 admin（后端 4090 + 前端禁用提示）；C-ROLE-007 全局 admin 对任意空间成员管理同权（统一鉴权谓词 + 审计事件 member_added / member_role_changed / member_removed）

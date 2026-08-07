@@ -11,14 +11,14 @@
 | 保留 / 省略决策 | 保留 |
 | 决策来源 | `ai/project-rules.md` §3（项目有 PostgreSQL + pgvector 持久化存储） |
 | 覆盖 REQ / 模块 | Phase1：空间 / 权限、文档、版本、导入、检索向量、术语管理；Phase1.5A：批量导入与 `.md` / ZIP 导出备份（REQ-037/038）；Phase1.5B：PDF 导出任务契约（REQ-027）；Phase2A：标签、内链 / 反链、快速录入（REQ-012/025/026）；Phase2B：AI 润色草稿（REQ-014）、**主题时间线（REQ-013a/024）**、文档目录树（REQ-039，第三 slice 候选）；愿景保留骨架 |
-| 当前状态 | P1 表结构**已落地 PostgreSQL**（Sprint-8 / task-008 T1–T5：8 张 `lumen_*` 表由 `migrations/001-005` 建，后端切 `PgRepository`；`lumen_chunks.embedding vector(512)` + hnsw + ts_vector 由 T4/T6 启用；migration 006 为 search 增加可选 zhparser / `simple` 回退配置）。内存 `demo_repository` 保留为单测 fake。Phase1.5A 的 REQ-037/038 已复用既有表完成、不新增迁移；Phase1.5B PDF 导出已落地 `lumen_doc_exports`（migration 013 + DocExport entity/ORM + Demo/Pg repository）；Phase2A 的标签、反链与快速录入表已落地；真实 Word/PDF 文本提取与 OCR 仍降级（RG-007 / RG-003）。2026-07-21 按 ADR-010 补“DB 权威运行态 + 衍生数据可重建”原则；**Phase2D 账号体系基础已落地（Sprint-26 / task-038，REQ-040/041/042）：migration 014 为 `lumen_users` 扩列（email / password_hash / status / last_login_at / failed_login_count / locked_until）+ 新建 `lumen_sessions`（不透明 token session，token 只存 SHA-256 摘要，TTL 8h 滑动续期 / 撤销 / 多设备）** |
-| 最后更新 | 2026-08-07（Sprint-26 账号体系 DB 契约落地：migration 014 `lumen_users` 扩列 + `lumen_sessions` + TC-P2-AUTH-001 自动化通过） |
+| 当前状态 | P1 表结构**已落地 PostgreSQL**（Sprint-8 / task-008 T1–T5：8 张 `lumen_*` 表由 `migrations/001-005` 建，后端切 `PgRepository`；`lumen_chunks.embedding vector(512)` + hnsw + ts_vector 由 T4/T6 启用；migration 006 为 search 增加可选 zhparser / `simple` 回退配置）。内存 `demo_repository` 保留为单测 fake。Phase1.5A 的 REQ-037/038 已复用既有表完成、不新增迁移；Phase1.5B PDF 导出已落地 `lumen_doc_exports`（migration 013 + DocExport entity/ORM + Demo/Pg repository）；Phase2A 的标签、反链与快速录入表已落地；真实 Word/PDF 文本提取与 OCR 仍降级（RG-007 / RG-003）。2026-07-21 按 ADR-010 补“DB 权威运行态 + 衍生数据可重建”原则；**Phase2D 账号体系基础已落地（Sprint-26 / task-038，REQ-040/041/042）：migration 014 为 `lumen_users` 扩列（email / password_hash / status / last_login_at / failed_login_count / locked_until）+ 新建 `lumen_sessions`（不透明 token session，token 只存 SHA-256 摘要，TTL 8h 滑动续期 / 撤销 / 多设备）**；**Phase2D Sprint-28 已立项（2026-08-07，REQ-045/046/047）：migration 016 为 `lumen_users` 增加全局角色 `role`（admin / member，默认 member + CHECK），支撑全局角色分层 / 用户管理后台 / 团队空间加入** |
+| 最后更新 | 2026-08-07（Sprint-28 立项：migration 016 `lumen_users.role` 字段契约 + REQ-045/046/047 追溯，TC-P2-ACC-002 待编码 Sprint 验收） |
 
 ## 1. 表清单（完整）
 
 | 表 | 用途 | 阶段 | 设计状态 | 当前实现状态 | 追溯 |
 |---|---|---|---|---|---|
-| lumen_users | 账号 | [P1] | P1-已实现；Phase2D 扩列（migration 014） | 已落地 PostgreSQL（migration 001 + 014 扩列：email / password_hash / status / last_login_at / failed_login_count / locked_until；PgRepository 接入） | REQ-001 基础；REQ-040/041/042 |
+| lumen_users | 账号 | [P1] | P1-已实现；Phase2D 扩列（migration 014 / 016） | 已落地 PostgreSQL（migration 001 + 014 扩列：email / password_hash / status / last_login_at / failed_login_count / locked_until + 016 role；PgRepository 接入） | REQ-001 基础；REQ-040/041/042；REQ-045 |
 | lumen_sessions | 登录会话（不透明 token） | [P2] | Phase2D-已实现 | 已落地 PostgreSQL（migration 014；token 只存 SHA-256 摘要；TTL / 撤销 / 续期轮换 / 多设备会话） | REQ-041/042 |
 | lumen_spaces | 空间 | [P1] | P1-已实现 | 已落地 PostgreSQL（migration 001；PgRepository 接入） | REQ-001 |
 | lumen_space_members | 成员-空间-角色 | [P1] | P1-已实现 | 已落地 PostgreSQL（migration 001；PgRepository 接入） | REQ-001/002 |
@@ -71,6 +71,7 @@ LUMEN 采用 `docs/decisions/ADR-010-db-authority-derived-data-rebuildability.md
 | failed_login_count | int | 连续失败次数（锁定阈值 5 次 / 15min） |
 | locked_until | timestamptz | 锁定截止时间（空=未锁定） |
 | created_at | timestamptz | |
+| role | varchar | 全局角色 admin / member（默认 member，CHECK 约束；Sprint-28 migration 016；seed alice=admin / kira·brightlite-member=member） |
 
 ### lumen_sessions（Phase2D · migration 014 · 已实现）
 | 字段 | 类型 | 说明 |
@@ -177,6 +178,7 @@ LUMEN 采用 `docs/decisions/ADR-010-db-authority-derived-data-rebuildability.md
 | lumen_users | external_id | varchar | 是 | — | 唯一（登录标识） | REQ-001 | 中 | 随账号删除 |
 | lumen_users | name | varchar | 是 | — | — | REQ-001 | 低 | 随账号删除 |
 | lumen_users | created_at | timestamptz | 是 | now() | — | REQ-001 | 低 | 随账号删除 |
+| lumen_users | role | varchar | 是 | 'member' | CHECK admin/member | REQ-045 | 中 | 随账号删除 |
 | lumen_spaces | id | bigint PK | 是 | — | PK | REQ-001 | 低 | 随空间删除 |
 | lumen_spaces | code | varchar | 是 | — | UK | REQ-001 | 低 | 随空间删除 |
 | lumen_spaces | name | varchar | 是 | — | — | REQ-001 | 低 | 随空间删除 |
@@ -337,6 +339,7 @@ erDiagram
 |---|---|---|---|---|
 | REQ-001 / 002 | `lumen_users`、`lumen_spaces`、`lumen_space_members` | TC-P1-001 / 002 | Sprint-1 | 账号、空间与成员关系支撑隔离和切换 |
 | REQ-040 / 041 / 042 | `lumen_users`（扩列）、`lumen_sessions` | TC-P2-AUTH-001 | Sprint-26（Phase2D，task-038，migration 014） | 注册 / 凭证登录 bcrypt / 登出会话·不透明 token + 多设备 / 锁定与审计 |
+| REQ-045 / 046 / 047 | `lumen_users`（role）、`lumen_space_members` | TC-P2-ACC-002 | Sprint-28（Phase2D，task-040，migration 016） | 全局角色 admin/member + admin 域用户管理（列表 / 改角色 / 禁用启用）+ space 域成员 CRUD（按 email 添加 / 改空间角色 / 移除） |
 | REQ-003 | `lumen_documents`、`lumen_space_members` | TC-P1-003 | Sprint-1 | 文档权限、作者与空间成员共同决定可见性 |
 | REQ-004 / 005 | `lumen_documents` | TC-P1-004 / 005 | Sprint-2 | 文档 CRUD 与行内编辑持久化 |
 | REQ-006 | `lumen_document_versions` | TC-P1-006 | Sprint-2 | 保存历史版本并支持恢复 |
@@ -362,3 +365,4 @@ erDiagram
 - Phase1.5A 的 REQ-037 / REQ-038 已按不新增 DB 表完成；若后续需要批次表、目录表或长期导出产物表，必须先回到本文、`07`、`08/09` 修订契约。
 - PDF 导出（REQ-027）属于 Phase1.5B，已随 Sprint-18 落地 `lumen_doc_exports`、API-019 写入策略和 `tmp/pdf_exports` 首版产物路径；v1.7.0 已补下载端点并复用导出任务记录，不新增 DB 表；过期清理 job / 异步队列如需扩展需另行设计。
 - Phase2A 标签、反链与快速录入 DB 契约已实现；**Phase2B REQ-014 `lumen_ai_drafts` 已推进到 MVP 级已设计**（字段 / 约束 / 索引草案齐备，数据外发风险已接受 RG-008），migration 010 已落地（Sprint-19），后端 service / API / tests 已实现；**REQ-013/024 时间轴数据来源已定候选 A并随 task-030 本地实现（实时聚合不建表，migration 012 仅加时间索引，见 `docs/design/timeline.md` TL-C-001），运行态 API / Edge headless 浏览器 / 真实 PG 大数据性能 smoke 已通过**；**REQ-039 文档目录树（Phase2B 第三 slice）已落地 `lumen_folders` + `lumen_documents.folder_id` 契约：folder 后端核心、API-029 导入保留结构、API-038 单文档移动与前端文件管理器基础能力已实现；浏览器自动化 smoke 已补**。
+- **Sprint-28 角色分层 + 用户管理 + 团队空间加入（2026-08-07 立项，task-040）**：migration 016 `lumen_users.role`（admin / member，默认 member + CHECK；seed alice=admin / kira·brightlite-member=member）；字段级契约与追溯矩阵已更新（REQ-045/046/047 → TC-P2-ACC-002）；编码 Sprint 启动时按 `docs/design/accounts-auth.md` §18.3/18.4 落地；`role` 不做独立索引（3–5 人团队 admin 过滤低频，YAGNI）。
