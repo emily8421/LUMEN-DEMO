@@ -15,6 +15,10 @@ type TopBarProps = {
   rightPaneOpen: boolean;
   onToggleRightPane: () => void;
   onLogout: () => void;
+  /** Sprint-28（REQ-046）：当前用户是否为全局 admin（用户管理入口显隐；后端强制鉴权）。 */
+  canManageUsers: boolean;
+  /** 打开用户管理页（全局 admin 可见）。 */
+  onOpenUserManagement: () => void;
 };
 
 /**
@@ -49,6 +53,8 @@ export function TopBar({
   rightPaneOpen,
   onToggleRightPane,
   onLogout,
+  canManageUsers,
+  onOpenUserManagement,
 }: TopBarProps) {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
@@ -231,6 +237,18 @@ export function TopBar({
             <div className="user-menu-popover" role="menu">
               <span>用户 {userLabel}</span>
               <strong>{currentSpace?.name ?? `空间 ${session.currentSpaceId}`}</strong>
+              {canManageUsers ? (
+                <button
+                  type="button"
+                  className="user-menu-admin"
+                  onClick={() => {
+                    setUserMenuOpen(false);
+                    onOpenUserManagement();
+                  }}
+                >
+                  用户管理
+                </button>
+              ) : null}
               <button
                 type="button"
                 className="user-menu-logout"

@@ -1,0 +1,147 @@
+﻿/* Sprint-28 用户管理 + 空间成员管理（REQ-045/046/047，task-040）。 */
+
+.admin-users-filters {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.admin-users-filters input,
+.admin-users-filters select,
+.admin-users-filters button {
+  height: 32px;
+}
+
+.admin-users-scroll,
+.members-scroll {
+  overflow: auto;
+  padding: 0 var(--space-4) var(--space-4);
+}
+
+.admin-users-table,
+.members-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.admin-users-table th,
+.admin-users-table td,
+.members-table th,
+.members-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line-soft);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.admin-users-table th,
+.members-table th {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.admin-users-table select,
+.members-table select,
+.member-add-form select {
+  height: 30px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--panel);
+  color: var(--text);
+  padding: 0 6px;
+}
+
+.user-status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  line-height: 18px;
+  white-space: nowrap;
+}
+
+.user-status-badge.active {
+  background: var(--green-soft);
+  color: var(--green);
+}
+
+.user-status-badge.disabled {
+  background: var(--red-soft);
+  color: var(--red);
+}
+
+button.secondary.danger {
+  color: var(--red);
+  border-color: #f3c6c6;
+}
+
+button.secondary.danger:hover {
+  background: var(--red-soft);
+}
+
+.member-add-form {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+  padding: 0 var(--space-4) var(--space-3);
+  position: relative;
+}
+
+.member-add-form input,
+.member-add-form select,
+.member-add-form button {
+  height: 32px;
+}
+
+.member-search-wrap {
+  position: relative;
+  flex: 1;
+  max-width: 320px;
+}
+
+.member-search-wrap input {
+  width: 100%;
+}
+
+.member-search-results {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  box-shadow: 0 8px 24px rgba(23, 32, 51, 0.12);
+  max-height: 220px;
+  overflow: auto;
+}
+
+.member-search-results button {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.member-search-results button:hover {
+  background: var(--blue-soft);
+}
+
+.member-search-results small {
+  color: var(--muted);
+}

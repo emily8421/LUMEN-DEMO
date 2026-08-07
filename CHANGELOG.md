@@ -6,6 +6,19 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.1.0（2026-08-07）
+
+**Sprint-28 角色分层 + 用户管理 + 团队空间加入（Phase2D 收口，REQ-045/046/047，TC-P2-ACC-002，task-040）。** 在 Sprint-26 账号体系 + Sprint-27 权限底座上补齐团队治理能力：全局角色分层（`lumen_users.role` admin/member）、admin 域用户管理后台、space 域成员管理（按 email 添加 / 改空间角色 / 移除）。
+
+- 数据契约（migration 016）：`lumen_users.role`（默认 member + CHECK）+ seed 对齐（alice=admin / kira·brightlite-member=member）+ `lumen_space_members.created_at`（支撑 API-046 `joined_at`）。
+- API：新增 API-044 admin 用户列表 / API-045 改角色·禁用启用 / API-046..049 空间成员 CRUD / API-050 受限用户搜索；登录响应新增 `role`（additive）；错误码 4003/4004/4030/4090/4220。
+- 安全：管理接口仅全局 admin 或空间 admin（member 4030，demo 仓储不旁路）；不返回 `password_hash`；禁用后登录 4030 且既有会话失效；最后一个空间 admin 降级 / 移除 4090（C-ROLE-006）；审计事件（user_role_changed / user_status_changed / member_added / member_role_changed / member_removed）。
+- 前端：用户管理页（admin 域入口「用户管理」+ 列表 / 过滤 / 行内改角色 / 禁用开关）+ 空间设置成员管理（email 搜索添加 / 改角色 / 移除确认）；管理入口按角色显隐（member 不可见）。
+- 实现偏差（`docs/design/accounts-auth.md` §18.9）：API-044/046 契约草案分页（`page?` / `{items,total,page}`）未实现，实际为扁平 `{code,msg,data:[...]}`（3-5 人团队规模）；API-045/048 响应不含 `updated_at`（用 `last_login_at` / `joined_at`）；`last_login_at` 为只读展示列，未实现显式排序；refresh 响应未附带 `role`（仅登录响应）。
+- 验证：backend discover 275 OK（skipped=2）；`volta run --node 22.17.1 npm run build` 绿；`node scripts/smoke-sprint28-role-admin-browser.mjs` PASS（admin/member 双视角 + API 矩阵：member 4030 / 改角色 / 禁用登录 403 / 重复添加 409 / 最后一个 admin 4090 / 搜索 4030 / 移除后失权 4003）。
+
+> MINOR 依据（`ai/project-rules.md` §2.8.2）：Sprint 验收 / 里程碑交付 + 新增 API endpoint（API-044..050）。
+
 ## v3.0.0（2026-08-07）
 
 **Sprint-26 账号体系基础（Phase2D 首个 vertical slice，REQ-040/041/042，TC-P2-AUTH-001）。** 把 Demo 占位账号侧（无密码 / seed 用户 / 手撸 token）升级为真实多用户账号体系：注册（bcrypt 哈希 + 默认个人空间）、凭证登录（API-001 login 契约变更）、登出 / token 刷新轮换 / 多设备会话管理（不透明 token + `lumen_sessions`，token 只存 SHA-256 摘要，TTL 8h / 滑动续期 / 撤销幂等）。

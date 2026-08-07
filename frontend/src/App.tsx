@@ -18,6 +18,8 @@ import { useSession } from './app/useSession';
 import { useDocuments } from './app/useDocuments';
 import { useAiPolish } from './app/useAiPolish';
 import { useFolders } from './app/useFolders';
+import { useAdminUsers } from './app/useAdminUsers';
+import { useSpaceMembers } from './app/useSpaceMembers';
 import { useTimeline } from './app/useTimeline';
 import { isAuthTokenError } from './app/session-store';
 import type { LocalVaultDoc } from './app/local-vault-index';
@@ -103,12 +105,25 @@ function App() {
     setNotice: workspace.setNotice,
   });
   const imports = useImport({ token, runAction, setNotice: workspace.setNotice, onImported: handleImported });
+  const adminUsers = useAdminUsers({ token, runAction, setNotice: workspace.setNotice });
+  const spaceMembers = useSpaceMembers({
+    token,
+    currentSpaceId: session.session?.currentSpaceId,
+    currentUserId: session.session?.userId,
+    globalRole: session.session?.role ?? 'member',
+    runAction,
+    setNotice: workspace.setNotice,
+  });
 
   const currentSpace = session.spaces.find((space) => space.id === session.session?.currentSpaceId) ?? null;
 
   // 登录态变化 → 重置本次会话的首次引导显示（未完成时下次登录重新弹）。
   useEffect(() => {
     setGuideDismissed(false);
+    // Sprint-28：非 admin 登录后不滞留用户管理页（后端仍强制鉴权，此处仅体验收敛）。
+    if (session.session?.role !== 'admin' && workspace.activeView === 'admin-users') {
+      workspace.setActiveView('home');
+    }
   }, [session.session?.token]);
 
   // session / 空间变化 → 刷新工作区（spaces + documents + terms）。
@@ -247,6 +262,8 @@ function App() {
         rightPaneOpen={paneLayout.rightPaneOpen}
         onToggleRightPane={paneLayout.toggleRightPane}
         onLogout={session.handleLogout}
+        canManageUsers={session.session?.role === 'admin'}
+        onOpenUserManagement={() => workspace.setActiveView('admin-users')}
       />
 
       {!session.session ? (
@@ -316,7 +333,12 @@ function App() {
           className={`workspace-layout workspace-shell${leftPaneOpen ? '' : ' pane-left-collapsed'}`}
           style={{ '--left-pane-width': `${leftPaneWidth.width}px` } as CSSProperties}
         >
-          <WorkspaceViewNav activeView={workspace.activeView} disabled={workspace.isBusy} onChange={workspace.setActiveView} />
+          <WorkspaceViewNav
+            activeView={workspace.activeView}
+            disabled={workspace.isBusy}
+            onChange={workspace.setActiveView}
+            showMembers={spaceMembers.canManageMembers}
+          />
 
           <ContextPane
             activeView={workspace.activeView}
@@ -366,6 +388,9 @@ function App() {
             tags={tags}
             timeline={timeline}
             aiPolish={aiPolish}
+            adminUsers={adminUsers}
+            spaceMembers={spaceMembers}
+            currentSpaceName={currentSpace?.name ?? ''}
             onQuickEntryOpen={quickEntry.open}
             onNavigate={workspace.setActiveView}
             onCreateDocument={documents.handleCreateDocument}

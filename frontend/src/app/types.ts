@@ -4,6 +4,8 @@ export type Session = {
   token: string;
   userId: number;
   currentSpaceId: number;
+  /** Sprint-28（REQ-045）：全局角色 admin / member（登录响应携带，C-ROLE-004 前端显隐依据）。 */
+  role: 'admin' | 'member';
 };
 
 export type ImportDraft = {

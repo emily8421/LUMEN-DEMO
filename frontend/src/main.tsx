@@ -18,6 +18,7 @@ import './styles/ai-polish.css';
 import './styles/responsive.css';
 import './styles/onboarding.css';
 import './styles/local-mount.css';
+import './styles/members.css';
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>

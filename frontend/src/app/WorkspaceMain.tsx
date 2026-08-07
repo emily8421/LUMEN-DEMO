@@ -7,6 +7,8 @@ import { TermsFeature } from '../features/TermsFeature';
 import { TagsFeature } from '../features/TagsFeature';
 import { TimelineFeature } from '../features/TimelineFeature';
 import { WelcomeFeature } from '../features/WelcomeFeature';
+import { AdminUsersFeature } from '../features/AdminUsersFeature';
+import { MembersFeature } from '../features/MembersFeature';
 import type { ActiveView } from './WorkspaceViewNav';
 import { useDocuments } from './useDocuments';
 import { useSearch } from './useSearch';
@@ -15,6 +17,8 @@ import { useTerms } from './useTerms';
 import { useTags } from './useTags';
 import { useTimeline } from './useTimeline';
 import type { useAiPolish } from './useAiPolish';
+import type { useAdminUsers } from './useAdminUsers';
+import type { useSpaceMembers } from './useSpaceMembers';
 import type { OnboardingState, OnboardingStepId } from './onboarding-store';
 
 interface WorkspaceMainProps {
@@ -29,6 +33,10 @@ interface WorkspaceMainProps {
   tags: ReturnType<typeof useTags>;
   timeline: ReturnType<typeof useTimeline>;
   aiPolish: ReturnType<typeof useAiPolish>;
+  adminUsers: ReturnType<typeof useAdminUsers>;
+  spaceMembers: ReturnType<typeof useSpaceMembers>;
+  /** 当前空间名称（成员视图副标题）。 */
+  currentSpaceName: string;
   onQuickEntryOpen: () => void;
   /** 视图切换（首页卡片，Doc-First §9.5.2，Sprint-21 slice 3c）。 */
   onNavigate: (view: ActiveView) => void;
@@ -59,6 +67,9 @@ export function WorkspaceMain({
   tags,
   timeline,
   aiPolish,
+  adminUsers,
+  spaceMembers,
+  currentSpaceName,
   onQuickEntryOpen,
   onNavigate,
   onCreateDocument,
@@ -186,6 +197,40 @@ export function WorkspaceMain({
           onLoadTimeline={timeline.handleLoadTimeline}
           onOpenDocument={documents.handleOpenDocument}
           onGoToDocuments={() => onNavigate('documents')}
+        />
+      ) : null}
+
+      {activeView === 'members' ? (
+        <MembersFeature
+          isBusy={isBusy}
+          spaceName={currentSpaceName}
+          members={spaceMembers.members}
+          canManageMembers={spaceMembers.canManageMembers}
+          searchQuery={spaceMembers.searchQuery}
+          searchResults={spaceMembers.searchResults}
+          addEmail={spaceMembers.addEmail}
+          addRole={spaceMembers.addRole}
+          onSearchQueryChange={spaceMembers.handleSearchQueryChange}
+          onAddEmailChange={spaceMembers.setAddEmail}
+          onAddRoleChange={spaceMembers.setAddRole}
+          onAdd={spaceMembers.handleAdd}
+          onRoleChange={spaceMembers.handleRoleChange}
+          onRemove={spaceMembers.handleRemove}
+        />
+      ) : null}
+
+      {activeView === 'admin-users' ? (
+        <AdminUsersFeature
+          isBusy={isBusy}
+          users={adminUsers.users}
+          filterQ={adminUsers.filterQ}
+          filterRole={adminUsers.filterRole}
+          filterStatus={adminUsers.filterStatus}
+          onFilterQChange={adminUsers.setFilterQ}
+          onFilterRoleChange={adminUsers.setFilterRole}
+          onFilterStatusChange={adminUsers.setFilterStatus}
+          onRoleChange={adminUsers.handleRoleChange}
+          onStatusToggle={adminUsers.handleStatusToggle}
         />
       ) : null}
     </section>

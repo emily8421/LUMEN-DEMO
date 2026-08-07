@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import delete, func, select, text as sql_text
+from sqlalchemy import delete, func, or_, select, text as sql_text
 
 from backend.model.entities import (
     AiDraft,
@@ -28,6 +28,7 @@ from backend.model.entities import (
     ImportJob,
     Space,
     SpaceMember,
+    SpaceMemberDetail,
     SpaceRole,
     Tag,
     TagLink,
@@ -76,6 +77,7 @@ def _to_user(r: UserORM) -> User:
         failed_login_count=r.failed_login_count,
         locked_until=_dt_iso(r.locked_until),
         last_login_at=_dt_iso(r.last_login_at),
+        role=r.role,
     )
 
 
@@ -99,7 +101,18 @@ def _to_space(r: SpaceORM) -> Space:
 
 
 def _to_member(r: SpaceMemberORM) -> SpaceMember:
-    return SpaceMember(user_id=r.user_id, space_id=r.space_id, role=SpaceRole(r.role))
+    return SpaceMember(user_id=r.user_id, space_id=r.space_id, role=SpaceRole(r.role), created_at=_dt_iso(r.created_at))
+
+
+def _to_member_detail(member: SpaceMemberORM, user: UserORM) -> SpaceMemberDetail:
+    return SpaceMemberDetail(
+        user_id=member.user_id,
+        space_id=member.space_id,
+        name=user.name,
+        email=user.email,
+        role=SpaceRole(member.role),
+        joined_at=_dt_iso(member.created_at),
+    )
 
 
 def _to_document(r: DocumentORM) -> Document:
@@ -437,6 +450,119 @@ class PgRepository:
                 .order_by(SpaceMemberORM.space_id)
             ).first()
             return None if row is None else row.space_id
+
+    # --- Sprint-28（REQ-045/046/047，task-040）：用户管理 / 空间成员 CRUD / 用户搜索 ---
+
+    def list_users(self, q: str = "", role: str = "", status: str = "") -> list[User]:
+        """admin 域用户列表（API-044）：q 匹配 name/email，可按 role / status 过滤。"""
+        with SessionLocal() as session:
+            stmt = select(UserORM).order_by(UserORM.id)
+            if q:
+                like = f"%{q}%"
+                stmt = stmt.where(or_(UserORM.name.ilike(like), UserORM.email.ilike(like)))
+            if role:
+                stmt = stmt.where(UserORM.role == role)
+            if status:
+                stmt = stmt.where(UserORM.status == status)
+            return [_to_user(r) for r in session.scalars(stmt).all()]
+
+    def search_users(self, q: str = "") -> list[User]:
+        """成员添加时用户搜索（API-050）：q 匹配 name/email，返回最小字段子集（上限 20）。"""
+        with SessionLocal() as session:
+            stmt = select(UserORM).order_by(UserORM.id)
+            if q:
+                like = f"%{q}%"
+                stmt = stmt.where(or_(UserORM.name.ilike(like), UserORM.email.ilike(like)))
+            return [_to_user(r) for r in session.scalars(stmt.limit(20)).all()]
+
+    def update_user_role(self, user_id: int, role: str) -> User | None:
+        """改全局角色（API-045）；不存在返回 None。"""
+        with SessionLocal() as session:
+            row = session.get(UserORM, user_id)
+            if row is None:
+                return None
+            row.role = role
+            session.commit()
+            return _to_user(row)
+
+    def set_user_status(self, user_id: int, status: str) -> User | None:
+        """禁用 / 启用账号（API-045）；不存在返回 None。禁用后登录 4030 由 auth service 处理。"""
+        with SessionLocal() as session:
+            row = session.get(UserORM, user_id)
+            if row is None:
+                return None
+            row.status = status
+            session.commit()
+            return _to_user(row)
+
+    def revoke_user_sessions(self, user_id: int) -> int:
+        """禁用账号时撤销全部活跃会话（API-045：既有会话失效）。"""
+        with SessionLocal() as session:
+            rows = session.scalars(
+                select(SessionORM).where(SessionORM.user_id == user_id, SessionORM.revoked_at.is_(None))
+            ).all()
+            for row in rows:
+                row.revoked_at = func.now()
+            session.commit()
+            return len(rows)
+
+    def find_space(self, space_id: int) -> Space | None:
+        with SessionLocal() as session:
+            row = session.get(SpaceORM, space_id)
+            return _to_space(row) if row else None
+
+    def list_space_members(self, space_id: int) -> list[SpaceMemberDetail]:
+        """空间成员列表（API-046）：含用户展示字段 + 加入时间 joined_at。"""
+        with SessionLocal() as session:
+            rows = session.execute(
+                select(SpaceMemberORM, UserORM)
+                .join(UserORM, UserORM.id == SpaceMemberORM.user_id)
+                .where(SpaceMemberORM.space_id == space_id)
+                .order_by(SpaceMemberORM.created_at, SpaceMemberORM.user_id)
+            ).all()
+            return [_to_member_detail(member, user) for member, user in rows]
+
+    def add_space_member(self, space_id: int, user_id: int, role: str) -> SpaceMemberDetail | None:
+        """按 email 添加成员（API-047）；已是成员返回 None。"""
+        with SessionLocal() as session:
+            existing = session.get(SpaceMemberORM, (user_id, space_id))
+            if existing is not None:
+                return None
+            session.add(SpaceMemberORM(user_id=user_id, space_id=space_id, role=role))
+            session.commit()
+            user = session.get(UserORM, user_id)
+            row = session.get(SpaceMemberORM, (user_id, space_id))
+            if row is None:
+                return None
+            return _to_member_detail(row, user)
+
+    def update_space_member_role(self, space_id: int, user_id: int, role: str) -> SpaceMemberDetail | None:
+        """改空间角色（API-048）；非成员返回 None。"""
+        with SessionLocal() as session:
+            row = session.get(SpaceMemberORM, (user_id, space_id))
+            if row is None:
+                return None
+            row.role = role
+            session.commit()
+            user = session.get(UserORM, user_id)
+            return _to_member_detail(row, user)
+
+    def remove_space_member(self, space_id: int, user_id: int) -> bool:
+        """移除成员（API-049）；文档归属不变（仅删成员关系）。"""
+        with SessionLocal() as session:
+            row = session.get(SpaceMemberORM, (user_id, space_id))
+            if row is None:
+                return False
+            session.delete(row)
+            session.commit()
+            return True
+
+    def count_space_admins(self, space_id: int) -> int:
+        with SessionLocal() as session:
+            rows = session.scalars(
+                select(SpaceMemberORM).where(SpaceMemberORM.space_id == space_id, SpaceMemberORM.role == "admin")
+            ).all()
+            return len(rows)
 
     # --- documents ---
 

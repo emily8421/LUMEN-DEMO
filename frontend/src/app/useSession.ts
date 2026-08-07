@@ -44,10 +44,11 @@ export function useSession({ runAction, setNotice, onSpaceChanged }: UseSessionA
         token: result.token,
         userId: result.user_id,
         currentSpaceId: result.current_space_id,
+        role: result.role,
       };
       setSession(nextSession);
       persistSession(nextSession);
-      setNotice(`已登录：${nextSession.userId}`);
+      setNotice(`已登录：${nextSession.userId}（${result.role}）`);
     });
   };
 
@@ -61,10 +62,11 @@ export function useSession({ runAction, setNotice, onSpaceChanged }: UseSessionA
         token: result.token,
         userId: result.user_id,
         currentSpaceId: result.current_space_id,
+        role: result.role,
       };
       setSession(nextSession);
       persistSession(nextSession);
-      setNotice(`注册成功：${created.name}（${created.email}）`);
+      setNotice(`注册成功：${created.name}（${created.email}，member）`);
     });
   };
 
