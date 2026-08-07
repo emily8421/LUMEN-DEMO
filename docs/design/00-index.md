@@ -17,6 +17,7 @@
 | `export-delivery.md` | 导出交付子系统（MOD-007） | REQ-038 / REQ-027 | Phase1.5A `.md` / ZIP 导出已实现；Phase1.5B PDF 导出已实现并通过 TC-P1-017 | Sprint-17/18 已实现设计 |
 | `intelligence-analysis.md` | 情报分析子系统（MOD-009，i2 精神） | REQ-029..034 | 愿景骨架，待技术验证 | P1/P2 不实现，升 Phase 前再评估 |
 | `help-onboarding.md` | 帮助与引导体系（COMP-002） | REQ-011（可用性收口）；不新增 REQ | **L0+L1 已实现（2026-08-06，Sprint-25）** | 分层帮助：L0 内容源 / L1 首次引导 / L2 帮助中心 / L3 上下文 / L4 速查 |
+| `ai-assistant.md` | AI 助手子系统（右下角悬浮窗 + 基于知识库开关 + 多轮） | REQ-008（AI 问答·RAG 扩展） | **已编码 + 验证通过（2026-08-07，维护态批3）**，待人工验收 | 通用对话（开关关闭）/ 多轮 history 走路径 A（前端管理）；不新增表 / 独立接口 |
 
 ## 2. 原型与辅助材料
 

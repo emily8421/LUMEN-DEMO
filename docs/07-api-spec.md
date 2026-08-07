@@ -50,7 +50,7 @@
 | API-007 | GET | /api/documents/{id}/versions | 版本列表 | [P1] | P1-已实现 | 已实现（PG 版本历史） | REQ-006 |
 | API-008 | POST | /api/documents/{id}/versions/{v}/restore | 恢复版本 | [P1] | P1-已实现 | 已实现（PG 版本恢复） | REQ-006 |
 | API-009 | GET | /api/search?q= | 全文 / 语义混合搜索 | [P1] | P1-已实现 | 已实现（substring + ts_vector + pgvector 语义召回；zhparser 可选） | REQ-007 |
-| API-010 | POST | /api/query | RAG 问答 | [P1] | P1-已实现 | 已实现（pgvector 向量召回 + GLM LLM；可配 Mock） | REQ-008 |
+| API-010 | POST | /api/query | RAG 问答 / 通用对话（批3 扩：请求体增 `history` + `use_knowledge_base` + `llm_provider`，向后兼容；配套 `GET /api/llm-configs` 多通道切换） | [P1] | P1-已实现 | 已实现（pgvector 向量召回 + LLM；可配 Mock；批3 2026-08-07 扩多轮 history 与通用对话开关，2026-08-08 扩 LLM 多配置切换，见 `docs/design/ai-assistant.md`） | REQ-008 |
 | API-011 | POST | /api/import | 导入文件 | [P1] | P1-已设计 | **降级实现（仅 `.md`/`.txt` 已提取文本；无 PDF/OCR）** | REQ-009/010 |
 | API-012 | GET/POST | /api/terms | 术语列表 / 创建术语 | [P1] | P1-已实现 | 已实现（PG 术语存储；REQ-048 扩 `category_id`/`category`/`source` 请求·响应字段，migration 017） | REQ-036 / REQ-048 |
 | API-013 | GET/PUT/DELETE | /api/terms/{id} | 术语详情 / 更新 / 删除 | [P1] | P1-已实现 | 已实现（PG 术语存储；REQ-048 扩 `category_id`/`category`/`source`，`category_id` 跨空间→4220） | REQ-036 / REQ-048 |
@@ -240,10 +240,20 @@
 
 > 以下为 P1 Demo 契约示例：`/api/query` 已接 pgvector 向量召回 + GLM LLM；`/api/search` 为 hybrid search；`/api/import` 仅 `.md`/`.txt` 已提取文本（无真实 PDF/OCR）。逐接口状态见 §2。
 
-#### POST /api/query （RAG 问答）
-- 请求：`{ "space_id": "brightlite-team", "question": "场景联动触发延迟是多少？" }`
+#### POST /api/query （RAG 问答 / 通用对话，批3 扩展）
+- 请求：`{ "space_id": "brightlite-team", "question": "场景联动触发延迟是多少？", "history": [ { "role": "user", "content": "…" }, { "role": "assistant", "content": "…" } ], "use_knowledge_base": true, "llm_provider": "deepseek" }`
+  - `history`（可选，默认 `[]`）：多轮对话历史（路径 A：前端维护），后端拼进 LLM prompt；RAG 检索仍只基于当前 `question`。
+  - `use_knowledge_base`（可选，默认 `true`）：`true` = RAG 检索增强问答（带来源）；`false` = 通用对话（不检索、无来源，LLM 不可用降级「通用对话不可用」）。向后兼容：旧客户端不传字段行为不变。
+  - `llm_provider`（可选，默认后端默认通道）：命名 LLM 配置名（`LLM_PROVIDERS` 列表项），多通道切换（2026-08-08）。
 - 成功：`{ "code":0, "data": { "answer": "实测 280ms，理论下限 230ms…", "sources": [ { "doc_id": "..", "title": "场景联动性能分析", "snippet": "…" } ] } }`
 - 无相关内容：`{ "code":0, "data": { "answer": "未在当前空间知识库找到相关内容", "sources": [] } }`
+- 通用对话（`use_knowledge_base=false`）：`{ "code":0, "data": { "answer": "…", "sources": [] } }`；LLM 未配置 / 失败 → `answer` 为降级文案，`sources: []`
+- 详细设计见 `docs/design/ai-assistant.md` §4
+
+#### GET /api/llm-configs （LLM 多通道配置列表，2026-08-08，API-010 配套）
+- 鉴权：Bearer Token（登录用户）
+- 响应：`{ "code":0, "data": [ { "name": "deepseek", "provider": "deepseek", "model": "deepseek-v4-flash", "base_url": "https://api.deepseek.com/v1", "enabled": true } ] }`
+  - **脱敏**：不返回 `api_key`；`enabled` 表示该配置可用（provider 已支持且 key 非空）。配置来源见 `docs/design/ai-assistant.md` §4（`LLM_PROVIDERS` 命名配置）。
 
 #### POST /api/import
 - 请求：multipart，`space_id` + `file`（Phase1 当前 `.md` / `.txt`；.docx / .pdf / .png 为后续真实解析 / OCR）

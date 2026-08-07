@@ -60,6 +60,7 @@ def create_app():
     from backend.api.export import router as export_router
     from backend.api.folders import router as folders_router
     from backend.api.imports import router as imports_router
+    from backend.api.rag import config_router as llm_configs_router
     from backend.api.rag import router as rag_router
     from backend.api.search import router as search_router
     from backend.api.spaces import router as spaces_router
@@ -106,6 +107,8 @@ def create_app():
         app.include_router(timeline_router)
     if rag_router is not None:
         app.include_router(rag_router)
+    if llm_configs_router is not None:
+        app.include_router(llm_configs_router)
     if term_categories_router is not None:
         app.include_router(term_categories_router)
     if terms_router is not None:

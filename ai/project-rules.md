@@ -34,6 +34,7 @@
 - Phase1.5B 个人增强：单文档 PDF 导出已随 Sprint-18 完成（API-019 / TC-P1-017）；真实 Word/PDF 文本提取、zhparser 中文分词增强仍为后续候选，需 RG / 选型 / 中文样例验证
 - 空间级术语表 + 文档术语识别 + 问答口径对齐
 - **术语领域树（REQ-048，2026-08-07 维护态增强）**：空间术语按内容领域树组织（`lumen_term_categories`）+ 内容分类 + 来源追溯 + 全局术语固定区 + 阅读/编辑态分离；标签 CRUD 前端接线（API-027）
+- **AI 助手悬浮窗 + LLM 多通道切换（2026-08-08 维护态增强，REQ-008 扩展）**：右下角 AI 抽屉（多轮对话 + 「基于知识库」开关 = RAG 检索增强 / 通用对话；命令面板「问 AI」开抽屉）；LLM 多通道切换（`LLM_PROVIDERS` 命名配置，deepseek / glm / gpt，`GET /api/llm-configs` 脱敏列表；`run-sprint16-demo.ps1` 加载 `.env` 注入后端）；设计 `docs/design/ai-assistant.md`
 - 桌面端浏览器访问
 - Phase2A 个人知识组织：内部链接 / 反向链接（REQ-026）、标签视图（REQ-012）、快速录入索引条目（REQ-025）均已完成；验收见 `docs/09-verification.md` TC-P2-LINK-001 / TC-P2-TAG-001 / TC-P2-QUICK-001
 - **Phase2B 团队 MVP（已完成）**：AI 润色 / 写作引用（REQ-014，首批核心，API-028 / `lumen_ai_drafts`，数据外发护栏见 RG-008）；时间轴视图 + 密度热条（REQ-013/024，第二 slice，API-033）；文档目录树（REQ-039，第三 slice，API-034..038 / API-029 `preserve_structure`）；Sprint-19/20/21/22 见 `docs/08-dev-plan.md`

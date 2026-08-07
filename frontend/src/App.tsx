@@ -28,7 +28,9 @@ import { QuickEntryFeature } from './features/QuickEntryFeature';
 import { ImportFeature } from './features/ImportFeature';
 import { WorkspaceMain } from './app/WorkspaceMain';
 import { useCommandPalette } from './app/useCommandPalette';
+import { useAiAssistant } from './app/useAiAssistant';
 import { CommandPalette } from './features/CommandPalette';
+import { AiAssistant } from './features/AiAssistant';
 import { OnboardingGuide } from './features/OnboardingGuide';
 import { ONBOARDING_STEPS, isOnboardingDone, loadOnboardingState, persistOnboardingState } from './app/onboarding-store';
 import type { OnboardingState, OnboardingStepId } from './app/onboarding-store';
@@ -119,15 +121,17 @@ function App() {
     setNotice: workspace.setNotice,
   });
 
+  const aiAssistant = useAiAssistant({ token });
+
   const palette = useCommandPalette({
     token,
     onOpenDocument: documents.handleOpenDocument,
     onNavigate: workspace.setActiveView,
     onCreateDocument: documents.handleCreateDocument,
     onOpenImport: () => setImportModalOpen(true),
+    // 批3：命令面板「问 AI」由跳问答视图改为打开 AI 抽屉并带入问题（保留问答页作完整视图）。
     onAskAi: (queryText) => {
-      query.setQuestion(queryText);
-      workspace.setActiveView('query');
+      aiAssistant.open(queryText);
     },
   });
 
@@ -181,6 +185,7 @@ function App() {
     workspace.setActiveView('home');
     search.setSearchResult(null);
     query.setQueryResult(null);
+    aiAssistant.reset();
     terms.newTerm();
   }
 
@@ -488,6 +493,25 @@ function App() {
           onKeyDown={palette.onKeyDown}
           onExecute={palette.execute}
           onClose={palette.close}
+        />
+      ) : null}
+
+      {session.session ? (
+        <AiAssistant
+          isOpen={aiAssistant.isOpen}
+          messages={aiAssistant.messages}
+          draft={aiAssistant.draft}
+          sending={aiAssistant.sending}
+          useKnowledgeBase={aiAssistant.useKnowledgeBase}
+          llmConfigs={aiAssistant.llmConfigs}
+          llmProvider={aiAssistant.llmProvider}
+          onLlmProviderChange={aiAssistant.setLlmProvider}
+          onOpen={() => aiAssistant.open()}
+          onClose={aiAssistant.close}
+          onDraftChange={aiAssistant.setDraft}
+          onToggleKnowledgeBase={aiAssistant.toggleKnowledgeBase}
+          onSend={() => void aiAssistant.handleSend()}
+          onOpenDocument={documents.handleOpenDocument}
         />
       ) : null}
       <StatusBar notice={workspace.notice} error={workspace.error} />

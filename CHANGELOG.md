@@ -6,6 +6,19 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.3.0（2026-08-08）
+
+**维护态批次批3（Sprint-30，REQ-008 扩展）：AI 助手悬浮窗 + 「基于知识库」开关 + 多轮对话 + LLM 多通道切换（TC-P2-ASSIST-001）。** 右下角新增 AI 助手悬浮窗（悬浮图标 → 对话抽屉），支持多轮对话与「基于知识库」开关（勾选 = RAG 检索增强问答带来源；关闭 = 通用对话不检索）；命令面板「问 AI」改为直接打开抽屉并带入问题。同时把 LLM 通道做成**多配置可切换**（`.env` 的 `LLM_PROVIDERS` 命名配置，deepseek / glm / gpt，新增 `deepseek` provider），抽屉底部可下拉切换通道，避免单一中转 / 模型达上限后卡死。
+
+- API（向后兼容）：`POST /api/query` 请求体扩展 `history`（多轮对话历史，前端维护路径 A）+ `use_knowledge_base`（RAG / 通用对话开关）+ `llm_provider`（命名 LLM 通道）；新增 `GET /api/llm-configs`（脱敏配置列表，不含 api_key）。
+- LLM 多配置（`llm_adapter`）：`LLM_PROVIDERS=name1,name2`（第一个默认）+ 每项 `LLM_<NAME>_PROVIDER/BASE_URL/MODEL/API_KEY`；旧单配置兼容为 default；新增 `deepseek` provider；`load_config(name)` / `list_configs()`。
+- 前端：`AiAssistant` 抽屉（对话区 / 答案来源可点开文档 / 多轮 / LLM 通道下拉 / 全局 Esc 收起）；`useAiAssistant` 维护多轮 state；命令面板「问 AI」开抽屉预填；空间切换清空对话。
+- Demo 环境：`run-sprint16-demo.ps1` 新增加载 `.env` 注入后端进程（原不加载致 LLM 全降级），demo 现可走真实 deepseek 通道。
+- 修复：`_resolve_chat_fn` 闭包绑定 LLM config，避免显式切换通道后仍走默认通道（demo 曾复现）。
+- 验证：`test_rag.py` +7 + `test_llm_adapter.py` +6 → backend discover **310 OK**；`volta run --node 22.17.1 npm run build` **294 modules 绿**；`scripts/smoke-ai-assistant-browser.mjs` **PASS**（切 deepseek 通用对话真实出文）；用户浏览器验收通过（2026-08-08）。
+
+> MINOR 依据（`ai/project-rules.md` §2.8.2）：新增可演示能力（AI 抽屉 + 通用对话 + 多轮 + LLM 多通道切换）+ 新增 API endpoint（GET /api/llm-configs）。REQ-008 扩展不另编号（用户确认）。
+
 ## v3.2.0（2026-08-07）
 
 **维护态 UI 改进批次（Sprint-29，REQ-048 术语领域树 + 批2b 步2 标签 CRUD + 批1 顶栏 + 批2a 命令面板，TC-P2-TERM-001）。** 项目收尾进入维护态后的一批前端体验增强：术语管理从平铺列表升级为**领域树组织 + 阅读/编辑态分离**，标签补齐重命名/描述/颜色/归档前端接线，顶栏图标语义化 + 左右栏折叠箭头，全局搜索命令面板（Ctrl+K / ⌘K）。

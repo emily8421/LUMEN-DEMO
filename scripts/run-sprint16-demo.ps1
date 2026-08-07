@@ -143,6 +143,32 @@ function Test-HttpReachable([string]$Uri) {
     }
 }
 
+# 读取项目根 .env（KEY=VALUE，忽略 # 注释 / 空行；剥掉值两侧引号），返回 hashtable。
+# 用途：demo 后端进程注入 LLM 配置（LLM_PROVIDER / LLM_BASE_URL / LLM_MODEL / LLM_API_KEY），
+# 让通用对话 / RAG 走真实内网中转 GLM，而非默认 mock 降级。.env 已被 gitignore，密钥不进入仓库。
+function Read-EnvFile([string]$Path) {
+    $result = @{}
+    if (-not (Test-Path $Path)) {
+        return $result
+    }
+    Get-Content -Path $Path -Encoding UTF8 | ForEach-Object {
+        $line = $_.Trim()
+        if (-not $line -or $line.StartsWith("#") -or -not $line.Contains("=")) {
+            return
+        }
+        $separator = $line.IndexOf("=")
+        $key = $line.Substring(0, $separator).Trim()
+        $value = $line.Substring($separator + 1).Trim()
+        if ($value.Length -ge 2 -and $value.StartsWith('"') -and $value.EndsWith('"')) {
+            $value = $value.Substring(1, $value.Length - 2)
+        }
+        if ($key) {
+            $result[$key] = $value
+        }
+    }
+    return $result
+}
+
 function Start-DemoProcess([string]$Name, [string[]]$CommandParts, [string]$WorkingDirectory, [hashtable]$Environment = @{}) {
     $stdout = Join-Path $tempRoot "$Name.out.log"
     $stderr = Join-Path $tempRoot "$Name.err.log"
@@ -283,7 +309,11 @@ if __name__ == "__main__":
     Write-Host "Using backend Python: $backendPython"
     Write-Host "Using Volta command: $voltaCommand"
 
-    Start-DemoProcess "backend" @($backendPython, $backendScript) $repoRoot
+    $envVariables = Read-EnvFile (Join-Path $repoRoot ".env")
+    if ($envVariables.Count -gt 0) {
+        Write-Host "Loading $($envVariables.Count) env var(s) from .env into backend process (LLM: $($envVariables.LLM_PROVIDER)/$($envVariables.LLM_MODEL))."
+    }
+    Start-DemoProcess "backend" @($backendPython, $backendScript) $repoRoot $envVariables
     Start-DemoProcess "frontend" @($voltaCommand, "run", "--node", "22.17.1", "npm", "exec", "vite", "--", "--host", "localhost", "--port", "$FrontendPort", "--strictPort") $frontendRoot @{
         VITE_API_BASE = ""
         DEMO_BACKEND_PROXY_URL = "http://127.0.0.1:$BackendPort"
