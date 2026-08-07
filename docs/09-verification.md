@@ -96,14 +96,16 @@
 | TC-P2-VAULT-002 | REQ-018 模式 B 增强·子树导入 UI；API-029 + `preserveStructure` | task-033 留后续（2026-08-06）；Sprint-24 规划已落 08 | 本地挂载目录树选中任意子文件夹 → 「导入到 LUMEN」→ 上层 DB 出现且目录结构保留；单篇 / 整库入口回归 | 子树导入保留目录；导入后可搜；单篇 / 整库不回归 | build + 浏览器人工 smoke（Sprint-24） | 通过（2026-08-06 人工 smoke，4 项全过） |
 | TC-P2-HELP-001 | 帮助体系 L0+L1（user-guide 内容源 + 首次引导 / 空状态）；REQ-011 可用性收口 | design/help-onboarding（新增 2026-08-06）；Sprint-25 规划已落 08 | 新用户路径：登录 → 首次引导 3 步 → 各视图空状态有下一步 → 首页提示「示例文档未建索引」；帮助可检索到「导入」；内容源单一来源核对 | 3 分钟内可完成首篇可搜文档；引导可跳过；不破既有主流程 | build + 浏览器人工 smoke（Sprint-25）+ 内容走查 | 通过（2026-08-06，Sprint-25：build 273 modules 绿 + scripts/smoke-help-onboarding-browser.mjs 自动化通过；人工浏览器 smoke 待用户确认后补记） |
 | TC-P2-VAULT-003 | REQ-018 模式 B 增强·FileSystemObserver 自动监听 | RG-010 Go（2026-08-06，Edge 139 实测） | 本地挂载文件夹新增 / 修改 / 删除文件后自动重扫生效（无需手动） | 自动反映变更；手动重扫保留 | 浏览器 smoke（Wave 3 实现时执行） | 已 Go（2026-08-06）；Wave 3 可立项 |
-| TC-P2-ACC-001 | 账户管理（注册 / 登录 / 用户管理）+ 权限多人化；REQ-001/002/003 扩展 | Wave 2 拍板（2026-08-06）；阶段升级后细化 | 待需求 / 设计细化后定义 | — | 待定 | 已拍板·待 Wave 2 启动 |
-| TC-P2-VAULT-004 | REQ-018 模式 B 增强·跨设备 vault 元数据 `/api/vault-mounts` | 依赖账户体系（Sprint-26）；migration 014 待落地 | 设备 A 挂载 → 元数据入库 → 设备 B 登录可见挂载点列表 | 仅元数据同步，正文不上传 | 后端 tests + API smoke + 浏览器 smoke | 已拍板·待 Wave 3 启动 |
+| TC-P2-AUTH-001 | 账号体系基础（注册 / 凭证登录 bcrypt / 登出会话·不透明 token + `lumen_sessions`）；REQ-040/041/042 | Phase2D 立项（2026-08-07）；design/accounts-auth；task-038 | 注册 → 凭证登录 → 鉴权访问；错误凭证失败+锁定+不枚举账号；登出撤销+TTL 过期+续期轮换+多设备会话；demo 开关 PG 强制/内存允许；跨用户隔离不泄露（私有文档仅 owner） | 凭证错误也能登入；登出后仍可用；跨用户泄露 | 后端 tests + 浏览器 smoke + RG-011 PoC（Sprint-26） | 已立项·待 Sprint-26 实现 |
+| TC-P2-ACC-001 | 权限多人化（owner_id 跨用户过滤 + 角色分层 + 用户管理 UI）；REQ-001/002/003 扩展 | Wave 2（2026-08-06 拍板）；账号基础 TC-P2-AUTH-001 已拆出 Sprint-26 | 待 Sprint-27/28 立项细化 | — | 待定 | Wave 2：账号基础 Sprint-26（TC-P2-AUTH-001）；权限多人化 / 角色 / UI 留 Sprint-27/28 |
+| TC-P2-VAULT-004 | REQ-018 模式 B 增强·跨设备 vault 元数据 `/api/vault-mounts` | 依赖账户体系（Sprint-26）；migration 015 待落地（014 已用于账户 `lumen_sessions`，vault_mounts 顺延） | 设备 A 挂载 → 元数据入库 → 设备 B 登录可见挂载点列表 | 仅元数据同步，正文不上传 | 后端 tests + API smoke + 浏览器 smoke | 已拍板·待 Wave 3 启动 |
 - REQ-027 PDF 导出已提前到 Phase1.5B 并完成，验证口径见 TC-P1-017。
 - **REQ-013a 主题时间线 / REQ-024 密度热条**：TC-P2-TL-001 已列入上表；task-030 已通过自动化验证、运行态 API smoke、Edge headless 浏览器 smoke 与真实 PG 大数据性能 smoke；详见 `docs/design/timeline.md`。
 - **REQ-039 文档目录树（Phase2B 第三 slice）**：TC-P2-FOLDER-001——文件夹树 CRUD / 移动 / 排序 + 单文档移动 + 导入保留目录结构（`preserve_structure`）后端/API、前端 build、运行态 API smoke、用户浏览器 smoke 与浏览器自动化 smoke 已通过；folder 不独立设权限，文档可见性仍按 permission；防环 / 跨空间 / 重名 / 删非空 folder 拒绝；详见 `docs/design/folder-tree.md`。
 - **REQ-018 Vault 兼容模式 B（Phase2C）**：TC-P2-VAULT-001——浏览器 File System Access 句柄 + IndexedDB 持久化 + 本地索引搜索 + 左侧上下分区（CMP-P2-TREE）+ 按需导入走 API-029；RG-009 PoC Go（2026-08-05，8 能力 + 5 场景，刷新自动恢复 granted、无上传）；硬天花板：仅本地挂载内容不进服务端 RAG；详见 `docs/research/2026-08-05-rg009-vault-local-mount-poc.md` + `docs/design/ingestion.md` Flow-D-014。
 - **Phase2C 增强（Wave 1，2026-08-06 拍板）**：子树导入 UI（TC-P2-VAULT-002）、帮助体系 L0+L1（TC-P2-HELP-001）；FileSystemObserver 自动监听（TC-P2-VAULT-003）已 RG-010 Go（2026-08-06）。
-- **Wave 2/3（已拍板）**：账户管理 + 权限多人化（TC-P2-ACC-001）、跨设备 vault 元数据（TC-P2-VAULT-004，migration 014 + `/api/vault-mounts`）；依赖账户体系，排 Wave 2/3。
+- **Wave 2 账户（Phase2D，2026-08-07 立项）**：账号体系基础 TC-P2-AUTH-001（Sprint-26，REQ-040/041/042，`design/accounts-auth` + task-038）；权限多人化 / 角色 / 用户管理 UI 留 Sprint-27/28（TC-P2-ACC-001）。
+- **Wave 3（已拍板）**：跨设备 vault 元数据（TC-P2-VAULT-004，migration 015 + `/api/vault-mounts`，vault_mounts 顺延——014 已用于账户 `lumen_sessions`）；FileSystemObserver 自动监听（TC-P2-VAULT-003）已 RG-010 Go。
 - REQ-015 / 016 / 017 其余 P2 后续用例（推送 / 协作 / 移动端）——不进 Phase2B 首批，待后续 Phase 细化。
 
 ### 远期愿景（不承诺）

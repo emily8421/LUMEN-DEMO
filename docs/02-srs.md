@@ -98,6 +98,9 @@
 | REQ-033 | 假设检验 / 证据地图 | U-39 | 高风险待验证（正反证据自动搜集与分栏） *(v18)* | [愿景] | 骨架 |
 | REQ-034 | 信号追踪 | U-40 | 待技术验证（主题匹配、增量推送） *(v18)* | [愿景] | 骨架 |
 | REQ-035 | 分析包 A Kit | U-41 | 待技术验证（加密打包、不含原文的脱敏） *(v18)* | [愿景] | 骨架 |
+| REQ-040 | 账户注册：新用户提交登录标识（email / external_id）+ 密码；密码 bcrypt 哈希存储（非明文）；注册成功建 `lumen_users` 行（status=active）+ 默认个人空间；重复标识 / 缺字段拒绝 | U-45 | 注册新账号后可用其凭证登录成功；重复标识拒绝；密码 bcrypt 哈希存储 | [P2] | Phase2D·骨架·待实现（Sprint-26） |
+| REQ-041 | 凭证登录：登录接口校验账号 + 密码（bcrypt verify）；通过则发不透明 token + 建 `lumen_sessions`（TTL，存 token_hash 不存明文）；失败计数达阈值锁定；不泄露账号是否存在 | U-46 | 正确凭证登录成功发 token 且后续请求鉴权通过；错误密码失败；连续失败触发锁定 | [P2] | Phase2D·骨架·待实现（Sprint-26） |
+| REQ-042 | 登出 / 会话管理：登出撤销当前 session（token 立即失效）；session TTL 过期自动失效；续期轮换（发新 token 旧 token 失效）；支持查询 / 撤销多设备会话 | U-47 | 登出后原 token 再用被拒；过期 session 自动失效；续期后旧 token 失效 | [P2] | Phase2D·骨架·待实现（Sprint-26） |
 
 > 阅读索引：上方 REQ 主表已覆盖全部 REQ-001..038 的「系统需求 / 来源 U-ID / 可验证口径 / 初步阶段 / 状态」，不再以分组 bullet 双写（避免与主表漂移）。P1 / P1.5 REQ 可验证口径见上表；P2 / 愿景 REQ 保留骨架，可验证口径写「待该阶段细化 / 待技术验证」，升阶段时再细化。
 
@@ -143,6 +146,9 @@
 | U-40 | REQ-034 | [愿景] | 信号追踪 | 待验证（骨架） | — |
 | U-41 | REQ-035 | [愿景] | 分析包 A Kit | 待验证（骨架） | — |
 | U-44 | REQ-039 | [P2] | 文档目录树（folder-tree） | 是 | SC-009（已补，SRS-C-002 已确认 2026-08-02） |
+| U-45 | REQ-040 | [P2] | 账户注册 | 待细化（骨架） | 立项 2026-08-07，认证选型已定（bcrypt + 不透明 token） |
+| U-46 | REQ-041 | [P2] | 凭证登录 | 待细化（骨架） | 立项 2026-08-07 |
+| U-47 | REQ-042 | [P2] | 登出 / 会话管理 | 待细化（骨架） | 立项 2026-08-07 |
 
 ## 4.1 验证入口
 
@@ -167,6 +173,9 @@
 | REQ-025 | AC-P2-QUICK-001 | TC-P2-QUICK-001 | `docs/09-verification.md` §2、快速录入后端 tests + API / 浏览器 smoke | P2-已实现 / 通过 |
 | REQ-026 | AC-P2-LINK-001 | TC-P2-LINK-001 | `docs/09-verification.md` §2、内链后端 tests + API / 浏览器 smoke | P2-已实现 / 通过 |
 | REQ-039 | AC-P2-FOLDER-001 | TC-P2-FOLDER-001 | `docs/09-verification.md` §2、folder 后端 tests + 浏览器 smoke（待立项编码） | 骨架·待实现 |
+| REQ-040 | AC-P2-AUTH-001 | TC-P2-AUTH-001 | `docs/09-verification.md` §2、账户注册 + 凭证登录后端 tests（待立项编码） | 骨架·待实现 |
+| REQ-041 | AC-P2-AUTH-002 | TC-P2-AUTH-001 | `docs/09-verification.md` §2、凭证登录 + 失败锁定 tests（待立项编码） | 骨架·待实现 |
+| REQ-042 | AC-P2-AUTH-003 | TC-P2-AUTH-001 | `docs/09-verification.md` §2、登出 / 会话撤销 / 续期 tests（待立项编码） | 骨架·待实现 |
 
 ## 5. 待人工确认项
 
