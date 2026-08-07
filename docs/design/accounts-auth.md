@@ -364,6 +364,8 @@ ALTER TABLE lumen_users ADD CONSTRAINT chk_lumen_users_role CHECK (role IN ('adm
 
 | ID | 待确认项 | AI 建议 | 依据 | 备选 | 取舍 / 阻塞 |
 |---|---|---|---|---|---|
-| C-ROLE-005 | admin 域用户列表是否包含 `last_login_at` 展示 | 包含（只读展示） | 主流管理页标配最后活跃 / 最后登录，便于识别僵尸账号 | 不展示 | 低风险，仅元数据 |
-| C-ROLE-006 | 空间 admin 能否移除 / 降级最后一个空间 admin | 禁止（至少保留 1 个 admin，避免空间失控） | 主流（Notion / Confluence）防止自锁 | 允许（留下无管理员空间） | 会导致空间不可治理 |
-| C-ROLE-007 | 全局 admin 与空间 admin 交叉时是否允许全局 admin 管理任意空间成员 | 允许（全局 admin 拥有空间成员管理同权） | 管理员兜底语义；后端统一 admin 校验 | 仅空间 admin | 便于运维，风险由 admin 校验兜底 |
+| C-ROLE-005 ✅已确认（2026-08-07） | admin 域用户列表是否包含 `last_login_at` 展示 | 包含（只读展示，仅 admin 域可见，可排序） | 主流管理页标配最后活跃 / 最后登录（GitHub / Slack / Google Workspace），便于识别僵尸账号 | 不展示 | 低风险，仅元数据；未来强隐私诉求可降级 |
+| C-ROLE-006 ✅已确认（2026-08-07） | 空间 admin 能否移除 / 降级最后一个空间 admin | 禁止（至少保留 1 个 admin，后端强制拒绝 **4090** + 前端禁用按钮并提示） | 主流（GitHub org owner / Notion / Google Workspace）防止自锁；无管理员空间不可治理 | 允许（留下无管理员空间） | 会导致空间失控；4090 语义「操作会导致空间无管理员」 |
+| C-ROLE-007 ✅已确认（2026-08-07） | 全局 admin 与空间 admin 交叉时是否允许全局 admin 管理任意空间成员 | 允许（全局 admin 拥有空间成员管理同权；鉴权谓词统一 `is_global_admin OR is_space_admin`；成员管理操作写审计日志） | 平台级管理员兜底语义（GitHub org owner / Confluence system admin / Google super admin）；全局角色无全局能力则形同虚设 | 仅空间 admin | 权限面大但由 admin 校验 + 审计兜底 |
+
+> **确认记录（2026-08-07）**：用户按 AI 建议执行——C-ROLE-005 显示 `last_login_at`（admin 域只读列）；C-ROLE-006 禁止移除 / 降级最后一个空间 admin（后端 4090 + 前端防呆）；C-ROLE-007 全局 admin 对任意空间成员管理同权（统一鉴权谓词 + 审计事件 `member_added / member_role_changed / member_removed`）。
