@@ -1,6 +1,6 @@
 # task-039-permission-multi-user（Sprint-27 权限多人化）
 
-> Phase2D「账户与多人权限」Sprint-27。设计权威：`docs/design/accounts-auth.md` §17（增量·草案）。立项 2026-08-07；**待实现**（编码前确认 accounts-auth §17.5 待确认项 C-ACC-001..003）。
+> Phase2D「账户与多人权限」Sprint-27。设计权威：`docs/design/accounts-auth.md` §17。立项 2026-08-07；**已实现（2026-08-07）**：C-ACC-001..003 已确认；全路径审计 → P0 doc-links 修复 + 多用户隔离回归 → 双用户浏览器 smoke PASS（详见 §17.6 与 09 验收记录）。
 
 ## 目标
 在真实多用户账号体系上验证并补全权限过滤底座（REQ-043 / REQ-044，U-48 / U-49）：
