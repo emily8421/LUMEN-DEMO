@@ -15,7 +15,7 @@
 
 ## 快速开始
 
-> 当前 Phase1 Demo 的 Sprint-1 ~ Sprint-8 已完成：核心 UI 闭环、LLM adapter、PostgreSQL+pgvector、Embedding 与 RAG 向量召回均已落地；真实 Word / PDF 解析与 OCR 仍为后续阶段。后端运行说明见 `backend/README.md`。
+> 当前已交付至 Phase2D（账户与多人权限）并收口（2026-08-07）：核心 UI 闭环、LLM adapter、PostgreSQL+pgvector、Embedding 与 RAG 向量召回、账号体系 / 权限多人化 / 角色与团队治理均已落地；真实 Word / PDF 解析与 OCR 仍为后续阶段。后端运行说明见 `backend/README.md`，阶段状态见 `ai/project-rules.md` §1。
 
 1. **读懂项目**：`docs/00-scenario.md`（背景 / 用户 / 场景）→ `docs/03-prd.md §3`（阶段路线图）→ 本 README「文档导航」。
 2. **确认运行环境**：见 `docs/env/local-env.md`（本机 Win11 / i7 / 31.7GB / RTX 3050）与 `ai/project-rules.md §2.5` 资源约束。
@@ -24,8 +24,8 @@
 
 ## 当前状态
 
-- **阶段**：Phase1（功能范围 `[P1]` · 交付物形态 **Demo**）——Sprint-1 ~ Sprint-8 已完成并推送，包含权限 / 文档 / 版本 / 降级文本导入 / 搜索 / RAG / 术语 / 桌面端闭环；Sprint-7/8 已完成真实 LLM、PostgreSQL+pgvector、Embedding 与 RAG 向量召回接入。
-- **演进路线**：Phase1 **Demo**（当前）→ Phase2 **MVP** → 远期愿景 **产品**；双维度（功能范围 + 交付物形态）总览见 `docs/03-prd.md` §3。
+- **阶段**：**Phase2D（账户与多人权限 · 团队验证）已完成并收口（2026-08-07）**。Phase1（Demo）→ Phase1.5A/B（可用性 / PDF 导出）→ Phase2A（个人知识组织）→ Phase2B（团队 MVP）→ Phase2C（本地知识源接入）→ Phase2D（账户与多人权限）均已交付；下一阶段范围待用户定义。
+- **演进路线**：Phase1 Demo → Phase2A 个人知识组织 → Phase2B 团队 MVP → Phase2C 本地知识源接入 → Phase2D 账户与多人权限（已完成）→ 远期愿景产品；双维度（功能范围 + 交付物形态）总览见 `docs/03-prd.md` §3，阶段状态见 `ai/project-rules.md` §1。
 - **基准**：需求 / 架构 / 数据 / 接口 / 验证均已落在 `docs/`，是开发的唯一事实来源；阶段归属以 `docs/03-prd.md` §3 路线图为准。
 
 ## 文档导航（先读这些）

@@ -145,7 +145,7 @@ flowchart TB
 | Flow-D-001 导入主流水线 | REQ-009/010 | Sprint-3 | TC-P1-009/010 | 见上 | 降级实现 |
 | Flow-006 批量 / 文件夹导入 | REQ-037 | Sprint-16 | TC-P1-015 | 后端 tests + Chrome headless drop-zone smoke 已通过 | Phase1.5A-已实现 |
 | Flow-D-012 导入保留目录结构（folder-tree） | REQ-037/039 | Sprint-22 | TC-P2-FOLDER-001 + TC-P1-015 扩展 | `tests.backend.test_imports` / `test_import_api` + 临时 PG smoke：`preserve_structure` 建/复用 `lumen_folders` | Phase2B 第三 slice·后端/API 已实现；前端文件管理器待实现 |
-| Flow-D-014 Vault 兼容双模式 | REQ-018 | Phase2C | TC-P2-VAULT-001 | 浏览器 File System Access 授权 + IndexedDB 本地索引 + 1000+ 文件本地树 / 按需导入 smoke（RG-009 PoC Go 2026-08-05） | Phase2C·已设计（编码 Sprint-23C 待启动） |
+| Flow-D-014 Vault 兼容双模式 | REQ-018 | Phase2C | TC-P2-VAULT-001 | 浏览器 File System Access 授权 + IndexedDB 本地索引 + 1000+ 文件本地树 / 按需导入 smoke（RG-009 PoC Go 2026-08-05） | Phase2C·已完成（Sprint-23C TC-P2-VAULT-001 通过 / PR#108 v2.0.0） |
 
 ## 8. 待人工确认项
 

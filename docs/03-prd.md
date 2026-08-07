@@ -8,9 +8,9 @@
 | 项 | 内容 |
 |---|---|
 | 输入来源 | `docs/01-user-requirements.md`、`docs/02-srs.md`、`ai/project-rules.md` §1 |
-| 覆盖 REQ | REQ-001..REQ-042（按 Phase1 / Phase1.5A / Phase1.5B / Phase2A / Phase2B / Phase2C / Phase2D / 愿景分阶段；REQ-040..042 为 Phase2D 账户体系基础，待 `02` 细化） |
-| 当前状态 | 已确认（§3 为阶段标签唯一来源；Phase1.5B 单文档 PDF 导出已完成；Phase2A 个人知识组织已完成；Phase2B 团队 MVP 已完成（2026-08-05 收口）；Phase2B 第三 slice REQ-039 文档目录树已完成验收；**Phase2C 本地知识源接入已完成（2026-08-06，Sprint-23C TC-P2-VAULT-001 通过 / PR#108 v2.0.0）**；**Phase2D 账户与多人权限已立项（2026-08-07）/ 待实现，Sprint-26 账号体系基础待启动**） |
-| 最后更新 | 2026-08-07（Phase2D 账户与多人权限立项：Sprint-26 账号体系基础待启动；Phase2C 状态修正为已完成）；前次 2026-08-04（Sprint-18 单文档 PDF 导出闭环：REQ-027 / API-019 / TC-P1-017 通过） |
+| 覆盖 REQ | REQ-001..REQ-042（按 Phase1 / Phase1.5A / Phase1.5B / Phase2A / Phase2B / Phase2C / Phase2D / 愿景分阶段；REQ-040..047 为 Phase2D 账户与多人权限（已完成 2026-08-07 收口）） |
+| 当前状态 | 已确认（§3 为阶段标签唯一来源；Phase1.5B 单文档 PDF 导出已完成；Phase2A 个人知识组织已完成；Phase2B 团队 MVP 已完成（2026-08-05 收口）；Phase2C 本地知识源接入已完成（2026-08-06，Sprint-23C TC-P2-VAULT-001 通过 / PR#108 v2.0.0）；**Phase2D 账户与多人权限已完成（2026-08-07 收口）：Sprint-26 账号体系基础（TC-P2-AUTH-001 / PR#112 v3.0.0）+ Sprint-27 权限多人化（TC-P2-ACC-001 / PR#114）+ Sprint-28 角色分层 + 用户管理 + 团队空间加入（TC-P2-ACC-002 / PR#117 v3.1.0）三 slice 全部验收通过、退出标准达成；下一阶段范围待用户定义**） |
+| 最后更新 | 2026-08-07（Phase2D 收口：Sprint-26/27/28 三 slice 全部验收通过，退出标准达成，不升 Phase；Sprint-27 P2 两项 + Sprint-28 偏差经用户确认全接受、留后续；下一阶段范围待用户定义）；前次 2026-08-07（Phase2D 立项 + Sprint-26/27/28 实现） |
 
 ## 1. 功能范围（完整，对齐 01 / 02）
 
@@ -20,7 +20,7 @@
 - 个人增强（Phase1.5B）：U-33 / REQ-027 已实现并通过 TC-P1-017；真实 Word/PDF 文本提取、zhparser 中文分词增强仍为后续候选
 - 团队 MVP（Phase2B）：U-14..U-20、U-30 / REQ-013..REQ-017、REQ-024（其中 U-18..U-20 不进首批团队 MVP）；REQ-039 文档目录树（第三 slice 候选）
 - Phase2C 本地知识源接入：U-21 / REQ-018 模式 B（仅本地挂载，浏览器 File System Access，RG-009 Go；**已完成 Sprint-23C**）；模式 A 导入数据库已随 Phase2B 交付
-- Phase2D 账户与多人权限：真实多用户账号体系（注册 / 凭证登录 / 登出会话，REQ-040.. 待 `02` 补齐）+ 多人权限（Sprint-26 账号基础 / Sprint-27 权限多人化已完成 / Sprint-28 角色与用户管理已立项）；从 Demo 占位账号侧升级，交付物形态团队验证
+- Phase2D 账户与多人权限（已完成 2026-08-07 收口）：真实多用户账号体系（注册 / 凭证登录 / 登出会话，REQ-040..042）+ 多人权限（REQ-043/044 owner 过滤 + 跨用户隔离）+ 团队治理（REQ-045..047 角色分层 + 用户管理 + 团队空间加入）；从 Demo 占位账号侧升级，交付物形态团队验证；Sprint-26/27/28 三 slice 全部验收通过
 - 远期愿景：U-22..U-29、U-34..U-41 / REQ-019..REQ-023、REQ-028..REQ-035
 
 ## 2. 优先级与取舍
@@ -58,10 +58,10 @@
 | F-009a | 本地知识源挂载（Obsidian Vault / 本地 Markdown 文件夹） | REQ-018 | `[P2]` | 本地知识源接入 MVP | Phase2C·已设计（模式 B 浏览器 File System Access，RG-009 Go）；模式 A 导入数据库已随 Phase2B 交付 |
 | F-010 | 情报分析与高风险 AI 能力 | REQ-020 / REQ-021 / REQ-029 / REQ-030 / REQ-031 / REQ-032 / REQ-033 / REQ-034 | `[愿景]` | 产品 | 高风险，待技术验证 |
 | F-011 | P1.5 导入 / 导出可用性收口 | REQ-027 / REQ-037 / REQ-038 | `[P1]` | 个人可用增强 | REQ-037/038 为 Alpha 已实现；REQ-027 为 Beta 已实现 |
-| F-012 | 账户与认证 | REQ-040 / REQ-041 / REQ-042 | `[P2]` | 团队验证 | Phase2D·Sprint-26 已完成（PR#112 v3.0.0，TC-P2-AUTH-001 通过）：注册 / 凭证登录 bcrypt / 登出会话·不透明 token + `lumen_sessions`；权限多人化 Sprint-27 已完成 / 角色与用户管理 UI 已进 Sprint-28 立项 |
-| F-013 | 权限多人化（owner 过滤与隔离） | REQ-043 / REQ-044（REQ-001/002/003 扩展） | `[P2]` | 团队验证 | Phase2D·Sprint-27 已完成（2026-08-07，PR#114，TC-P2-ACC-001 通过）：owner_id 跨用户过滤 + 私有按 owner 过滤 + 跨用户隔离回归；全局角色 / 用户管理 UI 已进 Sprint-28 立项 |
-| F-014 | 角色分层与用户管理 | REQ-045 / REQ-046 | `[P2]` | 团队验证 | Phase2D·Sprint-28 已立项（2026-08-07）：全局角色 admin/member（`lumen_users.role`）+ admin 域用户管理后台（用户列表 / 改角色 / 禁用启用）；管理接口仅 admin（4030） |
-| F-015 | 团队空间加入 | REQ-047 | `[P2]` | 团队验证 | Phase2D·Sprint-28 已立项（2026-08-07）：space 域成员 CRUD（按 email 搜索添加 / 改空间角色 / 移除）+ 空间设置成员管理 UI |
+| F-012 | 账户与认证 | REQ-040 / REQ-041 / REQ-042 | `[P2]` | 团队验证 | Phase2D·Sprint-26 已完成（PR#112 v3.0.0，TC-P2-AUTH-001 通过）：注册 / 凭证登录 bcrypt / 登出会话·不透明 token + `lumen_sessions`；权限多人化 Sprint-27 已完成 / 角色与用户管理 UI 已随 Sprint-28 完成 |
+| F-013 | 权限多人化（owner 过滤与隔离） | REQ-043 / REQ-044（REQ-001/002/003 扩展） | `[P2]` | 团队验证 | Phase2D·Sprint-27 已完成（2026-08-07，PR#114，TC-P2-ACC-001 通过）：owner_id 跨用户过滤 + 私有按 owner 过滤 + 跨用户隔离回归；全局角色 / 用户管理 UI 已随 Sprint-28 完成 |
+| F-014 | 角色分层与用户管理 | REQ-045 / REQ-046 | `[P2]` | 团队验证 | Phase2D·已完成（2026-08-07，Sprint-28，PR#117 v3.1.0，TC-P2-ACC-002 通过）：全局角色 admin/member（`lumen_users.role`）+ admin 域用户管理后台（用户列表 / 改角色 / 禁用启用）；管理接口仅 admin（4030） |
+| F-015 | 团队空间加入 | REQ-047 | `[P2]` | 团队验证 | Phase2D·已完成（2026-08-07，Sprint-28，PR#117 v3.1.0，TC-P2-ACC-002 通过）：space 域成员 CRUD（按 email 搜索添加 / 改空间角色 / 移除）+ 空间设置成员管理 UI |
 
 ## 3. 阶段路线图
 
@@ -78,7 +78,7 @@
 | Phase2A（个人知识组织 · 已完成） | `[P2]` · REQ-026、REQ-012、REQ-025 | **个人知识组织** | 已完成（REQ-026 / REQ-012 / REQ-025 三个 vertical slice 通过） | Phase1.5A 使真实资料量进入系统；06/07/09 已补最小契约与 TC | 文档可用内链 / 反链互联，可用标签组织，可快速录入轻量条目；权限过滤不泄露 |
 | Phase2B（团队 MVP） | `[P2]` · REQ-014 首批核心 + REQ-013/024 时间轴紧随 + REQ-039 文档目录树（第三 slice 候选）；REQ-015/016/017 延后 | **团队 MVP** | **已完成（2026-08-05 收口；REQ-014 / REQ-013a+024 / REQ-039 验收通过）** | Phase2A 稳定；04/05 Phase2 设计补强；**RG-008（AI 数据外发风险接受）Go**；06/07 契约齐备；Sprint-19/20 已规划 | 小团队可真实使用知识组织与写作辅助；AI 润色数据外发风险已接受（护栏见 `ai/project-rules.md` §2.5 / `docs/05-tech-spec.md` RG-008）；产品红线未破坏 |
 | Phase2C（本地知识源接入） | `[P2]` · REQ-018 模式 B（仅本地挂载） | **本地知识源接入 MVP** | **已完成（2026-08-06，Sprint-23C TC-P2-VAULT-001 通过 / PR#108 v2.0.0）** | RG-009 PoC Go；`06/07/09` 契约齐备 | TC-P2-VAULT-001 通过；本地挂载内容不进服务端 RAG（硬天花板）；隐私边界未被破坏 |
-| Phase2D（账户与多人权限） | `[P2]` · REQ-040.. 账号体系基础（Sprint-26 已完成）；权限多人化（Sprint-27 已完成）；角色 / 用户管理 + 团队空间加入（Sprint-28 已立项） | **团队验证** | **Sprint-26 已完成（2026-08-07，PR#112 v3.0.0）；Sprint-27 已完成（2026-08-07，PR#114，TC-P2-ACC-001 通过）；Sprint-28 已立项（2026-08-07）** | Phase2C 完成；认证选型确认（bcrypt + 不透明 token session）；readiness gate（密码哈希 / token session 安全 / 跨用户隔离）Go（RG-011/012/013） | Sprint-26：真实账号可注册 / 凭证登录 / 登出 / 统一鉴权 / 基础 UI；demo 模式保留开关 + 物理隔离；凭证安全与跨用户隔离红线未破坏。Sprint-27：TC-P2-ACC-001 通过（私有仅 owner + 全路径跨用户隔离 + 空间隔离切换回归）。Sprint-28：TC-P2-ACC-002 通过（全局角色分层 + 用户管理后台 + 团队空间加入） |
+| Phase2D（账户与多人权限） | `[P2]` · REQ-040.. 账号体系基础（Sprint-26 已完成）；权限多人化（Sprint-27 已完成）；角色 / 用户管理 + 团队空间加入（Sprint-28 已完成） | **团队验证** | **Sprint-26 已完成（2026-08-07，PR#112 v3.0.0）；Sprint-27 已完成（2026-08-07，PR#114，TC-P2-ACC-001 通过）；Sprint-28 已完成（2026-08-07，PR#117 v3.1.0，TC-P2-ACC-002 通过）；Phase2D 收口（2026-08-07）** | Phase2C 完成；认证选型确认（bcrypt + 不透明 token session）；readiness gate（密码哈希 / token session 安全 / 跨用户隔离）Go（RG-011/012/013） | Sprint-26：真实账号可注册 / 凭证登录 / 登出 / 统一鉴权 / 基础 UI；demo 模式保留开关 + 物理隔离；凭证安全与跨用户隔离红线未破坏。Sprint-27：TC-P2-ACC-001 通过（私有仅 owner + 全路径跨用户隔离 + 空间隔离切换回归）。Sprint-28：TC-P2-ACC-002 通过（全局角色分层 + 用户管理后台 + 团队空间加入） |
 | 远期愿景（不承诺时间） | `[愿景]` · REQ-019..023、REQ-028..035（REQ-018 已升 Phase2C） | **产品** | 骨架 | 05 技术验证高难度 AI 可行 | 不承诺时间 |
 
 ### Phase1 —— 已完成基线（功能范围 `[P1]` · 交付物形态 **Demo**）
@@ -125,9 +125,9 @@
 - **进入标准**：RG-009 PoC Go（2026-08-05，8 能力 + 5 场景，刷新自动恢复 granted）；`06/07/09` 契约齐备（`lumen_vault_mounts` 仅元数据 / 模式 B 后端零新 API / TC-P2-VAULT-001 已定义）。
 - **退出标准**：TC-P2-VAULT-001 通过（授权+刷新恢复 / 1000+ 本地树 / IndexedDB 本地搜索 / 左侧分区视觉隔离+不进团队 RAG / 按需导入走 API-029 / 隐私红线不上传）；产品红线（不上传、不越权）未被破坏。
 
-### Phase2D —— 账户与多人权限（功能范围 `[P2]` · 交付物形态 **团队验证**）
+### Phase2D —— 账户与多人权限（功能范围 `[P2]` · 交付物形态 **团队验证** · **已完成 2026-08-07 收口**）
 - **目标**：把 Demo 占位的账号侧（无密码 / 3 seed 用户 / 手撸 token）升级为真实多用户账号体系，为团队验证和后续多人权限打基础。
-- **功能范围 `[P2]`**：Sprint-26 账号体系基础（已完成）——REQ-040 账户注册、REQ-041 凭证登录（bcrypt）、REQ-042 登出 / 会话管理（不透明 token + `lumen_sessions`）；**Sprint-27 权限多人化（已完成，2026-08-07，PR#114）——REQ-043/044（REQ-001/002/003 扩展）owner_id 跨用户过滤 + 私有按 owner 过滤 + 跨用户隔离回归**；**Sprint-28 已立项（2026-08-07）——REQ-045/046/047 角色分层 + 用户管理 + 团队空间加入**；REQ-016 多人实时协作留后续。
+- **功能范围 `[P2]`**：Sprint-26 账号体系基础（已完成）——REQ-040 账户注册、REQ-041 凭证登录（bcrypt）、REQ-042 登出 / 会话管理（不透明 token + `lumen_sessions`）；**Sprint-27 权限多人化（已完成，2026-08-07，PR#114）——REQ-043/044（REQ-001/002/003 扩展）owner_id 跨用户过滤 + 私有按 owner 过滤 + 跨用户隔离回归**；**Sprint-28 角色分层 + 用户管理 + 团队空间加入（已完成，2026-08-07，PR#117 v3.1.0）——REQ-045/046/047**；REQ-016 多人实时协作留后续。
 - **交付物形态 团队验证**：真实账号可注册 / 凭证登录 / 登出，凭证安全（bcrypt 哈希、token 可撤销），13 router 统一 `get_current_user` 鉴权；**demo 模式（`create_demo_token` + alice/kira/brightlite-member 无密码快速登录）保留为 env 开关 + 物理隔离护栏（PG 仓储强制真实认证，内存仓储 `demo_repository` 允许 demo）**，真实账号为正式路径。
 - **进入标准**：Phase2C 完成；认证选型确认（bcrypt + 不透明 token session，`secrets` 标准库零新 token 依赖）；readiness gate——密码哈希选型 / token session 安全（密钥 env 注入、TTL、撤销）/ 跨用户隔离回归——Go（`docs/05-tech-spec.md` 新增 RG-ID，见 `docs/design/accounts-auth.md` 待建）。
 - **退出标准（Sprint-26）**：TC-P2-AUTH-001（注册 / 凭证登录 / 登出 / 会话撤销 / 续期轮换）通过；13 router 统一 `get_current_user` 且 demo 模式开关可切（PG 强制真实 / 内存允许 demo）；基础登录 / 注册页可用；登录失败锁定 + 审计日志生效；**凭证安全与跨用户隔离红线未被破坏（私有文档仍仅 owner 可见，跨用户不泄露）**。
@@ -144,6 +144,7 @@
 - **退出标准（Sprint-28）**：TC-P2-ACC-002（全局角色 admin/member 权限校验 + admin 域用户管理 + space 域成员管理）通过；自动化 tests + 浏览器 smoke；权限红线未被破坏（管理接口仅 admin、用户列表不暴露敏感字段、禁用不删数据、demo 仓储不旁路管理权限）。
 - **硬约束（Sprint-28）**：不做移除用户 / 重置密码 / 邀请码 / 邀请链接 / REQ-016 多人实时协作（留候选或后续）；不引新依赖；不因 demo 仓储类型旁路管理鉴权。
 - **硬约束（Sprint-26）**：Sprint-26 只立账号基础，不做权限多人化实质改造（owner_id 跨用户过滤回归）、全局角色分层、用户管理后台 UI、REQ-016 多人实时协作——权限多人化已进 Sprint-27，其余留 Sprint-28+。
+- **收口结论（2026-08-07）**：Phase2D 三 slice（Sprint-26/27/28）退出标准全部达成——TC-P2-AUTH-001 / TC-P2-ACC-001 / TC-P2-ACC-002 通过，权限红线（凭证安全 / 跨用户隔离 / 管理接口仅 admin / 用户列表不暴露 `password_hash`）未被破坏；「账号 → 权限 → 团队协作」闭环成形。已知偏差（accounts-auth §18.9：API-044/046 未分页 / `last_login_at` 未显式排序 / API-045/048 无 `updated_at` / refresh 不含 `role`；Sprint-27 P2：`visible_document_where_clause` 未使用 / `upsert_link` 目标解析）经用户确认全接受、留后续，不阻塞收口。不升 Phase；下一阶段范围待用户定义（候选：移除用户 / 重置密码 / 邀请码 / REQ-016 / 真实团队端到端验证 / 产品化）。
 
 ### 远期愿景（不承诺时间）（功能范围 `[愿景]` · 交付物形态 **产品**）
 - **目标**：补存量知识接入、**情报分析（i2 精神）**、情报交付能力——情报分析（路径推理 / 矛盾检测 / 证据地图等）是 v18 强调的远期差异化方向。
@@ -196,9 +197,9 @@
 | REQ-037 | F-011 | 批量 / 文件夹导入（`.md` / `.txt`） | `[P1]` | 个人可用 Alpha | P1.5A 已完成（TC-P1-015 通过） |
 | REQ-038 | F-011 | 单文档 `.md` + 空间 ZIP 导出 | `[P1]` | 个人可用 Alpha | P1.5A 已完成（TC-P1-016 通过） |
 | REQ-039 | F-007 | 文档目录树（嵌套文件夹 CRUD / 移动 / 排序 + 导入保留结构） | `[P2]` | 团队 MVP | **Phase2B 第三 slice（folder-tree）已实现**：`lumen_folders` 嵌套树 + 文档 `folder_id` + CRUD / 移动 / 排序（API-034..038）+ 导入 `preserve_structure`（API-029 扩展）+ 前端文件管理器；TC-P2-FOLDER-001 通过；folder 不独立设权限 |
-| REQ-040 | F-012 | 账户注册 | `[P2]` | 团队验证 | Phase2D·已立项（2026-08-07）：bcrypt 哈希 + `lumen_users` 扩列 + 默认个人空间；Sprint-26 待启动 |
-| REQ-041 | F-012 | 凭证登录 | `[P2]` | 团队验证 | Phase2D·已立项：bcrypt verify + 不透明 token + `lumen_sessions` + 失败锁定 |
-| REQ-042 | F-012 | 登出 / 会话管理 | `[P2]` | 团队验证 | Phase2D·已立项：会话撤销 + TTL + 续期轮换 + 多设备会话 |
+| REQ-040 | F-012 | 账户注册 | `[P2]` | 团队验证 | Phase2D·已完成（2026-08-07，Sprint-26，PR#112 v3.0.0，TC-P2-AUTH-001 通过）：bcrypt 哈希 + `lumen_users` 扩列 + 默认个人空间 |
+| REQ-041 | F-012 | 凭证登录 | `[P2]` | 团队验证 | Phase2D·已完成（Sprint-26）：bcrypt verify + 不透明 token + `lumen_sessions` + 失败锁定 |
+| REQ-042 | F-012 | 登出 / 会话管理 | `[P2]` | 团队验证 | Phase2D·已完成（Sprint-26）：会话撤销 + TTL + 续期轮换 + 多设备会话 |
 
 ## 4.1 证据 / 验收引用
 
@@ -212,7 +213,7 @@
 | Phase2A closure | `docs/09-verification.md` §2 / §5，`docs/08-dev-plan.md` Phase2A 完成包 | REQ-026 / REQ-012 / REQ-025 三个 vertical slice 已通过；未进入 Phase2B |
 | Phase2B / 愿景 | 本文 §3 / §6 待确认项 | 团队 MVP 首批范围和进入标准待确认；不直接把愿景写入当前阶段 |
 | Phase2C | 本文 §3 Phase2C 子节；`docs/research/2026-08-05-rg009-vault-local-mount-poc.md`（RG-009 Go）；TC-P2-VAULT-001（已通过 2026-08-06） | REQ-018 模式 B 本地知识源接入；Sprint-23C 已完成（PR#108 v2.0.0）；Sprint-24 子树导入（PR#109 v2.1.0）+ Sprint-25 帮助（PR#110 v2.2.0）随 Wave 1 收口 |
-| Phase2D | 本文 §3 Phase2D 子节；`docs/design/accounts-auth.md`（§17 Sprint-27 增量设计 + §18 Sprint-28 增量设计）；`docs/05-tech-spec.md` RG-011/012/013（Go） | 账号体系基础 Sprint-26 已完成（PR#112 v3.0.0）；权限多人化 Sprint-27 已完成（REQ-043/044 / TC-P2-ACC-001 / task-039，PR#114）；角色分层 + 用户管理 + 团队空间加入 Sprint-28 已立项（REQ-045..047 / TC-P2-ACC-002 / task-040） |
+| Phase2D | 本文 §3 Phase2D 子节；`docs/design/accounts-auth.md`（§17 Sprint-27 增量设计 + §18 Sprint-28 增量设计）；`docs/05-tech-spec.md` RG-011/012/013（Go） | 账号体系基础 Sprint-26 已完成（PR#112 v3.0.0）；权限多人化 Sprint-27 已完成（REQ-043/044 / TC-P2-ACC-001 / task-039，PR#114）；角色分层 + 用户管理 + 团队空间加入 Sprint-28 已完成（REQ-045..047 / TC-P2-ACC-002 / task-040，PR#117 v3.1.0）；Phase2D 三 slice 已收口（2026-08-07） |
 
 ## 5. 非目标（明确不做，防范围蔓延）
 
