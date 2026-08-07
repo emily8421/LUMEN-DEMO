@@ -296,3 +296,74 @@ CREATE INDEX idx_lumen_sessions_user ON lumen_sessions(user_id) WHERE revoked_at
 - **P0 修复（跨用户泄露，已修）**：`GET /api/doc-links` 查询前未校验源文档可见性——同空间成员可枚举他人 PRIVATE 文档 id，从出链 `link_text` 泄露私有正文片段；修复为 `list_links` 先 `get_visible_document`（不可见→4004），API 层映射 4004（提交 `6c293a0`）。
 - **P2 记录（待用户确认接受）**：① `visible_document_where_clause` 全仓仅定义未使用（过滤收敛在 Python 层，无 SQL 下沉；安全无泄露，属事实漂移——`test_permission.py` 同名用例仅断言字符串字面量，测试名与实现不符）；② `upsert_link` 按标题解析目标可指向同空间不可见文档（仅记录链接行，不向请求者返回解析结果，无读泄露）。
 - **实现偏差**：预期零——未新增依赖 / migration / API 契约变更 / 前端改动；P0 修复为 service + API 层最小改动。
+
+## 18. Sprint-28 角色分层 + 用户管理 + 团队空间加入（增量设计·草案）
+
+> 定位：Phase2D「账户与多人权限」Sprint-28 增量设计（2026-08-07 立项）。承接 REQ-045 / REQ-046 / REQ-047（U-50 / U-51 / U-52），在 Sprint-26 账号体系 + Sprint-27 权限过滤底座之上补齐团队治理能力。C-ROLE-001..004 已确认（2026-08-07 用户按 AI 建议执行，主流设计评估见 handoff / 立项对话）。
+
+### 18.1 目标与范围
+
+- **目标**：完成「账号 → 权限 → 团队协作」的 Phase2D 闭环——全局角色分层（admin / member）、用户管理后台（admin 域）、团队空间加入机制（space 域成员管理）。
+- **范围**：REQ-045 全局角色分层（`lumen_users.role`，默认 member）；REQ-046 用户管理后台（用户列表 / 过滤 / 改角色 / 禁用启用）；REQ-047 团队空间加入（按 email 搜索添加成员 / 改空间角色 / 移除）。migration 016；零新依赖。
+- **不做（Sprint-28 外，留候选 / 后续）**：移除用户 / 重置密码 / 邀请码与邀请链接 / REQ-016 多人实时协作 / 角色矩阵化（`lumen_user_roles` 关联表）；管理鉴权不因 demo 仓储类型旁路。
+
+### 18.2 设计决策（已确认 2026-08-07）
+
+| ID | 决策 | 依据（主流设计与交互） | 备选（未采） |
+|---|---|---|---|
+| C-ROLE-001 | 全局角色单列 `lumen_users.role`（admin / member，`DEFAULT 'member'` + `CHECK`） | Notion / GitHub 组织均为单值枚举角色；3–5 人团队无需多角色矩阵；与 `lumen_space_members.role` 同构 | `lumen_user_roles` 关联表（权限矩阵化时才需要，远期迁移路径明确） |
+| C-ROLE-002 | 用户管理最小集：用户列表 + 按角色 / 状态过滤 + 改全局角色 + 禁用 / 启用；不做移除用户 / 重置密码 | 主流管理页标配列表 + 角色 + 禁用；重置密码走用户自助（管理员强改会绕过安全链路）；移除用户触发文档转交 / 孤儿策略，超出团队验证 | 移除用户（级联处理文档，产品级决策）；重置密码（需邮件基础设施） |
+| C-ROLE-003 | 团队空间加入 = 空间设置按 email 搜索用户添加（含空间角色）；不做邀请码 / 邀请链接 | Notion / 语雀 / Confluence / GitHub 私有仓库均为管理员主动添加；邀请链接需过期 / 吊销 / 审批管理，小团队过度设计 | 邀请码（枚举 / 过期 / 滥用成本高）；邀请链接（公开加入场景，留候选） |
+| C-ROLE-004 | demo seed：alice=admin、kira / brightlite-member=member（内存 / PG 一致）；管理入口前端按角色显隐 + 后端强制鉴权 | 演示环境覆盖「管理员操作 + 普通成员被限制」两条路径；显隐是体验、校验是安全，两者不互相替代 | seed 全 member（demo 无法演示管理路径） |
+
+### 18.3 数据契约（migration 016）
+
+```sql
+ALTER TABLE lumen_users ADD COLUMN role VARCHAR(20) NOT NULL DEFAULT 'member';
+ALTER TABLE lumen_users ADD CONSTRAINT chk_lumen_users_role CHECK (role IN ('admin','member'));
+-- seed 对齐：alice → 'admin'；kira / brightlite-member → 'member'
+```
+
+- 沿用 Sprint-26 的 `status`（active / disabled / pending）语义：禁用 = `status='disabled'`，登录 4030（复用既有 `login` 锁定 / 禁用分支），既有会话失效；**不删除用户、不迁移文档**（私有文档仅 owner 可见，禁用不改变可见性，不泄露）。
+- migration 编号：014 已用（Sprint-26），015 预留给 vault_mounts（Wave 3），本 Sprint 用 **016**。
+
+### 18.4 API 契约（草案，编号编码 Sprint 时分配）
+
+| 域 | endpoint | 方法 | 用途 | 权限 | 关键错误 |
+|---|---|---|---|---|---|
+| admin | `/api/admin/users` | GET | 用户列表（id / name / email / role / status / last_login_at；支持 `q` / `role` / `status` 过滤） | 全局 admin | 4030 非 admin / 4220 参数 |
+| admin | `/api/admin/users/{id}` | PATCH | 改全局角色 / 禁用 / 启用（`role` / `status`） | 全局 admin | 4030 / 4004 不存在 / 4220 |
+| space | `/api/spaces/{id}/members` | GET | 空间成员列表（user_id / name / email / role / joined_at） | 空间成员 | 4001 / 4003 / 4004 |
+| space | `/api/spaces/{id}/members` | POST | 按 email 添加成员（`{email, role}`，role 默认 member） | 空间 admin | 4030 / 4004 用户不存在 / 4090 已是成员 |
+| space | `/api/spaces/{id}/members/{user_id}` | PATCH | 改空间角色（admin / member） | 空间 admin | 4030 / 4004 / 4220 |
+| space | `/api/spaces/{id}/members/{user_id}` | DELETE | 移除成员（文档归属不变） | 空间 admin | 4030 / 4004 |
+| shared | `/api/users/search?q=` | GET | 添加成员时的用户搜索（返回 id / name / email 最小字段） | 空间 admin 或全局 admin | 4030 / 4220 |
+
+- **契约方向**（C-ACC-003 已预留）：用户管理走 **admin 域**、空间成员 CRUD 走 **space 域**；用户搜索为受限共享端点。
+- **隐私护栏**：所有用户信息端点不返回 `password_hash` / `external_id` 之外敏感字段；用户搜索仅管理上下文可用（防普通用户枚举账号）。
+- **管理鉴权**：admin / space-member 校验在 service 层统一实现（类似 `get_current_user` / `require_space_member`），不因仓储类型（PG / demo）旁路。
+
+### 18.5 前端交互（草案）
+
+- **用户管理页（admin 域）**：全局 admin 可见「用户管理」入口（TopBar / Nav Rail 项，member 不可见）；页内用户列表（头像 / 姓名 / email / 角色徽标 / 状态 / 最后登录）+ 角色 / 状态过滤 + 行内操作（角色下拉、禁用开关）；禁用操作二次确认并说明影响（"该用户将无法登录，文档保留不删除"）；空态「暂无用户」。
+- **空间设置成员管理（space 域）**：空间 admin 在空间设置 / 成员 tab 添加成员（email 搜索输入 → 结果选择 → 空间角色下拉 → 添加）、行内改角色、移除（确认弹窗说明"将失去该空间访问，文档归属不变"）；非空间 admin 无成员管理入口。
+- 交互基线沿用现有工作台（无新组件库 / router 依赖，保持 WSG 与既有 CSS token 体系）。
+
+### 18.6 安全控制
+
+- 管理 API 一律后端强制鉴权（4030），前端显隐仅为体验；用户列表 / 搜索不暴露 `password_hash`；禁用不删数据、不改变既有文档可见性。
+- 越权矩阵（编码 Sprint 测试覆盖）：全局 member 调 admin API → 4030；空间普通成员调成员管理 → 4030；非空间成员访问空间成员列表 → 4003 / 4004；demo 仓储不旁路以上任何校验。
+
+### 18.7 验证方案（编码 Sprint）
+
+- 后端：`tests/backend/test_role.py`（角色默认值 / CHECK / seed 对齐）+ `test_admin_users.py`（admin 域列表 / 过滤 / 改角色 / 禁用启用 / 4030 越权 / 不泄露 password_hash）+ `test_space_members.py`（成员 CRUD / email 添加 / 4090 重复 / 4030 越权 / 移除后失权）；既有 `test_auth.py` / `test_permission.py` 回归不破；全量 backend discover。
+- 前端：`volta run --node 22.17.1 npm run build` + 浏览器 smoke（用户管理页 + 空间设置成员管理，admin / member 双视角）。
+- 验收：TC-P2-ACC-002（`docs/09-verification.md` §2）。
+
+### 18.8 待确认项（编码前拍板）
+
+| ID | 待确认项 | AI 建议 | 依据 | 备选 | 取舍 / 阻塞 |
+|---|---|---|---|---|---|
+| C-ROLE-005 | admin 域用户列表是否包含 `last_login_at` 展示 | 包含（只读展示） | 主流管理页标配最后活跃 / 最后登录，便于识别僵尸账号 | 不展示 | 低风险，仅元数据 |
+| C-ROLE-006 | 空间 admin 能否移除 / 降级最后一个空间 admin | 禁止（至少保留 1 个 admin，避免空间失控） | 主流（Notion / Confluence）防止自锁 | 允许（留下无管理员空间） | 会导致空间不可治理 |
+| C-ROLE-007 | 全局 admin 与空间 admin 交叉时是否允许全局 admin 管理任意空间成员 | 允许（全局 admin 拥有空间成员管理同权） | 管理员兜底语义；后端统一 admin 校验 | 仅空间 admin | 便于运维，风险由 admin 校验兜底 |
