@@ -9,7 +9,7 @@
 |---|---|
 | 输入来源 | `docs/01-user-requirements.md`、`docs/02-srs.md`、`ai/project-rules.md` §1 |
 | 覆盖 REQ | REQ-001..REQ-042（按 Phase1 / Phase1.5A / Phase1.5B / Phase2A / Phase2B / Phase2C / Phase2D / 愿景分阶段；REQ-040..047 为 Phase2D 账户与多人权限（已完成 2026-08-07 收口）） |
-| 当前状态 | 已确认（§3 为阶段标签唯一来源；Phase1.5B 单文档 PDF 导出已完成；Phase2A 个人知识组织已完成；Phase2B 团队 MVP 已完成（2026-08-05 收口）；Phase2C 本地知识源接入已完成（2026-08-06，Sprint-23C TC-P2-VAULT-001 通过 / PR#108 v2.0.0）；**Phase2D 账户与多人权限已完成（2026-08-07 收口）：Sprint-26 账号体系基础（TC-P2-AUTH-001 / PR#112 v3.0.0）+ Sprint-27 权限多人化（TC-P2-ACC-001 / PR#114）+ Sprint-28 角色分层 + 用户管理 + 团队空间加入（TC-P2-ACC-002 / PR#117 v3.1.0）三 slice 全部验收通过、退出标准达成；下一阶段范围待用户定义**） |
+| 当前状态 | 已确认（§3 为阶段标签唯一来源；Phase1.5B 单文档 PDF 导出已完成；Phase2A 个人知识组织已完成；Phase2B 团队 MVP 已完成（2026-08-05 收口）；Phase2C 本地知识源接入已完成（2026-08-06，Sprint-23C TC-P2-VAULT-001 通过 / PR#108 v2.0.0）；**Phase2D 账户与多人权限已完成（2026-08-07 收口）：Sprint-26 账号体系基础（TC-P2-AUTH-001 / PR#112 v3.0.0）+ Sprint-27 权限多人化（TC-P2-ACC-001 / PR#114）+ Sprint-28 角色分层 + 用户管理 + 团队空间加入（TC-P2-ACC-002 / PR#117 v3.1.0）三 slice 全部验收通过、退出标准达成；**项目 demo 目标已达成（2026-08-07 评估收尾），进入维护态，下一阶段未定义；成果总结见 `docs/research/2026-08-07-project-closure-summary.md`**） |
 | 最后更新 | 2026-08-07（Phase2D 收口：Sprint-26/27/28 三 slice 全部验收通过，退出标准达成，不升 Phase；Sprint-27 P2 两项 + Sprint-28 偏差经用户确认全接受、留后续；下一阶段范围待用户定义）；前次 2026-08-07（Phase2D 立项 + Sprint-26/27/28 实现） |
 
 ## 1. 功能范围（完整，对齐 01 / 02）

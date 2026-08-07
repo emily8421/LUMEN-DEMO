@@ -241,3 +241,4 @@
 - **Phase2B 范围、进入 / 退出标准、数据外发风险接受方式（RG-008）与验证包均已确认 / 就绪（2026-07-30）**；REQ-014 AI 润色已完成并通过 TC-P2-AI-001，D-C-001 citation 同步延迟量化已关闭（当前不做异步 job）；REQ-013a/024 主题时间线已完成并通过自动化验证、运行态 API smoke 与 Edge headless 浏览器 smoke。
 - Phase1.5B 的 TC-P1-017 已随 Sprint-18 通过；Word-PDF / zhparser 仍不阻塞 Phase2A closure。
 - **Phase2D 收口待确认项定性（2026-08-07 用户确认）**：① Sprint-27 P2 两项（`visible_document_where_clause` 全仓未使用——过滤在 Python 层、无 SQL 下沉；`upsert_link` 标题解析可指向同空间不可见文档——无读泄露）→ **接受**，不阻塞；② Sprint-28 实现偏差（API-044/046 未分页 / `last_login_at` 未显式排序 / API-045/048 无 `updated_at` / refresh 不含 `role`，见 accounts-auth §18.9）→ **接受、留后续**，3-5 人团队验证规模非必要；③ 移除用户 / 重置密码 / 邀请码 / REQ-016 多人实时协作 → 不进 Phase2D（Sprint-28 硬约束），留候选 / 后续。Phase2D 三 slice（Sprint-26/27/28）退出标准全部达成，已收口；不升 Phase，下一阶段范围待用户定义。
+- **项目收尾（2026-08-07）**：demo 目标达成，进入维护态；无未决 open items。历史待确认项均已确认 / 收口（Phase2A closure / Phase2B 范围确认 / Phase2D 收口定性）。后续若重启见 `docs/research/2026-08-07-project-closure-summary.md` §6。

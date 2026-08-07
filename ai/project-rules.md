@@ -14,6 +14,8 @@
 
 ## 1. Phase边界
 
+> **项目收尾（2026-08-07）**：LUMEN-DEMO demo 目标已达成——Phase1-2D 全系列交付、`docs/09-verification.md` §6 风险全清、产品红线（不编造 / 不越权 / 不泄露）未破坏。进入维护态；下一阶段未定义。成果总结见 `docs/research/2026-08-07-project-closure-summary.md`；后续若重启方向见该文 §6。
+
 当前阶段：**Phase2D（账户与多人权限·团队验证）已完成（2026-08-07 收口：Sprint-26/27/28 三 slice 全部验收通过，退出标准达成；Sprint-27 P2 两项 + Sprint-28 偏差经用户确认全接受、留后续；不升 Phase，下一阶段范围待用户定义）**；Phase1 Demo + Phase1.5A 可用性 + Phase1.5B PDF 导出 + Phase2A（个人知识组织）+ Phase2B（团队 MVP）+ Phase2C（本地知识源接入）均已完成；**Phase2C 已完成（2026-08-06，Sprint-23C TC-P2-VAULT-001 通过 / PR#108 v2.0.0）**——前次"待实现"系 Wave 1 收口未回写，本次修正；数据外发风险已接受（RG-008 Go）；**Phase2D Sprint-26 账号体系基础已完成（2026-08-07）：注册 / 凭证登录 bcrypt / 登出 / `lumen_users` 扩列 / 统一 `get_current_user` / 不透明 token + `lumen_sessions` / 登录·注册页；demo 模式由仓储类型决定（PG 强制凭证 / 内存允许 demo）+ 物理隔离护栏（`LUMEN_ENABLE_DEMO_AUTH` 未实现，见 accounts-auth §15）；**Sprint-27 权限多人化已完成（2026-08-07，TC-P2-ACC-001 通过 / PR#114）**；**Sprint-28 角色分层 + 用户管理 + 团队空间加入已完成（2026-08-07，REQ-045..047 / TC-P2-ACC-002 / PR#117 v3.1.0，见 accounts-auth §18）**；RG-010 FileSystemObserver Go（2026-08-06）解锁 Wave 3 自动监听候选；Word-PDF 解析 / zhparser 仍留后续候选
 
 > 双维度（global-rules §8.1）：每个阶段同时声明**功能范围**与**交付物形态**，两者正交、不得混用。

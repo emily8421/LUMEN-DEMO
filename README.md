@@ -24,7 +24,7 @@
 
 ## 当前状态
 
-- **阶段**：**Phase2D（账户与多人权限 · 团队验证）已完成并收口（2026-08-07）**。Phase1（Demo）→ Phase1.5A/B（可用性 / PDF 导出）→ Phase2A（个人知识组织）→ Phase2B（团队 MVP）→ Phase2C（本地知识源接入）→ Phase2D（账户与多人权限）均已交付；下一阶段范围待用户定义。
+- **阶段**：**Phase2D（账户与多人权限 · 团队验证）已完成并收口（2026-08-07）**。Phase1（Demo）→ Phase1.5A/B（可用性 / PDF 导出）→ Phase2A（个人知识组织）→ Phase2B（团队 MVP）→ Phase2C（本地知识源接入）→ Phase2D（账户与多人权限）均已交付。**项目 demo 目标已达成（2026-08-07 评估收尾），进入维护态**——Phase1-2D 全系列交付、`docs/09-verification.md` §6 风险全清、产品红线未破坏；成果总结见 `docs/research/2026-08-07-project-closure-summary.md`。
 - **演进路线**：Phase1 Demo → Phase2A 个人知识组织 → Phase2B 团队 MVP → Phase2C 本地知识源接入 → Phase2D 账户与多人权限（已完成）→ 远期愿景产品；双维度（功能范围 + 交付物形态）总览见 `docs/03-prd.md` §3，阶段状态见 `ai/project-rules.md` §1。
 - **基准**：需求 / 架构 / 数据 / 接口 / 验证均已落在 `docs/`，是开发的唯一事实来源；阶段归属以 `docs/03-prd.md` §3 路线图为准。
 
