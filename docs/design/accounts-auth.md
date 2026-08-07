@@ -242,3 +242,50 @@ CREATE INDEX idx_lumen_sessions_user ON lumen_sessions(user_id) WHERE revoked_at
 | C-AUTH-006 | bcrypt vs Argon2id | bcrypt 起步 | 成熟、生态广；rehash 路径可后续升 Argon2id | 直接 Argon2id | 不阻塞；差异小 |
 
 > **确认记录（2026-08-07 编码前）**：C-AUTH-001..006 均按 AI 建议落地——C-AUTH-001 注册自建个人空间（role=admin）；C-AUTH-002 登录标识 email（兼容 external_id 别名）；C-AUTH-003 锁定阈值 5 次 / 15min；C-AUTH-004 审计最小集（register / login_success / login_failed / login_locked / logout，结构化日志，不新建表）；C-AUTH-005 密码策略 8–64 字符；C-AUTH-006 bcrypt（cost 12，不采用 passlib）。`docs/01 §4` 的 U-45「注册空间归属待确认」随之关闭。
+
+## 17. Sprint-27 权限多人化设计（增量·草案）
+
+> 定位：Phase2D「账户与多人权限」Sprint-27 增量设计（2026-08-07 立项·草案待人工确认）。承接 REQ-043 / REQ-044（REQ-001/002/003 扩展，U-48 / U-49），在 Sprint-26 账号体系之上做权限过滤实质改造与回归。编码前需确认 §17.5 待确认项（C-ACC-001..003）。
+
+### 17.1 目标与范围
+
+- **目标**：在真实多用户账号体系上验证并补全权限过滤底座——任何用户只能看到其所属空间的可见文档；私有文档仅 owner 可见；外部只读仅 owner 可写；列表 / 搜索 / 问答 / 时间线 / 目录树 / 标签 / 导出 / 链接 / 快速录入等全部查询路径跨用户零泄露。
+- **做（Sprint-27）**：owner_id 跨用户过滤全路径审计与回归、私有按 owner 过滤回归、外部只读仅 owner 可写回归、跨用户隔离自动化回归、空间隔离 / 切换回归（REQ-001/002/003 扩展）。
+- **不做（Sprint-28+）**：全局角色分层 / 用户管理后台 UI（Sprint-28）、REQ-016 多人实时协作；不引新依赖；预期零 migration（`lumen_documents.owner_id` 等字段已存在）。
+
+### 17.2 现状（代码事实锚点，2026-08-07 盘点）
+
+| # | 事实 | 锚点 |
+|---|---|---|
+| 1 | 权限谓词已集中：`can_view_document`（space_id 相等 + 空间成员 + PRIVATE→owner_id == user_id）、`can_write_document`（external 仅 owner 可写）、`filter_visible_documents`、`visible_document_where_clause`（SQL 层） | `backend/service/permission.py` |
+| 2 | 文档 CRUD / 链接 / folder document_count / quick_entry 已走可见性谓词 | `backend/service/document.py`、`backend/service/doc_links.py`、`backend/service/folder.py` |
+| 3 | 空间成员校验：`ensure_space_access` + `list_memberships()`；`lumen_space_members.role` 为空间级 admin/member | `backend/service/space.py`、`backend/model/orm.py:48` |
+| 4 | 鉴权已收敛：`get_current_user` / `get_current_user_optional` / `require_space_member` | `backend/service/auth_context.py` |
+| 5 | RG-013（跨用户隔离回归）Go（2026-08-07）：注册用户 + 个人空间隔离断言 | `tests/backend/test_auth.py`、`docs/05-tech-spec.md` RG-013 |
+
+### 17.3 设计决策（草案）
+
+| # | 决策 | AI 建议 | 依据 / 备选 |
+|---|---|---|---|
+| D-ACC-001 | owner 过滤统一 | 全查询路径统一复用 `can_view_document` / `visible_document_where_clause`（列表 / 搜索 hybrid / RAG 候选 / 时间线 / 目录树计数 / 标签 document_count / 导出 ZIP / 链接 / 快速录入），逐路径审计并修复遗漏 | 谓词已集中，审计成本低；避免路径级复制导致漂移 |
+| D-ACC-002 | 私有按 owner 过滤 | PRIVATE → `owner_id == user_id`（含同空间成员）；external 仅 owner 可写（写路径 4003） | 已实现（permission.py）；Sprint-27 补回归断言 |
+| D-ACC-003 | 空间隔离 / 切换回归 | 真实账号下回归 REQ-001/002：仅能访问所属空间；切换后上下文只反映目标空间 | 已有 `is_space_member` / `ensure_space_access` / `current_space_id` 会话承载 |
+| D-ACC-004 | 隔离回归测试形态 | 扩展 `tests/backend/test_permission.py` + 新增多用户隔离用例（注册 2-3 真实用户，逐路径断言零泄露） | RG-013 已铺底；全路径矩阵比单路径更可信 |
+| D-ACC-005 | 团队空间加入机制 | **Sprint-27 不做**，留 Sprint-28 与角色 / 用户管理 UI 一起；Sprint-27 隔离回归使用注册自建个人空间 + seed 同空间成员数据 | C-AUTH-001 备选（邀请码加入 / 管理员分配）；保持 Sprint-27 聚焦隔离可信 |
+| D-ACC-006 | 前端改动 | 预期零前端改动（过滤在 service/SQL 层）；若回归暴露前端可见性问题，最小修复并记录 | 隔离是服务端职责；前端只消费过滤后结果 |
+
+### 17.4 验证方案
+
+- 后端：`tests/backend/test_permission.py` 扩展 + 新增多用户隔离用例；既有权限 TC（TC-P1-001/002/003）回归不破；全量 backend discover 通过。
+- 浏览器 smoke：登录两个真实用户，交叉验证私有文档不可见（Sprint-27 实现时执行）。
+- 零 migration / 零新依赖声明：`06` / `07` 预期无契约变更；若审计发现需补字段 / API，先停下说明并走契约修订。
+
+### 17.5 待确认项（编码前拍板）
+
+| ID | 待确认项 | AI 建议 | 依据 | 备选 | 取舍 / 阻塞 |
+|---|---|---|---|---|---|
+| C-ACC-001 | 团队空间加入机制（邀请码 / 管理员分配）是否进 Sprint-27 | 不进，留 Sprint-28 与角色 / 用户管理 UI 一起 | 主流（Notion / 语雀 / 飞书知识库 / Confluence）：空间成员由创建者或管理员主动添加 / 邀请链接加入，与成员管理页强绑定；只做邀请不做管理页 = 孤儿 UI；邀请码有枚举 / 过期 / 滥用成本；3-5 人团队最简路径 = 空间设置加成员 | 进 Sprint-27（范围扩大） | 影响范围与验收；不阻塞隔离回归 |
+| C-ACC-002 | 全路径审计中发现的既有泄露缺口处理 | 分档：P0 跨用户泄露必修（阻塞退出）；P1 越权写 / 元数据可见修复；P2 已知降级记录并由用户确认接受；契约变更先停下确认 | 安全隔离按 fail-closed，发现即修；不得把「已审计未修复」写成已通过 | 全部记录为已知风险推迟 | 安全边界；P0 阻塞退出标准 |
+| C-ACC-003 | 是否新增用户列表 / 空间成员类 API（团队空间加入时用） | Sprint-27 不加；预留契约方向（空间成员 CRUD 走 space 域、用户管理走 admin 域），Sprint-28 立项时定稿 | 消费者是 Sprint-28 成员管理 UI（YAGNI）；提前暴露用户信息面有枚举风险；避免两轮破坏性契约变更 | 提前加 | 范围蔓延 |
+
+> **确认记录（2026-08-07）**：用户按 AI 建议执行——C-ACC-001 不进 Sprint-27（留 Sprint-28 与角色 / 用户管理 UI 一起）；C-ACC-002 按 P0/P1/P2 分档修复，P0 阻塞退出标准；C-ACC-003 Sprint-27 不加（契约方向预留：空间成员 CRUD 走 space 域、用户管理走 admin 域）。可选增强（文档列表「创建者」列 / tooltip 强化归属认知）不纳入本 Sprint，另行评估。
