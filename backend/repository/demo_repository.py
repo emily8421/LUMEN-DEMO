@@ -19,6 +19,7 @@ from backend.model.entities import (
     Session,
     Space,
     SpaceMember,
+    SpaceMemberDetail,
     SpaceRole,
     Tag,
     TagLink,
@@ -33,20 +34,21 @@ class DemoRepository:
     is_demo = True  # demo 标识（accounts-auth §7 物理隔离：PG 强制真实认证，内存允许 demo 快捷登录）
 
     def __init__(self) -> None:
+        # Sprint-28 seed（C-ROLE-004）：alice=admin；kira / brightlite-member=member（默认）
         self.users = [
-            User(id=1, external_id="alice", name="Alice", email="alice@example.com"),
-            User(id=2, external_id="kira", name="Kira", email="kira@example.com"),
-            User(id=3, external_id="brightlite-member", name="BrightLite Member", email="brightlite-member@example.com"),
+            User(id=1, external_id="alice", name="Alice", email="alice@example.com", role="admin"),
+            User(id=2, external_id="kira", name="Kira", email="kira@example.com", role="member"),
+            User(id=3, external_id="brightlite-member", name="BrightLite Member", email="brightlite-member@example.com", role="member"),
         ]
         self.spaces = [
             Space(id=10, code="nova-internal", name="Nova Internal"),
             Space(id=20, code="brightlite-team", name="BrightLite Team"),
         ]
         self.memberships = [
-            SpaceMember(user_id=1, space_id=10, role=SpaceRole.ADMIN),
-            SpaceMember(user_id=1, space_id=20, role=SpaceRole.ADMIN),
-            SpaceMember(user_id=2, space_id=10, role=SpaceRole.MEMBER),
-            SpaceMember(user_id=3, space_id=20, role=SpaceRole.MEMBER),
+            SpaceMember(user_id=1, space_id=10, role=SpaceRole.ADMIN, created_at=_now_iso()),
+            SpaceMember(user_id=1, space_id=20, role=SpaceRole.ADMIN, created_at=_now_iso()),
+            SpaceMember(user_id=2, space_id=10, role=SpaceRole.MEMBER, created_at=_now_iso()),
+            SpaceMember(user_id=3, space_id=20, role=SpaceRole.MEMBER, created_at=_now_iso()),
         ]
         self.documents = [
             Document(
@@ -140,7 +142,9 @@ class DemoRepository:
             created_at=_now_iso(),
         )
         self.spaces.append(space)
-        self.memberships.append(SpaceMember(user_id=user.id, space_id=space.id, role=SpaceRole.ADMIN))
+        self.memberships.append(
+            SpaceMember(user_id=user.id, space_id=space.id, role=SpaceRole.ADMIN, created_at=_now_iso())
+        )
         return user
 
     def _next_user_id(self) -> int:
@@ -235,6 +239,135 @@ class DemoRepository:
             None,
         )
         return None if membership is None else membership.space_id
+
+    # --- Sprint-28（REQ-045/046/047，task-040）：用户管理 / 空间成员 CRUD / 用户搜索 ---
+
+    def list_users(self, q: str = "", role: str = "", status: str = "") -> list[User]:
+        """admin 域用户列表（API-044）：q 匹配 name/email，可按 role / status 过滤。"""
+        results = list(self.users)
+        if q:
+            needle = q.strip().lower()
+            results = [
+                user
+                for user in results
+                if needle in (user.name or "").lower()
+                or (user.email is not None and needle in user.email.lower())
+            ]
+        if role:
+            results = [user for user in results if user.role == role]
+        if status:
+            results = [user for user in results if user.status == status]
+        return results
+
+    def search_users(self, q: str = "") -> list[User]:
+        """成员添加时用户搜索（API-050）：q 匹配 name/email，上限 20。"""
+        return self.list_users(q=q)[:20]
+
+    def update_user_role(self, user_id: int, role: str) -> User | None:
+        for index, user in enumerate(self.users):
+            if user.id != user_id:
+                continue
+            updated = replace(user, role=role)
+            self.users[index] = updated
+            return updated
+        return None
+
+    def set_user_status(self, user_id: int, status: str) -> User | None:
+        for index, user in enumerate(self.users):
+            if user.id != user_id:
+                continue
+            updated = replace(user, status=status)
+            self.users[index] = updated
+            return updated
+        return None
+
+    def revoke_user_sessions(self, user_id: int) -> int:
+        count = 0
+        for index, session in enumerate(self.sessions):
+            if session.user_id != user_id or session.revoked_at is not None:
+                continue
+            self.sessions[index] = replace(session, revoked_at=_now_iso())
+            count += 1
+        return count
+
+    def find_space(self, space_id: int) -> Space | None:
+        return next((space for space in self.spaces if space.id == space_id), None)
+
+    def list_space_members(self, space_id: int) -> list[SpaceMemberDetail]:
+        """空间成员列表（API-046）：含用户展示字段 + 加入时间 joined_at。"""
+        result: list[SpaceMemberDetail] = []
+        for membership in self.memberships:
+            if membership.space_id != space_id:
+                continue
+            user = self.find_user_by_id(membership.user_id)
+            result.append(
+                SpaceMemberDetail(
+                    user_id=membership.user_id,
+                    space_id=membership.space_id,
+                    name=user.name if user is not None else "",
+                    email=user.email if user is not None else None,
+                    role=membership.role,
+                    joined_at=membership.created_at,
+                )
+            )
+        result.sort(key=lambda detail: (detail.joined_at, detail.user_id))
+        return result
+
+    def add_space_member(self, space_id: int, user_id: int, role: str) -> SpaceMemberDetail | None:
+        """按 email 添加成员（API-047）；已是成员返回 None。"""
+        if any(
+            membership.user_id == user_id and membership.space_id == space_id
+            for membership in self.memberships
+        ):
+            return None
+        membership = SpaceMember(
+            user_id=user_id,
+            space_id=space_id,
+            role=SpaceRole(role),
+            created_at=_now_iso(),
+        )
+        self.memberships.append(membership)
+        user = self.find_user_by_id(user_id)
+        return SpaceMemberDetail(
+            user_id=user_id,
+            space_id=space_id,
+            name=user.name if user is not None else "",
+            email=user.email if user is not None else None,
+            role=membership.role,
+            joined_at=membership.created_at,
+        )
+
+    def update_space_member_role(self, space_id: int, user_id: int, role: str) -> SpaceMemberDetail | None:
+        for index, membership in enumerate(self.memberships):
+            if membership.space_id != space_id or membership.user_id != user_id:
+                continue
+            updated = replace(membership, role=SpaceRole(role))
+            self.memberships[index] = updated
+            user = self.find_user_by_id(user_id)
+            return SpaceMemberDetail(
+                user_id=user_id,
+                space_id=space_id,
+                name=user.name if user is not None else "",
+                email=user.email if user is not None else None,
+                role=updated.role,
+                joined_at=updated.created_at,
+            )
+        return None
+
+    def remove_space_member(self, space_id: int, user_id: int) -> bool:
+        for index, membership in enumerate(self.memberships):
+            if membership.space_id != space_id or membership.user_id != user_id:
+                continue
+            del self.memberships[index]
+            return True
+        return False
+
+    def count_space_admins(self, space_id: int) -> int:
+        return sum(
+            1
+            for membership in self.memberships
+            if membership.space_id == space_id and membership.role == SpaceRole.ADMIN
+        )
 
     def list_documents(self) -> list[Document]:
         return list(self.documents)
@@ -954,6 +1087,3 @@ class DemoRepository:
 
 def _now_iso() -> str:
     return datetime.now(UTC).isoformat()
-
-
-

@@ -40,6 +40,8 @@ class User:
     failed_login_count: int = 0
     locked_until: str = ""
     last_login_at: str = ""
+    # Sprint-28（REQ-045，migration 016）：全局角色 admin / member，默认 member
+    role: str = "member"
 
 
 @dataclass(frozen=True)
@@ -71,6 +73,19 @@ class SpaceMember:
     user_id: int
     space_id: int
     role: SpaceRole
+    created_at: str = ""
+
+
+@dataclass(frozen=True)
+class SpaceMemberDetail:
+    """Sprint-28 空间成员列表行（API-046）：成员 + 用户展示字段 + 加入时间。"""
+
+    user_id: int
+    space_id: int
+    name: str
+    email: str | None
+    role: SpaceRole
+    joined_at: str = ""
 
 
 @dataclass(frozen=True)

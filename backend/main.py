@@ -51,6 +51,7 @@ def create_app():
     if FastAPI is None:
         raise RuntimeError("FastAPI is not installed")
 
+    from backend.api.admin import router as admin_router
     from backend.api.auth import router as auth_router
     from backend.api.doc_links import router as doc_links_router
     from backend.api.tags import router as tags_router
@@ -62,8 +63,10 @@ def create_app():
     from backend.api.rag import router as rag_router
     from backend.api.search import router as search_router
     from backend.api.spaces import router as spaces_router
+    from backend.api.space_members import router as space_members_router
     from backend.api.timeline import router as timeline_router
     from backend.api.terms import router as terms_router
+    from backend.api.users import router as users_router
 
     app = FastAPI(title="LUMEN Knowledge Base API", lifespan=lifespan)
 
@@ -76,8 +79,12 @@ def create_app():
 
     if auth_router is not None:
         app.include_router(auth_router)
+    if admin_router is not None:
+        app.include_router(admin_router)
     if spaces_router is not None:
         app.include_router(spaces_router)
+    if space_members_router is not None:
+        app.include_router(space_members_router)
     if documents_router is not None:
         app.include_router(documents_router)
     if imports_router is not None:
@@ -100,6 +107,8 @@ def create_app():
         app.include_router(rag_router)
     if terms_router is not None:
         app.include_router(terms_router)
+    if users_router is not None:
+        app.include_router(users_router)
     return app
 
 

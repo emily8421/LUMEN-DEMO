@@ -193,6 +193,11 @@ def audit_logout(user_id: int) -> None:
     _audit("logout", user_id, "success")
 
 
+def audit_event(event: str, user_id: int | None, outcome: str, **extra) -> None:
+    """结构化审计日志公共入口（C-AUTH-004 最小集 + Sprint-28 C-ROLE-007 成员管理事件）。"""
+    _audit(event, user_id, outcome, **extra)
+
+
 def authenticate(
     repository,
     login_id: str,

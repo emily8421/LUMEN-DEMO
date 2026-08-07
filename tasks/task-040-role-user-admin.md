@@ -39,3 +39,10 @@
 ## 待确认项
 - **已确认（2026-08-07，按 AI 建议执行）**：C-ROLE-001 单列角色（admin/member，默认 member）；C-ROLE-002 最小集（列表 / 过滤 / 改角色 / 禁用启用；移除与重置密码留候选）；C-ROLE-003 管理员按 email 添加成员（邀请码 / 邀请链接留候选）；C-ROLE-004 seed alice=admin / kira·brightlite-member=member（内存 / PG 一致，管理入口显隐 + 后端强制鉴权）
 - **已确认（2026-08-07，按 AI 建议执行）**：C-ROLE-005 用户列表显示 `last_login_at`（admin 域只读列，可排序）；C-ROLE-006 禁止移除 / 降级最后一个空间 admin（后端 4090 + 前端禁用提示）；C-ROLE-007 全局 admin 对任意空间成员管理同权（统一鉴权谓词 + 审计事件 member_added / member_role_changed / member_removed）
+
+## 完成记录（2026-08-07）
+
+- **TC-P2-ACC-002 通过**：backend discover 275 OK（skipped=2）；浏览器 smoke PASS（`scripts/smoke-sprint28-role-admin-browser.mjs`，admin/member 双视角 + API 矩阵全绿：member 4030 / 改角色 / 禁用登录 403 / 重复添加 409 / 最后一个 admin 4090 / 搜索 4030 / 移除后失权 4003）。
+- 交付：migration 016（`lumen_users.role` + CHECK + seed 对齐 alice=admin / kira·brightlite-member=member + `lumen_space_members.created_at`）+ admin 域（API-044/045）+ space 域（API-046..049）+ 受限用户搜索（API-050）+ 登录响应 role + 前端用户管理页与空间设置成员管理（入口按角色显隐）。
+- 实现偏差见 `docs/design/accounts-auth.md` §18.9（未分页 / `last_login_at` 未显式排序 / API-045·048 无 `updated_at` / refresh 不含 role）。
+- 回写：`docs/08`（Sprint-28 总览行 + 完成包表行）、`docs/09`（TC-P2-ACC-002 + §5 验收记录）、`docs/06`（migration 016 + `lumen_space_members.created_at`）、`docs/07`（API-044..050 已实现 + 登录 role）、`CHANGELOG.md` / `CHANGELOG-PLAIN.md` / `VERSION`（v3.1.0）。

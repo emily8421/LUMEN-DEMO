@@ -17,3 +17,5 @@ export * from './api/quickEntry';
 export * from './api/aiPolish';
 export * from './api/folders';
 export * from './api/timeline';
+export * from './api/admin';
+export * from './api/spaceMembers';

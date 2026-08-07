@@ -32,6 +32,8 @@ class UserORM(Base):
     # migration 014（Sprint-26 / Phase2D 账号体系）：password_hash demo seed = NULL
     password_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
     status: Mapped[str] = mapped_column(String(20), default='active')
+    # migration 016（Sprint-28 / REQ-045）：全局角色 admin / member，默认 member（DB server_default 兜底）
+    role: Mapped[str] = mapped_column(String(20), default='member')
     last_login_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
     failed_login_count: Mapped[int] = mapped_column(Integer, default=0)
     locked_until: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
@@ -70,6 +72,8 @@ class SpaceMemberORM(Base):
     user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("lumen_users.id", ondelete="CASCADE"), primary_key=True)
     space_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("lumen_spaces.id", ondelete="CASCADE"), primary_key=True)
     role: Mapped[str] = mapped_column(String)
+    # migration 016（Sprint-28 / REQ-047）：成员加入时间，支撑 API-046 joined_at 契约
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
 
 
 class DocumentORM(Base):

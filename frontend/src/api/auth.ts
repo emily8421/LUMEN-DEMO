@@ -4,6 +4,8 @@ export type LoginResponse = {
   token: string;
   user_id: number;
   current_space_id: number;
+  /** Sprint-28（REQ-045）：全局角色，支撑前端管理入口显隐。 */
+  role: 'admin' | 'member';
 };
 
 export type RegisterResponse = {

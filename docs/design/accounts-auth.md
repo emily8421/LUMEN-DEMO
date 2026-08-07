@@ -369,3 +369,14 @@ ALTER TABLE lumen_users ADD CONSTRAINT chk_lumen_users_role CHECK (role IN ('adm
 | C-ROLE-007 ✅已确认（2026-08-07） | 全局 admin 与空间 admin 交叉时是否允许全局 admin 管理任意空间成员 | 允许（全局 admin 拥有空间成员管理同权；鉴权谓词统一 `is_global_admin OR is_space_admin`；成员管理操作写审计日志） | 平台级管理员兜底语义（GitHub org owner / Confluence system admin / Google super admin）；全局角色无全局能力则形同虚设 | 仅空间 admin | 权限面大但由 admin 校验 + 审计兜底 |
 
 > **确认记录（2026-08-07）**：用户按 AI 建议执行——C-ROLE-005 显示 `last_login_at`（admin 域只读列）；C-ROLE-006 禁止移除 / 降级最后一个空间 admin（后端 4090 + 前端防呆）；C-ROLE-007 全局 admin 对任意空间成员管理同权（统一鉴权谓词 + 审计事件 `member_added / member_role_changed / member_removed`）。
+
+### 18.9 完成记录与实现偏差（2026-08-07 编码 Sprint 验收）
+
+**完成记录**：TC-P2-ACC-002 通过（backend discover 275 OK（skipped=2）+ 浏览器双视角 smoke PASS）。migration 016（`lumen_users.role` + CHECK + seed 对齐 alice=admin / kira·brightlite-member=member + `lumen_space_members.created_at`）；admin 域（API-044/045：列表 / 过滤 / 改角色 / 禁用启用，禁用后登录 4030 且会话失效，不泄露 `password_hash`）；space 域（API-046..049：按 email 添加 / 改空间角色 / 移除，移除后失权 4003，最后一个 admin 4090）；受限用户搜索（API-050，member 4030）；鉴权谓词统一 `is_global_admin OR is_space_admin`（C-ROLE-007）；审计事件 user_role_changed / user_status_changed / member_added / member_role_changed / member_removed；前端用户管理页 + 空间设置成员管理（入口按角色显隐，member 不可见）。详见 `docs/07-api-spec.md` API-044..050 与 `docs/09-verification.md` §5。
+
+**实现偏差（相对 §18.4 / `docs/07` §3.9 契约草案）**：
+1. **未实现分页**：API-044/046 契约草案含 `page?` / `{items,total,page}`，实现为扁平 `{code,msg,data:[...]}`（3-5 人团队规模，未分页；`docs/07` 契约按实际回写）。
+2. **响应字段差异**：API-045/048 响应不含 `updated_at`（admin 用 `last_login_at`、成员用 `joined_at`）；API-049 删除返回 `data:null`。
+3. **未实现 `last_login_at` 显式排序**（C-ROLE-005 草案「可排序」）：当前按仓储返回顺序展示，仅作只读列。
+4. **refresh 响应不含 `role`**：登录响应新增 `role`（additive，支撑前端管理入口显隐）；刷新 token 后角色不刷新（前端以登录时角色为准，属已知边界）。
+5. 其余与契约一致：seed、鉴权谓词、最后一个 admin 4090、审计事件、demo 仓储不旁路。

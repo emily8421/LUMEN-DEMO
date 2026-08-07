@@ -83,6 +83,9 @@ if APIRouter is not None:
             except SpaceAccessError:
                 pass  # 无权限空间静默回退当前会话空间
 
+        # Sprint-28（REQ-045）：登录响应附带全局角色，支撑前端管理入口显隐（additive，非破坏性）
+        current_user = repository.find_user_by_id(session.user_id)
+        role = current_user.role if current_user is not None else "member"
         return {
             "code": 0,
             "msg": "ok",
@@ -90,6 +93,7 @@ if APIRouter is not None:
                 "token": token,
                 "user_id": session.user_id,
                 "current_space_id": current_space_id,
+                "role": role,
             },
         }
 

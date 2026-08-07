@@ -14,7 +14,8 @@ export function loadStoredSession(): Session | null {
     if (
       typeof parsed.token !== 'string' ||
       typeof parsed.userId !== 'number' ||
-      typeof parsed.currentSpaceId !== 'number'
+      typeof parsed.currentSpaceId !== 'number' ||
+      (parsed.role !== 'admin' && parsed.role !== 'member')
     ) {
       return null;
     }
@@ -22,6 +23,7 @@ export function loadStoredSession(): Session | null {
       token: parsed.token,
       userId: parsed.userId,
       currentSpaceId: parsed.currentSpaceId,
+      role: parsed.role,
     };
   } catch {
     return null;
