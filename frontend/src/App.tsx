@@ -33,6 +33,8 @@ import { useLocalVaultMount } from './app/useLocalVaultMount';
 import { CommandPalette } from './features/CommandPalette';
 import { AiAssistant } from './features/AiAssistant';
 import { OnboardingGuide } from './features/OnboardingGuide';
+import { PasswordInput } from './features/auth/PasswordInput';
+import { PasswordResetModal } from './features/auth/PasswordResetModal';
 import { ONBOARDING_STEPS, isOnboardingDone, loadOnboardingState, persistOnboardingState } from './app/onboarding-store';
 import type { OnboardingState, OnboardingStepId } from './app/onboarding-store';
 
@@ -53,6 +55,7 @@ function App() {
   const [onboarding, setOnboarding] = useState<OnboardingState>(() => loadOnboardingState());
   // 本次会话引导是否已关闭（未全部完成时下次登录重新弹，Sprint-25 Flow-H-001）。
   const [guideDismissed, setGuideDismissed] = useState(false);
+  const [resetModalOpen, setResetModalOpen] = useState(false);
 
   const session = useSession({ runAction, setNotice: workspace.setNotice, onSpaceChanged: handleSpaceChanged });
   const token = session.session?.token;
@@ -332,8 +335,11 @@ function App() {
               </label>
               <label>
                 密码
-                <input type="password" value={session.password} onChange={(event) => session.setPassword(event.target.value)} />
+                <PasswordInput value={session.password} onChange={session.setPassword} />
               </label>
+              <button type="button" className="auth-link-button" onClick={() => setResetModalOpen(true)}>
+                忘记密码？
+              </button>
               <button type="submit" disabled={workspace.isBusy || session.loginId.trim().length === 0}>登录</button>
             </form>
           ) : (
@@ -350,7 +356,7 @@ function App() {
               </label>
               <label>
                 密码（至少 8 位）
-                <input type="password" value={session.registerPassword} onChange={(event) => session.setRegisterPassword(event.target.value)} />
+                <PasswordInput value={session.registerPassword} onChange={session.setRegisterPassword} />
               </label>
               <button
                 type="submit"
@@ -365,6 +371,7 @@ function App() {
               </button>
             </form>
           )}
+          <PasswordResetModal open={resetModalOpen} onClose={() => setResetModalOpen(false)} />
         </section>
       ) : (
         <div

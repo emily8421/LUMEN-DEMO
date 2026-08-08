@@ -3,7 +3,13 @@
 from __future__ import annotations
 
 from backend.repository import repository
-from backend.service.admin import AdminError, list_users as admin_list_users, set_user_status, update_user_role
+from backend.service.admin import (
+    AdminError,
+    list_user_spaces_for_admin as admin_list_user_spaces,
+    list_users as admin_list_users,
+    set_user_status,
+    update_user_role,
+)
 from backend.service.auth_context import TokenContext, get_current_user
 
 try:
@@ -68,5 +74,17 @@ if APIRouter is not None:
         except AdminError as exc:
             raise _http_error(exc) from exc
         return {"code": 0, "msg": "ok", "data": _user_payload(row)}
+
+    @router.get("/{user_id}/spaces")
+    def list_user_spaces_endpoint(
+        user_id: int,
+        ctx: TokenContext = Depends(get_current_user),
+    ) -> dict[str, object]:
+        """查询用户已加入空间 + 可授予空间（API-054，REQ-050，维护态批5）。仅全局 admin。"""
+        try:
+            data = admin_list_user_spaces(repository, ctx.user, user_id)
+        except AdminError as exc:
+            raise _http_error(exc) from exc
+        return {"code": 0, "msg": "ok", "data": data}
 else:
     router = None

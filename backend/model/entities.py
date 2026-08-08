@@ -42,6 +42,10 @@ class User:
     last_login_at: str = ""
     # Sprint-28（REQ-045，migration 016）：全局角色 admin / member，默认 member
     role: str = "member"
+    # Sprint-30（REQ-051，migration 018）：忘记密码 reset token；DB 只存 sha256_hex，一次性 TTL 30min
+    reset_token_hash: str | None = None
+    reset_expires_at: str = ""
+    reset_used_at: str = ""
 
 
 @dataclass(frozen=True)

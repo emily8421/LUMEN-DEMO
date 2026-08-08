@@ -42,6 +42,9 @@
 | API-051 | GET/POST | /api/term-categories | 领域树查询（`parent_id?` 懒加载，空=根层）/ 新建领域 | [P1] | 维护态增强·已实现 | 已实现（REQ-048，migration 017；领域树不独立设权限；同 parent 重名 4090） | REQ-048 |
 | API-052 | PATCH/DELETE | /api/term-categories/{id} | 领域改名 / 移动（`parent_id`，null=移到根，防环 4220）/ 删除（删非空 4090） | [P1] | 维护态增强·已实现 | 已实现（REQ-048，migration 017） | REQ-048 |
 | API-053 | POST | /api/term-categories/reorder | 领域排序（body `parent_id`+`ordered_ids`，须等于该层全部子领域） | [P1] | 维护态增强·已实现 | 已实现（REQ-048，migration 017） | REQ-048 |
+| API-054 | GET | /api/admin/users/{user_id}/spaces | 查询用户已加入空间 + 可授予空间（admin 域只读，一次返回 joined + available） | [P2] | 维护态批5·待实现 | 仅全局 admin（4030）；用户不存在 4004 | REQ-050 |
+| API-055 | POST | /api/auth/password-reset/request | 请求重置密码（恒响应防枚举；demo 无 SMTP，token 写后端日志人工下发） | [P2] | 维护态批5·待实现 | 公开端点；恒返回"若已注册则已发送" | REQ-051 |
+| API-056 | POST | /api/auth/password-reset/confirm | 重置密码（token + 新密码 → 更新 password_hash + 吊销该用户全部活跃 session） | [P2] | 维护态批5·待实现 | token 无效 / 过期 / 已用 4010；密码不合规 4220 | REQ-051 |
 | API-002 | GET | /api/spaces | 列出我的空间 | [P1] | P1-已实现 | 已实现（PG 空间 / 成员） | REQ-001/002 |
 | API-003 | POST | /api/spaces/switch | 切换当前空间 | [P1] | P1-已实现 | 已实现（PG 成员校验） | REQ-002 |
 | API-004 | GET | /api/documents | 文档列表 | [P1] | P1-已实现 | 已实现（PG 文档 + 权限过滤） | REQ-004 |
@@ -335,6 +338,9 @@ sequenceDiagram
 | API-051 `GET/POST /api/term-categories` | GET `parent_id?`（空=根层）；POST `name`、`parent_id?` | `{code,msg,data:{items:[{id,name,parent_id,order_idx,term_count,child_category_count,created_at,updated_at}]}}` / `{id,name,parent_id,order_idx}` | 空间成员（4003）；POST 同 parent 重名 4090；parent 跨空间 4220；name 空 4220 | `lumen_term_categories`、`lumen_terms` | **维护态增强·已实现**（REQ-048，migration 017，2026-08-07）；领域树不独立设权限；term_count 该领域下术语数 |
 | API-052 `PATCH/DELETE /api/term-categories/{id}` | PATCH `name?`（改名）、`parent_id?`（移动，null=移到根）；DELETE 无 body | `{code,msg,data:{id,name,parent_id,order_idx}}` / `{deleted:true}` | 空间成员（4003）；改名重名 4090；防环 / 跨空间 4220；删非空（有子领域或术语）4090；不存在 4004 | `lumen_term_categories` | **维护态增强·已实现**（REQ-048，migration 017）；PATCH 用 `model_fields_set` 区分未传与显式 null |
 | API-053 `POST /api/term-categories/reorder` | `parent_id?`、`ordered_ids[]`（须等于该层全部子领域） | `{code,msg,data:{ok:true}}` | 空间成员（4003）；ordered_ids 不匹配 4220 | `lumen_term_categories` | **维护态增强·已实现**（REQ-048，migration 017） |
+| API-054 `GET /api/admin/users/{user_id}/spaces` | — | `{code,msg,data:{joined:[{space_id,space_code,space_name,role,joined_at}],available:[{space_id,space_code,space_name}]}}` | 全局 admin（member 4030）；用户不存在 4004 | `lumen_space_members`、`lumen_spaces` | **维护态批5·待实现**（REQ-050，Sprint-30）；复用 `list_spaces` + `list_memberships` + `find_user_by_id`，service/repo 零改动；一次返回 joined（已加入 + 角色）+ available（可授予），避免改 `GET /api/spaces`（那会破坏 admin 空间切换下拉）；前端用户详情抽屉读此接口 |
+| API-055 `POST /api/auth/password-reset/request` | `email` | `{code,msg,data:{message:"若该邮箱已注册，重置链接已发送"}}`（**恒响应防枚举**；demo 无 SMTP，reset token 写后端 WARNING 日志供运维人工下发） | 公开端点；不泄露账号是否存在（dummy bcrypt 延迟） | `lumen_users.reset_token_hash` / `reset_expires_at` / `reset_used_at` | **维护态批5·待实现**（REQ-051，migration 018，Sprint-30） |
+| API-056 `POST /api/auth/password-reset/confirm` | `token`、`new_password`（8-64） | `{code,msg,data:{message:"密码已重置，请用新密码登录"}}` | token 无效 / 过期 / 已用 → 4010；密码 <8 或 >64 → 4220；成功后吊销该用户全部活跃 session | `lumen_users`、`lumen_sessions` | **维护态批5·待实现**（REQ-051，Sprint-30）；一次性 token（`reset_used_at` 防重放） |
 
 **Phase1.5 / Phase2 错误码补充**：
 

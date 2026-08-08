@@ -37,6 +37,10 @@ class UserORM(Base):
     last_login_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
     failed_login_count: Mapped[int] = mapped_column(Integer, default=0)
     locked_until: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
+    # migration 018（Sprint-30 / REQ-051）：忘记密码 reset token，只存 sha256_hex，一次性 TTL 30min
+    reset_token_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    reset_expires_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
+    reset_used_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
 
 

@@ -6,6 +6,17 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.7.0（2026-08-09）
+
+**维护态批5：REQ-050 成员空间可见性 + REQ-051 忘记密码 / 登录密码显隐。**
+
+- **REQ-050 成员空间可见性（admin 用户详情抽屉）**：admin 在用户管理页点用户行打开「可访问空间」抽屉，跨空间授予 / 撤销成员资格 + 就地改空间角色（即时操作，复用 space 域成员 API + 最后一个 space admin 4090 保护）。后端新增 admin 只读查询接口 **API-054**（`GET /api/admin/users/{id}/spaces`，一次返回 `{joined, available}`，不改 `GET /api/spaces` 以免影响 admin 自身空间切换）；service `list_user_spaces_for_admin` 内存过滤，repo 零改动。
+- **REQ-051 登录密码显隐（小眼睛）**：登录 / 注册密码框统一换 `PasswordInput`（受控 + 「显示 / 隐藏」toggle，复用于重置弹窗），降低 `App.tsx` 负载。
+- **REQ-051 忘记密码自助重置（reset token 全链路）**：登录页加「忘记密码？」入口 → 两步弹窗（email 申请 → token + 新密码确认）。后端 **migration 018**（`lumen_users` reset 3 列 + 稀疏索引）+ service `auth_reset.py`（从 `auth.py` 拆出——auth.py 已超 service 250 阈值）+ **API-055** `/password-reset/request`（恒响应防枚举 + dummy bcrypt 恒时序；demo 无 SMTP 降级，token 写 `lumen.auth.reset` WARNING 日志）+ **API-056** `/password-reset/confirm`（token 一次性 TTL 30min + 重置成功吊销该用户全部活跃 session）。
+- **安全**：reset token DB 只存 `sha256_hex`，明文仅进日志；`/request` 恒响应不泄露账号是否存在；重置吊销全部 session（跨设备安全）；`update_password` 顺带解锁。
+
+> MINOR 依据（`ai/project-rules.md` §2.8.1）：REQ-050 / REQ-051 均为新增可演示能力 + 3 新 API（054/055/056）+ migration 018。验证：后端 **276 tests OK**（+12：REQ-051 reset 9 + REQ-050 空间查询 3，零回归）；前端 build **301 modules 绿**；`docs/design/accounts-auth.md` §19 增量设计落盘。真 PG migration 018 应用 + 浏览器 smoke `scripts/smoke-batch5-auth-admin-browser.mjs` 待环境（Docker / demo）就绪后补。
+
 ## v3.6.0（2026-08-08）
 
 **维护态批4：REQ-049 增强（多挂载目录 + 导入入口补充）+ UI 优化批次。**

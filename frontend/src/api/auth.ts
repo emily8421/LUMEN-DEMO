@@ -56,3 +56,19 @@ export async function listSessions(token: string): Promise<SessionInfo[]> {
 export async function revokeSession(token: string, sessionId: number): Promise<void> {
   await request<null>(`/api/auth/sessions/${sessionId}`, { method: 'DELETE', token });
 }
+
+/** 忘记密码申请（REQ-051，API-055）：恒响应防枚举；demo 模式 token 写后端日志（无 SMTP 降级）。 */
+export async function requestPasswordReset(email: string): Promise<{ message: string }> {
+  return request<{ message: string }>('/api/auth/password-reset/request', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+}
+
+/** 忘记密码确认（REQ-051，API-056）：token + 新密码；失败（token 无效/过期/已用、密码不合规）抛 Error。 */
+export async function confirmPasswordReset(token: string, newPassword: string): Promise<void> {
+  await request<null>('/api/auth/password-reset/confirm', {
+    method: 'POST',
+    body: JSON.stringify({ token, new_password: newPassword }),
+  });
+}

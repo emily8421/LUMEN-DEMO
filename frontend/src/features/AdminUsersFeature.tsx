@@ -1,4 +1,5 @@
-﻿import type { AdminUserView, UserRole, UserStatus } from '../api';
+import type { AdminUserSpacesResult, AdminUserView, SpaceMemberRole, UserRole, UserStatus } from '../api';
+import { UserSpacesDrawer } from './admin/UserSpacesDrawer';
 
 type AdminUsersFeatureProps = {
   isBusy: boolean;
@@ -11,9 +12,17 @@ type AdminUsersFeatureProps = {
   onFilterStatusChange: (value: string) => void;
   onRoleChange: (userId: number, role: UserRole) => void;
   onStatusToggle: (user: AdminUserView) => void;
+  drawerUserId: number | null;
+  drawerData: AdminUserSpacesResult | null;
+  drawerBusy: boolean;
+  drawerNotice: string;
+  onOpenDrawer: (user: AdminUserView) => void;
+  onCloseDrawer: () => void;
+  onChangeSpaceRole: (spaceId: number, role: SpaceMemberRole) => void;
+  onRemoveSpace: (spaceId: number) => void;
+  onAddSpace: (spaceId: number, role: SpaceMemberRole) => void;
 };
 
-const ROLE_LABELS: Record<UserRole, string> = { admin: '管理员', member: '成员' };
 const STATUS_LABELS: Record<UserStatus, string> = { active: '正常', disabled: '已禁用' };
 
 function formatDateTime(value: string): string {
@@ -30,6 +39,8 @@ function formatDateTime(value: string): string {
 /**
  * 用户管理页（REQ-046，Sprint-28）：admin 域列表 / 过滤 / 行内改角色 / 禁用开关（二次确认）。
  * 管理入口按全局角色显隐（TopBar 用户菜单）；后端强制鉴权兜底。
+ *
+ * REQ-050（维护态批5）：操作列加「空间」按钮 → 打开用户可访问空间抽屉（UserSpacesDrawer）。
  */
 export function AdminUsersFeature({
   isBusy,
@@ -42,7 +53,19 @@ export function AdminUsersFeature({
   onFilterStatusChange,
   onRoleChange,
   onStatusToggle,
+  drawerUserId,
+  drawerData,
+  drawerBusy,
+  drawerNotice,
+  onOpenDrawer,
+  onCloseDrawer,
+  onChangeSpaceRole,
+  onRemoveSpace,
+  onAddSpace,
 }: AdminUsersFeatureProps) {
+  const drawerOpen = drawerUserId !== null;
+  const drawerTarget = users.find((user) => user.id === drawerUserId);
+
   return (
     <section className="admin-users-panel focus-panel task-workspace">
       <div className="workspace-toolbar">
@@ -116,7 +139,15 @@ export function AdminUsersFeature({
                     </span>
                   </td>
                   <td>{formatDateTime(user.last_login_at)}</td>
-                  <td>
+                  <td className="admin-user-actions">
+                    <button
+                      type="button"
+                      className="secondary"
+                      disabled={isBusy}
+                      onClick={() => onOpenDrawer(user)}
+                    >
+                      空间
+                    </button>
                     <button
                       type="button"
                       className={`secondary ${user.status === 'active' ? 'danger' : ''}`}
@@ -132,6 +163,19 @@ export function AdminUsersFeature({
           </table>
         </div>
       )}
+
+      <UserSpacesDrawer
+        open={drawerOpen}
+        targetName={drawerTarget?.name ?? ''}
+        joined={drawerData?.joined ?? []}
+        available={drawerData?.available ?? []}
+        busy={drawerBusy}
+        notice={drawerNotice}
+        onChangeRole={onChangeSpaceRole}
+        onRemove={onRemoveSpace}
+        onAdd={onAddSpace}
+        onClose={onCloseDrawer}
+      />
     </section>
   );
 }

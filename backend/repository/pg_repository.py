@@ -80,6 +80,9 @@ def _to_user(r: UserORM) -> User:
         locked_until=_dt_iso(r.locked_until),
         last_login_at=_dt_iso(r.last_login_at),
         role=r.role,
+        reset_token_hash=r.reset_token_hash,
+        reset_expires_at=_dt_iso(r.reset_expires_at),
+        reset_used_at=_dt_iso(r.reset_used_at),
     )
 
 
@@ -394,6 +397,59 @@ class PgRepository:
             row.locked_until = None
             row.last_login_at = func.now()
             session.commit()
+
+    # --- Sprint-30（REQ-051，migration 018）：忘记密码 reset token ---
+
+    def set_reset_token(self, user_id: int, token_hash: str, expires_at: str) -> None:
+        """签发 reset token：写入 sha256 摘要 + 过期时刻，清空 used_at（覆盖任何进行中的 token）。"""
+        with SessionLocal() as session:
+            row = session.get(UserORM, user_id)
+            if row is None:
+                return
+            row.reset_token_hash = token_hash
+            row.reset_expires_at = datetime.fromisoformat(expires_at)
+            row.reset_used_at = None
+            session.commit()
+
+    def find_user_by_reset_token_hash(self, token_hash: str) -> User | None:
+        with SessionLocal() as session:
+            row = session.scalars(
+                select(UserORM).where(UserORM.reset_token_hash == token_hash)
+            ).first()
+            return _to_user(row) if row else None
+
+    def update_password(self, user_id: int, password_hash: str) -> None:
+        """更新密码哈希；顺带重置失败计数 / 解锁（重置成功后不应仍处于锁定态）。"""
+        with SessionLocal() as session:
+            row = session.get(UserORM, user_id)
+            if row is None:
+                return
+            row.password_hash = password_hash
+            row.failed_login_count = 0
+            row.locked_until = None
+            session.commit()
+
+    def clear_reset_token(self, user_id: int, used_at: str) -> None:
+        """置位 reset_used_at（token 一次性）；保留 hash / expires_at 留审计。"""
+        with SessionLocal() as session:
+            row = session.get(UserORM, user_id)
+            if row is None:
+                return
+            row.reset_used_at = datetime.fromisoformat(used_at)
+            session.commit()
+
+    def revoke_all_sessions(self, user_id: int) -> int:
+        """重置密码后吊销该用户全部活跃 session；返回撤销条数。"""
+        with SessionLocal() as session:
+            rows = session.scalars(
+                select(SessionORM).where(
+                    SessionORM.user_id == user_id, SessionORM.revoked_at.is_(None)
+                )
+            ).all()
+            for row in rows:
+                row.revoked_at = func.now()
+            session.commit()
+            return len(rows)
 
     def create_session(
         self,
