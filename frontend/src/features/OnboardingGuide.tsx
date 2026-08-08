@@ -31,6 +31,15 @@ export function OnboardingGuide({ isBusy, steps, onStep, onSkip, onDismiss }: On
         <header className="onboarding-header">
           <h2>欢迎来到 LUMEN · 3 步上手</h2>
           <p>先完成第一篇「可被搜索」的文档，约 3 分钟。</p>
+          <button
+            type="button"
+            className="onboarding-close"
+            aria-label="关闭引导（未完成时下次登录重新弹出）"
+            title="关闭引导"
+            onClick={onDismiss}
+          >
+            ×
+          </button>
         </header>
         <ol className="onboarding-steps">
           {ONBOARDING_STEPS.map((step) => {

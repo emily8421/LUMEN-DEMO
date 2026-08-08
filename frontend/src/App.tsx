@@ -127,7 +127,7 @@ function App() {
     token,
     onOpenDocument: documents.handleOpenDocument,
     onNavigate: workspace.setActiveView,
-    onCreateDocument: documents.handleCreateDocument,
+    onCreateDocument: handleCreateDocument,
     onOpenImport: () => setImportModalOpen(true),
     // 批3：命令面板「问 AI」由跳问答视图改为打开 AI 抽屉并带入问题（保留问答页作完整视图）。
     onAskAi: (queryText) => {
@@ -214,6 +214,13 @@ function App() {
     }
   }, [documents.selectedId]);
 
+  // ②：新建文档时关闭本地预览——新建态 selectedId 保持 null，App 互斥 effect 不触发，
+  // 需在此显式清空，否则主区一直显示本地预览、看不到新建文档编辑视图。
+  function handleCreateDocument() {
+    setLocalPreviewDoc(null);
+    documents.handleCreateDocument();
+  }
+
   async function handleExportSpace() {
     if (!session.session) {
       return;
@@ -239,7 +246,7 @@ function App() {
       return;
     }
     if (stepId === 'create') {
-      documents.handleCreateDocument();
+      handleCreateDocument();
     } else {
       workspace.setActiveView(step.view);
     }
@@ -374,7 +381,7 @@ function App() {
             selectedId={documents.selectedId}
             isCreating={documents.isCreating}
             isBusy={workspace.isBusy}
-            onCreateDocument={documents.handleCreateDocument}
+            onCreateDocument={handleCreateDocument}
             onSelectDocument={documents.handleSelectDocument}
             onMoveDocument={documents.handleMoveDocument}
             onDeleteDocument={documents.handleDeleteDocument}
@@ -423,7 +430,7 @@ function App() {
             currentSpaceName={currentSpace?.name ?? ''}
             onQuickEntryOpen={quickEntry.open}
             onNavigate={workspace.setActiveView}
-            onCreateDocument={documents.handleCreateDocument}
+            onCreateDocument={handleCreateDocument}
             onOpenImport={() => setImportModalOpen(true)}
             onExpandLeftPane={() => paneLayout.setLeftPaneOpen(true)}
             onExitToEmpty={() => { documents.setSelectedId(null); documents.setIsCreating(false); }}

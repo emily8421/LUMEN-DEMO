@@ -43,12 +43,13 @@ export function useSession({ runAction, setNotice, onSpaceChanged }: UseSessionA
       const nextSession = {
         token: result.token,
         userId: result.user_id,
+        name: result.name,
         currentSpaceId: result.current_space_id,
         role: result.role,
       };
       setSession(nextSession);
       persistSession(nextSession);
-      setNotice(`已登录：${nextSession.userId}（${result.role}）`);
+      setNotice(`已登录：${result.name || `#${result.user_id}`}（${result.role}）`);
     });
   };
 
@@ -61,6 +62,7 @@ export function useSession({ runAction, setNotice, onSpaceChanged }: UseSessionA
       const nextSession = {
         token: result.token,
         userId: result.user_id,
+        name: result.name || created.name,
         currentSpaceId: result.current_space_id,
         role: result.role,
       };

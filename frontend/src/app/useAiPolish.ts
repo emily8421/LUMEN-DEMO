@@ -28,8 +28,8 @@ type PolishPhase = 'idle' | 'loading' | 'generated' | 'error';
 const UNAVAILABLE_HINT = 'AI 暂不可用，可重试';
 
 function isExternalPermission(permission: string): boolean {
-  // 后端用 'external'，前端类型为 'external_readonly'；两种都按只读处理。
-  return permission === 'external' || permission === 'external_readonly';
+  // 后端唯一枚举值 'external'（⑦ 移除前端遗留 'external_readonly'）。
+  return permission === 'external';
 }
 
 function friendlyPolishError(message: string): string {

@@ -22,6 +22,8 @@ export function loadStoredSession(): Session | null {
     return {
       token: parsed.token,
       userId: parsed.userId,
+      // 旧 localStorage 无 name 时保持 undefined，TopBar 回退显示 #userId（⑨ 兼容）。
+      name: parsed.name,
       currentSpaceId: parsed.currentSpaceId,
       role: parsed.role,
     };

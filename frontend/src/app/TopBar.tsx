@@ -64,7 +64,8 @@ export function TopBar({
   const [helpOpen, setHelpOpen] = useState(false);
   const [helpQuery, setHelpQuery] = useState('');
   const helpWrapRef = useRef<HTMLDivElement>(null);
-  const userLabel = session ? `#${session.userId}` : '';
+  // ⑨：优先显示用户名（登录响应附带）；旧 session / 无 name 时回退 #userId。
+  const userLabel = session ? (session.name || `#${session.userId}`) : '';
 
   // 帮助弹层关闭：点击外部 / Esc / 头部「×」（Sprint-25 bugfix）。
   useEffect(() => {

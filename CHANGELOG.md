@@ -6,6 +6,17 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.3.3（2026-08-08）
+
+**维护态使用反馈缺陷修复（批1）：4 个交互 bug。** 使用 LUMEN 时逐条反馈定位：
+
+- **① 首页新手清单做完关不掉**：`OnboardingGuide` 弹层 footer 无「× 关闭」，首页 `WelcomeFeature` 新手清单无关闭 / 收折入口。修复：弹层 header 加「×」关闭（未完成时下次登录重新弹出）；首页清单加「× 关闭」（会话内记忆）与完成态自动收起 + 「展开」。
+- **② 预览本地文档后再新建，看不到新建视图**：`WorkspaceMain` 以 `localPreviewDoc` 决定渲染，`App.tsx` 仅 `selectedId !== null` 时清预览，而新建态 selectedId 保持 null → 本地预览一直显示。修复：`App.handleCreateDocument` 包装先清预览，全入口透传。
+- **⑦ 文档权限选项「外部只读」出现两次**：`constants.ts` `permissionLabels` 含 4 键，`external` 与 `external_readonly` 均映射「外部只读」→ 下拉重复。后端枚举仅三值（private/team/external）。修复：移除前端遗留 `external_readonly`（类型 + labels + AI 润色只读判断）。
+- **⑨ 右上角用户图标显示 `#1` 而非用户名**：登录响应不含 `name`，`Session` 无 name 字段。修复：后端 login/refresh 响应补 `name`（additive），前端 `Session.name` + `TopBar` 显示用户名，旧 localStorage 无 name 时回退 `#userId`。
+
+> PATCH 依据（`ai/project-rules.md` §2.8.1）：纯 bug 修复，不改对外 API 契约（登录响应补 name 为 additive 字段）、不新增可演示能力。验证：前端 build 296 modules 绿；后端 311 tests OK；验收记录见 `docs/09-verification.md` §5.1。
+
 ## v3.3.2（2026-08-08）
 
 **团队 E2E 验证缺陷修复：AI 助手切换用户后对话未清空。** E2E-14（AI 助手浏览器交互）用户验证发现：同一用户切换空间时对话清空（符合预期），但登出后换账号登录，前用户 AI 助手对话及来源仍残留。

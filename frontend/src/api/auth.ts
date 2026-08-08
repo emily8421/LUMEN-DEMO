@@ -3,6 +3,8 @@ import { request } from './client';
 export type LoginResponse = {
   token: string;
   user_id: number;
+  /** 用户名（注册时填写；登录响应附带，支撑顶栏显示，additive）。 */
+  name: string;
   current_space_id: number;
   /** Sprint-28（REQ-045）：全局角色，支撑前端管理入口显隐。 */
   role: 'admin' | 'member';

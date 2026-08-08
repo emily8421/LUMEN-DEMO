@@ -86,12 +86,14 @@ if APIRouter is not None:
         # Sprint-28（REQ-045）：登录响应附带全局角色，支撑前端管理入口显隐（additive，非破坏性）
         current_user = repository.find_user_by_id(session.user_id)
         role = current_user.role if current_user is not None else "member"
+        name = current_user.name if current_user is not None else ""
         return {
             "code": 0,
             "msg": "ok",
             "data": {
                 "token": token,
                 "user_id": session.user_id,
+                "name": name,
                 "current_space_id": current_space_id,
                 "role": role,
             },
@@ -113,12 +115,15 @@ if APIRouter is not None:
             new_token, new_session = refresh_session(repository, token)
         except AuthenticationError as exc:
             raise _http_error(exc) from exc
+        current_user = repository.find_user_by_id(new_session.user_id)
+        name = current_user.name if current_user is not None else ""
         return {
             "code": 0,
             "msg": "ok",
             "data": {
                 "token": new_token,
                 "user_id": new_session.user_id,
+                "name": name,
                 "current_space_id": new_session.current_space_id,
             },
         }
