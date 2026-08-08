@@ -1,6 +1,7 @@
 import { DocumentsFeature } from '../features/DocumentsFeature';
 import { LocalDocPreview } from '../features/LocalDocPreview';
 import type { LocalVaultDoc } from './local-vault-index';
+import type { UseLocalVaultMount } from './useLocalVaultMount';
 import { SearchFeature } from '../features/SearchFeature';
 import { QueryFeature } from '../features/QueryFeature';
 import { TermsFeature } from '../features/TermsFeature';
@@ -55,6 +56,8 @@ interface WorkspaceMainProps {
   onExitToEmpty: () => void;
   localPreviewDoc: LocalVaultDoc | null;
   onCloseLocalDoc: () => void;
+  /** REQ-049：本地挂载 vm（主区 LocalDocPreview 编辑入口）。 */
+  localVault: UseLocalVaultMount;
   /** 新手清单进度（Sprint-25 L1）。 */
   onboardingSteps: OnboardingState['steps'];
   /** 新手清单条目：标记完成 + 直达对应视图（Sprint-25 L1）。 */
@@ -85,6 +88,7 @@ export function WorkspaceMain({
   onExitToEmpty,
   localPreviewDoc,
   onCloseLocalDoc,
+  localVault,
   onboardingSteps,
   onOnboardingStep,
 }: WorkspaceMainProps) {
@@ -103,7 +107,16 @@ export function WorkspaceMain({
 
       {activeView === 'documents' ? (
         localPreviewDoc ? (
-          <LocalDocPreview doc={localPreviewDoc} onClose={onCloseLocalDoc} />
+          <LocalDocPreview
+            doc={localPreviewDoc}
+            onClose={onCloseLocalDoc}
+            editingPath={localVault.editingPath}
+            editingText={localVault.editingText}
+            onBeginEdit={localVault.beginEdit}
+            onEditingTextChange={localVault.setEditingText}
+            onSaveEdit={() => void localVault.saveEdit()}
+            onCancelEdit={localVault.cancelEdit}
+          />
         ) : (
         <DocumentsFeature
           isCreating={documents.isCreating}

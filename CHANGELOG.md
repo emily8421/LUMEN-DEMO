@@ -6,6 +6,16 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.5.0（2026-08-08）
+
+**维护态使用反馈：REQ-049 本地挂载可编辑 + ⑪ 部署落地。** 三项立项中的两项已实现：
+
+- **REQ-049 本地挂载文件可编辑（增删改查）**：放开 Phase2C「只读」边界为本地可读写。`local-vault-fs.ts` 补 `writeVaultFile` / `createVaultFile` / `deleteVaultFile` / `renameVaultFile`（Chromium `move()`）+ 目录句柄收集；`useLocalVaultMount` 补 `beginEdit/saveEdit/cancelEdit` + `createFile/deleteFile/renameFile`（写前 `readwrite` 授权、写后重建索引）；主区 `LocalDocPreview` 加「编辑」→ textarea 保存/取消；左栏 `LocalMountPane` 目录右键/「＋」新建文件、文件右键重命名 + 删除（确认弹窗）。**边界不变**：内容只写本地文件系统，不上传服务端、不进团队 RAG。
+- **⑪ 部署落地（方案 A 全容器化）**：`backend/Dockerfile`（Python 3.14-slim + CPU torch + uvicorn 0.0.0.0）+ `frontend/Dockerfile`（Node 22 build → Nginx 托管 + `/api` 反代）+ `frontend/nginx.conf`（SPA fallback + envsubst）+ `docker/docker-compose.prod.yml`（postgres + backend + frontend，`env_file ../.env` 透传 LLM，DATABASE_URL 覆盖容器内）+ `docs/env/deploy-guide.md`（部署手册：步骤 / 验证 / 运维 / HTTPS / 安全）+ `.env.example` 补多配置格式示例。
+- 剩余立项（REQ-050 成员空间可见性 / REQ-051 忘记密码+登录交互）待人工确认。
+
+> MINOR 依据（`ai/project-rules.md` §2.8.1）：REQ-049 新增可演示能力（本地文件增删改查）；⑪ 为部署工程能力。验证：前端 build 296 modules 绿；`docker compose -f docker/docker-compose.prod.yml config --quiet` 通过；真实 FSA 写文件待用户浏览器授权验收（`showDirectoryPicker` 无法 headless 自动化）。
+
 ## v3.4.0（2026-08-08）
 
 **维护态使用反馈增强（批2）：3 项前端能力。** 使用 LUMEN 时的长文档阅读 / 编写体验增强：

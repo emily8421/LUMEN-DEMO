@@ -29,6 +29,7 @@ import { ImportFeature } from './features/ImportFeature';
 import { WorkspaceMain } from './app/WorkspaceMain';
 import { useCommandPalette } from './app/useCommandPalette';
 import { useAiAssistant } from './app/useAiAssistant';
+import { useLocalVaultMount } from './app/useLocalVaultMount';
 import { CommandPalette } from './features/CommandPalette';
 import { AiAssistant } from './features/AiAssistant';
 import { OnboardingGuide } from './features/OnboardingGuide';
@@ -122,6 +123,9 @@ function App() {
   });
 
   const aiAssistant = useAiAssistant({ token });
+
+  // REQ-049：本地挂载 vm 提升到 App——LocalMountPane（左栏）与 LocalDocPreview（主区编辑）共享同一实例。
+  const localVault = useLocalVaultMount();
 
   const palette = useCommandPalette({
     token,
@@ -395,6 +399,7 @@ function App() {
             onImported={() => handleImported(null)}
             onOpenLocalDoc={handleOpenLocalDoc}
             onToggleLeftPane={paneLayout.toggleLeftPane}
+            localVault={localVault}
           />
 
           {leftPaneOpen ? (
@@ -439,6 +444,7 @@ function App() {
             onCloseLocalDoc={() => setLocalPreviewDoc(null)}
             onboardingSteps={onboarding.steps}
             onOnboardingStep={handleOnboardingStep}
+            localVault={localVault}
           />
 
           <QuickEntryFeature

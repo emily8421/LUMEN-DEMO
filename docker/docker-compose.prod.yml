@@ -1,0 +1,68 @@
+# LUMEN 生产部署编排（⑪ 方案 A：全容器化，backend + frontend + postgres）。
+# 用法：docker compose -f docker/docker-compose.prod.yml up -d --build
+# 前端默认 http://<服务器>:80，API 经 Nginx 同源反代，无跨域。
+# 说明：
+#   - LUMEN_ENV=production → 后端强制 PG 仓储 + demo 仓储 fail-fast（凭证登录）。
+#   - 首次启动后端跑 migration 014..017 + seed（init_db 幂等）。
+#   - .env 的 LLM 中转 / 密钥经 environment 注入后端（不 commit 密钥）。
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: lumen-pg-prod
+    environment:
+      POSTGRES_USER: lumen
+      POSTGRES_PASSWORD: ${LUMEN_PG_PASSWORD:-lumen}
+      POSTGRES_DB: lumen
+    volumes:
+      - lumen_pgdata_prod:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lumen -d lumen"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    # 生产不暴露 PG 端口到宿主机（仅容器内访问）
+    expose:
+      - "5432"
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+    container_name: lumen-backend-prod
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      # 透传仓库根 .env 全部 LLM 多配置变量（LLM_PROVIDERS + LLM_<NAME>_*）；.env 不入 git
+      # 相对路径以 compose 文件所在目录（docker/）为基准，故用 ../.env
+      - ../.env
+    environment:
+      LUMEN_ENV: production
+      # PG 连接（容器内 postgres:5432）覆盖 .env 里的 localhost:15432
+      DATABASE_URL: postgresql://lumen:${LUMEN_PG_PASSWORD:-lumen}@postgres:5432/lumen
+      # Embedding 模型缓存目录（可挂卷避免每次重建下载）
+      HF_HOME: /app/.hf-cache
+    volumes:
+      - lumen_hf_cache:/app/.hf-cache
+    expose:
+      - "8000"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: frontend/Dockerfile
+    container_name: lumen-frontend-prod
+    depends_on:
+      - backend
+    environment:
+      LUMEN_BACKEND_URL: http://backend:8000
+    ports:
+      - "80:80"
+    restart: unless-stopped
+
+volumes:
+  lumen_pgdata_prod:
+  lumen_hf_cache:

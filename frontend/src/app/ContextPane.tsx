@@ -6,6 +6,7 @@ import type { FolderManager } from './useFolders';
 import { TermCategoryTree } from './TermCategoryTree';
 import type { TermCategoryManager } from './useTermCategories';
 import { LocalMountPane } from '../features/LocalMountPane';
+import type { UseLocalVaultMount } from './useLocalVaultMount';
 import { useLocalMountHeight } from './useLocalMountHeight';
 import { usePaneSectionHeight } from './usePaneSectionHeight';
 import { TERM_CATEGORIES_HEIGHT_STORAGE_KEY, DEFAULT_TERM_CATEGORIES_HEIGHT } from './pane-section-height-store';
@@ -37,6 +38,8 @@ type ContextPaneProps = {
   onOpenLocalDoc: (doc: LocalVaultDoc | null) => void;
   /** 收起左目录（批1，点1：左栏右边缘就近折叠）。 */
   onToggleLeftPane: () => void;
+  /** REQ-049：本地挂载 vm（App 提升共享，LocalMountPane 与主区 LocalDocPreview 同一实例）。 */
+  localVault: UseLocalVaultMount;
 };
 
 export function ContextPane({
@@ -60,6 +63,7 @@ export function ContextPane({
   onImported,
   onOpenLocalDoc,
   onToggleLeftPane,
+  localVault,
 }: ContextPaneProps) {
   const selectedDocument = documents.find((document) => document.id === selectedId) ?? null;
   const mountHeight = useLocalMountHeight();
@@ -211,7 +215,7 @@ export function ContextPane({
               onDoubleClick={mountHeight.resetHeight}
               onKeyDown={mountHeight.handleKeyDown}
             />
-              <LocalMountPane token={token} onImported={onImported} onOpenLocalDoc={onOpenLocalDoc} />
+              <LocalMountPane token={token} onImported={onImported} onOpenLocalDoc={onOpenLocalDoc} localVault={localVault} />
           </div>
         </>
       ) : null}

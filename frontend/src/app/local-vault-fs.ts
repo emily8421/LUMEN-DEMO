@@ -78,23 +78,85 @@ function directoryValues(dir: FileSystemDirectoryHandle): AsyncIterable<FileSyst
 /**
  * 递归遍历目录，收集可索引文本文件（过滤隐藏段 + 非白名单扩展）。
  * 返回 acc（便于累计）；onProgress 每 200 文件回调一次。
+ * dirs（可选）：按「目录相对路径 → 目录句柄」填充，供增删改查定位父目录（REQ-049）。
  */
 export async function walkVault(
   dirHandle: FileSystemDirectoryHandle,
   prefix: string,
   acc: WalkedFile[],
-  onProgress?: (count: number) => void
+  onProgress?: (count: number) => void,
+  dirs?: Map<string, FileSystemDirectoryHandle>,
 ): Promise<WalkedFile[]> {
   for await (const entry of directoryValues(dirHandle)) {
     const path = prefix ? `${prefix}/${entry.name}` : entry.name;
     if (entry.kind === 'directory') {
-      await walkVault(entry as FileSystemDirectoryHandle, path, acc, onProgress);
+      if (dirs) dirs.set(path, entry as FileSystemDirectoryHandle);
+      await walkVault(entry as FileSystemDirectoryHandle, path, acc, onProgress, dirs);
     } else if (entry.kind === 'file' && isVaultTextFile(entry.name) && !hasHiddenSegment(path)) {
       acc.push({ path, name: entry.name, handle: entry as FileSystemFileHandle });
       if (onProgress && acc.length % 200 === 0) onProgress(acc.length);
     }
   }
   return acc;
+}
+
+// ---- 本地写路径（REQ-049：仅本地文件系统写，不进服务端 / 不进 RAG，硬天花板不变）----
+
+/**
+ * 授权校验：以 readwrite 模式授权（写操作必须，浏览器会弹授权）。
+ * 必须在用户手势内调用（点击 / 右键等），否则 requestPermission 被拒。
+ */
+export async function ensureVaultWritePermission(handle: FileSystemFileHandle | FileSystemDirectoryHandle): Promise<boolean> {
+  return verifyPermission(handle, true);
+}
+
+/** 覆盖写一篇本地文件（编辑保存）。调用前需 ensureVaultWritePermission。 */
+export async function writeVaultFile(handle: FileSystemFileHandle, content: string): Promise<void> {
+  const writable = await handle.createWritable();
+  await writable.write(content);
+  await writable.close();
+}
+
+/** 在目录下新建一篇文本文件（name 含扩展名）。 */
+export async function createVaultFile(
+  dirHandle: FileSystemDirectoryHandle,
+  name: string,
+  content: string,
+): Promise<FileSystemFileHandle> {
+  const fileHandle = await dirHandle.getFileHandle(name, { create: true });
+  await writeVaultFile(fileHandle, content);
+  return fileHandle;
+}
+
+/** 删除目录下的一篇文件。 */
+export async function deleteVaultFile(dirHandle: FileSystemDirectoryHandle, name: string): Promise<void> {
+  await dirHandle.removeEntry(name);
+}
+
+/** 重命名目录下的一篇文件（newName 含扩展名）。 */
+export async function renameVaultFile(
+  dirHandle: FileSystemDirectoryHandle,
+  oldName: string,
+  newName: string,
+): Promise<FileSystemFileHandle> {
+  const fileHandle = await dirHandle.getFileHandle(oldName);
+  // Chromium FileSystemFileHandle.move() 扩展（TS lib.dom 未声明）。
+  await (fileHandle as unknown as { move: (name: string) => Promise<void> }).move(newName);
+  return dirHandle.getFileHandle(newName);
+}
+
+/** 从路径取父目录句柄（目录集合 + vault 根）。路径不含目录段时返回 vault 根。 */
+export function parentDirectoryForPath(
+  path: string,
+  dirs: Map<string, FileSystemDirectoryHandle>,
+  rootHandle: FileSystemDirectoryHandle,
+): FileSystemDirectoryHandle {
+  const lastSlash = path.lastIndexOf('/');
+  if (lastSlash === -1) {
+    return rootHandle;
+  }
+  const parentPath = path.slice(0, lastSlash);
+  return dirs.get(parentPath) ?? rootHandle;
 }
 
 /** 本地读取单篇文件内容，提取标题（首个 `# 标题`）与正文（不上传）。 */

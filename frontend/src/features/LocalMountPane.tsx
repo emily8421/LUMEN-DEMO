@@ -6,8 +6,8 @@
 import { useState } from 'react';
 import {
   buildLocalMountTree,
-  useLocalVaultMount,
   type LocalMountTreeNode,
+  type UseLocalVaultMount,
 } from '../app/useLocalVaultMount';
 import type { LocalVaultDoc } from '../app/local-vault-index';
 import { importBatchDocuments } from '../api';
@@ -20,10 +20,12 @@ type LocalMountPaneProps = {
   token: string | undefined;
   onImported: () => void;
   onOpenLocalDoc: (doc: LocalVaultDoc | null) => void;
+  /** REQ-049：本地挂载 vm（App 提升共享）。 */
+  localVault: UseLocalVaultMount;
 };
 
-export function LocalMountPane({ token, onImported, onOpenLocalDoc }: LocalMountPaneProps) {
-  const vm = useLocalVaultMount();
+export function LocalMountPane({ token, onImported, onOpenLocalDoc, localVault }: LocalMountPaneProps) {
+  const vm = localVault;
   const [collapsed, setCollapsed] = useState(false);
   const [importing, setImporting] = useState(false);
   const [importMsg, setImportMsg] = useState('');
@@ -193,6 +195,10 @@ export function LocalMountPane({ token, onImported, onOpenLocalDoc }: LocalMount
                 onSelect={handleOpen}
                 onImportDir={requestImportDir}
                 importDisabled={!canImport}
+                onCreateFile={vm.createFile}
+                onDeleteFile={vm.deleteFile}
+                onRenameFile={vm.renameFile}
+                isBusy={false}
               />
             ) : (
               <p className="empty-state">空 vault</p>
@@ -248,6 +254,10 @@ function LocalMountTreeView({
   onSelect,
   onImportDir,
   importDisabled,
+  onCreateFile,
+  onDeleteFile,
+  onRenameFile,
+  isBusy,
 }: {
   node: LocalMountTreeNode;
   depth: number;
@@ -255,10 +265,36 @@ function LocalMountTreeView({
   onSelect: (path: string) => void;
   onImportDir: (path: string, label: string) => void;
   importDisabled: boolean;
+  onCreateFile: (dirPath: string, name: string, content: string) => Promise<void>;
+  onDeleteFile: (path: string) => Promise<void>;
+  onRenameFile: (path: string, newName: string) => Promise<void>;
+  isBusy: boolean;
 }) {
   const [open, setOpen] = useState(true);
+  // REQ-049：目录「新建文件」与文件「重命名」的 inline 输入态。
+  const [creatingFileIn, setCreatingFileIn] = useState<string | null>(null);
+  const [renamingPath, setRenamingPath] = useState<string | null>(null);
+  const [inputValue, setInputValue] = useState('');
   const pad = 6 + Math.max(0, depth) * 14;
   const childDirs = [...node.children.values()];
+
+  function commitInline() {
+    const name = inputValue.trim();
+    if (!name) {
+      setCreatingFileIn(null);
+      setRenamingPath(null);
+      setInputValue('');
+      return;
+    }
+    if (creatingFileIn !== null) {
+      void onCreateFile(creatingFileIn, name, '');
+    } else if (renamingPath !== null) {
+      void onRenameFile(renamingPath, name);
+    }
+    setCreatingFileIn(null);
+    setRenamingPath(null);
+    setInputValue('');
+  }
 
   return (
     <div>
@@ -267,6 +303,13 @@ function LocalMountTreeView({
           className="local-mount-node local-mount-dir"
           style={{ paddingLeft: pad }}
           onClick={() => setOpen((o) => !o)}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setCreatingFileIn(node.path);
+            setInputValue('');
+          }}
+          title={node.path ? `${node.path} · 右键新建文件` : '右键新建文件'}
         >
           <span className="local-mount-arrow">{open ? '▾' : '▸'}</span>
           <span className="local-mount-ic" aria-hidden="true">📁</span>
@@ -284,8 +327,39 @@ function LocalMountTreeView({
           >
             ⤓ 导入
           </button>
+          <button
+            type="button"
+            className="local-mount-node-action"
+            onClick={(e) => {
+              e.stopPropagation();
+              setCreatingFileIn(node.path);
+              setInputValue('');
+            }}
+            disabled={isBusy}
+            title="在此新建文件"
+            aria-label={`在此新建文件 ${node.name}`}
+          >
+            ＋
+          </button>
         </div>
       )}
+      {creatingFileIn === node.path ? (
+        <div className="local-mount-inline" style={{ paddingLeft: pad + 18 }}>
+          <input
+            value={inputValue}
+            placeholder="文件名（含扩展名，如 note.md）"
+            autoFocus
+            disabled={isBusy}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') commitInline();
+              if (e.key === 'Escape') { setCreatingFileIn(null); setInputValue(''); }
+            }}
+            onBlur={commitInline}
+            aria-label="新建文件名"
+          />
+        </div>
+      ) : null}
       {open && (
         <div className="local-mount-children">
           {childDirs.map((d) => (
@@ -297,6 +371,10 @@ function LocalMountTreeView({
               onSelect={onSelect}
               onImportDir={onImportDir}
               importDisabled={importDisabled}
+              onCreateFile={onCreateFile}
+              onDeleteFile={onDeleteFile}
+              onRenameFile={onRenameFile}
+              isBusy={isBusy}
             />
           ))}
           {node.files.map((f) => (
@@ -305,11 +383,51 @@ function LocalMountTreeView({
               className={`local-mount-node local-mount-file ${f.doc.path === selectedPath ? 'cur' : ''}`}
               style={{ paddingLeft: pad + 18 }}
               onClick={() => onSelect(f.doc.path)}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setRenamingPath(f.doc.path);
+                setInputValue(f.name);
+              }}
               title={f.doc.path}
             >
-              <span className="local-mount-ic" aria-hidden="true">📄</span>
-              <span className="local-mount-label">{f.name}</span>
-              <span className="local-mount-tag">本地</span>
+              {renamingPath === f.doc.path ? (
+                <span className="local-mount-inline-inline" onClick={(e) => e.stopPropagation()}>
+                  <input
+                    value={inputValue}
+                    autoFocus
+                    disabled={isBusy}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') commitInline();
+                      if (e.key === 'Escape') { setRenamingPath(null); setInputValue(''); }
+                    }}
+                    onBlur={commitInline}
+                    aria-label="重命名文件名"
+                  />
+                </span>
+              ) : (
+                <>
+                  <span className="local-mount-ic" aria-hidden="true">📄</span>
+                  <span className="local-mount-label">{f.name}</span>
+                  <span className="local-mount-tag">本地</span>
+                  <button
+                    type="button"
+                    className="local-mount-node-action"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (window.confirm(`确认删除本地文件「${f.name}」？`)) {
+                        void onDeleteFile(f.doc.path);
+                      }
+                    }}
+                    disabled={isBusy}
+                    title="删除文件"
+                    aria-label={`删除文件 ${f.name}`}
+                  >
+                    ×
+                  </button>
+                </>
+              )}
             </div>
           ))}
         </div>

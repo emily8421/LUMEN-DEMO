@@ -5,13 +5,19 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   clearVaultHandle,
+  createVaultFile,
+  deleteVaultFile,
+  ensureVaultWritePermission,
   isFileSystemAccessSupported,
+  parentDirectoryForPath,
   pickDirectory,
   readVaultFile,
+  renameVaultFile,
   restoreVaultHandle,
   saveVaultHandle,
   verifyPermission,
   walkVault,
+  writeVaultFile,
   type WalkedFile,
 } from './local-vault-fs';
 import {
@@ -77,6 +83,16 @@ export interface UseLocalVaultMount {
   reindex: () => Promise<void>;
   unmount: () => Promise<void>;
   openDoc: (path: string) => void;
+  // REQ-049 本地读写：编辑态 + 文件增删改查。
+  editingPath: string | null;
+  editingText: string;
+  beginEdit: (path: string) => void;
+  setEditingText: (text: string) => void;
+  saveEdit: () => Promise<void>;
+  cancelEdit: () => void;
+  createFile: (dirPath: string, name: string, content: string) => Promise<void>;
+  deleteFile: (path: string) => Promise<void>;
+  renameFile: (path: string, newName: string) => Promise<void>;
 }
 
 export function useLocalVaultMount(): UseLocalVaultMount {
@@ -90,8 +106,13 @@ export function useLocalVaultMount(): UseLocalVaultMount {
   const [query, setQuery] = useState('');
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
   const [error, setError] = useState('');
+  // REQ-049：编辑态（path + 草稿文本）。
+  const [editingPath, setEditingPath] = useState<string | null>(null);
+  const [editingText, setEditingText] = useState('');
 
   const handleRef = useRef<FileSystemDirectoryHandle | null>(null);
+  // REQ-049：目录相对路径 → 目录句柄（增删改查定位父目录）；随 buildIndex 重建。
+  const dirsRef = useRef<Map<string, FileSystemDirectoryHandle>>(new Map());
 
   // 构建索引：walk → 读内容 → buildInvertedIndex（PoC buildIndex 同构）
   const buildIndex = useCallback(async (handle: FileSystemDirectoryHandle, name: string) => {
@@ -99,7 +120,8 @@ export function useLocalVaultMount(): UseLocalVaultMount {
     setMountName(name);
     setFileCount(0);
     const files: WalkedFile[] = [];
-    await walkVault(handle, '', files, (n) => setFileCount(n));
+    const dirs = new Map<string, FileSystemDirectoryHandle>();
+    await walkVault(handle, '', files, (n) => setFileCount(n), dirs);
     const newDocs: LocalVaultDoc[] = [];
     for (const f of files) {
       newDocs.push(await readVaultFile(f));
@@ -109,6 +131,7 @@ export function useLocalVaultMount(): UseLocalVaultMount {
     setIndex(buildInvertedIndex(newDocs));
     setFileCount(newDocs.length);
     handleRef.current = handle;
+    dirsRef.current = dirs;
     setStatus('mounted');
   }, []);
 
@@ -175,12 +198,15 @@ export function useLocalVaultMount(): UseLocalVaultMount {
   const unmount = useCallback(async () => {
     await clearVaultHandle();
     handleRef.current = null;
+    dirsRef.current = new Map();
     setDocs([]);
     setIndex(null);
     setMountName('');
     setFileCount(0);
     setSelectedPath(null);
     setQuery('');
+    setEditingPath(null);
+    setEditingText('');
     setStatus('idle');
   }, []);
 
@@ -197,6 +223,105 @@ export function useLocalVaultMount(): UseLocalVaultMount {
   }, [docs, selectedPath]);
 
   const openDoc = useCallback((path: string) => setSelectedPath(path), []);
+
+  // ---- REQ-049 本地读写（仅本地文件系统写，不进服务端 / 不进 RAG）----
+
+  /** 进入编辑态：从 docs 取当前文本作草稿。 */
+  const beginEdit = useCallback((path: string) => {
+    const doc = docs.find((d) => d.path === path);
+    setEditingPath(path);
+    setEditingText(doc?.text ?? '');
+  }, [docs]);
+
+  /** 保存编辑：readwrite 授权 → 覆盖写 → 重建索引 → 退出编辑态。 */
+  const saveEdit = useCallback(async () => {
+    if (!editingPath || !handleRef.current) return;
+    const doc = docs.find((d) => d.path === editingPath);
+    if (!doc) return;
+    const ok = await ensureVaultWritePermission(doc.handle);
+    if (!ok) {
+      setError('写入授权被拒，请重新授权（readwrite）后重试。');
+      setStatus('needs-auth');
+      return;
+    }
+    try {
+      await writeVaultFile(doc.handle, editingText);
+      await buildIndex(handleRef.current, mountName || handleRef.current.name);
+      setEditingPath(null);
+      setEditingText('');
+      setSelectedPath(editingPath);
+    } catch (e) {
+      setError(`保存失败：${e instanceof Error ? e.message : String(e)}`);
+    }
+  }, [editingPath, editingText, docs, handleRef, mountName, buildIndex]);
+
+  const cancelEdit = useCallback(() => {
+    setEditingPath(null);
+    setEditingText('');
+  }, []);
+
+  /** 新建文件：父目录 readwrite 授权 → createVaultFile → 重建索引。 */
+  const createFile = useCallback(async (dirPath: string, name: string, content: string) => {
+    if (!handleRef.current || !name.trim()) return;
+    const parent = parentDirectoryForPath(dirPath, dirsRef.current, handleRef.current);
+    const ok = await ensureVaultWritePermission(parent);
+    if (!ok) {
+      setError('写入授权被拒，请重新授权（readwrite）后重试。');
+      setStatus('needs-auth');
+      return;
+    }
+    try {
+      await createVaultFile(parent, name.trim(), content);
+      await buildIndex(handleRef.current, mountName || handleRef.current.name);
+    } catch (e) {
+      setError(`新建失败：${e instanceof Error ? e.message : String(e)}`);
+    }
+  }, [handleRef, mountName, buildIndex]);
+
+  /** 删除文件：父目录 readwrite 授权 → deleteVaultFile → 重建索引。 */
+  const deleteFile = useCallback(async (path: string) => {
+    if (!handleRef.current) return;
+    const doc = docs.find((d) => d.path === path);
+    if (!doc) return;
+    const parent = parentDirectoryForPath(path, dirsRef.current, handleRef.current);
+    const ok = await ensureVaultWritePermission(parent);
+    if (!ok) {
+      setError('写入授权被拒，请重新授权（readwrite）后重试。');
+      setStatus('needs-auth');
+      return;
+    }
+    try {
+      await deleteVaultFile(parent, doc.name);
+      if (selectedPath === path) setSelectedPath(null);
+      if (editingPath === path) cancelEdit();
+      await buildIndex(handleRef.current, mountName || handleRef.current.name);
+    } catch (e) {
+      setError(`删除失败：${e instanceof Error ? e.message : String(e)}`);
+    }
+  }, [handleRef, docs, selectedPath, editingPath, cancelEdit, mountName, buildIndex]);
+
+  /** 重命名文件：父目录 readwrite 授权 → renameVaultFile → 重建索引。 */
+  const renameFile = useCallback(async (path: string, newName: string) => {
+    if (!handleRef.current || !newName.trim()) return;
+    const doc = docs.find((d) => d.path === path);
+    if (!doc) return;
+    const parent = parentDirectoryForPath(path, dirsRef.current, handleRef.current);
+    const ok = await ensureVaultWritePermission(parent);
+    if (!ok) {
+      setError('写入授权被拒，请重新授权（readwrite）后重试。');
+      setStatus('needs-auth');
+      return;
+    }
+    try {
+      const dirPath = path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : '';
+      const newPath = dirPath ? `${dirPath}/${newName.trim()}` : newName.trim();
+      await renameVaultFile(parent, doc.name, newName.trim());
+      if (selectedPath === path) setSelectedPath(newPath);
+      await buildIndex(handleRef.current, mountName || handleRef.current.name);
+    } catch (e) {
+      setError(`重命名失败：${e instanceof Error ? e.message : String(e)}`);
+    }
+  }, [handleRef, docs, selectedPath, mountName, buildIndex]);
 
   return {
     status,
@@ -215,5 +340,14 @@ export function useLocalVaultMount(): UseLocalVaultMount {
     reindex,
     unmount,
     openDoc,
+    editingPath,
+    editingText,
+    beginEdit,
+    setEditingText,
+    saveEdit,
+    cancelEdit,
+    createFile,
+    deleteFile,
+    renameFile,
   };
 }
