@@ -140,6 +140,8 @@ function App() {
   // 登录态变化 → 重置本次会话的首次引导显示（未完成时下次登录重新弹）。
   useEffect(() => {
     setGuideDismissed(false);
+    // 用户切换（登录 / 登出 / 换账号）→ 清空 AI 助手对话，避免跨用户残留前用户可见文档的来源（跨用户隔离红线）。
+    aiAssistant.reset();
     // Sprint-28：非 admin 登录后不滞留用户管理页（后端仍强制鉴权，此处仅体验收敛）。
     if (session.session?.role !== 'admin' && workspace.activeView === 'admin-users') {
       workspace.setActiveView('home');
