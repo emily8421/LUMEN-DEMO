@@ -380,3 +380,79 @@ ALTER TABLE lumen_users ADD CONSTRAINT chk_lumen_users_role CHECK (role IN ('adm
 3. **未实现 `last_login_at` 显式排序**（C-ROLE-005 草案「可排序」）：当前按仓储返回顺序展示，仅作只读列。
 4. **refresh 响应不含 `role`**：登录响应新增 `role`（additive，支撑前端管理入口显隐）；刷新 token 后角色不刷新（前端以登录时角色为准，属已知边界）。
 5. 其余与契约一致：seed、鉴权谓词、最后一个 admin 4090、审计事件、demo 仓储不旁路。
+
+## 19. Sprint-30 忘记密码 + 登录密码显隐（增量设计·已实现 2026-08-09）
+
+> 定位：维护态批5（Sprint-30）增量设计（2026-08-08 立项 / 2026-08-09 编码）。承接 REQ-051（U-54），在 Sprint-26 账号体系底座上补齐「忘记密码自助重置 + 登录密码显隐」。C-PWD-001..004 已确认（2026-08-08/09）。同批 REQ-050（成员空间可见性）见 `docs/design/batch-maintenance-2026-08-08.md` §3 + 本仓 commit 2（API-054）。
+
+### 19.1 目标与范围
+
+- **目标**：① 登录 / 注册密码框支持「小眼睛」显隐；② 提供「忘记密码」自助重置流程（reset token 一次性、TTL 30min、重置成功吊销全部活跃 session）。
+- **范围**：REQ-051 忘记密码后端（migration 018 `lumen_users` reset 3 列 + service `auth_reset.py` + API-055/056）+ 前端（`PasswordInput` 小眼睛 + `PasswordResetModal` 两步重置 + 登录 form 入口）；登录 / 注册密码框统一换 `PasswordInput`。零新依赖（bcrypt / hashlib / secrets 均已有）。
+- **不做（留候选 / 后续）**：SMTP 真实邮件投递（demo 降级 token 写日志）、邮箱验证、OAuth、邀请码、独立限流（接受风险，登录失败锁定兜底）。
+
+### 19.2 设计决策（已确认）
+
+| ID | 决策 | 依据 | 备选（未采） |
+|---|---|---|---|
+| C-PWD-001 | reset token = `secrets.token_urlsafe(32)`，DB 只存 `sha256_hex(token)`，明文仅进后端 WARNING 日志 | 与 `lumen_sessions.token_hash` 同口径（不存明文 token）；demo 无 SMTP，运维从日志取 token 人工下发 | 明文入库（不可接受） |
+| C-PWD-002 | `/request` 恒响应「若该邮箱已注册，重置链接已发送」；账号不存在时对 dummy bcrypt hash 做 `verify_password` 保恒时时序 | 主流防枚举（GitHub / Google）；不泄露账号是否存在 | 区分响应（泄露账号枚举面） |
+| C-PWD-003 | token 一次性（`reset_used_at`）+ TTL 30min；重置成功吊销该用户全部活跃 session | 一次性防重放；30min 平衡可用与安全；吊销全部 session 对齐跨设备安全（密码已变，旧 session 须失效） | 仅吊销当前 session / 不吊销 |
+| C-PWD-004 | demo 降级 token 写结构化 JSON WARNING 日志（`lumen.auth.reset` logger），注释明示生产接 SMTP | demo 规模 + 无 SMTP；结构化日志便于运维提取 | 接 SMTP（demo 无邮件基础设施） |
+
+### 19.3 数据契约（migration 018）
+
+```sql
+ALTER TABLE lumen_users ADD COLUMN reset_token_hash VARCHAR(64);   -- sha256_hex(token)；NULL = 无进行中重置
+ALTER TABLE lumen_users ADD COLUMN reset_expires_at TIMESTAMPTZ;   -- 签发 +30min
+ALTER TABLE lumen_users ADD COLUMN reset_used_at TIMESTAMPTZ;      -- NULL = 未使用；重置成功置位，留审计
+CREATE INDEX idx_lumen_users_reset_token ON lumen_users(reset_token_hash)
+  WHERE reset_used_at IS NULL AND reset_token_hash IS NOT NULL;    -- 稀疏索引（仅有效 token）
+```
+
+- 不加 UNIQUE：同一用户可多次 `/request`（后者覆盖前者 hash + 清 `used_at`），已用 token 不删行、只置 `used_at` 保留审计。
+- `update_password` 顺带 reset 失败计数 + 解锁（重置成功后不应仍处锁定态）。
+
+### 19.4 API 契约（API-055 / API-056）
+
+| 域 | endpoint | 方法 | 用途 | 权限 | 关键错误 |
+|---|---|---|---|---|---|
+| auth | `/api/auth/password-reset/request` | POST | 申请重置（`{email}`）；**恒响应** `{message}` | 公开 | 恒 200（不泄露） |
+| auth | `/api/auth/password-reset/confirm` | POST | 确认重置（`{token, new_password}`）；改密 + 吊销全部 session | 公开（凭 token） | 4220 密码 <8 / >64；4010 token 无效 / 过期 / 已用 |
+
+- 恒响应口径（C-PWD-002）：`/request` 无论账号是否存在，返回同一 `{message: "若该邮箱已注册，重置链接已发送（demo 模式请从后端日志取 token）。"}`。
+- token 失败统一 4010（不区分「不存在 / 已用 / 过期」防信息泄露）。
+- 重置成功 `data:null`，审计事件 `password_reset_requested` / `password_reset_confirmed`（含 `revoked_sessions` 计数）。
+
+### 19.5 前端交互
+
+- **`PasswordInput`**（`features/auth/PasswordInput.tsx`）：受控密码框 + 「显示 / 隐藏」toggle，复用于登录 / 注册 / 重置（降 `App.tsx` 负载）。
+- **`PasswordResetModal`**（`features/auth/PasswordResetModal.tsx`）：居中弹窗两步——① email 申请（提示 demo 从日志取 token）→ ② token + 新密码确认 → 成功提示「全部会话已失效，请用新密码登录」。
+- 登录 form 密码框下加「忘记密码？」链接式按钮打开 modal；登录 / 注册两处密码框统一换 `PasswordInput`。
+- 交互基线沿用现有 CSS token 体系（新 `styles/auth.css`，<100 行）；回车天然支持（`<form onSubmit>`）、注册已有长度提示、loading 复用 `runAction` / 按钮 disabled。
+
+### 19.6 安全控制
+
+- reset token 只存 `sha256_hex`，明文仅进日志（demo 降级，生产须接 SMTP 并移除明文日志）。
+- 防枚举：`/request` 恒响应 + dummy bcrypt 恒时序（复用 `_get_dummy_hash`）。
+- 一次性 + TTL：`reset_used_at` 置位后不可重放；过期 30min。
+- 重置吊销全部 session：`revoke_all_sessions(user_id)` 对齐跨设备安全。
+- 无独立限流（接受风险）：恒响应降低暴力价值，登录侧 5 次失败锁定兜底。
+
+### 19.7 验证方案（commit 4）
+
+- 后端：`tests/backend/test_auth.py` 加 reset 用例——request 恒响应 + 日志有 token + DB 存 hash 非明文 / confirm 成功新密码登录旧密码失败 / 过期 4010 / 二次使用 4010 / 重置后活跃 session 全吊销（`resolve_session`→None）/ 密码 <8 → 4220 / 防枚举响应一致；内存 + PG 仓储一致；全量 backend discover 不回归。
+- 前端：`volta run --node 22.17.1 npm run build`（绿，commit 3 已验 301 modules）+ 新 `scripts/smoke-batch5-auth-admin-browser.mjs`（小眼睛 + 忘记密码全流程 + admin 空间可见性授予 / 撤销 + 最后一个 space admin 保护）。
+- 真 PG：`lumen-pg` 容器应用 migration 018（schema 校验）。
+- 验收：TC-P2-AUTH-002（`docs/09-verification.md`）。
+
+### 19.8 实现结果与偏差（2026-08-09 commit 3 编码完成，测试 / smoke / 版本留 commit 4）
+
+**完成记录（commit 3）**：migration 018（`lumen_users` reset 3 列 + 稀疏索引）；entities / orm User +3 字段；pg + demo repository 各 +5 方法（`set_reset_token` / `find_user_by_reset_token_hash` / `update_password` / `clear_reset_token` / `revoke_all_sessions`）；service `auth_reset.py`（从 `auth.py` 拆出，复用 bcrypt / sha256 / session / 审计 helper，auth.py 不增长）；api/auth API-055/056；前端 `PasswordInput` + `PasswordResetModal` + `api/auth.ts` client + `App.tsx` 两处密码框替换 + 忘记密码入口 + `styles/auth.css`。验证：后端 264 tests OK（零回归，与 commit 2 持平）+ 前端 build 301 modules 绿。
+
+**实现偏差 / 决策落地**：
+1. **service 拆分**：`auth.py` 已 333 行（超 service 250 阈值），reset 拆到新 `auth_reset.py`（用户确认）；从 `auth.py` import `_get_dummy_hash` / `sha256_hex` / `create_session_token` / `_audit` 等 helper。
+2. **`update_password` 顺带解锁**：改密同时 `failed_login_count=0` + `locked_until=None`（重置后不应仍锁定；草案未明示，安全最佳实践）。
+3. **reset 用独立 logger**：token 明文走 `lumen.auth.reset` WARNING（与审计 `_audit` 的 `lumen.auth` info 分离），便于生产单独关闭 / 脱敏。
+4. **登录标准优化范围**：commit 3 仅 plan §C 核心（小眼睛 + modal + 替换 + client）；错误内联 / 独立 loading 留候选（当前 runAction 全局 notice + isBusy 已可用）。
+5. 测试 / smoke / v3.7.0 三件套 / 真 PG migration 验证 / 开 PR 全部留 commit 4。

@@ -23,6 +23,7 @@ import './styles/members.css';
 import './styles/admin-drawer.css';
 import './styles/command-palette.css';
 import './styles/ai-assistant.css';
+import './styles/auth.css';
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>

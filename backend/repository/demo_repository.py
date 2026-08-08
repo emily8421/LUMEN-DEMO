@@ -184,6 +184,51 @@ class DemoRepository:
             )
             return
 
+    # --- Sprint-30（REQ-051，migration 018）：忘记密码 reset token ---
+
+    def set_reset_token(self, user_id: int, token_hash: str, expires_at: str) -> None:
+        for index, user in enumerate(self.users):
+            if user.id != user_id:
+                continue
+            self.users[index] = replace(
+                user,
+                reset_token_hash=token_hash,
+                reset_expires_at=expires_at,
+                reset_used_at="",
+            )
+            return
+
+    def find_user_by_reset_token_hash(self, token_hash: str) -> User | None:
+        return next((user for user in self.users if user.reset_token_hash == token_hash), None)
+
+    def update_password(self, user_id: int, password_hash: str) -> None:
+        for index, user in enumerate(self.users):
+            if user.id != user_id:
+                continue
+            self.users[index] = replace(
+                user,
+                password_hash=password_hash,
+                failed_login_count=0,
+                locked_until="",
+            )
+            return
+
+    def clear_reset_token(self, user_id: int, used_at: str) -> None:
+        for index, user in enumerate(self.users):
+            if user.id != user_id:
+                continue
+            self.users[index] = replace(user, reset_used_at=used_at)
+            return
+
+    def revoke_all_sessions(self, user_id: int) -> int:
+        count = 0
+        for index, session in enumerate(self.sessions):
+            if session.user_id != user_id or session.revoked_at is not None:
+                continue
+            self.sessions[index] = replace(session, revoked_at=_now_iso())
+            count += 1
+        return count
+
     def create_session(
         self,
         user_id: int,

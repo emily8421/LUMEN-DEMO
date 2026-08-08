@@ -18,6 +18,7 @@ from backend.service.auth import (
     update_session_space,
 )
 from backend.service.auth_context import TokenContext, get_current_user
+from backend.service.auth_reset import confirm_password_reset, request_password_reset
 from backend.service.space import SpaceAccessError, ensure_space_access
 
 try:
@@ -152,6 +153,28 @@ if APIRouter is not None:
     def revoke_session_endpoint(session_id: int, ctx: TokenContext = Depends(get_current_user)) -> dict[str, object]:
         if not revoke_session(repository, session_id, ctx.user_id):
             raise HTTPException(status_code=404, detail={"code": 4004, "msg": "session not found"})
+        return {"code": 0, "msg": "ok", "data": None}
+
+    # Sprint-30 / 维护态批5（REQ-051）：忘记密码 reset token，demo 降级 token 写日志，见 accounts-auth §19
+    class PasswordResetRequest(BaseModel):
+        email: str
+
+    class PasswordResetConfirm(BaseModel):
+        token: str
+        new_password: str
+
+    @router.post("/password-reset/request")
+    def password_reset_request(request: PasswordResetRequest) -> dict[str, object]:
+        # REQ-051：恒响应防枚举（service 层保证账号不存在时也走 dummy bcrypt + 同文案）
+        msg = request_password_reset(repository, request.email)
+        return {"code": 0, "msg": "ok", "data": {"message": msg}}
+
+    @router.post("/password-reset/confirm")
+    def password_reset_confirm(request: PasswordResetConfirm) -> dict[str, object]:
+        try:
+            confirm_password_reset(repository, request.token, request.new_password)
+        except AuthenticationError as exc:
+            raise _http_error(exc) from exc
         return {"code": 0, "msg": "ok", "data": None}
 else:
     router = None
