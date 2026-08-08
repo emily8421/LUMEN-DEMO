@@ -6,6 +6,17 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.3.2（2026-08-08）
+
+**团队 E2E 验证缺陷修复：AI 助手切换用户后对话未清空。** E2E-14（AI 助手浏览器交互）用户验证发现：同一用户切换空间时对话清空（符合预期），但登出后换账号登录，前用户 AI 助手对话及来源仍残留。
+
+- 根因：`useSession` 登录 / 登出 / 换账号只更新 session，无回调通知 App；`aiAssistant.reset()` 仅挂在 `handleSpaceChanged`（空间切换）上，用户身份变化不触发清空 → 前用户对话（含 RAG 来源，可能指向前用户可见文档）残留给下一位用户，违反跨用户隔离红线。
+- 修复：`frontend/src/App.tsx` 登录态变化 `useEffect`（依赖 `[session.session?.token]`）中追加 `aiAssistant.reset()`，登录 / 登出 / 换账号 / 鉴权失效时清空 AI 助手对话；不改 `useSession.ts`，复用既有模式。
+- 验证：`volta run --node 22.17.1 npm run build` 294 modules 绿（tsc 无错误）+ 用户浏览器复测通过（alice 发消息 → 登出 → kira 登录 → AI 助手对话已清空）。
+- 文档：`docs/09-verification.md` §5.1 新增缺陷登记；TEAM-E2E-001 E2E-14 浏览器交互已验。
+
+> PATCH 依据（`ai/project-rules.md` §2.8.1）：纯 bug 修复，不改对外 API 契约、不新增可演示能力。
+
 ## v3.3.1（2026-08-08）
 
 **PG 团队 E2E 验证缺陷修复：导入文档无法删除（`DELETE /api/documents/{id}` 返回 HTTP 500）。** 团队端到端验证（`docs/env/team-e2e-verification-runbook.md`，TEAM-E2E-001）在 E2E-18 清理阶段发现：导入产生的文档删除时后端抛 500。
