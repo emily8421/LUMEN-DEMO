@@ -59,3 +59,39 @@ def set_user_status(repository, actor: User, user_id: int, status: str) -> User:
         repository.revoke_user_sessions(user_id)
     audit_event("user_status_changed", actor.id, "success", target_user_id=user_id, status=status)
     return user
+
+
+def list_user_spaces_for_admin(repository, actor: User, user_id: int) -> dict[str, list[dict]]:
+    """admin 域查询用户所属空间（API-054，REQ-050，维护态批5）。
+
+    返回 ``{joined, available}``：joined = 该用户已加入空间 + 各空间角色 / 加入时间；
+    available = 未加入空间（供"添加到空间"下拉）。避免改 ``GET /api/spaces``（那会
+    影响 admin 自身的空间切换下拉），改由本端点一次返回两者。
+    """
+    require_global_admin(actor)
+    target = repository.find_user_by_id(user_id)
+    if target is None:
+        raise AdminError(4004, "user not found")
+    spaces = {s.id: s for s in repository.list_spaces()}
+    joined_space_ids: set[int] = set()
+    joined: list[dict] = []
+    for membership in repository.list_memberships():
+        if membership.user_id != user_id or membership.space_id not in spaces:
+            continue
+        space = spaces[membership.space_id]
+        joined_space_ids.add(space.id)
+        joined.append(
+            {
+                "space_id": space.id,
+                "space_code": space.code,
+                "space_name": space.name,
+                "role": membership.role,
+                "joined_at": membership.created_at,
+            }
+        )
+    available = [
+        {"space_id": space.id, "space_code": space.code, "space_name": space.name}
+        for space in spaces.values()
+        if space.id not in joined_space_ids
+    ]
+    return {"joined": joined, "available": available}
