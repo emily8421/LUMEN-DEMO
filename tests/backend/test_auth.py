@@ -1,4 +1,6 @@
+import json
 import unittest
+from datetime import UTC, datetime, timedelta
 
 from backend.repository.demo_repository import DemoRepository
 from backend.service.auth import (
@@ -15,7 +17,13 @@ from backend.service.auth import (
     register,
     resolve_session,
     revoke_session,
+    sha256_hex,
     verify_password,
+)
+from backend.service.auth_reset import (
+    RESET_REQUEST_RESPONSE,
+    confirm_password_reset,
+    request_password_reset,
 )
 
 
@@ -175,6 +183,107 @@ class AuthServiceTest(unittest.TestCase):
 
     def test_demo_repository_is_demo(self) -> None:
         self.assertTrue(DemoRepository().is_demo)
+
+
+# --- 忘记密码 reset（REQ-051，Sprint-30 / 维护态批5）---
+
+
+class PasswordResetServiceTest(unittest.TestCase):
+    """auth_reset service：request 恒响应防枚举 + confirm 校验 + 改密 + 吊销全部 session。"""
+
+    def _register(self, repo, email="u@example.com", password="password123"):
+        return register(repo, email, "U", password)
+
+    def _request_token(self, repo, email) -> str:
+        with self.assertLogs("lumen.auth.reset", level="WARNING") as cm:
+            request_password_reset(repo, email)
+        record = json.loads(cm.records[0].getMessage())
+        return record["token"]
+
+    def test_request_constant_response_and_logs_token(self) -> None:
+        repo = DemoRepository()
+        self._register(repo)
+        with self.assertLogs("lumen.auth.reset", level="WARNING") as cm:
+            msg = request_password_reset(repo, "u@example.com")
+        self.assertEqual(msg, RESET_REQUEST_RESPONSE)
+        record = json.loads(cm.records[0].getMessage())
+        self.assertEqual(record["event"], "password_reset_token_issued")
+        token = record["token"]
+        self.assertTrue(token)
+        # DB 存 sha256 hash 非明文：按 hash 能查到用户，且 used_at 为空
+        user = repo.find_user_by_reset_token_hash(sha256_hex(token))
+        self.assertIsNotNone(user)
+        self.assertEqual(user.reset_used_at, "")
+
+    def test_request_no_user_constant_response(self) -> None:
+        repo = DemoRepository()
+        msg = request_password_reset(repo, "nobody@example.com")
+        self.assertEqual(msg, RESET_REQUEST_RESPONSE)
+
+    def test_request_anti_enumeration_identical_response(self) -> None:
+        repo = DemoRepository()
+        self._register(repo)
+        registered = request_password_reset(repo, "u@example.com")
+        unknown = request_password_reset(repo, "nobody@example.com")
+        self.assertEqual(registered, unknown)
+
+    def test_confirm_success_new_password_works_old_fails(self) -> None:
+        repo = DemoRepository()
+        self._register(repo)
+        token = self._request_token(repo, "u@example.com")
+        confirm_password_reset(repo, token, "newpass456")
+        # 新密码登录成功
+        new_token, _ = authenticate(repo, "u@example.com", "newpass456")
+        self.assertIsNotNone(new_token)
+        # 旧密码失败
+        with self.assertRaises(AuthenticationError):
+            authenticate(repo, "u@example.com", "password123")
+
+    def test_confirm_revokes_all_sessions(self) -> None:
+        repo = DemoRepository()
+        self._register(repo)
+        old_token, s1 = authenticate(repo, "u@example.com", "password123")
+        authenticate(repo, "u@example.com", "password123")
+        self.assertEqual(len(repo.list_sessions(s1.user_id)), 2)
+        token = self._request_token(repo, "u@example.com")
+        confirm_password_reset(repo, token, "newpass456")
+        # 全部活跃 session 被吊销
+        self.assertIsNone(resolve_session(repo, old_token))
+        self.assertEqual(repo.list_sessions(s1.user_id), [])
+
+    def test_confirm_invalid_token(self) -> None:
+        repo = DemoRepository()
+        with self.assertRaises(AuthenticationError) as ctx:
+            confirm_password_reset(repo, "nonexistent-token", "newpass456")
+        self.assertEqual(ctx.exception.code, 4010)
+
+    def test_confirm_short_password(self) -> None:
+        repo = DemoRepository()
+        self._register(repo)
+        token = self._request_token(repo, "u@example.com")
+        with self.assertRaises(AuthenticationError) as ctx:
+            confirm_password_reset(repo, token, "short")
+        self.assertEqual(ctx.exception.code, 4220)
+
+    def test_confirm_expired_token(self) -> None:
+        repo = DemoRepository()
+        self._register(repo)
+        token = self._request_token(repo, "u@example.com")
+        user = repo.find_user_by_email("u@example.com")
+        past = (datetime.now(UTC) - timedelta(minutes=1)).isoformat()
+        repo.set_reset_token(user.id, sha256_hex(token), past)
+        with self.assertRaises(AuthenticationError) as ctx:
+            confirm_password_reset(repo, token, "newpass456")
+        self.assertEqual(ctx.exception.code, 4010)
+
+    def test_confirm_reused_token_rejected(self) -> None:
+        repo = DemoRepository()
+        self._register(repo)
+        token = self._request_token(repo, "u@example.com")
+        confirm_password_reset(repo, token, "newpass456")
+        with self.assertRaises(AuthenticationError) as ctx:
+            confirm_password_reset(repo, token, "another789")
+        self.assertEqual(ctx.exception.code, 4010)
 
 
 if __name__ == "__main__":

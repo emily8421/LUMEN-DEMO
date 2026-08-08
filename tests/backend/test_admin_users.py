@@ -5,6 +5,7 @@ import unittest
 from backend.repository.demo_repository import DemoRepository
 from backend.service.admin import (
     AdminError,
+    list_user_spaces_for_admin,
     list_users,
     set_user_status,
     update_user_role,
@@ -90,6 +91,33 @@ class AdminUsersServiceTest(unittest.TestCase):
         with self.assertRaises(AdminError) as ctx:
             set_user_status(self.repo, self.alice, self.kira.id, "pending")
         self.assertEqual(ctx.exception.code, 4220)
+
+    # --- REQ-050 admin 查询用户可访问空间（API-054，维护态批5）---
+
+    def test_list_user_spaces_requires_admin(self) -> None:
+        with self.assertRaises(AdminError) as ctx:
+            list_user_spaces_for_admin(self.repo, self.kira, self.alice.id)
+        self.assertEqual(ctx.exception.code, 4030)
+
+    def test_list_user_spaces_missing_user(self) -> None:
+        with self.assertRaises(AdminError) as ctx:
+            list_user_spaces_for_admin(self.repo, self.alice, 999999)
+        self.assertEqual(ctx.exception.code, 4004)
+
+    def test_list_user_spaces_joined_available_partition(self) -> None:
+        result = list_user_spaces_for_admin(self.repo, self.alice, self.kira.id)
+        self.assertEqual(set(result.keys()), {"joined", "available"})
+        all_space_ids = {s.id for s in self.repo.list_spaces()}
+        joined_ids = {row["space_id"] for row in result["joined"]}
+        available_ids = {row["space_id"] for row in result["available"]}
+        # joined 与 available 不重叠，并集 = 全部空间
+        self.assertEqual(joined_ids & available_ids, set())
+        self.assertEqual(joined_ids | available_ids, all_space_ids)
+        # joined 行含角色 + 加入时间 + 空间名
+        for row in result["joined"]:
+            self.assertIn("role", row)
+            self.assertIn("joined_at", row)
+            self.assertIn("space_name", row)
 
 
 if __name__ == "__main__":
