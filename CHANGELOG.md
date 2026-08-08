@@ -6,6 +6,17 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.3.1（2026-08-08）
+
+**PG 团队 E2E 验证缺陷修复：导入文档无法删除（`DELETE /api/documents/{id}` 返回 HTTP 500）。** 团队端到端验证（`docs/env/team-e2e-verification-runbook.md`，TEAM-E2E-001）在 E2E-18 清理阶段发现：导入产生的文档删除时后端抛 500。
+
+- 根因：`lumen_imports.parsed_doc_id` 外键无 `ON DELETE CASCADE`（`backend/migrations/004_sprint8_imports_terms.sql`），而 `PgRepository.delete_document` 只删 `lumen_documents` 依赖级联清理，imports 一路未覆盖 → 删除导入文档违反 `lumen_imports_parsed_doc_id_fkey` 约束。内存 Demo 无 FK 不受影响；versions / chunks 的 FK 均有 CASCADE，仅 imports 遗漏。
+- 修复（方案 A）：`backend/repository/pg_repository.py` `delete_document` 删除前先 `UPDATE lumen_imports SET parsed_doc_id=NULL WHERE parsed_doc_id=:id` 解绑引用，不改 migration / 现有库无需迁移。
+- 回归：`tests/backend/test_pg_repository.py` 新增 `test_delete_imported_document_unbinds_import_job`；PG 集成 17/17 OK + 后端全量 311 OK + 真 PG 复验（导入 → 删除 HTTP 200 `deleted:true`，imports 解绑为 NULL）。
+- 文档：`docs/09-verification.md` §5.1 缺陷状态更新为「已修复（本轮）」；TEAM-E2E-001 状态 BLOCKED → PASS WITH ISSUE；新增 `docs/env/team-e2e-verification-runbook.md`（团队 E2E 验证 SOP）。
+
+> PATCH 依据（`ai/project-rules.md` §2.8.1）：纯 bug 修复，不改对外 API 契约、不新增可演示能力。
+
 ## v3.3.0（2026-08-08）
 
 **维护态批次批3（Sprint-30，REQ-008 扩展）：AI 助手悬浮窗 + 「基于知识库」开关 + 多轮对话 + LLM 多通道切换（TC-P2-ASSIST-001）。** 右下角新增 AI 助手悬浮窗（悬浮图标 → 对话抽屉），支持多轮对话与「基于知识库」开关（勾选 = RAG 检索增强问答带来源；关闭 = 通用对话不检索）；命令面板「问 AI」改为直接打开抽屉并带入问题。同时把 LLM 通道做成**多配置可切换**（`.env` 的 `LLM_PROVIDERS` 命名配置，deepseek / glm / gpt，新增 `deepseek` provider），抽屉底部可下拉切换通道，避免单一中转 / 模型达上限后卡死。
