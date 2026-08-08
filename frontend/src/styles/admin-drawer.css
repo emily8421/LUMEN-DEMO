@@ -1,0 +1,61 @@
+/* REQ-050 用户可访问空间抽屉（UserSpacesDrawer）：admin 用户管理页点「空间」按钮打开。 */
+
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  justify-content: flex-end;
+  background: rgba(15, 23, 42, 0.35);
+}
+
+.user-spaces-drawer {
+  position: relative;
+  z-index: 1;
+  width: min(480px, 94vw);
+  height: 100%;
+  overflow: hidden;
+  border-left: 1px solid var(--line);
+  border-radius: 0;
+  background: var(--panel);
+  display: flex;
+  flex-direction: column;
+  box-shadow: -12px 0 32px rgba(15, 23, 42, 0.16);
+}
+
+.user-spaces-drawer .drawer-header {
+  flex: 0 0 auto;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--line);
+}
+
+.user-spaces-drawer .drawer-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.drawer-notice {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-control);
+  background: var(--blue-soft);
+  color: var(--text);
+  font-size: 13px;
+}
+
+/* 用户管理表格操作列：空间 / 禁用按钮并排 */
+.admin-user-actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .user-spaces-drawer {
+    width: 100vw;
+  }
+}

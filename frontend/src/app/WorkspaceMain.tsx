@@ -263,6 +263,15 @@ export function WorkspaceMain({
           onFilterStatusChange={adminUsers.setFilterStatus}
           onRoleChange={adminUsers.handleRoleChange}
           onStatusToggle={adminUsers.handleStatusToggle}
+          drawerUserId={adminUsers.drawerUserId}
+          drawerData={adminUsers.drawerData}
+          drawerBusy={adminUsers.drawerBusy}
+          drawerNotice={adminUsers.drawerNotice}
+          onOpenDrawer={adminUsers.handleOpenDrawer}
+          onCloseDrawer={adminUsers.handleCloseDrawer}
+          onChangeSpaceRole={adminUsers.handleChangeSpaceRole}
+          onRemoveSpace={adminUsers.handleRemoveSpace}
+          onAddSpace={adminUsers.handleAddSpace}
         />
       ) : null}
     </section>

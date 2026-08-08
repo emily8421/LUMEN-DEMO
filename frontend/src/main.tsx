@@ -20,6 +20,7 @@ import './styles/responsive.css';
 import './styles/onboarding.css';
 import './styles/local-mount.css';
 import './styles/members.css';
+import './styles/admin-drawer.css';
 import './styles/command-palette.css';
 import './styles/ai-assistant.css';
 

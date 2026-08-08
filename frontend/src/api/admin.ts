@@ -1,4 +1,5 @@
 ﻿import { request } from './client';
+import type { SpaceMemberRole } from './spaceMembers';
 
 export type UserRole = 'admin' | 'member';
 export type UserStatus = 'active' | 'disabled';
@@ -39,4 +40,28 @@ export async function updateAdminUser(
     token,
     body: JSON.stringify(payload),
   });
+}
+
+export type AdminUserSpaceView = {
+  space_id: number;
+  space_code: string;
+  space_name: string;
+  role: SpaceMemberRole;
+  joined_at: string;
+};
+
+export type AdminUserSpaceAvailable = {
+  space_id: number;
+  space_code: string;
+  space_name: string;
+};
+
+export type AdminUserSpacesResult = {
+  joined: AdminUserSpaceView[];
+  available: AdminUserSpaceAvailable[];
+};
+
+/** admin 查询用户已加入空间 + 可授予空间（API-054，REQ-050）。仅全局 admin。 */
+export async function listAdminUserSpaces(token: string, userId: number): Promise<AdminUserSpacesResult> {
+  return request<AdminUserSpacesResult>(`/api/admin/users/${userId}/spaces`, { token });
 }
