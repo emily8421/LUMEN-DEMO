@@ -4,6 +4,7 @@ param(
     [switch]$NoBrowser,
     [switch]$StopExisting,
     [switch]$Detached,
+    [switch]$UsePostgres,
     [string[]]$RequiredBackendRoute = @(),
     [switch]$Stop
 )
@@ -265,7 +266,24 @@ try {
     }
 
     $backendScript = Join-Path $tempRoot "sprint16_demo_backend.py"
-    @"
+    if ($UsePostgres) {
+        @"
+import sys
+from pathlib import Path
+
+repo_root = Path(r"$repoRoot")
+sys.path.insert(0, str(repo_root))
+
+import backend.main as main
+
+app = main.create_app()
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=$BackendPort, log_level="warning")
+"@ | Set-Content -Path $backendScript -Encoding UTF8
+    } else {
+        @"
 from contextlib import asynccontextmanager
 import importlib.util
 import sys
@@ -301,6 +319,7 @@ if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="127.0.0.1", port=$BackendPort, log_level="warning")
 "@ | Set-Content -Path $backendScript -Encoding UTF8
+    }
 
     Remove-Item Env:VITE_API_BASE -ErrorAction SilentlyContinue
     $env:DEMO_BACKEND_PROXY_URL = "http://127.0.0.1:$BackendPort"
@@ -330,9 +349,17 @@ if __name__ == "__main__":
     }
     Write-Host ""
     Write-Host "Sprint-16 demo is ready: $frontendUrl"
-    Write-Host "Login account: alice"
+    if ($UsePostgres) {
+        Write-Host "Login account: alice / demo-pass-1234 (seeded account, real PG authentication)"
+    } else {
+        Write-Host "Login account: alice (demo mode, no password)"
+    }
     Write-Host "Try: Documents view -> batch import panel -> drag/select .md/.txt files or a folder -> Search/Query."
-    Write-Host "Backend uses an in-memory demo repository for this run; no PostgreSQL data is changed."
+    if ($UsePostgres) {
+        Write-Host "Backend uses the PostgreSQL repository (persistent); data survives restarts. Requires the lumen-pg container."
+    } else {
+        Write-Host "Backend uses an in-memory demo repository for this run; no PostgreSQL data is changed."
+    }
 
     if (-not $NoBrowser) {
         $browser = Find-Browser
