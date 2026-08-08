@@ -91,10 +91,10 @@ flowchart LR
 
 | 能力 / 流程 | 数据表 / 字段 | API-ID（候选） | 权限规则 | 错误码 | 契约状态 |
 |---|---|---|---|---|---|
-| 文件夹树查询 | `lumen_folders` | API-034 `GET /api/folders` | space 成员，按 space 过滤 | 4003 | 草案 |
-| 新建文件夹 | `lumen_folders` | API-035 `POST /api/folders` | space 成员 | 4003/4090（重名） | 草案 |
-| 移动 / 改名 | `lumen_folders` / `lumen_documents` | API-036 | space 成员 + 防环 | 4003/4004/4090（改名重名）/4220（防环 / 跨空间） | 草案 |
-| 排序 | `lumen_folders.order` | API-037 | space 成员 | 4003 | 草案 |
+| 文件夹树查询 | `lumen_folders` | API-034 `GET /api/folders` | space 成员，按 space 过滤 | 4003 | 已实现（task-027） |
+| 新建文件夹 | `lumen_folders` | API-035 `POST /api/folders` | space 成员 | 4003/4090（重名） | 已实现（task-027） |
+| 移动 / 改名 | `lumen_folders` / `lumen_documents` | API-036 | space 成员 + 防环 | 4003/4004/4090（改名重名）/4220（防环 / 跨空间） | 已实现（task-027） |
+| 排序 | `lumen_folders.order` | API-037 | space 成员 | 4003 | 已实现（task-027） |
 | 导入保留结构 | `lumen_folders` + `lumen_documents.folder_id` | API-029 改造 | space 成员 | 同 API-029 | 已实现（task-028） |
 | 文档归属 | `lumen_documents.folder_id` | API-038 `PATCH /api/documents/{document_id}/folder` | 文档可见且可写；目标 folder 同空间；`folder_id=null`=根目录 | 4003/4004/4220 | 已实现（task-029） |
 

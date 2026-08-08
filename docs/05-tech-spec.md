@@ -9,7 +9,7 @@
 |---|---|
 | 输入来源 | `docs/03-prd.md`、`docs/04-architecture.md`、`docs/env/local-env.md`、`ai/project-rules.md`、`docs/research/2026-07-15-overall-design-04-05-audit.md` |
 | 覆盖架构组件 | FastAPI 后端、React 前端、PostgreSQL + pgvector、Embedding / LLM 适配、导入解析、导出备份、PDF 候选 |
-| 当前状态 | 目标基线已定（Phase1 技术选型已钉死）。Sprint-7/8 + task-009 真实化后：**PostgreSQL+pgvector / Embedding / LLM 已接入，RAG 与 search 均可走向量召回**（RG-001/002/004 Go，见 §1「当前实现状态」列与 §5.1）；Phase1.5A 批量导入与 `.md` / ZIP 导出备份已完成；Phase1.5B PDF 导出已完成 API-019 / Sprint-18 产品实现；Phase2A 标签、反向链接与快速入口已完成。OCR / 真实 Word/PDF 文本提取与 zhparser 搜索增强仍需后续 RG / 选型；Phase2B 实现期变更需先修订本文 |
+| 当前状态 | 目标基线已定（Phase1 技术选型已钉死）。Sprint-7/8 + task-009 真实化后：**PostgreSQL+pgvector / Embedding / LLM 已接入，RAG 与 search 均可走向量召回**（RG-001/002/004 Go，见 §1「当前实现状态」列与 §5.1）；Phase1.5A 批量导入与 `.md` / ZIP 导出备份已完成；Phase1.5B PDF 导出已完成 API-019 / Sprint-18 产品实现；Phase2A 标签、反向链接与快速入口已完成；Phase2B 团队 MVP（REQ-014/013/024/039）、Phase2C 本地知识源接入（REQ-018）、Phase2D 账户与多人权限（Sprint-26/27/28）均已完成（见 `ai/project-rules.md` §1）。OCR / 真实 Word/PDF 文本提取与 zhparser 搜索增强仍需后续 RG / 选型；后续阶段实现期变更需先修订本文 |
 | 最后更新 | 2026-08-04（Sprint-18 PDF 导出产品闭环：ReportLab + API-019 + TC-P1-017 通过） |
 
 ## 1. 技术栈与版本
@@ -93,7 +93,7 @@ flowchart TB
 - **Phase1.5A（个人可用 Alpha）**：允许 REQ-037 / 038 低依赖导入导出增强；不得以 PDF、真实 Word/PDF 解析、OCR、标签 / 内链、AI 润色作为退出门槛；新增实现必须遵守 WSG 文件阈值。
 - **Phase1.5B（个人增强 Beta）**：REQ-027 单文档 PDF 已完成 RG-006 选型 + Sprint-18 产品实现（ReportLab 首版）；真实 Word/PDF 文本提取、zhparser 搜索增强需单独选型 / RG，不阻塞 Alpha。
 - **Phase2A（个人知识组织）**：已完成 REQ-026 / 012 / 025 三个 vertical slice（TC-P2-LINK/TAG/QUICK-001 通过，2026-07-20 closure）。Phase2B（团队 MVP）契约与首个 vertical slice 待升阶段确认，不得一次性实现全部 P2 UI。
-- **Phase2B（团队 MVP，范围已确认 2026-07-30，未切指针）**：REQ-014 AI 润色为首批核心、REQ-013 / 024 时间轴紧随第二 slice；**AI 润色数据外发风险已接受（真实外发 + 权限护栏，见 RG-008 + `ai/project-rules.md §2.5`），5030 / Mock 可降级**；REQ-015 / 016 / 017（推送 / 协作 / 移动端）不进首批，留后续 Phase。
+- **Phase2B（团队 MVP，已完成 2026-08-05 收口）**：REQ-014 AI 润色为首批核心、REQ-013 / 024 时间轴紧随第二 slice；**AI 润色数据外发风险已接受（真实外发 + 权限护栏，见 RG-008 + `ai/project-rules.md §2.5`），5030 / Mock 可降级**；REQ-015 / 016 / 017（推送 / 协作 / 移动端）不进首批，留后续 Phase。
 
 ## 4. 编码约定
 

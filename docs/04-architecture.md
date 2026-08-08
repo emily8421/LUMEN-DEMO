@@ -17,7 +17,7 @@
 
 | 维度 | 内容 |
 |---|---|
-| 当前 Phase | **Phase2D（账户与多人权限）进行中（2026-08-07 切指针；Sprint-26 账号体系基础已完成）**；Phase2B（团队 MVP）已完成（2026-08-05 收口）；Phase1 Demo + Phase1.5A + Phase2A（个人知识组织）已完成，见 `ai/project-rules.md` §1 |
+| 当前 Phase | **Phase2D（账户与多人权限）已完成（2026-08-07 收口：Sprint-26/27/28 全部验收通过）**；Phase2C（本地知识源接入）已完成（2026-08-06）；Phase2B（团队 MVP）已完成（2026-08-05 收口）；Phase1 Demo + Phase1.5A + Phase2A（个人知识组织）已完成，见 `ai/project-rules.md` §1 |
 | 交付物形态 | Demo / 个人可用 Alpha / 个人知识组织：Phase1 保证核心价值可演示；Phase1.5A 已解决批量入库与导出备份；Phase2A 已补标签、内链 / 反链、快速录入；Phase1.5B / Phase2B 后续确认；全程保留产品红线（库外问答回复"未找到"、不编造） |
 | 运行环境 | 本机单机 Demo（React + FastAPI + Docker PostgreSQL+pgvector + 本机 Embedding + 内网 LLM 中转），详见 §4 |
 | 项目形态裁剪 | Full 剖面；`06/07` 保留（持久化 + 对外 REST），见 `ai/project-rules.md` §3 |
@@ -242,8 +242,8 @@ flowchart TB
 | REQ-038 | [P1] | COMP-001 / 002 / 003 | MOD-002 / 007 | Flow-007 | `docs/08-dev-plan.md` Sprint-17、`docs/07-api-spec.md` API-030、`docs/09-verification.md` TC-P1-016 | Phase1.5A-已实现（TC-P1-016 通过） |
 | REQ-027 | [P1] | COMP-001 / 002 / 003 | MOD-007 | Flow-008 | ADR-006、`docs/08-dev-plan.md` Sprint-18、`docs/09-verification.md` TC-P1-017 | Phase1.5B-已实现（TC-P1-017 通过） |
 | REQ-012 / 025 / 026 | [P2] | COMP-001 / 002 / 003 | MOD-006 | Flow-003 / 004 | 导航交互见 `docs/design/frontend-interaction.md` §3 | P2-已实现（TC-P2-LINK/TAG/QUICK-001 通过） |
-| REQ-013 / REQ-024 | [P2] | COMP-001 / 002 / 003 | MOD-006 | Flow-009 | `docs/design/timeline.md`（Phase2B 建） | Phase2B 首批·第二 slice（紧随 REQ-014）；骨架，待设计细化 |
-| REQ-014 | [P2] | COMP-001 / 002 / 003 / 004 | MOD-007 | Flow-005 | `docs/design/ai-polish.md`（Phase2B 建） | Phase2B 首批核心·后端已实现（MVP 级）；数据外发风险已接受（RG-008 Go）；UI 门禁待重跑 |
+| REQ-013 / REQ-024 | [P2] | COMP-001 / 002 / 003 | MOD-006 | Flow-009 | `docs/design/timeline.md`（Phase2B 建） | Phase2B 首批·第二 slice（紧随 REQ-014）；P2-已实现（TC-P2-TL-001 通过） |
+| REQ-014 | [P2] | COMP-001 / 002 / 003 / 004 | MOD-007 | Flow-005 | `docs/design/ai-polish.md`（Phase2B 建） | Phase2B 首批核心·P2-已实现（MVP 级，TC-P2-AI-001 通过）；数据外发风险已接受（RG-008 Go） |
 | REQ-015 / 016 / 017 | [P2] | — | MOD-007 | — | 后续 Phase 时细化 | 不进 Phase2B 首批 |
 | REQ-018 | [P2] | COMP-001 / 002 / 003 / 004 | MOD-008 | Flow-010 | `docs/design/ingestion.md` Flow-D-014 + `docs/design/frontend-interaction.md` §9.3 | Phase2C·已设计（模式 B 浏览器，RG-009 Go）；模式 A 已随 Phase2B |
 | REQ-019..023 / 028..035 | [愿景] | — | MOD-008 / 009 / 010 | — | 技术验证通过后细化 | 骨架 |

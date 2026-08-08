@@ -243,7 +243,7 @@ CREATE INDEX idx_lumen_sessions_user ON lumen_sessions(user_id) WHERE revoked_at
 
 > **确认记录（2026-08-07 编码前）**：C-AUTH-001..006 均按 AI 建议落地——C-AUTH-001 注册自建个人空间（role=admin）；C-AUTH-002 登录标识 email（兼容 external_id 别名）；C-AUTH-003 锁定阈值 5 次 / 15min；C-AUTH-004 审计最小集（register / login_success / login_failed / login_locked / logout，结构化日志，不新建表）；C-AUTH-005 密码策略 8–64 字符；C-AUTH-006 bcrypt（cost 12，不采用 passlib）。`docs/01 §4` 的 U-45「注册空间归属待确认」随之关闭。
 
-## 17. Sprint-27 权限多人化设计（增量·草案）
+## 17. Sprint-27 权限多人化设计（增量·已实现 2026-08-07）
 
 > 定位：Phase2D「账户与多人权限」Sprint-27 增量设计（2026-08-07 立项；**已实现 2026-08-07**）。承接 REQ-043 / REQ-044（REQ-001/002/003 扩展，U-48 / U-49），在 Sprint-26 账号体系之上做权限过滤实质改造与回归。C-ACC-001..003 已确认（2026-08-07 按 AI 建议执行）。
 

@@ -273,7 +273,7 @@ sequenceDiagram
 | Phase1.5A `[P1]` | UI 路径已实现 | 批量 / 文件夹导入复用 Context Pane 导入区，增加 drop zone、多文件 / 文件夹选择、批量进度与逐条结果；导出复用文档详情 / 空间工具栏，增加 `.md` 下载与空间 ZIP 导出入口；TC-P1-015/016 已通过 |
 | Phase1.5B `[P1]` | UI 路径已实现 | 文档详情工具栏新增"导出 PDF"入口，调用 API-019 同步生成中文 PDF artifact；TC-P1-017 已通过 |
 | Phase2A `[P2]` | 已实现最小闭环 | 标签、内链 / 反链、快速录入已完成并通过 TC-P2-TAG/LINK/QUICK-001；经典 / 探索双模式等更大 UI 方向仍按候选处理，不自动扩大 Phase2A 范围 |
-| Phase2B `[P2]` | **范围已确认·部分实现（2026-08-04）** | AI 润色 / 写作引用（REQ-014 首批核心，已落地）、**主题时间线 / 密度热条（REQ-013a/024 第二 slice·PG-P2-008 已实现，候选 A + 关键词/标签驱动 + actor + 密度 ratio，TL-C-001..011 已确认；运行态 API smoke / Edge headless 浏览器 smoke / 真实 PG 大数据性能 smoke 已通过）**；数据外发已接受（RG-008）、AI 降级 5030 已定 |
+| Phase2B `[P2]` | **已完成（2026-08-05 收口）** | AI 润色 / 写作引用（REQ-014 首批核心，已落地）、**主题时间线 / 密度热条（REQ-013a/024 第二 slice·PG-P2-008 已实现，候选 A + 关键词/标签驱动 + actor + 密度 ratio，TL-C-001..011 已确认；运行态 API smoke / Edge headless 浏览器 smoke / 真实 PG 大数据性能 smoke 已通过）**；数据外发已接受（RG-008）、AI 降级 5030 已定 |
 | 愿景产品 `[愿景]` | 骨架·待技术验证 | 承接 `docs/design/frontend-experience-brief.md`：受限局部情报墙、证据地图、矛盾检测、路径推理等仅作为愿景方向；不得作为全空间默认首页，待情报分析技术验证与权限边界设计后再细化 |
 
 ### 9.0 Phase1.5A/B 已实现交互路径
@@ -320,12 +320,12 @@ sequenceDiagram
 
 | Page-ID | 页面 / 视图 | 入口 | 角色 | 来源依据 | Phase | 状态 | 编码前确认点 |
 |---|---|---|---|---|---|---|---|
-| PG-P2-001 | LUMEN 首页 / 简洁空间入口 | 登录后默认页、左侧总览入口 | 已登录空间成员 | `FEB-P-007`、`UXD-P2-HOME`、用户确认主题风格可沿用 | `[P2]` 候选 | 草案·待实现前原型确认 | 欢迎语、知识图谱展示层级、快捷操作、AI 助手入口位置、首屏信息密度 |
-| PG-P2-002 | 经典目录 / 分层导航列 | 全局左侧目录、文档页左侧栏 | 已登录空间成员 | `FEB-P-003`、`PX-R-002`、HTML 原型目录折叠演示 | `[P2]` 候选 | 草案·待实现前原型确认 | 多层目录默认展开层级、折叠状态记忆、目录到页面 / 文档联动、空目录文案 |
-| PG-P2-003 | 文档预览 / 编辑 / 并排工作区 | 目录叶子、搜索来源、问答来源、术语引用 | 具备文档可见权限的成员 | `FEB-P-005`、`PX-R-004`、P1 `PG-003` | `[P1]` 延续 / `[P2]` 细化 | 草案·待实现前原型确认 | 预览 / 编辑 / 编辑+预览并排切换、可调宽区域、版本来源位置、保存反馈、只读 / 无权限表现 |
-| PG-P2-004 | 搜索工作区增强 | 左侧搜索入口、首页快捷操作、目录待核实入口 | 已登录空间成员 | P1 `PG-005`、`PX-R-006` | `[P2]` 候选 | 草案·待实现前原型确认 | 筛选项、结果密度、来源打开路径、无结果与权限过滤提示 |
-| PG-P2-005 | 问答 / AI 助手工作区 | 首页 AI 入口、左侧问答入口、搜索加入问答 | 已登录空间成员 | P1 `PG-006`、`FEB-P-008`、`UXD-P2-ASK` | `[P2]` 候选 | 草案·待实现前原型确认 | 推荐问题来源、回答范围提示、来源引用、库外问题兜底、首页入口形态 |
-| PG-P2-006 | 术语工作区增强 | 左侧术语入口、文档术语提示、问答来源 | 已登录空间成员 | P1 `PG-007`、REQ-036、`PX-R-006` | `[P2]` 候选 | 草案·待实现前原型确认 | 术语筛选、编辑入口、待确认术语、文档 / 问答联动 |
+| PG-P2-001 | LUMEN 首页 / 简洁空间入口 | 登录后默认页、左侧总览入口 | 已登录空间成员 | `FEB-P-007`、`UXD-P2-HOME`、用户确认主题风格可沿用 | `[P2]` 候选 | 已实现（落地形态见 §9.5 偏差） | 欢迎语、知识图谱展示层级、快捷操作、AI 助手入口位置、首屏信息密度 |
+| PG-P2-002 | 经典目录 / 分层导航列 | 全局左侧目录、文档页左侧栏 | 已登录空间成员 | `FEB-P-003`、`PX-R-002`、HTML 原型目录折叠演示 | `[P2]` 候选 | 已实现（落地形态见 §9.5 偏差） | 多层目录默认展开层级、折叠状态记忆、目录到页面 / 文档联动、空目录文案 |
+| PG-P2-003 | 文档预览 / 编辑 / 并排工作区 | 目录叶子、搜索来源、问答来源、术语引用 | 具备文档可见权限的成员 | `FEB-P-005`、`PX-R-004`、P1 `PG-003` | `[P1]` 延续 / `[P2]` 细化 | 已实现（落地形态见 §9.5 偏差） | 预览 / 编辑 / 编辑+预览并排切换、可调宽区域、版本来源位置、保存反馈、只读 / 无权限表现 |
+| PG-P2-004 | 搜索工作区增强 | 左侧搜索入口、首页快捷操作、目录待核实入口 | 已登录空间成员 | P1 `PG-005`、`PX-R-006` | `[P2]` 候选 | 已实现（落地形态见 §9.5 偏差） | 筛选项、结果密度、来源打开路径、无结果与权限过滤提示 |
+| PG-P2-005 | 问答 / AI 助手工作区 | 首页 AI 入口、左侧问答入口、搜索加入问答 | 已登录空间成员 | P1 `PG-006`、`FEB-P-008`、`UXD-P2-ASK` | `[P2]` 候选 | 已实现（落地形态见 §9.5 偏差） | 推荐问题来源、回答范围提示、来源引用、库外问题兜底、首页入口形态 |
+| PG-P2-006 | 术语工作区增强 | 左侧术语入口、文档术语提示、问答来源 | 已登录空间成员 | P1 `PG-007`、REQ-036、`PX-R-006` | `[P2]` 候选 | 已实现（落地形态见 §9.5 偏差） | 术语筛选、编辑入口、待确认术语、文档 / 问答联动 |
 | PG-P2-007 | 局部关系图 / 情报墙候选视图 | 项目 / 主题 / 叶子文件夹内可选视图 | 已登录空间成员 | `UXD-VISION-BOARD`、`FEB-P-004` | `[愿景]` 候选 | 草案·待技术验证 | 节点规模阈值、权限过滤、待核实文案、与列表 / 文档互跳 |
 | PG-P2-008 | **主题时间线** / 密度热条视图 | 空间内可选视图、首页快捷入口 | 已登录空间成员 | REQ-013a/024、`docs/design/timeline.md`（候选 A 实时聚合） | `[P2]` Phase2B 第二 slice | 已实现（task-030；运行态 API smoke + Edge headless 浏览器 smoke + 真实 PG 大数据性能 smoke 通过） | **两种主题入口（关键词搜索框 + 标签选择，并列）** + 顶部密度热条（4 档色阶 **+ 量化 ratio 悬停提示**）+ 下方事件列表（带 **actor**；linked 显示「未知」）+ 零命中空态 + 大集合聚合提示；越权事件不显示 |
 
@@ -515,7 +515,7 @@ sequenceDiagram
 
 #### 9.5.7 实现偏差与进展（Sprint-21）
 
-> 编码进展（2026-08-01）：slice 3a（栏显隐机制）+ slice 3c（欢迎页首屏 + 少容器视觉收口）编码完成，`volta run --node 22.17.1 npm run build` 绿（246 modules），WSG-004 行数达标（workspace.css 263 / App.tsx 253 / WorkspaceMain 140 / DocumentsFeature 300 未动）。Chrome/Edge smoke + TC-P1-014 回归待 PG+LLM 栈（本会话起不了完整 demo）。slice 3b（单列阅读/编辑切换，§9.5.4）未启动。
+> 编码进展（2026-08-01）：slice 3a（栏显隐机制）+ slice 3c（欢迎页首屏 + 少容器视觉收口）编码完成，`volta run --node 22.17.1 npm run build` 绿（246 modules），WSG-004 行数达标（workspace.css 263 / App.tsx 253 / WorkspaceMain 140 / DocumentsFeature 300 未动）。Chrome/Edge smoke + TC-P1-014 回归待 PG+LLM 栈（本会话起不了完整 demo）。slice 3b（单列阅读/编辑切换，§9.5.4）未启动。**更新（Phase2B 收口后）：slice 3a/3c 的 Chrome/Edge smoke + TC-P1-014 回归已在 PG+LLM 栈就绪后通过。**
 
 | 偏差 ID | 代码事实 | 原设计（§9.5） | 偏差类型 | 处理结论 | 验证 |
 |---|---|---|---|---|---|
@@ -529,11 +529,11 @@ sequenceDiagram
 | F-impl-8 | 视觉收口主区：workspace-main 透明底 + editor-panel/inspector-pane/task/term 去卡片框（border+radius+白底）融入主区 + markdown-preview 去框 + 正文限宽；保留 toolbar/inspector-header 分隔线 + textarea 边界。ContextPane/ViewNav/TopBar 未动 | §9.5.1 少容器清爽 | 范围调整 | 用户 Q2「主区为主」+ smoke #3 深化（去两大卡片框）；全局收口留后续 | 待 smoke |
 | F-impl-9 | pane-left-collapsed 显式锁定 grid 列（view-nav/context-pane/workspace-main = 1/2/3） | §9.5 栏显隐（3a 原实现 auto-placement） | bug 修复 | 3a smoke（slice 3c 期间）发现：context-pane 用 display:none 收起移出 grid，auto-placement 把 workspace-main 错填到 0 宽列 2 → 中间区整体消失；已显式 grid-column 修复（layout.css） | 已修复（2026-08-01，build 绿，待 smoke 复核） |
 | F-impl-10 | documents 视图无选中 + 非新建时渲染引导卡；toolbar 加「返回」按钮（新建态/文档页退回引导卡）；reloadDocuments 不再自动选首篇（刷新/登录回引导卡，保留已选） | §9.5.2/§9.5.3 + smoke 反馈 | 范围扩展 | 用户 2026-08-01 决策 A 方案 + 返回能力；避免「主体空」+ 编辑态/文档页回不去 | 待 smoke |
-| F-impl-11 | ContextPane 常驻导入区（import-panel section）抽为按钮触发的居中弹窗（ImportFeature），DocumentsFeature toolbar 加「导入」触发；复用 useImport + api/imports，不改导入契约 | §9.5.8（frontend-workspace-redesign §L90 方向建议） | 范围扩展 | 用户 2026-08-01 决策：modal + toolbar 触发；ContextPane 减负贴合 §9.5.1 少容器；触及 REQ-037/TC-P1-015 已验收入口形态，需回归 | 设计中 / 待编码 |
+| F-impl-11 | ContextPane 常驻导入区（import-panel section）抽为按钮触发的居中弹窗（ImportFeature），DocumentsFeature toolbar 加「导入」触发；复用 useImport + api/imports，不改导入契约 | §9.5.8（frontend-workspace-redesign §L90 方向建议） | 范围扩展 | 用户 2026-08-01 决策：modal + toolbar 触发；ContextPane 减负贴合 §9.5.1 少容器；触及 REQ-037/TC-P1-015 已验收入口形态，需回归 | 已实现（ImportFeature） |
 
-#### 9.5.8 导入入口弹窗化（Doc-First slice 3d，2026-08-01 设计中）
+#### 9.5.8 导入入口弹窗化（Doc-First slice 3d，已实现）
 
-> 状态：**设计中 / 待编码**（用户 2026-08-01 决策容器形态与触发位置；编码待 slice 3a/3c smoke 闭环后启动）。追溯：REQ-037（Phase1.5A `[P1]`）→ Sprint-16 已实现 → 本 slice 改入口形态 → task-025 → TC-P1-015 回归。
+> 状态：**已实现**（ImportFeature modal + DocumentsFeature toolbar「导入」触发；用户 2026-08-01 决策容器形态与触发位置，后续编码落地）。追溯：REQ-037（Phase1.5A `[P1]`）→ Sprint-16 已实现 → 本 slice 改入口形态 → task-025 → TC-P1-015 回归。
 
 **动机**：ContextPane 当前常驻导入区（`<section className="import-panel context-footer">`：drag/drop + 文件夹选择 + 权限 + 文件列表 + 结果摘要/逐条）使左栏承担「导航 + 文档上下文 + 导入入口」三种角色（`frontend-workspace-redesign` §L28/§L90），与 §9.5.1 少容器清爽冲突；导入是低频操作，常驻抢屏。方向依据：`frontend-workspace-redesign:90`「导入入口不再常驻全局侧栏，建议放文档视图 toolbar 的『导入』次级按钮」。
 

@@ -72,7 +72,7 @@
 | API-025 | GET/POST | /api/signal-tracks | 信号追踪 | [愿景] | 骨架 | — | REQ-034 |
 | API-026 | POST | /api/kits | 分析包 A Kit | [愿景] | 骨架 | — | REQ-035 |
 | API-027 | GET/PUT/DELETE | /api/tags/{id} | 标签详情 / 更新 / 归档 | [P2] | Phase2A-已实现 | — | REQ-012 |
-| API-028 | POST | /api/documents/{id}/polish | AI 润色 / 写作引用 | [P2] | MVP 级已设计 | — | REQ-014 |
+| API-028 | POST | /api/documents/{id}/polish | AI 润色 / 写作引用 | [P2] | Phase2B·首批核心·已实现 | 已实现（TC-P2-AI-001 通过） | REQ-014 |
 | API-033 | GET | /api/spaces/{id}/timeline | **主题时间线 / 密度热条**（REQ-013a 重定位） | [P2] | Phase2B·第二 slice·本地实现完成 | task-030；运行态 API smoke / Edge headless 浏览器 smoke / 真实 PG 大数据性能 smoke 已通过 | REQ-013a/024 |
 | API-034 | GET | /api/folders | 文件夹树查询（嵌套；token current_space_id；`parent_id` query，空=根层） | [P2] | Phase2B·第三 slice·已实现 | 后端已实现（task-027；路径裁定 /api/folders，2026-08-02） | REQ-039 |
 | API-035 | POST | /api/folders | 新建文件夹 | [P2] | Phase2B·第三 slice·已实现 | 后端已实现（task-027） | REQ-039 |

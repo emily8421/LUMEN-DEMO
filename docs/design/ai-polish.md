@@ -27,7 +27,7 @@
 | 本设计不负责 | 文档 CRUD / 版本（复用 `lumen_documents` / `lumen_document_versions`，REQ-004/005/006）；RAG 问答（REQ-008，独立子系统 `docs/design/rag-retrieval.md`，citation 模式仅复用其检索）；术语注入逻辑（复用 `docs/design/term-management.md`） |
 | 不新增内容 | 不新增 REQ、不新增 `06` 外的表 / 字段、不新增 `07` 外的接口；不实现 REQ-015/016/017 |
 | 权限边界 | 前端侧边栏入口仅可见性控制；**权限由后端 API-028 鉴权 + service 层「文档可写」+ sources「当前用户可见 chunk」过滤执行**，前端隐藏不替代后端边界 |
-| 依赖前置 | RG-004（LLM 通道，已 Go）+ **RG-008（数据外发风险接受，Conditional Go）**；migration 010 待编码 |
+| 依赖前置 | RG-004（LLM 通道，已 Go）+ **RG-008（数据外发风险接受，Conditional Go）**；migration 010 已落地（lumen_ai_drafts） |
 
 ## 2. 上游依据与追溯
 
@@ -101,8 +101,8 @@ stateDiagram-v2
 
 | 能力 / 流程 | 数据表 / 字段 | API-ID / 命令 | 权限规则 | 错误码 | 契约状态 |
 |---|---|---|---|---|---|
-| 润色（POLISH-01） | `lumen_ai_drafts`（input_excerpt_hash / prompt_summary / output_md / status） | API-028 mode=polish | 文档可写 | 4001/4003/4004/4220/5030 | MVP 级已设计 |
-| 写作引用（POLISH-02） | `lumen_ai_drafts`（cited_chunk_ids）+ `lumen_chunks` + `lumen_documents` | API-028 mode=citation | 文档可写；sources 仅当前用户可见 chunk | 4001/4003/4004/4220/5030 | MVP 级已设计 |
+| 润色（POLISH-01） | `lumen_ai_drafts`（input_excerpt_hash / prompt_summary / output_md / status） | API-028 mode=polish | 文档可写 | 4001/4003/4004/4220/5030 | 已实现（TC-P2-AI-001 通过） |
+| 写作引用（POLISH-02） | `lumen_ai_drafts`（cited_chunk_ids）+ `lumen_chunks` + `lumen_documents` | API-028 mode=citation | 文档可写；sources 仅当前用户可见 chunk | 4001/4003/4004/4220/5030 | 已实现（TC-P2-AI-001 通过） |
 | 草稿应用 | `lumen_documents` + `lumen_document_versions`（复用） | （走文档更新 API-005/006，非新接口） | 文档可写 | 4003/4004 | 复用既有 |
 
 - 字段 / 接口 / 错误码 / 权限以 `06/07` 为权威，本文只引用与组合。
