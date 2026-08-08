@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import delete, func, or_, select, text as sql_text
+from sqlalchemy import delete, func, or_, select, text as sql_text, update
 
 from backend.model.entities import (
     AiDraft,
@@ -657,6 +657,13 @@ class PgRepository:
 
     def delete_document(self, document_id: int) -> None:
         with SessionLocal() as session:
+            # imports keep a parsed_doc_id FK without ON DELETE CASCADE: unbind first,
+            # otherwise deleting an imported document violates lumen_imports_parsed_doc_id_fkey.
+            session.execute(
+                update(ImportJobORM)
+                .where(ImportJobORM.parsed_doc_id == document_id)
+                .values(parsed_doc_id=None)
+            )
             # versions + chunks removed by ON DELETE CASCADE
             session.execute(delete(DocumentORM).where(DocumentORM.id == document_id))
             session.commit()

@@ -127,6 +127,19 @@ class PgRepositoryTest(unittest.TestCase):
         self.assertEqual(self.repo.list_document_chunks(doc.id), [])
         self.assertEqual(self.repo.list_document_versions(doc.id), [])
 
+    def test_delete_imported_document_unbinds_import_job(self) -> None:
+        # Regression: deleting an imported document used to raise a 500 because
+        # lumen_imports.parsed_doc_id has no ON DELETE CASCADE. delete_document
+        # must unbind the import job reference before removing the document.
+        doc = self.repo.create_document(self.space_ids[0], "T", "c1", self.user_ids[0], DocumentPermission.TEAM)
+        job = self.repo.create_import_job(self.space_ids[0], "note.txt", self.user_ids[0])
+        self.repo.complete_import_job(job.id, doc.id, 1)
+        self.assertEqual(self.repo.require_import_job(job.id).parsed_doc_id, doc.id)
+
+        self.repo.delete_document(doc.id)
+        self.assertIsNone(self.repo.get_document(doc.id))
+        self.assertIsNone(self.repo.require_import_job(job.id).parsed_doc_id)
+
     def test_set_document_folder_round_trips_folder_id(self) -> None:
         folder = self.repo.create_folder(self.space_ids[0], None, "Imported", self.user_ids[0])
         doc = self.repo.create_document(self.space_ids[0], "T", "c1", self.user_ids[0], DocumentPermission.TEAM)
