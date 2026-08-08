@@ -3,7 +3,8 @@
 // 点文件 → onOpenLocalDoc(doc) 通知主区预览（左栏不再显示预览，避免遮挡目录）。
 // 自管理 useLocalVaultMount hook；token / onImported / onOpenLocalDoc 由 ContextPane 透传。
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { CSSProperties } from 'react';
 import {
   buildLocalMountTree,
   type LocalMountTreeNode,
@@ -31,7 +32,7 @@ export function LocalMountPane({ token, onImported, onOpenLocalDoc, localVault }
   const [importMsg, setImportMsg] = useState('');
   const [pendingImport, setPendingImport] = useState<{ path: string; label: string; count: number } | null>(null);
 
-  if (vm.status === 'unsupported') {
+  if (!vm.supported) {
     return (
       <section className="local-mount-pane">
         <header className="local-mount-header">
@@ -43,19 +44,19 @@ export function LocalMountPane({ token, onImported, onOpenLocalDoc, localVault }
     );
   }
 
-  const badgeClass = vm.status === 'mounted' ? 'ok' : vm.status === 'needs-auth' ? 'warn' : 'idle';
-  const badgeText =
-    vm.status === 'mounted'
-      ? `${vm.fileCount} 文件`
-      : vm.status === 'needs-auth'
-        ? '需重授权'
-        : vm.status === 'mounting'
-          ? '索引中…'
-          : '未挂载';
+  const hasMount = vm.mounts.length > 0;
+  const anyNeedsAuth = vm.mounts.some((m) => m.status === 'needs-auth');
+  const anyMounting = vm.mounts.some((m) => m.status === 'mounting');
+  const badgeClass = hasMount ? (anyNeedsAuth ? 'warn' : 'ok') : 'idle';
+  const badgeText = hasMount
+    ? `${vm.fileCount} 文件 · ${vm.mounts.length} 挂载`
+    : anyMounting
+      ? '索引中…'
+      : '未挂载';
 
   const tree = vm.docs.length > 0 ? buildLocalMountTree(vm.docs) : null;
   const searching = vm.query.trim().length > 0;
-  const canImport = vm.status === 'mounted' && !!token && !importing;
+  const canImport = hasMount && !!token && !importing;
 
   function handleOpen(path: string) {
     vm.openDoc(path);
@@ -88,9 +89,11 @@ export function LocalMountPane({ token, onImported, onOpenLocalDoc, localVault }
     }
   }
 
-  const importSelected = () => {
-    if (!vm.selectedPath) return;
-    const doc = vm.docs.find((d) => d.path === vm.selectedPath);
+  /** 导入单篇（path 缺省时用全局选中）。 */
+  const importSelected = (path?: string) => {
+    const targetPath = path ?? vm.selectedPath;
+    if (!targetPath) return;
+    const doc = vm.docs.find((d) => d.path === targetPath);
     if (doc) void importDocs([doc], '此篇');
   };
   const subtreeDocs = (dirPath: string) =>
@@ -133,36 +136,42 @@ export function LocalMountPane({ token, onImported, onOpenLocalDoc, localVault }
         <h2>本地挂载</h2>
         <span className={`local-mount-badge ${badgeClass}`}>{badgeText}</span>
         <div className="local-mount-actions">
-          {vm.status === 'mounted' ? (
-            <>
-              <button type="button" onClick={vm.reindex} title="重扫本地变更">
-                重扫
-              </button>
-              <button type="button" onClick={vm.unmount} title="卸载本地挂载">
-                卸载
-              </button>
-            </>
-          ) : vm.status === 'needs-auth' ? (
-            <button type="button" onClick={vm.reauth}>
+          {anyNeedsAuth ? (
+            <button type="button" onClick={() => vm.mounts.forEach((m) => { if (m.status === 'needs-auth') void vm.reauth(m.id); })}>
               重新授权
             </button>
-          ) : (
-            <button type="button" onClick={vm.mount} disabled={vm.status === 'mounting'}>
-              挂载 vault
+          ) : null}
+          {hasMount ? (
+            <button type="button" onClick={() => void vm.unmountAll()} title="卸载全部本地挂载">
+              卸载全部
             </button>
-          )}
+          ) : null}
+          <button type="button" onClick={vm.mount} disabled={anyMounting} title="添加本地挂载目录">
+            挂载 vault
+          </button>
         </div>
       </header>
 
-      {!collapsed && vm.status !== 'mounted' && vm.status !== 'mounting' && (
+      {!collapsed && !hasMount && !anyMounting && (
         <p className="empty-state local-mount-empty">
-          选择本地 vault / Markdown 文件夹挂载（仅本地浏览与搜索，不上传服务端）。
+          选择本地 vault / Markdown 文件夹挂载（仅本地浏览与搜索，不上传服务端）。可同时挂载多个目录。
         </p>
       )}
 
-      {!collapsed && vm.status === 'mounted' && (
+      {!collapsed && hasMount && (
         <>
           {vm.error && <p className="local-mount-error">{vm.error}</p>}
+          {vm.mounts.some((m) => m.status === 'needs-auth') ? (
+            <div className="local-mount-mount-list">
+              {vm.mounts.filter((m) => m.status === 'needs-auth').map((m) => (
+                <div key={m.id} className="local-mount-mount-row">
+                  <span>📁 {m.name}</span>
+                  <button type="button" className="secondary" onClick={() => void vm.reauth(m.id)}>重新授权</button>
+                  <button type="button" className="secondary" onClick={() => void vm.unmount(m.id)}>移除</button>
+                </div>
+              ))}
+            </div>
+          ) : null}
           <input
             className="local-mount-search"
             placeholder="本地关键词搜索（文件名 / 标题 / 正文）"
@@ -198,6 +207,8 @@ export function LocalMountPane({ token, onImported, onOpenLocalDoc, localVault }
                 onCreateFile={vm.createFile}
                 onDeleteFile={vm.deleteFile}
                 onRenameFile={vm.renameFile}
+                onImportAll={requestImportAll}
+                onImportFile={importSelected}
                 isBusy={false}
               />
             ) : (
@@ -223,7 +234,7 @@ export function LocalMountPane({ token, onImported, onOpenLocalDoc, localVault }
               <button
                 type="button"
                 className="local-mount-import"
-                onClick={importSelected}
+                onClick={() => importSelected()}
                 disabled={!canImport || !vm.selectedPath}
                 title="把选中的本地文件导入 LUMEN（走 API-029，获得搜索 / RAG / 团队能力）"
               >
@@ -257,6 +268,8 @@ function LocalMountTreeView({
   onCreateFile,
   onDeleteFile,
   onRenameFile,
+  onImportAll,
+  onImportFile,
   isBusy,
 }: {
   node: LocalMountTreeNode;
@@ -268,6 +281,8 @@ function LocalMountTreeView({
   onCreateFile: (dirPath: string, name: string, content: string) => Promise<void>;
   onDeleteFile: (path: string) => Promise<void>;
   onRenameFile: (path: string, newName: string) => Promise<void>;
+  onImportAll: () => void;
+  onImportFile: (path: string) => void;
   isBusy: boolean;
 }) {
   const [open, setOpen] = useState(true);
@@ -275,8 +290,42 @@ function LocalMountTreeView({
   const [creatingFileIn, setCreatingFileIn] = useState<string | null>(null);
   const [renamingPath, setRenamingPath] = useState<string | null>(null);
   const [inputValue, setInputValue] = useState('');
+  // REQ-049 优化：文件右键菜单（重命名 / 删除入口）。
+  const [menuPath, setMenuPath] = useState<string | null>(null);
+  const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+  // REQ-049 优化：目录右键菜单（新建文件 / 导入入口）。
+  const [dirMenuPath, setDirMenuPath] = useState<string | null>(null);
+  const [dirMenuPos, setDirMenuPos] = useState<{ x: number; y: number } | null>(null);
+  const dirMenuRef = useRef<HTMLDivElement | null>(null);
   const pad = 6 + Math.max(0, depth) * 14;
   const childDirs = [...node.children.values()];
+
+  // 右键菜单关闭：点击菜单外 / Esc（文件 + 目录菜单共用）。
+  useEffect(() => {
+    if (menuPath === null && dirMenuPath === null) {
+      return undefined;
+    }
+    function handlePointerDown(event: PointerEvent) {
+      if (menuRef.current?.contains(event.target as Node) || dirMenuRef.current?.contains(event.target as Node)) {
+        return;
+      }
+      setMenuPath(null);
+      setDirMenuPath(null);
+    }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setMenuPath(null);
+        setDirMenuPath(null);
+      }
+    }
+    window.document.addEventListener('pointerdown', handlePointerDown);
+    window.document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.document.removeEventListener('pointerdown', handlePointerDown);
+      window.document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [menuPath, dirMenuPath]);
 
   function commitInline() {
     const name = inputValue.trim();
@@ -306,10 +355,10 @@ function LocalMountTreeView({
           onContextMenu={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            setCreatingFileIn(node.path);
-            setInputValue('');
+            setDirMenuPath(node.path);
+            setDirMenuPos({ x: e.clientX, y: e.clientY });
           }}
-          title={node.path ? `${node.path} · 右键新建文件` : '右键新建文件'}
+          title={node.path ? `${node.path} · 右键新建文件 / 导入` : '右键新建文件 / 导入'}
         >
           <span className="local-mount-arrow">{open ? '▾' : '▸'}</span>
           <span className="local-mount-ic" aria-hidden="true">📁</span>
@@ -341,6 +390,50 @@ function LocalMountTreeView({
           >
             ＋
           </button>
+          {dirMenuPath === node.path && dirMenuPos ? (
+            <div
+              ref={dirMenuRef}
+              className="local-mount-menu"
+              style={{ left: dirMenuPos.x, top: dirMenuPos.y } as CSSProperties}
+              role="menu"
+              aria-label={`${node.name} 操作`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setDirMenuPath(null);
+                  setCreatingFileIn(node.path);
+                  setInputValue('');
+                }}
+              >
+                <span aria-hidden="true">＋</span> 新建文件
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setDirMenuPath(null);
+                  onImportDir(node.path, node.name);
+                }}
+                disabled={importDisabled}
+              >
+                <span aria-hidden="true">⤓</span> 导入此文件夹
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setDirMenuPath(null);
+                  onImportAll();
+                }}
+                disabled={importDisabled}
+              >
+                <span aria-hidden="true">⤓</span> 导入全部挂载
+              </button>
+            </div>
+          ) : null}
         </div>
       )}
       {creatingFileIn === node.path ? (
@@ -374,6 +467,8 @@ function LocalMountTreeView({
               onCreateFile={onCreateFile}
               onDeleteFile={onDeleteFile}
               onRenameFile={onRenameFile}
+              onImportAll={onImportAll}
+              onImportFile={onImportFile}
               isBusy={isBusy}
             />
           ))}
@@ -386,8 +481,8 @@ function LocalMountTreeView({
               onContextMenu={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                setRenamingPath(f.doc.path);
-                setInputValue(f.name);
+                setMenuPath(f.doc.path);
+                setMenuPos({ x: e.clientX, y: e.clientY });
               }}
               title={f.doc.path}
             >
@@ -411,21 +506,52 @@ function LocalMountTreeView({
                   <span className="local-mount-ic" aria-hidden="true">📄</span>
                   <span className="local-mount-label">{f.name}</span>
                   <span className="local-mount-tag">本地</span>
-                  <button
-                    type="button"
-                    className="local-mount-node-action"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (window.confirm(`确认删除本地文件「${f.name}」？`)) {
-                        void onDeleteFile(f.doc.path);
-                      }
-                    }}
-                    disabled={isBusy}
-                    title="删除文件"
-                    aria-label={`删除文件 ${f.name}`}
-                  >
-                    ×
-                  </button>
+                  {menuPath === f.doc.path && menuPos ? (
+                    <div
+                      ref={menuRef}
+                      className="local-mount-menu"
+                      style={{ left: menuPos.x, top: menuPos.y } as CSSProperties}
+                      role="menu"
+                      aria-label={`${f.name} 操作`}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setMenuPath(null);
+                          onImportFile(f.doc.path);
+                        }}
+                        disabled={importDisabled}
+                      >
+                        <span aria-hidden="true">⤓</span> 导入此篇
+                      </button>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setMenuPath(null);
+                          setRenamingPath(f.doc.path);
+                          setInputValue(f.name);
+                        }}
+                      >
+                        <span aria-hidden="true">✎</span> 重命名
+                      </button>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className="danger"
+                        onClick={() => {
+                          setMenuPath(null);
+                          if (window.confirm(`确认删除本地文件「${f.name}」？`)) {
+                            void onDeleteFile(f.doc.path);
+                          }
+                        }}
+                      >
+                        <span aria-hidden="true">×</span> 删除
+                      </button>
+                    </div>
+                  ) : null}
                 </>
               )}
             </div>

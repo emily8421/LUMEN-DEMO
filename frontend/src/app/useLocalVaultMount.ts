@@ -1,6 +1,7 @@
-// 本地 Vault 挂载编排 hook（REQ-018 模式 B）
+// 本地 Vault 挂载编排 hook（REQ-018 模式 B / REQ-049 增强）
 // 编排 task-031 数据层：pick→verify→存句柄→walk→读内容→倒排索引；页面加载无感恢复；本地搜索 / 预览。
-// 挂载元信息为运行时状态（从 handle + 索引重建），不另建 localStorage store（避免冗余）；句柄走 local-vault-fs 的 IndexedDB。
+// 多挂载（REQ-049 增强）：支持同时挂载多个本地目录，IDB 存句柄数组；
+// 各挂载独立管理句柄 / 状态，docs 聚合后供树 / 搜索 / 编辑统一使用（path 全局唯一）。
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -12,8 +13,9 @@ import {
   parentDirectoryForPath,
   pickDirectory,
   readVaultFile,
+  removeVaultHandle,
   renameVaultFile,
-  restoreVaultHandle,
+  restoreVaultHandles,
   saveVaultHandle,
   verifyPermission,
   walkVault,
@@ -35,6 +37,19 @@ export type LocalMountStatus =
   | 'needs-auth'
   | 'unsupported'
   | 'error';
+
+/** 单个挂载项（多挂载）。 */
+export interface VaultMount {
+  /** 稳定 id（句柄 name + 序号），用于 key / 移除。 */
+  id: string;
+  name: string;
+  handle: FileSystemDirectoryHandle;
+  status: LocalMountStatus;
+  fileCount: number;
+  /** 该挂载的目录相对路径 → 目录句柄（增删改查定位父目录）。 */
+  dirs: Map<string, FileSystemDirectoryHandle>;
+  error: string;
+}
 
 /** 目录树节点（由扁平 docs 路径聚合，PoC renderTree 同构）。 */
 export interface LocalMountTreeNode {
@@ -67,8 +82,11 @@ export function buildLocalMountTree(docs: LocalVaultDoc[]): LocalMountTreeNode {
 }
 
 export interface UseLocalVaultMount {
-  status: LocalMountStatus;
-  mountName: string;
+  /** 是否支持 File System Access（Chrome/Edge + localhost）。 */
+  supported: boolean;
+  /** 全部挂载项（含各自句柄 / 状态 / 目录句柄）。 */
+  mounts: VaultMount[];
+  /** 聚合文档（多挂载合并；path 全局唯一）。 */
   docs: LocalVaultDoc[];
   index: LocalVaultIndex | null;
   fileCount: number;
@@ -79,9 +97,10 @@ export interface UseLocalVaultMount {
   error: string;
   setQuery: (q: string) => void;
   mount: () => Promise<void>;
-  reauth: () => Promise<void>;
-  reindex: () => Promise<void>;
-  unmount: () => Promise<void>;
+  reauth: (mountId: string) => Promise<void>;
+  reindex: (mountId: string) => Promise<void>;
+  unmount: (mountId: string) => Promise<void>;
+  unmountAll: () => Promise<void>;
   openDoc: (path: string) => void;
   // REQ-049 本地读写：编辑态 + 文件增删改查。
   editingPath: string | null;
@@ -95,11 +114,11 @@ export interface UseLocalVaultMount {
   renameFile: (path: string, newName: string) => Promise<void>;
 }
 
+let mountSeq = 0;
+
 export function useLocalVaultMount(): UseLocalVaultMount {
-  const [status, setStatus] = useState<LocalMountStatus>(
-    isFileSystemAccessSupported() ? 'idle' : 'unsupported'
-  );
-  const [mountName, setMountName] = useState('');
+  const [supported] = useState<boolean>(isFileSystemAccessSupported());
+  const [mounts, setMounts] = useState<VaultMount[]>([]);
   const [docs, setDocs] = useState<LocalVaultDoc[]>([]);
   const [index, setIndex] = useState<LocalVaultIndex | null>(null);
   const [fileCount, setFileCount] = useState(0);
@@ -110,113 +129,157 @@ export function useLocalVaultMount(): UseLocalVaultMount {
   const [editingPath, setEditingPath] = useState<string | null>(null);
   const [editingText, setEditingText] = useState('');
 
-  const handleRef = useRef<FileSystemDirectoryHandle | null>(null);
-  // REQ-049：目录相对路径 → 目录句柄（增删改查定位父目录）；随 buildIndex 重建。
-  const dirsRef = useRef<Map<string, FileSystemDirectoryHandle>>(new Map());
+  const mountsRef = useRef<VaultMount[]>([]);
+  mountsRef.current = mounts;
 
-  // 构建索引：walk → 读内容 → buildInvertedIndex（PoC buildIndex 同构）
-  const buildIndex = useCallback(async (handle: FileSystemDirectoryHandle, name: string) => {
-    setStatus('mounting');
-    setMountName(name);
-    setFileCount(0);
-    const files: WalkedFile[] = [];
-    const dirs = new Map<string, FileSystemDirectoryHandle>();
-    await walkVault(handle, '', files, (n) => setFileCount(n), dirs);
-    const newDocs: LocalVaultDoc[] = [];
-    for (const f of files) {
-      newDocs.push(await readVaultFile(f));
-      if (newDocs.length % 200 === 0) setFileCount(newDocs.length);
-    }
-    setDocs(newDocs);
-    setIndex(buildInvertedIndex(newDocs));
-    setFileCount(newDocs.length);
-    handleRef.current = handle;
-    dirsRef.current = dirs;
-    setStatus('mounted');
+  /** 聚合索引：把多个挂载的 docs 合并成一个索引（path 作为唯一键，重复按后者覆盖）。 */
+  const buildAggregateIndex = useCallback((allDocs: LocalVaultDoc[]): LocalVaultIndex => {
+    return buildInvertedIndex(allDocs);
   }, []);
 
-  // 页面加载：尝试无感恢复（queryPermission→granted，RG-009 ① 决定性证据）
+  /** 构建单个挂载：walk → 读内容 → 更新该挂载句柄 + 聚合 docs/index。 */
+  const buildMountIndex = useCallback(async (mountId: string, handle: FileSystemDirectoryHandle) => {
+    setMounts((current) => current.map((m) => (m.id === mountId ? { ...m, status: 'mounting', fileCount: 0 } : m)));
+    const files: WalkedFile[] = [];
+    const dirs = new Map<string, FileSystemDirectoryHandle>();
+    await walkVault(handle, '', files, (n) => {
+      setMounts((cur) => cur.map((m) => (m.id === mountId ? { ...m, fileCount: n } : m)));
+    }, dirs);
+    const mountName = handle.name;
+    // 多挂载：doc.path 加挂载名前缀（`<挂载名>/<相对路径>`）保证全局唯一，聚合树平铺所有挂载。
+    const newDocs: LocalVaultDoc[] = [];
+    for (const f of files) {
+      const doc = await readVaultFile(f);
+      newDocs.push({ ...doc, path: `${mountName}/${doc.path}`, name: doc.name });
+    }
+    // 更新该挂载句柄映射。
+    setMounts((current) => current.map((m) => (m.id === mountId ? { ...m, dirs, fileCount: newDocs.length, status: 'mounted' } : m)));
+    // 聚合：去掉该挂载旧 docs（按挂载名前缀过滤），合并新 docs。
+    setDocs((allDocs) => {
+      const others = allDocs.filter((d) => !d.path.startsWith(`${mountName}/`));
+      const merged = [...others, ...newDocs];
+      setIndex(buildAggregateIndex(merged));
+      setFileCount(merged.length);
+      return merged;
+    });
+  }, [buildAggregateIndex]);
+
+  // 页面加载：无感恢复全部已保存挂载。
   useEffect(() => {
     if (!isFileSystemAccessSupported()) return;
     let cancelled = false;
     void (async () => {
-      const result = await restoreVaultHandle(false);
+      const results = await restoreVaultHandles(false);
       if (cancelled) return;
-      if (result.status === 'granted' && result.handle) {
-        await buildIndex(result.handle, result.handle.name);
-      } else if (result.status === 'needs-auth') {
-        setStatus('needs-auth');
-        if (result.handle) {
-          handleRef.current = result.handle;
-          setMountName(result.handle.name);
+      const restored: VaultMount[] = [];
+      for (const result of results) {
+        if (result.status === 'granted' && result.handle) {
+          const id = `${result.handle.name}-${mountSeq++}`;
+          restored.push({ id, name: result.handle.name, handle: result.handle, status: 'mounting', fileCount: 0, dirs: new Map(), error: '' });
+        } else if (result.status === 'needs-auth' && result.handle) {
+          const id = `${result.handle.name}-${mountSeq++}`;
+          restored.push({ id, name: result.handle.name, handle: result.handle, status: 'needs-auth', fileCount: 0, dirs: new Map(), error: '' });
         }
       }
-      // no-handle → 保持 idle
+      if (restored.length > 0) {
+        setMounts(restored);
+        // 并行构建所有 granted 挂载。
+        for (const mount of restored) {
+          if (mount.status === 'mounting') {
+            await buildMountIndex(mount.id, mount.handle);
+          }
+        }
+      }
     })();
     return () => {
       cancelled = true;
     };
-  }, [buildIndex]);
+  }, [buildMountIndex]);
 
-  // 挂载：选目录 → 授权 → 存句柄 → 建索引
+  // 挂载：选目录 → 授权 → 存句柄 → 建索引。
   const mount = useCallback(async () => {
     setError('');
     try {
       const handle = await pickDirectory();
       if (!(await verifyPermission(handle, false))) {
         setError('授权被拒');
-        setStatus('needs-auth');
         return;
       }
       await saveVaultHandle(handle);
-      await buildIndex(handle, handle.name);
+      const id = `${handle.name}-${mountSeq++}`;
+      setMounts((current) => [...current, { id, name: handle.name, handle, status: 'mounting', fileCount: 0, dirs: new Map(), error: '' }]);
+      await buildMountIndex(id, handle);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
-      setStatus('error');
     }
-  }, [buildIndex]);
+  }, [buildMountIndex]);
 
-  // 重新授权（在用户手势内调用 requestPermission）
-  const reauth = useCallback(async () => {
+  // 重新授权单个挂载（在用户手势内调用 requestPermission）。
+  const reauth = useCallback(async (mountId: string) => {
     setError('');
-    const result = await restoreVaultHandle(true);
-    if (result.status === 'granted' && result.handle) {
-      await buildIndex(result.handle, result.handle.name);
+    const target = mountsRef.current.find((m) => m.id === mountId);
+    if (!target) return;
+    const result = await restoreVaultHandles(true);
+    const granted = result.find((r) => r.handle?.name === target.name);
+    if (granted?.status === 'granted' && granted.handle) {
+      await buildMountIndex(mountId, granted.handle);
     } else {
-      setError('重新授权失败：' + result.reason);
-      setStatus('needs-auth');
+      setError('重新授权失败');
     }
-  }, [buildIndex]);
+  }, [buildMountIndex]);
 
-  // 重扫（手动增量，FileSystemObserver 留后续）
-  const reindex = useCallback(async () => {
-    if (!handleRef.current) return;
-    await buildIndex(handleRef.current, mountName || handleRef.current.name);
-  }, [buildIndex, mountName]);
+  // 重扫单个挂载。
+  const reindex = useCallback(async (mountId: string) => {
+    const target = mountsRef.current.find((m) => m.id === mountId);
+    if (!target) return;
+    await buildMountIndex(mountId, target.handle);
+  }, [buildMountIndex]);
 
-  // 卸载
-  const unmount = useCallback(async () => {
+  // 卸载单个挂载。
+  const unmount = useCallback(async (mountId: string) => {
+    const target = mountsRef.current.find((m) => m.id === mountId);
+    if (target) {
+      await removeVaultHandle(target.handle);
+    }
+    setMounts((current) => current.filter((m) => m.id !== mountId));
+    setDocs((allDocs) => {
+      if (target) {
+        const withoutTarget = allDocs.filter((d) => !d.path.startsWith(target.name + '/') && d.path !== target.name);
+        setIndex(buildAggregateIndex(withoutTarget));
+        setFileCount(withoutTarget.length);
+        return withoutTarget;
+      }
+      return allDocs;
+    });
+    if (selectedPath && target && (selectedPath === target.name || selectedPath.startsWith(target.name + '/'))) {
+      setSelectedPath(null);
+    }
+    if (editingPath && target && (editingPath === target.name || editingPath.startsWith(target.name + '/'))) {
+      setEditingPath(null);
+      setEditingText('');
+    }
+  }, [buildAggregateIndex, selectedPath, editingPath]);
+
+  // 卸载全部。
+  const unmountAll = useCallback(async () => {
     await clearVaultHandle();
-    handleRef.current = null;
-    dirsRef.current = new Map();
+    setMounts([]);
     setDocs([]);
     setIndex(null);
-    setMountName('');
     setFileCount(0);
     setSelectedPath(null);
     setQuery('');
     setEditingPath(null);
     setEditingText('');
-    setStatus('idle');
   }, []);
 
-  // 本地搜索
+  // 本地搜索。
   const hits = useMemo(
     () => (index && query.trim() ? searchIndex(index, query) : []),
     [index, query]
   );
 
-  // 本地预览（本地读取，不上传）
+  // 本地预览。
   const previewText = useMemo(() => {
     if (!selectedPath) return '';
     return docs.find((d) => d.path === selectedPath)?.text ?? '';
@@ -226,106 +289,131 @@ export function useLocalVaultMount(): UseLocalVaultMount {
 
   // ---- REQ-049 本地读写（仅本地文件系统写，不进服务端 / 不进 RAG）----
 
-  /** 进入编辑态：从 docs 取当前文本作草稿。 */
   const beginEdit = useCallback((path: string) => {
     const doc = docs.find((d) => d.path === path);
     setEditingPath(path);
     setEditingText(doc?.text ?? '');
   }, [docs]);
 
-  /** 保存编辑：readwrite 授权 → 覆盖写 → 重建索引 → 退出编辑态。 */
+  /** 从 path 找所属挂载（含句柄与目录句柄映射）。 */
+  const mountForPath = useCallback((path: string): VaultMount | null => {
+    return mountsRef.current.find((m) => path === m.name || path.startsWith(m.name + '/')) ?? null;
+  }, []);
+
+  /** 取 path 的父目录句柄（所属挂载的 dirs 或根）。 */
+  const parentHandleForPath = useCallback((path: string): FileSystemDirectoryHandle | null => {
+    const mount = mountForPath(path);
+    if (!mount) return null;
+    // 相对挂载根的路径。
+    const rel = path.startsWith(mount.name + '/') ? path.slice(mount.name.length + 1) : '';
+    return parentDirectoryForPath(rel, mount.dirs, mount.handle);
+  }, [mountForPath]);
+
   const saveEdit = useCallback(async () => {
-    if (!editingPath || !handleRef.current) return;
+    if (!editingPath) return;
     const doc = docs.find((d) => d.path === editingPath);
     if (!doc) return;
     const ok = await ensureVaultWritePermission(doc.handle);
     if (!ok) {
       setError('写入授权被拒，请重新授权（readwrite）后重试。');
-      setStatus('needs-auth');
       return;
     }
     try {
       await writeVaultFile(doc.handle, editingText);
-      await buildIndex(handleRef.current, mountName || handleRef.current.name);
+      const mount = mountForPath(editingPath);
+      if (mount) {
+        await buildMountIndex(mount.id, mount.handle);
+      }
       setEditingPath(null);
       setEditingText('');
       setSelectedPath(editingPath);
     } catch (e) {
       setError(`保存失败：${e instanceof Error ? e.message : String(e)}`);
     }
-  }, [editingPath, editingText, docs, handleRef, mountName, buildIndex]);
+  }, [editingPath, editingText, docs, mountForPath, buildMountIndex]);
 
   const cancelEdit = useCallback(() => {
     setEditingPath(null);
     setEditingText('');
   }, []);
 
-  /** 新建文件：父目录 readwrite 授权 → createVaultFile → 重建索引。 */
   const createFile = useCallback(async (dirPath: string, name: string, content: string) => {
-    if (!handleRef.current || !name.trim()) return;
-    const parent = parentDirectoryForPath(dirPath, dirsRef.current, handleRef.current);
+    const parent = parentHandleForPath(dirPath);
+    if (!parent || !name.trim()) return;
     const ok = await ensureVaultWritePermission(parent);
     if (!ok) {
       setError('写入授权被拒，请重新授权（readwrite）后重试。');
-      setStatus('needs-auth');
       return;
     }
     try {
       await createVaultFile(parent, name.trim(), content);
-      await buildIndex(handleRef.current, mountName || handleRef.current.name);
+      const mount = mountForPath(dirPath || mountNameOf(parent) || '');
+      if (mount) {
+        await buildMountIndex(mount.id, mount.handle);
+      }
     } catch (e) {
       setError(`新建失败：${e instanceof Error ? e.message : String(e)}`);
     }
-  }, [handleRef, mountName, buildIndex]);
+  }, [parentHandleForPath, mountForPath, buildMountIndex]);
 
-  /** 删除文件：父目录 readwrite 授权 → deleteVaultFile → 重建索引。 */
+  /** 从目录句柄反查挂载 id（dirPath 为空 = 根目录新建）。 */
+  const mountNameOf = useCallback((handle: FileSystemDirectoryHandle): string | null => {
+    const mount = mountsRef.current.find((m) => m.handle === handle);
+    return mount?.name ?? null;
+  }, []);
+
   const deleteFile = useCallback(async (path: string) => {
-    if (!handleRef.current) return;
     const doc = docs.find((d) => d.path === path);
     if (!doc) return;
-    const parent = parentDirectoryForPath(path, dirsRef.current, handleRef.current);
+    const parent = parentHandleForPath(path);
+    if (!parent) return;
     const ok = await ensureVaultWritePermission(parent);
     if (!ok) {
       setError('写入授权被拒，请重新授权（readwrite）后重试。');
-      setStatus('needs-auth');
       return;
     }
     try {
       await deleteVaultFile(parent, doc.name);
       if (selectedPath === path) setSelectedPath(null);
       if (editingPath === path) cancelEdit();
-      await buildIndex(handleRef.current, mountName || handleRef.current.name);
+      const mount = mountForPath(path);
+      if (mount) {
+        await buildMountIndex(mount.id, mount.handle);
+      }
     } catch (e) {
       setError(`删除失败：${e instanceof Error ? e.message : String(e)}`);
     }
-  }, [handleRef, docs, selectedPath, editingPath, cancelEdit, mountName, buildIndex]);
+  }, [docs, parentHandleForPath, selectedPath, editingPath, cancelEdit, mountForPath, buildMountIndex]);
 
-  /** 重命名文件：父目录 readwrite 授权 → renameVaultFile → 重建索引。 */
   const renameFile = useCallback(async (path: string, newName: string) => {
-    if (!handleRef.current || !newName.trim()) return;
+    if (!newName.trim()) return;
     const doc = docs.find((d) => d.path === path);
     if (!doc) return;
-    const parent = parentDirectoryForPath(path, dirsRef.current, handleRef.current);
+    const parent = parentHandleForPath(path);
+    if (!parent) return;
     const ok = await ensureVaultWritePermission(parent);
     if (!ok) {
       setError('写入授权被拒，请重新授权（readwrite）后重试。');
-      setStatus('needs-auth');
       return;
     }
     try {
-      const dirPath = path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : '';
-      const newPath = dirPath ? `${dirPath}/${newName.trim()}` : newName.trim();
       await renameVaultFile(parent, doc.name, newName.trim());
-      if (selectedPath === path) setSelectedPath(newPath);
-      await buildIndex(handleRef.current, mountName || handleRef.current.name);
+      const mount = mountForPath(path);
+      if (mount) {
+        const newRel = path.startsWith(mount.name + '/')
+          ? `${mount.name}/${newName.trim()}`
+          : newName.trim();
+        if (selectedPath === path) setSelectedPath(newRel);
+        await buildMountIndex(mount.id, mount.handle);
+      }
     } catch (e) {
       setError(`重命名失败：${e instanceof Error ? e.message : String(e)}`);
     }
-  }, [handleRef, docs, selectedPath, mountName, buildIndex]);
+  }, [docs, parentHandleForPath, selectedPath, mountForPath, buildMountIndex]);
 
   return {
-    status,
-    mountName,
+    supported,
+    mounts,
     docs,
     index,
     fileCount,
@@ -339,6 +427,7 @@ export function useLocalVaultMount(): UseLocalVaultMount {
     reauth,
     reindex,
     unmount,
+    unmountAll,
     openDoc,
     editingPath,
     editingText,

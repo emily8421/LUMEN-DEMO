@@ -71,22 +71,30 @@ const DOCUMENT_MODES: Array<{ value: DocumentMode; label: string }> = [
   { value: 'split', label: '并排' },
 ];
 
-// ⑤：md 编辑工具栏（快捷插入语法；按「分类 label → 插入动作」渲染按钮）。
-const MD_TOOLBAR_ITEMS: Array<{ action: MarkdownToolbarAction; label: string; title: string }> = [
-  { action: 'bold', label: 'B', title: '加粗' },
-  { action: 'italic', label: 'I', title: '斜体' },
-  { action: 'heading1', label: 'H1', title: '一级标题' },
-  { action: 'heading2', label: 'H2', title: '二级标题' },
-  { action: 'heading3', label: 'H3', title: '三级标题' },
-  { action: 'unordered-list', label: '• 列表', title: '无序列表' },
-  { action: 'ordered-list', label: '1. 列表', title: '有序列表' },
-  { action: 'quote', label: '❝ 引用', title: '引用' },
-  { action: 'code', label: '`代码`', title: '行内代码' },
-  { action: 'code-block', label: '代码块', title: '代码块' },
-  { action: 'link', label: '🔗 链接', title: '链接' },
-  { action: 'image', label: '🖼 图片', title: '图片' },
-  { action: 'divider', label: '— 分割线', title: '分割线' },
+// ⑤：md 编辑工具栏（快捷插入语法；维护态优化——分组渲染 + 分隔线，去边框紧凑）。
+// group: 'fmt' 格式 / 'struct' 结构 / 'insert' 插入；组间渲染 .editor-md-toolbar-sep。
+type MdToolbarGroup = 'fmt' | 'struct' | 'insert';
+const MD_TOOLBAR_ITEMS: Array<{ action: MarkdownToolbarAction; label: string; title: string; group: MdToolbarGroup }> = [
+  { action: 'bold', label: 'B', title: '加粗', group: 'fmt' },
+  { action: 'italic', label: 'I', title: '斜体', group: 'fmt' },
+  { action: 'code', label: '`代码`', title: '行内代码', group: 'fmt' },
+  { action: 'heading1', label: 'H1', title: '一级标题', group: 'struct' },
+  { action: 'heading2', label: 'H2', title: '二级标题', group: 'struct' },
+  { action: 'heading3', label: 'H3', title: '三级标题', group: 'struct' },
+  { action: 'unordered-list', label: '• 列表', title: '无序列表', group: 'struct' },
+  { action: 'ordered-list', label: '1. 列表', title: '有序列表', group: 'struct' },
+  { action: 'quote', label: '❝ 引用', title: '引用', group: 'struct' },
+  { action: 'divider', label: '— 分割线', title: '分割线', group: 'struct' },
+  { action: 'code-block', label: '代码块', title: '代码块', group: 'insert' },
+  { action: 'link', label: '🔗 链接', title: '链接', group: 'insert' },
+  { action: 'image', label: '🖼 图片', title: '图片', group: 'insert' },
 ];
+
+const MD_TOOLBAR_GROUP_LABEL: Record<MdToolbarGroup, string> = {
+  fmt: '格式',
+  struct: '结构',
+  insert: '插入',
+};
 
 export function DocumentsFeature({
   isCreating,
@@ -130,6 +138,48 @@ export function DocumentsFeature({
   const splitRatioRef = useRef(splitRatio);
   const splitGridRef = useRef<HTMLDivElement | null>(null);
   const splitDragRef = useRef<{ containerLeft: number; containerWidth: number } | null>(null);
+
+  // 编辑撤销栈（维护态修复：受控 textarea 使浏览器原生 Ctrl+Z 失效，需自建）。
+  // 每次输入 / 工具插入前把「当前内容 + 光标」压栈；Ctrl+Z 出栈恢复。
+  // 上限 50 步，超出丢弃最旧。
+  const undoStackRef = useRef<Array<{ text: string; start: number; end: number }>>([]);
+  const UNDO_MAX = 50;
+
+  /** 记录一次可撤销快照（工具插入 / 手动输入前调用）。 */
+  const pushUndoSnapshot = () => {
+    const textarea = textareaRef.current;
+    const text = textarea?.value ?? draft.content_md;
+    const { selectionStart = 0, selectionEnd = 0 } = textarea ?? {};
+    const stack = undoStackRef.current;
+    // 连续相同内容不重复入栈（避免同一次输入多次 onChange 堆栈）。
+    const last = stack[stack.length - 1];
+    if (last && last.text === text) {
+      return;
+    }
+    stack.push({ text, start: selectionStart, end: selectionEnd });
+    if (stack.length > UNDO_MAX) {
+      stack.shift();
+    }
+  };
+
+  /** Ctrl+Z：出栈恢复上一步内容与光标。 */
+  const handleUndo = () => {
+    const snapshot = undoStackRef.current.pop();
+    if (!snapshot) {
+      return;
+    }
+    onDraftChange({ ...draft, content_md: snapshot.text });
+    window.requestAnimationFrame(() => {
+      textareaRef.current?.focus();
+      textareaRef.current?.setSelectionRange(snapshot.start, snapshot.end);
+    });
+  };
+
+  // 切换文档 / 新建 / 保存后重置撤销栈（编辑会话结束）。
+  useEffect(() => {
+    undoStackRef.current = [];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCreating, selectedDocument?.id, savedRevision]);
 
   const updateSplitRatio = (ratio: number) => {
     const clamped = clampSplitRatio(ratio);
@@ -192,6 +242,7 @@ export function DocumentsFeature({
       return;
     }
     const { selectionStart, selectionEnd } = textarea;
+    pushUndoSnapshot();
     const result = applyMarkdownAction(action, draft.content_md, selectionStart, selectionEnd);
     onDraftChange({ ...draft, content_md: result.value });
     // 受控组件更新后光标会被重置；下一帧恢复选区。
@@ -210,6 +261,15 @@ export function DocumentsFeature({
       setDocumentMode('read');
     }
   }, [isCreating, selectedDocument?.id]);
+
+  // 并排模式：自动收起右栏（Inspector 与编辑/预览抢横向空间），把宽度留给两侧，避免挤压变形。
+  // 切回阅读/编辑态不影响右栏偏好（可手动 Ctrl+R 或点边缘按钮再展开）。
+  useEffect(() => {
+    if (documentMode === 'split' && rightPaneOpen) {
+      onToggleRightPane();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [documentMode]);
 
   // 保存成功后回到阅读态（编辑/并排保存同一文档时 id 不变，需显式信号）。
   useEffect(() => {
@@ -317,20 +377,25 @@ export function DocumentsFeature({
               <div
                 ref={splitGridRef}
                 className={effectiveMode === 'split' ? `editor-content-grid split-mode${splitResizing ? ' resizing' : ''}` : 'editor-content-grid single-column'}
-                style={effectiveMode === 'split' ? { gridTemplateColumns: `minmax(0, ${splitRatio * 100}%) 6px minmax(220px, ${(1 - splitRatio) * 100}%)` } : undefined}
+                style={effectiveMode === 'split' ? { gridTemplateColumns: `minmax(0, ${splitRatio * 100}%) 6px minmax(160px, ${(1 - splitRatio) * 100}%)` } : undefined}
               >
                 <div className="editor-md-toolbar" role="toolbar" aria-label="Markdown 工具栏">
-                  {MD_TOOLBAR_ITEMS.map((item) => (
-                    <button
-                      key={item.action}
-                      type="button"
-                      className="editor-md-toolbar-btn"
-                      onClick={() => handleMdAction(item.action)}
-                      title={item.title}
-                      aria-label={item.title}
-                    >
-                      {item.label}
-                    </button>
+                  {(['fmt', 'struct', 'insert'] as MdToolbarGroup[]).map((group, groupIndex) => (
+                    <span key={group} className="editor-md-toolbar-group" role="group" aria-label={MD_TOOLBAR_GROUP_LABEL[group]}>
+                      {groupIndex > 0 ? <span className="editor-md-toolbar-sep" aria-hidden="true" /> : null}
+                      {MD_TOOLBAR_ITEMS.filter((item) => item.group === group).map((item) => (
+                        <button
+                          key={item.action}
+                          type="button"
+                          className="editor-md-toolbar-btn"
+                          onClick={() => handleMdAction(item.action)}
+                          title={item.title}
+                          aria-label={item.title}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </span>
                   ))}
                 </div>
                 <label className="editor-field">
@@ -338,7 +403,18 @@ export function DocumentsFeature({
                   <textarea
                     ref={textareaRef}
                     value={draft.content_md}
-                    onChange={(event) => onDraftChange({ ...draft, content_md: event.target.value })}
+                    onChange={(event) => {
+                      // 更新前记录当前快照（浏览器原生 undo 被受控组件破坏，自建栈）。
+                      pushUndoSnapshot();
+                      onDraftChange({ ...draft, content_md: event.target.value });
+                    }}
+                    onKeyDown={(event) => {
+                      // Ctrl+Z / Ctrl+Shift+Z 撤销；Ctrl+Y 重做暂不做（栈仅保存 undo）。
+                      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') {
+                        event.preventDefault();
+                        handleUndo();
+                      }
+                    }}
                     onSelect={handleTextareaSelect}
                     placeholder="输入或编辑 Markdown 内容"
                     rows={14}

@@ -478,31 +478,49 @@
   padding: 6px 0;
 }
 
-/* ⑤：md 编辑工具栏（快捷插入语法）。 */
+/* ⑤：md 编辑工具栏（快捷插入语法；维护态优化——去边框紧凑分组、单行滚动不换行挤压）。 */
 .editor-md-toolbar {
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  padding: 4px 0;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 2px;
+  padding: 3px 0;
   border-bottom: 1px solid var(--line-soft);
+  overflow-x: auto;
+  scrollbar-width: thin;
 }
 
 .editor-md-toolbar-btn {
-  padding: 3px 8px;
-  border: 1px solid var(--line);
+  flex: 0 0 auto;
+  padding: 3px 7px;
+  border: none;
   border-radius: 5px;
-  background: var(--panel);
-  color: var(--text);
+  background: transparent;
+  color: var(--muted);
   font-size: 12px;
   line-height: 1.4;
   cursor: pointer;
   white-space: nowrap;
 }
 
-.editor-md-toolbar-btn:hover {
-  border-color: var(--blue);
-  background: var(--blue-soft);
+/* hover / focus：仅文字变蓝、无底色块——必须用 :not(:disabled) 压过 base.css 全局
+   `button:hover:not(:disabled)`（其背景 #1d4ed8 深蓝，特异性 0,2,1 高于本类 0,1,0）。 */
+.editor-md-toolbar-btn:hover:not(:disabled) {
+  background: transparent;
   color: var(--blue);
+}
+
+.editor-md-toolbar-btn:focus-visible {
+  outline: none;
+}
+
+/* 工具栏分组：格式 | 结构 | 插入，组间细分隔线（参考主流编辑器）。 */
+.editor-md-toolbar-sep {
+  flex: 0 0 auto;
+  width: 1px;
+  height: 14px;
+  margin: 0 5px;
+  background: var(--line-soft);
 }
 
 /* 视觉收口：标题 / 权限去框融入主区（主流编辑器风格），单行紧凑工具栏。 */
@@ -557,17 +575,53 @@
 
 .editor-content-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(220px, 0.65fr);
+  grid-template-columns: minmax(0, 1.35fr) minmax(160px, 0.65fr);
+  grid-template-rows: auto minmax(0, 1fr);
   gap: var(--space-2);
   min-height: 0;
   overflow: hidden;
   padding: var(--space-2);
 }
 
-/* 并排模式：编辑 | 拖拽分隔条 | 预览；列比例由 DocumentsFeature 拖拽覆盖。 */
+/* md 工具栏占满整行（grid-column 跨全部列），编辑/分隔/预览排第二行。 */
+.editor-content-grid .editor-md-toolbar {
+  grid-column: 1 / -1;
+  grid-row: 1;
+}
+
+.editor-content-grid > .editor-field,
+.editor-content-grid > .markdown-preview {
+  min-width: 0;
+  min-height: 0;
+}
+
+/* 并排模式：编辑 | 拖拽分隔条 | 预览；列比例由 DocumentsFeature 拖拽覆盖。
+   预览列下限 160px（原 220px），并排时不因右栏占宽挤压编辑列变形。 */
 .editor-content-grid.split-mode {
-  grid-template-columns: minmax(0, 1.35fr) 6px minmax(220px, 0.65fr);
+  grid-template-columns: minmax(0, 1.35fr) 6px minmax(160px, 0.65fr);
+  grid-template-rows: auto minmax(0, 1fr);
   gap: 0;
+}
+
+/* 并排：工具栏占第一行全宽；编辑/分隔/预览占第二行三列。 */
+.editor-content-grid.split-mode .editor-md-toolbar {
+  grid-column: 1 / -1;
+  grid-row: 1;
+}
+
+.editor-content-grid.split-mode > .editor-field {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.editor-content-grid.split-mode > .split-resizer {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.editor-content-grid.split-mode > .markdown-preview {
+  grid-column: 3;
+  grid-row: 2;
 }
 
 .split-resizer {

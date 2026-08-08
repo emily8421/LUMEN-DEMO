@@ -176,6 +176,8 @@ export async function readVaultFile(walked: WalkedFile): Promise<LocalVaultDoc> 
 }
 
 // ---- 原生 IndexedDB 句柄持久化（FileSystemDirectoryHandle 可结构化克隆）----
+// 多挂载（REQ-049 增强）：IDB 存「句柄数组」，支持同时挂载多个本地目录。
+// 兼容旧版单句柄存储：读取时若值为单个 handle，自动升级为数组。
 
 function openVaultIdb(): Promise<IDBDatabase | null> {
   return new Promise(resolve => {
@@ -187,31 +189,66 @@ function openVaultIdb(): Promise<IDBDatabase | null> {
   });
 }
 
-/** 把 vault 根句柄持久化到 IndexedDB（刷新后可恢复）。 */
+/** 把 vault 根句柄追加持久化到 IndexedDB（刷新后可恢复；重复目录跳过）。 */
 export async function saveVaultHandle(handle: FileSystemDirectoryHandle): Promise<boolean> {
   const db = await openVaultIdb();
   if (!db) return false;
+  const existing = await loadVaultHandles();
+  if (existing.some((h) => h.name === handle.name)) {
+    return true;
+  }
   return new Promise(res => {
     const tx = db.transaction(IDB_STORE, 'readwrite');
-    tx.objectStore(IDB_STORE).put(handle, IDB_HANDLE_KEY);
+    tx.objectStore(IDB_STORE).put([...existing, handle], IDB_HANDLE_KEY);
     tx.oncomplete = () => res(true);
     tx.onerror = () => res(false);
   });
 }
 
-/** 从 IndexedDB 读取已保存的 vault 根句柄（无则 null）。 */
-export async function loadVaultHandle(): Promise<FileSystemDirectoryHandle | null> {
+/** 从 IndexedDB 读取已保存的全部 vault 根句柄（无则 []）。兼容旧单句柄值。 */
+export async function loadVaultHandles(): Promise<FileSystemDirectoryHandle[]> {
   const db = await openVaultIdb();
-  if (!db) return null;
+  if (!db) return [];
   return new Promise(res => {
     const tx = db.transaction(IDB_STORE, 'readonly');
     const r = tx.objectStore(IDB_STORE).get(IDB_HANDLE_KEY);
-    r.onsuccess = () => res((r.result as FileSystemDirectoryHandle | undefined) || null);
-    r.onerror = () => res(null);
+    r.onsuccess = () => {
+      const value = r.result;
+      if (Array.isArray(value)) {
+        res(value as FileSystemDirectoryHandle[]);
+      } else if (value) {
+        // 兼容旧版：单个句柄升级为数组（下次保存时写回数组）。
+        res([value as FileSystemDirectoryHandle]);
+      } else {
+        res([]);
+      }
+    };
+    r.onerror = () => res([]);
   });
 }
 
-/** 清除已保存的 vault 句柄（卸载挂载）。 */
+/** 移除一个已保存的 vault 句柄（卸载单个挂载）。 */
+export async function removeVaultHandle(handle: FileSystemDirectoryHandle): Promise<boolean> {
+  const existing = await loadVaultHandles();
+  const remaining = existing.filter((h) => h.name !== handle.name);
+  if (remaining.length === existing.length) {
+    return true;
+  }
+  const db = await openVaultIdb();
+  if (!db) return false;
+  return new Promise(res => {
+    const tx = db.transaction(IDB_STORE, 'readwrite');
+    if (remaining.length === 0) {
+      tx.objectStore(IDB_STORE).delete(IDB_HANDLE_KEY);
+    } else {
+      tx.objectStore(IDB_STORE).put(remaining, IDB_HANDLE_KEY);
+    }
+    tx.oncomplete = () => res(true);
+    tx.onerror = () => res(false);
+  });
+}
+
+/** 清除全部已保存的 vault 句柄（卸载全部挂载）。 */
 export async function clearVaultHandle(): Promise<boolean> {
   const db = await openVaultIdb();
   if (!db) return false;
@@ -233,26 +270,41 @@ export interface RestoreResult {
 }
 
 /**
- * 刷新后恢复挂载：从 IndexedDB 取句柄 → queryPermission。
- * - `granted`：自动恢复成功（RG-009 ① 决定性证据：刷新后无需重新授权），不弹授权框。
- * - `needs-auth`：句柄在但权限为 prompt / denied，需用户点「恢复」在手势内触发 requestPermission。
- * - `no-handle`：无已保存句柄。
+ * 刷新后恢复全部挂载：从 IndexedDB 取全部句柄 → 逐个 queryPermission。
+ * 返回每条结果；granted 的由调用方 buildIndex，needs-auth 的留待用户手势内 reauth。
  * autoRequestIfPrompt=true 时在 prompt 下尝试 requestPermission（必须在用户手势内调用）。
  */
-export async function restoreVaultHandle(autoRequestIfPrompt = false): Promise<RestoreResult> {
-  const handle = await loadVaultHandle();
-  if (!handle) return { status: 'no-handle', handle: null, reason: '无已保存句柄' };
-  try {
-    const h = asPermissionable(handle);
-    const q = await h.queryPermission({ mode: 'read' });
-    if (q === 'granted') return { status: 'granted', handle, reason: 'granted' };
-    if (autoRequestIfPrompt) {
-      const r = await h.requestPermission({ mode: 'read' });
-      if (r === 'granted') return { status: 'granted', handle, reason: 'granted' };
-      return { status: 'needs-auth', handle, reason: r };
-    }
-    return { status: 'needs-auth', handle, reason: q };
-  } catch {
-    return { status: 'error', handle: null, reason: 'query 失败' };
+export async function restoreVaultHandles(autoRequestIfPrompt = false): Promise<RestoreResult[]> {
+  const handles = await loadVaultHandles();
+  if (handles.length === 0) {
+    return [{ status: 'no-handle', handle: null, reason: '无已保存句柄' }];
   }
+  const results: RestoreResult[] = [];
+  for (const handle of handles) {
+    try {
+      const h = asPermissionable(handle);
+      const q = await h.queryPermission({ mode: 'read' });
+      if (q === 'granted') {
+        results.push({ status: 'granted', handle, reason: 'granted' });
+      } else if (autoRequestIfPrompt) {
+        const r = await h.requestPermission({ mode: 'read' });
+        if (r === 'granted') {
+          results.push({ status: 'granted', handle, reason: 'granted' });
+        } else {
+          results.push({ status: 'needs-auth', handle, reason: r });
+        }
+      } else {
+        results.push({ status: 'needs-auth', handle, reason: q });
+      }
+    } catch {
+      results.push({ status: 'error', handle, reason: 'query 失败' });
+    }
+  }
+  return results;
+}
+
+/** 兼容旧调用：恢复单个挂载（取首个句柄）。 */
+export async function restoreVaultHandle(autoRequestIfPrompt = false): Promise<RestoreResult> {
+  const results = await restoreVaultHandles(autoRequestIfPrompt);
+  return results[0];
 }
