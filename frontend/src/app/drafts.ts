@@ -14,5 +14,7 @@ export function normalizeDraft(draft: Draft) {
     title: draft.title.trim(),
     content_md: draft.content_md,
     permission: draft.permission,
+    // ⑥：新建时透传 folder_id（可空=根目录）；编辑态 draft.folder_id 为 undefined 则不携带。
+    ...(draft.folder_id !== undefined ? { folder_id: draft.folder_id } : {}),
   };
 }

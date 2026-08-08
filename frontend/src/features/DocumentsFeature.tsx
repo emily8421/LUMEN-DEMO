@@ -15,6 +15,7 @@ import { DocumentEmptyState } from './DocumentEmptyState';
 import { DocumentInspectorFeature } from './DocumentInspectorFeature';
 import { useTextareaSelection } from '../app/useTextareaSelection';
 import type { useAiPolish } from '../app/useAiPolish';
+import { applyMarkdownAction, type MarkdownToolbarAction } from '../app/markdown-editor-actions';
 import { clampSplitRatio, DEFAULT_SPLIT_RATIO, loadSplitRatio, persistSplitRatio } from '../app/split-layout-store';
 import { usePaneWidth } from '../app/usePaneWidth';
 
@@ -68,6 +69,23 @@ const DOCUMENT_MODES: Array<{ value: DocumentMode; label: string }> = [
   { value: 'read', label: '阅读' },
   { value: 'edit', label: '编辑' },
   { value: 'split', label: '并排' },
+];
+
+// ⑤：md 编辑工具栏（快捷插入语法；按「分类 label → 插入动作」渲染按钮）。
+const MD_TOOLBAR_ITEMS: Array<{ action: MarkdownToolbarAction; label: string; title: string }> = [
+  { action: 'bold', label: 'B', title: '加粗' },
+  { action: 'italic', label: 'I', title: '斜体' },
+  { action: 'heading1', label: 'H1', title: '一级标题' },
+  { action: 'heading2', label: 'H2', title: '二级标题' },
+  { action: 'heading3', label: 'H3', title: '三级标题' },
+  { action: 'unordered-list', label: '• 列表', title: '无序列表' },
+  { action: 'ordered-list', label: '1. 列表', title: '有序列表' },
+  { action: 'quote', label: '❝ 引用', title: '引用' },
+  { action: 'code', label: '`代码`', title: '行内代码' },
+  { action: 'code-block', label: '代码块', title: '代码块' },
+  { action: 'link', label: '🔗 链接', title: '链接' },
+  { action: 'image', label: '🖼 图片', title: '图片' },
+  { action: 'divider', label: '— 分割线', title: '分割线' },
 ];
 
 export function DocumentsFeature({
@@ -167,6 +185,22 @@ export function DocumentsFeature({
     persistSplitRatio(DEFAULT_SPLIT_RATIO);
   };
 
+  // ⑤：md 工具栏插入——在光标处应用语法，更新草稿后恢复光标到插入内容之后。
+  const handleMdAction = (action: MarkdownToolbarAction) => {
+    const textarea = textareaRef.current;
+    if (!textarea) {
+      return;
+    }
+    const { selectionStart, selectionEnd } = textarea;
+    const result = applyMarkdownAction(action, draft.content_md, selectionStart, selectionEnd);
+    onDraftChange({ ...draft, content_md: result.value });
+    // 受控组件更新后光标会被重置；下一帧恢复选区。
+    window.requestAnimationFrame(() => {
+      textarea.focus();
+      textarea.setSelectionRange(result.start, result.end);
+    });
+  };
+
   useEffect(() => {
     if (isCreating) {
       setDocumentMode('edit');
@@ -203,6 +237,7 @@ export function DocumentsFeature({
         emptyText="暂无可预览内容。"
         docLinks={outboundLinks}
         onOpenDocument={onOpenDocument}
+        showToc={effectiveMode === 'read'}
       />
     </section>
   );
@@ -284,6 +319,20 @@ export function DocumentsFeature({
                 className={effectiveMode === 'split' ? `editor-content-grid split-mode${splitResizing ? ' resizing' : ''}` : 'editor-content-grid single-column'}
                 style={effectiveMode === 'split' ? { gridTemplateColumns: `minmax(0, ${splitRatio * 100}%) 6px minmax(220px, ${(1 - splitRatio) * 100}%)` } : undefined}
               >
+                <div className="editor-md-toolbar" role="toolbar" aria-label="Markdown 工具栏">
+                  {MD_TOOLBAR_ITEMS.map((item) => (
+                    <button
+                      key={item.action}
+                      type="button"
+                      className="editor-md-toolbar-btn"
+                      onClick={() => handleMdAction(item.action)}
+                      title={item.title}
+                      aria-label={item.title}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
                 <label className="editor-field">
                   Markdown 内容
                   <textarea

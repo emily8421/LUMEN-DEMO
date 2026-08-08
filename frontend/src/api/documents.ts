@@ -27,6 +27,8 @@ export type DocumentWritePayload = {
   title: string;
   content_md: string;
   permission: DocumentPermission;
+  /** 新建时所属文件夹（⑥；可空=根目录）。 */
+  folder_id?: number | null;
 };
 
 export async function listDocuments(token: string): Promise<KnowledgeDocument[]> {

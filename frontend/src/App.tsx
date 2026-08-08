@@ -216,9 +216,10 @@ function App() {
 
   // ②：新建文档时关闭本地预览——新建态 selectedId 保持 null，App 互斥 effect 不触发，
   // 需在此显式清空，否则主区一直显示本地预览、看不到新建文档编辑视图。
-  function handleCreateDocument() {
+  // ⑥：透传 folderId，支撑文件夹右键「在此新建文档」。
+  function handleCreateDocument(folderId?: number | null) {
     setLocalPreviewDoc(null);
-    documents.handleCreateDocument();
+    documents.handleCreateDocument(folderId);
   }
 
   async function handleExportSpace() {

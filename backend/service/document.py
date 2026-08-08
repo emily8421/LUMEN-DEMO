@@ -31,6 +31,8 @@ class DocumentCreate:
     title: str
     content_md: str
     permission: DocumentPermission
+    # ⑥：新建时指定所属文件夹（可空=根目录）；服务端校验目标文件夹属于当前空间。
+    folder_id: int | None = None
 
 
 @dataclass(frozen=True)
@@ -64,12 +66,19 @@ def create_document(
     if not is_space_member(user_id, current_space_id, memberships):
         raise DocumentAccessError("space access denied")
 
+    # ⑥：新建带 folder_id 时校验目标文件夹属于当前空间（与 move_document_to_folder 同口径）。
+    if request.folder_id is not None:
+        folder = repository.get_folder(request.folder_id)
+        if folder is None or folder.space_id != current_space_id:
+            raise DocumentValidationError("target folder not found in this space")
+
     document = repository.create_document(
         space_id=current_space_id,
         title=request.title,
         content_md=request.content_md,
         owner_id=user_id,
         permission=request.permission,
+        folder_id=request.folder_id,
     )
     sync_document_chunks(repository, document)
     sync_document_wikilinks(repository, document)

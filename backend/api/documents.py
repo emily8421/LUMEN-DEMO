@@ -46,6 +46,8 @@ if APIRouter is not None:
         title: str
         content_md: str
         permission: DocumentPermission = DocumentPermission.TEAM
+        # ⑥：新建时指定所属文件夹（可空=根目录）；仅 create 使用，update 沿用既有字段不动。
+        folder_id: int | None = None
 
     class DocumentMoveRequest(BaseModel):
         folder_id: int | None = None
@@ -73,6 +75,7 @@ if APIRouter is not None:
                 title=request.title,
                 content_md=request.content_md,
                 permission=request.permission,
+                folder_id=request.folder_id,
             ),
         )
         return {"code": 0, "msg": "ok", "data": _document_detail(document)}

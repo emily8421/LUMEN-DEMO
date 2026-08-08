@@ -58,6 +58,8 @@ export function useDocuments({
   const [backlinks, setBacklinks] = useState<DocLinkView[]>([]);
   const [draft, setDraft] = useState<Draft>(emptyDraft);
   const [isCreating, setIsCreating] = useState(false);
+  // ⑥：新建目标文件夹（文件夹右键「在此新建文档」传入；null=根目录）。
+  const [creatingFolderId, setCreatingFolderId] = useState<number | null>(null);
   const [savedRevision, setSavedRevision] = useState(0);
 
   const selectedDocument = useMemo(
@@ -68,7 +70,8 @@ export function useDocuments({
   // 新建态 / 选中文档变化 → 同步草稿、版本、出入链与反链。
   useEffect(() => {
     if (isCreating) {
-      setDraft(emptyDraft);
+      // ⑥：新建草稿携带目标文件夹（文件夹右键新建时设置 creatingFolderId）。
+      setDraft({ ...emptyDraft, folder_id: creatingFolderId ?? null });
       setVersions([]);
       setOutboundLinks([]);
       setBacklinks([]);
@@ -92,7 +95,7 @@ export function useDocuments({
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isCreating, selectedDocument?.id, selectedDocument?.content_md, selectedDocument?.permission, selectedDocument?.title, token]);
+  }, [isCreating, creatingFolderId, selectedDocument?.id, selectedDocument?.content_md, selectedDocument?.permission, selectedDocument?.title, token]);
 
   async function loadVersions(loadToken: string, documentId: number) {
     setVersions(await listVersions(loadToken, documentId));
@@ -190,8 +193,10 @@ export function useDocuments({
     });
   };
 
-  const handleCreateDocument = () => {
+  /** 新建文档；folderId 传入时在指定文件夹下新建（⑥，文件夹右键入口），缺省=根目录。 */
+  const handleCreateDocument = (folderId?: number | null) => {
     setActiveView('documents');
+    setCreatingFolderId(folderId ?? null);
     setIsCreating(true);
   };
 

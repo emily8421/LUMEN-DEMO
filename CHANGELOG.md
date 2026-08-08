@@ -6,6 +6,17 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.4.0（2026-08-08）
+
+**维护态使用反馈增强（批2）：3 项前端能力。** 使用 LUMEN 时的长文档阅读 / 编写体验增强：
+
+- **④ 长 md 文档预览目录导航（TOC）**：新增 `markdown-toc.ts`（ATX 标题提取 + slug + 层级）；`MarkdownBlock` 支持 `showToc`——为标题注入 id（按行号与 TOC 计数对齐），渲染左侧 sticky 目录，点击滚动定位；DocumentsFeature 阅读态与 LocalDocPreview 均启用。
+- **⑤ md 编辑工具栏**：新增 `markdown-editor-actions.ts`（13 个快捷插入动作：加粗 / 斜体 / H1-3 / 列表 / 引用 / 行内代码 / 代码块 / 链接 / 图片 / 分割线）；DocumentsFeature 编辑态 textarea 上方加工具栏，光标处插入语法并恢复选区（有选区时包裹）。
+- **⑥ 文件夹内新建文档**：后端 `DocumentCreate.folder_id` 全链路（api / service / pg + demo repository）；前端 Draft / `handleCreateDocument` 支持 folder_id；`FolderTree` 文件夹右键加「在此新建文档」→ 新文档保存到该文件夹（不再一律落根目录）。
+- 立项（待人工确认，编码时回写 02/07/09）：`docs/design/batch-maintenance-2026-08-08.md`（REQ-049 本地挂载可编辑 / REQ-050 成员空间可见性 / REQ-051 忘记密码+登录交互 / ⑪ 部署建议）。
+
+> MINOR 依据（`ai/project-rules.md` §2.8.1）：新增可演示能力（TOC / md 工具栏 / 文件夹内新建）。验证：前端 build 296 modules 绿；后端 311 tests OK；浏览器 smoke `scripts/smoke-batch2-ui-browser.mjs` 全绿（TOC 渲染 + 标题锚点、md 工具栏插入、文件夹内新建 folder_id 持久化）。
+
 ## v3.3.3（2026-08-08）
 
 **维护态使用反馈缺陷修复（批1）：4 个交互 bug。** 使用 LUMEN 时逐条反馈定位：

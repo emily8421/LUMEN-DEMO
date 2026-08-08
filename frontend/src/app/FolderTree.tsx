@@ -11,6 +11,8 @@ type FolderTreeProps = {
   isBusy: boolean;
   folders: FolderManager;
   onSelectDocument: (documentId: number) => void;
+  /** ⑥：在指定文件夹下新建文档（文件夹右键「在此新建文档」）。 */
+  onCreateDocumentInFolder: (folderId?: number | null) => void;
   onMoveDocument: (document: KnowledgeDocument, targetFolderId: number | null) => void;
   onDeleteDocument: (documentId: number) => void;
 };
@@ -36,6 +38,7 @@ export function FolderTree({
   isBusy,
   folders,
   onSelectDocument,
+  onCreateDocumentInFolder,
   onMoveDocument,
   onDeleteDocument,
 }: FolderTreeProps) {
@@ -44,7 +47,7 @@ export function FolderTree({
 
   const openFolderMenu = useCallback((folderId: number, x: number, y: number) => {
     const menuWidth = 220;
-    const menuHeight = 292;
+    const menuHeight = 320;
     setMenuState({
       type: 'folder',
       folderId,
@@ -113,6 +116,7 @@ export function FolderTree({
             menuState={menuState}
             onOpenMenu={openFolderMenu}
             onCloseMenu={closeMenu}
+            onCreateDocumentInFolder={onCreateDocumentInFolder}
           >
             {folders.expandedFolderIds.has(folder.id) ? renderBranch(folder.id, depth + 1) : null}
           </FolderNode>
@@ -159,6 +163,7 @@ type FolderNodeProps = {
   menuState: TreeMenuState | null;
   onOpenMenu: (folderId: number, x: number, y: number) => void;
   onCloseMenu: () => void;
+  onCreateDocumentInFolder: (folderId?: number | null) => void;
   children: ReactNode;
 };
 
@@ -173,6 +178,7 @@ function FolderNode({
   menuState,
   onOpenMenu,
   onCloseMenu,
+  onCreateDocumentInFolder,
   children,
 }: FolderNodeProps) {
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -273,6 +279,11 @@ function FolderNode({
           role="menu"
           aria-label={`${folder.name} 操作`}
         >
+          <button type="button" role="menuitem" onClick={() => runMenuAction(() => onCreateDocumentInFolder(folder.id))} disabled={isBusy}>
+            <span aria-hidden="true">＋</span>
+            <span>在此新建文档</span>
+          </button>
+          <div className="tree-menu-separator" role="separator" />
           <button type="button" role="menuitem" onClick={() => runMenuAction(() => folders.beginCreateFolder(folder.id))} disabled={isBusy}>
             <span aria-hidden="true">▣</span>
             <span>新建子文件夹</span>

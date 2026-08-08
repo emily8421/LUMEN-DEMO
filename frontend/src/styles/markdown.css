@@ -121,3 +121,59 @@
 .compact-markdown h3 {
   font-size: 13px;
 }
+
+/* --- ④ 标题目录导航（TOC） --- */
+.markdown-toc-layout {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.markdown-toc {
+  position: sticky;
+  top: var(--space-3);
+  max-height: calc(100vh - 120px);
+  overflow: auto;
+  padding: var(--space-2) var(--space-2) var(--space-2) 0;
+  border-right: 1px solid var(--line);
+}
+
+.markdown-toc-title {
+  display: block;
+  margin-bottom: var(--space-1);
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.markdown-toc-list {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.markdown-toc-item button {
+  display: block;
+  width: 100%;
+  padding: 3px 6px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+  text-align: left;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.markdown-toc-item button:hover {
+  background: var(--panel);
+  color: var(--text);
+}

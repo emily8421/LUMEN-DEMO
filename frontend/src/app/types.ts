@@ -23,6 +23,8 @@ export type Draft = {
   title: string;
   content_md: string;
   permission: DocumentPermission;
+  /** 新建时所属文件夹（⑥；可空=根目录）。编辑态不传，沿用文档自身 folder_id。 */
+  folder_id?: number | null;
 };
 
 export type TermDraft = {

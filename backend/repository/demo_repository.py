@@ -385,6 +385,7 @@ class DemoRepository:
         content_md: str,
         owner_id: int,
         permission: DocumentPermission,
+        folder_id: int | None = None,
     ) -> Document:
         now = _now_iso()
         document = Document(
@@ -394,6 +395,7 @@ class DemoRepository:
             content_md=content_md,
             owner_id=owner_id,
             permission=permission,
+            folder_id=folder_id,
             current_version=1,
             created_at=now,
             updated_at=now,

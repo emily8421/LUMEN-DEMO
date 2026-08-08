@@ -478,6 +478,33 @@
   padding: 6px 0;
 }
 
+/* ⑤：md 编辑工具栏（快捷插入语法）。 */
+.editor-md-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.editor-md-toolbar-btn {
+  padding: 3px 8px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.4;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.editor-md-toolbar-btn:hover {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+
 /* 视觉收口：标题 / 权限去框融入主区（主流编辑器风格），单行紧凑工具栏。 */
 .editor-toolbar input,
 .editor-toolbar select {

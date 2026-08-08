@@ -20,7 +20,8 @@ type ContextPaneProps = {
   selectedId: number | null;
   isCreating: boolean;
   isBusy: boolean;
-  onCreateDocument: () => void;
+  /** 新建文档；folderId 传入时在指定文件夹下新建（⑥，文件夹右键「在此新建文档」）。 */
+  onCreateDocument: (folderId?: number | null) => void;
   onSelectDocument: (documentId: number) => void;
   onMoveDocument: (document: KnowledgeDocument, targetFolderId: number | null) => void;
   onDeleteDocument: (documentId: number) => void;
@@ -116,7 +117,7 @@ export function ContextPane({
               <button
                 type="button"
                 className="folder-icon-button"
-                onClick={onCreateDocument}
+                onClick={() => onCreateDocument()}
                 disabled={isBusy}
                 title="新建文档"
                 aria-label="新建文档"
@@ -192,6 +193,7 @@ export function ContextPane({
             isBusy={isBusy}
             folders={folders}
             onSelectDocument={onSelectDocument}
+            onCreateDocumentInFolder={onCreateDocument}
             onMoveDocument={onMoveDocument}
             onDeleteDocument={onDeleteDocument}
           />

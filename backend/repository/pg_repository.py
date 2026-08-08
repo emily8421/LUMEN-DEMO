@@ -607,6 +607,7 @@ class PgRepository:
         content_md: str,
         owner_id: int,
         permission: DocumentPermission,
+        folder_id: int | None = None,
     ) -> Document:
         with SessionLocal() as session:
             doc = DocumentORM(
@@ -616,6 +617,7 @@ class PgRepository:
                 owner_id=owner_id,
                 permission=permission.value,
                 current_version=1,
+                folder_id=folder_id,
             )
             session.add(doc)
             session.flush()  # populate doc.id from BIGSERIAL
