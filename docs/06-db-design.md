@@ -18,7 +18,7 @@
 
 | 表 | 用途 | 阶段 | 设计状态 | 当前实现状态 | 追溯 |
 |---|---|---|---|---|---|
-| lumen_users | 账号 | [P1] | P1-已实现；Phase2D 扩列（migration 014 / 016） | 已落地 PostgreSQL（migration 001 + 014 扩列：email / password_hash / status / last_login_at / failed_login_count / locked_until + 016 role；PgRepository 接入） | REQ-001 基础；REQ-040/041/042；REQ-045 |
+| lumen_users | 账号 | [P1] | P1-已实现；Phase2D 扩列（migration 014 / 016 / 018） | 已落地 PostgreSQL（migration 001 + 014 扩列：email / password_hash / status / last_login_at / failed_login_count / locked_until + 016 role + 018 reset_token_hash / reset_expires_at / reset_used_at；PgRepository 接入） | REQ-001 基础；REQ-040/041/042；REQ-045；REQ-051 |
 | lumen_sessions | 登录会话（不透明 token） | [P2] | Phase2D-已实现 | 已落地 PostgreSQL（migration 014；token 只存 SHA-256 摘要；TTL / 撤销 / 续期轮换 / 多设备会话） | REQ-041/042 |
 | lumen_spaces | 空间 | [P1] | P1-已实现 | 已落地 PostgreSQL（migration 001；PgRepository 接入） | REQ-001 |
 | lumen_space_members | 成员-空间-角色 | [P1] | P1-已实现；Phase2D 补列（migration 016 `created_at`） | 已落地 PostgreSQL（migration 001 + 016 `created_at` 补列；PgRepository 接入） | REQ-001/002；REQ-047（API-046 joined_at） |
@@ -73,6 +73,9 @@ LUMEN 采用 `docs/decisions/ADR-010-db-authority-derived-data-rebuildability.md
 | locked_until | timestamptz | 锁定截止时间（空=未锁定） |
 | created_at | timestamptz | |
 | role | varchar | 全局角色 admin / member（默认 member，CHECK 约束；Sprint-28 migration 016；seed alice=admin / kira·brightlite-member=member） |
+| reset_token_hash | varchar(64) | SHA-256(reset token)，仿 `lumen_sessions.token_hash` 不存明文；NULL=无重置（维护态批5 migration 018，REQ-051） |
+| reset_expires_at | timestamptz | reset token TTL 30min；过期失效（migration 018，REQ-051） |
+| reset_used_at | timestamptz | 一次性标记，confirm 成功置位防重放（migration 018，REQ-051） |
 
 ### lumen_sessions（Phase2D · migration 014 · 已实现）
 | 字段 | 类型 | 说明 |
