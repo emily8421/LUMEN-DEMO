@@ -12,8 +12,17 @@
 | 当前 Phase | **Phase2D（账户与多人权限）已完成（2026-08-07 收口）：Sprint-26 账号体系基础（TC-P2-AUTH-001）+ Sprint-27 权限多人化（TC-P2-ACC-001）+ Sprint-28 角色分层 + 用户管理 + 团队空间加入（TC-P2-ACC-002）三 slice 全部验收通过、退出标准达成；Sprint-27 P2 两项 + Sprint-28 偏差经用户确认全接受、留后续；不升 Phase，下一阶段范围待用户定义**；Phase2B（团队 MVP）已完成（2026-08-05 收口）；Phase2C（本地知识源接入）已完成（2026-08-06） |
 | 交付物形态 | Demo / 个人可用 Alpha / 个人知识组织 |
 | 覆盖 REQ | Phase1：REQ-001..REQ-011、REQ-036；Phase1.5A：REQ-037/038；Phase1.5B：REQ-027；Phase2A：REQ-026/012/025；**Phase2B：REQ-014 首批核心（后端已实现，RG-008 升 Go，2026-07-30）+ REQ-013a 主题时间线 / REQ-024 第二 slice（已完成，运行态 API smoke + Edge headless 浏览器 smoke 通过）+ REQ-039 文档目录树第三 slice**；**Phase2C：REQ-018 模式 B 本地知识源接入（RG-009 Go 2026-08-05，TC-P2-VAULT-001）**；**Phase2D：REQ-040/041/042 账号体系基础（Sprint-26 已完成，TC-P2-AUTH-001 自动化通过 2026-08-07）+ REQ-043/044 权限多人化（Sprint-27 已完成，TC-P2-ACC-001 通过 2026-08-07）+ REQ-045..047 角色分层 / 用户管理 / 团队空间加入（Sprint-28 已完成 2026-08-07，TC-P2-ACC-002 通过）**；其余愿景验证项待升阶段 |
-| 当前状态 | Phase1 全量验收已记录，结论为 Conditional Go（Demo closure）；Phase1.5A 已完成 TC-P1-015/016；Phase1.5B 已完成 TC-P1-017（Sprint-18 PDF 导出；v1.7.0 已补下载端点 + 前端下载闭环）；Phase2A 已完成 TC-P2-LINK-001 / TC-P2-TAG-001 / TC-P2-QUICK-001，个人知识组织三个 vertical slice 验收通过。**Phase2B 范围已确认（2026-07-30）+ 设计就绪 + 数据外发风险已接受；REQ-014 已完成 v1.1.0（TC-P2-AI-001 通过，D-C-001 citation 同步延迟量化已补，当前不需要异步 job）；REQ-013a/024 主题时间线 TC-P2-TL-001 已通过本地自动化验证 + frontend build + 运行态 API smoke + Edge headless 浏览器 smoke + 真实 PG 大数据性能 smoke，并已随 v1.5.0 推送 `origin/main`、CI 通过、tag 发布；Sprint-21 Doc-First UX 已完成**；**REQ-039 文档目录树 TC-P2-FOLDER-001 已完成后端核心 + API-029 `preserve_structure` 导入保留结构 + 前端文件管理器基础能力（含 API-038 单文档移动）验证；浏览器人工 smoke 已通过（2026-08-03 用户确认），浏览器自动化 smoke 已补（2026-08-04）**；**REQ-018 模式 B 已随 Phase2C 完成（RG-009 PoC Go 2026-08-05；Sprint-23C 已完成 2026-08-06，TC-P2-VAULT-001 通过 / PR#108 v2.0.0）**；其余愿景项待升阶段。**Phase2D 账号体系基础已完成（Sprint-26，2026-08-07）：TC-P2-AUTH-001 自动化通过（`tests/backend/test_auth.py` 20/20 + 全量 222 OK），RG-011/012/013 Go；浏览器 smoke（登录/注册页）PASS + demo 启动验证通过（2026-08-07，`scripts/smoke-auth-browser.mjs`）。** **Sprint-27 权限多人化已完成（2026-08-07，TC-P2-ACC-001 通过，PR#114）**。**Sprint-28 角色分层 + 用户管理 + 团队空间加入已完成（2026-08-07，TC-P2-ACC-002 通过，backend 275 OK + 浏览器双视角 smoke PASS）**。 |
+| 当前状态 | **维护态**（2026-08-07 收口）。Phase2D（账户与多人权限）三 slice 验收全通过（TC-P2-AUTH-001 / ACC-001 / ACC-002），下一阶段范围待用户定义；无未完成验证项。各 TC 状态见 §2 追溯矩阵与 §5 验收记录。 |
 | 最后更新 | 2026-08-07（Phase2D 收口：Sprint-26/27/28 三 slice 全部验收通过、退出标准达成；Sprint-27 P2 两项 + Sprint-28 偏差经用户确认全接受、留后续；不升 Phase，下一阶段范围待用户定义）；前次 2026-08-07（Sprint-26/27/28 实现 + 验收） |
+
+> **阶段验收线**（历史指针；各 TC 详情见 §2 矩阵 / §5 验收记录，不在此重复）：
+> - **Phase1 Demo**：全量验收 Conditional Go（TC-P1-001..017）。
+> - **Phase1.5A**：TC-P1-015 / 016。
+> - **Phase1.5B**：TC-P1-017（Sprint-18 PDF 导出；v1.7.0 下载闭环）。
+> - **Phase2A**：TC-P2-LINK-001 / TAG-001 / QUICK-001。
+> - **Phase2B（团队 MVP）**：2026-08-05 收口。TC-P2-AI-001（REQ-014 / v1.1.0）+ TC-P2-TL-001（REQ-013a/024 / v1.5.0）+ TC-P2-FOLDER-001（REQ-039）；数据外发风险已接受（RG-008 Go 2026-07-30）。
+> - **Phase2C（本地知识源接入）**：2026-08-06 完成。TC-P2-VAULT-001（REQ-018 模式 B / RG-009 Go 2026-08-05 / PR#108 / v2.0.0）。
+> - **Phase2D（账户与多人权限）**：2026-08-07 收口。TC-P2-AUTH-001（Sprint-26 / RG-011/012/013 Go / PR#112 / v3.0.0）+ TC-P2-ACC-001（Sprint-27 / PR#114）+ TC-P2-ACC-002（Sprint-28 / PR#117 / v3.1.0）。Sprint-27 P2 两项 + Sprint-28 偏差经用户确认接受、留后续。
 
 ## 1. 测试策略
 

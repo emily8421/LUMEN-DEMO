@@ -11,8 +11,17 @@
 | 当前 Phase | **Phase2D（账户与多人权限）已完成（2026-08-07 收口）：Sprint-26 账号体系基础（TC-P2-AUTH-001 / PR#112 v3.0.0）+ Sprint-27 权限多人化（TC-P2-ACC-001 / PR#114）+ Sprint-28 角色分层 + 用户管理 + 团队空间加入（TC-P2-ACC-002 / PR#117 v3.1.0）三 slice 全部验收通过、退出标准达成；Sprint-27 P2 两项 + Sprint-28 偏差经用户确认全接受、留后续；不升 Phase，下一阶段范围待用户定义**；Phase2C（本地知识源接入）已完成（2026-08-06）；Phase2B（团队 MVP）已完成（2026-08-05 收口；2026-07-30 切指针；RG-008 升 Go；Sprint-19/20/21/22 均完成验收） |
 | 交付物形态 | Demo / 个人可用 Alpha / 个人知识组织 |
 | 输入基线 | `docs/03-prd.md` §3、`docs/04-architecture.md`、`docs/05-tech-spec.md`、`docs/09-verification.md` |
-| 当前状态 | Phase1 Demo 已完成并已记录全量验收（Conditional Go）；Phase1.5A 已完成批量 / 文件夹导入（REQ-037）与 `.md` / ZIP 导出备份（REQ-038）；Phase2A 已完成 REQ-026 内链 / 反链、REQ-012 标签、REQ-025 快速录入三个 vertical slice 并通过 `09` 对应用例。Phase1.5B：**PDF 导出已随 Sprint-18 完成（API-019 / TC-P1-017 通过，v1.6.0），并在 v1.7.0 补齐 PDF 下载端点 + 前端下载闭环；Word-PDF / zhparser 仍待后续 RG**。**Phase2B（团队 MVP）范围已确认（2026-07-30）：REQ-014 首批核心已完成 v1.1.0（TC-P2-AI-001 通过；D-C-001 citation 同步延迟量化已补，当前不做异步 job）；REQ-013a/024 主题时间线第二 slice 已完成并发布为 v1.5.0（task-030，后端自动化验证 + frontend build + 运行态 API smoke + Edge headless 浏览器 smoke + push 后 CI 通过 + tag 已推送；真实 PG 大数据性能 smoke 已补）；Sprint-21 Doc-First UX 已完成**；**Sprint-22 文档目录树（folder-tree，REQ-039）后端核心 + API-029 `preserve_structure` 导入保留结构 + 前端文件管理器基础能力（含 API-038 单文档移动）已完成并验证通过；浏览器人工 smoke 已通过（2026-08-03 用户确认），浏览器自动化 smoke 已补（2026-08-04）**。**Phase2B 已收口（2026-08-05）**：范围三项（REQ-014 / REQ-013a+024 / REQ-039）全部验收通过，退出标准达成，详见 `docs/09-verification.md` §5；下一阶段范围待定义。**Sprint-25 帮助手册 L0+L1 已完成（2026-08-06：自动化 build + 浏览器 smoke + 人工 smoke 新用户路径均通过，验收期修复 2 缺陷）**。**Phase2C 本地知识源接入已完成（2026-08-06，Sprint-23C TC-P2-VAULT-001 通过 / PR#108 v2.0.0；Sprint-24 子树导入 UI / Sprint-25 帮助手册随 Wave 1 收口）**。**Phase2D 账户与多人权限已完成（2026-08-07 收口）：Sprint-26 账号体系基础（TC-P2-AUTH-001 / PR#112 v3.0.0）+ Sprint-27 权限多人化（TC-P2-ACC-001 / PR#114）+ Sprint-28 角色分层 + 用户管理 + 团队空间加入（TC-P2-ACC-002 / PR#117 v3.1.0）三 slice 全部验收通过、退出标准达成；Sprint-27 P2 两项 + Sprint-28 偏差经用户确认全接受、留后续；不升 Phase，下一阶段范围待用户定义**。 |
+| 当前状态 | **维护态**（2026-08-07 收口）。Phase2D（账户与多人权限）已完成，下一阶段范围待用户定义；无未完成执行任务。各 Sprint 状态见下方「Sprint 总览」，验收证据见 `docs/09-verification.md` §5。 |
 | 最后更新 | 2026-08-07（Phase2D 收口：Sprint-26/27/28 三 slice 全部验收通过、退出标准达成；Sprint-27 P2 两项 + Sprint-28 偏差经用户确认全接受、留后续；不升 Phase，下一阶段范围待用户定义）；前次 2026-08-07（Phase2D Sprint-26/27/28 实现 + 契约回写） |
+
+> **阶段完成线**（历史指针；各 Sprint 详情见「Sprint 总览」，不在此重复）：
+> - **Phase1 Demo**：已完成，全量验收 Conditional Go。
+> - **Phase1.5A**：REQ-037 批量 / 文件夹导入 + REQ-038 `.md` / ZIP 导出。
+> - **Phase1.5B**：REQ-027 PDF 导出（Sprint-18 / API-019 / TC-P1-017 / v1.6.0；v1.7.0 下载闭环）。Word-PDF / zhparser 待后续 RG。
+> - **Phase2A**：REQ-026 内链反链 + REQ-012 标签 + REQ-025 快速录入（TC-P2-LINK/TAG/QUICK-001）。
+> - **Phase2B（团队 MVP）**：2026-08-05 收口。REQ-014 AI 润色（TC-P2-AI-001 / v1.1.0）+ REQ-013a/024 时间线（v1.5.0）+ REQ-039 文档目录树（TC-P2-FOLDER-001 / API-029 `preserve_structure` / API-038）；Sprint-21 Doc-First UX。
+> - **Phase2C（本地知识源接入）**：2026-08-06 完成。REQ-018 模式 B（TC-P2-VAULT-001 / PR#108 / v2.0.0）；Sprint-24 子树导入 UI + Sprint-25 帮助手册随 Wave 1 收口。
+> - **Phase2D（账户与多人权限）**：2026-08-07 收口。Sprint-26 账号体系基础（TC-P2-AUTH-001 / PR#112 / v3.0.0）+ Sprint-27 权限多人化（TC-P2-ACC-001 / PR#114）+ Sprint-28 角色分层 + 用户管理 + 团队空间加入（TC-P2-ACC-002 / PR#117 / v3.1.0）。Sprint-27 P2 两项 + Sprint-28 偏差经用户确认接受、留后续。
 
 ## Sprint 总览
 
