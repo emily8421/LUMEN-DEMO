@@ -201,7 +201,7 @@ CREATE INDEX idx_lumen_sessions_user ON lumen_sessions(user_id) WHERE revoked_at
 
 ## 13. 版本与契约影响
 
-- **版本**：Phase2C → Phase2D 是 Phase 跨越 + 对外契约破坏性变更（login 入参改、API-001 契约变），按 `ai/project-rules.md` §2.8.1 应 **bump MAJOR v3.0**，时机为 Sprint-26 验收发布。
+- **版本**：Phase2C → Phase2D 是 Phase 跨越 + 对外契约破坏性变更（login 入参改、API-001 契约变），按 `ai/project-rules.md` §2.4.1 应 **bump MAJOR v3.0**，时机为 Sprint-26 验收发布。
 - **migration**：014 = `lumen_users` 扩列 + `lumen_sessions`；`lumen_vault_mounts`（原 Wave 3 预占 014）顺延 015，回写 `docs/06`。
 
 ## 14. 验收追溯

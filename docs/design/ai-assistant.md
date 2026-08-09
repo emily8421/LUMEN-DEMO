@@ -100,7 +100,7 @@ flowchart TD
 | 越权来源 | RAG 召回含不可见 chunk | `filter_visible_documents` 剔除，不进 prompt / 不返回 | 不泄露 | — | 否（红线） | TC-P1-008 延续 |
 | 前端请求失败 | 网络 / 登录失效 | assistant 消息就地显示错误文案 | 错误气泡 | — | 否 | 09 待回写 |
 
-数据外发护栏（RG-008，权威源 `ai/project-rules.md §2.5`）：通用对话为**用户单条显式触发**，符合「由用户自判是否触发」护栏；不携带 API key；`history` 仅当前会话前端内存，不落库。
+数据外发护栏（RG-008，权威源 `ai/project-rules.md §2.1`）：通用对话为**用户单条显式触发**，符合「由用户自判是否触发」护栏；不携带 API key；`history` 仅当前会话前端内存，不落库。
 
 ## 6. 阶段增量、readiness gate 与实现状态
 

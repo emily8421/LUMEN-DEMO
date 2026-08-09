@@ -129,7 +129,7 @@
 
 ## 4. 本机资源验证
 
-> 验证 Demo 在本机资源范围内可运行（受 `docs/env/local-env.md` 与 `ai/project-rules.md` §2.5 约束）。
+> 验证 Demo 在本机资源范围内可运行（受 `docs/env/local-env.md` 与 `ai/project-rules.md` §2.1 约束）。
 
 - 本机起库与依赖：Docker Compose 起 PostgreSQL+pgvector，确认本机内存 / 磁盘足够。
 - Demo 运行资源占用：峰值内存 < 8GB、显存 < 4GB、磁盘 < 20GB；Embedding 必须使用本机 `bge-small-zh`（512 维），不依赖外部 Embedding API。
@@ -245,7 +245,7 @@
 | RISK-VISION-001 | 后续 AI Gate | P2 / 愿景高风险 AI 能力 | REQ-020 / 021 / 030 / 032 / 033 等 | 不进入 Phase1 必过项，技术验证通过后再补用例 | 待愿景技术验证 |
 | RISK-P2-003 | WSG-001..006 / P2-UI-G-001..006 | P2 UI 少容器清爽稿通用 gate 未形成独立全量 smoke | Sprint-11、TC-P2-WSG-001、TC-P2-UI-001~005、Phase2B | Phase2A 三个 vertical slice 已分别完成浏览器 smoke / build；Sprint-11 仍作为后续 Phase2B UI gate 草案保留，不阻塞 Phase2A closure | Phase2B 启动前重新确认 UI gate 与 smoke 范围 |
 | RISK-P2-004 | OI-005 / TC-P2-TAG-001..QUICK-001 | ~~Phase2A 核心 DB / API / TC 契约未实现~~ | ~~REQ-012 / 025 / 026~~ | ✅ **已解决**（REQ-026 / REQ-012 / REQ-025 已完成后端 + 前端 vertical slice；TC-P2-LINK-001 / TAG-001 / QUICK-001 通过） | 2026-07-20 Phase2A closure；§2 矩阵与 §5 验收记录 |
-| RISK-P2-005 | RG-004 / 数据外发 / **RG-008** | AI 润色 / 写作引用可能发送真实文档片段到外部 LLM | REQ-014 | **数据外发风险已人工接受（2026-07-30，真实外发 + 权限护栏，见 RG-008 / `ai/project-rules.md §2.5`）**：sources 权限过滤、草稿只存 hash + 摘要、不做自动过滤、5030 降级 | ✅ 已解决 / 关闭：后端权限过滤（越权 chunk 不进 prompt / 不返回）、5030 不落库不编造、hash 留存均经 `tests.backend.test_ai_polish` 验证；RG-008→Go；前端 UI smoke 后续已在 TC-P2-AI-001 通过；D-C-001 citation 同步延迟量化已通过，当前不新增异步 job |
+| RISK-P2-005 | RG-004 / 数据外发 / **RG-008** | AI 润色 / 写作引用可能发送真实文档片段到外部 LLM | REQ-014 | **数据外发风险已人工接受（2026-07-30，真实外发 + 权限护栏，见 RG-008 / `ai/project-rules.md §2.1`）**：sources 权限过滤、草稿只存 hash + 摘要、不做自动过滤、5030 降级 | ✅ 已解决 / 关闭：后端权限过滤（越权 chunk 不进 prompt / 不返回）、5030 不落库不编造、hash 留存均经 `tests.backend.test_ai_polish` 验证；RG-008→Go；前端 UI smoke 后续已在 TC-P2-AI-001 通过；D-C-001 citation 同步延迟量化已通过，当前不新增异步 job |
 | RISK-P1-006 | RG-006 / TC-P1-017 | ~~PDF 导出库未验证；API-019 未实现~~ | REQ-027 | ✅ **已解决**（2026-08-04）：ReportLab / pypdf / pdfplumber / Pillow 已安装并锁入依赖；`simhei.ttf` 中文样例生成、Poppler 渲染、文本抽取和人工 PNG 检查均通过；Sprint-18 已实现 API-019 + `lumen_doc_exports` + 前端入口，产品样例 PDF 验证通过 | `scripts/smoke-pdf-rg006.py` + `docs/research/2026-08-04-tech-env-evaluation-rg006-pdf-export.md` + TC-P1-017 验收记录 |
 | RISK-P1-007 | TC-P1-015 | ~~Sprint-16 Chrome 拖拽 / 文件夹 smoke 未补~~ | ~~REQ-037 前端人工验收~~ | ✅ **已解决**（Chrome headless drop-zone smoke 已覆盖批量 drop、路径标题、搜索与问答来源） | Sprint-16 smoke 记录（2026-07-15） |
 | RISK-P1-008 | TC-P1-015 | 1000+ 文件夹导入一次请求可能撞 multipart `max_files/max_fields=1000` 限制 | REQ-037 / REQ-039 大文件夹导入 | ✅ 已解决（编码 PR #104，2026-08-04）：前端分批 50/批顺序上传 + 逐批 try/catch + 汇总，纯前端、不改 API-029；build + 后端 11 测试绿 | ✅ 1000 文件夹 smoke 通过（2026-08-04，内存 demo，非 PG/embedding）：1000 文件 ÷50/批 = 20 批顺序上传，全 HTTP 200、done 997 / skip 3 / fail 0、0.9s；对照「单请求 1000 文件」→ 400 `Too many fields. Maximum number of fields is 1000.`（复现原 bug）。PG + 同步 embedding perf 已测（2026-08-04，scripts/smoke-import-pg-performance.py）：200 文档 ~41s、~205ms/doc（bge embedding 已写入）、每批随 `list_documents` 去重略增（9.9→10.6s/批）；1000+ 文档预计数分钟，大规模 vault 的后台异步导入留后续 |

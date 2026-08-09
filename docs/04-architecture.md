@@ -69,7 +69,7 @@ flowchart LR
 ```
 
 - **外部系统状态**：公司内网 LLM 中转 = **已接入**（GLM `glm-5.2`，RG-004 Go；可配置 Mock 降级）；飞书同步 / Vault 挂载 = 愿景候选（未实现）。
-- **数据外发边界**：跨 LUMEN 受信域 → 外部 LLM 为唯一数据外发点。RAG 问答 / 术语注入（Phase1 起）与 Phase2B AI 润色（REQ-014）均可能发往内网 LLM；**Phase2B AI 润色数据外发风险已人工接受（2026-07-30）：允许真实文档片段外发，护栏见 `ai/project-rules.md §2.5` 与 `docs/05-tech-spec.md` RG-008**（sources 权限过滤、草稿只存 hash + 摘要、不做敏感字段自动过滤、5030 降级）；非润色场景仍优先避免批量外发。Embedding 本机运行，不外发。
+- **数据外发边界**：跨 LUMEN 受信域 → 外部 LLM 为唯一数据外发点。RAG 问答 / 术语注入（Phase1 起）与 Phase2B AI 润色（REQ-014）均可能发往内网 LLM；**Phase2B AI 润色数据外发风险已人工接受（2026-07-30）：允许真实文档片段外发，护栏见 `ai/project-rules.md §2.1` 与 `docs/05-tech-spec.md` RG-008**（sources 权限过滤、草稿只存 hash + 摘要、不做敏感字段自动过滤、5030 降级）；非润色场景仍优先避免批量外发。Embedding 本机运行，不外发。
 - **输入 / 输出**：输入 = 用户 REST 请求（Bearer token，文档 / 搜索 / 问答 / 术语操作）；输出 = JSON 结果（可见范围内的文档、检索结果、带来源 RAG 答案）。跨受信域输出仅 LLM Prompt 片段（见上）。
 
 ### 1.2 容器 / 组件视图
@@ -138,7 +138,7 @@ flowchart LR
 
 ## 4. 部署 / 运行拓扑约束
 
-> 受 `ai/project-rules.md` §2.5 与 `docs/env/local-env.md` 约束。Demo 本机优先；资源不足再上公司服务器。
+> 受 `ai/project-rules.md` §2.1 与 `docs/env/local-env.md` 约束。Demo 本机优先；资源不足再上公司服务器。
 
 - 进程 / 端口（Demo）：FastAPI 后端 `uvicorn` :18000；React 前端 Vite :5173；PostgreSQL+pgvector `lumen-pg` :5432（Docker Compose）。
 

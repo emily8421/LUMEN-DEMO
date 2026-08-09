@@ -117,7 +117,7 @@ stateDiagram-v2
 | 越权 chunk | sources 含不可见 chunk | 查询层过滤剔除，不进入 prompt / 不返回 | 不泄露 | — | 否（红线） | TC-P2-AI-001 |
 | 片段为空 / mode 非法 | selection_md 空、mode ∉ {polish,citation} | 4220 | 字段错误提示 | — | 否 | TC-P2-AI-001 |
 
-数据外发护栏（RG-008，权威源 `ai/project-rules.md §2.5` / `05 RG-008`）：
+数据外发护栏（RG-008，权威源 `ai/project-rules.md §2.1` / `05 RG-008`）：
 
 | 护栏 | 说明 |
 |---|---|
