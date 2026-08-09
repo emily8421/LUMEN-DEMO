@@ -8,6 +8,61 @@
 
 本文是母模板 `ai-project-template` 的 changelog 大白话版，记录母模板自身演进。派生项目同步后，根目录 `CHANGELOG.md` / `CHANGELOG-PLAIN.md` 归派生项目自有；母模板继承版本号以 `TEMPLATE-BASE.md` 为准，母模板发布说明参考见同步生成的 `upstream/CHANGELOG.md` / `upstream/CHANGELOG-PLAIN.md`。权威版本事实仍以母模板 `VERSION`、`CHANGELOG.md` 和 Git 历史为准；本文件只帮助人快速读懂母模板发布影响。
 
+## v1.60.2（2026-08-09）
+
+加了一个「文档健康度复核」的轻量检查（`docs-health-review`），让你在一轮工作收尾时能顺手梳理「文档越写越厚」的副作用——臃肿、重复、状态滞后这些（来源 issue #307，LUMEN 项目回流）。
+
+- 新增 `/run docs-health-review` 命令和 24 号 Prompt：查四类问题（内容重复 / 章节臃肿 / 结构退化 / 状态滞后），给出 `文件:行` 定位，分「可安全整理」和「需人工确认」两类，默认只读不改文件。和已有的 `docs-system-audit`（全链路审计）互补：它管「可读性」，`docs-system-audit` 管「追溯链」。
+- 给「文档只增不删」开了个整理口子（`global-rules §8.4`）：允许清理过时的过程性记录（比如事情早做完了还标着「待提交」的）、把超长头部精简成「当前状态 + 历史指针」、把过时段落挪进 `docs/archive/`；但历史事实和追溯锚点（需求 / 设计结论 / 验收 / 决策）不能删，只能进 archive 或留一行指针，保证还能追溯。
+- 在 `session-rules` 和场景引导 A8 接了触发点，说「收尾梳理文档」「检查文档可读性」「文档瘦身」就能路由到它。
+- 同步清单和自检断言都更新了，派生项目同步后自动获得这个能力。
+
+这是 patch 级的可选能力增强：全是新增的可选命令，默认只读，不强制用，现有命令和行为都不变，派生项目不用迁移。
+
+## v1.60.1（2026-08-04）
+
+把 `ai/project-rules.md`（项目专属规则种子）从模板创建起就存在的章节编号问题修掉了：§2 下面直接跳到 §2.5（§2.1-2.4 从没存在过），而且 §2.5-2.9 讲的运行环境、图表、UI 原型、版本、运行时这些其实不算“技术栈”子话题却挂在 §2 下。顺手把“文档编号要连续”沉淀成通用规则，防止以后再出现怪编号。
+
+- **重编号**：§2.5-2.9 → §2.1-2.5（运行环境 / 图表格式 / UI 原型 / 项目版本 / 运行时版本），§2 标题改成“技术栈与项目约束”兜住杂项；§0/§1/§3-§6 不动（避开引用最密的 §3）。
+- **全量引用迁移**：种子本身 + 3 个 `_examples` 副本 + 规范基线 `ai/doc-standards/project-rules.md` + 约 20 处跨文档引用（global-rules、document-lifecycle、各 doc-standards、scenario-guides、env-setup、多个 prompts、docs/04/06/07 等）全部按新编号迁移；CHANGELOG（历史）和 `_archive/**` 显式不动。
+- **编号规范沉淀**：`global-rules §5` 新增「文档编号规范」小节（连续 / 归属一致 / 改编号要全量迁移 / advisory 自检）；`check-template` 加了个非阻断的 advisory 检测 §2.x 跳号。
+
+这是 patch 级编号规范化：不改同步脚本逻辑、不改默认行为、不要求派生项目迁移（派生同步后收到新编号的种子 + 规范基线；既有派生实例的 `ai/project-rules.md` 不被覆盖）。
+
+## v1.60.0（2026-08-04）
+
+模板治理分层的第三阶段：给领域模板（比如 `agent-system-template` 这类面向某类系统的专用模板）补了一层「领域通用但跨项目」的规则中间层；同时把下行同步清单从“一锅端的扁平列表”拆成按派生路线选组的三组，让普通派生项目不再误收领域专属文件。
+
+- **领域 rules 规范基线**：新建 `ai/doc-standards/domain-rules.md`（领域层 rules 的字段规范 / 审计基线，进同步清单的 `files_domain` 组，只有领域路线接收）；领域模板仓自己的 `ai/domain-rules.md` 种子由 `domain-template-lab` 按 standards 自动生成，不入同步清单、不同步、受边界检查保护。
+- **同步清单三组化**：`template-sync.json` 从扁平 `files` 拆成 `files_all`（全部路线）/ `files_ordinary`（普通派生补充，当前空）/ `files_domain`（领域专属），向后兼容（旧 json 只有 `files` 视为 `files_all`）。路线 = 领域 `files_all ∪ files_domain`，普通 `files_all ∪ files_ordinary`。
+- **同步脚本按路线路由**：`sync-template` 和 `check-derived-sync` 改成按路线选组，防止普通派生项目误收 `files_domain` 文件。
+- **受保护路径**：`check-derived-sync` 受保护清单加 `ai/domain-rules.md`；两个 `TEMPLATE-BASE.md` writer 各加 `## Managed Files` 段，指向 `template-sync.json` 并声明直接改会被覆盖。
+
+这是 minor 级能力增强（新增领域 rules 层 + 按路线差异化同步），向后兼容（旧 json + 新脚本仍可解析；普通派生路线行为不变）。已知限制：领域→领域派生那段（`check-domain-derived-sync.*` 等）不在本仓，这版只打通「母模板→领域模板」。
+
+## v1.59.2（2026-08-02）
+
+给“项目自己写的 demo 启动脚本”补了一段 Windows 注意事项（承接 issue #296）。
+
+- 用 PowerShell 的 `Start-Process` 启动本地服务前，先清理进程里重复的 `Path` / `PATH` 键，复用模板脚本里 `Repair-ProcessPathEnvironment` 的做法。
+- 后台拉服务时用 `-WindowStyle Hidden` 别弹控制台窗口；说清楚它和 `-NoNewWindow` 不能一起用（模板自己的脚本是 `-NoNewWindow -Wait` 同步跑，不需要这个）。
+- 注意 AI 执行器可能在命令结束时把子进程收掉，所以后台服务要写运行状态文件、给一个显式 stop 命令。
+- 自检加了关键词断言，防止这段指导以后被同步悄悄删掉。
+
+这是 patch 级文档说明，不改脚本逻辑；#296 的核心修复在 v1.59.1 已经做了，这版把剩下给 demo 脚本的指导补齐并关闭 #296。
+
+## v1.59.1（2026-07-30）
+
+修了 Windows PowerShell wrapper 在重复 `Path` / `PATH` 环境下还没开始跑脚本就失败的问题。
+
+- `check-template.ps1`、`sync-template.ps1`、`check-derived-sync.ps1` 现在会先清理当前进程里的重复 PATH 键，再调用 `Start-Process`。
+- 只改当前进程环境，不会写用户或系统 PATH。
+- 如果两个 PATH 键都有内容，会尽量合并可用片段，并保留标准的 `Path` 键。
+- Remote / CI SOP 也补了一条：在 Windows / AI CLI 多层包装里，复杂 `gh --jq` / `gh --template` 容易被拆词；稳定只读查 PR / issue / Actions 时，优先用 GitHub REST API + `Invoke-WebRequest` 拿原始 JSON。
+- 自检脚本加了关键词断言，防止以后 wrapper 修了但 SOP 或自检入口漂移。
+
+这是 patch 级兼容性修复，派生项目不用迁移；同步到新版模板后直接获得修复。
+
 ## v1.59.0（2026-07-29）
 
 给领域模板补了一个可复制的“领域模板 → 领域派生项目”剧本模板。

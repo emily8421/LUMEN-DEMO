@@ -1,4 +1,5 @@
 <#
+Sync notice: 本文件由 ai-project-template 模板同步维护，派生项目同步时会被覆盖；不应直接修改，通用改进请经 _proposals/ 回流模板仓库。
 check-derived-sync.ps1 - Windows PowerShell entrypoint for derived project sync boundary check.
 
 Usage:
@@ -16,6 +17,50 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+
+function Repair-ProcessPathEnvironment {
+  $vars = [Environment]::GetEnvironmentVariables("Process")
+  $pathKeys = @()
+  foreach ($key in $vars.Keys) {
+    if ([string]::Equals([string]$key, "Path", [StringComparison]::OrdinalIgnoreCase)) {
+      $pathKeys += [string]$key
+    }
+  }
+  if ($pathKeys.Count -le 1) { return }
+
+  $orderedKeys = @()
+  foreach ($key in $pathKeys) {
+    if ($key -ceq "Path") { $orderedKeys += $key }
+  }
+  foreach ($key in $pathKeys) {
+    if ($key -cne "Path") { $orderedKeys += $key }
+  }
+
+  $separator = [string][System.IO.Path]::PathSeparator
+  $seen = New-Object 'System.Collections.Generic.HashSet[string]' ([System.StringComparer]::OrdinalIgnoreCase)
+  $parts = New-Object 'System.Collections.Generic.List[string]'
+  foreach ($key in $orderedKeys) {
+    $value = [Environment]::GetEnvironmentVariable($key, "Process")
+    if ([string]::IsNullOrWhiteSpace($value)) { continue }
+    foreach ($part in ([string]$value -split [regex]::Escape($separator))) {
+      if ([string]::IsNullOrWhiteSpace($part)) { continue }
+      if ($seen.Add($part)) {
+        $parts.Add($part) | Out-Null
+      }
+    }
+  }
+
+  foreach ($key in $pathKeys) {
+    if ($key -cne "Path") {
+      [Environment]::SetEnvironmentVariable($key, $null, "Process")
+    }
+  }
+  if ($parts.Count -gt 0) {
+    [Environment]::SetEnvironmentVariable("Path", [string]::Join($separator, $parts), "Process")
+  }
+}
+
+Repair-ProcessPathEnvironment
 
 function Find-TemplateBash {
   $programFilesX86 = [Environment]::GetEnvironmentVariable("ProgramFiles(x86)")
@@ -196,6 +241,7 @@ function Test-ProtectedProjectFile {
   return (
     $ChangedFile -eq "README.md" -or
     $ChangedFile -eq "ai/project-rules.md" -or
+    $ChangedFile -eq "ai/domain-rules.md" -or
     $ChangedFile -like "docs/0[0-9]-*" -or
     $ChangedFile -like "frontend/*" -or
     $ChangedFile -like "backend/*" -or
@@ -204,13 +250,43 @@ function Test-ProtectedProjectFile {
   )
 }
 
+function Get-LineageRole {
+  if (-not (Test-Path -LiteralPath "TEMPLATE-BASE.md" -PathType Leaf)) { return "" }
+  foreach ($line in (Get-Content -Encoding UTF8 TEMPLATE-BASE.md)) {
+    if ($line -match '^\-\s*Lineage type:\s*(.+)$') {
+      $v = $Matches[1].Trim()
+      if ($v -eq "ordinary derived project") { return "ordinary" }
+      if ($v -eq "domain template") { return "domain" }
+    }
+  }
+  $tbSniff = Get-Content -Raw -Encoding UTF8 TEMPLATE-BASE.md
+  if ($tbSniff -match 'ordinary derived project') { return "ordinary" }
+  if ($tbSniff -match 'domain template') { return "domain" }
+  return ""
+}
+
 function Get-SyncFiles {
+  param([string]$LineageRole = "")
+
   if (-not (Test-Path -LiteralPath "template-sync.json" -PathType Leaf)) {
     return @()
   }
 
   $json = Get-Content -Raw -Encoding UTF8 template-sync.json | ConvertFrom-Json
-  return @($json.files | Where-Object { $_ })
+  # 三组并集按路线路由：files_all 为主（legacy files fallback）；领域路线 + files_domain，普通路线 + files_ordinary。
+  $keys = $json.PSObject.Properties.Name
+  $all = @()
+  if ($keys -contains "files_all") { $all += @($json.files_all) }
+  elseif ($keys -contains "files") { $all += @($json.files) }
+  $routeKey = if ($LineageRole -eq "domain") { "files_domain" } else { "files_ordinary" }
+  if ($keys -contains $routeKey) { $all += @($json.$routeKey) }
+
+  $seen = @{}
+  $unique = @()
+  foreach ($f in $all) {
+    if ($f -and -not $seen.ContainsKey($f)) { $seen[$f] = $true; $unique += $f }
+  }
+  return $unique
 }
 
 function Invoke-NativeDerivedSyncCheck {
@@ -246,7 +322,13 @@ function Invoke-NativeDerivedSyncCheck {
     Fail "cannot resolve commit: $commit"
   }
 
-  $syncFiles = @(Get-SyncFiles)
+  $lineageRole = Get-LineageRole
+  if ($lineageRole -eq "domain") {
+    Write-Host "INFO  Domain lineage: validating sync list on domain route (files_all U files_domain)."
+  } else {
+    Write-Host "INFO  Validating sync list on ordinary route (files_all U files_ordinary, excludes domain-only files)."
+  }
+  $syncFiles = @(Get-SyncFiles -LineageRole $lineageRole)
   if ($syncFiles.Count -eq 0) {
     Fail "cannot parse sync file list from template-sync.json"
   } else {
@@ -310,19 +392,7 @@ function Invoke-NativeDerivedSyncCheck {
   Write-Host ""
   Write-Host "==> Root README template version consistency (non-blocking)"
   if (Test-Path -LiteralPath "TEMPLATE-BASE.md") {
-    $lineageRole = ""
-    foreach ($line in (Get-Content -Encoding UTF8 TEMPLATE-BASE.md)) {
-      if ($line -match '^\-\s*Lineage type:\s*(.+)$') {
-        $v = $Matches[1].Trim()
-        if ($v -eq "ordinary derived project") { $lineageRole = "ordinary"; break }
-        if ($v -eq "domain template") { $lineageRole = "domain"; break }
-      }
-    }
-    if (-not $lineageRole) {
-      $tbSniff = Get-Content -Raw -Encoding UTF8 TEMPLATE-BASE.md
-      if ($tbSniff -match 'ordinary derived project') { $lineageRole = "ordinary" }
-      elseif ($tbSniff -match 'domain template') { $lineageRole = "domain" }
-    }
+    # $lineageRole 已在前段同步清单路由前判定（Get-LineageRole），此处直接复用。
     if ($lineageRole -eq "domain") {
       Write-Host "INFO  Domain TEMPLATE-BASE.md detected (Lineage type: domain template): VERSION/CHANGELOG are domain-template-owned; inherited base template version is in TEMPLATE-BASE.md. Skip README/VERSION template-version consistency check."
     } else {

@@ -55,7 +55,7 @@
 |---|---|---|
 | `design/subsystem-design.md` | `docs/design/<subsystem>.md` | `ai/doc-standards/design-doc.md` |
 | `design/frontend-interaction.md` | `docs/design/frontend-interaction.md` 或 `docs/design/*interaction*.md` | `ai/doc-standards/frontend-interaction.md` |
-| `design/ui-prototype-strategy.md` | `ai/project-rules.md` §2.7、`docs/05-tech-spec.md`、`docs/design/frontend-interaction.md` 或独立策略记录 | `ai/doc-standards/ui-prototype-strategy.md` |
+| `design/ui-prototype-strategy.md` | `ai/project-rules.md` §2.3、`docs/05-tech-spec.md`、`docs/design/frontend-interaction.md` 或独立策略记录 | `ai/doc-standards/ui-prototype-strategy.md` |
 | `decisions/ADR-template.md` | `docs/decisions/ADR-0001-title.md` | `ai/document-lifecycle-rules.md` §7 |
 | `research/docs-open-items.md` | `docs/research/YYYY-MM-DD-docs-open-items.md` | `ai/prompts/docs/21-docs-open-items.md` |
 | `research/ui-prototype-exploration.md` | `docs/research/YYYY-MM-DD-ui-prototype-exploration.md` | `ai/document-lifecycle-rules.md` §10.2 |

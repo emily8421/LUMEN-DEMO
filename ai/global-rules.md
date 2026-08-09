@@ -6,7 +6,7 @@
 > 本文件对所有基于本模板创建的项目逐字复用，不针对具体项目修改。
 > 如需调整通用原则，先改本模板仓库的本文件，再覆盖同步到各项目（见README）。
 >
-> **全局规则版本：v1.11（2026-07-20）**。本文件仅记录跨项目通用规则自身版本；
+> **全局规则版本：v1.13（2026-08-09）**。本文件仅记录跨项目通用规则自身版本；
 > 整个模板版本以根目录 `VERSION` 为准，并在 `CHANGELOG.md` 登记。
 
 ## 1. AI编程总体原则
@@ -99,11 +99,11 @@ ProjectName/
 额外项目文档必须按 `docs/README.md` 放入 `vision/`、`inputs/`、`design/`、`decisions/`、`research/`、`env/`、`meetings/`、`archive/` 等子目录，
 不占用、不挪动 `00-09` 编号，禁止把新增文档直接堆到 `docs/` 根目录。
 
-`frontend/` 是否启用取决于 `ai/project-rules.md` §3 的「演示形态」决策：消息通道内交互、CLI 或不需演示通常不启用；独立 Web 页面、移动端、小程序、桌面端等可点击 UI 通常启用，并在 `docs/04-architecture.md`、`docs/05-tech-spec.md` 体现前端设计。若项目存在多页面、多角色、复杂表单、状态流、验收依赖点击路径，或 Sprint 修改范围包含页面 / 组件 / 搜索问答 UI / 管理页 / 桌面端集成，开发前应补充 `docs/design/frontend-interaction.md` 或按入口拆分的 `docs/design/*interaction*.md`；若不补，须在 `ai/project-rules.md` §3 或 `docs/05-tech-spec.md` 写明豁免理由。满足前端交互触发条件且用户需实现前预览界面、页面信息密度高、主流程依赖点击验收、存在多状态 / 多角色 / 权限可见性，或 Demo / Mock / 降级口径可能被误读时，应在 `ai/project-rules.md` §2.7 / §3、`docs/05-tech-spec.md` 或前端交互设计中选择 UI 原型策略（Figma / Penpot / Balsamiq / Axure / Storybook / 代码原型 / 截图标注 / 其他）或写明豁免；原型不替代需求、设计或验收，不新增未授权需求 / 接口 / 权限 / 验收目标。非平凡子系统、复杂权限 / 安全边界、AI / 外部服务、导入 / 异步任务、跨模块状态机、Mock / 降级差异或高风险愿景能力，也应按 `ai/doc-standards/design-doc.md` 补充 `docs/design/<subsystem>.md` 或写明豁免理由。根 `README.md` 是项目件，用于说明具体项目，不纳入下行同步清单，各项目自行维护。
+`frontend/` 是否启用取决于 `ai/project-rules.md` §3 的「演示形态」决策：消息通道内交互、CLI 或不需演示通常不启用；独立 Web 页面、移动端、小程序、桌面端等可点击 UI 通常启用，并在 `docs/04-architecture.md`、`docs/05-tech-spec.md` 体现前端设计。若项目存在多页面、多角色、复杂表单、状态流、验收依赖点击路径，或 Sprint 修改范围包含页面 / 组件 / 搜索问答 UI / 管理页 / 桌面端集成，开发前应补充 `docs/design/frontend-interaction.md` 或按入口拆分的 `docs/design/*interaction*.md`；若不补，须在 `ai/project-rules.md` §3 或 `docs/05-tech-spec.md` 写明豁免理由。满足前端交互触发条件且用户需实现前预览界面、页面信息密度高、主流程依赖点击验收、存在多状态 / 多角色 / 权限可见性，或 Demo / Mock / 降级口径可能被误读时，应在 `ai/project-rules.md` §2.3 / §3、`docs/05-tech-spec.md` 或前端交互设计中选择 UI 原型策略（Figma / Penpot / Balsamiq / Axure / Storybook / 代码原型 / 截图标注 / 其他）或写明豁免；原型不替代需求、设计或验收，不新增未授权需求 / 接口 / 权限 / 验收目标。非平凡子系统、复杂权限 / 安全边界、AI / 外部服务、导入 / 异步任务、跨模块状态机、Mock / 降级差异或高风险愿景能力，也应按 `ai/doc-standards/design-doc.md` 补充 `docs/design/<subsystem>.md` 或写明豁免理由。根 `README.md` 是项目件，用于说明具体项目，不纳入下行同步清单，各项目自行维护。
 
 复杂 Web / 全栈交互项目（同时启用 `frontend/` 与 `backend/`、需要浏览器演示、多页面 / 多状态 / 多角色 / 数据密集界面，或首个前端 Sprint 可能把多个业务能力堆入单个主应用文件）在通用 System Skeleton Gate（见 `ai/implementation-lifecycle-rules.md` §3）基础上叠加 **Web App Structure Profile（Web 特化）**：参考 `template-docs/web-fullstack-profile.md`，在 `docs/04-architecture.md` / `docs/05-tech-spec.md` / `docs/08-dev-plan.md` / `docs/09-verification.md` 中明确 App Shell、前后端目录边界、API client ↔ API-ID 追溯、vertical slice、文件膨胀阈值和浏览器 / API smoke；若不触发，须在 `ai/project-rules.md` §3 或 `docs/05-tech-spec.md` 写明豁免理由。
 
-项目涉及具体运行时版本锁定（如 Node / Python / Java 锁定特定版本）时，应在 `ai/project-rules.md` §2.9 写明锁定的运行时与版本、版本声明文件、切换工具、CI 校验方式和锁定原因，或写明豁免理由；声明文件标准与切换工具推荐见 `template-docs/env-setup.md`「运行时版本管理」小节。
+项目涉及具体运行时版本锁定（如 Node / Python / Java 锁定特定版本）时，应在 `ai/project-rules.md` §2.5 写明锁定的运行时与版本、版本声明文件、切换工具、CI 校验方式和锁定原因，或写明豁免理由；声明文件标准与切换工具推荐见 `template-docs/env-setup.md`「运行时版本管理」小节。
 
 两类常见的语义命名约定：
 - **原始输入包**：用户提供的愿景草稿、brief、客户 PRD/SRS、访谈、现有系统说明和外部接入材料，默认先放
@@ -123,6 +123,27 @@ ProjectName/
 AI 判断需要新增项目文档时，必须先阅读 `docs/README.md` 的分区规则；若无法判断放入哪个子目录，先提出建议路径并等待人工确认，不得自行创建到 `docs/` 根目录。
 
 待人工确认项必须体现“AI 辅助分析，但不替人决策”：AI 应给出推荐口径、建议依据、备选方案、取舍影响和阻塞关系，帮助用户判断；但字段必须明确标为“AI 建议 / 待人工确认”，不得把建议写成已确认事实。用户确认后，AI 才能把该项回填到 PRD、技术方案、开发计划、任务单或续接文件，并将原待确认项标为已确认或移出待确认区。
+
+### 规则分层原则
+
+`ai/` 规则按"通用 → 专属"分两层，专属层再分"规范基线 / 种子实例"两子层，避免规范与项目事实混在同一文件：
+
+- **通用层**（`ai/global-rules.md`、`ai/rules-core.md` 等，跨项目同步）：换到任何项目都成立的 AI 行为与目录原则。
+- **项目专属层**：
+  - **规范基线**（`ai/doc-standards/project-rules.md`，同步）：`ai/project-rules.md` 的字段规范、填写要求、审计项与禁止项的单一事实源。
+  - **种子实例**（`ai/project-rules.md`，不同步）：派生项目填写的项目专属事实骨架（技术栈、Phase、裁剪决策等）。
+- **领域专属层**（领域模板项目，详见 `template-docs/domain-templates.md`）：`ai/doc-standards/domain-rules.md`（规范基线，同步）+ 领域仓自持的 `ai/domain-rules.md`（种子实例，不同步）。
+
+判断标准：一条规则换到另一个完全不同的项目上是否还成立——成立属通用层或规范基线，不成立（具体技术栈 / 功能 / Phase）属种子实例。文档生成、审计、精修 `ai/project-rules.md` 时对照 `ai/doc-standards/project-rules.md`；项目专属内容只写实例，不回写规范基线（规范基线经 `_proposals/` 回流模板仓）。
+
+### 文档编号规范
+
+模板与派生项目的文档章节编号须满足：
+
+- **连续**：同一父节下的子节编号连续（如 §2.1、§2.2、§2.3……），不出现未说明的跳号；有意保留 / 预留的编号须在该节注明（如"§2.4 预留"）。
+- **归属一致**：子节标题与父节主题相符；不属于父节主题的内容应升为独立顶级节，不硬塞进无关父节。
+- **稳定锚点**：章节号是跨文档引用的稳定锚点；改编号须全量迁移所有引用（种子、standards、docs、scaffold、prompts、脚本断言），并过 `scripts/check-template.sh` 自检，不得只改单点。
+- **advisory 自检**：`scripts/check-template.sh` 对 `ai/project-rules.md` §2.x 子节编号连续性做非阻断告警（advisory），发现可疑跳号提醒人工复核；不阻断通过，避免过度治理。
 
 ## 6. 最佳实践流程总览
 
@@ -176,6 +197,15 @@ Prompt / SOP / 脚本说明执行；不要要求用户手工打开 prompt 文件
 - 不得把 `[P2]` / `[愿景]` 要素的详细设计提前写死
 - 不得把 Demo 声称为 MVP / 产品；不得把候选、预留或默认关闭的技术写成已使用
 - 需求层（00-02）跨阶段稳定；阶段调整只动 03 §3 与 `project-rules.md` §1 指针
+
+### 8.4 整理（tidy）例外
+
+「只增不删」保证历史可追溯，但不等于「看起来冗余的内容一律不能动」。周期性健康度复核（`docs-health-review`）发现过时过程性残留、超长头部元信息或结构退化时，允许在**保留可追溯前提**下整理 / 瘦身；历史事实与追溯锚点严禁删除。
+
+- **允许整理**：删除 / 合并**已过时的过程性记录**（已完成但未推进的状态标记、不再指向当前事实的临时描述）；将超长头部元信息重构为「当前状态 + 历史指针」结构；把过时过程段落移入 `docs/archive/`。
+- **禁止删除 / 改写**：**历史事实与追溯锚点**（REQ / 设计结论 / 验收记录 / 决策记录 / ADR）。历史事实进 `docs/archive/` 或留一行指针，保持可追溯底线。
+- **判断准则**：整理后仍能从当前文档追溯到全部历史事实；不确定时标「需人工确认」，不擅自删除。
+- **触发**：Sprint / Phase 收口或连续多轮文档修改后，可运行 `docs-health-review` 做收尾梳理（见 `ai/session-rules.md` §4）。
 
 ## 9. 模板优化反馈
 

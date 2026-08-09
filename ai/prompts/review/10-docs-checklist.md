@@ -36,7 +36,7 @@
 - [ ] docs/design/*（如触发）：非平凡子系统、复杂 UI、权限 / 安全、AI / 外部服务、导入 / 异步任务、跨模块状态机、Mock / 降级差异或高风险愿景能力已按 `ai/doc-standards/design-doc.md` 补通用详细设计；不补时有豁免理由
 - [ ] docs/design/frontend-experience-brief.md（如 UI brief / 参考分析 / 需求探索原型 / 视觉效果探索已被用户确认）：已记录确认依据、体验原则、信息架构方向、视觉 / 密度 / 文案方向、阶段边界和不进入实现的候选项；未确认候选只进入 open items，不写成正式设计事实
 - [ ] docs/design/frontend-interaction.md 或 docs/design/*interaction*.md（如触发）：独立 Web / 移动端 / 小程序 / 桌面端、多页面、多角色、复杂表单、状态流或点击路径验收已补前端交互设计；该文档满足通用 design 元信息、追溯、readiness gate、验收和实现偏差要求；已引用 UI brief / research / experience brief 的用户确认依据；不补时有豁免理由
-- [ ] UI 原型策略（如触发）：已在 `ai/project-rules.md` §2.7、`docs/05-tech-spec.md` 或前端交互设计中选择默认 UI 标准基线、原型形式 / 位置 / 覆盖范围、UI / 后端 / 双轨顺序判断，或写明豁免理由；原型覆盖主流程、关键页面状态、权限 / 降级状态和设备 / 浏览器范围，并映射到 `08` Sprint 与 `09` smoke / 人工验收 TC；UI-G-004 / UI-G-006 / UI-G-007 状态明确
+- [ ] UI 原型策略（如触发）：已在 `ai/project-rules.md` §2.3、`docs/05-tech-spec.md` 或前端交互设计中选择默认 UI 标准基线、原型形式 / 位置 / 覆盖范围、UI / 后端 / 双轨顺序判断，或写明豁免理由；原型覆盖主流程、关键页面状态、权限 / 降级状态和设备 / 浏览器范围，并映射到 `08` Sprint 与 `09` smoke / 人工验收 TC；UI-G-004 / UI-G-006 / UI-G-007 状态明确
 - [ ] Web App Structure Profile（如触发）：复杂 Web / 全栈交互项目已记录 App Shell、前后端目录边界、API client ↔ API-ID、vertical slice、文件膨胀阈值、Sprint 0 / Walking Skeleton 和 API / browser smoke；若没有，已有豁免理由
 - [ ] 08-dev-plan：Sprint 拆分合理，单 Sprint 限制在 1~3 个文件；验收标准可判断；当前阶段 Sprint 支撑对应交付物形态；每个当前 Sprint 有验证包、TC-ID、完成包字段和状态
 - [ ] 09-verification：REQ → TC 追溯矩阵覆盖当前阶段全部 REQ，包含交付物形态；TC 详情包含前置条件、步骤、输入、期望结果、异常验证、自动化位置和证据记录；包含本机启动、内存 / 显存 / 磁盘 / 端口等资源验证项
@@ -57,7 +57,7 @@
 - 上游输入锚点 → U-ID → REQ-ID → 03 §3 阶段 → 04/05 模块与技术决策 → 06/07 契约 → docs/design/* Design Point → 08 Sprint → 09 验收用例可追溯，无悬空 ID
 - README / 03 / 05 / 09 对 Demo / MVP / 产品的说法一致，未把 Demo 声称为 MVP 或产品
 - 横切事实有唯一权威源，其他文档引用权威源而非各自重新声明；权威源变更后引用处已同步
-- 04 / 05 / 09 的运行环境假设一致，且与 `ai/project-rules.md` §2.5、`docs/env/local-env.md` 不冲突
+- 04 / 05 / 09 的运行环境假设一致，且与 `ai/project-rules.md` §2.1、`docs/env/local-env.md` 不冲突
 - 06 表 / 07 接口 ⊆ 04 模块（若有 06/07，其数据与接口都落在架构内）
 - 08-09 ⊆ 05-07 中实际保留的文档（开发计划不引入技术方案外的依赖）
 - Sprint 完成事实不得只留在 `.ai/session-handoff.md`、聊天或 PR 中；长期进度写 `08`，验证证据 / 验收记录写 `09`

@@ -277,7 +277,7 @@ bash scripts/new-project.sh smoke-demo --local --no-remote
 
 项目锁定了具体运行时版本（如米家插件锁 Node 16.13.0、Python 项目锁 3.11、跨语言项目锁多运行时）时，应使用版本声明文件 + 版本管理器组合，避免“本机是 Node 20 但项目要 Node 16”导致的环境漂移。
 
-是否启用由 `ai/project-rules.md` §2.9 决定；锁定的具体版本与声明文件在 `docs/05-tech-spec.md` §1 / §1.1 记录；本机实际版本由 `scripts/collect-env.ps1` 生成到 `docs/env/local-env.md`。三者职责分离。
+是否启用由 `ai/project-rules.md` §2.5 决定；锁定的具体版本与声明文件在 `docs/05-tech-spec.md` §1 / §1.1 记录；本机实际版本由 `scripts/collect-env.ps1` 生成到 `docs/env/local-env.md`。三者职责分离。
 
 ### 声明文件（中立，按需选用）
 
@@ -306,7 +306,7 @@ Volta 项目用 `package.json` 的 `volta` 字段；fnm / nvm / asdf 项目用 `
 
 ### 母模板中立性
 
-母模板**不预置**任何版本声明文件，也**不强制**具体工具。派生项目按需在仓库根放 `.node-version` 等；切换工具由派生项目自选，记录在 `ai/project-rules.md` §2.9 的「切换工具」字段。
+母模板**不预置**任何版本声明文件，也**不强制**具体工具。派生项目按需在仓库根放 `.node-version` 等；切换工具由派生项目自选，记录在 `ai/project-rules.md` §2.5 的「切换工具」字段。
 
 不在 `scripts/bootstrap-dev-env.ps1` 里自动装版本管理器（遵循本文件「非最小工具的处理建议」先例）：版本管理器安装涉及 PATH / shell profile / 用户偏好，脚本化会引入额外维护面。本节只文档说明，由用户手工安装。
 

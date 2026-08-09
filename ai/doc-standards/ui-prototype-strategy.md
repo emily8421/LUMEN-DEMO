@@ -25,11 +25,11 @@
 | 需求探索原型 | `00-03` 定稿前 | `docs/research/YYYY-MM-DD-ui-prototype-exploration.md` | 否；确认后回填需求链 | 需求假设、页面流、用户反馈 |
 | 视觉效果探索 | 需求方向存在但视觉 / 密度 / IA 未确认时 | `docs/research/*ui-visual-exploration.md`、`prototype.html`、截图 | 否；确认后回填体验原则或正式设计 | 视觉候选、已确认视觉方向、失败反馈 |
 | Frontend Experience Brief | 探索结论已被用户确认、但尚未进入正式交互设计时 | `docs/design/frontend-experience-brief.md` | 否；作为正式交互设计上游输入 | 已确认体验原则、信息架构方向、阶段边界 |
-| UI 原型策略 / 实现前原型 | `00-03`、体验原则和前端交互设计已有后 | `ai/project-rules.md` §2.7、`docs/05-tech-spec.md` 或 `docs/design/frontend-interaction.md` | 仅在承接已授权需求时可作为实现参考 | 原型形式、覆盖范围、证据与验收映射 |
+| UI 原型策略 / 实现前原型 | `00-03`、体验原则和前端交互设计已有后 | `ai/project-rules.md` §2.3、`docs/05-tech-spec.md` 或 `docs/design/frontend-interaction.md` | 仅在承接已授权需求时可作为实现参考 | 原型形式、覆盖范围、证据与验收映射 |
 
 ## 3. 推荐记录位置
 
-- 简单项目：记录在 `ai/project-rules.md` §2.7。
+- 简单项目：记录在 `ai/project-rules.md` §2.3。
 - 技术方案相关：记录在 `docs/05-tech-spec.md` 的 UI 原型策略 / 前端约束段落。
 - UI 型项目：记录在 `docs/design/frontend-interaction.md`，并引用 `template-docs/ui-prototype-strategy-template.md`。
 - 探索阶段：使用 `template-docs/ui-prototype-exploration-template.md`、`docs/research/*ui-visual-exploration.md` 或 `template-docs/frontend-experience-brief-template.md`，不要写成 UI 原型策略已确认。

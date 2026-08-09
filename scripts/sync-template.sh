@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Sync notice: 本文件由 ai-project-template 模板同步维护，派生项目同步时会被覆盖；不应直接修改，通用改进请经 _proposals/ 回流模板仓库。
 # sync-template.sh — 在派生项目里下行同步 ai-project-template 的方法论文件
 #
 # 用法（在派生项目根目录执行）:
@@ -167,6 +168,7 @@ DEFAULT_SYNC_FILES=(
   "ai/doc-standards/design-doc.md"
   "ai/doc-standards/frontend-interaction.md"
   "ai/doc-standards/ui-prototype-strategy.md"
+  "ai/doc-standards/project-rules.md"
   "ai/commands/README.md"
   "ai/commands/sync-methodology.md"
   "ai/commands/post-sync-cleanup.md"
@@ -255,18 +257,33 @@ warn_derived_workflow_migration() {
 
 SYNC_FILES=()
 
-parse_sync_files_json() {
-  sed -n '/"files"[[:space:]]*:[[:space:]]*\[/,/\]/ s/^[[:space:]]*"\([^"]\+\)"[[:space:]]*,\{0,1\}[[:space:]]*$/\1/p'
+# 从 stdin（template-sync.json 内容）提取指定数组键（files_all / files_ordinary / files_domain / legacy files）的文件清单。
+# 下划线在正则中是字面量：传 "files" 不误匹配 "files_all"。依赖每个数组 ] 独占行。
+parse_sync_array() {
+  local key="$1"
+  sed -n "/\"${key}\"[[:space:]]*:[[:space:]]*\[/,/\]/ s/^[[:space:]]*\"\([^\"]\+\)\"[[:space:]]*,\{0,1\}[[:space:]]*$/\1/p"
 }
 
 load_sync_files() {
   local ref="$1"
   SYNC_FILES=()
 
+  local -A seen=()
+  local json_content="" has_files_all=0 file main_key route_key key
+
   if git cat-file -e "$ref:template-sync.json" 2>/dev/null; then
-    while IFS= read -r file; do
-      [[ -n "$file" ]] && SYNC_FILES+=("$file")
-    done < <(git show "$ref:template-sync.json" | parse_sync_files_json)
+    json_content="$(git show "$ref:template-sync.json")"
+    if printf '%s' "$json_content" | grep -q '"files_all"'; then has_files_all=1; fi
+    # 主集：files_all（legacy "files" fallback）；路线补充：领域 → files_domain，普通 → files_ordinary
+    if [[ "$has_files_all" -eq 1 ]]; then main_key="files_all"; else main_key="files"; fi
+    if [[ "$DOMAIN_TEMPLATE_MODE" -eq 1 ]]; then route_key="files_domain"; else route_key="files_ordinary"; fi
+    # 关联数组去重保序：先主集后路线组
+    for key in "$main_key" "$route_key"; do
+      while IFS= read -r file; do
+        [[ -z "$file" ]] && continue
+        if [[ -z "${seen[$file]:-}" ]]; then seen["$file"]=1; SYNC_FILES+=("$file"); fi
+      done < <(printf '%s' "$json_content" | parse_sync_array "$key")
+    done
   else
     SYNC_FILES=("${DEFAULT_SYNC_FILES[@]}")
   fi
@@ -278,13 +295,13 @@ load_sync_files() {
 
   if [[ "$PRESERVE_PROJECT_VERSION" -eq 1 || "$DOMAIN_TEMPLATE_MODE" -eq 1 ]]; then
     local filtered=()
-    local file
-    for file in "${SYNC_FILES[@]}"; do
-      case "$file" in
+    local f
+    for f in "${SYNC_FILES[@]}"; do
+      case "$f" in
         VERSION|CHANGELOG.md|CHANGELOG-PLAIN.md)
           ;;
         *)
-          filtered+=("$file")
+          filtered+=("$f")
           ;;
       esac
     done
@@ -369,6 +386,12 @@ write_template_base() {
 - \`TEMPLATE-BASE.md\` records the inherited ai-project-template version used for methodology sync audit.
 - \`upstream/CHANGELOG.md\` and \`upstream/CHANGELOG-PLAIN.md\` are generated read-only references for upstream ai-project-template release notes.
 - Template sync commits keep the message format \`sync template $template_version from ai-project-template\`.
+
+## Managed Files
+
+- Files managed by template sync are listed in \`template-sync.json\` (synced from ai-project-template).
+- Direct edits to those files are overwritten on the next template sync; propose reusable changes via \`_proposals/\`.
+- Project-owned files (\`ai/project-rules.md\`, \`docs/\`, business code) are not in the sync list and are preserved.
 EOF
 }
 
@@ -421,6 +444,12 @@ write_domain_template_base() {
 - \`TEMPLATE-BASE.md\` records the inherited ai-project-template version used for methodology sync audit.
 - \`upstream/CHANGELOG.md\` and \`upstream/CHANGELOG-PLAIN.md\` are generated read-only references for upstream ai-project-template release notes.
 - Template sync commits keep the message format \`sync template $template_version from ai-project-template\`.
+
+## Managed Files
+
+- Files managed by template sync are listed in \`template-sync.json\` (synced from ai-project-template).
+- Direct edits to those files are overwritten on the next template sync; propose reusable changes via \`_proposals/\`.
+- Domain-template-owned files (\`ai/project-rules.md\`, \`ai/domain-rules.md\`, \`docs/\`, business code) are not in the sync list and are preserved.
 EOF
 }
 
@@ -557,6 +586,11 @@ elif [[ "$DOMAIN_TEMPLATE_MODE" -eq 1 ]]; then
   echo "==> 领域模板版本治理: 保留领域模板 VERSION/CHANGELOG/CHANGELOG-PLAIN，更新 TEMPLATE-BASE.md 为领域版继承版本记录"
 fi
 warn_derived_workflow_migration
+if [[ "$DOMAIN_TEMPLATE_MODE" -eq 1 ]]; then
+  echo "==> 同步路线: 领域模板（files_all ∪ files_domain）"
+else
+  echo "==> 同步路线: 普通派生（files_all ∪ files_ordinary）"
+fi
 echo "==> 同步文件:"
 
 remote_file_matches_local() {

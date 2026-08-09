@@ -18,9 +18,9 @@
 
 > 本节为 P1 回梳新增（对照 `ai/doc-standards/02-srs.md §2`）。LUMEN 作为 Lean 剖面 Demo，NFR / 约束 / 异常不在本文重述，委托如下权威源承载：
 
-- **非功能需求（性能 / 资源 / 可用性）**：见 `docs/05-tech-spec.md §5` 运行环境与资源评估（Demo 资源软上限、降级 / Mock 策略、Readiness Gate）与 `ai/project-rules.md §2.5`。
+- **非功能需求（性能 / 资源 / 可用性）**：见 `docs/05-tech-spec.md §5` 运行环境与资源评估（Demo 资源软上限、降级 / Mock 策略、Readiness Gate）与 `ai/project-rules.md §2.1`。
 - **技术约束 / 选型禁令**：见 `ai/project-rules.md` §1（Phase 边界）、§2（技术栈约束）。
-- **运行环境约束**：见 `docs/env/local-env.md` 与 `ai/project-rules.md §2.5`。
+- **运行环境约束**：见 `docs/env/local-env.md` 与 `ai/project-rules.md §2.1`。
 - **异常场景**：REQ 级异常（库外问答「未找到」、权限拒绝 403 等）见各 REQ 验收口径与 `docs/09-verification.md`；错误码见 `docs/07-api-spec.md §1`。
 
 ### 0.1.1 非功能需求（NFR）
@@ -29,8 +29,8 @@
 |---|---|---|---|---|---|
 | NFR-001 | 权限 / 隔离 | 空间、成员和文档权限必须约束搜索、问答、文档读取与编辑 | SCB-003、REQ-001..003 | TC-P1-001..003、权限相关后端测试 | P1-已验证（Demo） |
 | NFR-002 | 可追溯性 | RAG 答案必须带来源；库外问题明确未找到，不编造 | SCB-004、REQ-008 | TC-P1-008、RAG 相关验收 | P1-已验证（Demo） |
-| NFR-003 | 资源约束 | Phase1 Demo 在本机资源软上限内运行，重资源能力按门禁降级 | `ai/project-rules.md` §2.5、`docs/05-tech-spec.md` §5 | 资源 / readiness gate 记录，`docs/09-verification.md` §6 | P1-条件通过 |
-| NFR-004 | 数据安全 | 真实文档导入需显式标注来源 / 敏感级别，优先避免发送到外部模型 | `ai/project-rules.md` §2.5 | 人工验收与后续真实导入任务检查 | 后续阶段待细化 |
+| NFR-003 | 资源约束 | Phase1 Demo 在本机资源软上限内运行，重资源能力按门禁降级 | `ai/project-rules.md` §2.1、`docs/05-tech-spec.md` §5 | 资源 / readiness gate 记录，`docs/09-verification.md` §6 | P1-条件通过 |
+| NFR-004 | 数据安全 | 真实文档导入需显式标注来源 / 敏感级别，优先避免发送到外部模型 | `ai/project-rules.md` §2.1 | 人工验收与后续真实导入任务检查 | 后续阶段待细化 |
 
 ### 0.1.2 约束与假设（CON）
 
@@ -83,7 +83,7 @@
 | REQ-024 | 时间轴密度热条 | U-30 | Phase2B 第二 slice·已实现并补齐验证：4 档色阶（0 无 / 1 低 / 2 中 / 3 高）**+ 量化 ratio（相对均值倍数）**；密度按事件数 + 渲染去重；日窗口（>180 天切周）；**传 `q` 时反映主题活跃节奏** *(v18)* | [P2] | Phase2B·已实现并补齐验证（TC-P2-TL-001 自动化、运行态 API smoke、Edge headless 浏览器 smoke、真实 PG 大数据性能 smoke 已通过） |
 | REQ-025 | 快速录入索引条目 | U-31 | 30s 录标题/来源/摘要；mode=draft 保留私有草稿、create_document 转新私有文档、append_document 追加到已有文档；可关联 tag_ids；draft 可丢弃 *(v18)* | [P2] | P2-已实现（TC-P2-QUICK-001 通过） |
 | REQ-026 | 内部链接 + 反向链接 | U-32 | Phase2A 最小版：`[[文件名]]` 解析、resolved / unresolved / no_access 状态、出链 / 反链查询与权限过滤 | [P2] | P2-已实现（TC-P2-LINK-001 通过） |
-| REQ-039 | 文档目录树：空间内嵌套文件夹（CRUD / 移动 / 排序）组织文档；导入保留真实目录结构（扩展 REQ-037）；folder 不独立设权限（继承空间，文档可见性仍看 permission） | **U-44** | Phase2B 第三 slice 候选：建 / 移动 / 排序文件夹后文档归属正确；导入文件夹后目录结构保留；防环 / 跨空间 / 重名 / 删非空 folder 拒绝 | [P2] | P2-已设计（folder-tree，FT-C-001..013 已确认，编码进行中） |
+| REQ-039 | 文档目录树：空间内嵌套文件夹（CRUD / 移动 / 排序）组织文档；导入保留真实目录结构（扩展 REQ-037）；folder 不独立设权限（继承空间，文档可见性仍看 permission） | **U-44** | Phase2B 第三 slice 候选：建 / 移动 / 排序文件夹后文档归属正确；导入文件夹后目录结构保留；防环 / 跨空间 / 重名 / 删非空 folder 拒绝 | [P2] | P2-已实现（folder-tree，TC-P2-FOLDER-001 通过；9a1b479 全链路 + 浏览器 smoke，2026-08-05 验收） |
 | REQ-027 | 单文档导出 PDF（Markdown → PDF，含中文排版） | U-33 | ReportLab 首版：基础 Markdown 子集（标题 / 段落 / 列表 / 表格 / 引用）+ 页眉页脚 + 中文字体；导出任务绑定版本，产物继承权限，依赖不可用返回 5030 | [P1] | P1.5B-已实现（Sprint-18 / TC-P1-017 通过，从 Phase2 提前） |
 | REQ-018 | Obsidian Vault 兼容：同一文件夹来源可选择“导入数据库”或“仅本地挂载”；导入后成为 LUMEN 正式文档并参与权限 / 搜索 / RAG；仅挂载内容保持个人 / 当前设备可见，不默认进入团队空间、后端 RAG 或共享权限链 | U-21 | Phase2C·模式 B 浏览器 MVP：File System Access 授权+刷新恢复 / IndexedDB 本地索引搜索 / 左侧分区 / 不上传（RG-009 已验证 5 场景 + 8 能力）；模式 A 导入数据库已随 Phase2B 交付 | [P2] | Phase2C·已设计（RG-009 Go 2026-08-05） |
 | REQ-019 | 录音转文字 + 摘要 | U-22 | 待技术验证（转写引擎、摘要质量） | [愿景] | 骨架 |
@@ -108,8 +108,8 @@
 | REQ-046 | 用户管理后台（admin 域）：管理员查看用户列表（姓名 / email / 角色 / 状态 / 最后登录）、按角色 / 状态过滤、修改全局角色、禁用 / 启用账号；列表与接口不暴露 `password_hash` 等敏感字段 | U-51 | admin 可列用户并改角色 / 禁用启用；禁用后该用户登录被拒（4030）且既有会话失效；非 admin 无此能力；接口不返回 `password_hash` | [P2] | Phase2D·Sprint-28 已完成（TC-P2-ACC-002 通过，2026-08-07） |
 | REQ-047 | 团队空间加入机制（space 域成员管理）：空间 admin 按 email 搜索用户并添加为空间成员（分配空间角色 admin / member）、修改成员空间角色、移除成员；普通成员不可管理成员 | U-52 | 空间 admin 添加成员后该用户可访问并切换空间；改角色即时生效；移除后失去空间访问；非空间 admin 调用成员管理接口被拒（4030） | [P2] | Phase2D·Sprint-28 已完成（TC-P2-ACC-002 通过，2026-08-07） |
 | REQ-049 | 本地挂载文件可编辑（REQ-018 模式 B 扩展）：浏览器内对本地 vault 文件增删改查（File System Access 写句柄：write / create / delete / rename），编辑态切换 + 左栏增删改 UI；边界不变（仅本地读写，不上传服务端、不进团队 RAG） | U-21 | 新建 / 编辑 / 删除 / 重命名本地文件后目录树与搜索即时反映；写失败走重授权流程 | [P2] | 维护态·已实现（v3.5.0，2026-08-08） |
-| REQ-050 | 成员空间可见性配置（admin 域）：全局 admin 可查询任意用户所属空间 + 各空间角色，并跨空间授予 / 撤销成员关系（复用 space 域成员 API；前端用户详情抽屉即时操作） | U-53 | admin 查用户空间返回所属空间 + 角色；授予新空间后该用户空间下拉出现；撤销后立即不可见；非 admin 4030 | [P2] | Phase2D·Sprint-30 待实现 |
-| REQ-051 | 登录注册密码可见性 toggle + 忘记密码自助重置：密码小眼睛；reset token 一次性短 TTL（30min），demo 无 SMTP 降级 token 写后端日志人工下发；重置成功吊销该用户全部活跃 session | U-54 | 小眼睛切换；请求重置恒响应（防枚举）；确认重置后新密码可登录、旧密码失败、token 过期 / 二次使用拒绝、该用户全部活跃 session 吊销 | [P2] | Phase2D·Sprint-30 待实现 |
+| REQ-050 | 成员空间可见性配置（admin 域）：全局 admin 可查询任意用户所属空间 + 各空间角色，并跨空间授予 / 撤销成员关系（复用 space 域成员 API；前端用户详情抽屉即时操作） | U-53 | admin 查用户空间返回所属空间 + 角色；授予新空间后该用户空间下拉出现；撤销后立即不可见；非 admin 4030 | [P2] | 维护态批5·Sprint-30 已完成（v3.7.0，TC-P2-ACC-003 通过，2026-08-09） |
+| REQ-051 | 登录注册密码可见性 toggle + 忘记密码自助重置：密码小眼睛；reset token 一次性短 TTL（30min），demo 无 SMTP 降级 token 写后端日志人工下发；重置成功吊销该用户全部活跃 session | U-54 | 小眼睛切换；请求重置恒响应（防枚举）；确认重置后新密码可登录、旧密码失败、token 过期 / 二次使用拒绝、该用户全部活跃 session 吊销 | [P2] | 维护态批5·Sprint-30 已完成（v3.7.0，TC-P2-AUTH-002 通过，2026-08-09） |
 
 > 阅读索引：上方 REQ 主表已覆盖全部 REQ-001..051 的「系统需求 / 来源 U-ID / 可验证口径 / 初步阶段 / 状态」，不再以分组 bullet 双写（避免与主表漂移）。P1 / P1.5 REQ 可验证口径见上表；P2 / 愿景 REQ 保留骨架，可验证口径写「待该阶段细化 / 待技术验证」，升阶段时再细化。
 
@@ -188,7 +188,7 @@
 | REQ-012 | AC-P2-TAG-001 | TC-P2-TAG-001 | `docs/09-verification.md` §2、标签后端 tests + 浏览器 smoke | P2-已实现 / 通过 |
 | REQ-025 | AC-P2-QUICK-001 | TC-P2-QUICK-001 | `docs/09-verification.md` §2、快速录入后端 tests + API / 浏览器 smoke | P2-已实现 / 通过 |
 | REQ-026 | AC-P2-LINK-001 | TC-P2-LINK-001 | `docs/09-verification.md` §2、内链后端 tests + API / 浏览器 smoke | P2-已实现 / 通过 |
-| REQ-039 | AC-P2-FOLDER-001 | TC-P2-FOLDER-001 | `docs/09-verification.md` §2、folder 后端 tests + 浏览器 smoke（待立项编码） | 骨架·待实现 |
+| REQ-039 | AC-P2-FOLDER-001 | TC-P2-FOLDER-001 | `docs/09-verification.md` §2、folder 后端 tests + 浏览器 smoke（已实现） | P2-已实现 / 通过 |
 | REQ-040 | AC-P2-AUTH-001 | TC-P2-AUTH-001 | `docs/09-verification.md` §2、账户注册 + 凭证登录后端 tests（`tests/backend/test_auth.py` 20/20，Sprint-26） | Sprint-26 已完成 |
 | REQ-041 | AC-P2-AUTH-002 | TC-P2-AUTH-001 | `docs/09-verification.md` §2、凭证登录 + 失败锁定 tests（`tests/backend/test_auth.py`，Sprint-26） | Sprint-26 已完成 |
 | REQ-042 | AC-P2-AUTH-003 | TC-P2-AUTH-001 | `docs/09-verification.md` §2、登出 / 会话撤销 / 续期 tests（`tests/backend/test_auth.py`，Sprint-26） | Sprint-26 已完成 |
@@ -198,8 +198,8 @@
 | REQ-046 | AC-P2-ACC-005 | TC-P2-ACC-002 | `docs/09-verification.md` §2、admin 域用户管理 tests + 浏览器 smoke | 已完成（TC-P2-ACC-002 通过，2026-08-07） |
 | REQ-047 | AC-P2-ACC-006 | TC-P2-ACC-002 | `docs/09-verification.md` §2、space 域成员管理 tests + 浏览器 smoke | 已完成（TC-P2-ACC-002 通过，2026-08-07） |
 | REQ-049 | —（REQ-018 模式 B 扩展） | 浏览器 smoke（v3.5.0） | 本地挂载编辑 `frontend`（write / create / delete / rename） | 维护态·已实现（v3.5.0） |
-| REQ-050 | AC-P2-ACC-007 | TC-P2-ACC-003 | `docs/09-verification.md` §2、admin 用户空间查询 tests + 浏览器 smoke（用户详情抽屉授予 / 撤销） | Sprint-30 待实现 |
-| REQ-051 | AC-P2-AUTH-004 | TC-P2-AUTH-002 | `docs/09-verification.md` §2、reset request / confirm tests（防枚举 / 过期 / 二次使用 / session 吊销）+ 浏览器 smoke | Sprint-30 待实现 |
+| REQ-050 | AC-P2-ACC-007 | TC-P2-ACC-003 | `docs/09-verification.md` §2、admin 用户空间查询 tests + 浏览器 smoke（用户详情抽屉授予 / 撤销） | Sprint-30 已完成（v3.7.0，2026-08-09） |
+| REQ-051 | AC-P2-AUTH-004 | TC-P2-AUTH-002 | `docs/09-verification.md` §2、reset request / confirm tests（防枚举 / 过期 / 二次使用 / session 吊销）+ 浏览器 smoke | Sprint-30 已完成（v3.7.0，2026-08-09） |
 | REQ-048 | AC-P1-009 扩展 | TC-P2-TERM-001 | `docs/09-verification.md` §2、术语领域树后端 tests（`tests/backend/test_term_category.py` 18 例 + `test_term.py` 扩字段，Sprint-29） | 维护态增强·已实现 |
 
 ## 5. 待人工确认项

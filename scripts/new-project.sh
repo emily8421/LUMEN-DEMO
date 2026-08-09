@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Sync notice: 本文件由 ai-project-template 模板同步维护，派生项目同步时会被覆盖；不应直接修改，通用改进请经 _proposals/ 回流模板仓库。
 # new-project.sh — 从 ai-project-template 派生新项目并初始化 git 远端
 #
 # 用法:

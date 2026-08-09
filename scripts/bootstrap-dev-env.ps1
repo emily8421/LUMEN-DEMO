@@ -1,4 +1,5 @@
 <#
+Sync notice: 本文件由 ai-project-template 模板同步维护，派生项目同步时会被覆盖；不应直接修改，通用改进请经 _proposals/ 回流模板仓库。
 bootstrap-dev-env.ps1 - Install baseline Windows tools for ai-project-template.
 
 Usage:

@@ -233,7 +233,7 @@ sequenceDiagram
 
 ## 8. 原型策略、可视化证据与实现前门禁
 
-> 本节为 P1 回梳新增（对照 `ai/doc-standards/ui-prototype-strategy.md` + `ai/project-rules.md §2.7`）。本项目前端已实现完毕（Sprint-2~6），原型策略为「代码原型 + mock 数据 + 浏览器 smoke」，不引入 Figma 等外部设计工具。
+> 本节为 P1 回梳新增（对照 `ai/doc-standards/ui-prototype-strategy.md` + `ai/project-rules.md §2.3`）。本项目前端已实现完毕（Sprint-2~6），原型策略为「代码原型 + mock 数据 + 浏览器 smoke」，不引入 Figma 等外部设计工具。
 
 | 项 | 内容 |
 |---|---|

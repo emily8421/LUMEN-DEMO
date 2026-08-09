@@ -9,6 +9,75 @@
 
 模板版本采用三段式 `vMAJOR.MINOR.PATCH`，以根目录 `VERSION` 为单一审计入口。版本是发布边界，不是提案数量边界；提案收件箱增长不触发版本递增，只有合并到同步范围内并改变模板行为或下游同步判断的 PR 才判断 `PATCH / MINOR / MAJOR`。`ai/global-rules.md` 顶部仅记录全局规则自身版本。
 
+## v1.60.2（2026-08-09）
+
+新增「文档体系周期性健康度复核」机制（`docs-health-review` 命令 + 24 号 Prompt + `global-rules §8.4` 整理例外 + `session-rules §4` 触发点 + A8 场景接入），补位现有「阶段触发型」审计命令缺少的「周期性 / 收尾触发的可读性与信息密度检查」。来源 issue #307（LUMEN 派生项目回流），提案镜像 `_proposals/_remote-issues/issue-307.md`。
+
+- **新增命令 + Prompt**：`ai/commands/docs-health-review.md` + `ai/prompts/review/24-docs-health-review.md`，检查四类信号（内容重复 / 章节臃肿 / 结构退化 / 状态滞后），输出区分「可安全整理」与「需人工确认」两类清单，默认只读、定位 `文件:行`；区别于 `docs-system-audit`(16) 的全链路追溯，聚焦可读性与信息密度，互补不替换。
+- **整理例外通道**：`ai/global-rules.md` §8 新增 §8.4 整理（tidy）例外——允许在保留可追溯前提下清理过时过程性记录 / 重构超长头部 / 过时段落进 `docs/archive/`；禁止删除历史事实与追溯锚点（REQ / 设计结论 / 验收记录 / 决策记录），历史事实进 archive 或留指针；全局规则版本 v1.12→v1.13。
+- **触发点 + 场景接入**：`ai/session-rules.md` §4 加 Sprint / Phase 收口触发点；`template-docs/scenario-guides.md` A8「文档评估 / 审计 / 检查」并入健康度复核（步骤 5 + 速查索引 + cmd 指针），不新增顶层场景。
+- **同步 + 自检**：`template-sync.json` `files_all` 加新命令 + Prompt；`scripts/check-template.sh` 加 command_file 循环注册 + sync json 断言 + 新命令区块断言（对称 19-docs-evaluation，含 §8.4 / 四类信号 / 命令路由 / 两处注册）；`check-template.ps1` 的 sync 动态检查（`Get-SyncFiles`）自动覆盖新增文件，无需改 fallback。
+
+本版是 patch 级可选能力增强：新增命令 / Prompt / 场景 / §8.4 全部为可选、默认只读、不强制采用，现有命令与默认行为不变，不要求派生项目迁移。按 CONTRIBUTING 兼容性默认规则判定 patch（issue 原建议 minor，但无强制迁移 / 默认行为变化 / 同步结构扩展，故降为 patch）；patch 可豁免 L3 端到端回归。
+
+## v1.60.1（2026-08-04）
+
+project-rules 种子章节编号规范化：修复 `ai/project-rules.md` 自创建（v1.55.0 起）就存在的 §2→§2.5 编号跳号（§2.1-2.4 从未存在）+ §2.5-2.9 内容（运行环境/图表/UI 原型/版本/运行时）非"技术栈"子话题却挂 §2 下的概念错位；并把"文档编号规范"沉淀为 global-rules 通用原则 + advisory 自检，防复发。
+
+- **重编号（方案 D + 改 §2 标题）**：§2.5-2.9 → §2.1-2.5（运行环境/图表格式/UI 原型/项目版本/运行时版本），§2 标题"技术栈约束"→"技术栈与项目约束"兜住杂项；§0/§1/§3/§4/§5/§6 不动，避开动引用最密的 §3。
+- **全量引用迁移**：种子 + 3 个 `_examples` 副本 + `ai/doc-standards/project-rules.md` standards + ~20 跨文档引用（global-rules、document-lifecycle、doc-standards 04/05/06/07/ui-prototype/frontend/README、template-docs docs-scaffold/*、scenario-guides、env-setup、prompts 15/12/10/16/20/00/22、docs/04/06/07、docker/README、check-derived-sync 消息）按映射迁移；显式不动 CHANGELOG（历史）与 `_archive/**`。04-architecture 自身 §2.6、05-tech-spec 自身 §2.9 保持不动（仅它们对 project-rules 的引用迁移）。
+- **编号规范沉淀**：`ai/global-rules.md` §5 新增「文档编号规范」小节（连续 / 归属一致 / 稳定锚点须全量迁移 / advisory 自检）；`check-template.sh` 新增 `check_project_rules_section_continuity` advisory（非阻断，检测 §2.x 跳号告警）。
+- **防漂移断言**：`check-template.sh` 的 §2.5/§2.8/§2.9 内容断言 + `## 2.X` 标题断言（种子/烟测）+ standards §2.X 断言 + global-rules 路由断言 + 15-post-sync-cleanup 断言全部迁移到新编号；新增 global-rules 文档编号规范断言。
+
+本版是 patch 级编号规范化：不改同步脚本逻辑、不改默认行为、不要求派生项目迁移（派生同步后收到新编号的种子 + standards；既有派生实例的 `ai/project-rules.md` 不被覆盖）。L3 端到端回归（`e2e-sync-check.sh` + 残留旧编号 grep）通过。
+
+## v1.60.0（2026-08-04）
+
+模板治理分层第三阶段（领域层 + 同步路线三组化）：补齐领域模板（domain template）的「领域通用但跨项目」rules 中间层，并把下行同步清单从扁平 `files` 拆为按派生路线选组的 `files_all` / `files_ordinary` / `files_domain`，使普通派生项目不再误收领域专属文件。承接 v1.59.3 的规则文档分层，提案见 `_proposals/TEMPLATE-UPGRADE-project-rules-layering.md` §10。
+
+- **领域 rules 规范基线**：新建 `ai/doc-standards/domain-rules.md`（领域层 rules 字段规范 / 审计基线，进 `template-sync.json` 的 `files_domain` 组，仅领域路线接收）；领域模板仓的 `ai/domain-rules.md` 种子由 `domain-template-lab` 按 standards 自生成（§0-§4：领域定位 / 标准件清单 / 裁剪禁止 / 验收口径 / 与 project-rules 关系），不入同步清单、不同步、受 `check-derived-sync` 保护。
+- **同步清单三组化**：`template-sync.json` 由扁平 `files` 拆为 `files_all`（全部路线）/ `files_ordinary`（普通派生补充，当前空）/ `files_domain`（领域专属），向后兼容（仅有 `files` 视为 `files_all`）。路线 = 领域 `files_all ∪ files_domain`，普通 `files_all ∪ files_ordinary`。
+- **同步脚本按路线路由**：`sync-template.sh` / `.ps1` 的文件加载改为按路线选组（复用 `detect_lineage_role` / `Get-LineageRole`，关联数组 / HashSet 去重保序）；`check-derived-sync.sh` / `.ps1` 新增独立 lineage 判定 + 按路线读清单，防止普通派生项目误收 `files_domain` 文件。dry-run / sync 输出新增「同步路线」摘要行。
+- **受保护路径 + 受管文件指针**：`check-derived-sync.*` 受保护清单加 `ai/domain-rules.md`（方案①全不同步）；两个 `TEMPLATE-BASE.md` writer（普通 / 领域）各加 `## Managed Files` 段，指向 `template-sync.json` 并声明直接修改会被覆盖。
+- **边界文档**：`domain-templates.md`、`domain-template-lab` 命令 + Prompt、`12-sync-template`、`15-post-sync-cleanup`、`MAINTAINERS`、`git-guide`、`CONTRIBUTING` 补领域 rules 层与三组路线说明。
+- **防漂移断言**：`check-template.sh` / `.ps1` 增加 `files_all` / `files_ordinary` / `files_domain` 键断言、`files_domain` 非重叠断言、同步数组多行格式断言（`[` 须在行尾，防 sed 跨数组串读）、domain-rules standards 断言、sync-template 路由摘要与 Managed Files 覆盖声明断言、check-derived-sync 领域路线断言。
+
+本版是 minor 级能力增强：新增领域 rules 层 + 按路线差异化同步的同步行为变化。向后兼容（旧 `files` json + 新脚本仍可解析；普通派生路线行为不变，仍同步原 151 个 `files_all` 文件）。已知限制：领域→领域派生段（`check-domain-derived-sync.*` 等 Batch 3 资产）不在本仓，本次只打通「母模板→领域模板」段。L3 端到端回归（`e2e-sync-check.sh` + 双路线 dry-run + `ai/domain-rules.md` 受保护 + 向后兼容）通过。
+
+## v1.59.3（2026-08-03）
+
+模板治理分层（规则文档分层第一、二阶段 + sync-notice patch）：为 `ai/project-rules.md` 建立「规范基线 / 种子实例」两层分工，规范长文上移到随模板同步的 `ai/doc-standards/project-rules.md`，种子实例瘦身为填写骨架；并把 Sync notice 强制覆盖范围从 Markdown 扩展到脚本与 json 自声明。提案见 `_proposals/TEMPLATE-UPGRADE-project-rules-layering.md`、`_proposals/TEMPLATE-UPGRADE-sync-notice-coverage.md`。
+
+- **project-rules 规范分层**：新建 `ai/doc-standards/project-rules.md`（字段规范 / 审计基线，进 `template-sync.json` 与 `sync-template.sh` 兜底清单）；`ai/project-rules.md` 剥离 §2.8 项目版本管理、§6 AI 修改确认规则、§3 按形态裁剪说明等规范长文，保留章节标题、字段占位与初始化必填检查（填写骨架），改以指向行引用规范基线。
+- **引用迁移（仅 A 类）**：`ai/doc-standards/05-tech-spec.md` §2.9、`ai/doc-standards/04-architecture.md` §2.6 的「字段规范」引用改指向 `ai/doc-standards/project-rules.md`；B 类「项目实例权威位置」引用（03/06/07/08/09、frontend-interaction、design-doc、ui-prototype-strategy）保持指向实例 `ai/project-rules.md` 不动。
+- **规则分层原则**：`ai/global-rules.md` §5 新增「规则分层原则」小节（通用层 / 项目专属层 standards+seed / 领域专属层），指向 project-rules 规范基线；`CONTRIBUTING.md`、`MAINTAINERS.md`、`ai/prompts/maintainers/15-post-sync-cleanup.md` 补两层分工说明。
+- **sync-notice 覆盖扩展**：`check-template.sh` / `.ps1` 的 `require_sync_notice` 从仅 `*.md` 扩展到 `*.md` / `*.mdc` / `*.sh` / `*.ps1`（`VERSION` 豁免）；15 个清单内脚本补头部 Sync notice；`template-sync.json` 的 `description` 补「会被覆盖 / 勿改」自声明（json 无法内嵌注释）；`MAINTAINERS.md`、`git-guide.md` 边界说明同步。
+- **防漂移断言**：`check-template.sh` 增加 project-rules 规范基线字段源断言、global-rules 规则分层原则断言、实例指向规范基线断言；sync-notice 扩展后强制覆盖脚本后缀，防清单演进遗漏。
+
+本版是 patch 级治理增强：不改同步脚本逻辑、不改默认行为、不要求派生项目迁移（领域层 + 同步路线三组化归后续 minor v1.60.0）。下游同步后派生项目会收到新的 `ai/doc-standards/project-rules.md` 与脚本头部 notice；既有 `ai/project-rules.md` 实例不被覆盖（种子不同步）。
+
+## v1.59.2（2026-08-02）
+
+Demo 启动脚本 Windows 注意事项：承接 issue #296，在 `template-docs/demo-runbook-template.md` 补一段 Windows 启动脚本指导，覆盖 PowerShell `Start-Process` 的三类常见坑。
+
+- **Path / PATH 归一化**：项目 demo 脚本用 `Start-Process` 前应归一化进程内重复的 `Path` / `PATH` 键，复用母模板 wrapper 的 `Repair-ProcessPathEnvironment` 套路。
+- **后台启动窗口**：后台拉服务用 `-WindowStyle Hidden` 避免弹控制台窗口；明确 `-WindowStyle Hidden` 与 `-NoNewWindow` 互斥，后者适用于同步等待、无窗口的子进程（母模板 wrapper 用 `-NoNewWindow -Wait`，无需 `-WindowStyle`）。
+- **进程生命周期**：AI 执行器可能在命令结束时回收子进程，后台服务应写运行状态文件（`.ai/local-demo-runtime.json`）并提供显式 stop 命令；`show-demo` 命令补交叉指针。
+- **防漂移断言**：`check-template.sh` 增加稳定关键词断言，锁住 `Repair-ProcessPathEnvironment` 与 `-WindowStyle Hidden` 指引。
+
+本版是 patch 级文档澄清，不改脚本逻辑、不改同步清单范围，不要求派生项目迁移；#296 核心由 v1.59.1（#295）吸收，本版落地残余的 demo 脚本指导并关闭 #296。
+
+## v1.59.1（2026-07-30）
+
+Windows PowerShell wrapper 兼容性修复：承接 issue #293，三个会通过 `Start-Process` 拉起 Git Bash / Git 的 PowerShell 入口先归一化当前进程内重复的 `Path` / `PATH` 环境变量键，避免子进程环境构造在真正执行检查前失败。
+
+- **wrapper 修复**：`scripts/check-template.ps1`、`scripts/sync-template.ps1`、`scripts/check-derived-sync.ps1` 在启动前运行 `Repair-ProcessPathEnvironment`，只修 Process scope，不写 User / Machine 环境变量。
+- **行为边界**：保留 canonical `Path`，合并可用 PATH 片段后删除重复大小写变体；不改变 Bash 主路径、同步清单、保护文件策略或默认输出语义。
+- **远端查询 SOP**：`remote-ci-sop-profile` 记录 Windows PowerShell / AI CLI 包装层中复杂 `gh --jq` / `gh --template` 可能被拆词，稳定只读复核优先用 GitHub REST API + `Invoke-WebRequest` 原始 JSON。
+- **防漂移断言**：`check-template.*` 增加稳定关键词断言，锁住三个 PowerShell wrapper 的 PATH 修复 helper 与 Remote / CI Profile 的 REST JSON 建议。
+
+本版是 patch 级兼容性修复，不要求派生项目迁移；重复 PATH 环境下的失败从 PowerShell 子进程启动阶段回到原脚本逻辑。
+
 ## v1.59.0（2026-07-29）
 
 领域派生项目 L2→L3 剧本模板：承接 issue #285，新增可下行同步的 `template-docs/domain-derived-scenarios-template.md`，为领域模板提供通用剧本骨架。

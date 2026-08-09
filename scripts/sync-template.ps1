@@ -1,4 +1,5 @@
 ﻿<#
+Sync notice: 本文件由 ai-project-template 模板同步维护，派生项目同步时会被覆盖；不应直接修改，通用改进请经 _proposals/ 回流模板仓库。
 sync-template.ps1 - Windows PowerShell entrypoint for template sync.
 
 Usage:
@@ -22,6 +23,50 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+
+function Repair-ProcessPathEnvironment {
+  $vars = [Environment]::GetEnvironmentVariables("Process")
+  $pathKeys = @()
+  foreach ($key in $vars.Keys) {
+    if ([string]::Equals([string]$key, "Path", [StringComparison]::OrdinalIgnoreCase)) {
+      $pathKeys += [string]$key
+    }
+  }
+  if ($pathKeys.Count -le 1) { return }
+
+  $orderedKeys = @()
+  foreach ($key in $pathKeys) {
+    if ($key -ceq "Path") { $orderedKeys += $key }
+  }
+  foreach ($key in $pathKeys) {
+    if ($key -cne "Path") { $orderedKeys += $key }
+  }
+
+  $separator = [string][System.IO.Path]::PathSeparator
+  $seen = New-Object 'System.Collections.Generic.HashSet[string]' ([System.StringComparer]::OrdinalIgnoreCase)
+  $parts = New-Object 'System.Collections.Generic.List[string]'
+  foreach ($key in $orderedKeys) {
+    $value = [Environment]::GetEnvironmentVariable($key, "Process")
+    if ([string]::IsNullOrWhiteSpace($value)) { continue }
+    foreach ($part in ([string]$value -split [regex]::Escape($separator))) {
+      if ([string]::IsNullOrWhiteSpace($part)) { continue }
+      if ($seen.Add($part)) {
+        $parts.Add($part) | Out-Null
+      }
+    }
+  }
+
+  foreach ($key in $pathKeys) {
+    if ($key -cne "Path") {
+      [Environment]::SetEnvironmentVariable($key, $null, "Process")
+    }
+  }
+  if ($parts.Count -gt 0) {
+    [Environment]::SetEnvironmentVariable("Path", [string]::Join($separator, $parts), "Process")
+  }
+}
+
+Repair-ProcessPathEnvironment
 
 function Find-TemplateBash {
   $programFilesX86 = [Environment]::GetEnvironmentVariable("ProgramFiles(x86)")
@@ -196,20 +241,33 @@ function Get-LocalHash {
 }
 
 function Get-SyncFilesFromRef {
-  param([string]$Ref)
+  param([string]$Ref, [bool]$DomainMode = $false)
 
+  $json = $null
   if (Test-GitObject -Ref $Ref -Path "template-sync.json") {
     $jsonText = Get-GitUtf8Text show ("{0}:template-sync.json" -f $Ref)
     $json = $jsonText | ConvertFrom-Json
-    return @($json.files | Where-Object { $_ })
-  }
-
-  if (Test-Path -LiteralPath "template-sync.json" -PathType Leaf) {
+  } elseif (Test-Path -LiteralPath "template-sync.json" -PathType Leaf) {
     $json = Get-Content -Raw -Encoding UTF8 template-sync.json | ConvertFrom-Json
-    return @($json.files | Where-Object { $_ })
   }
 
-  return @()
+  if (-not $json) { return @() }
+
+  # 三组并集按路线路由：files_all 为主（legacy files fallback）；领域路线 + files_domain，普通路线 + files_ordinary。
+  $keys = $json.PSObject.Properties.Name
+  $all = @()
+  if ($keys -contains "files_all") { $all += @($json.files_all) }
+  elseif ($keys -contains "files") { $all += @($json.files) }
+  $routeKey = if ($DomainMode) { "files_domain" } else { "files_ordinary" }
+  if ($keys -contains $routeKey) { $all += @($json.$routeKey) }
+
+  # 去重保序
+  $seen = @{}
+  $unique = @()
+  foreach ($f in $all) {
+    if ($f -and -not $seen.ContainsKey($f)) { $seen[$f] = $true; $unique += $f }
+  }
+  return $unique
 }
 
 function Remove-ProjectVersionFiles {
@@ -312,6 +370,12 @@ function Write-TemplateBase {
 - ``TEMPLATE-BASE.md`` records the inherited ai-project-template version used for methodology sync audit.
 - ``upstream/CHANGELOG.md`` and ``upstream/CHANGELOG-PLAIN.md`` are generated read-only references for upstream ai-project-template release notes.
 - Template sync commits keep the message format ``sync template $TemplateVersion from ai-project-template``.
+
+## Managed Files
+
+- Files managed by template sync are listed in ``template-sync.json`` (synced from ai-project-template).
+- Direct edits to those files are overwritten on the next template sync; propose reusable changes via ``_proposals/``.
+- Project-owned files (``ai/project-rules.md``, ``docs/``, business code) are not in the sync list and are preserved.
 "@
   $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
   [System.IO.File]::WriteAllText((Join-Path (Get-Location) "TEMPLATE-BASE.md"), $content, $utf8NoBom)
@@ -363,6 +427,12 @@ function Write-DomainTemplateBase {
 - ``TEMPLATE-BASE.md`` records the inherited ai-project-template version used for methodology sync audit.
 - ``upstream/CHANGELOG.md`` and ``upstream/CHANGELOG-PLAIN.md`` are generated read-only references for upstream ai-project-template release notes.
 - Template sync commits keep the message format ``sync template $TemplateVersion from ai-project-template``.
+
+## Managed Files
+
+- Files managed by template sync are listed in ``template-sync.json`` (synced from ai-project-template).
+- Direct edits to those files are overwritten on the next template sync; propose reusable changes via ``_proposals/``.
+- Domain-template-owned files (``ai/project-rules.md``, ``ai/domain-rules.md``, ``docs/``, business code) are not in the sync list and are preserved.
 "@
   $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
   [System.IO.File]::WriteAllText((Join-Path (Get-Location) "TEMPLATE-BASE.md"), $content, $utf8NoBom)
@@ -803,7 +873,7 @@ function Invoke-NativeTemplateSync {
     }
   }
 
-  $syncFiles = @(Get-SyncFilesFromRef -Ref $ref)
+  $syncFiles = @(Get-SyncFilesFromRef -Ref $ref -DomainMode ([bool]$domainTemplateMode))
   if ($preserveProjectVersion -or $domainTemplateMode) {
     $syncFiles = @(Remove-ProjectVersionFiles -SyncFiles $syncFiles)
   }
@@ -822,6 +892,11 @@ function Invoke-NativeTemplateSync {
   if (Test-Path -LiteralPath ".github/workflows/template-check.yml" -PathType Leaf) {
     Write-Warning "Detected .github/workflows/template-check.yml. This workflow is for template repository self-checks; derived project PRs should not run scripts/check-template.sh. Migrate to .github/workflows/project-check.yml with git diff --check for normal PRs and scripts/check-derived-sync.sh HEAD only for template sync commits."
     Write-Host ""
+  }
+  if ($domainTemplateMode) {
+    Write-Host "==> Sync route: domain template (files_all U files_domain)"
+  } else {
+    Write-Host "==> Sync route: ordinary derived (files_all U files_ordinary)"
   }
   Write-Host "==> Sync files:"
 

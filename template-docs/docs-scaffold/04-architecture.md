@@ -28,7 +28,7 @@
 |---|---|---|---|
 | 架构目标 |  | `docs/03-prd.md` | 04-09 |
 | 当前 Phase / 交付物形态 | Phase1 / Demo、MVP、产品 | `docs/03-prd.md` §3、`ai/project-rules.md` §1 | 05 / 08 / 09 |
-| 运行环境约束 | 见 `docs/env/local-env.md` 与 `ai/project-rules.md` §2.5 | `docs/env/local-env.md` | 05 / 09 |
+| 运行环境约束 | 见 `docs/env/local-env.md` 与 `ai/project-rules.md` §2.1 | `docs/env/local-env.md` | 05 / 09 |
 | 项目形态裁剪 | 见 `ai/project-rules.md` §3 | `ai/project-rules.md` | 05 / 06 / 07 / frontend |
 | 禁止项 / 非目标 |  | `docs/00-scenario.md`、`docs/03-prd.md` | 04-09 / Sprint 禁止事项 |
 

@@ -21,7 +21,7 @@
 
 1. `ai/index.md` 及其列出的全部规则文件。
 2. `ai/commands/domain-template-lab.md`。
-3. `template-docs/domain-templates.md`。
+3. `template-docs/domain-templates.md`、`ai/doc-standards/domain-rules.md`（领域层 rules 规范基线，领域模板仓 `ai/domain-rules.md` 种子按此生成）。
 4. `template-docs/domain-derived-scenarios-template.md`。
 5. `_proposals/TEMPLATE-UPGRADE-domain-template-inheritance.md`。
 6. 当前仓库的 `git status --short --branch`、`VERSION`、`template-sync.json`（若存在）。
@@ -53,6 +53,7 @@
 | 文件 / 目录 | 用途 | 状态 |
 |---|---|---|
 | `TEMPLATE-BASE.md` | 记录母模板来源、base version、继承范围和叠加领域标准件 | 实验线建议资产 |
+| `ai/domain-rules.md` | 领域层 rules 种子实例（领域通用但跨项目的标准件骨架）；按 `ai/doc-standards/domain-rules.md` 规范基线生成，不进 `template-sync.json`、不同步、受 `check-derived-sync` 保护 | 实验线必备资产 |
 | `domain-template-sync.json` | 领域模板下发给领域派生项目的同步清单，避免和母模板 `template-sync.json` 混淆 | 实验线建议资产 |
 | `scripts/sync-domain-template.ps1` / `.sh` | 领域模板 → 领域派生项目的 dry-run / commit 同步入口 | 实验线建议资产 |
 | `scripts/check-domain-derived-sync.ps1` / `.sh` | 检查领域派生项目同步边界，避免覆盖业务事实 | 实验线建议资产 |
@@ -69,7 +70,7 @@
 3. **确认边界**：复述“只相邻同步，不跨层操作；跨层回流经中间层提炼”。
 4. **输出计划**：列出目标领域、目标仓库 / 目录、预计新增 / 修改文件、验证方式和不做事项；若创建或更新领域模板实验线，必须规划 L2→L3 场景剧本入口（L2-to-L3 playbook，如 `template-docs/<domain>/domain-derived-scenarios.md`），可从 `template-docs/domain-derived-scenarios-template.md` 复制后领域化，未生成时列为待办。
 5. **等待确认**：未经用户确认，不创建文件、不复制脚本、不提交。
-6. **创建实验资产**：在领域模板仓库内生成最小资产；脚本可参考母模板同步脚本的思想，但必须使用领域清单名和领域提示语。
+6. **创建实验资产**：在领域模板仓库内生成最小资产；脚本可参考母模板同步脚本的思想，但必须使用领域清单名和领域提示语。领域模板仓必须按 `ai/doc-standards/domain-rules.md` 生成 `ai/domain-rules.md` 种子（领域通用标准件骨架，§0-§4：领域定位 / 标准件清单 / 裁剪禁止 / 验收口径 / 与 project-rules 关系）；该文件不进 `template-sync.json`、不同步、受 `check-derived-sync` 保护。
 7. **验证**：至少运行结构检查、同步清单解析检查、dry-run（如脚本已生成），并确认不会覆盖领域派生项目的业务事实。
 8. **记录结果**：更新领域模板的同步记录或续接文件；如暴露跨领域通用问题，再通过 `submit-proposal` 回流母模板。
 

@@ -61,7 +61,7 @@
 
 ## 写入风险
 
-启动服务、生成运行产物或安装依赖会改变本机或仓库状态；执行前必须说明并确认。运行产物（二维码、临时日志等）应由项目加入 `.gitignore`。
+启动服务、生成运行产物或安装依赖会改变本机或仓库状态；执行前必须说明并确认。运行产物（二维码、临时日志等）应由项目加入 `.gitignore`。Windows 下用 PowerShell 启动 demo 服务时，注意 `Path` / `PATH` 重复键与后台进程生命周期（详见 `template-docs/demo-runbook-template.md` §4 Windows 启动脚本）。
 
 ## 续接要求
 

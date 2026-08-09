@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Sync notice: 本文件由 ai-project-template 模板同步维护，派生项目同步时会被覆盖；不应直接修改，通用改进请经 _proposals/ 回流模板仓库。
 # check-derived-sync.sh — 检查派生项目最近一次模板同步提交是否越过同步边界
 #
 # 用法（在派生项目根目录执行）:
@@ -45,8 +46,42 @@ require_contains() {
   fi
 }
 
+# 从 TEMPLATE-BASE.md 嗅探派生角色：ordinary / domain / 空（无 TEMPLATE-BASE.md）。
+detect_lineage_role() {
+  [[ -f TEMPLATE-BASE.md ]] || return 0
+  local lineage
+  lineage="$(grep -E '^\- Lineage type:' TEMPLATE-BASE.md | head -1 | sed -E 's/^\- Lineage type:[[:space:]]*//' | sed -E 's/[[:space:]]*$//' || true)"
+  case "$lineage" in
+    "ordinary derived project") echo "ordinary" ;;
+    "domain template") echo "domain" ;;
+    "")
+      if grep -qi 'ordinary derived project' TEMPLATE-BASE.md; then echo "ordinary"
+      elif grep -qi 'domain template' TEMPLATE-BASE.md; then echo "domain"; fi
+      ;;
+  esac
+}
+
+# 从 template-sync.json 指定数组键提取文件清单（下划线字面量，不互误匹配）。
+extract_sync_array() {
+  local key="$1"
+  sed -n "/\"${key}\"[[:space:]]*:[[:space:]]*\[/,/\]/ s/^[[:space:]]*\"\([^\"]\+\)\"[[:space:]]*,\{0,1\}[[:space:]]*$/\1/p" template-sync.json
+}
+
+# 按路线读取同步清单：领域 → files_all ∪ files_domain；普通（含 legacy 无标志）→ files_all ∪ files_ordinary。
+# 向后兼容仅有旧 "files" 键的 json（视为 files_all）。关联数组去重保序。
 extract_sync_files() {
-  sed -n '/"files"[[:space:]]*:[[:space:]]*\[/,/\]/ s/^[[:space:]]*"\([^"]\+\)"[[:space:]]*,\{0,1\}[[:space:]]*$/\1/p' template-sync.json
+  local lineage="${1:-}"
+  local main_key route_key
+  if grep -q '"files_all"' template-sync.json; then main_key="files_all"; else main_key="files"; fi
+  if [[ "$lineage" == "domain" ]]; then route_key="files_domain"; else route_key="files_ordinary"; fi
+  local -A seen=()
+  local key file
+  for key in "$main_key" "$route_key"; do
+    while IFS= read -r file; do
+      [[ -z "$file" ]] && continue
+      if [[ -z "${seen[$file]:-}" ]]; then seen["$file"]=1; printf '%s\n' "$file"; fi
+    done < <(extract_sync_array "$key")
+  done
 }
 
 is_sync_file() {
@@ -69,7 +104,7 @@ is_sync_file() {
 is_protected_project_file() {
   local changed_file="$1"
   case "$changed_file" in
-    README.md|ai/project-rules.md|docs/0[0-9]-*|frontend/*|backend/*|tests/*|docker/*)
+    README.md|ai/project-rules.md|ai/domain-rules.md|docs/0[0-9]-*|frontend/*|backend/*|tests/*|docker/*)
       return 0
       ;;
     *)
@@ -95,11 +130,17 @@ if ! git rev-parse --verify "$COMMIT^{commit}" >/dev/null 2>&1; then
   fail "无法解析提交: $COMMIT"
 fi
 
+LINEAGE_ROLE="$(detect_lineage_role)"
+if [[ "$LINEAGE_ROLE" == "domain" ]]; then
+  echo "ℹ️  检测到领域模板（domain lineage）：同步清单按 files_all ∪ files_domain 路线校验。"
+else
+  echo "ℹ️  按普通派生路线校验同步清单（files_all ∪ files_ordinary，不含领域专属文件）。"
+fi
 SYNC_FILES=()
 if [[ -f template-sync.json ]]; then
   while IFS= read -r sync_file; do
     [[ -n "$sync_file" ]] && SYNC_FILES+=("$sync_file")
-  done < <(extract_sync_files)
+  done < <(extract_sync_files "$LINEAGE_ROLE")
 fi
 
 if [[ "${#SYNC_FILES[@]}" -eq 0 ]]; then
@@ -151,16 +192,7 @@ fi
 echo
 echo "==> 根 README 模板版本号一致性（非阻断）"
 if [[ -f "TEMPLATE-BASE.md" ]]; then
-  LINEAGE_ROLE=""
-  lineage_val="$(grep -E '^\- Lineage type:' TEMPLATE-BASE.md | head -1 | sed -E 's/^\- Lineage type:[[:space:]]*//' | sed -E 's/[[:space:]]*$//' || true)"
-  case "$lineage_val" in
-    "ordinary derived project") LINEAGE_ROLE="ordinary" ;;
-    "domain template") LINEAGE_ROLE="domain" ;;
-    "")
-      if grep -qi 'ordinary derived project' TEMPLATE-BASE.md; then LINEAGE_ROLE="ordinary"
-      elif grep -qi 'domain template' TEMPLATE-BASE.md; then LINEAGE_ROLE="domain"; fi
-      ;;
-  esac
+  # LINEAGE_ROLE 已在前段同步清单路由前判定（detect_lineage_role），此处直接复用。
   if [[ "$LINEAGE_ROLE" == "domain" ]]; then
     echo "ℹ️  检测到领域版 TEMPLATE-BASE.md（Lineage type: domain template）：VERSION / CHANGELOG 属于领域模板自身；继承母模板版本以 TEMPLATE-BASE.md 为准，跳过 README ↔ VERSION 模板版本一致性检查。"
   else
@@ -223,7 +255,7 @@ else
   if $main_signal_ok && $aux_signal_ok; then
     pass "派生项目版本机制已启用（project-check.yml 含版本一致性校验 + ai/project-rules.md 含「项目版本管理」规则）"
   elif $main_signal_ok; then
-    echo "⚠️  版本机制主信号在（project-check.yml 校验 VERSION↔CHANGELOG）但辅信号缺：ai/project-rules.md 未含「项目版本管理」规则。建议补 §2.8 明确 PATCH/MINOR/MAJOR 语义（非阻断，不计入失败）。"
+    echo "⚠️  版本机制主信号在（project-check.yml 校验 VERSION↔CHANGELOG）但辅信号缺：ai/project-rules.md 未含「项目版本管理」规则。建议补 §2.4 明确 PATCH/MINOR/MAJOR 语义（非阻断，不计入失败）。"
   elif $aux_signal_ok; then
     echo "⚠️  版本机制辅信号在（ai/project-rules.md 含「项目版本管理」）但主信号缺：.github/workflows/project-check.yml 未含「Check project version consistency」校验。建议补 CI 校验防 VERSION/CHANGELOG 漂移（非阻断，不计入失败）。"
   else

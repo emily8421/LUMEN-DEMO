@@ -43,6 +43,7 @@
 - 参数说明：默认端口只是示例；实际入口以启动脚本输出或运行状态文件为准。
 - 端口策略：前端开发服务应启用 strict port 或等价机制；使用备用端口时，脚本必须同步更新输出 URL 和代理配置。
 - 后端代理：记录前端 `/api` 代理目标（如 `DEMO_BACKEND_PROXY_URL` / 项目化环境变量），避免后端改端口后前端仍请求默认端口。
+- Windows 启动脚本：若项目 demo 用 PowerShell 启动本地服务，注意三点 ——（1）`Start-Process` 前先归一化进程内重复的 `Path` / `PATH` 键（复用母模板 `scripts/*.ps1` 的 `Repair-ProcessPathEnvironment` 套路，否则可能抛 `Item has already been added`）；（2）后台拉起服务用 `-WindowStyle Hidden` 避免弹出控制台窗口，**不要**与 `-NoNewWindow` 同用（两者互斥；`-NoNewWindow` 适用于同步等待、无新窗口的子进程）；（3）AI 执行器可能在命令结束时回收子进程，后台服务应写入运行状态文件（如 `.ai/local-demo-runtime.json`）并提供显式 stop 命令，必要时提示用户改用独立终端运行。
 - 关闭方式：
 
 ## 5. 访问入口

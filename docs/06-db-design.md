@@ -344,7 +344,7 @@ erDiagram
 ## 5. 数据安全与留存
 
 > 对照 `ai/doc-standards/06-db-design.md §4.5`（吸收 `docs/05-tech-spec.md` 数据安全面）。
-> **外部传输限制总则**：Sprint-7 起 RAG **已调用外部 LLM**（GLM 中转，RG-004 Go；可配置 Mock 降级），故召回片段（`lumen_chunks.text` / 术语定义）**会发往 LLM**。发往模型前须过滤敏感片段、优先避免发送真实团队文档（见 `ai/project-rules.md §2.5`、`docs/05-tech-spec.md`）。Embedding 为本机 `bge-small-zh`，**不外发**（RG-002）。
+> **外部传输限制总则**：Sprint-7 起 RAG **已调用外部 LLM**（GLM 中转，RG-004 Go；可配置 Mock 降级），故召回片段（`lumen_chunks.text` / 术语定义）**会发往 LLM**。发往模型前须过滤敏感片段、优先避免发送真实团队文档（见 `ai/project-rules.md §2.1`、`docs/05-tech-spec.md`）。Embedding 为本机 `bge-small-zh`，**不外发**（RG-002）。
 
 | 数据 / 表 / 字段 | 敏感性 | 访问控制 | 脱敏 / 加密 | 留存 / 删除 | 外部传输限制 | 验证入口 |
 |---|---|---|---|---|---|---|
