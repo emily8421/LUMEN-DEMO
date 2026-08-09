@@ -126,25 +126,13 @@
 - **退出标准**：TC-P2-VAULT-001 通过（授权+刷新恢复 / 1000+ 本地树 / IndexedDB 本地搜索 / 左侧分区视觉隔离+不进团队 RAG / 按需导入走 API-029 / 隐私红线不上传）；产品红线（不上传、不越权）未被破坏。
 
 ### Phase2D —— 账户与多人权限（功能范围 `[P2]` · 交付物形态 **团队验证** · **已完成 2026-08-07 收口**）
-- **目标**：把 Demo 占位的账号侧（无密码 / 3 seed 用户 / 手撸 token）升级为真实多用户账号体系，为团队验证和后续多人权限打基础。
-- **功能范围 `[P2]`**：Sprint-26 账号体系基础（已完成）——REQ-040 账户注册、REQ-041 凭证登录（bcrypt）、REQ-042 登出 / 会话管理（不透明 token + `lumen_sessions`）；**Sprint-27 权限多人化（已完成，2026-08-07，PR#114）——REQ-043/044（REQ-001/002/003 扩展）owner_id 跨用户过滤 + 私有按 owner 过滤 + 跨用户隔离回归**；**Sprint-28 角色分层 + 用户管理 + 团队空间加入（已完成，2026-08-07，PR#117 v3.1.0）——REQ-045/046/047**；REQ-016 多人实时协作留后续。
-- **交付物形态 团队验证**：真实账号可注册 / 凭证登录 / 登出，凭证安全（bcrypt 哈希、token 可撤销），13 router 统一 `get_current_user` 鉴权；**demo 模式（`create_demo_token` + alice/kira/brightlite-member 无密码快速登录）保留为 env 开关 + 物理隔离护栏（PG 仓储强制真实认证，内存仓储 `demo_repository` 允许 demo）**，真实账号为正式路径。
-- **进入标准**：Phase2C 完成；认证选型确认（bcrypt + 不透明 token session，`secrets` 标准库零新 token 依赖）；readiness gate——密码哈希选型 / token session 安全（密钥 env 注入、TTL、撤销）/ 跨用户隔离回归——Go（`docs/05-tech-spec.md` 新增 RG-ID，见 `docs/design/accounts-auth.md` 待建）。
-- **退出标准（Sprint-26）**：TC-P2-AUTH-001（注册 / 凭证登录 / 登出 / 会话撤销 / 续期轮换）通过；13 router 统一 `get_current_user` 且 demo 模式开关可切（PG 强制真实 / 内存允许 demo）；基础登录 / 注册页可用；登录失败锁定 + 审计日志生效；**凭证安全与跨用户隔离红线未被破坏（私有文档仍仅 owner 可见，跨用户不泄露）**。
-- **目标（Sprint-27 权限多人化）**：在真实多用户账号体系上验证并补全权限过滤底座——任何用户只能看到其所属空间的可见文档；私有文档仅 owner 可见；外部只读仅 owner 可写；列表 / 搜索 / 问答 / 时间线 / 目录树 / 标签 / 导出 / 链接等全部查询路径跨用户零泄露。
-- **功能范围 `[P2]`（Sprint-27）**：REQ-043 权限多人化（owner_id 跨用户过滤 + 私有按 owner 过滤 + external 仅 owner 可写）+ REQ-044 跨用户隔离回归（REQ-001/002/003 扩展）；零新依赖、预期零 migration。
-- **交付物形态 团队验证（Sprint-27）**：多真实账号共存互不泄露；权限过滤底座经全路径审计与自动化回归证明可信。
-- **进入标准（Sprint-27）**：Sprint-26 已完成（TC-P2-AUTH-001 通过）；权限过滤底座与 RG-013 已 Go；`06` / `07` 契约预期无变更。
-- **退出标准（Sprint-27）**：TC-P2-ACC-001（私有仅 owner / 全路径跨用户隔离 / 空间隔离切换回归）通过；自动化 tests + 浏览器 smoke；权限红线未被破坏。
-- **硬约束（Sprint-27）**：不做全局角色分层 / 用户管理后台 UI（Sprint-28）、REQ-016 多人实时协作；不引入新依赖；预期零 migration；无大范围前端改动。
-- **目标（Sprint-28 角色分层 + 用户管理 + 团队空间加入）**：在真实账号 + 权限过滤底座上补齐团队治理能力——全局角色分层（admin / member）+ 用户管理后台（admin 域）+ 团队空间加入机制（space 域成员管理），完成「账号 → 权限 → 团队协作」的 Phase2D 闭环。
-- **功能范围 `[P2]`（Sprint-28）**：REQ-045 全局角色分层（`lumen_users.role`，默认 member）+ REQ-046 用户管理后台（admin 域：用户列表 / 过滤 / 改角色 / 禁用启用）+ REQ-047 团队空间加入机制（space 域成员 CRUD：按 email 添加 / 改空间角色 / 移除）；migration 016；零新依赖。
-- **交付物形态 团队验证（Sprint-28）**：admin 可治理用户与空间成员，member 无管理权限；管理能力后端强制鉴权（非 admin 4030），不依赖前端隐藏；用户列表不暴露 `password_hash`。
-- **进入标准（Sprint-28）**：Sprint-27 已完成（TC-P2-ACC-001 通过）；`06` / `07` / `09` 契约更新完成（migration 016 + admin 域 / space 域成员 API + TC-P2-ACC-002 定义）。
-- **退出标准（Sprint-28）**：TC-P2-ACC-002（全局角色 admin/member 权限校验 + admin 域用户管理 + space 域成员管理）通过；自动化 tests + 浏览器 smoke；权限红线未被破坏（管理接口仅 admin、用户列表不暴露敏感字段、禁用不删数据、demo 仓储不旁路管理权限）。
-- **硬约束（Sprint-28）**：不做移除用户 / 重置密码 / 邀请码 / 邀请链接 / REQ-016 多人实时协作（留候选或后续）；不引新依赖；不因 demo 仓储类型旁路管理鉴权。
-- **硬约束（Sprint-26）**：Sprint-26 只立账号基础，不做权限多人化实质改造（owner_id 跨用户过滤回归）、全局角色分层、用户管理后台 UI、REQ-016 多人实时协作——权限多人化已进 Sprint-27，其余留 Sprint-28+。
-- **收口结论（2026-08-07）**：Phase2D 三 slice（Sprint-26/27/28）退出标准全部达成——TC-P2-AUTH-001 / TC-P2-ACC-001 / TC-P2-ACC-002 通过，权限红线（凭证安全 / 跨用户隔离 / 管理接口仅 admin / 用户列表不暴露 `password_hash`）未被破坏；「账号 → 权限 → 团队协作」闭环成形。已知偏差（accounts-auth §18.9：API-044/046 未分页 / `last_login_at` 未显式排序 / API-045/048 无 `updated_at` / refresh 不含 `role`；Sprint-27 P2：`visible_document_where_clause` 未使用 / `upsert_link` 目标解析）经用户确认全接受、留后续，不阻塞收口。不升 Phase；下一阶段范围待用户定义（候选：移除用户 / 重置密码 / 邀请码 / REQ-016 / 真实团队端到端验证 / 产品化）。
+- **目标**：把 Demo 占位的账号侧（无密码 / 3 seed 用户 / 手撸 token）升级为真实多用户账号体系，完成「账号 → 权限 → 团队协作」闭环，为团队验证打基础。
+- **功能范围 `[P2]`**：REQ-040/041/042 账号体系基础（注册 / 凭证登录 bcrypt / 登出会话，不透明 token + `lumen_sessions`）+ REQ-043/044 权限多人化（REQ-001/002/003 扩展：owner_id 跨用户过滤 + 私有按 owner 过滤 + external 仅 owner 可写 + 跨用户隔离回归）+ REQ-045/046/047 角色分层 + 用户管理 + 团队空间加入（`lumen_users.role` admin/member + admin 域用户管理 + space 域成员 CRUD，migration 016）；REQ-016 多人实时协作留后续。三 slice 拆分（Sprint-26/27/28）见 `docs/08-dev-plan.md` Sprint 总览 + `docs/design/accounts-auth.md` §17/§18。
+- **交付物形态 团队验证**：真实账号可注册 / 凭证登录 / 登出，凭证安全（bcrypt 哈希、token 可撤销），13 router 统一 `get_current_user` 鉴权；**demo 模式（`create_demo_token` + alice/kira/brightlite-member 无密码快速登录）保留为 env 开关 + 物理隔离护栏（PG 仓储强制真实认证，内存仓储 `demo_repository` 允许 demo）**，真实账号为正式路径；admin 可治理用户与空间成员（管理能力后端强制鉴权，非 admin 4030，用户列表不暴露 `password_hash`）。
+- **进入标准**：Phase2C 完成；认证选型确认（bcrypt + 不透明 token session，`secrets` 标准库零新 token 依赖）；readiness gate——密码哈希选型 / token session 安全（密钥 env 注入、TTL、撤销）/ 跨用户隔离回归——Go（RG-011/012/013，见 `docs/05-tech-spec.md` + `docs/design/accounts-auth.md`）。
+- **退出标准**：TC-P2-AUTH-001（注册 / 凭证登录 / 登出 / 会话撤销 / 续期轮换）+ TC-P2-ACC-001（私有仅 owner / 全路径跨用户隔离 / 空间隔离切换回归）+ TC-P2-ACC-002（admin/member 角色校验 + admin 域用户管理 + space 域成员管理）通过；13 router 统一鉴权且 demo 模式开关可切；登录失败锁定 + 审计日志生效；权限红线（凭证安全 / 跨用户隔离 / 管理接口仅 admin / 用户列表不暴露 `password_hash`）未被破坏。
+- **硬约束**：Sprint-26 只立账号基础不做权限多人化实质改造；不做 REQ-016 多人实时协作、移除用户 / 重置密码 / 邀请码 / 邀请链接（留候选或后续）；不引入新依赖；不因 demo 仓储类型旁路管理鉴权。
+- **收口结论（2026-08-07）**：Phase2D 三 slice（Sprint-26/27/28）退出标准全部达成——TC-P2-AUTH-001 / TC-P2-ACC-001 / TC-P2-ACC-002 通过（PR#114 / PR#117 v3.1.0），权限红线（凭证安全 / 跨用户隔离 / 管理接口仅 admin / 用户列表不暴露 `password_hash`）未被破坏，「账号 → 权限 → 团队协作」闭环成形。已知偏差经用户确认全接受、留后续，不阻塞收口——`accounts-auth` §18.9（API-044/046 未分页 / `last_login_at` 未显式排序 / API-045/048 无 `updated_at` / refresh 不含 `role`）+ Sprint-27 P2（`visible_document_where_clause` 未使用 / `upsert_link` 目标解析）。不升 Phase；下一阶段范围待用户定义（候选：移除用户 / 重置密码 / 邀请码 / REQ-016 / 真实团队端到端验证 / 产品化）。
 
 ### 远期愿景（不承诺时间）（功能范围 `[愿景]` · 交付物形态 **产品**）
 - **目标**：补存量知识接入、**情报分析（i2 精神）**、情报交付能力——情报分析（路径推理 / 矛盾检测 / 证据地图等）是 v18 强调的远期差异化方向。
