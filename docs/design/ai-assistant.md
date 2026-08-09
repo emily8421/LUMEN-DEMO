@@ -14,10 +14,10 @@
 | 覆盖 REQ / NFR | REQ-008（AI 问答·RAG 扩展）、NFR-004（数据安全，通用对话外发走 RG-008 护栏） |
 | 所属阶段 | 维护态（demo 目标达成后 UI 改进批次·批3） |
 | 交付物形态 | Demo |
-| 当前状态 | **已编码 + 验证通过，待人工浏览器验收**（2026-08-08：后端 310 tests OK / 前端 build 294 modules 绿 / `scripts/smoke-ai-assistant-browser.mjs` PASS；含 LLM 多配置切换：deepseek 通道真实出文） |
+| 当前状态 | **已编码 + 验证通过 + 用户浏览器验收通过**（2026-08-08：后端 310 tests OK / 前端 build 294 modules 绿 / `scripts/smoke-ai-assistant-browser.mjs` PASS；含 LLM 多配置切换：deepseek 通道真实出文） |
 | 流程 ID | Flow-D-ASSIST-01（多轮对话 / RAG），见 §3 |
 | 最后更新 | 2026-08-08 |
-| 下游影响 | `07`（API-010 请求体扩 history + use_knowledge_base）、`09`（验收记录待回写）、`08`（维护态批次进度）、`frontend/src`（useAiAssistant / AiAssistant / App 接线） |
+| 下游影响 | `07`（API-010 请求体扩 history + use_knowledge_base）、`09`（验收记录已回写，TC-P2-ASSIST-001）、`08`（维护态批次进度）、`frontend/src`（useAiAssistant / AiAssistant / App 接线） |
 
 ## 1. 职责与边界
 
@@ -40,7 +40,7 @@
 | `07-api-spec.md` | API-010 `POST /api/query` | 请求体扩 `history` + `use_knowledge_base`（向后兼容） | API 层 |
 | 用户决策（2026-08-07） | 批3 方案三项确认 | ① 通用对话后端扩展 ② 保留问答页 + 抽屉快捷入口 ③ 多轮由前端管理（路径 A） | 实现边界 |
 
-最低追溯链：`REQ-008 → API-010（扩展） → 本设计 → 批3 → smoke-ai-assistant-browser.mjs / 304 tests → 09 验收记录（待回写）`。
+最低追溯链：`REQ-008 → API-010（扩展） → 本设计 → 批3 → smoke-ai-assistant-browser.mjs / 304 tests → 09 验收记录（已回写，TC-P2-ASSIST-001）`。
 
 ## 3. 核心流程 / 状态机
 
@@ -59,7 +59,7 @@
 - 输出：多轮消息列表（含答案 / 来源 / 错误占位）
 - 成功条件：RAG 命中返回带来源答案；通用对话 LLM 可用返回对话回答
 - 失败 / 降级路径：LLM 未配置 → 通用对话「降级模式：未配置 LLM，通用对话不可用。请开启「基于知识库」问答。」；LLM 调用失败 → 「降级模式：LLM 调用失败…」；RAG 沿用既有 NOT_FOUND / 降级（不编造）
-- 关联：REQ-008 / API-010 / TC（09 验收待回写）
+- 关联：REQ-008 / API-010 / TC-P2-ASSIST-001（09 已回写）
 
 ```mermaid
 flowchart TD
@@ -94,11 +94,11 @@ flowchart TD
 
 | 场景 | 触发条件 | 系统行为 | 用户可见 | 记录 | 阻塞验收 | 关联 TC |
 |---|---|---|---|---|---|---|
-| 通用对话 LLM 未配置 | `use_knowledge_base=false` 且 provider=mock / 无 API key | 不调 LLM，返回降级文案 | 「通用对话不可用，请开启基于知识库问答」 | service 日志 | 否（demo 无 LLM 时降级可演示） | 09 待回写 |
-| 通用对话 LLM 调用失败 / 空返回 | 网络 / 5xx / 空输出 | 返回降级文案（不编造） | 「降级模式：LLM 调用失败 / 返回为空」 | service 日志 | 否 | 09 待回写 |
+| 通用对话 LLM 未配置 | `use_knowledge_base=false` 且 provider=mock / 无 API key | 不调 LLM，返回降级文案 | 「通用对话不可用，请开启基于知识库问答」 | service 日志 | 否（demo 无 LLM 时降级可演示） | 09 已回写 |
+| 通用对话 LLM 调用失败 / 空返回 | 网络 / 5xx / 空输出 | 返回降级文案（不编造） | 「降级模式：LLM 调用失败 / 返回为空」 | service 日志 | 否 | 09 已回写 |
 | RAG 无命中 | 当前空间无相关 chunk | 沿用既有 NOT_FOUND | 「未在当前空间知识库找到相关内容」 | — | 否（既有） | TC-P1-008 延续 |
 | 越权来源 | RAG 召回含不可见 chunk | `filter_visible_documents` 剔除，不进 prompt / 不返回 | 不泄露 | — | 否（红线） | TC-P1-008 延续 |
-| 前端请求失败 | 网络 / 登录失效 | assistant 消息就地显示错误文案 | 错误气泡 | — | 否 | 09 待回写 |
+| 前端请求失败 | 网络 / 登录失效 | assistant 消息就地显示错误文案 | 错误气泡 | — | 否 | 09 已回写 |
 
 数据外发护栏（RG-008，权威源 `ai/project-rules.md §2.1`）：通用对话为**用户单条显式触发**，符合「由用户自判是否触发」护栏；不携带 API key；`history` 仅当前会话前端内存，不落库。
 
@@ -108,7 +108,7 @@ flowchart TD
 
 | 阶段 | 功能范围 | 交付物形态 | 设计状态 | 实现状态 | 备注 |
 |---|---|---|---|---|---|
-| 维护态·批3 | AI 抽屉 + 基于知识库开关 + 多轮（REQ-008 扩展） | Demo | 已设计（本文） | **已编码 + 验证通过（待人工验收）** | 2026-08-07 |
+| 维护态·批3 | AI 抽屉 + 基于知识库开关 + 多轮（REQ-008 扩展） | Demo | 已设计（本文） | **已编码 + 验证通过 + 用户验收通过** | 2026-08-08（用户验收） |
 
 readiness gate：
 
@@ -121,9 +121,9 @@ readiness gate：
 
 | 设计点 | 关联 REQ | 批次 | TC | 验证方式 | 状态 |
 |---|---|---|---|---|---|
-| 后端 history + use_knowledge_base | REQ-008 | 批3 | 09 待回写 | `tests/backend/test_rag.py` +6（通用降级 / 拼 prompt / RAG 不受 history 影响），后端全量 304 OK | 通过 |
-| 前端抽屉 + 开关 + 多轮 | REQ-008 | 批3 | 09 待回写 | `npm run build` 294 modules 绿；`scripts/smoke-ai-assistant-browser.mjs` PASS（fab→抽屉→RAG 降级+来源→通用降级→多轮→Esc→问 AI 开抽屉预填；API 双模式） | 通过 |
-| 命令面板「问 AI」改开抽屉 | REQ-008 | 批3 | 09 待回写 | smoke 第 7 步断言抽屉打开 + 输入框预填 | 通过 |
+| 后端 history + use_knowledge_base | REQ-008 | 批3 | 09 已回写 | `tests/backend/test_rag.py` +6（通用降级 / 拼 prompt / RAG 不受 history 影响），后端全量 304 OK | 通过 |
+| 前端抽屉 + 开关 + 多轮 | REQ-008 | 批3 | 09 已回写 | `npm run build` 294 modules 绿；`scripts/smoke-ai-assistant-browser.mjs` PASS（fab→抽屉→RAG 降级+来源→通用降级→多轮→Esc→问 AI 开抽屉预填；API 双模式） | 通过 |
+| 命令面板「问 AI」改开抽屉 | REQ-008 | 批3 | 09 已回写 | smoke 第 7 步断言抽屉打开 + 输入框预填 | 通过 |
 
 正式验收证据以 `docs/09-verification.md` 为准（批3 浏览器人工验收 + §5.1 记录待用户确认后回写）。
 

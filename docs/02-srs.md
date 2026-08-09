@@ -83,7 +83,7 @@
 | REQ-024 | 时间轴密度热条 | U-30 | Phase2B 第二 slice·已实现并补齐验证：4 档色阶（0 无 / 1 低 / 2 中 / 3 高）**+ 量化 ratio（相对均值倍数）**；密度按事件数 + 渲染去重；日窗口（>180 天切周）；**传 `q` 时反映主题活跃节奏** *(v18)* | [P2] | Phase2B·已实现并补齐验证（TC-P2-TL-001 自动化、运行态 API smoke、Edge headless 浏览器 smoke、真实 PG 大数据性能 smoke 已通过） |
 | REQ-025 | 快速录入索引条目 | U-31 | 30s 录标题/来源/摘要；mode=draft 保留私有草稿、create_document 转新私有文档、append_document 追加到已有文档；可关联 tag_ids；draft 可丢弃 *(v18)* | [P2] | P2-已实现（TC-P2-QUICK-001 通过） |
 | REQ-026 | 内部链接 + 反向链接 | U-32 | Phase2A 最小版：`[[文件名]]` 解析、resolved / unresolved / no_access 状态、出链 / 反链查询与权限过滤 | [P2] | P2-已实现（TC-P2-LINK-001 通过） |
-| REQ-039 | 文档目录树：空间内嵌套文件夹（CRUD / 移动 / 排序）组织文档；导入保留真实目录结构（扩展 REQ-037）；folder 不独立设权限（继承空间，文档可见性仍看 permission） | **U-44** | Phase2B 第三 slice 候选：建 / 移动 / 排序文件夹后文档归属正确；导入文件夹后目录结构保留；防环 / 跨空间 / 重名 / 删非空 folder 拒绝 | [P2] | P2-已设计（folder-tree，FT-C-001..013 已确认，编码进行中） |
+| REQ-039 | 文档目录树：空间内嵌套文件夹（CRUD / 移动 / 排序）组织文档；导入保留真实目录结构（扩展 REQ-037）；folder 不独立设权限（继承空间，文档可见性仍看 permission） | **U-44** | Phase2B 第三 slice 候选：建 / 移动 / 排序文件夹后文档归属正确；导入文件夹后目录结构保留；防环 / 跨空间 / 重名 / 删非空 folder 拒绝 | [P2] | P2-已实现（folder-tree，TC-P2-FOLDER-001 通过；9a1b479 全链路 + 浏览器 smoke，2026-08-05 验收） |
 | REQ-027 | 单文档导出 PDF（Markdown → PDF，含中文排版） | U-33 | ReportLab 首版：基础 Markdown 子集（标题 / 段落 / 列表 / 表格 / 引用）+ 页眉页脚 + 中文字体；导出任务绑定版本，产物继承权限，依赖不可用返回 5030 | [P1] | P1.5B-已实现（Sprint-18 / TC-P1-017 通过，从 Phase2 提前） |
 | REQ-018 | Obsidian Vault 兼容：同一文件夹来源可选择“导入数据库”或“仅本地挂载”；导入后成为 LUMEN 正式文档并参与权限 / 搜索 / RAG；仅挂载内容保持个人 / 当前设备可见，不默认进入团队空间、后端 RAG 或共享权限链 | U-21 | Phase2C·模式 B 浏览器 MVP：File System Access 授权+刷新恢复 / IndexedDB 本地索引搜索 / 左侧分区 / 不上传（RG-009 已验证 5 场景 + 8 能力）；模式 A 导入数据库已随 Phase2B 交付 | [P2] | Phase2C·已设计（RG-009 Go 2026-08-05） |
 | REQ-019 | 录音转文字 + 摘要 | U-22 | 待技术验证（转写引擎、摘要质量） | [愿景] | 骨架 |
@@ -188,7 +188,7 @@
 | REQ-012 | AC-P2-TAG-001 | TC-P2-TAG-001 | `docs/09-verification.md` §2、标签后端 tests + 浏览器 smoke | P2-已实现 / 通过 |
 | REQ-025 | AC-P2-QUICK-001 | TC-P2-QUICK-001 | `docs/09-verification.md` §2、快速录入后端 tests + API / 浏览器 smoke | P2-已实现 / 通过 |
 | REQ-026 | AC-P2-LINK-001 | TC-P2-LINK-001 | `docs/09-verification.md` §2、内链后端 tests + API / 浏览器 smoke | P2-已实现 / 通过 |
-| REQ-039 | AC-P2-FOLDER-001 | TC-P2-FOLDER-001 | `docs/09-verification.md` §2、folder 后端 tests + 浏览器 smoke（待立项编码） | 骨架·待实现 |
+| REQ-039 | AC-P2-FOLDER-001 | TC-P2-FOLDER-001 | `docs/09-verification.md` §2、folder 后端 tests + 浏览器 smoke（已实现） | P2-已实现 / 通过 |
 | REQ-040 | AC-P2-AUTH-001 | TC-P2-AUTH-001 | `docs/09-verification.md` §2、账户注册 + 凭证登录后端 tests（`tests/backend/test_auth.py` 20/20，Sprint-26） | Sprint-26 已完成 |
 | REQ-041 | AC-P2-AUTH-002 | TC-P2-AUTH-001 | `docs/09-verification.md` §2、凭证登录 + 失败锁定 tests（`tests/backend/test_auth.py`，Sprint-26） | Sprint-26 已完成 |
 | REQ-042 | AC-P2-AUTH-003 | TC-P2-AUTH-001 | `docs/09-verification.md` §2、登出 / 会话撤销 / 续期 tests（`tests/backend/test_auth.py`，Sprint-26） | Sprint-26 已完成 |
