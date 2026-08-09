@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Sync notice: 本文件由 ai-project-template 模板同步维护，派生项目同步时会被覆盖；不应直接修改，通用改进请经 _proposals/ 回流模板仓库。
 # check-template.sh — 检查 ai-project-template 的关键入口、文档骨架与同步清单是否自洽
 #
 # 用法:
@@ -203,16 +204,36 @@ extract_index_rules() {
   grep -Eo '`ai/[^`]+\.md`|^- ai/.+\.md$' ai/index.md | sed -E 's/^`//; s/`$//; s/^- //'
 }
 
+# 从 template-sync.json 指定数组键（files_all / files_ordinary / files_domain / legacy files）提取文件清单。
+# 下划线在正则中是字面量：传 "files" 不误匹配 "files_all"，传 "files_all" 不误匹配 "files_ordinary"。
+# 依赖每个数组的 ] 独占一行（sed 范围闭合到第一个 ]）；空数组（如 "files_ordinary": []）不产出条目。
+extract_sync_array() {
+  local key="$1"
+  sed -n "/\"${key}\"[[:space:]]*:[[:space:]]*\[/,/\]/ s/^[[:space:]]*\"\([^\"]\+\)\"[[:space:]]*,\{0,1\}[[:space:]]*$/\1/p" template-sync.json
+}
+
+# 自检需校验全部同步文件存在：取三组并集（files_all 为主；files_ordinary / files_domain 补充），
+# 向后兼容仅有旧 "files" 键的 json（视为 files_all）。awk 去重后输出。
 extract_sync_files() {
-  sed -n '/"files"[[:space:]]*:[[:space:]]*\[/,/\]/ s/^[[:space:]]*"\([^"]\+\)"[[:space:]]*,\{0,1\}[[:space:]]*$/\1/p' template-sync.json
+  {
+    if grep -q '"files_all"' template-sync.json; then
+      extract_sync_array "files_all"
+    else
+      extract_sync_array "files"   # legacy fallback：旧 json 无 files_all 时读 files
+    fi
+    extract_sync_array "files_ordinary"
+    extract_sync_array "files_domain"
+  } | awk '!seen[$0]++'
 }
 
 require_sync_notice() {
   local sync_file
   while IFS= read -r sync_file; do
     [[ -n "$sync_file" ]] || continue
+    # VERSION 是纯版本号（程序读取），无法内嵌 notice；其“会被覆盖”语义由 template-sync.json description 承载。
+    [[ "$sync_file" == "VERSION" ]] && continue
     case "$sync_file" in
-      *.md)
+      *.md|*.mdc|*.sh|*.ps1)
         require_contains "$sync_file" 'Sync notice' "$sync_file 包含同步覆盖说明"
         ;;
     esac
@@ -221,6 +242,43 @@ require_sync_notice() {
   require_contains "AGENTS.md" 'Sync notice' "AGENTS.md 包含入口同步说明"
   require_contains "CLAUDE.md" 'Sync notice' "CLAUDE.md 包含入口同步说明"
   require_contains ".cursor/rules/project-rules.mdc" 'Sync notice' "Cursor 规则包含入口同步说明"
+}
+
+# files_domain 非重叠断言（v1.60.0）：领域专属文件不得同时出现在 files_all 或 files_ordinary，
+# 防误配导致普通派生项目误收领域文件（普通路线 = files_all ∪ files_ordinary，不含 files_domain）。
+check_files_domain_no_overlap() {
+  begin_section "检查 files_domain 非重叠"
+  local domain_file count
+  while IFS= read -r domain_file; do
+    [[ -n "$domain_file" ]] || continue
+    # 每个数组条目独占一行：grep -cF 统计该路径在 json 中出现的行数；>1 即跨组重复。
+    count="$(grep -cF "\"$domain_file\"" template-sync.json || true)"
+    if [[ "$count" -gt 1 ]]; then
+      fail "$domain_file 同时出现在多个同步组（files_domain 应与 files_all / files_ordinary 互斥）"
+    else
+      pass "$domain_file 仅在 files_domain（无跨组重叠）"
+    fi
+  done < <(extract_sync_array "files_domain")
+}
+
+# advisory（非阻断，v1.60.1）：project-rules 种子 §2.x 子节编号连续性。
+# 发现未说明的跳号仅告警（不计入失败），与 global-rules「文档编号规范」一致：有意保留号须当节注明。
+check_project_rules_section_continuity() {
+  begin_section "检查 project-rules §2.x 编号连续性（advisory）"
+  local nums expected n prev gap
+  nums="$(grep -oE '^## 2\.[0-9]+' ai/project-rules.md | sed 's/^## 2\.//' | sort -n | uniq)"
+  [[ -z "$nums" ]] && { echo "ℹ️  无 §2.x 子节，跳过连续性检查"; return 0; }
+  prev=0
+  gap=0
+  while IFS= read -r n; do
+    expected=$((prev + 1))
+    if [[ "$n" -ne "$expected" ]]; then
+      echo "⚠️  project-rules §2.x 跳号：期望 §2.$expected，实际 §2.$n（若为有意保留号须当节注明；规范见 ai/global-rules.md 文档编号规范）" >&2
+      gap=1
+    fi
+    prev="$n"
+  done <<< "$nums"
+  [[ "$gap" -eq 0 ]] && pass "project-rules §2.x 子节编号连续（无未说明跳号）"
 }
 
 require_changelog_current_version() {
@@ -429,7 +487,7 @@ require_new_project_local_smoke() {
   require_contains "$project_dir/CHANGELOG-PLAIN.md" '^## v0\.1\.0（' "new-project 烟测 CHANGELOG-PLAIN 顶部项目版本匹配 v0.1.0"
   require_contains "$project_dir/TEMPLATE-BASE.md" 'Project version at sync time: v0\.1\.0' "new-project 烟测 TEMPLATE-BASE 记录项目版本起点"
   require_contains "$project_dir/.github/workflows/project-check.yml" 'Check project version consistency' "new-project 烟测 workflow 校验项目版本一致性"
-  require_contains "$project_dir/ai/project-rules.md" '## 2\.8 项目版本管理' "new-project 烟测 project-rules 含项目版本管理"
+  require_contains "$project_dir/ai/project-rules.md" '## 2\.4 项目版本管理' "new-project 烟测 project-rules 含项目版本管理"
   require_contains "$project_dir/README.md" 'docs/inputs/' "new-project 烟测 README 从 inputs 起步"
   require_contains "$project_dir/README.md" 'docs/env/local-env\.md' "new-project 烟测 README 提醒环境采集"
   require_contains "$project_dir/README.md" 'input-review-report\.md' "new-project 烟测 README 说明输入评审报告"
@@ -584,12 +642,15 @@ check_script_entrypoints() {
   require_contains "scripts/sync-template.ps1" 'Invoke-NativeTemplateSync -NativeSyncArgs \$SyncArgs' "sync-template fallback 显式传递同步参数"
   require_contains "scripts/sync-template.ps1" 'PowerShell fallback template sync' "sync-template fallback 输出明确标识"
   require_contains "scripts/sync-template.ps1" 'doc-standards compatibility mirror' "sync-template fallback 同步 doc-standards 兼容镜像"
+  require_contains "scripts/sync-template.ps1" 'Repair-ProcessPathEnvironment' "sync-template PowerShell 入口修复重复 PATH 键"
   require_contains "scripts/check-template.ps1" 'check-template\.sh' "check-template PowerShell 入口调用 Bash 脚本"
+  require_contains "scripts/check-template.ps1" 'Repair-ProcessPathEnvironment' "check-template PowerShell 入口修复重复 PATH 键"
   require_contains "scripts/check-derived-sync.ps1" 'check-derived-sync\.sh' "check-derived-sync PowerShell 入口调用 Bash 脚本"
   require_contains "scripts/check-derived-sync.ps1" 'Invoke-NativeDerivedSyncCheck' "check-derived-sync PowerShell 入口含原生 fallback"
   require_contains "scripts/check-derived-sync.ps1" 'PowerShell fallback derived sync boundary check' "check-derived-sync fallback 输出明确标识"
   require_contains "scripts/check-derived-sync.ps1" 'param\(\[string\[\]\]\$CheckArgs\)' "check-derived-sync fallback 不使用易混淆 Args 参数名"
   require_contains "scripts/check-derived-sync.ps1" '<sync-commit>' "check-derived-sync PowerShell 入口提示显式同步提交"
+  require_contains "scripts/check-derived-sync.ps1" 'Repair-ProcessPathEnvironment' "check-derived-sync PowerShell 入口修复重复 PATH 键"
   require_contains "scripts/check-derived-sync.sh" '<sync-commit>' "check-derived-sync Bash 入口提示显式同步提交"
   require_contains "scripts/check-derived-sync.sh" 'merge commit' "check-derived-sync Bash 入口提示 merge commit 场景"
   require_contains "SOP.md" 'PowerShell fallback' "SOP 常用命令说明 PowerShell fallback"
@@ -785,7 +846,16 @@ require_contains "MAINTAINERS.md" 'template-sync\.json' "MAINTAINERS 说明同�
 require_contains "MAINTAINERS.md" 'README\.md.*轻量' "MAINTAINERS 约束 README 保持轻量"
 require_contains "MAINTAINERS.md" 'Sync notice' "MAINTAINERS 说明同步文档提示块"
 require_contains "MAINTAINERS.md" '根 `README\.md` 是项目专属文档' "MAINTAINERS 说明派生 README 不同步"
-require_contains "template-sync.json" '"files"' "template-sync.json 包含同步文件清单"
+require_contains "template-sync.json" '"files_all"' "template-sync.json 主同步清单键为 files_all"
+require_contains "template-sync.json" '"files_ordinary"' "template-sync.json 含普通派生补充组 files_ordinary"
+require_contains "template-sync.json" '"files_domain"' "template-sync.json 含领域模板专属组 files_domain"
+# json 格式约定（extract_sync_array sed 解析依赖）：同步数组的 [ 必须在行尾（] 独占行），
+# 禁止任何内联数组内容（含内联空数组 [] 与内联非空数组 ["x"]），否则 sed 范围会跨数组串读。
+if grep -qE '"[^"]*"[[:space:]]*:[[:space:]]*\[[[:space:]]*[^[:space:]]' template-sync.json; then
+  fail "template-sync.json 含内联数组内容（数组 [ 须在行尾、] 独占行，sed 解析依赖）"
+else
+  pass "template-sync.json 数组均多行（[ 在行尾、] 独占行）"
+fi
 require_contains "template-sync.json" '"CHANGELOG\.md"' "template-sync 同步 CHANGELOG"
 require_contains "template-sync.json" '"CHANGELOG-PLAIN\.md"' "template-sync 同步大白话 CHANGELOG"
 require_contains "template-sync.json" '"MAINTAINERS\.md"' "template-sync 同步 MAINTAINERS"
@@ -805,6 +875,8 @@ require_contains "template-sync.json" '"ai/doc-standards/05-tech-spec\.md"' "tem
 require_contains "template-sync.json" '"ai/commands/README\.md"' "template-sync 同步 AI 快捷命令索引"
 require_contains "template-sync.json" '"ai/commands/docs-evaluation\.md"' "template-sync 同步 docs-evaluation 命令"
 require_contains "template-sync.json" '"ai/prompts/review/19-docs-evaluation\.md"' "template-sync 同步 docs-evaluation Prompt"
+require_contains "template-sync.json" '"ai/commands/docs-health-review\.md"' "template-sync 同步 docs-health-review 命令"
+require_contains "template-sync.json" '"ai/prompts/review/24-docs-health-review\.md"' "template-sync 同步 docs-health-review Prompt"
 require_contains "template-sync.json" '"ai/prompts/README\.md"' "template-sync 同步 Prompt Library README"
 require_contains "template-sync.json" '"ai/prompts/planning/19-plan-phases-and-sprints\.md"' "template-sync 同步 A9 阶段 Sprint 规划 Prompt"
 require_contains "template-sync.json" '"template-docs/session-handoff\.example\.md"' "template-sync 同步会话续接样例"
@@ -835,6 +907,7 @@ for command_file in \
   ai/commands/sync-methodology.md \
   ai/commands/post-sync-cleanup.md \
   ai/commands/docs-system-audit.md \
+  ai/commands/docs-health-review.md \
   ai/commands/docs-evaluation.md \
   ai/commands/template-proposal-summary.md \
   ai/commands/domain-template-lab.md \
@@ -1033,6 +1106,15 @@ require_contains "ai/prompts/review/19-docs-evaluation.md" 'docs/research/YYYY-M
 require_contains "ai/commands/docs-evaluation.md" 'Go / Conditional Go / No Go' "docs-evaluation 命令说明 Go 结论"
 require_contains "ai/commands/README.md" 'docs-evaluation' "commands README 注册 docs-evaluation"
 require_contains "template-docs/scenario-guides.md" 'docs-evaluation' "scenario guides 注册 docs-evaluation"
+require_contains "ai/global-rules.md" '### 8\.4 整理（tidy）例外' "global-rules §8.4 定义整理例外通道"
+require_contains "ai/session-rules.md" 'docs-health-review' "session-rules §4 接入 docs-health-review 触发点"
+require_file "ai/prompts/review/24-docs-health-review.md"
+require_contains "ai/prompts/review/24-docs-health-review.md" '可安全整理' "docs-health-review Prompt 区分可安全整理"
+require_contains "ai/prompts/review/24-docs-health-review.md" '状态滞后' "docs-health-review Prompt 覆盖状态滞后信号"
+require_contains "ai/prompts/review/24-docs-health-review.md" '整理例外' "docs-health-review Prompt 引用 §8.4 整理例外"
+require_contains "ai/commands/docs-health-review.md" 'ai/prompts/review/24-docs-health-review\.md' "docs-health-review 路由到 24 健康 Prompt"
+require_contains "ai/commands/README.md" 'docs-health-review' "commands README 注册 docs-health-review"
+require_contains "template-docs/scenario-guides.md" 'docs-health-review' "scenario guides 注册 docs-health-review"
 require_contains "ai/document-lifecycle-rules.md" 'E1' "document-lifecycle 定义 E1-E6 评估码"
 require_contains "ai/implementation-lifecycle-rules.md" 'Conditional Go' "implementation-lifecycle 承接 docs-evaluation"
 require_contains "ai/prompts/docs/00-generate-or-complete-docs.md" '功能范围 \+ 交付物形态' "生成 Prompt 要求阶段双维度"
@@ -1090,14 +1172,24 @@ require_contains "scripts/check-derived-sync.sh" 'Upstream template changelog re
 require_contains "scripts/check-derived-sync.ps1" 'Upstream template changelog reference' "check-derived-sync PowerShell fallback 校验 upstream changelog 定位说明"
 require_contains "scripts/check-derived-sync.sh" 'Domain standards scope' "check-derived-sync 校验领域版 TEMPLATE-BASE.md 领域标准件字段"
 require_contains "scripts/check-derived-sync.ps1" 'Domain standards scope' "check-derived-sync PowerShell fallback 校验领域版 TEMPLATE-BASE.md"
-require_contains "scripts/check-derived-sync.sh" 'README\.md\|ai/project-rules\.md\|docs/0\[0-9\]-\*' "check-derived-sync 保护项目专属文件"
+require_contains "scripts/check-derived-sync.sh" 'README\.md\|ai/project-rules\.md\|ai/domain-rules\.md\|docs/0\[0-9\]-\*' "check-derived-sync 保护项目专属文件（含 domain-rules）"
 require_contains "scripts/check-derived-sync.sh" 'git show --name-only' "check-derived-sync 输出最近同步提交文件名（--name-only；v1.56.11 去 --stat 减噪）"
 require_contains "scripts/check-derived-sync.sh" 'git rev-list --parents -n 1' "check-derived-sync 识别 HEAD merge commit 并提示传入实际同步提交"
 require_contains "scripts/check-derived-sync.sh" 'ai/prompts/maintainers/15-post-sync-cleanup\.md' "check-derived-sync 指向同步后整理 Prompt"
+# v1.60.0：check-derived-sync 按路线路由同步清单，防止普通派生项目误收 files_domain 领域专属文件。
+require_contains "scripts/check-derived-sync.sh" 'files_domain' "check-derived-sync 按领域路线读 files_domain"
+require_contains "scripts/check-derived-sync.ps1" 'files_domain' "check-derived-sync PowerShell fallback 按领域路线读 files_domain"
 require_contains "scripts/sync-template.sh" 'ai/doc-standards' "sync-template 含 doc-standards 规范镜像步骤"
 require_contains "scripts/sync-template.sh" '--preserve-project-version' "sync-template 支持普通派生项目保留自身 VERSION"
 require_contains "scripts/sync-template.sh" 'core.autocrlf=false' "sync-template dry-run diff 局部关 autocrlf 消 Windows CRLF 噪音（不影响 commit）"
 require_contains "scripts/sync-template.ps1" 'core.autocrlf=false' "sync-template PowerShell fallback dry-run diff 局部关 autocrlf"
+# v1.60.0：sync-template 三组路由 + TEMPLATE-BASE 受管文件指针（防漂移断言，守用户可见输出与结构）。
+require_contains "scripts/sync-template.sh" 'files_domain' "sync-template 领域路线读 files_domain 组"
+require_contains "scripts/sync-template.ps1" 'files_domain' "sync-template.ps1 领域路线读 files_domain 组"
+require_contains "scripts/sync-template.sh" '同步路线' "sync-template 输出同步路线摘要"
+require_contains "scripts/sync-template.ps1" 'Sync route' "sync-template.ps1 输出同步路线摘要"
+require_contains "scripts/sync-template.sh" 'overwritten on the next template sync' "sync-template TEMPLATE-BASE writer 声明受管文件会被覆盖"
+require_contains "scripts/sync-template.ps1" 'overwritten on the next template sync' "sync-template.ps1 TEMPLATE-BASE writer 声明受管文件会被覆盖"
 require_contains "scripts/sync-template.sh" 'detect_lineage_role' "sync-template 自动判定 TEMPLATE-BASE 普通版/领域版角色"
 require_contains "scripts/sync-template.sh" 'TEMPLATE-BASE\.md' "sync-template 维护普通派生项目继承版本记录"
 require_contains "scripts/sync-template.sh" 'VERSION\|CHANGELOG\.md\|CHANGELOG-PLAIN\.md' "sync-template Bash 保留过滤含 CHANGELOG-PLAIN"
@@ -1168,16 +1260,35 @@ require_contains "docs/05-tech-spec.md" '技术环境评估结论' "05 技术方
 require_contains "docs/09-verification.md" '技术环境评估验证' "09 验证计划包含技术环境评估验证"
 require_contains "template-docs/scenario-guides.md" 'A24 技术路线与环境支撑评估' "scenario-guides 路由技术环境评估"
 
-# 运行时版本锁定机制（v1.55.0）：规则层 project-rules §2.9、声明层 05-tech-spec 标准 + scaffold §1.1、
+# 运行时版本锁定机制（v1.55.0）：规则层 project-rules §2.5、声明层 05-tech-spec 标准 + scaffold §1.1、
 # 文档层 env-setup「运行时版本管理」、评估层 20-tech-env-evaluation、路由层 global-rules §5。
 # PS1 fallback 显式收窄、不镜像内容断言（见 check-template.ps1 顶部注释），故断言只在此维护。
-require_contains "ai/project-rules.md" '^## 2\.9 运行时版本锁定' "project-rules 含运行时版本锁定小节"
-require_contains "ai/project-rules.md" '§2\.5.*运行环境与资源约束' "project-rules §2.9 与 §2.5 运行环境与资源约束区分"
-require_contains "ai/project-rules.md" '版本声明文件' "project-rules §2.9 标明版本声明文件字段"
-require_contains "ai/project-rules.md" '切换工具' "project-rules §2.9 标明切换工具字段"
-require_contains "ai/project-rules.md" '豁免理由' "project-rules §2.9 含豁免理由字段"
-require_contains "ai/project-rules.md" 'docs/05-tech-spec\.md' "project-rules §2.9 指向 05-tech-spec 声明落点"
+require_contains "ai/project-rules.md" '^## 2\.5 运行时版本锁定' "project-rules 含运行时版本锁定小节"
+require_contains "ai/project-rules.md" '运行环境与资源约束.*正交' "project-rules §2.5 运行时版本与 §2.1 运行环境与资源约束正交区分"
+require_contains "ai/project-rules.md" '版本声明文件' "project-rules §2.5 标明版本声明文件字段"
+require_contains "ai/project-rules.md" '切换工具' "project-rules §2.5 标明切换工具字段"
+require_contains "ai/project-rules.md" '豁免理由' "project-rules §2.5 含豁免理由字段"
+require_contains "ai/project-rules.md" 'docs/05-tech-spec\.md' "project-rules §2.5 指向 05-tech-spec 声明落点"
 require_contains "ai/doc-standards/05-tech-spec.md" '运行时版本锁定' "05 技术方案标准纳入运行时版本锁定维度"
+# project-rules 字段规范分层（v1.59.3）：规范长文上移到 doc-standards/project-rules.md（规范基线，同步），
+# 种子 ai/project-rules.md 瘦身为填写骨架 + 指向行（实例，不同步）。规范源断言锁定 standards 为字段规范单一事实源。
+require_contains "ai/doc-standards/project-rules.md" '规范基线' "project-rules standards 声明规范基线定位"
+require_contains "ai/doc-standards/project-rules.md" '§2\.4 项目版本管理' "project-rules standards 含 §2.4 版本管理规范"
+require_contains "ai/doc-standards/project-rules.md" '§2\.5 运行时版本锁定' "project-rules standards 含 §2.5 运行时版本锁定规范"
+require_contains "ai/doc-standards/project-rules.md" '版本声明文件' "project-rules standards §2.5 标明版本声明文件字段"
+require_contains "ai/doc-standards/project-rules.md" '切换工具' "project-rules standards §2.5 标明切换工具字段"
+require_contains "ai/doc-standards/project-rules.md" 'AI 修改确认规则' "project-rules standards 含 AI 修改确认规则规范"
+require_contains "ai/project-rules.md" 'ai/doc-standards/project-rules\.md' "project-rules 实例指向规范基线"
+require_contains "ai/global-rules.md" '规则分层原则' "global-rules 含规则分层原则小节"
+require_contains "ai/global-rules.md" 'ai/doc-standards/project-rules\.md' "global-rules 规则分层原则指向 project-rules 规范基线"
+require_contains "ai/global-rules.md" '文档编号规范' "global-rules 含文档编号规范小节"
+# domain-rules 字段规范分层（v1.60.0）：领域层 rules 规范基线（doc-standards/domain-rules.md）只走领域模板路线（files_domain），
+# 领域仓 ai/domain-rules.md 种子不同步、自生成、受 check-derived-sync 保护。
+require_contains "ai/doc-standards/domain-rules.md" '规范基线' "domain-rules standards 声明规范基线定位"
+require_contains "ai/doc-standards/domain-rules.md" 'Sync notice' "domain-rules standards 含同步覆盖说明"
+require_contains "ai/doc-standards/domain-rules.md" '§1 领域标准件清单' "domain-rules standards 含领域标准件清单规范"
+require_contains "ai/global-rules.md" 'ai/doc-standards/domain-rules\.md' "global-rules 规则分层原则指向 domain-rules 规范基线"
+require_contains "template-sync.json" 'ai/doc-standards/domain-rules\.md' "template-sync files_domain 含 domain-rules 规范基线"
 require_contains "template-docs/docs-scaffold/05-tech-spec.md" '运行时版本锁定' "05 scaffold 提示运行时版本锁定"
 require_contains "template-docs/docs-scaffold/05-tech-spec.md" '版本声明文件' "05 scaffold 含版本声明文件字段"
 require_contains "template-docs/docs-scaffold/05-tech-spec.md" '切换工具' "05 scaffold 含切换工具字段"
@@ -1188,7 +1299,7 @@ require_contains "template-docs/env-setup.md" 'pyenv-win' "env-setup 推荐 Wind
 require_contains "template-docs/env-setup.md" '\.node-version|\.python-version|\.tool-versions' "env-setup 列举标准声明文件"
 require_contains "template-docs/env-setup.md" 'asdf.*WSL|WSL.*asdf' "env-setup 注明 asdf Windows 需 WSL"
 require_contains "ai/prompts/review/20-tech-env-evaluation.md" '声明锁定版本|声明运行时版本锁定' "tech-env-evaluation 比对项目声明锁定版本"
-require_contains "ai/global-rules.md" '§2\.9' "global-rules 路由到 project-rules §2.9"
+require_contains "ai/global-rules.md" '§2\.5 写明' "global-rules 路由到 project-rules §2.5"
 require_contains "ai/global-rules.md" 'ai/commands/README\.md' "global-rules 指向快捷命令路由"
 require_contains "ai/global-rules.md" 'ai/session-rules\.md' "global-rules 指向会话续接规则"
 require_contains "ai/global-rules.md" 'ai/implementation-lifecycle-rules\.md' "global-rules 指向实现生命周期规则"
@@ -1364,7 +1475,7 @@ require_contains "ai/prompts/maintainers/15-post-sync-cleanup.md" '同步后项�
 require_contains "ai/prompts/maintainers/15-post-sync-cleanup.md" '同步报告回写建议' "同步后整理 Prompt 输出同步报告回写建议"
 require_contains "ai/prompts/maintainers/15-post-sync-cleanup.md" 'project-check\.yml' "同步后整理 Prompt 提醒迁移派生 workflow"
 require_contains "ai/prompts/maintainers/15-post-sync-cleanup.md" 'docs/env/local-env\.md' "同步后整理 Prompt 检查 local-env"
-require_contains "ai/prompts/maintainers/15-post-sync-cleanup.md" '§2\.5「运行环境与资源约束」' "同步后整理 Prompt 检查 project-rules §2.5"
+require_contains "ai/prompts/maintainers/15-post-sync-cleanup.md" '§2\.1「运行环境与资源约束」' "同步后整理 Prompt 检查 project-rules §2.1"
 require_contains "ai/prompts/maintainers/15-post-sync-cleanup.md" '部署 / 运行拓扑约束' "同步后整理 Prompt 检查 04 运行拓扑"
 require_contains "ai/prompts/maintainers/15-post-sync-cleanup.md" '运行环境与资源评估' "同步后整理 Prompt 检查 05 资源评估"
 require_contains "ai/prompts/maintainers/15-post-sync-cleanup.md" '本机资源验证' "同步后整理 Prompt 检查 09 本机资源验证"
@@ -1386,7 +1497,7 @@ require_contains "template-docs/derived-sync-report-template.md" '项目验证�
 require_contains "scripts/new-project.sh" 'project-check\.yml' "new-project 生成派生项目 workflow"
 require_contains "scripts/new-project.sh" 'Check project version consistency' "new-project 生成派生项目版本一致性检查"
 require_contains "scripts/new-project.sh" 'DERIVED_PROJECT_VERSION="v0\.1\.0"' "new-project 默认项目自有版本从 v0.1.0 起步"
-require_contains "ai/project-rules.md" '## 2\.8 项目版本管理' "project-rules 种子包含项目版本管理"
+require_contains "ai/project-rules.md" '## 2\.4 项目版本管理' "project-rules 种子包含项目版本管理"
 require_contains "scripts/new-project.sh" 'Not a template sync commit; skip derived sync boundary check' "派生 workflow 普通 PR 跳过同步边界检查"
 require_contains "scripts/new-project.sh" 'bash scripts/check-derived-sync\.sh HEAD' "派生 workflow 同步提交运行边界检查"
 require_contains "scripts/new-project.sh" 'rm -f "\$TARGET/\.github/workflows/template-check\.yml"' "new-project 移除模板仓 workflow"
@@ -1586,6 +1697,7 @@ require_contains "scripts/sync-template.sh" 'template-docs/capability-packages\.
 require_file "template-docs/remote-ci-sop-profile.md"
 require_contains "template-docs/remote-ci-sop-profile.md" 'PR / CI 闭环 Checklist' "Remote / CI profile 包含 PR/CI 闭环 checklist"
 require_contains "template-docs/remote-ci-sop-profile.md" 'CI pending 即汇报 pending' "Remote / CI profile 约束 CI pending 不长等"
+require_contains "template-docs/remote-ci-sop-profile.md" 'Invoke-WebRequest' "Remote / CI profile 推荐 Windows 下原始 REST JSON 查询"
 require_contains "template-docs/remote-ci-sop-profile.md" '未确认不做 push / merge / close / delete / release' "Remote / CI profile 保留高风险确认边界"
 require_contains "ai/index.md" 'template-docs/remote-ci-sop-profile\.md' "任务路由包含 Remote / CI profile"
 require_contains "ai/commands/README.md" 'template-docs/remote-ci-sop-profile\.md' "命令索引包含 Remote / CI profile"
@@ -1652,6 +1764,8 @@ require_contains "template-docs/demo-runbook-template.md" '不替代' "demo-runb
 require_contains "template-docs/demo-runbook-template.md" 'identity marker' "demo-runbook 模板包含页面身份标记"
 require_contains "template-docs/demo-runbook-template.md" 'local-demo-runtime\.json' "demo-runbook 模板包含运行状态文件忽略口径"
 require_contains "template-docs/demo-runbook-template.md" '默认端口只是示例' "demo-runbook 模板区分默认端口和实际入口"
+require_contains "template-docs/demo-runbook-template.md" 'Repair-ProcessPathEnvironment' "demo-runbook 模板含 Windows Path/PATH 归一化复用指引（#296）"
+require_contains "template-docs/demo-runbook-template.md" 'WindowStyle Hidden' "demo-runbook 模板含 Windows 后台启动 -WindowStyle Hidden 指引（#296）"
 require_contains "ai/commands/README.md" 'show-demo' "命令索引收录 show-demo"
 require_contains "docs/README.md" 'local-demo-runbook' "docs README 记录 demo runbook 默认路径"
 require_contains "template-sync.json" 'ai/commands/show-demo\.md' "同步清单包含 show-demo 命令"
@@ -1713,12 +1827,14 @@ require_contains "template-sync.json" 'ai/doc-standards/08-dev-plan\.md' "同步
 require_contains "template-sync.json" 'ai/doc-standards/09-verification\.md' "同步清单包含 09 验证独立标准"
 require_contains "template-sync.json" 'ai/doc-standards/frontend-interaction\.md' "同步清单包含前端交互独立标准"
 require_contains "template-sync.json" 'ai/doc-standards/ui-prototype-strategy\.md' "同步清单包含 UI 原型策略独立标准"
+require_contains "template-sync.json" 'ai/doc-standards/project-rules\.md' "同步清单包含 project-rules 字段规范标准"
 require_contains "scripts/sync-template.sh" 'ai/doc-standards/06-db-design\.md' "sync-template fallback 包含 06 DB 独立标准"
 require_contains "scripts/sync-template.sh" 'ai/doc-standards/07-api-spec\.md' "sync-template fallback 包含 07 API 独立标准"
 require_contains "scripts/sync-template.sh" 'ai/doc-standards/08-dev-plan\.md' "sync-template fallback 包含 08 开发计划独立标准"
 require_contains "scripts/sync-template.sh" 'ai/doc-standards/09-verification\.md' "sync-template fallback 包含 09 验证独立标准"
 require_contains "scripts/sync-template.sh" 'ai/doc-standards/frontend-interaction\.md' "sync-template fallback 包含前端交互独立标准"
 require_contains "scripts/sync-template.sh" 'ai/doc-standards/ui-prototype-strategy\.md' "sync-template fallback 包含 UI 原型策略独立标准"
+require_contains "scripts/sync-template.sh" 'ai/doc-standards/project-rules\.md' "sync-template fallback 包含 project-rules 字段规范标准"
 require_contains "scripts/sync-template.sh" '00-09 已升级为独立标准文件' "sync-template 说明 00-09 独立标准"
 require_absent_contains "scripts/sync-template.sh" 'DOC_STANDARD_DOCS=\([^)]*docs/06-db-design\.md' "sync-template 不再用 docs/06 覆盖 06 标准"
 require_absent_contains "scripts/sync-template.sh" 'DOC_STANDARD_DOCS=\([^)]*docs/07-api-spec\.md' "sync-template 不再用 docs/07 覆盖 07 标准"
@@ -1756,7 +1872,7 @@ require_contains "ai/doc-standards/ui-prototype-strategy.md" '原型形式' "UI 
 require_contains "ai/doc-standards/README.md" 'docs/design/\* 通用详细设计基线' "doc-standards README 定义 design 基线"
 require_contains "ai/document-lifecycle-rules.md" 'docs/design/\* 通用详细设计触发与回写规则' "文档生命周期定义 design 触发与回写"
 require_contains "ai/document-lifecycle-rules.md" 'UI 原型策略触发与边界规则' "文档生命周期定义 UI 原型策略门禁"
-require_contains "ai/project-rules.md" '## 2\.7 UI 原型策略' "project-rules 包含 UI 原型策略章节"
+require_contains "ai/project-rules.md" '## 2\.3 UI 原型策略' "project-rules 包含 UI 原型策略章节"
 require_contains "ai/doc-standards/05-tech-spec.md" 'UI 原型策略记录位' "05 技术方案标准包含 UI 原型策略记录位"
 require_contains "ai/doc-standards/README.md" 'UI 原型策略是前端交互设计' "doc-standards README 说明 UI 原型证据关系"
 require_contains "docs/05-tech-spec.md" 'UI 原型策略' "05 技术方案模板包含 UI 原型策略字段"
@@ -1812,6 +1928,9 @@ require_sync_notice
 require_sync_dry_run_direction
 require_new_project_local_smoke
 require_doc_standards_mirror
+
+check_files_domain_no_overlap
+check_project_rules_section_continuity
 
 begin_section "检查同步清单一致性"
 while IFS= read -r sync_file; do

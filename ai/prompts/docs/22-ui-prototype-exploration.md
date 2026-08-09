@@ -11,7 +11,7 @@
 
 **适用场景**：用户正在构思系统，想先看低保真原型、页面流、可点击草图、截图标注、视觉效果探索或静态 Mock 来与用户 / 客户确认需求、信息架构、视觉方向和状态反馈；尤其适用于 Demo 前、生成 00-03 前、技术栈尚未确定前，或 UI brief 已补齐但正式 `frontend-interaction` 尚未定稿前。
 
-**不适用场景**：替代 `00-03` 正式需求、替代 `docs/design/frontend-interaction.md`、替代 `ai/project-rules.md` §2.7 UI 原型策略、替代 `09` 验收记录，或直接生成生产代码。
+**不适用场景**：替代 `00-03` 正式需求、替代 `docs/design/frontend-interaction.md`、替代 `ai/project-rules.md` §2.3 UI 原型策略、替代 `09` 验收记录，或直接生成生产代码。
 
 **使用前准备**：读取 `ai/index.md`、`ai/document-lifecycle-rules.md §5.2.1 / §10.2`、`docs/README.md`、`template-docs/ui-brief-intake-template.md` 和 `template-docs/ui-prototype-exploration-template.md`。若已有输入材料，读取 `docs/inputs/*`、`docs/vision/product-vision.md` 或当前会话中的用户描述；若缺参考产品、演示主线、页面结构、信息密度、设备范围或视觉禁区，先转 A25 UI Brief Intake 补齐，不要直接画原型。
 

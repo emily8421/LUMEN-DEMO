@@ -48,7 +48,7 @@ docs/inputs 原始输入包
 
 关键阶段转换前可使用 `ai/prompts/review/19-docs-evaluation.md` 做文档评估，输出 `Go / Conditional Go / No Go`。评估报告默认只读输出；用户确认落盘后写入 `docs/research/YYYY-MM-DD-docs-evaluation-<scope>.md`，不得写入 `docs/` 根目录，也不得替代 00-09 正式修订。
 
-生成或修订 `docs/05-tech-spec.md` 前，若项目涉及真实运行依赖（如 `backend/`、`frontend/`、`docker/`、数据库、本机模型、外部 API、重型 SDK），应先使用 `ai/prompts/review/20-tech-env-evaluation.md` 做技术路线与环境支撑评估，或在 `ai/project-rules.md` §2.5 / `docs/05-tech-spec.md` 说明跳过理由、风险和补做时点。技术环境评估报告默认只读输出；用户确认落盘后写入 `docs/research/YYYY-MM-DD-tech-env-evaluation-<scope>.md`，不得替代 `docs/env/local-env.md` 或 `docs/05-tech-spec.md`。评估结论应回填或引用到 `05` 的 Risk-ID / readiness gate、`09` 验证项和 `08` Sprint 解锁条件。`collect-env` 只采集事实，不等于评估通过。
+生成或修订 `docs/05-tech-spec.md` 前，若项目涉及真实运行依赖（如 `backend/`、`frontend/`、`docker/`、数据库、本机模型、外部 API、重型 SDK），应先使用 `ai/prompts/review/20-tech-env-evaluation.md` 做技术路线与环境支撑评估，或在 `ai/project-rules.md` §2.1 / `docs/05-tech-spec.md` 说明跳过理由、风险和补做时点。技术环境评估报告默认只读输出；用户确认落盘后写入 `docs/research/YYYY-MM-DD-tech-env-evaluation-<scope>.md`，不得替代 `docs/env/local-env.md` 或 `docs/05-tech-spec.md`。评估结论应回填或引用到 `05` 的 Risk-ID / readiness gate、`09` 验证项和 `08` Sprint 解锁条件。`collect-env` 只采集事实，不等于评估通过。
 
 | 评估码 | 阶段转换 | 核心问题 |
 |---|---|---|
@@ -229,7 +229,7 @@ docs/inputs/*
 
 ### 5.4 UI 原型策略触发与边界规则
 
-UI 原型策略是 UI 型项目进入前端实现前的可视化门禁，解决“是否需要先让用户看到、点击或评审界面效果”的问题。满足前端交互设计触发条件，且存在以下任一情况时，必须选择并记录 UI 原型策略；若不需要，必须在 `ai/project-rules.md` §2.7 / §3、`docs/05-tech-spec.md` 或 `docs/design/frontend-interaction.md` 写明豁免理由：
+UI 原型策略是 UI 型项目进入前端实现前的可视化门禁，解决“是否需要先让用户看到、点击或评审界面效果”的问题。满足前端交互设计触发条件，且存在以下任一情况时，必须选择并记录 UI 原型策略；若不需要，必须在 `ai/project-rules.md` §2.3 / §3、`docs/05-tech-spec.md` 或 `docs/design/frontend-interaction.md` 写明豁免理由：
 
 - 用户需要在实现前看到界面效果，或交付物形态为 Demo / MVP 且演示体验影响验收判断。
 - 页面信息密度较高，包含列表、详情、搜索、问答、管理页、看板、复杂表单、多栏布局或数据密集界面。
@@ -541,8 +541,8 @@ AI 生成或修改后输出：
 | `docs/07-api-spec.md` | 接口交互 / 时序图 |
 | `docs/design/*` | 流程图、状态机、交互图 |
 
-**格式**：默认 `mermaid`（GitHub 原生渲染），可选 `plantuml`；项目可在 `ai/project-rules.md §2.6` 覆盖默认。
+**格式**：默认 `mermaid`（GitHub 原生渲染），可选 `plantuml`；项目可在 `ai/project-rules.md §2.2` 覆盖默认。
 
 **性质**：「建议 + 默认」而非强制——图表服务于表达，不要求每类文档必须凑齐所有图；但涉及架构 / 数据 / 接口 / 关键流程的设计文档应有对应图表。生成或精修设计文档时（见 `template-docs/scenario-guides.md` A7），AI 应按本节出图，并提示用户确认格式偏好。
 
-图纸审核四维度（让图可审 / 可追溯 / 可验收，不改本节柔性）：① 可渲染（mermaid 默认或 `ai/project-rules.md` §2.6 指定格式）；② 有图 ID（`DIAG-<DOC>-<TYPE>-<NN>`，如 `DIAG-ARCH-01` / `DIAG-API-SEQ-01` / `DIAG-DB-ER-01`，可被评审 / 验收指名）；③ 可追溯（架构图→REQ / 模块，时序图→API-ID / 关键流程，ER 图→表 / REQ，状态图→子系统 / TC，挂 §6 追溯链）；④ 覆盖异常 / 降级 / 权限路径，非仅正常路径。各 doc-standards（04 / 06 / 07）按此落实关键图字段与检查项。
+图纸审核四维度（让图可审 / 可追溯 / 可验收，不改本节柔性）：① 可渲染（mermaid 默认或 `ai/project-rules.md` §2.2 指定格式）；② 有图 ID（`DIAG-<DOC>-<TYPE>-<NN>`，如 `DIAG-ARCH-01` / `DIAG-API-SEQ-01` / `DIAG-DB-ER-01`，可被评审 / 验收指名）；③ 可追溯（架构图→REQ / 模块，时序图→API-ID / 关键流程，ER 图→表 / REQ，状态图→子系统 / TC，挂 §6 追溯链）；④ 覆盖异常 / 降级 / 权限路径，非仅正常路径。各 doc-standards（04 / 06 / 07）按此落实关键图字段与检查项。

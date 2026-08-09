@@ -17,6 +17,7 @@
 
 - 模板维护一律先切维护分支，再改文件、再提交；不允许先在本地 `main` 提交后再补分支。
 - 模板修改来源分两类：① `_proposals/` 中已有提案驱动的修改；② 人工或对话中临时提出、需要主动修改模板的内容。无论哪种来源，最终都必须形成可审计提案记录，并在处理完成后归档。
+- `ai/project-rules.md` 分两层：规范基线 `ai/doc-standards/project-rules.md`（字段规范 / 审计基线，随模板同步）+ 种子实例 `ai/project-rules.md`（项目专属，不同步）。上文「`ai/project-rules.md` 的模板骨架」指规范基线；项目专属内容只写种子实例。
 
 ## 2. 模板 ↔ 派生：双向闭环
 
@@ -106,7 +107,7 @@
 
 ## 6. 下行同步（模板 → 项目）
 
-操作 SOP 以 `git-guide.md` §5 为准；同步文件清单见 `template-sync.json`，`ai/prompts/maintainers/12-sync-template.md` 提供可复制给 AI 执行的 Prompt。提交信息：`sync template vX.Y.Z`。审计：比对各项目根目录 `VERSION`。
+操作 SOP 以 `git-guide.md` §5 为准；同步文件清单见 `template-sync.json`（v1.60.0 起分 `files_all` / `files_ordinary` / `files_domain` 三组，按派生路线选组：领域模板走 `files_all ∪ files_domain`，普通派生走 `files_all ∪ files_ordinary`），`ai/prompts/maintainers/12-sync-template.md` 提供可复制给 AI 执行的 Prompt。提交信息：`sync template vX.Y.Z`。审计：比对各项目根目录 `VERSION`。
 
 > 注：`sync-template.sh` 是**下行获取**：派生项目拉取模板最新方法论并覆盖本地同步清单；派生项目是接收方，不会修改模板仓库。模板的改进只通过 §3 / §5 的模板仓库 PR 产生。
 

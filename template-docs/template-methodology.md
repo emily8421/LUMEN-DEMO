@@ -160,7 +160,7 @@ flowchart TB
 
 ### 运行环境与资源约束设计
 
-当前模板要求用 `scripts/collect-env.ps1` 生成 `docs/env/local-env.md`，并在 `ai/project-rules.md` §2.5 明确：
+当前模板要求用 `scripts/collect-env.ps1` 生成 `docs/env/local-env.md`，并在 `ai/project-rules.md` §2.1 明确：
 
 - 哪些能力必须在本机运行。
 - 哪些能力允许降级、Mock 或远程运行。

@@ -147,7 +147,7 @@ AI 识别场景后，**先输出引导计划给用户看（用人话 + 为什么
 | A5 评审输入材料 | 「评审输入」「材料够吗」「判断入口模式」 | Product Vision 就绪评估 + 缺口补齐 |
 | A6 生成文档骨架 | 「生成文档」「铺 00-09」「生成整个文档体系」 | 先说明阶段路线和模式，再生成 product-vision 与 docs 骨架 |
 | A7 PLM 文档精修 | 「打磨文档」「精修 02-srs」「补 ER 图」 | 按 PLM 阶段精修（见 §6） |
-| A8 文档评估 / 审计 / 检查 | 「评估文档」「审计文档」「PLM 链路检查」「开发前检查」 | docs-evaluation 判阶段，docs-system-audit 找问题，docs-checklist 拦编码 |
+| A8 文档评估 / 审计 / 检查 | 「评估文档」「审计文档」「PLM 链路检查」「开发前检查」「收尾梳理文档」「检查文档可读性」 | docs-evaluation 判阶段，docs-system-audit 找问题，docs-checklist 拦编码；收尾用 docs-health-review 查臃肿 / 可读性 |
 | A9 阶段规划与路线图 | 「规划阶段」「Demo 做什么」「排路线图」 | 分阶段 + 路线图 |
 | A10 执行 Sprint / 任务 | 「执行 Sprint」「做这个任务」「开始编码」 | 编码 + 合规审查 + 提交 |
 | A11 修 Bug | 「修 Bug」「修复缺陷」「这个报错」 | 定位根因 + 小范围修复 |
@@ -242,7 +242,7 @@ AI 识别场景后，**先输出引导计划给用户看（用人话 + 为什么
 |---|---|---|---|
 | 1 | 采集本机运行环境，生成环境文档 | 架构/技术方案要据本机资源定降级策略 | `scripts/collect-env.ps1` → `docs/env/local-env.md` |
 | 2 | 你确认本机必须跑什么/可 Mock/要不要服务器 | Demo 优先本机，资源不足要早定降级 | 补 `docs/env/local-env.md` 人工确认项 |
-| 3 | 初填项目专属规则 | 生成设计文档前必须先定阶段边界/技术栈/形态 | 填 `ai/project-rules.md`（§1/§2/§2.5/§3 + 图表偏好） |
+| 3 | 初填项目专属规则 | 生成设计文档前必须先定阶段边界/技术栈/形态 | 填 `ai/project-rules.md`（§1/§2/§2.1/§3 + 图表偏好） |
 
 - **完成判据**：`docs/env/local-env.md` 生成且关键项已填 · `project-rules.md` 占位已清除
 - **下一步**：A4
@@ -339,7 +339,7 @@ AI 识别场景后，**先输出引导计划给用户看（用人话 + 为什么
 | # | 做什么 | 为什么 | 机器执行 |
 |---|---|---|---|
 | 1 | 区分需求探索原型与实现前原型 | 防止用原型绕过正式需求链 | 对照 `ai/doc-standards/ui-prototype-strategy.md` |
-| 2 | 判断是否触发 UI 原型策略 | 多页面、多状态、多角色、Demo 验收或 Mock / 降级口径都可能触发 | 读取 `project-rules` §2.7、`03/05`、`frontend-interaction` |
+| 2 | 判断是否触发 UI 原型策略 | 多页面、多状态、多角色、Demo 验收或 Mock / 降级口径都可能触发 | 读取 `project-rules` §2.3、`03/05`、`frontend-interaction` |
 | 3 | 选择原型形式、默认 UI 基线和权威位置 | Figma / Penpot / Storybook / 代码原型 / 截图标注适用场景不同；用户没给专业规范时 AI 先给行业基线 | 可参考 `template-docs/ui-prototype-strategy-template.md` |
 | 4 | 判断 UI 优先 / 后端优先 / 双轨并行 | UI 体验、真实依赖或二者都高风险时，实施顺序不同 | 记录顺序判断、风险、汇合点和豁免理由 |
 | 5 | 映射覆盖范围和未覆盖项 | 明确页面、主流程、状态、角色、设备、风险和豁免 | 输出策略记录 + 待确认项 |
@@ -416,8 +416,8 @@ AI 识别场景后，**先输出引导计划给用户看（用人话 + 为什么
 - **cmd 指针**：`ai/implementation-lifecycle-rules.md` §3 + `ai/prompts/dev/02-run-task.md`
 
 #### A8 文档评估 / 审计 / 检查
-- **说明**：编码前或阶段转换前判断文档是否能继续往下走；评估给 Go / Conditional Go / No Go，审计找断点，checklist 做最后拦截。
-- **触发**：「评估文档」「评估能不能进入下一阶段」「审计文档」「PLM 链路检查」「开发前检查」
+- **说明**：编码前或阶段转换前判断文档是否能继续往下走；评估给 Go / Conditional Go / No Go，审计找断点，checklist 做最后拦截。一轮工作收尾时还可用 `docs-health-review` 做轻量健康度复核（臃肿 / 重复 / 结构退化 / 状态滞后），与审计互补，不重走追溯链。
+- **触发**：「评估文档」「评估能不能进入下一阶段」「审计文档」「PLM 链路检查」「开发前检查」「收尾梳理文档」「检查文档可读性」「文档瘦身」
 - **cwd·前置**：在派生项目 · 文档基本成型
 
 | # | 做什么 | 为什么 | 机器执行 |
@@ -426,10 +426,11 @@ AI 识别场景后，**先输出引导计划给用户看（用人话 + 为什么
 | 2 | 回溯审计整条文档链 | 检查有没有断点/越界，对照规范基线 | `docs-system-audit`(16)（对照 `ai/doc-standards`，先出报告不改文件） |
 | 3 | 开发前过一遍 checklist | 编码前最后一道边界复查 | `docs-checklist`(10) |
 | 4 | 把结论和问题清单给你 | 先看清问题再决定改，避免边审边改乱套 | 输出评估 / 审计报告（Go 结论、悬空 ID / 越界 / 漂移） |
+| 5 | 收尾做轻量健康度复核（可选） | 一轮工作收尾时顺手查臃肿 / 重复 / 状态滞后，保持文档可读 | `docs-health-review`(24)（默认只读，整理另确认，遵守 `global-rules §8.4`） |
 
 - **完成判据**：评估结论为 Go 或 Conditional Go 且条件已处理 / 接受 · 审计报告无阻断项 · 人工确认 03 §3 路线图 + 05 本机可行性
 - **下一步**：A9
-- **cmd 指针**：`ai/prompts/review/19-docs-evaluation.md` + `ai/prompts/review/16-docs-system-audit.md` + `ai/prompts/review/10-docs-checklist.md`
+- **cmd 指针**：`ai/prompts/review/19-docs-evaluation.md` + `ai/prompts/review/16-docs-system-audit.md` + `ai/prompts/review/10-docs-checklist.md` + `ai/prompts/review/24-docs-health-review.md`
 
 #### A24 技术路线与环境支撑评估
 - **说明**：真实运行依赖项目在生成 / 修订 05 或进入首个相关 Sprint 前，评估本机 / 团队环境是否支撑技术路线。

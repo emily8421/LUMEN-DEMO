@@ -23,6 +23,7 @@
 ```text
 更新方法论
 做文档体系审核
+收尾梳理文档 / 文档瘦身 / 检查文档可读性
 做文档评估
 做技术环境评估 / 技术路线评估
 汇总待确认事项 / 生成 open items
@@ -71,6 +72,7 @@ AI 识别到命令意图后，应先判断是否为 `resume` 快速续接；若�
 | `sync-methodology` | 更新方法论 / 同步模板方法论 / 已同步但没做后续 / 补完同步后流程 / A13 完整闭环 | `git-guide.md` §5、`ai/prompts/maintainers/12-sync-template.md` |
 | `post-sync-cleanup` | 同步后整理项目 | `ai/prompts/maintainers/15-post-sync-cleanup.md` |
 | `docs-system-audit` | 文档体系审核 / PLM 链路审计 | `ai/prompts/review/16-docs-system-audit.md` |
+| `docs-health-review` | 收尾梳理文档 / 文档瘦身 / 检查文档可读性 / 文档健康度复核 | `ai/prompts/review/24-docs-health-review.md` |
 | `docs-evaluation` | 文档评估 / 阶段转换评估 / 单文档评估 | `ai/prompts/review/19-docs-evaluation.md` |
 | `docs-open-items` | 汇总待确认事项 / 生成 open items / 编码前自检未决项 / 阶段任务前检查待确认项 | `ai/prompts/docs/21-docs-open-items.md` |
 | `ui-prototype-exploration` | 先看原型 / 先做页面原型确认需求 / Demo 前先确认交互 / 做视觉效果探索 / 分层信息架构原型 | `ai/prompts/docs/22-ui-prototype-exploration.md` |

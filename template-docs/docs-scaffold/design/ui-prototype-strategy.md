@@ -3,7 +3,7 @@
 > Sync notice: This file is maintained by `ai-project-template` and may be overwritten when a derived project syncs template methodology.
 > Do not edit it directly in derived projects; propose reusable changes in `_proposals/` and upstream them to the template repository.
 
-> 推荐落盘位置：`ai/project-rules.md` §2.7、`docs/05-tech-spec.md`、`docs/design/frontend-interaction.md` 或独立策略记录
+> 推荐落盘位置：`ai/project-rules.md` §2.3、`docs/05-tech-spec.md`、`docs/design/frontend-interaction.md` 或独立策略记录
 > 对应标准：`ai/doc-standards/ui-prototype-strategy.md`
 > 定位：已有需求链和基本设计后、进入前端实现前确认原型形式、覆盖范围和验收映射；不是需求权威源。
 

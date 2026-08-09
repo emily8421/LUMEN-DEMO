@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "description": "ai-project-template 下行同步方法论文件清单；项目专属内容不在此列。",
-  "files": [
+  "description": "ai-project-template 下行同步的模板方法论文件清单；派生项目同步时这些文件会被覆盖，不应直接修改（通用改进请经 _proposals/ 回流模板仓库）；项目专属内容（ai/project-rules.md / ai/domain-rules.md / docs/ / 业务代码）不在此列。",
+  "files_all": [
     "VERSION",
     "CHANGELOG.md",
     "CHANGELOG-PLAIN.md",
@@ -74,12 +74,14 @@
     "ai/doc-standards/design-doc.md",
     "ai/doc-standards/frontend-interaction.md",
     "ai/doc-standards/ui-prototype-strategy.md",
+    "ai/doc-standards/project-rules.md",
     "ai/commands/README.md",
     "ai/commands/scenario.md",
     "ai/commands/resume.md",
     "ai/commands/sync-methodology.md",
     "ai/commands/post-sync-cleanup.md",
     "ai/commands/docs-system-audit.md",
+    "ai/commands/docs-health-review.md",
     "ai/commands/docs-evaluation.md",
     "ai/commands/docs-open-items.md",
     "ai/commands/ui-prototype-exploration.md",
@@ -131,6 +133,7 @@
     "ai/prompts/review/16-docs-system-audit.md",
     "ai/prompts/review/19-docs-evaluation.md",
     "ai/prompts/review/20-tech-env-evaluation.md",
+    "ai/prompts/review/24-docs-health-review.md",
     "ai/prompts/setup/13-collect-env.md",
     "ai/prompts/setup/14-new-project.md",
     "CONTRIBUTING.md",
@@ -152,5 +155,10 @@
     "scripts/check-prereqs.ps1",
     "scripts/check-runtime.ps1",
     "scripts/bootstrap-dev-env.ps1"
+  ],
+  "files_ordinary": [
+  ],
+  "files_domain": [
+    "ai/doc-standards/domain-rules.md"
   ]
 }

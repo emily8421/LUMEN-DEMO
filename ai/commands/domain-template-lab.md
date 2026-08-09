@@ -34,7 +34,7 @@
 1. 判断当前仓库角色：母模板、领域模板仓库、领域派生项目，或普通派生项目。
 2. 若当前是普通派生项目，停止领域模板操作，提示应走 `/run sync-methodology`。
 3. 若当前是母模板仓库，仅输出领域模板实验线计划、目标仓库 / 目录、预计生成文件、验证方式和风险；不得把领域 scaffold 写进母模板。
-4. 若当前是领域模板仓库，按 Prompt 输出实验资产计划，例如 `TEMPLATE-BASE.md`、`domain-template-sync.json`、`scripts/sync-domain-template.*`、`scripts/check-domain-derived-sync.*`、`sync-records/domain-template-sync/`、领域 scaffold 和 L2→L3 场景剧本入口（L2-to-L3 playbook）。
+4. 若当前是领域模板仓库，按 Prompt 输出实验资产计划，例如 `TEMPLATE-BASE.md`、`ai/domain-rules.md`（按 `ai/doc-standards/domain-rules.md` 规范基线生成的领域 rules 种子，不同步、受 `check-derived-sync` 保护）、`domain-template-sync.json`、`scripts/sync-domain-template.*`、`scripts/check-domain-derived-sync.*`、`sync-records/domain-template-sync/`、领域 scaffold 和 L2→L3 场景剧本入口（L2-to-L3 playbook）。
 5. 若当前正在创建或更新领域模板实验线，必须规划该领域模板自己的 L2→L3 场景剧本（L2-to-L3 playbook，如 `template-docs/<domain>/domain-derived-scenarios.md`），可从 `template-docs/domain-derived-scenarios-template.md` 复制后领域化，覆盖领域派生项目创建、同步、整理、自检、回流和发布后下游同步；未生成时在计划和续接中列为待办。
 6. 用户确认后再创建或修改实验资产；首次写入前列出全部预计文件和每个文件的变更摘要。
 7. 验证时只检查领域模板实验线，不改 `git-guide.md` §5、不改母模板 `sync-template` 主流程、不让领域派生项目直接同步母模板。

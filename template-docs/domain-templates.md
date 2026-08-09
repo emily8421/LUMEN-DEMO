@@ -108,6 +108,8 @@ template-docs/<domain>/domain-derived-scenarios.md
 
 > **状态：机制已落地（v1.47.0，C-004；v1.57.4 补齐 `CHANGELOG-PLAIN.md` 归属；v1.58.0 补 `upstream/` 继承参考）**。普通派生项目由 `scripts/new-project.sh` / `scripts/sync-template.* --preserve-project-version` 生成**精简版** `TEMPLATE-BASE.md`（`Lineage type: ordinary derived project`，只记母模板继承版本）；领域模板由 `scripts/sync-template.* --domain-template` 生成 / 维护**领域版** `TEMPLATE-BASE.md`（`Lineage type: domain template`，额外记 `Domain standards scope` 领域标准件范围；首次生成留 TODO 占位由维护者填，后续 sync 保留）。普通派生项目和领域模板的根 `VERSION`、`CHANGELOG.md`、`CHANGELOG-PLAIN.md` 均归自身所有，模板同步不覆盖；母模板继承版本号见 `TEMPLATE-BASE.md`，母模板发布说明参考见同步生成的 `upstream/CHANGELOG.md` / `upstream/CHANGELOG-PLAIN.md`。`check-derived-sync.*` 按 `Lineage type` 识别角色，领域版额外校验 `Domain standards scope`，并校验 upstream changelog 继承参考对。两条线互不混用：不得把普通派生精简版套用到领域模板，反之亦然；`--preserve-project-version` 与 `--domain-template` 互斥。
 
+> **领域 rules 层（v1.60.0）**：领域模板仓额外维护 `ai/domain-rules.md` 种子（领域通用但跨项目的标准件骨架，如 agent 系统的工具权限矩阵 / memory 模型 / eval / trace / HITL），按同步下来的 `ai/doc-standards/domain-rules.md` 规范基线（走 `template-sync.json` 的 `files_domain` 组，仅领域路线接收）生成。`ai/domain-rules.md` 不进 `template-sync.json`、不同步、受 `scripts/check-derived-sync.sh` + `.ps1` 保护，由领域仓自行治理。普通派生项目不接收 `ai/doc-standards/domain-rules.md`，也不生成 `ai/domain-rules.md`。规则分层原则见 `ai/global-rules.md` §5。
+
 ## 6. 操作入口（怎么创建领域模板）
 
 创建领域模板的**操作步骤**见 `template-docs/scenario-guides.md` **A20「领域模板派生」**（含：判定是否为领域模板、内置 vs 独立仓、Phase 0 预检、创建命令、初始化待办）。本文件只讲方法论定位，不复制 A20 的操作步骤。

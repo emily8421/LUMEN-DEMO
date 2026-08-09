@@ -1,4 +1,5 @@
 ﻿<#
+Sync notice: 本文件由 ai-project-template 模板同步维护，派生项目同步时会被覆盖；不应直接修改，通用改进请经 _proposals/ 回流模板仓库。
 check-runtime.ps1 - Node 运行时健康诊断（v1.56.0 检测 / 门禁层）。
 
 Usage:

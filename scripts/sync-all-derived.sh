@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Sync notice: 本文件由 ai-project-template 模板同步维护，派生项目同步时会被覆盖；不应直接修改，通用改进请经 _proposals/ 回流模板仓库。
 # sync-all-derived.sh — 批量同步父目录下所有派生项目到最新模板方法论（维护者用）
 #
 # 用法:
