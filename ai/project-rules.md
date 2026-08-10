@@ -194,17 +194,22 @@
 
 > Phase 级功能禁止见 §1，技术栈替代品禁止见 §2，本节只管代码层。
 > 每条尽量具体可执行；没有则写“无”，不要留空占位。
-> 本节标注「待回填」的条目待 docs/04–05 落定后确认，暂不虚构。
+> 详细执行口径与「已落地 / 待对齐」清单见 `docs/05-tech-spec.md §4.2 代码层一致性基线`（对照待回流模板提案 `_proposals/TEMPLATE-UPGRADE-web-fullstack-code-consistency-baseline.md`）。本节为每次任务必读的精炼版。
 
 ### 5.1 既有约定（新代码必须向其看齐）
-- 命名：后端 snake_case（Python）、前端 camelCase（JS/TS）、组件 PascalCase
-- 分层与目录：backend 分 api / service / model 三层，对外接口只进 api 层（待 04-architecture 确认）
-- 既有模式：AI 调用统一走 OpenAI 兼容接口封装层（待 04/05 落基类后回填）
-- 错误处理 / 日志：统一异常类型与日志格式（待 04/05 回填）
+- **命名**：后端 snake_case（Python）、前端 camelCase（JS/TS）、React 组件 PascalCase；命名反映真实语义（纯 localStorage 序列化层用 `*-persist.ts`，不得命名 `*-store` 暗示响应式——本项目 7 个 `*-store.ts` 实为序列化纯函数，属历史命名债）；端点 / 函数后缀风格同项目内统一。
+- **分层与目录**：backend 分 **api / service / repository / model 四层**（repository 为独立持久化层）；对外接口只进 api 层；`service/` 层**不得 import fastapi**（`HTTPException` / `Request` / `Response` 等为 web 类型），service 抛领域异常、api 层统一转 HTTP；web 适配依赖（`Depends`）放 api 层或显式标注 `# web adapter`。读路径可直连 repository，写路径必走 service。
+- **既有模式**：AI 调用统一走 OpenAI 兼容 adapter 封装层（`service/llm_adapter.py`），不得在业务层直接绑定单一闭源 SDK；前端 HTTP 单出口——后端调用必须经 `frontend/src/api/client.ts` 的 `request()` / `downloadBlob()`；新增 API 资源 = 新建 `api/<resource>.ts` + 在 `api.ts` barrel 追加 `export *`。
+- **错误处理**：统一成功 envelope `{code:0,msg:"ok",data}`；service 抛带 code 的领域异常（`AuthenticationError` / `AdminError` / `SpaceMemberError` / `SpaceAccessError`）、api 层转 `HTTPException(detail={"code":...,})`；`code` 永远是业务码、HTTP 码只放 `status_code`；错误 `msg` 用固定用户文案，**禁 `str(exc)` 直传**泄露内部细节。
+- **类型纪律**：前端禁 `any`，泛型贯穿 API → hook → 组件；跨层 props 用 `ReturnType<typeof useXxx>` 导出，不手写重复接口。
+- **日志 / 配置**：统一 `logging`（**禁 `print`**）；降级 `except` 必须 `logger.warning` 记原因，禁静默吞。env 读取向 `backend/config.py` 收敛，禁止各模块裸 `os.environ.get`（集中化属【待对齐】，新代码先行遵循）。
+- **未对齐项**：`docs/05 §4.2` 标注【待对齐】的技术债（错误码集中映射、兜底 5xx envelope、CI 代码门、类型 codegen、`*-store` 重命名等），新代码不得再引入同类问题；旧代码登记为债、不强制当前维护态回改。
 
 ### 5.2 禁区（未经人工确认不得触碰）
 - 不得擅改的文件 / 模块：ai/ 规则文件、docs/00–08 编号文档的编号与既有结构
 - 不得擅自引入的依赖：任何新依赖须先确认（见 §2）
+- **不得绕过 `frontend/src/api/client.ts` 直接 `fetch` 后端**（HTTP 单出口）；所有后端调用经域 API 模块 → `client.ts`
+- **不得在 `backend/service/` 层 import fastapi**（`HTTPException` / `Request` / `Response` 等 web 类型）；service 用领域异常，api 层转 HTTP。现有 `service/auth_context.py` 为历史破例，新代码不得复制该模式
 - 不得自行实现的功能：见 §1 禁止清单；docs/vision/product-vision.md / docs/01 中的功能点不等于已批准实现；阶段归属以 docs/03-prd.md §3 路线图为准，编码以 §1 当前阶段为准
 
 ## 6. AI 修改确认规则

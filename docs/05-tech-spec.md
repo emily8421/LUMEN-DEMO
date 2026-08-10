@@ -125,6 +125,60 @@ flowchart TB
 
 > 若确需引入 router、组件库、全局状态库、PDF 库、文档解析库或新图形库，必须先回到本文 §2 / §5.1、`06/07`、`08/09` 和 open items 记录依赖、风险与验证方式。Sprint-16/17 已按不引新依赖完成；ZIP 使用标准库 `zipfile`。
 
+### 4.2 代码层一致性基线
+
+> 对照 `_proposals/TEMPLATE-UPGRADE-web-fullstack-code-consistency-baseline.md`（待回流模板）§9，以及 `ai/project-rules.md §5`。§4.1 管目录边界与文件膨胀；本节管代码内部一致性——错误处理、分层 import、类型契约、工程化护栏、命名语义在同一项目内的一致基线，避免 AI 自主编码时每个模块各写各的。每条标注 **【已落地】**（本项目强实践，新代码必须对齐）或 **【待对齐】**（已识别技术债，新代码不得再引入；旧代码登记为债、逐步迁移，当前维护态不强制回改）。
+
+#### 4.2.1 错误与响应契约
+
+- **【已落地】** 统一成功 envelope `{code:0,msg:"ok",data}`（`backend/api/*.py` 70+ 处一致）；前端 `api/client.ts` 单点解包、`envelope.code !== 0` 判错。
+- **【已落地】** service 抛带 code 的领域异常（`AuthenticationError` / `AdminError` / `SpaceMemberError` / `SpaceAccessError`），api 层转 `HTTPException(detail={"code":...,})`；业务码留在 service、HTTP 映射在 api。
+- **【待对齐】** `code` 字段二义：`main.py` `exception_handler` 的 else 分支回写 `code=exc.status_code`（HTTP 码），与 4 位业务码混用 → 收口为「`code` 永远是业务码，HTTP 码只放 `status_code`」，未分类用固定码（如 `5000`）。
+- **【待对齐】** `code→HTTP` 映射散落 4 份（`api/auth.py:35` / `admin.py:25` / `space_members.py:25` / `users.py:17` 各一份 `_status_for`，键集不同）→ 收口为单一映射（建议 `model/error_codes.py` 用 Enum/IntEnum，映射只此一处）。
+- **【待对齐】** 错误 `msg` 泄露内部细节：多处 `detail={"code":...,"msg":str(exc)}` 直传 service 异常原文（`api/tags.py`、`folders.py`、`terms.py`、`term_categories.py`、`quick_entry.py` 等）→ 禁 `str(exc)` 直传，`msg` 用固定用户文案，异常原文仅进日志。
+- **【待对齐】** 无兜底 5xx envelope：`main.py` 只注册了 `HTTPException` handler，service 未捕获异常走 FastAPI 默认响应、**不带 envelope** → 补 `@app.exception_handler(Exception)` 返回 `{code:5000,msg:"internal error",data:null}`，生产不回传堆栈 / 内部路径。
+- **【待对齐】** 前端 `client.ts` 抛裸 `Error(msg)` 丢弃 `code` → 改抛结构化 `ApiError(code,msg,status)`，供调用方按 `code` 分流（401/4010→登出、5030→AI 降级提示、4090→冲突 UI）。
+- **【待对齐】** 分页响应契约不统一（`tags` `{items,total}` vs `terms` `{items,total,page}` vs `documents` 裸 list）→ 统一 `{items,total,page,page_size}` 或全部裸 list。
+
+#### 4.2.2 分层与装配纪律
+
+- **【已落地】** service 抛领域异常、api 转换（`service/` 几乎不 import fastapi）；领域实体 `model/entities.py`（frozen dataclass）与 ORM `model/orm.py` 物理分离；`repository/` 独立第四层；ORM 只读写、不建表（schema 由 migration 管）。
+- **【待对齐】** `service/auth_context.py` 是 FastAPI `Depends` web 适配器却放在 `service/` 且 `import fastapi`（分层活化石，无注释说明）→ 移到 api 层，或保留但显式标注 `# web adapter`。
+- **【待对齐】** `main.py` 18 个 `if router is not None` 逐个 `include_router` → 改 `routers=[...]` 列表 + `for r in routers: if r: app.include_router(r)`。
+- **【待对齐】** 17 个 api 文件各自复制 `try/except ImportError` fastapi 兜底块 → 抽公共 import 或用环境标记。
+- **【待对齐】** api 越层直连 repository（`api/spaces.py`、`documents.py`、`auth.py` 读路径）→ 在 `project-rules §5` 明确「读可直连 repository / 写必走 service」约定并统一执行。
+- **【待对齐】** admin 授权无 `Depends`、埋在 service 内部判角色抛 `AdminError` → 加 `require_admin` / `require_space_member` Depends 在路由声明期拦截，与认证（`get_current_user`）对称。
+- **【待对齐·import 卫生】** `service/auth.py` 同文件 3 处 import 块（Phase1 demo-token 段 + Sprint-26 真实账号段历史拼接未收敛）→ 收敛到顶部；新代码 import 一律文件顶部，禁止追加式散落。
+
+#### 4.2.3 类型与契约同步
+
+- **【已落地】** 前端零 `any` + `ReturnType<typeof useXxx>` 导出类型零重复；泛型 `request<T>` 贯穿 API → hook → 组件。
+- **【已落地】** 前端 HTTP 单出口：`fetch` 仅存于 `api/client.ts`（2 处），所有域模块经 `request()` / `downloadBlob()`；`api.ts` barrel re-export 渐进拆分（调用方 `import from './api'` 不变）。
+- **【待对齐】** 前后端类型手工双写（`model/entities.py` `Document` ↔ `api/documents.ts` `KnowledgeDocument`），无 codegen、无 schema diff → 后端补 `response_model`，OpenAPI → `openapi-typescript` 生成前端类型，CI 加 schema diff 防漂移。
+- **【待对齐】** repository 双实现靠鸭子类型 + docstring 声明对齐（无 Protocol / ABC）→ 定义 `RepositoryProtocol`，`DemoRepository` / `PgRepository` 显式 implement，避免单侧静默缺方法。
+- **【待对齐】** service 函数 `repository` 形参全程无类型注解 → 标注 `RepositoryProtocol`，恢复 IDE 补全 / 安全重构。
+
+#### 4.2.4 工程化护栏
+
+- **【已落地】** 前端 `tsconfig.json` `strict:true`，`build = tsc -b && vite build`；`backend/requirements.txt` 全量 `==` 锁版；`frontend/Dockerfile` 多阶段 + `nginx.conf` SPA fallback / 同源反代 / assets immutable；生产 compose 不暴露 PG 到宿主。
+- **【待对齐·最高优先】** CI 零代码门：`.github/workflows/project-check.yml` 只校验 whitespace + `VERSION`/`CHANGELOG` + derived-sync 边界，**无 pytest / 无 tsc / 无 lint / 无 build**（~30 个后端测试从未在 CI 跑）→ 必须加 `backend-test`（pytest，默认 `-m "not integration"`）、`frontend-build`（`tsc -b && vite build`）、`backend-lint`（ruff）、`frontend-lint`（eslint）job。
+- **【待对齐】** 前端零测试 + 零 lint/format 工具（`package.json` 无 vitest/eslint/prettier，无 `test`/`lint`/`typecheck` 脚本）→ 引入工具 + 脚本。
+- **【待对齐】** 后端零 lint / 类型工具（无 `ruff.toml` / `mypy.ini` / `pyproject.toml`）且 `pytest` / `httpx` 未在 `requirements.txt`（隐式依赖）→ 新建 `requirements-dev.txt` + `ruff.toml`。
+- **【待对齐】** 测试不分层（`tests/backend/` 扁平、unit 与 PG 集成混放靠 `setUpClass` 抛 `SkipTest` 区分，无 marker / 无 coverage）→ 分 `tests/unit` vs `tests/integration` + pytest marker，CI 默认跑 unit。
+- **【待对齐】** API 测试不经 HTTP 层（直接 import 并调端点函数），全局 `exception_handler`（envelope 序列化层）**无回归保护** → 补 `fastapi.testclient.TestClient` 断言 HTTP 响应体 `{code,msg,data}`。
+- **【待对齐】** env 散落 6+ 处无集中 Settings（`main.py` / `auth.py` / `db.py` / `llm_adapter.py` / `embedding.py`）+ 弱默认 `LUMEN_DEMO_TOKEN_KEY="local-demo-signing-key"` 无生产校验（`main.py:32` 生产护栏只挡 demo 仓储不挡弱 key）→ 建 `backend/config.py`（pydantic-settings），启动期校验关键 secret 非默认值。
+- **【待对齐】** `print()` 与 `logging` 混用（`main.py:44,46`、`pg_repository.py:324`）+ 降级 `except` 静默吞无日志（`service/document.py:201` 索引回填、`rag.py:234,259` LLM 失败）→ 禁 `print`，降级路径必须 `logger.warning(...)` 记原因。
+
+#### 4.2.5 命名语义一致
+
+- **【待对齐】** `*-store.ts` 命名误导：`pane-layout-store` / `pane-width-store` / `split-layout-store` / `local-mount-height-store` / `pane-section-height-store` / `onboarding-store` / `session-store` 共 7 个，实为 localStorage 序列化纯函数（`load/persist/clamp`），状态在各 `useXxx` 的 `useState`，**非响应式 store**（全仓零 `useSyncExternalStore` / 零 Context）→ 重命名 `*-persist.ts`，或在 `project-rules §5` 明确「本项目 `*-store` = localStorage 序列化层，非响应式」。
+- **【待对齐】** 端点函数后缀混用（`list_documents` 无后缀 vs `create_document_endpoint` / `get_document_endpoint` 带后缀）→ 同项目内统一一种风格。
+- **【待对齐】** `app/` 目录混放 hooks + persist + 组件（`TopBar` / `ContextPane` / `FolderTree` / `WorkspaceMain` 等 .tsx），`components/` 仅 2 文件形同虚设；`app/ContextPane.tsx` 反向 `import '../features/LocalMountPane'`（层级倒置）→ `app/` 只放 hooks（`useXxx.ts`）+ persist（`*-persist.ts`）+ 常量；通用组件 → `components/`、业务组件 → `features/`、布局壳 → 保留 `app/` 但只放布局；依赖方向严格 `features/ → app/ → api/`，禁 `app/ → features/` 反向 import。
+- **【已落地】** API 类型与域模块同文件（`api/documents.ts` 类型贴 CRUD 函数）；`app/types.ts` 只放跨域 UI 态类型。
+- **【已落地】** 每个 hook 头部 JSDoc 写明职责 / 依赖注入约定 / 跨域回调语义 / 拆分溯源（关联 APP-SIZE ticket）；新 hook 照此格式。
+
+> **本节待对齐项不强制当前维护态回改**：新增代码必须对齐【已落地】项、不得再引入【待对齐】项的同类问题；【待对齐】项登记为技术债，若启动重构 Sprint，优先处理 **§4.2.1 错误契约收口** 与 **§4.2.4 CI 代码门** 两类（契约稳定性与回归保护风险最高）。超长文件（`repository/pg_repository.py` 1621 行、`demo_repository.py` 1251 行、`App.tsx` 545 行、`styles/workspace.css` 722 行等）按 §4.1 阈值另列拆分计划。
+
 ## 5. 运行环境与资源评估
 
 > 受 `ai/project-rules.md` §2.1 与 `docs/env/local-env.md` 约束。给出本机 Demo 可行性、瓶颈、降级 / Mock 与服务器预案。
