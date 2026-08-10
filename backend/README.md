@@ -110,9 +110,14 @@ The response contains `status=done`, `parsed_doc_id`, `chunk_count`, and `mode=d
 ## Validation
 
 ```powershell
-python -m unittest discover -s tests/backend -v
+# Default unit tests (no PG connection; integration tests are excluded)
+python -m pytest tests/backend -m "not integration" -v
 python -m compileall backend tests/backend
 python -c "from backend.main import create_app; app=create_app(); print([route.path for route in app.routes if route.path.startswith('/api')])"
+# PG integration tests require a separate lumen_test DB + three guard env vars
+# (see tests/backend/pg_test_support.py). Powershell example:
+#   $env:LUMEN_ENV='test'; $env:ALLOW_DESTRUCTIVE_TEST_DB='1'; $env:DATABASE_URL='postgresql://lumen:lumen@localhost:15432/lumen_test'
+#   python -m pytest tests/backend -m integration -v
 ```
 
 ## Troubleshooting

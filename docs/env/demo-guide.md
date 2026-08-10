@@ -230,8 +230,10 @@ set -a && . ./.env && set +a
 ## 附录 C：自动验证（不依赖浏览器）
 
 ```bash
-.venv/Scripts/python.exe -m unittest discover -s tests/backend -v        # 后端单测/集成
+.venv/Scripts/python.exe -m pytest tests/backend -m "not integration" -v  # 后端单测（不连 PG，默认）
 .venv/Scripts/python.exe -m compileall backend tests/backend             # 编译检查
 npm.cmd --prefix frontend run build                                       # 前端构建
+# PG 集成测试（需独立 lumen_test 库 + 三 guard env，见 tests/backend/pg_test_support.py）：
+# LUMEN_ENV=test ALLOW_DESTRUCTIVE_TEST_DB=1 DATABASE_URL=postgresql://lumen:lumen@localhost:15432/lumen_test .venv/Scripts/python.exe -m pytest tests/backend -m integration -v
 ```
 > 覆盖 REQ-001..011、036；用例追溯见 `docs/09-verification.md`。

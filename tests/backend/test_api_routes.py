@@ -1,5 +1,14 @@
 import importlib.util
+import os
+import sys
 import unittest
+
+import pytest
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from pg_test_support import assert_test_database_safe_from_engine  # noqa: E402
+
+pytestmark = pytest.mark.integration
 
 
 @unittest.skipIf(importlib.util.find_spec("fastapi") is None, "FastAPI is not installed")
@@ -18,6 +27,9 @@ class ApiRouteTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
+        from backend.service.db import engine as _guard_engine
+
+        assert_test_database_safe_from_engine(_guard_engine)
         try:
             from sqlalchemy import text
 

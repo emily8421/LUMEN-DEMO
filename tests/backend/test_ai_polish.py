@@ -13,8 +13,15 @@ are skipped when the lumen-pg container is unreachable; they assert the 4001/400
 
 import hashlib
 import importlib.util
+import os
+import sys
 import unittest
 from unittest.mock import patch
+
+import pytest
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from pg_test_support import assert_test_database_safe_from_engine  # noqa: E402
 
 from backend.model.entities import DocumentPermission
 from backend.repository.demo_repository import DemoRepository
@@ -198,11 +205,15 @@ class AiPolishServiceTest(unittest.TestCase):
 
 
 @unittest.skipIf(importlib.util.find_spec("fastapi") is None, "FastAPI is not installed")
+@pytest.mark.integration
 class AiPolishApiTest(unittest.TestCase):
     """API-028 error-code mapping against real PostgreSQL (skipped if unreachable)."""
 
     @classmethod
     def setUpClass(cls) -> None:
+        from backend.service.db import engine
+
+        assert_test_database_safe_from_engine(engine)
         try:
             from backend.service.db import init_db
 

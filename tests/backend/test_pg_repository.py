@@ -7,18 +7,27 @@ is skipped when the database is unreachable, so this file does not break the
 
 from __future__ import annotations
 
+import os
+import sys
 import unittest
 
+import pytest
 from sqlalchemy import text
 from sqlalchemy.orm import Session
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from pg_test_support import assert_test_database_safe_from_engine  # noqa: E402
 
 from backend.model.entities import DocumentPermission, TermStatus
 from backend.model.orm import SpaceMemberORM, SpaceORM, UserORM
 from backend.service.db import SessionLocal, engine, init_db
 from backend.repository.pg_repository import PgRepository
 
+pytestmark = pytest.mark.integration
+
 
 def _truncate_all() -> None:
+    assert_test_database_safe_from_engine(engine)
     with engine.connect() as conn:
         conn.execute(
             text(
@@ -51,6 +60,7 @@ class PgRepositoryTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
+        assert_test_database_safe_from_engine(engine)
         try:
             init_db()
             with engine.connect() as conn:
