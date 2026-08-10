@@ -2,7 +2,7 @@
 
 > 定位：**活文档 / 实施路线图**。承接 PR #123 的体系文档（governance R1-R7 + framework L0-L3 + assessment 诊断 + rule-consolidation-map + 2 提案 + §4.2/§5），回答「下一步怎么做、什么顺序、跟到哪了」。每完成一个子项更新 §10 进度表并 commit。
 >
-> 状态：**AI 建议 · 待人工确认优先级与排期**。本文不授权直接改业务代码；每个代码改动子项仍按 `project-rules §6` 单独确认后另起 PR。
+> 状态：**AI 建议 · P0 方案已联合裁决定稿（A1/B1，2026-08-11 落盘 §3）· 待立项编码**。本文不授权直接改业务代码；每个代码改动子项仍按 `project-rules §6` 单独确认后另起 PR。
 >
 > 上位依据：`2026-08-10-ai-code-governance-framework.md`（§7.3 ratchet / §10 回流晋升 / §11 实施路线 / §12 常见错误）；诊断：`2026-08-10-code-quality-maintainability-assessment.md`（CQ-P0/P1/P2）。
 
@@ -33,38 +33,53 @@
 
 两个杠杆点，**不做则后续所有改动无回归保护**（governance §11.1 第一阶段）。
 
-### P0-1：测试数据库隔离 guard（assessment CQ-P0-001）
+### P0-1：测试数据库隔离 guard（assessment CQ-P0-001 / 拟定 NFR-005）
 
-**现状**：`tests/backend/test_pg_repository.py:17-30` 用生产 `SessionLocal`/默认 `DATABASE_URL`（`postgresql://lumen:lumen@localhost:15432/lumen`），`_truncate_all()` 执行 `TRUNCATE ... RESTART IDENTITY CASCADE`；默认 PG 可连即运行。README 推荐的 `unittest discover` 可能清空开发库。
+> **联合裁决定稿（2026-08-10）**：原始步骤经 `2026-08-10-p0-engineering-governance-plan-evaluation.md` 复核修订并已核实——实际 **4 个 PG 测试面**（原方案只覆盖 1 个）；guard 落测试侧 `tests/backend/pg_test_support.py`（不进生产 `backend/service/`）；fail-closed 抛专用异常、**不降级 skip**。下方为最终实施口径。追溯 ID（NFR-005、task-041、TC-P2-GOV-001）为拟定，正式立项回写 `02/08/09` 时确认。
 
-**实施步骤**：
-1. 建 `lumen_test` 数据库（`docker-compose` 加 init script 或 test service；CI 用临时 PG service）。
-2. 三重 guard（任一不满足即拒绝执行，fail-closed）：
-   - `LUMEN_ENV=test`
-   - 数据库名匹配 `_test$`
-   - 显式 `ALLOW_DESTRUCTIVE_TEST_DB=1`
-3. `tests/backend/test_pg_repository.py` 启动期校验三 guard；不满足 `sys.exit` 或抛错。
-4. README 分离命令：默认 unit（不触 PG）vs PG integration（需 guard）。
-5. CI 用独立临时 PG，不复用开发实例。
+**现状（已核实）**：默认 `DATABASE_URL` 指向开发库 `postgresql://lumen:lumen@localhost:15432/lumen`，`backend/service/db.py` 模块加载即固化 `_DATABASE_URL` 与 engine（`db.py:34-36/78`）。**4 个测试面**会对该库执行破坏性操作或写入：
 
-**改动文件**：`tests/backend/test_pg_repository.py`、`backend/service/db.py`（或新 `backend/config.py`）、`docker/`（test db init）、`README.md`、`.github/workflows/`（P0-2 一并）。
-**验收**：默认 `discover` 在开发库可连时仍拒绝执行；guard 有自测；CI 用 `_test` 库跑通。
-**风险**：现有 PG 测试可能隐式依赖开发库 seed → 先确认 seed 在 `lumen_test` 可重建。
+| 测试面 | 破坏性入口 |
+|---|---|
+| `tests/backend/test_pg_repository.py` | `_truncate_all()`：`TRUNCATE ... RESTART IDENTITY CASCADE` |
+| `tests/backend/test_api_routes.py` | `setUpClass()`：schema 已存时 `TRUNCATE` + 重跑 seed |
+| `tests/backend/test_api_sprint28.py` | `setUpClass()`：含 `lumen_sessions` 的 `TRUNCATE` + 重跑 seed |
+| `tests/backend/test_ai_polish.py`（`AiPolishApiTest` 类） | 无 `TRUNCATE`，但 `init_db()` + 经 API 写 PG |
 
-### P0-2：CI 最小代码门（assessment CQ-P0-002）
-
-**现状**：`.github/workflows/project-check.yml` 只校验 whitespace + VERSION/CHANGELOG + derived-sync 边界；323 个后端测试从不跑、前端无 type/build。
+README / backend README / demo-guide 推荐的 `unittest discover` 在开发库可连时即触发上述行为 → 误清开发库。
 
 **实施步骤**：
-1. 新增 `backend-test` job：`setup-python 3.14` + `pip install -r requirements.txt -r requirements-dev.txt` + `pytest -m "not integration"`（unit 默认跑、integration 标记跳过，避免 CI 强依赖 PG）。
-2. 新增 `frontend-build` job：`setup-node 22`（Volta）+ `npm ci` + `npm run build`（`tsc -b && vite build`）。
-3. **advisory 起步**（governance §11.1.5）：先 `continue-on-error` 不阻断，基线清理后升 required。
-4. 新建 `backend/requirements-dev.txt`（`pytest`/`httpx`/`ruff`）+ `backend/ruff.toml`（最小规则集）。
-5. `frontend/package.json` 加 `typecheck`（`tsc -b --noEmit`）/ `lint`（可后置）脚本。
+1. 独立 `lumen_test` 库（与开发库共用同一 PG service，独立 database）：
+   - 新增 `docker/init-test-db.sql`（`CREATE DATABASE lumen_test;`），挂入 `docker/compose.yml` 的 `/docker-entrypoint-initdb.d/`——**仅对新 volume 生效**（已核实 compose 当前无 initdb 挂载）。
+   - 现有 `lumen_pgdata` volume 需一次性建库 `docker exec lumen-pg createdb -U lumen lumen_test`（**状态变更，执行前单步确认**，不由测试隐式建/删库）。
+2. 新增 `tests/backend/pg_test_support.py`（测试侧安全支持，**不进 `backend/service/`**）：
+   - `assert_test_database_safe()` 校验三重条件，任一不满足抛专用 `UnsafeTestDatabaseError`（**不降级为 skip**）：① `LUMEN_ENV` 精确等于 `test`；② `engine.url.database` 以 `_test` 结尾且 scheme 为 PostgreSQL；③ `ALLOW_DESTRUCTIVE_TEST_DB` 精确等于 `1`。
+   - 错误信息只列失败条件，**不含连接串/凭证**。
+3. 接入 4 个测试面：guard 在连接 `try/except` **外**调用；每次 `TRUNCATE` 前二次调用；`AiPolishApiTest` 虽无 TRUNCATE 但写 PG，也须过 guard。
+4. pytest integration marker：根 `pytest.ini` 注册（**非 `backend/pytest.ini`**——CI 从仓库根运行）；4 个 PG 测试面标 `@pytest.mark.integration`；`test_ai_polish.py` 混合（含纯 service 单测）→ 仅 `AiPolishApiTest` **类级**标记，不误排除同文件单测。
+5. README 分离默认命令：默认 unit（`pytest -m "not integration"`，不触 PG）vs PG integration（需 guard + `lumen_test`）。`unittest discover` 不识别 marker，须以运行时 guard 兜底。
 
-**改动文件**：`.github/workflows/project-check.yml`、`backend/requirements-dev.txt`、`backend/ruff.toml`、`frontend/package.json`。
-**验收**：CI 跑后端 unit + 前端 build；advisory 失败可见但不阻断；测试 marker 生效（integration 不在 default 跑）。
-**风险**：现有测试无 marker 区分 unit/PG → 需先给 PG 测试加 `@pytest.mark.integration`（P0-1 的 guard 帮助识别）。
+**改动文件**：`tests/backend/pg_test_support.py`（新）、`tests/backend/test_pg_repository.py`、`tests/backend/test_api_routes.py`、`tests/backend/test_api_sprint28.py`、`tests/backend/test_ai_polish.py`、`pytest.ini`（根，新）、`docker/init-test-db.sql`（新）、`docker/compose.yml`、`README.md`、`backend/README.md`、`docs/env/demo-guide.md`（默认命令）。
+**验收**（评估 §4.4 验证包）：① guard 纯单测（三条件全满足才过，缺一即拒，非 PG URL 拒）；② 负向 smoke（指向开发库 `lumen` 时，PG 可达也在连接/SQL 前拒）；③ 默认 unit 排除 integration，`AiPolishApiTest` 被排、同文件 service 单测仍跑；④ 真实 PG integration（显式配 `lumen_test`）跑通 4 面；⑤ 开发库保护复核（只读核对未被 reset）。
+**风险**：guard 被宽泛 `try/except Exception` 吞成 skip → 连接 try 外调用 + TRUNCATE 前二次调用；现有 PG 测试隐式依赖开发库 seed → 确认 seed 在 `lumen_test` 可重建。
+
+### P0-2：CI 最小代码门（assessment CQ-P0-002 / 拟定 NFR-006）
+
+> **联合裁决定稿（2026-08-10，A1/B1 已确认）**：CI 三 job；backend-test + frontend-build **advisory 起步 → 同 PR 内基线清完、合并前升 required**（A1）；`backend-lint`(ruff) 恒 advisory；**不新增前端 `typecheck`**（`build` 已含 `tsc -b`，已核实 `package.json:8`）；frontend-lint(eslint) **暂缓，记 P1**（B1，须在 NFR-006 / 05 §4.2.4 显式留痕，不静默漏）。追溯 ID（NFR-006、task-042、TC-P2-GOV-002）为拟定，立项回写时确认。
+
+**现状（已核实）**：`.github/workflows/project-check.yml` 仅 whitespace + VERSION/CHANGELOG + derived-sync 边界，**零代码门**（无 pytest / 无 tsc / 无 lint / 无 build）。
+
+**实施步骤**：
+1. 新增 `backend-test` job：Python 3.14 + `pip install -r requirements.txt -r requirements-dev.txt` + `pytest -m "not integration" --strict-markers`（依赖 P0-1 的 marker 与根 `pytest.ini`）。
+2. 新增 `frontend-build` job：Node 22.17.1（Volta）+ `npm ci` + `npm run build`（已含 `tsc -b`，**不再加 `typecheck` 脚本**）。
+3. 新增 `backend-lint` job：根 `ruff.toml`（Python 3.14、最小 `E4/E7/E9/F`、**不自动格式化**）查 `backend/` 与 `tests/backend/`。
+4. **严格度（A1）**：三 job 首次以 `continue-on-error: true` 起步（先看基线）；首次跑通、基线清完后，**在合并到 main 前移除 backend-test / frontend-build 的 `continue-on-error` 升 required**；`backend-lint` 保持 advisory（记录旧债基线，不阻断 P0）。
+5. **frontend-lint(eslint)**：P0 **不做**；在拟定 `NFR-006` 与 `docs/05 §4.2.4` 记「frontend-lint 留 P1」（上位 §4.2.4 原列 4 job 含 eslint，暂缓须显式留痕）。
+6. 新增 `backend/requirements-dev.txt`（锁 pytest / ruff / httpx）。
+
+**改动文件**：`.github/workflows/project-check.yml`、`pytest.ini`（根，与 P0-1 共用）、`ruff.toml`（根，新）、`backend/requirements-dev.txt`（新）。
+**验收**：CI 跑后端 unit + 前端 build + ruff；advisory 期失败可见不阻断；终态（合并前）backend-test / frontend-build required、ruff advisory；marker 生效（integration 不在 default 跑）。
+**风险**：required 暴露旧测试失败 → 同 PR 内修基线，不以永久 advisory 掩盖（A1 口径）；全量 runtime 依赖致 CI 慢 → 启用 pip / npm cache。
 
 > P0-1 与 P0-2 有耦合（test marker / CI job / test DB），建议**同一 Sprint 或两个紧邻小 PR** 完成。各 1-3 文件 + CI yaml。
 
@@ -144,17 +159,18 @@
 
 （状态记号：⏳ 未开始 / 🚧 进行中 / ✅ 完成 / ⛔ 阻塞）
 
-### 8.2 当前状态快照（2026-08-10）
+### 8.2 当前状态快照（2026-08-11 · P0 联合裁决定稿落盘）
 
 - **PR #123（体系文档 10 文件）已 merge**（squash `273bf14`，2026-08-10；CI 曾因 assessment 结尾多余空行 fail，已修 `e36152b` 后 pass）。
-- **P0-1/P0-2 方案已确认**（2026-08-10 会话，见 §9）：同 Sprint（Sprint-31 维护态批6）立项 → 编码。test DB 用 compose init script + 现有卷一次性 bootstrap；CI 以 advisory 起步（governance §11.1.5）；07 零 API 改动。
-- **轨道 1 回流节奏已确认**：L0 基线提案（已入库）立即 submit-proposal；test DB guard 规则文本（`TEMPLATE-UPGRADE-db-safety-concern`）待 P0-1 落地后起草（用实现经验写准 `DB-SAFE-001`）。
-- 轨道 2/3 代码改动均未开始。下一步：立项回写（02/08/09/project-rules）→ 编码 P0-1/P0-2。
+- **P0-1/P0-2 联合裁决定稿**（2026-08-10 裁决 / 2026-08-11 落盘 §3）：rollout 原方案 × 评估报告 → §3 已按评估修订口径重写并经代码核实。关键裁决：① PG 测试面 **4 个**（非 1 个）；② guard 落 `tests/backend/pg_test_support.py`（不进生产 service），三重 fail-closed 抛 `UnsafeTestDatabaseError` 不降级 skip；③ 根 `pytest.ini` + 根 `ruff.toml`；④ CI **A1**：backend-test / frontend-build advisory 起步 → 同 PR 内基线清完、合并前升 required，ruff 恒 advisory；⑤ **B1**：eslint 暂缓记 P1（05 §4.2.4 留痕）；⑥ 不新增前端 typecheck（build 已含 `tsc -b`）；⑦ 拟定 `NFR-005/006 + task-041/042 + TC-P2-GOV-001/002`，Sprint-31（维护态批6），目标版本 **v3.8.0**（MINOR，project-rules §2.4.2「Sprint 验收触发」）。
+- **轨道 1 回流节奏**：L0 基线提案（已入库）立即 submit-proposal；test DB guard 规则文本（`TEMPLATE-UPGRADE-db-safety-concern`）待 P0-1 落地后起草（用实现经验写准 `DB-SAFE-001`）。
+- 轨道 2/3 代码改动均未开始。下一步：立项回写（02/03/05/08/09/project-rules）→ 编码 P0-1/P0-2（走 PR）。
 
 ## 9. 待人工确认项
 
 1. ~~PR #123 是否合并（体系文档落地）？~~ ✅ **已确认**（2026-08-10 合并，squash `273bf14`）。
 2. P0-1/P0-2 是否立即立项？test DB 用独立 service 还是 init script？ → ✅ **已确认**：同 Sprint（Sprint-31 维护态批6）立项 → 编码；test DB 用 compose init script（新卷生效）+ 现有卷一次性 `docker exec lumen-pg createdb -U lumen lumen_test` bootstrap。
-3. CI 起步 advisory 还是直接 required？ → ✅ **已确认**：advisory 起步（`continue-on-error: true`，governance §11.1.5）。
+3. CI 起步 advisory 还是直接 required？ → ✅ **已确认（A1，2026-08-10 裁决）**：backend-test / frontend-build **advisory 起步**（`continue-on-error: true`，governance §11.1.5），**同 PR 内基线清完后、合并 main 前升 required**；backend-lint(ruff) 恒 advisory。
 4. 轨道 3 排期：P1 子项是否排入下个维护 Sprint？顺序（建议错误契约 → repository Protocol → 事务 → 其余）？ → ⏳ **仍待确认**（P0 落地后定）。
 5. 轨道 1 回流时机？ → ✅ **已确认**：L0 基线提案立即 submit-proposal；test DB guard 规则文本待 P0-1 落地后起草回流。
+6. 联合裁决其余口径（2026-08-10 裁决 / 2026-08-11 落盘 §3）？ → ✅ **已确认**：① PG 测试面 4 个（`test_pg_repository` / `test_api_routes` / `test_api_sprint28` / `test_ai_polish.AiPolishApiTest`）；② guard 落 `tests/backend/pg_test_support.py`（不进生产 service）；③ fail-closed 抛 `UnsafeTestDatabaseError` 不降级 skip；④ 根 `pytest.ini` / `ruff.toml`；⑤ **不新增前端 typecheck**（build 已含 `tsc -b`）；⑥ **eslint(frontend-lint) 暂缓记 P1**（B1，05 §4.2.4 留痕）；⑦ 用 `NFR-005/006`（非 `REQ-052/053`，工程治理无 U-ID 来源）；⑧ 拟定 `task-041/042 + TC-P2-GOV-001/002`，目标版本 v3.8.0。
