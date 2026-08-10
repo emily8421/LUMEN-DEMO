@@ -9,6 +9,7 @@
 |---|---|---|---|
 | `2026-08-10-ai-code-governance-framework.md` | AI 基于文档体系编码的分层治理框架 | 已落盘；**AI 建议 · 待人工确认与模板化** | 建议采用 R1-R7 七层路由 + 自动化执行平面；现有 Web 全栈提案作为 Profile 实证输入，回流前需做全局 / Profile / Adapter 去重分类 |
 | `2026-08-10-code-constraint-framework.md` | 代码规范 L0-L3 内容稳定性分层与模板载体映射 | 已落盘；**方法论草案 · 已形成两份待回流提案** | 与七层治理文档互补：L0-L3 判断规则内容放哪，R1-R7 判断任务执行时加载什么；关联 L0 通用原则与 Web 全栈一致性提案 |
+| `2026-08-10-code-governance-rollout-plan.md` | 代码治理体系落地实施计划（三轨道并行 + P0 先行 + ratchet） | 已落盘；**活文档 · 待人工确认优先级与排期** | 前置 PR #123 merge；最先做 P0-1 test DB guard + P0-2 CI 最小门；§8 进度表跨会话续接 |
 | `2026-08-10-rule-consolidation-map.md` | 三套规则清单（L0 12条 + web-fullstack §9 + assessment TQG 15条）去重 + R1-R7 归位对照 | 已落盘；**整合产物 · 待人工确认回流形态** | 以 governance R1-R7 为骨架归位；标注重叠合并点；指出 assessment 独有 R4 候选（test DB/事务/scoped query）尚无提案 |
 | `2026-08-10-code-quality-maintainability-assessment.md` | 前后端代码质量、可读性与可维护性评估 | 已落盘；**只读评估 · 待人工确认治理范围** | P0 建议先处理测试数据库隔离与最小 CI；模板规则候选见报告 §7。已起草 web-fullstack §9 + L0 基线 2 提案（governance §8.3 建议回流前按 R1/R3/R5 重构）；三套清单去重见 rule-consolidation-map |
 | `2026-07-30-docs-system-audit-post-v1.59.0.md` | 模板同步后文档体系审计 | 已执行；Phase1.5A / Phase2A 状态回写已落盘 | Phase1.5B / Phase2B 与项目验证仍待后续确认 |
