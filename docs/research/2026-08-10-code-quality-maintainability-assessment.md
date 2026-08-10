@@ -618,4 +618,3 @@ rg -n 'HTTPException|except Exception|Sprint-|REQ-|task-' backend frontend/src
 ```
 
 原因：`CQ-P0-001` 已确认该入口在默认 PG 可连接时可能执行 destructive truncate；在 test DB guard 修复前，运行它不符合工程安全要求。
-
