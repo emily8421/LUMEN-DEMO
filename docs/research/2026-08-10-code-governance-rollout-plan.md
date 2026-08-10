@@ -126,12 +126,12 @@
 
 | 子项 | 轨道 | 状态 | PR / commit | 备注 |
 |---|---|---|---|---|
-| PR #123 体系文档 | — | ⏳ 待 merge | #123 | 前置 |
-| L0 基线回流 | 1 | ⏳ 待 PR#123 merge | — | submit-proposal |
+| PR #123 体系文档 | — | ✅ 已 merge | #123 → `273bf14` | 前置（2026-08-10） |
+| L0 基线回流 | 1 | 🚧 方案已确认·待回流 | — | 立即 submit-proposal |
 | CI 元规则回流 | 1 | ⏳ | — | 并入 L0 或新提案 |
-| test DB guard 规则文本 | 1 | ⏳ 待起草 | — | `TEMPLATE-UPGRADE-db-safety-concern` |
-| P0-1 test DB guard | 2 | ⏳ 未开始 | — | 最先 |
-| P0-2 CI 最小门 | 2 | ⏳ 未开始 | — | 与 P0-1 耦合 |
+| test DB guard 规则文本 | 1 | ⏳ 待 P0-1 落地后起草 | — | `TEMPLATE-UPGRADE-db-safety-concern` |
+| P0-1 test DB guard | 2 | 🚧 方案已确认·待立项+编码 | — | Sprint-31，最先 |
+| P0-2 CI 最小门 | 2 | 🚧 方案已确认·待立项+编码 | — | 与 P0-1 同 Sprint |
 | 错误契约收口 | 3 | ⏳ | — | P1 |
 | repository Protocol | 3 | ⏳ | — | P1 |
 | 事务 UoW | 3 | ⏳ | — | P1 |
@@ -146,14 +146,15 @@
 
 ### 8.2 当前状态快照（2026-08-10）
 
-- PR #123（体系文档 9 文件）已开，待 review/merge。
-- 轨道 2/3 代码改动均未开始。
-- 下一步：PR #123 merge → P0-1 + P0-2（同 Sprint）。
+- **PR #123（体系文档 10 文件）已 merge**（squash `273bf14`，2026-08-10；CI 曾因 assessment 结尾多余空行 fail，已修 `e36152b` 后 pass）。
+- **P0-1/P0-2 方案已确认**（2026-08-10 会话，见 §9）：同 Sprint（Sprint-31 维护态批6）立项 → 编码。test DB 用 compose init script + 现有卷一次性 bootstrap；CI 以 advisory 起步（governance §11.1.5）；07 零 API 改动。
+- **轨道 1 回流节奏已确认**：L0 基线提案（已入库）立即 submit-proposal；test DB guard 规则文本（`TEMPLATE-UPGRADE-db-safety-concern`）待 P0-1 落地后起草（用实现经验写准 `DB-SAFE-001`）。
+- 轨道 2/3 代码改动均未开始。下一步：立项回写（02/08/09/project-rules）→ 编码 P0-1/P0-2。
 
 ## 9. 待人工确认项
 
-1. PR #123 是否合并（体系文档落地）？
-2. P0-1/P0-2 是否立即立项（同 Sprint 还是分两个）？test DB 用独立 service 还是 init script？
-3. CI 起步 advisory 还是直接 required（governance 建议 advisory）？
-4. 轨道 3 排期：P1 子项是否排入下个维护 Sprint？顺序（建议错误契约 → repository Protocol → 事务 → 其余）？
-5. 轨道 1 回流时机：PR #123 merge 后立即 submit-proposal，还是等 P0 验证后？
+1. ~~PR #123 是否合并（体系文档落地）？~~ ✅ **已确认**（2026-08-10 合并，squash `273bf14`）。
+2. P0-1/P0-2 是否立即立项？test DB 用独立 service 还是 init script？ → ✅ **已确认**：同 Sprint（Sprint-31 维护态批6）立项 → 编码；test DB 用 compose init script（新卷生效）+ 现有卷一次性 `docker exec lumen-pg createdb -U lumen lumen_test` bootstrap。
+3. CI 起步 advisory 还是直接 required？ → ✅ **已确认**：advisory 起步（`continue-on-error: true`，governance §11.1.5）。
+4. 轨道 3 排期：P1 子项是否排入下个维护 Sprint？顺序（建议错误契约 → repository Protocol → 事务 → 其余）？ → ⏳ **仍待确认**（P0 落地后定）。
+5. 轨道 1 回流时机？ → ✅ **已确认**：L0 基线提案立即 submit-proposal；test DB guard 规则文本待 P0-1 落地后起草回流。
