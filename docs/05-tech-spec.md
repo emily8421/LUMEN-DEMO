@@ -168,6 +168,7 @@ flowchart TB
 - **【待对齐】** API 测试不经 HTTP 层（直接 import 并调端点函数），全局 `exception_handler`（envelope 序列化层）**无回归保护** → 补 `fastapi.testclient.TestClient` 断言 HTTP 响应体 `{code,msg,data}`。
 - **【待对齐】** env 散落 6+ 处无集中 Settings（`main.py` / `auth.py` / `db.py` / `llm_adapter.py` / `embedding.py`）+ 弱默认 `LUMEN_DEMO_TOKEN_KEY="local-demo-signing-key"` 无生产校验（`main.py:32` 生产护栏只挡 demo 仓储不挡弱 key）→ 建 `backend/config.py`（pydantic-settings），启动期校验关键 secret 非默认值。
 - **【待对齐】** `print()` 与 `logging` 混用（`main.py:44,46`、`pg_repository.py:324`）+ 降级 `except` 静默吞无日志（`service/document.py:201` 索引回填、`rag.py:234,259` LLM 失败）→ 禁 `print`，降级路径必须 `logger.warning(...)` 记原因。
+- **【已立项·待执行】** P0 工程治理（Sprint-31 / task-041/042，2026-08-11 立项）：落地本节 CI 零代码门 → `backend-test`/`frontend-build` required（**A1**：advisory 起步 → 合并前升 required）+ `backend-lint`(ruff) advisory；后端 lint 工具 → 根 `ruff.toml` + `backend/requirements-dev.txt`；测试分层 → pytest `integration` marker + unit/integration 分层 + 独立 `lumen_test` 库三重 fail-closed guard（NFR-005）。`frontend-lint`(eslint) 留 P1（**B1**）。实施口径见 `docs/research/2026-08-10-code-governance-rollout-plan.md` §3。
 
 #### 4.2.5 命名语义一致
 
