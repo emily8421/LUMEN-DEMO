@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import os
 
 try:
@@ -15,6 +16,8 @@ except ImportError:  # pragma: no cover - allows tests before dependencies are i
 
 
 from contextlib import asynccontextmanager
+
+logger = logging.getLogger("lumen")
 
 
 @asynccontextmanager
@@ -78,6 +81,32 @@ def create_app():
             content = {"code": exc.detail["code"], "msg": exc.detail.get("msg", "error"), "data": exc.detail.get("data")}
             return JSONResponse(status_code=exc.status_code, content=content)
         return JSONResponse(status_code=exc.status_code, content={"code": exc.status_code, "msg": str(exc.detail), "data": None})
+
+    # CQ-P1-005 / NFR-007（Sprint-32 Slice A）：统一错误响应契约地基。
+    # ApiError 领域异常 → envelope；未捕获 Exception → 兜底 5000 envelope（不回传堆栈）。
+    # 现有 ~40 领域异常将在 Slice B 迁移继承 ApiError；本处为契约注册先行。
+    from backend.model.error_codes import ApiError, ErrorCode
+
+    @app.exception_handler(ApiError)
+    async def api_error_handler(request: Request, exc: ApiError):
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"code": exc.code, "msg": exc.message, "data": None},
+        )
+
+    @app.exception_handler(Exception)
+    async def unhandled_exception_handler(request: Request, exc: Exception):
+        logger.error(
+            "unhandled exception on %s %s: %r",
+            request.method,
+            request.url.path,
+            exc,
+            exc_info=True,
+        )
+        return JSONResponse(
+            status_code=500,
+            content={"code": int(ErrorCode.INTERNAL), "msg": "internal error", "data": None},
+        )
 
     if auth_router is not None:
         app.include_router(auth_router)
