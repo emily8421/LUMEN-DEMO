@@ -10,6 +10,11 @@ current_space_id）与设计 §4，使用 ``/api/folders``；07 原草案 ``/api
 
 PATCH 同时支持改名（name）与移动（parent_id，null=移到根）；用 ``model_fields_set``
 区分「字段未传」与「字段显式 null」。
+
+错误处理（CQ-P1-005 Slice B，2026-08-11）：folder 领域异常（FolderAccessError 等）已
+迁移继承 ``ApiError``（service/folder.py，code/message 自带）；本 router 不再 try/except
+手工转换——异常直接冒泡到 ``backend/main.py`` 注册的 ``ApiError`` handler 统一转
+envelope ``{code,msg,data}``，消除 ``str(exc)`` 直传与硬编码 code。
 """
 
 from __future__ import annotations
@@ -18,12 +23,8 @@ from backend.repository import repository
 from backend.service.auth_context import TokenContext, get_current_user
 from backend.service.folder import (
     UNSET,
-    FolderAccessError,
-    FolderConflictError,
     FolderCreateRequest,
-    FolderNotFoundError,
     FolderUpdateRequest,
-    FolderValidationError,
     FolderView,
     create_folder,
     delete_folder,
@@ -33,12 +34,11 @@ from backend.service.folder import (
 )
 
 try:
-    from fastapi import APIRouter, Depends, HTTPException
+    from fastapi import APIRouter, Depends
     from pydantic import BaseModel
 except ImportError:  # pragma: no cover - allows service tests before dependencies are installed
     APIRouter = None
     BaseModel = object
-    HTTPException = Exception
 
 
 if APIRouter is not None:
@@ -61,10 +61,7 @@ if APIRouter is not None:
         parent_id: int | None = None,
         ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        try:
-            views = list_folders(repository, ctx.user_id, ctx.current_space_id, parent_id)
-        except FolderAccessError as exc:
-            raise HTTPException(status_code=403, detail={"code": 4003, "msg": str(exc)}) from exc
+        views = list_folders(repository, ctx.user_id, ctx.current_space_id, parent_id)
         items = [_folder_view(v) for v in views]
         return {"code": 0, "msg": "ok", "data": {"items": items, "total": len(items)}}
 
@@ -73,19 +70,12 @@ if APIRouter is not None:
         request: FolderCreateBody,
         ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        try:
-            folder = create_folder(
-                repository,
-                ctx.user_id,
-                ctx.current_space_id,
-                FolderCreateRequest(name=request.name, parent_id=request.parent_id),
-            )
-        except FolderAccessError as exc:
-            raise HTTPException(status_code=403, detail={"code": 4003, "msg": str(exc)}) from exc
-        except FolderConflictError as exc:
-            raise HTTPException(status_code=409, detail={"code": 4090, "msg": str(exc)}) from exc
-        except FolderValidationError as exc:
-            raise HTTPException(status_code=422, detail={"code": 4220, "msg": str(exc)}) from exc
+        folder = create_folder(
+            repository,
+            ctx.user_id,
+            ctx.current_space_id,
+            FolderCreateRequest(name=request.name, parent_id=request.parent_id),
+        )
         return {"code": 0, "msg": "ok", "data": _folder_detail(folder)}
 
     @router.patch("/api/folders/{folder_id}")
@@ -97,22 +87,13 @@ if APIRouter is not None:
         fields = _fields_set(request)
         name = request.name if "name" in fields else UNSET
         target_parent = request.parent_id if "parent_id" in fields else UNSET
-        try:
-            folder = update_folder(
-                repository,
-                ctx.user_id,
-                ctx.current_space_id,
-                folder_id,
-                FolderUpdateRequest(name=name, parent_id=target_parent),
-            )
-        except FolderAccessError as exc:
-            raise HTTPException(status_code=403, detail={"code": 4003, "msg": str(exc)}) from exc
-        except FolderNotFoundError as exc:
-            raise HTTPException(status_code=404, detail={"code": 4004, "msg": str(exc)}) from exc
-        except FolderConflictError as exc:
-            raise HTTPException(status_code=409, detail={"code": 4090, "msg": str(exc)}) from exc
-        except FolderValidationError as exc:
-            raise HTTPException(status_code=422, detail={"code": 4220, "msg": str(exc)}) from exc
+        folder = update_folder(
+            repository,
+            ctx.user_id,
+            ctx.current_space_id,
+            folder_id,
+            FolderUpdateRequest(name=name, parent_id=target_parent),
+        )
         return {"code": 0, "msg": "ok", "data": _folder_detail(folder)}
 
     @router.delete("/api/folders/{folder_id}")
@@ -120,14 +101,7 @@ if APIRouter is not None:
         folder_id: int,
         ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        try:
-            delete_folder(repository, ctx.user_id, ctx.current_space_id, folder_id)
-        except FolderAccessError as exc:
-            raise HTTPException(status_code=403, detail={"code": 4003, "msg": str(exc)}) from exc
-        except FolderNotFoundError as exc:
-            raise HTTPException(status_code=404, detail={"code": 4004, "msg": str(exc)}) from exc
-        except FolderConflictError as exc:
-            raise HTTPException(status_code=409, detail={"code": 4090, "msg": str(exc)}) from exc
+        delete_folder(repository, ctx.user_id, ctx.current_space_id, folder_id)
         return {"code": 0, "msg": "ok", "data": {"deleted": True}}
 
     @router.post("/api/folders/reorder")
@@ -135,18 +109,13 @@ if APIRouter is not None:
         request: FolderReorderBody,
         ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        try:
-            reorder_folders(
-                repository,
-                ctx.user_id,
-                ctx.current_space_id,
-                request.parent_id,
-                request.ordered_ids,
-            )
-        except FolderAccessError as exc:
-            raise HTTPException(status_code=403, detail={"code": 4003, "msg": str(exc)}) from exc
-        except FolderValidationError as exc:
-            raise HTTPException(status_code=422, detail={"code": 4220, "msg": str(exc)}) from exc
+        reorder_folders(
+            repository,
+            ctx.user_id,
+            ctx.current_space_id,
+            request.parent_id,
+            request.ordered_ids,
+        )
         return {"code": 0, "msg": "ok", "data": {"ok": True}}
 
     def _fields_set(model) -> set[str]:
