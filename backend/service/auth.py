@@ -10,6 +10,8 @@ import time
 from dataclasses import dataclass
 from typing import Any
 
+from backend.model.error_codes import ApiError
+
 
 class TokenError(ValueError):
     """Raised when a demo bearer token is malformed, expired, or tampered with."""
@@ -176,13 +178,11 @@ def _audit(event: str, user_id: int | None, outcome: str, **extra) -> None:
     )
 
 
-class AuthenticationError(ValueError):
-    """鉴权失败统一异常；API 层按 code 映射 HTTP 状态码（4010 / 4030 / 4090 / 4220 等）。"""
+class AuthenticationError(ApiError):
+    """鉴权失败统一异常（4010 / 4030 / 4090 / 4220 等）；HTTP 码由 CODE_TO_HTTP 推导。"""
 
-    def __init__(self, code: int, msg: str):
-        super().__init__(msg)
-        self.code = code
-        self.msg = msg
+    def __init__(self, code: int, message: str, status_code: int | None = None) -> None:
+        super().__init__(code, message, status_code)
 
 
 def is_demo_repository(repo) -> bool:
