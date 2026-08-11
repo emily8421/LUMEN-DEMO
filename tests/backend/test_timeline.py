@@ -181,19 +181,19 @@ class TimelineApiTest(unittest.TestCase):
     """API-033 endpoint function tests with demo token and repository swap."""
 
     def test_timeline_api_rejects_empty_q(self) -> None:
-        from fastapi import HTTPException
-
         from backend.api import timeline as timeline_api
         from backend.api.auth import TOKEN_SIGNING_KEY
         from backend.repository.demo_repository import DemoRepository
         from backend.service.auth import create_demo_token
+        from backend.service.timeline import TimelineValidationError
 
         original_repository = timeline_api.repository
         timeline_api.repository = DemoRepository()
         try:
             token = create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
             ctx = _demo_ctx()
-            with self.assertRaises(HTTPException) as context:
+            # Slice B：TimelineValidationError 已继承 ApiError，异常冒泡到 main.py handler 转 envelope（code 4220）。
+            with self.assertRaises(TimelineValidationError) as context:
                 timeline_api.timeline_endpoint(
                     space_id=10,
                     q="",
@@ -203,7 +203,7 @@ class TimelineApiTest(unittest.TestCase):
                     density=True,
                     ctx=ctx,
                 )
-            self.assertEqual(context.exception.detail["code"], 4220)
+            self.assertEqual(context.exception.code, 4220)
         finally:
             timeline_api.repository = original_repository
 
