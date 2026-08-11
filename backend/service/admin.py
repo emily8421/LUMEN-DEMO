@@ -7,16 +7,15 @@
 from __future__ import annotations
 
 from backend.model.entities import User
+from backend.model.error_codes import ApiError
 from backend.service.auth import audit_event
 
 
-class AdminError(ValueError):
-    """admin 域统一异常；API 层按 code 映射 HTTP 状态码（4030 / 4004 / 4090 / 4220）。"""
+class AdminError(ApiError):
+    """admin 域统一异常（4030 / 4004 / 4090 / 4220）；HTTP 码由 CODE_TO_HTTP 推导。"""
 
-    def __init__(self, code: int, msg: str):
-        super().__init__(msg)
-        self.code = code
-        self.msg = msg
+    def __init__(self, code: int, message: str, status_code: int | None = None) -> None:
+        super().__init__(code, message, status_code)
 
 
 VALID_GLOBAL_ROLES = ("admin", "member")

@@ -75,15 +75,14 @@ class Sprint28ApiTest(unittest.TestCase):
         self.assertEqual(kira_data["role"], "member")
 
     def test_admin_list_rejects_member(self) -> None:
-        from fastapi import HTTPException
-
         from backend.api.admin import list_users_endpoint
+        from backend.service.admin import AdminError
 
         kira_token, _ = self._login("kira")
-        with self.assertRaises(HTTPException) as ctx:
+        with self.assertRaises(AdminError) as ctx:
             list_users_endpoint(ctx=self._ctx(kira_token))
+        self.assertEqual(ctx.exception.code, 4030)
         self.assertEqual(ctx.exception.status_code, 403)
-        self.assertEqual(ctx.exception.detail["code"], 4030)
 
     def test_admin_list_ok_and_no_password_hash(self) -> None:
         from backend.api.admin import list_users_endpoint
@@ -128,12 +127,12 @@ class Sprint28ApiTest(unittest.TestCase):
         self.assertEqual(disabled["data"]["status"], "disabled")
 
         # 禁用后凭证登录被拒（4030）
-        from fastapi import HTTPException
+        from backend.service.auth import AuthenticationError
 
-        with self.assertRaises(HTTPException) as ctx:
+        with self.assertRaises(AuthenticationError) as ctx:
             login(LoginRequest(login_id="kira", password="demo-pass-1234"))
+        self.assertEqual(ctx.exception.code, 4030)
         self.assertEqual(ctx.exception.status_code, 403)
-        self.assertEqual(ctx.exception.detail["code"], 4030)
 
         # 禁用后既有会话失效
         from fastapi import HTTPException as HTTPExceptionFastapi

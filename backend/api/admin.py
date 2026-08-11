@@ -13,17 +13,12 @@ from backend.service.admin import (
 from backend.service.auth_context import TokenContext, get_current_user
 
 try:
-    from fastapi import APIRouter, Depends, HTTPException
+    from fastapi import APIRouter, Depends
     from pydantic import BaseModel
 except ImportError:  # pragma: no cover - allows service tests before dependencies are installed
     APIRouter = None
     BaseModel = object
-    HTTPException = Exception
-
-
-def _http_error(exc: AdminError) -> HTTPException:
-    status = {4004: 404, 4030: 403, 4090: 409, 4220: 422}.get(exc.code, 400)
-    return HTTPException(status_code=status, detail={"code": exc.code, "msg": exc.msg})
+    Depends = None
 
 
 def _user_payload(row) -> dict[str, object]:
@@ -51,10 +46,8 @@ if APIRouter is not None:
         status: str = "",
         ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        try:
-            rows = admin_list_users(repository, ctx.user, q=q, role=role, status=status)
-        except AdminError as exc:
-            raise _http_error(exc) from exc
+        # 管理域错误（AdminError）冒泡 main.py ApiError handler → 对应 HTTP 码 envelope
+        rows = admin_list_users(repository, ctx.user, q=q, role=role, status=status)
         return {"code": 0, "msg": "ok", "data": [_user_payload(row) for row in rows]}
 
     @router.patch("/{user_id}")
@@ -63,16 +56,14 @@ if APIRouter is not None:
         request: UpdateUserRequest,
         ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        try:
-            row = None
-            if request.role is not None:
-                row = update_user_role(repository, ctx.user, user_id, request.role)
-            if request.status is not None:
-                row = set_user_status(repository, ctx.user, user_id, request.status)
-            if row is None:
-                raise AdminError(4220, "role or status required")
-        except AdminError as exc:
-            raise _http_error(exc) from exc
+        # 管理域错误（AdminError）冒泡 main.py ApiError handler → 对应 HTTP 码 envelope
+        row = None
+        if request.role is not None:
+            row = update_user_role(repository, ctx.user, user_id, request.role)
+        if request.status is not None:
+            row = set_user_status(repository, ctx.user, user_id, request.status)
+        if row is None:
+            raise AdminError(4220, "role or status required")
         return {"code": 0, "msg": "ok", "data": _user_payload(row)}
 
     @router.get("/{user_id}/spaces")
@@ -81,10 +72,8 @@ if APIRouter is not None:
         ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
         """查询用户已加入空间 + 可授予空间（API-054，REQ-050，维护态批5）。仅全局 admin。"""
-        try:
-            data = admin_list_user_spaces(repository, ctx.user, user_id)
-        except AdminError as exc:
-            raise _http_error(exc) from exc
+        # 管理域错误（AdminError）冒泡 main.py ApiError handler → 对应 HTTP 码 envelope
+        data = admin_list_user_spaces(repository, ctx.user, user_id)
         return {"code": 0, "msg": "ok", "data": data}
 else:
     router = None
