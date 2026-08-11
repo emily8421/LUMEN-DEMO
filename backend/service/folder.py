@@ -22,23 +22,36 @@ from dataclasses import dataclass
 from typing import Any
 
 from backend.model.entities import Folder
+from backend.model.error_codes import ApiError, ErrorCode
 from backend.service.permission import filter_visible_documents, is_space_member
 
 
-class FolderValidationError(Exception):
+class FolderValidationError(ApiError):
     """folder 请求字段非法 / 防环 / 跨空间（API 映射 4220）。"""
 
+    def __init__(self, message: str, status_code: int | None = None) -> None:
+        super().__init__(ErrorCode.VALIDATION_FAILED, message, status_code)
 
-class FolderAccessError(Exception):
+
+class FolderAccessError(ApiError):
     """空间访问被拒（API 映射 4003）。"""
 
+    def __init__(self, message: str, status_code: int | None = None) -> None:
+        super().__init__(ErrorCode.FORBIDDEN, message, status_code)
 
-class FolderConflictError(Exception):
+
+class FolderConflictError(ApiError):
     """同 parent 重名 / 删非空（API 映射 4090）。"""
 
+    def __init__(self, message: str, status_code: int | None = None) -> None:
+        super().__init__(ErrorCode.CONFLICT, message, status_code)
 
-class FolderNotFoundError(Exception):
+
+class FolderNotFoundError(ApiError):
     """folder 不存在或不属于当前空间（API 映射 4004）。"""
+
+    def __init__(self, message: str, status_code: int | None = None) -> None:
+        super().__init__(ErrorCode.NOT_FOUND, message, status_code)
 
 
 # sentinel：区分「不修改该字段」与「显式置 None」（move 到根 parent=None）
