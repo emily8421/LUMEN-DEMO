@@ -58,15 +58,14 @@ jobs:
             echo "Not a template sync commit; skip derived sync boundary check."
           fi
 
-  # --- P0-2 / NFR-006 / task-042：CI 最小代码门（A1 advisory 起步）---
-  # 口径：rollout §3 P0-2 / evaluation §4.3 联合裁决定稿。
-  # backend-test / frontend-build 首次 continue-on-error 起步，基线清完后、合并 main 前升 required；
-  # backend-lint(ruff) 恒 advisory（记旧债基线，不阻断 P0）。不新增前端 typecheck（build 已含 tsc -b）。
+  # --- P0-2 / NFR-006 / task-042：CI 最小代码门 ---
+  # 口径：rollout §3 P0-2 / evaluation §4.3 联合裁决定稿（A1）。
+  # backend-test / frontend-build 基线已清，required（PR 必过）；backend-lint(ruff) 恒 advisory（记旧债基线，不阻断）。
+  # 不新增前端 typecheck（build 已含 tsc -b）。
 
   backend-test:
-    name: Backend unit tests (advisory)
+    name: Backend unit tests
     runs-on: ubuntu-latest
-    continue-on-error: true   # A1 advisory 起步：基线清完后、合并 main 前移除
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -84,9 +83,8 @@ jobs:
         run: python -m pytest -m "not integration" --strict-markers
 
   frontend-build:
-    name: Frontend build (advisory)
+    name: Frontend build
     runs-on: ubuntu-latest
-    continue-on-error: true   # A1 advisory 起步：基线清完后、合并 main 前移除
     defaults:
       run:
         working-directory: frontend
