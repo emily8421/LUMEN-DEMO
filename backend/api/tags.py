@@ -14,12 +14,8 @@ from backend.service.document import DocumentNotFoundError
 from backend.service.tag import (
     DocumentTagView,
     Tag,
-    TagAccessError,
-    TagConflictError,
     TagCreateRequest,
-    TagNotFoundError,
     TagUpdateRequest,
-    TagValidationError,
     TagView,
     add_document_tag,
     archive_tag,
@@ -64,10 +60,7 @@ if APIRouter is not None:
         status: str | None = "active",
         ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        try:
-            views = list_tags(repository, ctx.user_id, ctx.current_space_id, q, status)
-        except TagAccessError as exc:
-            raise HTTPException(status_code=403, detail={"code": 4003, "msg": str(exc)}) from exc
+        views = list_tags(repository, ctx.user_id, ctx.current_space_id, q, status)
         items = [_tag_view(view) for view in views]
         return {"code": 0, "msg": "ok", "data": {"items": items, "total": len(items)}}
 
@@ -76,29 +69,17 @@ if APIRouter is not None:
         request: TagCreateBody,
         ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        try:
-            tag = create_tag(
-                repository,
-                ctx.user_id,
-                ctx.current_space_id,
-                TagCreateRequest(name=request.name, color=request.color, description=request.description),
-            )
-        except TagAccessError as exc:
-            raise HTTPException(status_code=403, detail={"code": 4003, "msg": str(exc)}) from exc
-        except TagConflictError as exc:
-            raise HTTPException(status_code=409, detail={"code": 4090, "msg": str(exc)}) from exc
-        except TagValidationError as exc:
-            raise HTTPException(status_code=422, detail={"code": 4220, "msg": str(exc)}) from exc
+        tag = create_tag(
+            repository,
+            ctx.user_id,
+            ctx.current_space_id,
+            TagCreateRequest(name=request.name, color=request.color, description=request.description),
+        )
         return {"code": 0, "msg": "ok", "data": _tag_detail(tag)}
 
     @router.get("/api/tags/{tag_id}")
     def get_tag_endpoint(tag_id: int, ctx: TokenContext = Depends(get_current_user)) -> dict[str, object]:
-        try:
-            view = get_tag_detail(repository, ctx.user_id, ctx.current_space_id, tag_id)
-        except TagAccessError as exc:
-            raise HTTPException(status_code=403, detail={"code": 4003, "msg": str(exc)}) from exc
-        except TagNotFoundError as exc:
-            raise HTTPException(status_code=404, detail={"code": 4004, "msg": str(exc)}) from exc
+        view = get_tag_detail(repository, ctx.user_id, ctx.current_space_id, tag_id)
         return {"code": 0, "msg": "ok", "data": _tag_view(view)}
 
     @router.put("/api/tags/{tag_id}")
@@ -107,37 +88,23 @@ if APIRouter is not None:
         request: TagUpdateBody,
         ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        try:
-            tag = update_tag(
-                repository,
-                ctx.user_id,
-                ctx.current_space_id,
-                tag_id,
-                TagUpdateRequest(
-                    name=request.name,
-                    color=request.color,
-                    description=request.description,
-                    status=request.status,
-                ),
-            )
-        except TagAccessError as exc:
-            raise HTTPException(status_code=403, detail={"code": 4003, "msg": str(exc)}) from exc
-        except TagNotFoundError as exc:
-            raise HTTPException(status_code=404, detail={"code": 4004, "msg": str(exc)}) from exc
-        except TagConflictError as exc:
-            raise HTTPException(status_code=409, detail={"code": 4090, "msg": str(exc)}) from exc
-        except TagValidationError as exc:
-            raise HTTPException(status_code=422, detail={"code": 4220, "msg": str(exc)}) from exc
+        tag = update_tag(
+            repository,
+            ctx.user_id,
+            ctx.current_space_id,
+            tag_id,
+            TagUpdateRequest(
+                name=request.name,
+                color=request.color,
+                description=request.description,
+                status=request.status,
+            ),
+        )
         return {"code": 0, "msg": "ok", "data": _tag_detail(tag)}
 
     @router.delete("/api/tags/{tag_id}")
     def archive_tag_endpoint(tag_id: int, ctx: TokenContext = Depends(get_current_user)) -> dict[str, object]:
-        try:
-            tag = archive_tag(repository, ctx.user_id, ctx.current_space_id, tag_id)
-        except TagAccessError as exc:
-            raise HTTPException(status_code=403, detail={"code": 4003, "msg": str(exc)}) from exc
-        except TagNotFoundError as exc:
-            raise HTTPException(status_code=404, detail={"code": 4004, "msg": str(exc)}) from exc
+        tag = archive_tag(repository, ctx.user_id, ctx.current_space_id, tag_id)
         return {"code": 0, "msg": "ok", "data": _tag_detail(tag)}
 
     @router.get("/api/documents/{document_id}/tags")
@@ -164,10 +131,6 @@ if APIRouter is not None:
             )
         except DocumentNotFoundError as exc:
             raise HTTPException(status_code=404, detail={"code": 4004, "msg": "document not found"}) from exc
-        except TagAccessError as exc:
-            raise HTTPException(status_code=403, detail={"code": 4003, "msg": str(exc)}) from exc
-        except TagValidationError as exc:
-            raise HTTPException(status_code=422, detail={"code": 4220, "msg": str(exc)}) from exc
         return {
             "code": 0,
             "msg": "ok",
@@ -188,8 +151,6 @@ if APIRouter is not None:
             remove_document_tag(repository, ctx.user_id, ctx.current_space_id, document_id, tag_id)
         except DocumentNotFoundError as exc:
             raise HTTPException(status_code=404, detail={"code": 4004, "msg": "document not found"}) from exc
-        except TagAccessError as exc:
-            raise HTTPException(status_code=403, detail={"code": 4003, "msg": str(exc)}) from exc
         return {"code": 0, "msg": "ok", "data": {"deleted": True}}
 
     @router.get("/api/tags/{tag_id}/documents")
@@ -198,14 +159,9 @@ if APIRouter is not None:
         status: str | None = "active",
         ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        try:
-            documents = list_documents_by_tag(
-                repository, ctx.user_id, ctx.current_space_id, tag_id, status
-            )
-        except TagAccessError as exc:
-            raise HTTPException(status_code=403, detail={"code": 4003, "msg": str(exc)}) from exc
-        except TagNotFoundError as exc:
-            raise HTTPException(status_code=404, detail={"code": 4004, "msg": str(exc)}) from exc
+        documents = list_documents_by_tag(
+            repository, ctx.user_id, ctx.current_space_id, tag_id, status
+        )
         items = [_document_view(document) for document in documents]
         return {"code": 0, "msg": "ok", "data": {"items": items, "total": len(items)}}
 
