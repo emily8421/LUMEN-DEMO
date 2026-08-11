@@ -250,7 +250,7 @@ class DocLinkApiTest(unittest.TestCase):
         from backend.api import doc_links as doc_links_api
         from backend.model.entities import DocumentPermission
         from backend.repository.demo_repository import DemoRepository
-        from fastapi import HTTPException
+        from backend.service.document import DocumentNotFoundError
 
         repository = DemoRepository()
         private = repository.create_document(
@@ -260,10 +260,10 @@ class DocLinkApiTest(unittest.TestCase):
         original_repository = doc_links_api.repository
         doc_links_api.repository = repository
         try:
-            with self.assertRaises(HTTPException) as raised:
+            # Slice B：DocumentNotFoundError 已继承 ApiError，异常冒泡到 main.py handler 转 envelope（code 4004）。
+            with self.assertRaises(DocumentNotFoundError) as raised:
                 doc_links_api.list_links_endpoint(document_id=private.id, direction="outbound", ctx=_demo_ctx())
-            self.assertEqual(raised.exception.status_code, 404)
-            self.assertEqual(raised.exception.detail["code"], 4004)
+            self.assertEqual(raised.exception.code, 4004)
         finally:
             doc_links_api.repository = original_repository
 

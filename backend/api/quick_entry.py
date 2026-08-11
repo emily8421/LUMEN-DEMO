@@ -9,24 +9,19 @@ from __future__ import annotations
 
 from backend.repository import repository
 from backend.service.auth_context import TokenContext, get_current_user
-from backend.service.document import DocumentNotFoundError
 from backend.service.quick_entry import (
-    QuickEntryAccessError,
     QuickEntryCaptureRequest,
-    QuickEntryNotFoundError,
-    QuickEntryValidationError,
     QuickEntryView,
     capture_quick_entry,
     discard_quick_entry,
 )
 
 try:
-    from fastapi import APIRouter, Depends, HTTPException
+    from fastapi import APIRouter, Depends
     from pydantic import BaseModel
 except ImportError:  # pragma: no cover - allows service tests before dependencies are installed
     APIRouter = None
     BaseModel = object
-    HTTPException = Exception
 
 
 if APIRouter is not None:
@@ -45,26 +40,19 @@ if APIRouter is not None:
         request: QuickEntryCaptureBody,
         ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        try:
-            view = capture_quick_entry(
-                repository,
-                ctx.user_id,
-                ctx.current_space_id,
-                QuickEntryCaptureRequest(
-                    title=request.title,
-                    content_md=request.content_md,
-                    source=request.source,
-                    target_document_id=request.target_document_id,
-                    tag_ids=tuple(request.tag_ids),
-                    mode=request.mode,
-                ),
-            )
-        except QuickEntryAccessError as exc:
-            raise HTTPException(status_code=403, detail={"code": 4003, "msg": str(exc)}) from exc
-        except DocumentNotFoundError as exc:
-            raise HTTPException(status_code=404, detail={"code": 4004, "msg": "document not found"}) from exc
-        except QuickEntryValidationError as exc:
-            raise HTTPException(status_code=422, detail={"code": 4220, "msg": str(exc)}) from exc
+        view = capture_quick_entry(
+            repository,
+            ctx.user_id,
+            ctx.current_space_id,
+            QuickEntryCaptureRequest(
+                title=request.title,
+                content_md=request.content_md,
+                source=request.source,
+                target_document_id=request.target_document_id,
+                tag_ids=tuple(request.tag_ids),
+                mode=request.mode,
+            ),
+        )
         return {"code": 0, "msg": "ok", "data": _quick_entry_view(view)}
 
     @router.delete("/api/quick-entry/{entry_id}")
@@ -72,14 +60,7 @@ if APIRouter is not None:
         entry_id: int,
         ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        try:
-            view = discard_quick_entry(repository, ctx.user_id, ctx.current_space_id, entry_id)
-        except QuickEntryAccessError as exc:
-            raise HTTPException(status_code=403, detail={"code": 4003, "msg": str(exc)}) from exc
-        except QuickEntryNotFoundError as exc:
-            raise HTTPException(status_code=404, detail={"code": 4004, "msg": str(exc)}) from exc
-        except QuickEntryValidationError as exc:
-            raise HTTPException(status_code=422, detail={"code": 4220, "msg": str(exc)}) from exc
+        view = discard_quick_entry(repository, ctx.user_id, ctx.current_space_id, entry_id)
         return {"code": 0, "msg": "ok", "data": _quick_entry_view(view)}
 
     def _quick_entry_view(view: QuickEntryView) -> dict[str, object]:
