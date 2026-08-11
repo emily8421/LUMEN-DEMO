@@ -6,13 +6,9 @@ from backend.model.entities import Document, DocumentPermission, DocumentVersion
 from backend.repository import repository
 from backend.service.auth_context import TokenContext, get_current_user
 from backend.service.document import (
-    DocumentAccessError,
     DocumentCreate,
     DocumentMove,
-    DocumentNotFoundError,
     DocumentUpdate,
-    DocumentValidationError,
-    VersionNotFoundError,
     create_document,
     delete_document,
     get_visible_document,
@@ -94,22 +90,17 @@ if APIRouter is not None:
         request: DocumentWriteRequest,
         ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        try:
-            document = update_document(
-                repository=repository,
-                user_id=ctx.user_id,
-                current_space_id=ctx.current_space_id,
-                document_id=document_id,
-                request=DocumentUpdate(
-                    title=request.title,
-                    content_md=request.content_md,
-                    permission=request.permission,
-                ),
-            )
-        except DocumentNotFoundError as exc:
-            raise HTTPException(status_code=404, detail={"code": 4004, "msg": "document not found"}) from exc
-        except DocumentAccessError as exc:
-            raise HTTPException(status_code=403, detail={"code": 4003, "msg": "no write permission on external document"}) from exc
+        document = update_document(
+            repository=repository,
+            user_id=ctx.user_id,
+            current_space_id=ctx.current_space_id,
+            document_id=document_id,
+            request=DocumentUpdate(
+                title=request.title,
+                content_md=request.content_md,
+                permission=request.permission,
+            ),
+        )
         return {"code": 0, "msg": "ok", "data": _document_detail(document)}
 
     @router.patch("/{document_id}/folder")
@@ -118,20 +109,13 @@ if APIRouter is not None:
         request: DocumentMoveRequest,
         ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        try:
-            document = move_document_to_folder(
-                repository=repository,
-                user_id=ctx.user_id,
-                current_space_id=ctx.current_space_id,
-                document_id=document_id,
-                request=DocumentMove(folder_id=request.folder_id),
-            )
-        except DocumentNotFoundError as exc:
-            raise HTTPException(status_code=404, detail={"code": 4004, "msg": "document not found"}) from exc
-        except DocumentAccessError as exc:
-            raise HTTPException(status_code=403, detail={"code": 4003, "msg": "no write permission on external document"}) from exc
-        except DocumentValidationError as exc:
-            raise HTTPException(status_code=422, detail={"code": 4220, "msg": str(exc)}) from exc
+        document = move_document_to_folder(
+            repository=repository,
+            user_id=ctx.user_id,
+            current_space_id=ctx.current_space_id,
+            document_id=document_id,
+            request=DocumentMove(folder_id=request.folder_id),
+        )
         return {"code": 0, "msg": "ok", "data": _document_detail(document)}
 
     @router.delete("/{document_id}")
@@ -139,12 +123,7 @@ if APIRouter is not None:
         document_id: int,
         ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        try:
-            delete_document(repository, ctx.user_id, ctx.current_space_id, document_id)
-        except DocumentNotFoundError as exc:
-            raise HTTPException(status_code=404, detail={"code": 4004, "msg": "document not found"}) from exc
-        except DocumentAccessError as exc:
-            raise HTTPException(status_code=403, detail={"code": 4003, "msg": "no write permission on external document"}) from exc
+        delete_document(repository, ctx.user_id, ctx.current_space_id, document_id)
         return {"code": 0, "msg": "ok", "data": {"deleted": True}}
 
     @router.get("/{document_id}/versions")
@@ -152,10 +131,7 @@ if APIRouter is not None:
         document_id: int,
         ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        try:
-            versions = list_versions(repository, ctx.user_id, ctx.current_space_id, document_id)
-        except DocumentNotFoundError as exc:
-            raise HTTPException(status_code=404, detail={"code": 4004, "msg": "document not found"}) from exc
+        versions = list_versions(repository, ctx.user_id, ctx.current_space_id, document_id)
         return {"code": 0, "msg": "ok", "data": [_version_detail(version) for version in versions]}
 
     @router.post("/{document_id}/versions/{version_no}/restore")
@@ -164,14 +140,7 @@ if APIRouter is not None:
         version_no: int,
         ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        try:
-            document = restore_version(repository, ctx.user_id, ctx.current_space_id, document_id, version_no)
-        except DocumentNotFoundError as exc:
-            raise HTTPException(status_code=404, detail={"code": 4004, "msg": "document not found"}) from exc
-        except VersionNotFoundError as exc:
-            raise HTTPException(status_code=404, detail={"code": 4004, "msg": "version not found"}) from exc
-        except DocumentAccessError as exc:
-            raise HTTPException(status_code=403, detail={"code": 4003, "msg": "no write permission on external document"}) from exc
+        document = restore_version(repository, ctx.user_id, ctx.current_space_id, document_id, version_no)
         return {"code": 0, "msg": "ok", "data": _document_detail(document)}
 
     class PolishRequestBody(BaseModel):
@@ -199,10 +168,6 @@ if APIRouter is not None:
                     use_sources=request.use_sources,
                 ),
             )
-        except DocumentNotFoundError as exc:
-            raise HTTPException(status_code=404, detail={"code": 4004, "msg": "document not found"}) from exc
-        except DocumentAccessError as exc:
-            raise HTTPException(status_code=403, detail={"code": 4003, "msg": "no write permission on external document"}) from exc
         except PolishValidationError as exc:
             raise HTTPException(status_code=422, detail={"code": 4220, "msg": str(exc)}) from exc
         except LlmUnavailableError as exc:
@@ -226,10 +191,7 @@ if APIRouter is not None:
         }
 
     def _read_document_or_404(user_id: int, current_space_id: int, document_id: int) -> Document:
-        try:
-            return get_visible_document(repository, user_id, current_space_id, document_id)
-        except DocumentNotFoundError as exc:
-            raise HTTPException(status_code=404, detail={"code": 4004, "msg": "document not found"}) from exc
+        return get_visible_document(repository, user_id, current_space_id, document_id)
 
 
     def _document_summary(document: Document) -> dict[str, object]:
