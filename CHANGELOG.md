@@ -6,6 +6,16 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.8.0（2026-08-11）
+
+**维护态批6（Sprint-31）：P0 工程治理——test DB 安全 guard（NFR-005）+ CI 最小回归门（NFR-006）。纯工程、非功能，不改 Phase / 交付物范围 / 对外 API。**
+
+- **P0-1 测试数据库安全 guard（NFR-005 / task-041）**：新增 `tests/backend/pg_test_support.py` 三重 fail-closed guard（`LUMEN_ENV=test` + 库名 `_test` 结尾 + `ALLOW_DESTRUCTIVE_TEST_DB=1` 三条件全满足才放行，缺任一抛 `UnsafeTestDatabaseError` 不降级 skip）+ 独立 `lumen_test` 库（`docker/init-test-db.sql` + compose 挂载）+ 4 PG 测试面接入（连接 try 外 + TRUNCATE 前二次 guard）+ 根 `pytest.ini` integration marker + guard 单测 + README/backend README/demo-guide 默认命令分离。防止 PG 集成测试误清开发库 `lumen`。
+- **P0-2 CI 最小回归门（NFR-006 / task-042）**：`.github/workflows/project-check.yml` 从零代码门升级到三 job——`backend-test`（pytest `-m "not integration" --strict-markers`，required）/ `frontend-build`（Node 22.17.1 + `npm run build`，含 `tsc -b`，required）/ `backend-lint`（ruff `E4/E7/E9/F`，恒 advisory）；A1：test/build advisory 起步→合并前升 required、lint 恒 advisory；B1：eslint 暂缓 P1。新增根 `ruff.toml`（py314）+ `backend/requirements-dev.txt`（pytest 9.1.1 / httpx 0.28.1 / ruff 0.15.14）。
+- **CI 首跑暴露并修复 2 个潜伏 bug**：① `python-multipart` 运行依赖漏声明（`backend/api/imports.py` / `service/export.py` 用 UploadFile/Form，`requirements.txt` 补 `python-multipart==0.0.32`）；② `backend/service/llm_adapter.py` env key 大小写——`LLM_PROVIDERS` 值小写 name 但 env key 约定大写，`_build_config`/`_read_env_configs` 用 `f"LLM_{name}_*"` 拼 key 不 upper() → Linux（case-sensitive）不匹配 → fallback mock（**生产影响：Linux 部署 LLM 多通道切换失效**）；修复 `name.upper()`。
+
+> MINOR 依据（`ai/project-rules.md` §2.4.2）：Sprint 验收 + 新增工程治理能力（CI 代码门 + 测试安全 guard）+ 2 个潜伏生产 bug 修复。验证：P0-1 guard 单测 10/10 + default unit 286 passed/47 deselected + 真实 PG integration 47 passed（`lumen_test`）+ 开发库保护；P0-2 CI 三 job（backend-test/frontend-build required、backend-lint advisory 41 基线）5 轮验证；前端 build 301 modules。口径见 `docs/research/2026-08-10-code-governance-rollout-plan.md` §3。
+
 ## v3.7.0（2026-08-09）
 
 **维护态批5：REQ-050 成员空间可见性 + REQ-051 忘记密码 / 登录密码显隐。**
