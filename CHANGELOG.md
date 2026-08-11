@@ -6,6 +6,16 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.8.4（2026-08-11）
+
+**维护态批7（Sprint-32）：CQ-P1-005 错误契约收口 Slice B-6 + Slice C——main.py HTTPException else 分支 code 二义收口 + 前端错误契约收口。纯契约收口、非功能，不改 Phase / 交付物范围 / 对外 API 语义。CQ-P1-005 全闭环（Slice A + B-1..B-6 + C），聚合 bump PATCH。**
+
+- **Slice B-6 main.py HTTPException else 分支（PR #137 `226923c`）**：`main.py` HTTPException handler else 分支（FastAPI/Starlette 内置 404/405 等不带业务 code）收口——code 走新增 `HTTP_TO_CODE` 反向映射到业务码（旧实现把 HTTP 码当 code 返回，与 `07-api-spec §1`「HTTP 码与业务码分离」相悖）+ msg 固定 "request failed" 禁 `str(exc)`（NFR-007）+ 原始 detail 进 `logger.warning` 不外泄；HTTP `status_code` 保持原值。`backend/model/error_codes.py` 新增 `HTTP_TO_CODE` 反向映射。
+- **Slice C 前端错误契约收口（PR #138 `c40f591`）**：`frontend/src/api/client.ts` 新增 `ApiError` class（携带 code + status，继承 Error 保留 `.message`）+ `request`/`downloadBlob` 错误改抛 `ApiError`（旧 `throw new Error(envelope.msg)` 丢失后端业务 code）；`session-store.ts` `isAuthTokenError` 改 `error instanceof ApiError && code === 4001` 判定，删正则文案匹配；`App.tsx`（2 处）+ `useDocuments.ts`（1 处）调用方传 `caughtError`。**005 ROI 兑现——前端不再靠文案判 auth。** 向后兼容：`ApiError.message === envelope.msg`，现有 catch/setError/notice 显示零改动。
+- **验证**：B-6 契约 `test_error_contract` 11 passed（3 新用例：404→4004 / 405→4004 / 418→5000）+ 全量 **297 passed / 47 deselected 零回归**（294→297）+ ruff advisory **37** 基线不增；Slice C tsc + vite build 全绿（301 modules，CI frontend-build 29s）；前端无单测/smoke 基础设施（`scripts/` 空），按 build + 逻辑审查验证；2 PR CI required 全绿（Linux backend-test + frontend-build + project-check；ruff advisory fail 不阻断）。
+
+> PATCH 依据（`ai/project-rules.md` §2.4.1）：纯重构 / 契约收口，不改对外 API 契约语义、不新增可演示能力；Slice B-6 + Slice C 聚合 bump，**CQ-P1-005 全闭环**。验证：B-6 全量 297 passed 零回归 + ruff 37 不增 + Slice C tsc/vite build 全绿 + 2 PR CI required 全绿。诊断 `docs/research/2026-08-10-code-quality-maintainability-assessment.md` §4.8 CQ-P1-005；实施口径 `docs/research/2026-08-10-code-governance-rollout-plan.md` §4 轨道3。
+
 ## v3.8.3（2026-08-11）
 
 **维护态批7（Sprint-32）：CQ-P1-005 错误契约收口 Slice B-5——auth+admin+space+space_members+users 域异常迁移继承 `ApiError` + api 层 `_status_for`/`_http_error` 收口。纯契约收口、非功能，不改 Phase / 交付物范围 / 对外 API 语义。Slice B-5 全部完成，聚合 bump PATCH。**
