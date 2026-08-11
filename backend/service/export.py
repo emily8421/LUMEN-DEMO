@@ -29,7 +29,7 @@ from backend.service.document import (
     get_visible_document,
     list_visible_documents,
 )
-from backend.service.space import SpaceAccessError, ensure_space_access
+from backend.service.space import ensure_space_access
 
 
 class ExportError(ApiError):

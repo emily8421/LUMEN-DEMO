@@ -20,7 +20,6 @@ from backend.service.export import (
     export_document_md,
     export_space_zip,
 )
-from backend.service.space import SpaceAccessError
 
 try:
     from fastapi import APIRouter, Depends, HTTPException, Query
@@ -78,14 +77,12 @@ if APIRouter is not None:
         if format != "zip":
             raise HTTPException(status_code=422, detail={"code": 4220, "msg": "only zip space export is supported"})
 
-        try:
-            export = export_space_zip(
-                repository=repository,
-                user_id=ctx.user_id,
-                current_space_id=ctx.current_space_id,
-            )
-        except SpaceAccessError as exc:
-            raise HTTPException(status_code=403, detail={"code": 4003, "msg": "space access denied"}) from exc
+        # 空间访问被拒（SpaceAccessError）冒泡 main.py ApiError handler → 403/4003 envelope
+        export = export_space_zip(
+            repository=repository,
+            user_id=ctx.user_id,
+            current_space_id=ctx.current_space_id,
+        )
 
         return Response(
             content=export.archive,

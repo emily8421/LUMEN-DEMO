@@ -12,7 +12,6 @@ from backend.service.imports import (
     import_batch,
     import_extracted_text,
 )
-from backend.service.space import SpaceAccessError
 
 try:
     from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
@@ -39,21 +38,18 @@ if APIRouter is not None:
             resolved_permission = DocumentPermission(permission)
         except ValueError as exc:
             raise HTTPException(status_code=422, detail={"code": 4220, "msg": "invalid document permission"}) from exc
-        # space access（SpaceAccessError，B-5 未迁移需保留 except）；ImportValidationError 已继承 ApiError 冒泡 main.py handler。
-        try:
-            result = import_extracted_text(
-                repository=repository,
-                user_id=ctx.user_id,
-                current_space_id=ctx.current_space_id,
-                request=ImportTextRequest(
-                    filename=file.filename or "",
-                    content=content,
-                    title=title,
-                    permission=resolved_permission,
-                ),
-            )
-        except SpaceAccessError as exc:
-            raise HTTPException(status_code=403, detail={"code": 4003, "msg": "space access denied"}) from exc
+        # space access（SpaceAccessError）冒泡 main.py ApiError handler → 403/4003 envelope；ImportValidationError 已继承 ApiError。
+        result = import_extracted_text(
+            repository=repository,
+            user_id=ctx.user_id,
+            current_space_id=ctx.current_space_id,
+            request=ImportTextRequest(
+                filename=file.filename or "",
+                content=content,
+                title=title,
+                permission=resolved_permission,
+            ),
+        )
 
         return {
             "code": 0,
@@ -92,20 +88,18 @@ if APIRouter is not None:
                 )
             )
 
-        try:
-            result = import_batch(
-                repository=repository,
-                user_id=ctx.user_id,
-                current_space_id=ctx.current_space_id,
-                request=BatchImportRequest(
-                    files=upload_requests,
-                    permission=resolved_permission,
-                    conflict_policy=conflict_policy,
-                    preserve_structure=preserve_structure,
-                ),
-            )
-        except SpaceAccessError as exc:
-            raise HTTPException(status_code=403, detail={"code": 4003, "msg": "space access denied"}) from exc
+        # space access（SpaceAccessError）冒泡 main.py ApiError handler → 403/4003 envelope
+        result = import_batch(
+            repository=repository,
+            user_id=ctx.user_id,
+            current_space_id=ctx.current_space_id,
+            request=BatchImportRequest(
+                files=upload_requests,
+                permission=resolved_permission,
+                conflict_policy=conflict_policy,
+                preserve_structure=preserve_structure,
+            ),
+        )
 
         return {
             "code": 0,

@@ -91,12 +91,10 @@ def require_space_member(space_id: int):
     """空间成员校验依赖；无权限时返回 403。"""
 
     def dependency(ctx: TokenContext = Depends(get_current_user)) -> TokenContext:
-        from backend.service.space import SpaceAccessError, ensure_space_access
+        from backend.service.space import ensure_space_access
 
-        try:
-            ensure_space_access(ctx.user_id, space_id, repository.list_memberships())
-        except SpaceAccessError as exc:
-            raise HTTPException(status_code=403, detail={"code": 4003, "msg": "space access denied"}) from exc
+        # 空间访问被拒（SpaceAccessError，ApiError 4003）冒泡 main.py handler → 403/4003 envelope
+        ensure_space_access(ctx.user_id, space_id, repository.list_memberships())
         return ctx
 
     return dependency
