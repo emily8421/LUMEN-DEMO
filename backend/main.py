@@ -80,12 +80,24 @@ def create_app():
         if isinstance(exc.detail, dict) and "code" in exc.detail:
             content = {"code": exc.detail["code"], "msg": exc.detail.get("msg", "error"), "data": exc.detail.get("data")}
             return JSONResponse(status_code=exc.status_code, content=content)
-        return JSONResponse(status_code=exc.status_code, content={"code": exc.status_code, "msg": str(exc.detail), "data": None})
+        # CQ-P1-005 Slice B-6：else 分支（HTTPException 不带业务 code，仅 FastAPI /
+        # Starlette 内置 404 / 405 等）收口——code 反向映射到业务码消除二义（旧实现
+        # 把 HTTP 码当 code 返回），msg 固定文案禁 str(exc)（NFR-007），原始 detail
+        # 仅进 warning 日志不外泄。HTTP status_code 保持原值，HTTP 层行为不变。
+        code = int(HTTP_TO_CODE.get(exc.status_code, ErrorCode.INTERNAL))
+        logger.warning(
+            "unclassified HTTPException %d on %s %s: %r",
+            exc.status_code,
+            request.method,
+            request.url.path,
+            exc.detail,
+        )
+        return JSONResponse(status_code=exc.status_code, content={"code": code, "msg": "request failed", "data": None})
 
     # CQ-P1-005 / NFR-007（Sprint-32 Slice A）：统一错误响应契约地基。
     # ApiError 领域异常 → envelope；未捕获 Exception → 兜底 5000 envelope（不回传堆栈）。
     # 现有 ~40 领域异常将在 Slice B 迁移继承 ApiError；本处为契约注册先行。
-    from backend.model.error_codes import ApiError, ErrorCode
+    from backend.model.error_codes import HTTP_TO_CODE, ApiError, ErrorCode
 
     @app.exception_handler(ApiError)
     async def api_error_handler(request: Request, exc: ApiError):
