@@ -16,6 +16,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from backend.model.entities import Document, Tag
+from backend.model.error_codes import ApiError, ErrorCode
 from backend.service.document import DocumentNotFoundError, get_visible_document
 from backend.service.permission import (
     can_view_document,
@@ -25,20 +26,32 @@ from backend.service.permission import (
 )
 
 
-class TagValidationError(Exception):
+class TagValidationError(ApiError):
     """标签请求字段非法（API 映射 4220）。"""
 
+    def __init__(self, message: str, status_code: int | None = None) -> None:
+        super().__init__(ErrorCode.VALIDATION_FAILED, message, status_code)
 
-class TagAccessError(Exception):
+
+class TagAccessError(ApiError):
     """空间 / 资源访问被拒（API 映射 4003）。"""
 
+    def __init__(self, message: str, status_code: int | None = None) -> None:
+        super().__init__(ErrorCode.FORBIDDEN, message, status_code)
 
-class TagConflictError(Exception):
+
+class TagConflictError(ApiError):
     """同空间标签重名（API 映射 4090）。"""
 
+    def __init__(self, message: str, status_code: int | None = None) -> None:
+        super().__init__(ErrorCode.CONFLICT, message, status_code)
 
-class TagNotFoundError(Exception):
+
+class TagNotFoundError(ApiError):
     """标签不存在或不属于当前空间（API 映射 4004）。"""
+
+    def __init__(self, message: str, status_code: int | None = None) -> None:
+        super().__init__(ErrorCode.NOT_FOUND, message, status_code)
 
 
 @dataclass(frozen=True)
