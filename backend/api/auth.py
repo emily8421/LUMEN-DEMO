@@ -9,7 +9,6 @@ from __future__ import annotations
 from backend.repository import repository
 from backend.service.auth import (
     TOKEN_SIGNING_KEY,
-    AuthenticationError,
     authenticate,
     list_active_sessions,
     refresh_session,
@@ -31,14 +30,6 @@ except ImportError:  # pragma: no cover - allows service tests before dependenci
     Depends = None
 
 
-def _status_for(exc: AuthenticationError) -> int:
-    return {4001: 401, 4010: 401, 4030: 403, 4004: 404, 4090: 409, 4220: 422}.get(exc.code, 400)
-
-
-def _http_error(exc: AuthenticationError) -> HTTPException:
-    return HTTPException(status_code=_status_for(exc), detail={"code": exc.code, "msg": exc.msg})
-
-
 if APIRouter is not None:
     router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -56,10 +47,8 @@ if APIRouter is not None:
 
     @router.post("/register")
     def register_endpoint(request: RegisterRequest) -> dict[str, object]:
-        try:
-            user = register(repository, request.email, request.name, request.password)
-        except AuthenticationError as exc:
-            raise _http_error(exc) from exc
+        # 鉴权失败（AuthenticationError）冒泡 main.py ApiError handler → 对应 HTTP 码 envelope
+        user = register(repository, request.email, request.name, request.password)
         return {
             "code": 0,
             "msg": "ok",
@@ -69,10 +58,8 @@ if APIRouter is not None:
     @router.post("/login")
     def login(request: LoginRequest) -> dict[str, object]:
         login_id = request.login_id or request.external_id or ""
-        try:
-            token, session = authenticate(repository, login_id, request.password)
-        except AuthenticationError as exc:
-            raise _http_error(exc) from exc
+        # 鉴权失败（AuthenticationError）冒泡 main.py ApiError handler → 对应 HTTP 码 envelope
+        token, session = authenticate(repository, login_id, request.password)
 
         current_space_id = session.current_space_id
         if request.current_space_id is not None:
@@ -112,10 +99,8 @@ if APIRouter is not None:
     @router.post("/refresh")
     def refresh(authorization: str = Header(default="")) -> dict[str, object]:
         token = _extract_token(authorization)
-        try:
-            new_token, new_session = refresh_session(repository, token)
-        except AuthenticationError as exc:
-            raise _http_error(exc) from exc
+        # 鉴权失败（AuthenticationError）冒泡 main.py ApiError handler → 对应 HTTP 码 envelope
+        new_token, new_session = refresh_session(repository, token)
         current_user = repository.find_user_by_id(new_session.user_id)
         name = current_user.name if current_user is not None else ""
         return {
@@ -171,10 +156,8 @@ if APIRouter is not None:
 
     @router.post("/password-reset/confirm")
     def password_reset_confirm(request: PasswordResetConfirm) -> dict[str, object]:
-        try:
-            confirm_password_reset(repository, request.token, request.new_password)
-        except AuthenticationError as exc:
-            raise _http_error(exc) from exc
+        # 鉴权失败（AuthenticationError）冒泡 main.py ApiError handler → 对应 HTTP 码 envelope
+        confirm_password_reset(repository, request.token, request.new_password)
         return {"code": 0, "msg": "ok", "data": None}
 else:
     router = None
