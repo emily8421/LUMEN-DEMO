@@ -21,6 +21,7 @@ class LlmAdapterMultiConfigTest(unittest.TestCase):
             "LLM_GPT_API_KEY": "key-b",
         }
         with mock.patch.dict(os.environ, env, clear=True):
+            print(f"DBG named: LLM_PROVIDERS={os.environ.get('LLM_PROVIDERS')!r} LLM_PROVIDER={os.environ.get('LLM_PROVIDER')!r} keys={sorted(k for k in os.environ if k.startswith('LLM'))}", flush=True)
             default = load_config()
             self.assertEqual(default.name, "glm_a")
             self.assertEqual(default.provider, "glm")
@@ -59,6 +60,7 @@ class LlmAdapterMultiConfigTest(unittest.TestCase):
             "LLM_GPT_API_KEY": "key-b",
         }
         with mock.patch.dict(os.environ, env, clear=True):
+            print(f"DBG inline: LLM_PROVIDERS={os.environ.get('LLM_PROVIDERS')!r} keys={sorted(k for k in os.environ if k.startswith('LLM'))}", flush=True)
             names = {item["name"] for item in list_configs()}
             self.assertEqual(names, {"glm_a", "gpt"})
 
@@ -71,6 +73,7 @@ class LlmAdapterMultiConfigTest(unittest.TestCase):
             "LLM_DEEPSEEK_API_KEY": "secret-key",
         }
         with mock.patch.dict(os.environ, env, clear=True):
+            print(f"DBG deepseek: LLM_PROVIDERS={os.environ.get('LLM_PROVIDERS')!r} LLM_DEEPSEEK_PROVIDER={os.environ.get('LLM_DEEPSEEK_PROVIDER')!r} keys={sorted(k for k in os.environ if k.startswith('LLM'))}", flush=True)
             cfg = load_config()
             self.assertEqual(cfg.provider, "deepseek")
             self.assertTrue(cfg.enabled)
