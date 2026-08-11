@@ -17,23 +17,36 @@ from dataclasses import dataclass
 from typing import Any
 
 from backend.model.entities import TermCategory
+from backend.model.error_codes import ApiError, ErrorCode
 from backend.service.permission import is_space_member
 
 
-class TermCategoryValidationError(Exception):
+class TermCategoryValidationError(ApiError):
     """领域树请求字段非法 / 防环 / 跨空间（API 映射 4220）。"""
 
+    def __init__(self, message: str, status_code: int | None = None) -> None:
+        super().__init__(ErrorCode.VALIDATION_FAILED, message, status_code)
 
-class TermCategoryAccessError(Exception):
+
+class TermCategoryAccessError(ApiError):
     """空间访问被拒（API 映射 4003）。"""
 
+    def __init__(self, message: str, status_code: int | None = None) -> None:
+        super().__init__(ErrorCode.FORBIDDEN, message, status_code)
 
-class TermCategoryConflictError(Exception):
+
+class TermCategoryConflictError(ApiError):
     """同 parent 重名 / 删非空（API 映射 4090）。"""
 
+    def __init__(self, message: str, status_code: int | None = None) -> None:
+        super().__init__(ErrorCode.CONFLICT, message, status_code)
 
-class TermCategoryNotFoundError(Exception):
+
+class TermCategoryNotFoundError(ApiError):
     """领域节点不存在或不属于当前空间（API 映射 4004）。"""
+
+    def __init__(self, message: str, status_code: int | None = None) -> None:
+        super().__init__(ErrorCode.NOT_FOUND, message, status_code)
 
 
 # sentinel：区分「不修改该字段」与「显式置 None」（move 到根 parent=None）

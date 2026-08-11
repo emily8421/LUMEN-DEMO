@@ -6,9 +6,6 @@ from backend.model.entities import Term, TermStatus
 from backend.repository import repository
 from backend.service.auth_context import TokenContext, get_current_user
 from backend.service.term import (
-    TermAccessError,
-    TermNotFoundError,
-    TermValidationError,
     TermWrite,
     create_term,
     delete_term,
@@ -18,12 +15,11 @@ from backend.service.term import (
 )
 
 try:
-    from fastapi import APIRouter, Depends, HTTPException
+    from fastapi import APIRouter, Depends
     from pydantic import BaseModel
 except ImportError:  # pragma: no cover - allows service tests before dependencies are installed
     APIRouter = None
     BaseModel = object
-    HTTPException = Exception
 
 
 if APIRouter is not None:
@@ -46,30 +42,17 @@ if APIRouter is not None:
         status: TermStatus | None = None,
         ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        try:
-            terms = list_visible_terms(repository, ctx.user_id, ctx.current_space_id, query=q, status=status)
-        except TermAccessError as exc:
-            raise HTTPException(status_code=403, detail={"code": 4003, "msg": str(exc)}) from exc
+        terms = list_visible_terms(repository, ctx.user_id, ctx.current_space_id, query=q, status=status)
         return {"code": 0, "msg": "ok", "data": {"items": [_term_detail(term) for term in terms], "total": len(terms), "page": 1}}
 
     @router.post("")
     def create_term_endpoint(request: TermWriteRequest, ctx: TokenContext = Depends(get_current_user)) -> dict[str, object]:
-        try:
-            term = create_term(repository, ctx.user_id, ctx.current_space_id, _term_write(request))
-        except TermAccessError as exc:
-            raise HTTPException(status_code=403, detail={"code": 4003, "msg": str(exc)}) from exc
-        except TermValidationError as exc:
-            raise HTTPException(status_code=422, detail={"code": 4220, "msg": str(exc)}) from exc
+        term = create_term(repository, ctx.user_id, ctx.current_space_id, _term_write(request))
         return {"code": 0, "msg": "ok", "data": _term_detail(term)}
 
     @router.get("/{term_id}")
     def get_term_endpoint(term_id: int, ctx: TokenContext = Depends(get_current_user)) -> dict[str, object]:
-        try:
-            term = get_visible_term(repository, ctx.user_id, ctx.current_space_id, term_id)
-        except TermAccessError as exc:
-            raise HTTPException(status_code=403, detail={"code": 4003, "msg": str(exc)}) from exc
-        except TermNotFoundError as exc:
-            raise HTTPException(status_code=404, detail={"code": 4004, "msg": "term not found"}) from exc
+        term = get_visible_term(repository, ctx.user_id, ctx.current_space_id, term_id)
         return {"code": 0, "msg": "ok", "data": _term_detail(term)}
 
     @router.put("/{term_id}")
@@ -78,24 +61,12 @@ if APIRouter is not None:
         request: TermWriteRequest,
         ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        try:
-            term = update_term(repository, ctx.user_id, ctx.current_space_id, term_id, _term_write(request))
-        except TermAccessError as exc:
-            raise HTTPException(status_code=403, detail={"code": 4003, "msg": str(exc)}) from exc
-        except TermNotFoundError as exc:
-            raise HTTPException(status_code=404, detail={"code": 4004, "msg": "term not found"}) from exc
-        except TermValidationError as exc:
-            raise HTTPException(status_code=422, detail={"code": 4220, "msg": str(exc)}) from exc
+        term = update_term(repository, ctx.user_id, ctx.current_space_id, term_id, _term_write(request))
         return {"code": 0, "msg": "ok", "data": _term_detail(term)}
 
     @router.delete("/{term_id}")
     def delete_term_endpoint(term_id: int, ctx: TokenContext = Depends(get_current_user)) -> dict[str, object]:
-        try:
-            delete_term(repository, ctx.user_id, ctx.current_space_id, term_id)
-        except TermAccessError as exc:
-            raise HTTPException(status_code=403, detail={"code": 4003, "msg": str(exc)}) from exc
-        except TermNotFoundError as exc:
-            raise HTTPException(status_code=404, detail={"code": 4004, "msg": "term not found"}) from exc
+        delete_term(repository, ctx.user_id, ctx.current_space_id, term_id)
         return {"code": 0, "msg": "ok", "data": {"deleted": True}}
 
     def _term_write(request: TermWriteRequest) -> TermWrite:

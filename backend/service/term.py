@@ -5,20 +5,30 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from backend.model.entities import Term, TermStatus
+from backend.model.error_codes import ApiError, ErrorCode
 from backend.service.permission import can_view_document
 from backend.service.space import SpaceAccessError, ensure_space_access
 
 
-class TermAccessError(Exception):
-    pass
+class TermAccessError(ApiError):
+    """空间 / 资源访问被拒（API 映射 4003）。"""
+
+    def __init__(self, message: str, status_code: int | None = None) -> None:
+        super().__init__(ErrorCode.FORBIDDEN, message, status_code)
 
 
-class TermNotFoundError(Exception):
-    pass
+class TermNotFoundError(ApiError):
+    """术语不存在或不属于当前空间（API 映射 4004）。"""
+
+    def __init__(self, message: str, status_code: int | None = None) -> None:
+        super().__init__(ErrorCode.NOT_FOUND, message, status_code)
 
 
-class TermValidationError(Exception):
-    pass
+class TermValidationError(ApiError):
+    """术语请求字段非法 / 源文档不可见（API 映射 4220）。"""
+
+    def __init__(self, message: str, status_code: int | None = None) -> None:
+        super().__init__(ErrorCode.VALIDATION_FAILED, message, status_code)
 
 
 @dataclass(frozen=True)

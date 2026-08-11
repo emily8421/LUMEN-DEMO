@@ -14,12 +14,8 @@ from backend.repository import repository
 from backend.service.auth_context import TokenContext, get_current_user
 from backend.service.term_category import (
     UNSET,
-    TermCategoryAccessError,
-    TermCategoryConflictError,
     TermCategoryCreateRequest,
-    TermCategoryNotFoundError,
     TermCategoryUpdateRequest,
-    TermCategoryValidationError,
     TermCategoryView,
     create_term_category,
     delete_term_category,
@@ -29,12 +25,11 @@ from backend.service.term_category import (
 )
 
 try:
-    from fastapi import APIRouter, Depends, HTTPException
+    from fastapi import APIRouter, Depends
     from pydantic import BaseModel
 except ImportError:  # pragma: no cover - allows service tests before dependencies are installed
     APIRouter = None
     BaseModel = object
-    HTTPException = Exception
 
 
 if APIRouter is not None:
@@ -57,10 +52,7 @@ if APIRouter is not None:
         parent_id: int | None = None,
         ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        try:
-            views = list_term_categories(repository, ctx.user_id, ctx.current_space_id, parent_id)
-        except TermCategoryAccessError as exc:
-            raise HTTPException(status_code=403, detail={"code": 4003, "msg": str(exc)}) from exc
+        views = list_term_categories(repository, ctx.user_id, ctx.current_space_id, parent_id)
         items = [_term_category_view(v) for v in views]
         return {"code": 0, "msg": "ok", "data": {"items": items, "total": len(items)}}
 
@@ -69,19 +61,12 @@ if APIRouter is not None:
         request: TermCategoryCreateBody,
         ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        try:
-            category = create_term_category(
-                repository,
-                ctx.user_id,
-                ctx.current_space_id,
-                TermCategoryCreateRequest(name=request.name, parent_id=request.parent_id),
-            )
-        except TermCategoryAccessError as exc:
-            raise HTTPException(status_code=403, detail={"code": 4003, "msg": str(exc)}) from exc
-        except TermCategoryConflictError as exc:
-            raise HTTPException(status_code=409, detail={"code": 4090, "msg": str(exc)}) from exc
-        except TermCategoryValidationError as exc:
-            raise HTTPException(status_code=422, detail={"code": 4220, "msg": str(exc)}) from exc
+        category = create_term_category(
+            repository,
+            ctx.user_id,
+            ctx.current_space_id,
+            TermCategoryCreateRequest(name=request.name, parent_id=request.parent_id),
+        )
         return {"code": 0, "msg": "ok", "data": _term_category_detail(category)}
 
     @router.patch("/api/term-categories/{category_id}")
@@ -93,22 +78,13 @@ if APIRouter is not None:
         fields = _fields_set(request)
         name = request.name if "name" in fields else UNSET
         target_parent = request.parent_id if "parent_id" in fields else UNSET
-        try:
-            category = update_term_category(
-                repository,
-                ctx.user_id,
-                ctx.current_space_id,
-                category_id,
-                TermCategoryUpdateRequest(name=name, parent_id=target_parent),
-            )
-        except TermCategoryAccessError as exc:
-            raise HTTPException(status_code=403, detail={"code": 4003, "msg": str(exc)}) from exc
-        except TermCategoryNotFoundError as exc:
-            raise HTTPException(status_code=404, detail={"code": 4004, "msg": str(exc)}) from exc
-        except TermCategoryConflictError as exc:
-            raise HTTPException(status_code=409, detail={"code": 4090, "msg": str(exc)}) from exc
-        except TermCategoryValidationError as exc:
-            raise HTTPException(status_code=422, detail={"code": 4220, "msg": str(exc)}) from exc
+        category = update_term_category(
+            repository,
+            ctx.user_id,
+            ctx.current_space_id,
+            category_id,
+            TermCategoryUpdateRequest(name=name, parent_id=target_parent),
+        )
         return {"code": 0, "msg": "ok", "data": _term_category_detail(category)}
 
     @router.delete("/api/term-categories/{category_id}")
@@ -116,14 +92,7 @@ if APIRouter is not None:
         category_id: int,
         ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        try:
-            delete_term_category(repository, ctx.user_id, ctx.current_space_id, category_id)
-        except TermCategoryAccessError as exc:
-            raise HTTPException(status_code=403, detail={"code": 4003, "msg": str(exc)}) from exc
-        except TermCategoryNotFoundError as exc:
-            raise HTTPException(status_code=404, detail={"code": 4004, "msg": str(exc)}) from exc
-        except TermCategoryConflictError as exc:
-            raise HTTPException(status_code=409, detail={"code": 4090, "msg": str(exc)}) from exc
+        delete_term_category(repository, ctx.user_id, ctx.current_space_id, category_id)
         return {"code": 0, "msg": "ok", "data": {"deleted": True}}
 
     @router.post("/api/term-categories/reorder")
@@ -131,18 +100,13 @@ if APIRouter is not None:
         request: TermCategoryReorderBody,
         ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        try:
-            reorder_term_categories(
-                repository,
-                ctx.user_id,
-                ctx.current_space_id,
-                request.parent_id,
-                request.ordered_ids,
-            )
-        except TermCategoryAccessError as exc:
-            raise HTTPException(status_code=403, detail={"code": 4003, "msg": str(exc)}) from exc
-        except TermCategoryValidationError as exc:
-            raise HTTPException(status_code=422, detail={"code": 4220, "msg": str(exc)}) from exc
+        reorder_term_categories(
+            repository,
+            ctx.user_id,
+            ctx.current_space_id,
+            request.parent_id,
+            request.ordered_ids,
+        )
         return {"code": 0, "msg": "ok", "data": {"ok": True}}
 
     def _fields_set(model) -> set[str]:
