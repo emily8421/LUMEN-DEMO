@@ -1,0 +1,15 @@
+# 后端开发 / 测试依赖（P0-2 / NFR-006 / task-042，2026-08-11）。
+#
+# 与 backend/requirements.txt（运行依赖）分离：CI backend-test job 同时安装两者。
+# 版本与本地 .venv 实测对齐（pip show）；ruff 锁首个支持 py314 target 的 0.15 系列。
+#
+# 安装：.venv/Scripts/pip install -r backend/requirements.txt -r backend/requirements-dev.txt
+
+# 测试框架（本地 .venv 实测 9.1.1）；pytest -m "not integration" --strict-markers 依赖根 pytest.ini 的 integration marker（task-041）。
+pytest==9.1.1
+
+# FastAPI TestClient 依赖（本地 .venv 实测 0.28.1）。
+httpx==0.28.1
+
+# 最小 lint 基线（ruff>=0.15.0 支持 target-version="py314"；backend-lint 恒 advisory，只 check 不 format）。
+ruff==0.15.14

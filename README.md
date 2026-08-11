@@ -68,7 +68,8 @@
 > 验证计划与 REQ→用例追溯见 `docs/09-verification.md`；本机资源验证见其 §4。
 
 - 单元 / 集成 / 验收测试覆盖 REQ-001..011、REQ-036（Phase1）；数据夹具：`nova-internal` / `brightlite-team` 双空间 + 三级权限。
-- 当前自动验证：`.venv\Scripts\python.exe -m unittest discover -s tests/backend -v`、`.venv\Scripts\python.exe -m compileall backend tests/backend`、`npm.cmd --prefix frontend run build`。
+- 当前自动验证（默认 unit，不连 PG）：`.venv\Scripts\python.exe -m pytest tests/backend -m "not integration" -v`、`.venv\Scripts\python.exe -m compileall backend tests/backend`、`npm.cmd --prefix frontend run build`。
+- PG 集成测试（需独立 `lumen_test` 库 + 三 guard env，见 `tests/backend/pg_test_support.py`）：`LUMEN_ENV=test ALLOW_DESTRUCTIVE_TEST_DB=1 DATABASE_URL=postgresql://lumen:lumen@localhost:15432/lumen_test .venv\Scripts\python.exe -m pytest tests/backend -m integration -v`。
 - 本机资源验证：Docker Compose 起库后确认 Demo 在内存 / 显存 / 磁盘软上限内运行。
 
 ## 项目结构
