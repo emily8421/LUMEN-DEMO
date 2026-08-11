@@ -16,7 +16,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.testclient import TestClient
 
-from backend.model.error_codes import CODE_TO_HTTP, ApiError, ErrorCode
+from backend.model.error_codes import CODE_TO_HTTP, HTTP_TO_CODE, ApiError, ErrorCode
 
 _logger = logging.getLogger("lumen-test")
 
@@ -34,9 +34,12 @@ def _build_app() -> FastAPI:
                 "data": exc.detail.get("data"),
             }
             return JSONResponse(status_code=exc.status_code, content=content)
+        # CQ-P1-005 Slice B-6：else 分支收口（与 backend/main.py 同步）。
+        code = int(HTTP_TO_CODE.get(exc.status_code, ErrorCode.INTERNAL))
+        _logger.warning("unclassified HTTPException %d: %r", exc.status_code, exc.detail)
         return JSONResponse(
             status_code=exc.status_code,
-            content={"code": exc.status_code, "msg": str(exc.detail), "data": None},
+            content={"code": code, "msg": "request failed", "data": None},
         )
 
     @app.exception_handler(ApiError)
@@ -65,6 +68,20 @@ def _build_app() -> FastAPI:
     @app.get("/raise/http-with-code")
     def raise_http_with_code():
         raise HTTPException(status_code=404, detail={"code": 4004, "msg": "not found"})
+
+    @app.get("/raise/http-no-code")
+    def raise_http_no_code():
+        # 模拟 FastAPI / Starlette 内置 HTTPException（不带业务 code，走 else 分支）。
+        raise HTTPException(status_code=404, detail="Not Found")
+
+    @app.get("/raise/http-no-code-405")
+    def raise_http_no_code_405():
+        raise HTTPException(status_code=405, detail="Method Not Allowed")
+
+    @app.get("/raise/http-no-code-418")
+    def raise_http_no_code_418():
+        # 未知 HTTP 码，验证兜底到 INTERNAL。
+        raise HTTPException(status_code=418, detail="I'm a teapot")
 
     return app
 
@@ -132,3 +149,27 @@ def test_http_exception_with_code_still_envelope():
     resp = client.get("/raise/http-with-code")
     assert resp.status_code == 404
     assert resp.json() == {"code": 4004, "msg": "not found", "data": None}
+
+
+def test_http_exception_without_code_maps_to_business_code():
+    """B-6：不带业务 code 的 HTTPException（FastAPI / Starlette 内置）走 else 分支，
+    code 反向映射到业务码（404→4004，非 HTTP 码 404），msg 固定文案，原始 detail 不外泄。"""
+    resp = client.get("/raise/http-no-code")
+    assert resp.status_code == 404
+    body = resp.json()
+    assert body == {"code": 4004, "msg": "request failed", "data": None}
+    assert "Not Found" not in resp.text  # NFR-007：原始 detail 不泄露
+
+
+def test_http_exception_405_maps_to_not_found():
+    """B-6 决策：405 Method Not Allowed 反向映射到 4004 NOT_FOUND。"""
+    resp = client.get("/raise/http-no-code-405")
+    assert resp.status_code == 405
+    assert resp.json()["code"] == 4004
+
+
+def test_http_exception_unknown_status_falls_back_to_internal():
+    """B-6：未知 HTTP 码（418）兜底到 5000 INTERNAL。"""
+    resp = client.get("/raise/http-no-code-418")
+    assert resp.status_code == 418
+    assert resp.json()["code"] == 5000

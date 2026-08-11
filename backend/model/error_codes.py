@@ -48,6 +48,28 @@ CODE_TO_HTTP: dict[int, int] = {
 }
 
 
+#: ``HTTP status → code`` 反向映射（CQ-P1-005 Slice B-6）。
+#:
+#: 用于 ``backend/main.py`` HTTPException handler 的 else 分支收口——当
+#: HTTPException 不带业务 ``code``（仅 FastAPI / Starlette 内置 404 / 405 等）时，
+#: 把 HTTP 码反向映射到无歧义的业务码，消除 ``code`` 字段二义（旧实现把 HTTP 码
+#: 当 ``code`` 返回，与 ``docs/07-api-spec.md`` §1「HTTP 码与业务码分离」相悖）。
+#: 多对一反向（如 401 既可 4001 也可 4010）取最通用的语义，不取带防枚举 / 锁定
+#: 等特殊语义的码；未知 HTTP 码由调用方兜底到 :attr:`ErrorCode.INTERNAL`。
+HTTP_TO_CODE: dict[int, int] = {
+    400: ErrorCode.VALIDATION_FAILED,
+    401: ErrorCode.UNAUTHENTICATED,
+    403: ErrorCode.FORBIDDEN,
+    404: ErrorCode.NOT_FOUND,
+    405: ErrorCode.NOT_FOUND,  # 方法不允许归资源定位失败大类（B-6 决策 2026-08-11）
+    409: ErrorCode.CONFLICT,
+    500: ErrorCode.INTERNAL,
+    502: ErrorCode.SERVICE_UNAVAILABLE,
+    503: ErrorCode.SERVICE_UNAVAILABLE,
+    504: ErrorCode.SERVICE_UNAVAILABLE,
+}
+
+
 class ApiError(Exception):
     """统一领域异常基类（CQ-P1-005 / NFR-007）。
 
