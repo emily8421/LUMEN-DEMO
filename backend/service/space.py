@@ -5,11 +5,15 @@ from __future__ import annotations
 from collections.abc import Iterable
 
 from backend.model.entities import Space, SpaceMember
+from backend.model.error_codes import ApiError, ErrorCode
 from backend.service.permission import can_access_space
 
 
-class SpaceAccessError(ValueError):
-    """Raised when a user attempts to enter a space they do not belong to."""
+class SpaceAccessError(ApiError):
+    """空间访问被拒（API 映射 4003，07 契约 API-011/029）。"""
+
+    def __init__(self, message: str, status_code: int | None = None) -> None:
+        super().__init__(ErrorCode.FORBIDDEN, message, status_code)
 
 
 def list_user_spaces(user_id: int, spaces: Iterable[Space], memberships: Iterable[SpaceMember]) -> list[Space]:
@@ -21,7 +25,7 @@ def list_user_spaces(user_id: int, spaces: Iterable[Space], memberships: Iterabl
 
 def ensure_space_access(user_id: int, space_id: int, memberships: Iterable[SpaceMember]) -> None:
     if not can_access_space(user_id, space_id, memberships):
-        raise SpaceAccessError("user is not a member of the requested space")
+        raise SpaceAccessError("space access denied")
 
 
 def switch_space(user_id: int, target_space_id: int, memberships: Iterable[SpaceMember]) -> int:

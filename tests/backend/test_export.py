@@ -566,18 +566,14 @@ class ExportApiTest(unittest.TestCase):
         self.assertIn("Nova Sprint Notes.md", _zip_names(response.body))
 
     def test_export_space_api_rejects_non_member(self) -> None:
-        from fastapi import HTTPException
-
         from backend.api import export as export_api
-        from backend.api.auth import TOKEN_SIGNING_KEY
         from backend.repository.demo_repository import DemoRepository
-        from backend.service.auth import create_demo_token
+        from backend.service.space import SpaceAccessError
 
         original_repository = export_api.repository
         export_api.repository = DemoRepository()
         try:
-            token = create_demo_token(user_id=3, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
-            with self.assertRaises(HTTPException) as context:
+            with self.assertRaises(SpaceAccessError) as context:
                 export_api.export_space_endpoint(
                     format="zip",
                     ctx=_demo_ctx(user_id=3),
@@ -585,8 +581,8 @@ class ExportApiTest(unittest.TestCase):
         finally:
             export_api.repository = original_repository
 
+        self.assertEqual(context.exception.code, 4003)
         self.assertEqual(context.exception.status_code, 403)
-        self.assertEqual(context.exception.detail["code"], 4003)
 
     def test_export_pdf_api_returns_task_view_and_download_blob(self) -> None:
         from backend.api import export as export_api
