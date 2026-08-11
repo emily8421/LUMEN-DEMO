@@ -6,6 +6,21 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.8.2（2026-08-11）
+
+**维护态批7（Sprint-32）：CQ-P1-005 错误契约收口 Slice B——~35 领域异常迁移继承 `ApiError` + api 层删 except（str(exc) 清零）。纯契约收口、非功能，不改 Phase / 交付物范围 / 对外 API 语义。Slice B 全部完成，聚合 bump PATCH。**
+
+- **Slice B-1 folder 域（PR #126 `84e4d84`）**：`service/folder.py` 4 异常（FolderValidation/Access/Conflict/NotFoundError）迁移继承 `ApiError`（4220/4003/4090/4004）+ `api/folders.py` 删 5 端点 try/except + 清 unused import。
+- **Slice B-2 tag 域（PR #127 `23661f3`）**：`service/tag.py` 4 异常（TagValidation/Access/Conflict/NotFoundError）迁移继承 `ApiError` + `api/tags.py` 删 8 端点 Tag* except（保留 3 处 `DocumentNotFoundError`，document 域 B-4a 前未迁移）。
+- **Slice B-3 term+term_category 域（PR #128 `2aabab1`）**：`service/term.py` 3 异常 + `term_category.py` 4 异常迁移继承 `ApiError` + 2 api 删 10 端点 except。
+- **Slice B-4a document 域（PR #129 `2aa65a3`）**：`service/document.py` 4 异常（DocumentAccess/NotFound/Validation/VersionNotFoundError）迁移继承 `ApiError` + `api/documents.py` 删 document except（保留 ai_polish 域 2 except）+ **收口 B-2 遗留**（`api/tags.py` 删 3 处 DocumentNotFoundError except + `service/tag.py` 清 unused）。
+- **Slice B-4b quick_entry+doc_links 域（PR #130 `4a23e58`）**：`service/quick_entry.py` 3 异常 + `doc_links.py` 1 异常迁移继承 `ApiError` + 2 api 删 except（含 DocumentNotFoundError）。
+- **Slice B-4c timeline+search+rag 域（PR #131 `7f4b6f8`）**：`service/timeline.py` 2 异常 + `search.py` 1 + `rag.py` 1 迁移继承 `ApiError` + 3 api 删 except。
+- **Slice B-4d export+imports 域（PR #132 `737c915`）**：`service/export.py` 5 异常 + `imports.py` 1 迁移继承 `ApiError` + 2 api 删 except；**imports 收敛 code 二义**——space access 不再转 `ImportValidationError`（msg 判断反模式），直接冒泡 space 域 `SpaceAccessError`（4003，符合 07 契约 API-011/029）；api 层保留 `SpaceAccessError` except（space 域 B-5 未迁移）。
+- **验证**：各 sub-slice 单测全绿（B-1 folder 19 + B-2 tag 15 + B-3 term 23 + B-4a document+tags 23 + B-4b quick+doc_links 29 + B-4c timeline+search+rag 31 + B-4d export+imports 40）+ 全量 **294 passed / 47 deselected 零回归** + ruff advisory **41→39**（清 unused import 收益，基线不增）+ CI required 全绿（Linux backend-test / frontend-build / project-check）。
+
+> PATCH 依据（`ai/project-rules.md` §2.4.1）：纯重构 / 契约收口，不改对外 API 契约语义、不新增可演示能力；Slice B 各 sub-slice 聚合 bump。验证：7 个 sub-slice 单测全绿 + 全量 294 passed 零回归 + ruff 41→39 基线不增 + 7 个 PR CI required 全绿。Slice B-5（auth+admin+space `_status_for` 收口）/ B-6（`main.py` HTTPException else 分支 code 二义收口）/ Slice C（前端 `client.ts` `ApiError` + `session-store` 删文案判 auth）待续。诊断 `docs/research/2026-08-10-code-quality-maintainability-assessment.md` §4.8 CQ-P1-005；实施口径 `docs/research/2026-08-10-code-governance-rollout-plan.md` §4 轨道3。
+
 ## v3.8.1（2026-08-11）
 
 **维护态批7（Sprint-32）：CQ-P1-005 错误契约收口 Slice A——错误响应契约地基（NFR-007）。纯契约收口、非功能，不改 Phase / 交付物范围 / 对外 API 语义。**
