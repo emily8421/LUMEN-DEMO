@@ -136,7 +136,7 @@ flowchart TB
 - **【待对齐】** `code` 字段二义：`main.py` `exception_handler` 的 else 分支回写 `code=exc.status_code`（HTTP 码），与 4 位业务码混用 → 收口为「`code` 永远是业务码，HTTP 码只放 `status_code`」，未分类用固定码（如 `5000`）。
 - **【待对齐】** `code→HTTP` 映射散落 4 份（`api/auth.py:35` / `admin.py:25` / `space_members.py:25` / `users.py:17` 各一份 `_status_for`，键集不同）→ 收口为单一映射（建议 `model/error_codes.py` 用 Enum/IntEnum，映射只此一处）。
 - **【待对齐】** 错误 `msg` 泄露内部细节：多处 `detail={"code":...,"msg":str(exc)}` 直传 service 异常原文（`api/tags.py`、`folders.py`、`terms.py`、`term_categories.py`、`quick_entry.py` 等）→ 禁 `str(exc)` 直传，`msg` 用固定用户文案，异常原文仅进日志。
-- **【已立项·Sprint-32 Slice A】** 无兜底 5xx envelope：`main.py` 只注册了 `HTTPException` handler，service 未捕获异常走 FastAPI 默认响应、**不带 envelope** → 补 `@app.exception_handler(Exception)` 返回 `{code:5000,msg:"internal error",data:null}`，生产不回传堆栈 / 内部路径。
+- **【已落地·Sprint-32 Slice A】** 无兜底 5xx envelope：`main.py` 只注册了 `HTTPException` handler，service 未捕获异常走 FastAPI 默认响应、**不带 envelope** → 补 `@app.exception_handler(Exception)` 返回 `{code:5000,msg:"internal error",data:null}`，生产不回传堆栈 / 内部路径。
 - **【待对齐】** 前端 `client.ts` 抛裸 `Error(msg)` 丢弃 `code` → 改抛结构化 `ApiError(code,msg,status)`，供调用方按 `code` 分流（401/4010→登出、5030→AI 降级提示、4090→冲突 UI）。
 - **【待对齐】** 分页响应契约不统一（`tags` `{items,total}` vs `terms` `{items,total,page}` vs `documents` 裸 list）→ 统一 `{items,total,page,page_size}` 或全部裸 list。
 

@@ -31,9 +31,9 @@
 | NFR-002 | 可追溯性 | RAG 答案必须带来源；库外问题明确未找到，不编造 | SCB-004、REQ-008 | TC-P1-008、RAG 相关验收 | P1-已验证（Demo） |
 | NFR-003 | 资源约束 | Phase1 Demo 在本机资源软上限内运行，重资源能力按门禁降级 | `ai/project-rules.md` §2.1、`docs/05-tech-spec.md` §5 | 资源 / readiness gate 记录，`docs/09-verification.md` §6 | P1-条件通过 |
 | NFR-004 | 数据安全 | 真实文档导入需显式标注来源 / 敏感级别，优先避免发送到外部模型 | `ai/project-rules.md` §2.1 | 人工验收与后续真实导入任务检查 | 后续阶段待细化 |
-| NFR-005 | 测试数据库安全 | PG 集成测试必须在独立 `lumen_test` 库执行，破坏性操作（TRUNCATE）受三重 fail-closed guard 保护，不得误清开发库 | `ai/project-rules.md` §2.1/§5、`docs/research/2026-08-10-code-governance-rollout-plan.md` §3 P0-1 | TC-P2-GOV-001、`tests/backend/test_pg_test_support.py` | 维护态批6·待执行（2026-08-11 立项） |
-| NFR-006 | CI 最小回归门 | CI 必须跑后端 unit 测试 + 前端 build + 后端 lint，防止坏代码无回归保护混入 main | `docs/05-tech-spec.md` §4.2.4、rollout plan §3 P0-2 | TC-P2-GOV-002、`.github/workflows/project-check.yml` | 维护态批6·待执行（2026-08-11 立项） |
-| NFR-007 | 错误响应契约 | 错误响应遵守统一契约：业务码 `code` 单一含义（不与 HTTP 码混用）、未捕获异常有兜底 envelope、`msg` 用固定用户文案禁 `str(exc)` 直传泄露内部细节 | `docs/05-tech-spec.md` §4.2.1、rollout plan §4 轨道3、assessment CQ-P1-005 | TC-P2-GOV-003、`backend/model/error_codes.py`、`tests/backend/test_error_contract.py` | 维护态批7·待执行（2026-08-11 立项） |
+| NFR-005 | 测试数据库安全 | PG 集成测试必须在独立 `lumen_test` 库执行，破坏性操作（TRUNCATE）受三重 fail-closed guard 保护，不得误清开发库 | `ai/project-rules.md` §2.1/§5、`docs/research/2026-08-10-code-governance-rollout-plan.md` §3 P0-1 | TC-P2-GOV-001、`tests/backend/test_pg_test_support.py` | 维护态批6·已实现（2026-08-11，PR #124） |
+| NFR-006 | CI 最小回归门 | CI 必须跑后端 unit 测试 + 前端 build + 后端 lint，防止坏代码无回归保护混入 main | `docs/05-tech-spec.md` §4.2.4、rollout plan §3 P0-2 | TC-P2-GOV-002、`.github/workflows/project-check.yml` | 维护态批6·已实现（2026-08-11，PR #124） |
+| NFR-007 | 错误响应契约 | 错误响应遵守统一契约：业务码 `code` 单一含义（不与 HTTP 码混用）、未捕获异常有兜底 envelope、`msg` 用固定用户文案禁 `str(exc)` 直传泄露内部细节 | `docs/05-tech-spec.md` §4.2.1、rollout plan §4 轨道3、assessment CQ-P1-005 | TC-P2-GOV-003、`backend/model/error_codes.py`、`tests/backend/test_error_contract.py` | 维护态批7·已实现（2026-08-11，PR #125） |
 
 ### 0.1.2 约束与假设（CON）
 

@@ -6,6 +6,14 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.8.1（2026-08-11）
+
+**维护态批7（Sprint-32）：CQ-P1-005 错误契约收口 Slice A——错误响应契约地基（NFR-007）。纯契约收口、非功能，不改 Phase / 交付物范围 / 对外 API 语义。**
+
+- **Slice A 错误响应契约地基（NFR-007 / task-043 / TC-P2-GOV-003）**：新增 `backend/model/error_codes.py`（`ErrorCode` IntEnum 权威码表对齐 `docs/07-api-spec.md` §1 + 集中 `CODE_TO_HTTP` 映射 + `ApiError` 领域异常基类 code/message/status_code，禁 `str(exc)` 直传）；`backend/main.py` 注册 `ApiError` handler（领域异常→envelope `{code,msg,data}`）+ 通用 `Exception` 兜底 handler（未捕获异常→`{code:5000,msg:"internal error",data:null}`，`logger.error` 记详情不外泄，不回传堆栈 / 内部路径）；顺带引入模块级 `logger`（现有 HTTPException handler 不动）。补 `tests/backend/test_error_contract.py`（8 单测含 TestClient 断言 envelope 序列化层，补 §4.2.4 回归保护）。
+
+> PATCH 依据（`ai/project-rules.md` §2.4.1）：纯重构 / 契约收口，不改对外 API 契约语义、不新增可演示能力。验证：新单测 8/8 + 全量 294 passed（286→294，零回归）/ 47 deselected + ruff 不恶化（advisory 41 基线）+ CI Linux backend-test 294 passed。Slice B（api `str(exc)` 清零 + ~40 异常迁移继承 `ApiError` + 散落 `_status_for` 收口）/ Slice C（前端 `client.ts` `ApiError` + `session-store` 删文案判 auth）待续。诊断 `docs/research/2026-08-10-code-quality-maintainability-assessment.md` §4.8 CQ-P1-005；实施口径 `docs/research/2026-08-10-code-governance-rollout-plan.md` §4 轨道3。
+
 ## v3.8.0（2026-08-11）
 
 **维护态批6（Sprint-31）：P0 工程治理——test DB 安全 guard（NFR-005）+ CI 最小回归门（NFR-006）。纯工程、非功能，不改 Phase / 交付物范围 / 对外 API。**
