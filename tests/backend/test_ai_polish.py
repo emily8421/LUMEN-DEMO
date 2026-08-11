@@ -312,34 +312,32 @@ class AiPolishApiTest(unittest.TestCase):
         self.assertEqual(context.exception.detail["code"], 4001)
 
     def test_polish_api_not_found_for_invisible_private_doc(self) -> None:
-        from fastapi import HTTPException
-
         from backend.api.documents import PolishRequestBody, polish_document_endpoint
+        from backend.service.document import DocumentNotFoundError
 
         alice = self._ctx("alice", 10)
         document_id = self._create_doc(alice, "Alice Private", "private")
         kira = self._ctx("kira", 10)  # kira 看不到 alice 的 private → 4004
 
-        with self.assertRaises(HTTPException) as context:
+        with self.assertRaises(DocumentNotFoundError) as context:
             polish_document_endpoint(document_id, PolishRequestBody(mode="polish", selection_md="片段"), ctx=kira)
 
+        self.assertEqual(context.exception.code, 4004)
         self.assertEqual(context.exception.status_code, 404)
-        self.assertEqual(context.exception.detail["code"], 4004)
 
     def test_polish_api_forbidden_on_external_doc_for_non_owner(self) -> None:
-        from fastapi import HTTPException
-
         from backend.api.documents import PolishRequestBody, polish_document_endpoint
+        from backend.service.document import DocumentAccessError
 
         alice = self._ctx("alice", 10)
         document_id = self._create_doc(alice, "Alice External", "external")
         kira = self._ctx("kira", 10)  # kira 可看 external 但不可写（owner-only）→ 4003
 
-        with self.assertRaises(HTTPException) as context:
+        with self.assertRaises(DocumentAccessError) as context:
             polish_document_endpoint(document_id, PolishRequestBody(mode="polish", selection_md="片段"), ctx=kira)
 
+        self.assertEqual(context.exception.code, 4003)
         self.assertEqual(context.exception.status_code, 403)
-        self.assertEqual(context.exception.detail["code"], 4003)
 
 
 if __name__ == "__main__":
