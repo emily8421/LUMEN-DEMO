@@ -6,24 +6,37 @@ import re
 from dataclasses import dataclass
 
 from backend.model.entities import DocLinkDraft, Document, DocumentPermission, DocumentVersion, SpaceMember
+from backend.model.error_codes import ApiError, ErrorCode
 from backend.service.chunking import clean_text, split_text_into_chunks
 from backend.service.permission import can_write_document, can_view_document, filter_visible_documents, is_space_member
 
 
-class DocumentAccessError(Exception):
-    pass
+class DocumentAccessError(ApiError):
+    """文档写权限被拒（API 映射 4003）。"""
+
+    def __init__(self, message: str, status_code: int | None = None) -> None:
+        super().__init__(ErrorCode.FORBIDDEN, message, status_code)
 
 
-class DocumentNotFoundError(Exception):
-    pass
+class DocumentNotFoundError(ApiError):
+    """文档不存在或不可见（API 映射 4004）。"""
+
+    def __init__(self, message: str, status_code: int | None = None) -> None:
+        super().__init__(ErrorCode.NOT_FOUND, message, status_code)
 
 
-class DocumentValidationError(Exception):
-    pass
+class DocumentValidationError(ApiError):
+    """文档请求字段非法 / 目标文件夹不符（API 映射 4220）。"""
+
+    def __init__(self, message: str, status_code: int | None = None) -> None:
+        super().__init__(ErrorCode.VALIDATION_FAILED, message, status_code)
 
 
-class VersionNotFoundError(Exception):
-    pass
+class VersionNotFoundError(ApiError):
+    """文档版本不存在（API 映射 4004）。"""
+
+    def __init__(self, message: str, status_code: int | None = None) -> None:
+        super().__init__(ErrorCode.NOT_FOUND, message, status_code)
 
 
 @dataclass(frozen=True)

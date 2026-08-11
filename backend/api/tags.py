@@ -10,7 +10,6 @@ from __future__ import annotations
 
 from backend.repository import repository
 from backend.service.auth_context import TokenContext, get_current_user
-from backend.service.document import DocumentNotFoundError
 from backend.service.tag import (
     DocumentTagView,
     Tag,
@@ -29,12 +28,11 @@ from backend.service.tag import (
 )
 
 try:
-    from fastapi import APIRouter, Depends, HTTPException
+    from fastapi import APIRouter, Depends
     from pydantic import BaseModel
 except ImportError:  # pragma: no cover - allows service tests before dependencies are installed
     APIRouter = None
     BaseModel = object
-    HTTPException = Exception
 
 
 if APIRouter is not None:
@@ -112,10 +110,7 @@ if APIRouter is not None:
         document_id: int,
         ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        try:
-            views = list_document_tags(repository, ctx.user_id, ctx.current_space_id, document_id)
-        except DocumentNotFoundError as exc:
-            raise HTTPException(status_code=404, detail={"code": 4004, "msg": "document not found"}) from exc
+        views = list_document_tags(repository, ctx.user_id, ctx.current_space_id, document_id)
         items = [_document_tag_view(view) for view in views]
         return {"code": 0, "msg": "ok", "data": {"items": items, "total": len(items)}}
 
@@ -125,12 +120,9 @@ if APIRouter is not None:
         request: DocumentTagCreateBody,
         ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        try:
-            link = add_document_tag(
-                repository, ctx.user_id, ctx.current_space_id, document_id, request.tag_id
-            )
-        except DocumentNotFoundError as exc:
-            raise HTTPException(status_code=404, detail={"code": 4004, "msg": "document not found"}) from exc
+        link = add_document_tag(
+            repository, ctx.user_id, ctx.current_space_id, document_id, request.tag_id
+        )
         return {
             "code": 0,
             "msg": "ok",
@@ -147,10 +139,7 @@ if APIRouter is not None:
         tag_id: int,
         ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        try:
-            remove_document_tag(repository, ctx.user_id, ctx.current_space_id, document_id, tag_id)
-        except DocumentNotFoundError as exc:
-            raise HTTPException(status_code=404, detail={"code": 4004, "msg": "document not found"}) from exc
+        remove_document_tag(repository, ctx.user_id, ctx.current_space_id, document_id, tag_id)
         return {"code": 0, "msg": "ok", "data": {"deleted": True}}
 
     @router.get("/api/tags/{tag_id}/documents")

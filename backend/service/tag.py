@@ -17,7 +17,7 @@ from dataclasses import dataclass
 
 from backend.model.entities import Document, Tag
 from backend.model.error_codes import ApiError, ErrorCode
-from backend.service.document import DocumentNotFoundError, get_visible_document
+from backend.service.document import get_visible_document
 from backend.service.permission import (
     can_view_document,
     can_write_document,
