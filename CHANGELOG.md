@@ -6,6 +6,19 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.8.3（2026-08-11）
+
+**维护态批7（Sprint-32）：CQ-P1-005 错误契约收口 Slice B-5——auth+admin+space+space_members+users 域异常迁移继承 `ApiError` + api 层 `_status_for`/`_http_error` 收口。纯契约收口、非功能，不改 Phase / 交付物范围 / 对外 API 语义。Slice B-5 全部完成，聚合 bump PATCH。**
+
+- **Slice B-5a space 域（PR #133 `2fd868e`）**：`service/space.py` `SpaceAccessError` 继承 `ApiError`（固定 4003，raise 文案对齐「space access denied」）+ `api/spaces.py`/`export.py`/`imports.py` 删 4 处 `SpaceAccessError` except + `service/auth_context.py require_space_member` 删 except 直接冒泡（403/4003 envelope）；保留 `api/auth.py` 登录静默回退（流程控制非错误契约）+ `service/term.py` 内部转换；清 `service/export.py` 未用 import；test_export API 级错误测试改断言冒泡；ruff 39→37。
+- **Slice B-5b auth 域（PR #134 `b29661b`）**：`service/auth.py` `AuthenticationError` 继承 `ApiError`（保留 `(code, message)` 签名，raise 点零改动）+ `api/auth.py` 删 `_status_for`/`_http_error`/4 处 `except AuthenticationError`（register/login/refresh/password-reset-confirm）；保留 `_extract_token` TokenError 处理（非领域转 4001）+ 登录 `except SpaceAccessError: pass`（流程控制）+ `TOKEN_SIGNING_KEY` re-export（测试依赖，ruff F401 但不可删）。
+- **Slice B-5c admin 域（PR #135 `1b13d56`）**：`service/admin.py` `AdminError` 继承 `ApiError`（保留 `(code, message)` 签名）+ `api/admin.py` 删 `_http_error`/3 处 except；保留 api 层 `raise AdminError(4220,...)`（删 except 后冒泡 handler，AdminError import 仍需保留）。
+- **Slice B-5d space_members+users 域（PR #136 `d69c9d6`）**：`service/space_members.py` `SpaceMemberError` 继承 `ApiError`（保留 `(code, message)` 签名）+ `api/space_members.py` 删 `_http_error`/4 处 except + `api/users.py` 删 `_http_error`/1 处 except；异常冒泡 `main.py` handler。
+- **integration 断言清扫（B-4 遗留，CI unit 门未覆盖）**：`test_api_sprint28` space_member + `test_api_routes` document/version/search/rag + `test_ai_polish` 断言全部改 ApiError 冒泡（修 7 个 B-4 遗留：test_ai_polish×2 + test_api_routes×5）。
+- **验证**：全量 **294 passed / 47 deselected 零回归** + ruff advisory **37** 基线不增 + **integration 47/47 全绿** + 4 PR CI required 全绿（Linux backend-test 3m12s / frontend-build / project-check；ruff advisory fail 不阻断）。
+
+> PATCH 依据（`ai/project-rules.md` §2.4.1）：纯重构 / 契约收口，不改对外 API 契约语义、不新增可演示能力；Slice B-5 各 sub-slice 聚合 bump。验证：4 个 sub-slice 全量 294 passed 零回归 + integration 47/47 + ruff 37 基线不增 + 4 个 PR CI required 全绿。**B-5 全部完成（space+auth+admin+space_members+users + `_status_for`/`_http_error` 收口）；B-6（`main.py` HTTPException else 分支 code 二义收口）/ Slice C（前端 `client.ts` `ApiError` + `session-store` 删文案判 auth）待续。** 诊断 `docs/research/2026-08-10-code-quality-maintainability-assessment.md` §4.8 CQ-P1-005；实施口径 `docs/research/2026-08-10-code-governance-rollout-plan.md` §4 轨道3。
+
 ## v3.8.2（2026-08-11）
 
 **维护态批7（Sprint-32）：CQ-P1-005 错误契约收口 Slice B——~35 领域异常迁移继承 `ApiError` + api 层删 except（str(exc) 清零）。纯契约收口、非功能，不改 Phase / 交付物范围 / 对外 API 语义。Slice B 全部完成，聚合 bump PATCH。**
