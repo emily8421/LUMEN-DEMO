@@ -111,8 +111,7 @@ export function useDocuments({
       setBacklinks(back);
     } catch (caughtError) {
       // doc-links 加载失败不阻塞文档编辑；仅处理登录失效，其余静默以免覆盖主流程错误提示。
-      const message = caughtError instanceof Error ? caughtError.message : '';
-      if (isAuthTokenError(message)) {
+      if (isAuthTokenError(caughtError)) {
         onAuthError();
         setNotice('登录已失效，请重新登录。');
       }

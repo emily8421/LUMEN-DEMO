@@ -1,3 +1,4 @@
+import { ApiError } from '../api/client';
 import type { Session } from './types';
 
 /** Demo 登录态 localStorage 持久化 + 登录失效识别（Sprint-12①）。 */
@@ -48,6 +49,13 @@ export function clearStoredSession(): void {
   }
 }
 
-export function isAuthTokenError(message: string): boolean {
-  return /invalid token|unauthorized|\b401\b/i.test(message);
+/** 后端业务码：未登录 / token 无效（对齐 backend `ErrorCode.UNAUTHENTICATED = 4001`）。 */
+const UNAUTHENTICATED_CODE = 4001;
+
+/**
+ * 登录失效判定（CQ-P1-005 Slice C）：改靠后端 envelope 业务码（code === 4001），
+ * 不再正则匹配 msg 文案（旧实现脆弱——后端文案一改前端判定即失效）。
+ */
+export function isAuthTokenError(error: unknown): boolean {
+  return error instanceof ApiError && error.code === UNAUTHENTICATED_CODE;
 }

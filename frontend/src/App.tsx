@@ -162,7 +162,7 @@ function App() {
     }
     void refreshWorkspace().catch((caughtError) => {
       const message = caughtError instanceof Error ? caughtError.message : '';
-      if (isAuthTokenError(message)) {
+      if (isAuthTokenError(caughtError)) {
         session.handleAuthError();
         workspace.setNotice('登录已失效，请重新登录。');
       } else {
@@ -276,7 +276,7 @@ function App() {
     } catch (caughtError) {
       const message = caughtError instanceof Error ? caughtError.message : '操作失败';
       workspace.setError(message);
-      if (isAuthTokenError(message)) {
+      if (isAuthTokenError(caughtError)) {
         session.handleAuthError();
         workspace.setNotice('登录已失效，请重新登录。');
       } else {
