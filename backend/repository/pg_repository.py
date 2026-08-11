@@ -39,6 +39,7 @@ from backend.model.entities import (
     TermStatus,
     User,
 )
+from backend.repository.protocol import RepositoryProtocol
 from backend.model.orm import (
     AiDraftORM,
     DocExportORM,
@@ -325,7 +326,7 @@ def _safe_embed(texts: list[str]) -> list[list[float]]:
         return []
 
 
-class PgRepository:
+class PgRepository(RepositoryProtocol):
     """PostgreSQL-backed implementation of the DemoRepository interface."""
 
     # --- users / spaces / members ---
