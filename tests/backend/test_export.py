@@ -510,13 +510,12 @@ class ExportApiTest(unittest.TestCase):
         self.assertIn(f"filename*=UTF-8''{quote('中文标题.md', safe='')}", disposition)
 
     def test_export_document_api_rejects_invisible_document(self) -> None:
-        from fastapi import HTTPException
-
         from backend.api import export as export_api
         from backend.api.auth import TOKEN_SIGNING_KEY
         from backend.model.entities import DocumentPermission
         from backend.repository.demo_repository import DemoRepository
         from backend.service.auth import create_demo_token
+        from backend.service.document import DocumentNotFoundError
 
         repository = DemoRepository()
         repository.create_document(
@@ -532,7 +531,8 @@ class ExportApiTest(unittest.TestCase):
         export_api.repository = repository
         try:
             token = create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
-            with self.assertRaises(HTTPException) as context:
+            # Slice B：DocumentNotFoundError 已继承 ApiError，异常冒泡到 main.py handler 转 envelope（code 4004）。
+            with self.assertRaises(DocumentNotFoundError) as context:
                 export_api.export_document_endpoint(
                     document_id=secret_id,
                     format="md",
@@ -541,8 +541,7 @@ class ExportApiTest(unittest.TestCase):
         finally:
             export_api.repository = original_repository
 
-        self.assertEqual(context.exception.status_code, 404)
-        self.assertEqual(context.exception.detail["code"], 4004)
+        self.assertEqual(context.exception.code, 4004)
 
     def test_export_space_api_returns_zip_blob(self) -> None:
         from backend.api import export as export_api
@@ -638,8 +637,6 @@ class ExportApiTest(unittest.TestCase):
             )
 
     def test_export_pdf_api_maps_dependency_error_to_5030(self) -> None:
-        from fastapi import HTTPException
-
         from backend.api import export as export_api
         from backend.api.auth import TOKEN_SIGNING_KEY
         from backend.service.auth import create_demo_token
@@ -647,18 +644,16 @@ class ExportApiTest(unittest.TestCase):
 
         token = create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
         with patch.object(export_api, "create_pdf_export", side_effect=PdfExportDependencyError("missing font")):
-            with self.assertRaises(HTTPException) as context:
+            # Slice B：PdfExportDependencyError 已继承 ApiError，异常冒泡到 main.py handler 转 envelope（code 5030）。
+            with self.assertRaises(PdfExportDependencyError) as context:
                 export_api.export_pdf_endpoint(
                     request=export_api.PdfExportRequestBody(document_id=100),
                     ctx=_demo_ctx(),
                 )
 
-        self.assertEqual(context.exception.status_code, 503)
-        self.assertEqual(context.exception.detail["code"], 5030)
+        self.assertEqual(context.exception.code, 5030)
 
     def test_download_pdf_api_maps_not_ready_to_4090(self) -> None:
-        from fastapi import HTTPException
-
         from backend.api import export as export_api
         from backend.api.auth import TOKEN_SIGNING_KEY
         from backend.service.auth import create_demo_token
@@ -666,14 +661,14 @@ class ExportApiTest(unittest.TestCase):
 
         token = create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
         with patch.object(export_api, "download_pdf_export", side_effect=PdfExportNotReadyError("PDF export is not ready")):
-            with self.assertRaises(HTTPException) as context:
+            # Slice B：PdfExportNotReadyError 已继承 ApiError，异常冒泡到 main.py handler 转 envelope（code 4090）。
+            with self.assertRaises(PdfExportNotReadyError) as context:
                 export_api.download_pdf_endpoint(
                     export_id=1,
                     ctx=_demo_ctx(),
                 )
 
-        self.assertEqual(context.exception.status_code, 409)
-        self.assertEqual(context.exception.detail["code"], 4090)
+        self.assertEqual(context.exception.code, 4090)
 
 
 if __name__ == "__main__":

@@ -13,14 +13,8 @@ from urllib.parse import quote
 
 from backend.repository import repository
 from backend.service.auth_context import TokenContext, get_current_user
-from backend.service.document import DocumentNotFoundError, VersionNotFoundError
 from backend.service.export import (
-    ExportError,
-    PdfExportDependencyError,
-    PdfExportNotFoundError,
-    PdfExportNotReadyError,
     PdfExportOptions,
-    PdfExportValidationError,
     create_pdf_export,
     download_pdf_export,
     export_document_md,
@@ -62,18 +56,13 @@ if APIRouter is not None:
         if format != "md":
             raise HTTPException(status_code=422, detail={"code": 4220, "msg": "only markdown export is supported"})
 
-        try:
-            export = export_document_md(
-                repository=repository,
-                user_id=ctx.user_id,
-                current_space_id=ctx.current_space_id,
-                document_id=document_id,
-                version_no=version_no,
-            )
-        except DocumentNotFoundError as exc:
-            raise HTTPException(status_code=404, detail={"code": 4004, "msg": "document not found"}) from exc
-        except VersionNotFoundError as exc:
-            raise HTTPException(status_code=404, detail={"code": 4004, "msg": "version not found"}) from exc
+        export = export_document_md(
+            repository=repository,
+            user_id=ctx.user_id,
+            current_space_id=ctx.current_space_id,
+            document_id=document_id,
+            version_no=version_no,
+        )
 
         return Response(
             content=export.content,
@@ -97,8 +86,6 @@ if APIRouter is not None:
             )
         except SpaceAccessError as exc:
             raise HTTPException(status_code=403, detail={"code": 4003, "msg": "space access denied"}) from exc
-        except ExportError as exc:
-            raise HTTPException(status_code=500, detail={"code": 5000, "msg": "failed to export space"}) from exc
 
         return Response(
             content=export.archive,
@@ -113,31 +100,17 @@ if APIRouter is not None:
     ) -> dict:
         options = request.options or PdfExportOptionsBody()
 
-        try:
-            result = create_pdf_export(
-                repository=repository,
-                user_id=ctx.user_id,
-                current_space_id=ctx.current_space_id,
-                document_id=request.document_id,
-                version_no=request.version_no,
-                options=PdfExportOptions(
-                    include_sources=options.include_sources,
-                    theme=options.theme,
-                ),
-            )
-        except DocumentNotFoundError as exc:
-            raise HTTPException(status_code=404, detail={"code": 4004, "msg": "document not found"}) from exc
-        except VersionNotFoundError as exc:
-            raise HTTPException(status_code=404, detail={"code": 4004, "msg": "version not found"}) from exc
-        except PdfExportValidationError as exc:
-            raise HTTPException(status_code=422, detail={"code": 4220, "msg": str(exc)}) from exc
-        except PdfExportDependencyError as exc:
-            raise HTTPException(
-                status_code=503,
-                detail={"code": 5030, "msg": str(exc) or "PDF export dependency unavailable"},
-            ) from exc
-        except ExportError as exc:
-            raise HTTPException(status_code=500, detail={"code": 5000, "msg": "failed to export PDF"}) from exc
+        result = create_pdf_export(
+            repository=repository,
+            user_id=ctx.user_id,
+            current_space_id=ctx.current_space_id,
+            document_id=request.document_id,
+            version_no=request.version_no,
+            options=PdfExportOptions(
+                include_sources=options.include_sources,
+                theme=options.theme,
+            ),
+        )
 
         return {
             "code": 0,
@@ -155,23 +128,12 @@ if APIRouter is not None:
         ctx: TokenContext = Depends(get_current_user),
     ) -> Response:
 
-        try:
-            artifact = download_pdf_export(
-                repository=repository,
-                user_id=ctx.user_id,
-                current_space_id=ctx.current_space_id,
-                export_id=export_id,
-            )
-        except DocumentNotFoundError as exc:
-            raise HTTPException(status_code=404, detail={"code": 4004, "msg": "document not found"}) from exc
-        except PdfExportNotFoundError as exc:
-            raise HTTPException(status_code=404, detail={"code": 4004, "msg": str(exc)}) from exc
-        except PdfExportNotReadyError as exc:
-            raise HTTPException(status_code=409, detail={"code": 4090, "msg": str(exc)}) from exc
-        except PdfExportValidationError as exc:
-            raise HTTPException(status_code=422, detail={"code": 4220, "msg": str(exc)}) from exc
-        except ExportError as exc:
-            raise HTTPException(status_code=500, detail={"code": 5000, "msg": "failed to read PDF"}) from exc
+        artifact = download_pdf_export(
+            repository=repository,
+            user_id=ctx.user_id,
+            current_space_id=ctx.current_space_id,
+            export_id=export_id,
+        )
 
         return Response(
             content=artifact.content,

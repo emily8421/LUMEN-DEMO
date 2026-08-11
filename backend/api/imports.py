@@ -9,10 +9,10 @@ from backend.service.imports import (
     BatchImportFileRequest,
     BatchImportRequest,
     ImportTextRequest,
-    ImportValidationError,
     import_batch,
     import_extracted_text,
 )
+from backend.service.space import SpaceAccessError
 
 try:
     from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
@@ -37,6 +37,10 @@ if APIRouter is not None:
         content = await file.read()
         try:
             resolved_permission = DocumentPermission(permission)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail={"code": 4220, "msg": "invalid document permission"}) from exc
+        # space access（SpaceAccessError，B-5 未迁移需保留 except）；ImportValidationError 已继承 ApiError 冒泡 main.py handler。
+        try:
             result = import_extracted_text(
                 repository=repository,
                 user_id=ctx.user_id,
@@ -48,12 +52,8 @@ if APIRouter is not None:
                     permission=resolved_permission,
                 ),
             )
-        except ValueError as exc:
-            raise HTTPException(status_code=422, detail={"code": 4220, "msg": "invalid document permission"}) from exc
-        except ImportValidationError as exc:
-            if str(exc) == "space access denied":
-                raise HTTPException(status_code=403, detail={"code": 4003, "msg": str(exc)}) from exc
-            raise HTTPException(status_code=422, detail={"code": 4220, "msg": str(exc)}) from exc
+        except SpaceAccessError as exc:
+            raise HTTPException(status_code=403, detail={"code": 4003, "msg": "space access denied"}) from exc
 
         return {
             "code": 0,
@@ -104,10 +104,8 @@ if APIRouter is not None:
                     preserve_structure=preserve_structure,
                 ),
             )
-        except ImportValidationError as exc:
-            if str(exc) == "space access denied":
-                raise HTTPException(status_code=403, detail={"code": 4003, "msg": str(exc)}) from exc
-            raise HTTPException(status_code=422, detail={"code": 4220, "msg": str(exc)}) from exc
+        except SpaceAccessError as exc:
+            raise HTTPException(status_code=403, detail={"code": 4003, "msg": "space access denied"}) from exc
 
         return {
             "code": 0,

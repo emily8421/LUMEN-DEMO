@@ -6,17 +6,25 @@ from dataclasses import dataclass
 from uuid import uuid4
 
 from backend.model.entities import DocumentPermission, ImportJob
+from backend.model.error_codes import ApiError, ErrorCode
 from backend.service.chunking import clean_text, split_text_into_chunks
 from backend.service.document import DocumentCreate, create_document, sync_document_wikilinks
 from backend.service.permission import can_view_document
-from backend.service.space import SpaceAccessError, ensure_space_access
+from backend.service.space import ensure_space_access
 
 
 SUPPORTED_TEXT_EXTENSIONS = {".md", ".markdown", ".txt"}
 
 
-class ImportValidationError(Exception):
-    """Raised when an uploaded file cannot be processed by the degraded importer."""
+class ImportValidationError(ApiError):
+    """上传文件无法被降级导入器处理（API 映射 4220）。
+
+    空间访问被拒（4003）不再经本异常承载：直接冒泡 space 域 ``SpaceAccessError``
+    （B-5 迁移后为 ApiError），消除 msg 判断二义（07 契约 API-011/029 含 4003）。
+    """
+
+    def __init__(self, message: str, status_code: int | None = None) -> None:
+        super().__init__(ErrorCode.VALIDATION_FAILED, message, status_code)
 
 
 @dataclass(frozen=True)
@@ -73,10 +81,8 @@ class BatchImportResult:
 
 
 def import_extracted_text(repository, user_id: int, current_space_id: int, request: ImportTextRequest) -> ImportResult:
-    try:
-        ensure_space_access(user_id, current_space_id, repository.list_memberships())
-    except SpaceAccessError as exc:
-        raise ImportValidationError("space access denied") from exc
+    # space access 直接冒泡 SpaceAccessError（4003，07 契约 API-011）；不再转 ImportValidationError 造成 msg 判断二义。
+    ensure_space_access(user_id, current_space_id, repository.list_memberships())
 
     _validate_filename(request.filename)
     source_text = _decode_text(request.content)
@@ -112,11 +118,9 @@ def import_extracted_text(repository, user_id: int, current_space_id: int, reque
 
 
 def import_batch(repository, user_id: int, current_space_id: int, request: BatchImportRequest) -> BatchImportResult:
-    try:
-        memberships = repository.list_memberships()
-        ensure_space_access(user_id, current_space_id, memberships)
-    except SpaceAccessError as exc:
-        raise ImportValidationError("space access denied") from exc
+    # space access 直接冒泡 SpaceAccessError（4003，07 契约 API-029）；不再转 ImportValidationError 造成 msg 判断二义。
+    memberships = repository.list_memberships()
+    ensure_space_access(user_id, current_space_id, memberships)
 
     if not request.files:
         raise ImportValidationError("at least one file is required")
