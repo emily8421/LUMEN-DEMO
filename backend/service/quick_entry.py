@@ -20,6 +20,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from backend.model.entities import DocumentPermission, QuickEntry
+from backend.model.error_codes import ApiError, ErrorCode
 from backend.service.document import (
     DocumentCreate,
     DocumentUpdate,
@@ -30,16 +31,25 @@ from backend.service.document import (
 from backend.service.permission import can_write_document, is_space_member
 
 
-class QuickEntryValidationError(Exception):
+class QuickEntryValidationError(ApiError):
     """快速录入请求字段非法（API 映射 4220）。"""
 
+    def __init__(self, message: str, status_code: int | None = None) -> None:
+        super().__init__(ErrorCode.VALIDATION_FAILED, message, status_code)
 
-class QuickEntryAccessError(Exception):
+
+class QuickEntryAccessError(ApiError):
     """空间 / 资源访问被拒（API 映射 4003）。"""
 
+    def __init__(self, message: str, status_code: int | None = None) -> None:
+        super().__init__(ErrorCode.FORBIDDEN, message, status_code)
 
-class QuickEntryNotFoundError(Exception):
+
+class QuickEntryNotFoundError(ApiError):
     """条目不存在或不属于当前用户（API 映射 4004）。"""
+
+    def __init__(self, message: str, status_code: int | None = None) -> None:
+        super().__init__(ErrorCode.NOT_FOUND, message, status_code)
 
 
 _QUICK_ENTRY_MODES = ("draft", "create_document", "append_document")

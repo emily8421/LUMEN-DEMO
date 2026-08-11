@@ -14,12 +14,16 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from backend.model.entities import DocLink
-from backend.service.document import DocumentNotFoundError, get_visible_document
+from backend.model.error_codes import ApiError, ErrorCode
+from backend.service.document import get_visible_document
 from backend.service.permission import can_view_document
 
 
-class DocLinkValidationError(Exception):
-    """手动登记链接请求非法（API 映射 4220 / 4004）。"""
+class DocLinkValidationError(ApiError):
+    """手动登记链接请求非法（API 映射 4220）。"""
+
+    def __init__(self, message: str, status_code: int | None = None) -> None:
+        super().__init__(ErrorCode.VALIDATION_FAILED, message, status_code)
 
 
 @dataclass(frozen=True)

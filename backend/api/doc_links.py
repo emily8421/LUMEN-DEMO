@@ -10,11 +10,9 @@ from backend.repository import repository
 from backend.service.auth_context import TokenContext, get_current_user
 from backend.service.doc_links import (
     DocLinkCreateRequest,
-    DocLinkValidationError,
     list_links,
     upsert_link,
 )
-from backend.service.document import DocumentNotFoundError
 
 try:
     from fastapi import APIRouter, Depends, HTTPException
@@ -43,10 +41,7 @@ if APIRouter is not None:
     ) -> dict[str, object]:
         if direction not in ("outbound", "backlink"):
             raise HTTPException(status_code=422, detail={"code": 4220, "msg": "direction must be outbound or backlink"})
-        try:
-            views = list_links(repository, ctx.user_id, ctx.current_space_id, document_id, direction)
-        except DocumentNotFoundError:
-            raise HTTPException(status_code=404, detail={"code": 4004, "msg": "document not found"})
+        views = list_links(repository, ctx.user_id, ctx.current_space_id, document_id, direction)
         return {"code": 0, "msg": "ok", "data": [_link_view(view) for view in views]}
 
     @router.post("")
@@ -54,23 +49,18 @@ if APIRouter is not None:
         request: DocLinkCreateBody,
         ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        try:
-            link = upsert_link(
-                repository,
-                ctx.user_id,
-                ctx.current_space_id,
-                DocLinkCreateRequest(
-                    source_document_id=request.source_document_id,
-                    link_text=request.link_text,
-                    target_document_id=request.target_document_id,
-                    target_title=request.target_title,
-                    link_type=request.link_type,
-                ),
-            )
-        except DocumentNotFoundError as exc:
-            raise HTTPException(status_code=404, detail={"code": 4004, "msg": "document not found"}) from exc
-        except DocLinkValidationError as exc:
-            raise HTTPException(status_code=422, detail={"code": 4220, "msg": str(exc)}) from exc
+        link = upsert_link(
+            repository,
+            ctx.user_id,
+            ctx.current_space_id,
+            DocLinkCreateRequest(
+                source_document_id=request.source_document_id,
+                link_text=request.link_text,
+                target_document_id=request.target_document_id,
+                target_title=request.target_title,
+                link_type=request.link_type,
+            ),
+        )
         return {"code": 0, "msg": "ok", "data": {"id": link.id, "status": link.status}}
 
     def _link_view(view) -> dict[str, object]:
