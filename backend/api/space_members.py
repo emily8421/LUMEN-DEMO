@@ -5,7 +5,6 @@ from __future__ import annotations
 from backend.repository import repository
 from backend.service.auth_context import TokenContext, get_current_user
 from backend.service.space_members import (
-    SpaceMemberError,
     add_member_by_email,
     list_space_members,
     remove_member,
@@ -13,17 +12,12 @@ from backend.service.space_members import (
 )
 
 try:
-    from fastapi import APIRouter, Depends, HTTPException
+    from fastapi import APIRouter, Depends
     from pydantic import BaseModel
 except ImportError:  # pragma: no cover - allows service tests before dependencies are installed
     APIRouter = None
     BaseModel = object
-    HTTPException = Exception
-
-
-def _http_error(exc: SpaceMemberError) -> HTTPException:
-    status = {4004: 404, 4003: 403, 4030: 403, 4090: 409, 4220: 422}.get(exc.code, 400)
-    return HTTPException(status_code=status, detail={"code": exc.code, "msg": exc.msg})
+    Depends = None
 
 
 def _member_payload(detail) -> dict[str, object]:
@@ -51,10 +45,8 @@ if APIRouter is not None:
         space_id: int,
         ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        try:
-            rows = list_space_members(repository, ctx.user, space_id)
-        except SpaceMemberError as exc:
-            raise _http_error(exc) from exc
+        # 成员管理域错误（SpaceMemberError）冒泡 main.py ApiError handler → 对应 HTTP 码 envelope
+        rows = list_space_members(repository, ctx.user, space_id)
         return {"code": 0, "msg": "ok", "data": [_member_payload(row) for row in rows]}
 
     @router.post("/{space_id}/members")
@@ -63,10 +55,8 @@ if APIRouter is not None:
         request: AddMemberRequest,
         ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        try:
-            detail = add_member_by_email(repository, ctx.user, space_id, request.email, request.role)
-        except SpaceMemberError as exc:
-            raise _http_error(exc) from exc
+        # 成员管理域错误（SpaceMemberError）冒泡 main.py ApiError handler → 对应 HTTP 码 envelope
+        detail = add_member_by_email(repository, ctx.user, space_id, request.email, request.role)
         return {"code": 0, "msg": "ok", "data": _member_payload(detail)}
 
     @router.patch("/{space_id}/members/{user_id}")
@@ -76,10 +66,8 @@ if APIRouter is not None:
         request: UpdateMemberRoleRequest,
         ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        try:
-            detail = update_member_role(repository, ctx.user, space_id, user_id, request.role)
-        except SpaceMemberError as exc:
-            raise _http_error(exc) from exc
+        # 成员管理域错误（SpaceMemberError）冒泡 main.py ApiError handler → 对应 HTTP 码 envelope
+        detail = update_member_role(repository, ctx.user, space_id, user_id, request.role)
         return {"code": 0, "msg": "ok", "data": _member_payload(detail)}
 
     @router.delete("/{space_id}/members/{user_id}")
@@ -88,10 +76,8 @@ if APIRouter is not None:
         user_id: int,
         ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        try:
-            remove_member(repository, ctx.user, space_id, user_id)
-        except SpaceMemberError as exc:
-            raise _http_error(exc) from exc
+        # 成员管理域错误（SpaceMemberError）冒泡 main.py ApiError handler → 对应 HTTP 码 envelope
+        remove_member(repository, ctx.user, space_id, user_id)
         return {"code": 0, "msg": "ok", "data": None}
 else:
     router = None

@@ -133,31 +133,29 @@ class ApiRouteTest(unittest.TestCase):
         self.assertEqual(restored_response["data"]["content_md"], "v2")
 
     def test_document_api_returns_not_found_for_invisible_document(self) -> None:
-        from fastapi import HTTPException
-
         from backend.api.auth import LoginRequest, login
         from backend.api.documents import get_document_endpoint, list_document_versions
+        from backend.service.document import DocumentNotFoundError
 
         token = login(LoginRequest(login_id="alice", password="demo-pass-1234", current_space_id=20))["data"]["token"]
         authorization = f"Bearer {token}"
         from backend.service.auth_context import get_current_user
         ctx = get_current_user(authorization=authorization)
 
-        with self.assertRaises(HTTPException) as detail_context:
+        with self.assertRaises(DocumentNotFoundError) as detail_context:
             get_document_endpoint(200, ctx=ctx)
-        with self.assertRaises(HTTPException) as versions_context:
+        with self.assertRaises(DocumentNotFoundError) as versions_context:
             list_document_versions(200, ctx=ctx)
 
-        self.assertEqual(detail_context.exception.status_code, 404)
-        self.assertEqual(detail_context.exception.detail["msg"], "document not found")
-        self.assertEqual(versions_context.exception.status_code, 404)
-        self.assertEqual(versions_context.exception.detail["msg"], "document not found")
+        self.assertEqual(detail_context.exception.code, 4004)
+        self.assertEqual(detail_context.exception.message, "document not found")
+        self.assertEqual(versions_context.exception.code, 4004)
+        self.assertEqual(versions_context.exception.message, "document not found")
 
     def test_document_api_delete_then_read_returns_not_found(self) -> None:
-        from fastapi import HTTPException
-
         from backend.api.auth import LoginRequest, login
         from backend.api.documents import DocumentWriteRequest, create_document_endpoint, delete_document_endpoint, get_document_endpoint
+        from backend.service.document import DocumentNotFoundError
 
         token = login(LoginRequest(login_id="alice", password="demo-pass-1234", current_space_id=10))["data"]["token"]
         authorization = f"Bearer {token}"
@@ -170,17 +168,16 @@ class ApiRouteTest(unittest.TestCase):
         document_id = created_response["data"]["id"]
 
         delete_response = delete_document_endpoint(document_id, ctx=ctx)
-        with self.assertRaises(HTTPException) as context:
+        with self.assertRaises(DocumentNotFoundError) as context:
             get_document_endpoint(document_id, ctx=ctx)
 
         self.assertTrue(delete_response["data"]["deleted"])
-        self.assertEqual(context.exception.status_code, 404)
+        self.assertEqual(context.exception.code, 4004)
 
     def test_document_api_restore_missing_version_returns_not_found(self) -> None:
-        from fastapi import HTTPException
-
         from backend.api.auth import LoginRequest, login
         from backend.api.documents import DocumentWriteRequest, create_document_endpoint, restore_document_version
+        from backend.service.document import VersionNotFoundError
 
         token = login(LoginRequest(login_id="alice", password="demo-pass-1234", current_space_id=10))["data"]["token"]
         authorization = f"Bearer {token}"
@@ -191,11 +188,11 @@ class ApiRouteTest(unittest.TestCase):
             ctx=ctx,
         )
 
-        with self.assertRaises(HTTPException) as context:
+        with self.assertRaises(VersionNotFoundError) as context:
             restore_document_version(created_response["data"]["id"], 99, ctx=ctx)
 
-        self.assertEqual(context.exception.status_code, 404)
-        self.assertEqual(context.exception.detail["msg"], "version not found")
+        self.assertEqual(context.exception.code, 4004)
+        self.assertEqual(context.exception.message, "version not found")
 
     def test_import_api_degraded_text_creates_readable_document(self) -> None:
         import asyncio
@@ -325,21 +322,20 @@ class ApiRouteTest(unittest.TestCase):
         self.assertIn("触发延迟", search_response["data"]["items"][0]["snippet"])
 
     def test_search_api_rejects_blank_query(self) -> None:
-        from fastapi import HTTPException
-
         from backend.api.auth import LoginRequest, login
         from backend.api.search import search_endpoint
+        from backend.service.search import SearchValidationError
 
         token = login(LoginRequest(login_id="alice", password="demo-pass-1234", current_space_id=10))["data"]["token"]
         authorization = f"Bearer {token}"
         from backend.service.auth_context import get_current_user
         ctx = get_current_user(authorization=authorization)
 
-        with self.assertRaises(HTTPException) as context:
+        with self.assertRaises(SearchValidationError) as context:
             search_endpoint(q=" ", ctx=ctx)
 
+        self.assertEqual(context.exception.code, 4220)
         self.assertEqual(context.exception.status_code, 422)
-        self.assertEqual(context.exception.detail["code"], 4220)
 
     def test_query_api_returns_degraded_answer_with_sources(self) -> None:
         import asyncio
@@ -395,21 +391,20 @@ class ApiRouteTest(unittest.TestCase):
         self.assertEqual(query_response["data"]["sources"], [])
 
     def test_query_api_rejects_blank_question(self) -> None:
-        from fastapi import HTTPException
-
         from backend.api.auth import LoginRequest, login
         from backend.api.rag import QueryRequest, query_endpoint
+        from backend.service.rag import RagValidationError
 
         token = login(LoginRequest(login_id="alice", password="demo-pass-1234", current_space_id=10))["data"]["token"]
         authorization = f"Bearer {token}"
         from backend.service.auth_context import get_current_user
         ctx = get_current_user(authorization=authorization)
 
-        with self.assertRaises(HTTPException) as context:
+        with self.assertRaises(RagValidationError) as context:
             query_endpoint(QueryRequest(question=" "), ctx=ctx)
 
+        self.assertEqual(context.exception.code, 4220)
         self.assertEqual(context.exception.status_code, 422)
-        self.assertEqual(context.exception.detail["code"], 4220)
 
     def test_created_document_is_searchable_and_queryable(self) -> None:
         from backend.api.auth import LoginRequest, login

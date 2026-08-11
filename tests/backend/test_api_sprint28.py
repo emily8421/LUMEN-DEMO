@@ -172,49 +172,46 @@ class Sprint28ApiTest(unittest.TestCase):
         self.assertEqual(added["data"]["user_id"], 3)
 
         # 重复添加 409
-        from fastapi import HTTPException
+        from backend.service.space_members import SpaceMemberError
 
-        with self.assertRaises(HTTPException) as dup_ctx:
+        with self.assertRaises(SpaceMemberError) as dup_ctx:
             add_member_endpoint(10, AddMemberRequest(email="brightlite-member@example.com"), ctx=ctx)
+        self.assertEqual(dup_ctx.exception.code, 4090)
         self.assertEqual(dup_ctx.exception.status_code, 409)
-        self.assertEqual(dup_ctx.exception.detail["code"], 4090)
 
         # 移除后失去空间访问
         self.assertEqual(remove_member_endpoint(10, 3, ctx=ctx)["code"], 0)
         bright_token, _ = self._login("brightlite-member")
-        from fastapi import HTTPException as H2
+        from backend.service.space_members import SpaceMemberError as SpaceMemberError2
 
-        with self.assertRaises(H2) as access_ctx:
+        with self.assertRaises(SpaceMemberError2) as access_ctx:
             list_members_endpoint(10, ctx=self._ctx(bright_token))
-        self.assertEqual(access_ctx.exception.detail["code"], 4003)
+        self.assertEqual(access_ctx.exception.code, 4003)
 
     def test_member_add_requires_space_admin(self) -> None:
         from backend.api.space_members import AddMemberRequest, add_member_endpoint
-
-        from fastapi import HTTPException
+        from backend.service.space_members import SpaceMemberError
 
         kira_token, _ = self._login("kira")  # 空间 10 member（非 admin）
-        with self.assertRaises(HTTPException) as ctx:
+        with self.assertRaises(SpaceMemberError) as ctx:
             add_member_endpoint(10, AddMemberRequest(email="brightlite-member@example.com"), ctx=self._ctx(kira_token))
+        self.assertEqual(ctx.exception.code, 4030)
         self.assertEqual(ctx.exception.status_code, 403)
-        self.assertEqual(ctx.exception.detail["code"], 4030)
 
     def test_demote_last_space_admin_409(self) -> None:
         from backend.api.space_members import UpdateMemberRoleRequest, update_member_role_endpoint
-
-        from fastapi import HTTPException
+        from backend.service.space_members import SpaceMemberError
 
         alice_token, _ = self._login("alice")
         # 空间 20 仅 alice 一个 admin：降级自己 -> 4090（C-ROLE-006）
-        with self.assertRaises(HTTPException) as ctx:
+        with self.assertRaises(SpaceMemberError) as ctx:
             update_member_role_endpoint(20, 1, UpdateMemberRoleRequest(role="member"), ctx=self._ctx(alice_token))
+        self.assertEqual(ctx.exception.code, 4090)
         self.assertEqual(ctx.exception.status_code, 409)
-        self.assertEqual(ctx.exception.detail["code"], 4090)
 
     def test_user_search_admin_allowed_member_denied(self) -> None:
         from backend.api.users import search_users_endpoint
-
-        from fastapi import HTTPException
+        from backend.service.space_members import SpaceMemberError
 
         alice_token, _ = self._login("alice")
         response = search_users_endpoint(q="kira", ctx=self._ctx(alice_token))
@@ -223,10 +220,10 @@ class Sprint28ApiTest(unittest.TestCase):
         self.assertNotIn("password_hash", response["data"][0])
 
         kira_token, _ = self._login("kira")
-        with self.assertRaises(HTTPException) as ctx:
+        with self.assertRaises(SpaceMemberError) as ctx:
             search_users_endpoint(q="kira", ctx=self._ctx(kira_token))
+        self.assertEqual(ctx.exception.code, 4030)
         self.assertEqual(ctx.exception.status_code, 403)
-        self.assertEqual(ctx.exception.detail["code"], 4030)
 
 
 if __name__ == "__main__":
