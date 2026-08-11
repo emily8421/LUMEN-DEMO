@@ -50,7 +50,10 @@ CI 从零代码门升级到三 job：`backend-test`（pytest）+ `frontend-build
 
 ## 完成记录
 
-（编码 + 验证后回写：commit / CI 基线结果 / 升 required 时机）
+- **commit**：`b7bf866`（P0-2 三 job + `ruff.toml` + `requirements-dev.txt`）+ `a96855a`（`python-multipart` 补声明）+ `5ca2c95`（`llm_adapter` env key 大小写修复）+ `0d62bbd`（升 required）；PR #124 squash 合并 main `c26bb63`（2026-08-11）。
+- **CI 基线（5 轮）**：backend-test 286 passed（required）+ frontend-build 301 modules（required）+ backend-lint 41 advisory 基线（恒 advisory）；CI 首跑暴露并修复 2 潜伏 bug（`python-multipart` 漏声明 + `llm_adapter` env key 大小写——后者影响 Linux 部署 LLM 多通道切换）。
+- **升 required 时机**：基线清完后（第 4 轮 backend-test pass）→ 第 5 轮升 required 验证绿（`0d62bbd`）→ merge。
+- **残留风险**：backend-lint 41 旧债恒 advisory（F841×16 / F401×13 / E402×11 / F811×1），按 ratchet 逐步整治。
 
 ## 待确认
 

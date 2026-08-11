@@ -54,7 +54,9 @@
 
 ## 完成记录
 
-（编码 + 验证后回写：commit / 验证结果 / 残留风险）
+- **commit**：`c2838ea`（feature 分支 `chore/p0-test-db-guard-and-ci`，PR #124 squash 合并 main `c26bb63`，2026-08-11）。
+- **验证（评估 §4.4 五面全过）**：① guard 单测 10/10；② 负向 smoke 指向开发库 `lumen` 被 guard 拒（17 ERROR 非 skip）；③ 默认 unit `pytest -m "not integration" --strict-markers` 排除 4 PG 面（286 passed / 47 deselected）；④ 真实 PG integration 47 passed（`lumen_test`，`createdb` 已建）；⑤ 开发库 `lumen` 保护复核未 reset。
+- **残留风险**：无；`lumen_test` volume 需一次性 `createdb`（已做）。
 
 ## 待确认
 

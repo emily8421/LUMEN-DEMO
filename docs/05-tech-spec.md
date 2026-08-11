@@ -161,9 +161,9 @@ flowchart TB
 #### 4.2.4 工程化护栏
 
 - **【已落地】** 前端 `tsconfig.json` `strict:true`，`build = tsc -b && vite build`；`backend/requirements.txt` 全量 `==` 锁版；`frontend/Dockerfile` 多阶段 + `nginx.conf` SPA fallback / 同源反代 / assets immutable；生产 compose 不暴露 PG 到宿主。
-- **【待对齐·最高优先】** CI 零代码门：`.github/workflows/project-check.yml` 只校验 whitespace + `VERSION`/`CHANGELOG` + derived-sync 边界，**无 pytest / 无 tsc / 无 lint / 无 build**（~30 个后端测试从未在 CI 跑）→ 必须加 `backend-test`（pytest，默认 `-m "not integration"`）、`frontend-build`（`tsc -b && vite build`）、`backend-lint`（ruff）、`frontend-lint`（eslint）job。
+- **【已落地·P0-2 2026-08-11】** CI 代码门：`.github/workflows/project-check.yml` 加 `backend-test`（pytest `-m "not integration" --strict-markers`，**required**）、`frontend-build`（`tsc -b && vite build`，**required**）、`backend-lint`（ruff `E4/E7/E9/F`，恒 advisory 记 41 旧债基线）三 job；`frontend-lint`（eslint）**留 P1**（B1 暂缓，见 NFR-006 / 本节留痕）。
 - **【待对齐】** 前端零测试 + 零 lint/format 工具（`package.json` 无 vitest/eslint/prettier，无 `test`/`lint`/`typecheck` 脚本）→ 引入工具 + 脚本。
-- **【待对齐】** 后端零 lint / 类型工具（无 `ruff.toml` / `mypy.ini` / `pyproject.toml`）且 `pytest` / `httpx` 未在 `requirements.txt`（隐式依赖）→ 新建 `requirements-dev.txt` + `ruff.toml`。
+- **【部分落地·P0-2】** 后端 lint：根 `ruff.toml`（py314、`E4/E7/E9/F`）+ `backend/requirements-dev.txt`（pytest / httpx / ruff）已建；mypy / coverage / 类型工具仍待对齐。
 - **【待对齐】** 测试不分层（`tests/backend/` 扁平、unit 与 PG 集成混放靠 `setUpClass` 抛 `SkipTest` 区分，无 marker / 无 coverage）→ 分 `tests/unit` vs `tests/integration` + pytest marker，CI 默认跑 unit。
 - **【待对齐】** API 测试不经 HTTP 层（直接 import 并调端点函数），全局 `exception_handler`（envelope 序列化层）**无回归保护** → 补 `fastapi.testclient.TestClient` 断言 HTTP 响应体 `{code,msg,data}`。
 - **【待对齐】** env 散落 6+ 处无集中 Settings（`main.py` / `auth.py` / `db.py` / `llm_adapter.py` / `embedding.py`）+ 弱默认 `LUMEN_DEMO_TOKEN_KEY="local-demo-signing-key"` 无生产校验（`main.py:32` 生产护栏只挡 demo 仓储不挡弱 key）→ 建 `backend/config.py`（pydantic-settings），启动期校验关键 secret 非默认值。
