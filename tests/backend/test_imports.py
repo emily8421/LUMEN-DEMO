@@ -63,17 +63,17 @@ class ImportServiceTest(unittest.TestCase):
 
     def test_import_rejects_non_member_space(self) -> None:
         from backend.repository.demo_repository import DemoRepository
-        from backend.service.imports import ImportTextRequest, ImportValidationError, import_extracted_text
+        from backend.service.imports import ImportTextRequest, import_extracted_text
+        from backend.service.space import SpaceAccessError
 
-        with self.assertRaises(ImportValidationError) as context:
+        # Slice B：空间访问被拒不转 ImportValidationError，直接冒泡 space 域 SpaceAccessError（4003，07 契约 API-011）。
+        with self.assertRaises(SpaceAccessError):
             import_extracted_text(
                 repository=DemoRepository(),
                 user_id=3,
                 current_space_id=10,
                 request=ImportTextRequest(filename="demo.txt", content=b"demo"),
             )
-
-        self.assertEqual(str(context.exception), "space access denied")
 
     def test_import_batch_uses_relative_path_titles(self) -> None:
         from backend.model.entities import DocumentPermission

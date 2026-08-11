@@ -22,6 +22,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from backend.model.entities import Document
+from backend.model.error_codes import ApiError, ErrorCode
 from backend.service.document import (
     DocumentNotFoundError,
     VersionNotFoundError,
@@ -31,24 +32,39 @@ from backend.service.document import (
 from backend.service.space import SpaceAccessError, ensure_space_access
 
 
-class ExportError(Exception):
-    """Raised when the space ZIP archive cannot be produced (API 映射 5000)."""
+class ExportError(ApiError):
+    """空间 ZIP / PDF 导出无法产出（API 映射 5000）。"""
+
+    def __init__(self, message: str, status_code: int | None = None) -> None:
+        super().__init__(ErrorCode.INTERNAL, message, status_code)
 
 
-class PdfExportValidationError(Exception):
-    """Raised when API-019 request fields are invalid (API 映射 4220)."""
+class PdfExportValidationError(ApiError):
+    """API-019 请求字段非法（API 映射 4220）。"""
+
+    def __init__(self, message: str, status_code: int | None = None) -> None:
+        super().__init__(ErrorCode.VALIDATION_FAILED, message, status_code)
 
 
-class PdfExportDependencyError(Exception):
-    """Raised when ReportLab/font dependencies are unavailable (API 映射 5030)."""
+class PdfExportDependencyError(ApiError):
+    """ReportLab / 字体依赖不可用（API 映射 5030）。"""
+
+    def __init__(self, message: str, status_code: int | None = None) -> None:
+        super().__init__(ErrorCode.SERVICE_UNAVAILABLE, message, status_code)
 
 
-class PdfExportNotFoundError(Exception):
-    """Raised when a PDF export task or artifact cannot be exposed (API 映射 4004)."""
+class PdfExportNotFoundError(ApiError):
+    """PDF 导出任务 / 产物不存在或不可访问（API 映射 4004）。"""
+
+    def __init__(self, message: str, status_code: int | None = None) -> None:
+        super().__init__(ErrorCode.NOT_FOUND, message, status_code)
 
 
-class PdfExportNotReadyError(Exception):
-    """Raised when a PDF export task exists but has no downloadable artifact yet (API 映射 4090)."""
+class PdfExportNotReadyError(ApiError):
+    """PDF 导出任务存在但尚无可用产物（API 映射 4090）。"""
+
+    def __init__(self, message: str, status_code: int | None = None) -> None:
+        super().__init__(ErrorCode.CONFLICT, message, status_code)
 
 
 @dataclass(frozen=True)
