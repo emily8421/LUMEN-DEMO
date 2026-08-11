@@ -136,7 +136,7 @@ flowchart TB
 - **【待对齐】** `code` 字段二义：`main.py` `exception_handler` 的 else 分支回写 `code=exc.status_code`（HTTP 码），与 4 位业务码混用 → 收口为「`code` 永远是业务码，HTTP 码只放 `status_code`」，未分类用固定码（如 `5000`）。
 - **【待对齐】** `code→HTTP` 映射散落 4 份（`api/auth.py:35` / `admin.py:25` / `space_members.py:25` / `users.py:17` 各一份 `_status_for`，键集不同）→ 收口为单一映射（建议 `model/error_codes.py` 用 Enum/IntEnum，映射只此一处）。
 - **【待对齐】** 错误 `msg` 泄露内部细节：多处 `detail={"code":...,"msg":str(exc)}` 直传 service 异常原文（`api/tags.py`、`folders.py`、`terms.py`、`term_categories.py`、`quick_entry.py` 等）→ 禁 `str(exc)` 直传，`msg` 用固定用户文案，异常原文仅进日志。
-- **【待对齐】** 无兜底 5xx envelope：`main.py` 只注册了 `HTTPException` handler，service 未捕获异常走 FastAPI 默认响应、**不带 envelope** → 补 `@app.exception_handler(Exception)` 返回 `{code:5000,msg:"internal error",data:null}`，生产不回传堆栈 / 内部路径。
+- **【已立项·Sprint-32 Slice A】** 无兜底 5xx envelope：`main.py` 只注册了 `HTTPException` handler，service 未捕获异常走 FastAPI 默认响应、**不带 envelope** → 补 `@app.exception_handler(Exception)` 返回 `{code:5000,msg:"internal error",data:null}`，生产不回传堆栈 / 内部路径。
 - **【待对齐】** 前端 `client.ts` 抛裸 `Error(msg)` 丢弃 `code` → 改抛结构化 `ApiError(code,msg,status)`，供调用方按 `code` 分流（401/4010→登出、5030→AI 降级提示、4090→冲突 UI）。
 - **【待对齐】** 分页响应契约不统一（`tags` `{items,total}` vs `terms` `{items,total,page}` vs `documents` 裸 list）→ 统一 `{items,total,page,page_size}` 或全部裸 list。
 
@@ -165,7 +165,7 @@ flowchart TB
 - **【待对齐】** 前端零测试 + 零 lint/format 工具（`package.json` 无 vitest/eslint/prettier，无 `test`/`lint`/`typecheck` 脚本）→ 引入工具 + 脚本。
 - **【部分落地·P0-2】** 后端 lint：根 `ruff.toml`（py314、`E4/E7/E9/F`）+ `backend/requirements-dev.txt`（pytest / httpx / ruff）已建；mypy / coverage / 类型工具仍待对齐。
 - **【待对齐】** 测试不分层（`tests/backend/` 扁平、unit 与 PG 集成混放靠 `setUpClass` 抛 `SkipTest` 区分，无 marker / 无 coverage）→ 分 `tests/unit` vs `tests/integration` + pytest marker，CI 默认跑 unit。
-- **【待对齐】** API 测试不经 HTTP 层（直接 import 并调端点函数），全局 `exception_handler`（envelope 序列化层）**无回归保护** → 补 `fastapi.testclient.TestClient` 断言 HTTP 响应体 `{code,msg,data}`。
+- **【部分立项·Sprint-32 Slice A】** API 测试不经 HTTP 层（直接 import 并调端点函数），全局 `exception_handler`（envelope 序列化层）**无回归保护** → 补 `fastapi.testclient.TestClient` 断言 HTTP 响应体 `{code,msg,data}`（Slice A 先补 handler 级 TestClient 断言；端点级 HTTP 测试仍待对齐）。
 - **【待对齐】** env 散落 6+ 处无集中 Settings（`main.py` / `auth.py` / `db.py` / `llm_adapter.py` / `embedding.py`）+ 弱默认 `LUMEN_DEMO_TOKEN_KEY="local-demo-signing-key"` 无生产校验（`main.py:32` 生产护栏只挡 demo 仓储不挡弱 key）→ 建 `backend/config.py`（pydantic-settings），启动期校验关键 secret 非默认值。
 - **【待对齐】** `print()` 与 `logging` 混用（`main.py:44,46`、`pg_repository.py:324`）+ 降级 `except` 静默吞无日志（`service/document.py:201` 索引回填、`rag.py:234,259` LLM 失败）→ 禁 `print`，降级路径必须 `logger.warning(...)` 记原因。
 - **【已立项·待执行】** P0 工程治理（Sprint-31 / task-041/042，2026-08-11 立项）：落地本节 CI 零代码门 → `backend-test`/`frontend-build` required（**A1**：advisory 起步 → 合并前升 required）+ `backend-lint`(ruff) advisory；后端 lint 工具 → 根 `ruff.toml` + `backend/requirements-dev.txt`；测试分层 → pytest `integration` marker + unit/integration 分层 + 独立 `lumen_test` 库三重 fail-closed guard（NFR-005）。`frontend-lint`(eslint) 留 P1（**B1**）。实施口径见 `docs/research/2026-08-10-code-governance-rollout-plan.md` §3。
