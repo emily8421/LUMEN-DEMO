@@ -11,6 +11,7 @@ from datetime import datetime, timedelta
 from typing import Literal
 
 from backend.model.entities import Document, DocumentChunk
+from backend.model.error_codes import ApiError, ErrorCode
 from backend.service.permission import filter_visible_documents, is_space_member
 
 
@@ -19,12 +20,18 @@ MAX_EVENTS_BEFORE_DEGRADE = 2000
 MAX_RETURNED_ITEMS_WHEN_DEGRADED = 200
 
 
-class TimelineAccessError(Exception):
-    """Raised when a user is not allowed to read the requested space."""
+class TimelineAccessError(ApiError):
+    """用户无权读取该空间（API 映射 4003）。"""
+
+    def __init__(self, message: str, status_code: int | None = None) -> None:
+        super().__init__(ErrorCode.FORBIDDEN, message, status_code)
 
 
-class TimelineValidationError(Exception):
-    """Raised when timeline query parameters are invalid."""
+class TimelineValidationError(ApiError):
+    """时间轴查询参数非法（API 映射 4220）。"""
+
+    def __init__(self, message: str, status_code: int | None = None) -> None:
+        super().__init__(ErrorCode.VALIDATION_FAILED, message, status_code)
 
 
 @dataclass(frozen=True)

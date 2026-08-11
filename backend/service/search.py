@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from backend.model.entities import Document, DocumentChunk
-
+from backend.model.error_codes import ApiError, ErrorCode
 from backend.service.permission import filter_visible_documents
 
 
@@ -14,8 +14,11 @@ MAX_SNIPPET_CHARS = 160
 VECTOR_SIMILARITY_THRESHOLD = 0.6
 
 
-class SearchValidationError(Exception):
-    """Raised when a search request is invalid."""
+class SearchValidationError(ApiError):
+    """搜索请求非法（API 映射 4220）。"""
+
+    def __init__(self, message: str, status_code: int | None = None) -> None:
+        super().__init__(ErrorCode.VALIDATION_FAILED, message, status_code)
 
 
 @dataclass(frozen=True)

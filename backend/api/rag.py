@@ -5,15 +5,14 @@ from __future__ import annotations
 from backend.repository import repository
 from backend.service import llm_adapter
 from backend.service.auth_context import TokenContext, get_current_user
-from backend.service.rag import RagSource, RagValidationError, answer_question
+from backend.service.rag import RagSource, answer_question
 
 try:
-    from fastapi import APIRouter, Depends, HTTPException
+    from fastapi import APIRouter, Depends
     from pydantic import BaseModel
 except ImportError:  # pragma: no cover - allows service tests before dependencies are installed
     APIRouter = None
     BaseModel = object
-    HTTPException = Exception
 
 
 if APIRouter is not None:
@@ -30,18 +29,15 @@ if APIRouter is not None:
 
     @router.post("")
     def query_endpoint(request: QueryRequest, ctx: TokenContext = Depends(get_current_user)) -> dict[str, object]:
-        try:
-            answer = answer_question(
-                repository=repository,
-                user_id=ctx.user_id,
-                current_space_id=ctx.current_space_id,
-                question=request.question,
-                history=request.history,
-                use_knowledge_base=request.use_knowledge_base,
-                llm_provider=request.llm_provider,
-            )
-        except RagValidationError as exc:
-            raise HTTPException(status_code=422, detail={"code": 4220, "msg": str(exc)}) from exc
+        answer = answer_question(
+            repository=repository,
+            user_id=ctx.user_id,
+            current_space_id=ctx.current_space_id,
+            question=request.question,
+            history=request.history,
+            use_knowledge_base=request.use_knowledge_base,
+            llm_provider=request.llm_provider,
+        )
 
         return {
             "code": 0,

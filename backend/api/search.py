@@ -4,13 +4,12 @@ from __future__ import annotations
 
 from backend.repository import repository
 from backend.service.auth_context import TokenContext, get_current_user
-from backend.service.search import SearchResult, SearchValidationError, search_documents
+from backend.service.search import SearchResult, search_documents
 
 try:
-    from fastapi import APIRouter, Depends, HTTPException
+    from fastapi import APIRouter, Depends
 except ImportError:  # pragma: no cover - allows service tests before dependencies are installed
     APIRouter = None
-    HTTPException = Exception
 
 
 if APIRouter is not None:
@@ -22,16 +21,13 @@ if APIRouter is not None:
         page: int = 1,
         ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        try:
-            result_page = search_documents(
-                repository=repository,
-                user_id=ctx.user_id,
-                current_space_id=ctx.current_space_id,
-                query=q,
-                page=page,
-            )
-        except SearchValidationError as exc:
-            raise HTTPException(status_code=422, detail={"code": 4220, "msg": str(exc)}) from exc
+        result_page = search_documents(
+            repository=repository,
+            user_id=ctx.user_id,
+            current_space_id=ctx.current_space_id,
+            query=q,
+            page=page,
+        )
 
         return {
             "code": 0,

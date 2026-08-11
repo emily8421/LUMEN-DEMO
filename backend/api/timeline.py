@@ -5,18 +5,15 @@ from __future__ import annotations
 from backend.repository import repository
 from backend.service.auth_context import TokenContext, get_current_user
 from backend.service.timeline import (
-    TimelineAccessError,
     TimelineDensityWindow,
     TimelineEvent,
-    TimelineValidationError,
     get_timeline,
 )
 
 try:
-    from fastapi import APIRouter, Depends, HTTPException, Query
+    from fastapi import APIRouter, Depends, Query
 except ImportError:  # pragma: no cover - allows service tests before dependencies are installed
     APIRouter = None
-    HTTPException = Exception
     Query = None
 
 
@@ -33,21 +30,16 @@ if APIRouter is not None:
         density: bool = True,
         ctx: TokenContext = Depends(get_current_user),
     ) -> dict[str, object]:
-        try:
-            view = get_timeline(
-                repository=repository,
-                user_id=ctx.user_id,
-                space_id=space_id,
-                q=q,
-                from_date=from_,
-                to_date=to,
-                tag_ids=tuple(tag_ids or ()),
-                density=density,
-            )
-        except TimelineAccessError as exc:
-            raise HTTPException(status_code=403, detail={"code": 4003, "msg": str(exc)}) from exc
-        except TimelineValidationError as exc:
-            raise HTTPException(status_code=422, detail={"code": 4220, "msg": str(exc)}) from exc
+        view = get_timeline(
+            repository=repository,
+            user_id=ctx.user_id,
+            space_id=space_id,
+            q=q,
+            from_date=from_,
+            to_date=to,
+            tag_ids=tuple(tag_ids or ()),
+            density=density,
+        )
 
         return {
             "code": 0,
