@@ -71,7 +71,7 @@ class LlmConfig:
 
 def _build_config(name: str, provider: str) -> LlmConfig:
     """按命名配置名读取 ``LLM_<NAME>_*``（``default`` 用无前缀 ``LLM_*`` 兼容旧配置）。"""
-    prefix = "LLM_" if name == _DEFAULT_NAME else f"LLM_{name}_"
+    prefix = "LLM_" if name == _DEFAULT_NAME else f"LLM_{name.upper()}_"
     defaults = _PROVIDER_DEFAULTS.get(provider, {})
     base_url = os.getenv(f"{prefix}BASE_URL", "").strip() or defaults.get("base_url", "")
     model = os.getenv(f"{prefix}MODEL", "").strip() or defaults.get("model", "")
@@ -87,7 +87,7 @@ def _read_env_configs() -> dict[str, LlmConfig]:
         result[_DEFAULT_NAME] = _build_config(_DEFAULT_NAME, legacy_provider)
     providers_value = _strip_inline_comment(os.getenv("LLM_PROVIDERS", "")).strip()
     for name in (item.strip() for item in providers_value.split(",") if item.strip()):
-        provider = os.getenv(f"LLM_{name}_PROVIDER", "").strip().lower()
+        provider = os.getenv(f"LLM_{name.upper()}_PROVIDER", "").strip().lower()
         if not provider or provider == MOCK_PROVIDER:
             continue
         result[name] = _build_config(name, provider)
