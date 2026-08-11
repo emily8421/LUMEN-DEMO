@@ -29,9 +29,10 @@ from backend.model.entities import (
     TermStatus,
     User,
 )
+from backend.repository.protocol import RepositoryProtocol
 
 
-class DemoRepository:
+class DemoRepository(RepositoryProtocol):
     is_demo = True  # demo 标识（accounts-auth §7 物理隔离：PG 强制真实认证，内存允许 demo 快捷登录）
 
     def __init__(self) -> None:
