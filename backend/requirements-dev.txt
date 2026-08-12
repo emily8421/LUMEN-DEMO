@@ -13,3 +13,8 @@ httpx==0.28.1
 
 # 最小 lint 基线（ruff>=0.15.0 支持 target-version="py314"；backend-lint 恒 advisory，只 check 不 format）。
 ruff==0.15.14
+
+# 类型检查基线（mypy 2.3 支持 python_version=3.14；backend-typecheck job advisory 起步，
+# 默认非 strict，查 backend/；Slice B 清零基线后升 required。基线与根因见
+# docs/research/2026-08-12-backend-mypy-b1-assessment.md）。
+mypy==2.3.0
