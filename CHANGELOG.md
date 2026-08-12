@@ -6,6 +6,17 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.8.7（2026-08-12）
+
+**维护态批10（Sprint-35）：7 个存量 PG integration 失败整治——补 17 处缺失的 `session.flush()`。纯债修复、非功能，不改 Phase / 交付物范围 / 对外 API 语义 / DB / 依赖。聚合 bump PATCH。**
+
+- **根因**：`backend/repository/pg_repository.py` 多处 `session.add(row)` 或 `row.x = func.now()` 后、`_to_xxx(row)` 转换前缺 `session.flush()`（Slice A UoW 收口后 commit 只在 `_session_scope` 块退出时发生，方法内不自动 flush）→ ① 8 处 create_*（create_session/create_tag/create_quick_entry/create_ai_draft/create_doc_export/create_term/create_folder/create_term_category）`_to_xxx` 读 `row.id` 返回 `None`（SQLAlchemy autoflush 不因访问 pending 主键触发）；② 9 处 `= func.now()` 后立即转换（update_session_space/update_document/restore_document_version/update_term/rename_folder/move_folder/rename_term_category/move_term_category/update_doc_export）读到 `func.now()` SQL 表达式（Comparator）无 `.isoformat()` → `'Comparator' object has no attribute 'isoformat'`（实验证实 flush 后 server-side 时间戳 reload 成真 datetime）。
+- **修复**：上述 17 处统一补 `session.flush()`（机械一行，无行为变更；create_document/create_import_job/create_user_with_personal_space 已有 flush 不动）。
+- **登记修正**：`docs/05 §4.2.4` 原登记 ③ `test_ai_polish` 为「LLM 环境」系误判——LLM 已 `patch.object` mock，实为 `create_ai_draft` 缺 flush 致 `draft_id=None`（同属 pending-id 类）。
+- **验证**：integration 全量 **48 passed**（原 41 passed + 7 failed → 48 passed 零失败）+ 默认 **306 passed 零回归** + ruff **37 不增**。
+
+> PATCH 依据（`ai/project-rules.md` §2.4.1）：纯 bug 修复，不改对外 API 契约语义、不新增可演示能力。验证：integration 48 passed 零失败 + 默认 306 零回归 + ruff 37 不增。**7 个存量 integration 失败已全部整治**（`docs/05 §4.2.4` 已识别→已整治）；`integration` 全量入 CI gate 未做（当前 CI 仅 `not integration`），另议；实施口径 `docs/research/2026-08-10-code-governance-rollout-plan.md` §5 轨道C。
+
 ## v3.8.6（2026-08-12）
 
 **维护态批9（Sprint-34）：CQ-P1-003 事务边界 UoW——service 层原子事务 + rollback 真语义验证。纯事务边界重构、非功能，不改 Phase / 交付物范围 / 对外 API 语义 / DB / 依赖。CQ-P1-003 全闭环（Slice A 地基 + Slice B service 包 + Slice C rollback 测试），聚合 bump PATCH。**

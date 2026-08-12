@@ -463,6 +463,7 @@ class PgRepository(RepositoryProtocol):
                 client_ip=client_ip,
             )
             session.add(row)
+            session.flush()  # populate row.id + materialize created_at server default
             return _to_session(row)
 
     def find_session_by_token_hash(self, token_hash: str) -> Session | None:
@@ -494,6 +495,7 @@ class PgRepository(RepositoryProtocol):
                 raise KeyError(session_id)
             row.current_space_id = space_id
             row.last_used_at = func.now()
+            session.flush()  # materialize last_used_at (func.now) before _to_session conversion
             return _to_session(row)
 
     def list_memberships(self) -> list[SpaceMember]:
@@ -693,6 +695,7 @@ class PgRepository(RepositoryProtocol):
                 content_md=content_md,
                 editor_id=editor_id,
             ))
+            session.flush()  # materialize updated_at (func.now) before _to_document conversion
             return _to_document(doc)
 
     def delete_document(self, document_id: int) -> None:
@@ -749,6 +752,7 @@ class PgRepository(RepositoryProtocol):
             doc.content_md = version.content_md
             doc.current_version = version_no
             doc.updated_at = func.now()
+            session.flush()  # materialize updated_at (func.now) before _to_document conversion
             return _to_document(doc)
 
     def _next_version_no(self, session, document_id: int) -> int:
@@ -942,6 +946,7 @@ class PgRepository(RepositoryProtocol):
                 created_by=created_by,
             )
             session.add(row)
+            session.flush()  # populate row.id + materialize created_at/updated_at server defaults
             return _to_tag(row)
 
     def update_tag(
@@ -1025,6 +1030,7 @@ class PgRepository(RepositoryProtocol):
                 status=status,
             )
             session.add(row)
+            session.flush()  # populate row.id + materialize created_at/updated_at server defaults
             return _to_quick_entry(row)
 
     def get_quick_entry(self, entry_id: int) -> QuickEntry | None:
@@ -1094,6 +1100,7 @@ class PgRepository(RepositoryProtocol):
                 status=status,
             )
             session.add(row)
+            session.flush()  # populate row.id + materialize created_at server default
             return _to_ai_draft(row)
 
     # --- document exports (REQ-027, API-019) ---
@@ -1122,6 +1129,7 @@ class PgRepository(RepositoryProtocol):
             if status in {"done", "failed"}:
                 row.finished_at = func.now()
             session.add(row)
+            session.flush()  # populate row.id + materialize created_at/finished_at server defaults
             return _to_doc_export(row)
 
     def get_doc_export(self, export_id: int) -> DocExport | None:
@@ -1146,6 +1154,7 @@ class PgRepository(RepositoryProtocol):
             row.error_message = error_message
             if status in {"done", "failed"}:
                 row.finished_at = func.now()
+            session.flush()  # materialize finished_at (func.now) before _to_doc_export conversion
             return _to_doc_export(row)
 
     def remove_document_tag(self, tag_id: int, document_id: int) -> bool:
@@ -1284,6 +1293,7 @@ class PgRepository(RepositoryProtocol):
                 source=source,
             )
             session.add(t)
+            session.flush()  # populate t.id + materialize created_at/updated_at server defaults
             return _to_term(t)
 
     def update_term(
@@ -1311,6 +1321,7 @@ class PgRepository(RepositoryProtocol):
             t.category = category
             t.source = source
             t.updated_at = func.now()
+            session.flush()  # materialize updated_at (func.now) before _to_term conversion
             return _to_term(t)
 
     def delete_term(self, term_id: int) -> None:
@@ -1362,6 +1373,7 @@ class PgRepository(RepositoryProtocol):
                 created_by=created_by,
             )
             session.add(row)
+            session.flush()  # populate row.id + materialize created_at/updated_at server defaults
             return _to_folder(row)
 
     def rename_folder(self, folder_id: int, name: str) -> Folder | None:
@@ -1371,6 +1383,7 @@ class PgRepository(RepositoryProtocol):
                 return None
             row.name = name
             row.updated_at = func.now()
+            session.flush()  # materialize updated_at (func.now) before _to_folder conversion
             return _to_folder(row)
 
     def move_folder(self, folder_id: int, parent_id: int | None) -> Folder | None:
@@ -1381,6 +1394,7 @@ class PgRepository(RepositoryProtocol):
             row.parent_id = parent_id
             row.order = self._next_folder_order(session, row.space_id, parent_id)
             row.updated_at = func.now()
+            session.flush()  # materialize updated_at (func.now) before _to_folder conversion
             return _to_folder(row)
 
     def delete_folder(self, folder_id: int) -> None:
@@ -1497,6 +1511,7 @@ class PgRepository(RepositoryProtocol):
                 created_by=created_by,
             )
             session.add(row)
+            session.flush()  # populate row.id + materialize created_at/updated_at server defaults
             return _to_term_category(row)
 
     def rename_term_category(self, category_id: int, name: str) -> TermCategory | None:
@@ -1506,6 +1521,7 @@ class PgRepository(RepositoryProtocol):
                 return None
             row.name = name
             row.updated_at = func.now()
+            session.flush()  # materialize updated_at (func.now) before _to_term_category conversion
             return _to_term_category(row)
 
     def move_term_category(self, category_id: int, parent_id: int | None) -> TermCategory | None:
@@ -1516,6 +1532,7 @@ class PgRepository(RepositoryProtocol):
             row.parent_id = parent_id
             row.order_idx = self._next_term_category_order(session, row.space_id, parent_id)
             row.updated_at = func.now()
+            session.flush()  # materialize updated_at (func.now) before _to_term_category conversion
             return _to_term_category(row)
 
     def delete_term_category(self, category_id: int) -> None:
