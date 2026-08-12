@@ -92,7 +92,7 @@ README / backend README / demo-guide 推荐的 `unittest discover` 在开发库�
 | 错误契约收口 | CQ-P1-005（code 二义/str(exc)/无兜底 5xx/前端丢 code） | `ApiError(code,msg,status)` + 集中 `code→HTTP` 映射 + 兜底 `Exception` handler + 禁 `str(exc)` | 前端不再靠文案判 auth → R3 Web Profile + R5 Adapter |
 | repository Protocol + 按域拆 | CQ-P1-002（pg 1621/demo 1251，无 Protocol） | 定义 `RepositoryProtocol`，按域 `DocumentRepository` 等，双实现 contract test | 接口变更不再靠人工同步 → R1 模块化 + R5 |
 | 事务边界 UoW | CQ-P1-003（多步写各自 commit） | service/UoW 拥有事务，repository 不独立 commit；故障注入 rollback 测试 | import/document 关键用例可回滚 → R4 DB Concern |
-| response_model/codegen | CQ-P1-006（64 endpoint/0 response_model，类型双写） | FastAPI `response_model` + OpenAPI → 前端 codegen / schema diff | 后端加字段前端自动同步 → R3 + R5 |
+| response_model/codegen | CQ-P1-006（64 endpoint/0 response_model，类型双写；实为 65，漏 `config_router`） | FastAPI `response_model` + OpenAPI → 前端 codegen / schema diff | 后端加字段前端自动同步 → R3 + R5（后端契约 + CI schema diff 已闭环；前端 codegen 留候选） |
 | scoped repository query | CQ-P1-004（全量读取再过滤） | `list_visible_documents(actor,space)` 等安全默认 API，全量法标 internal | 越权不依赖调用者记忆 → R4 Auth Concern |
 | fail-fast / readiness | CQ-P1-001（DB 失败仍启动） | production 强依赖失败 raise；liveness vs readiness 分离 | 端口可用≠可服务 → R4 可靠性 |
 | 前端 ratchet + App 减压 | CQ-P1-008（App.tsx 545，超限回堆） | changed-file ratchet 脚本；拆 auth/workspace/overlay shell | 新 PR 不增加超限文件职责 → R3 + R6 |
@@ -150,7 +150,7 @@ README / backend README / demo-guide 推荐的 `unittest discover` 在开发库�
 | 错误契约收口 | 3 | ⏳ | — | P1 |
 | repository Protocol | 3 | ⏳ | — | P1 |
 | 事务 UoW | 3 | ⏳ | — | P1 |
-| response_model/codegen | 3 | ⏳ | — | P1 |
+| response_model/codegen | 3 | ✅ 已闭环（Sprint-41 / task-048 / 62 JSON 端点 response_model + OpenAPI 快照 + CI schema-diff required，v3.8.13） | — | P1（前端 codegen 留后续候选） |
 | scoped query | 3 | ✅ 已闭环（Sprint-40 / task-047 / PR #151，v3.8.12） | — | P1 |
 | fail-fast | 3 | ⏳ | — | P1 |
 | 前端 ratchet | 3 | ⏳ | — | P2 |
@@ -170,6 +170,7 @@ README / backend README / demo-guide 推荐的 `unittest discover` 在开发库�
 - **2026-08-12 追加（维护态批12 / v3.8.9）**：轨道 3 ratchet「ruff 旧债」清零——`ruff check backend tests` **37→0**（F841×15 / E402×11 / F401×10 / F811×1）。自动修 26 条 + 手工 E402 11 条；`api/auth.py` `TOKEN_SIGNING_KEY` re-export 保留并 `# noqa: F401` 标注。验证：默认 306 passed 零回归。详见 `tasks/task-044-ruff-debt-cleanup.md`。
 - **2026-08-12 追加（维护态批13 / v3.8.10）**：前端引入 ESLint（eslint B1，NFR-006 P1 落地）全闭环——Slice A #146（advisory 引入）+ Slice B #147（清 10 problems 含 **QuickEntryFeature `rules-of-hooks` 真 bug**，tsc 没拦住）+ 升 required。验证：`npm run lint` 0 problem + build 301 modules 零回归 + CI `frontend-lint` required 绿。详见 `tasks/task-045-frontend-eslint.md` + 实证 `docs/research/2026-08-12-frontend-eslint-b1-assessment.md`。
 - **2026-08-12 追加（维护态批14 / v3.8.11）**：后端引入 mypy 类型检查（mypy B1，NFR-006 P1 落地 / CQ-P1-002 Slice C 收益兑现前提）全闭环——Slice A #148（advisory 引入，基线 190）+ Slice B-1 #149（**current_space_id C 方案**：TokenContext 字段收紧 int + get_current_user fail-closed guard，清 45 api arg-type None 传播契约缺口；+ reportlab override 8 + 真实 bug ~18）→ 119 + Slice B-2 #150（**§3 删 try/except** 19 文件清 119 + 补 6 service `repository.move/rename/update_X` 返回 `X|None` 临时变量 narrow + 升 required）→ **mypy 0**。**关键价值**：抓到 ruff/tsc 都抓不到的 current_space_id `int|None`→service(int) None 传播缺口 45 + 真实类型 bug ~20。验证：mypy 190→0 + ruff passed + pytest 307（+1 None guard 单测）零回归 + CI `backend-typecheck` required 绿。详见 `tasks/task-046-backend-mypy.md` + 实证 `docs/research/2026-08-12-backend-mypy-b1-assessment.md`。
+- **2026-08-13 追加（维护态批16 / v3.8.13）**：轨道 3 P1 `response_model/codegen`（CQ-P1-006）全闭环——Slice A 地基（`backend/model/schemas.py` `ApiEnvelope[T]` 泛型 + `scripts/export-openapi.py` 固定 `openapi/openapi.json` + CI `schema-diff` job advisory 起步）+ Slice B-1..B-3 按域接入（62/62 JSON 端点 `response_model=ApiEnvelope[X]`，二进制 md/zip/pdf 3 个明确排除）+ `schema-diff` 升 required。**修正评估口径**：实际 65 端点（评估数 64 漏 `config_router` llm-configs）。验证：路由全量 smoke **60/60**（62 JSON + 3 二进制端点 TestClient + DemoRepository 实测，response_model 零失配）+ mypy 0 + ruff passed + pytest **304 passed / 4 skipped** 零回归 + 快照无漂移。详见 `tasks/task-048-response-model-codegen.md`。前端 codegen（openapi-typescript 新依赖）与运行时 schema 校验留后续候选。
 
 ## 9. 待人工确认项
 
