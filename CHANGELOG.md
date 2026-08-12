@@ -15,7 +15,7 @@
 - **验证**：本地 integration 全量 **48 passed**（32s，零 skip 零失败）+ 预检脚本本地跑通（PG OK + pgvector 可装）+ 负向 smoke（开发库 `lumen` / 缺 `ALLOW_DESTRUCTIVE_TEST_DB` → `UnsafeTestDatabaseError` 硬失败）+ 默认 **306 passed** 零回归 + ruff 37 不增 + PR CI `backend-integration` 绿。
 - **回写**：`docs/05 §4.2.4`（integration 入 gate「另议」→ 已落地）+ `docs/08` Sprint-36 + `ai/project-rules.md §1` 维护态批11 + `docs/research/2026-08-10-code-governance-rollout-plan.md` §8。
 
-> PATCH 依据（`ai/project-rules.md` §2.4.1）：CI 配置 / 工程治理调整，非功能、不改对外 API 契约语义、不新增可演示能力。验证：本地 integration 48 passed + 默认 306 零回归 + ruff 37 不增。**integration 全量入 CI gate 已落地（闭环 `docs/05 §4.2.4` 另议）**；merge 后待管理员将 `backend-integration` 升为 main required check（先 merge 再设 required，观察 2-3 PR 稳定）。实施口径 `docs/research/2026-08-10-code-governance-rollout-plan.md` §5 轨道C。
+> PATCH 依据（`ai/project-rules.md` §2.4.1）：CI 配置 / 工程治理调整，非功能、不改对外 API 契约语义、不新增可演示能力。验证：本地 integration 48 passed + 默认 306 零回归 + ruff 37 不增。**integration 全量入 CI gate 已落地（闭环 `docs/05 §4.2.4` 另议）**；免费版私有仓库无分支保护，`backend-integration` 未强制 required；merge 前人工核对后端 checks 绿为流程约定。实施口径 `docs/research/2026-08-10-code-governance-rollout-plan.md` §5 轨道C。
 
 ## v3.8.7（2026-08-12）
 

@@ -60,7 +60,7 @@ jobs:
 
   # --- P0-2 / NFR-006 / task-042：CI 最小代码门 ---
   # 口径：rollout §3 P0-2 / evaluation §4.3 联合裁决定稿（A1）。
-  # backend-test / frontend-build 基线已清，required（PR 必过）；backend-lint(ruff) 恒 advisory（记旧债基线，不阻断）。
+  # backend-test / frontend-build 基线已清（CI 运行不强制阻断——免费版私有仓库无分支保护）；backend-lint(ruff) 恒 advisory（记旧债基线，不阻断）。
   # 不新增前端 typecheck（build 已含 tsc -b）。
 
   backend-test:
@@ -83,7 +83,7 @@ jobs:
         run: python -m pytest -m "not integration" --strict-markers
 
   # --- 维护态批11 / Sprint-36：PG integration 全量入 CI gate（闭环 docs/05 §4.2.4「另议」）---
-  # 独立 job：unit gate（backend-test）保持无 DB 依赖（hermetic）；integration gate 单独可 required。
+  # 独立 job：unit gate（backend-test）保持无 DB 依赖（hermetic）；integration gate 由 merge 前人工核对（免费版私有仓库无分支保护，未强制 required）。
   # DB：pgvector/pgvector:pg16 服务容器；guard 三 env 在 job 级注入（pytest 子进程继承，先于 db.py 模块 import 生效）。
   # 易错点①：不挂 /docker-entrypoint-initdb.d/ —— 服务容器先于 checkout 启动，挂载点尚无仓库文件，
   #   Docker 会把缺失源 bind-mount 成空目录 → entrypoint 处理 .sql 报错 → 容器起不来。lumen_test 由预检幂等补建。
