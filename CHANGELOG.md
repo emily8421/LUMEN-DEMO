@@ -6,6 +6,18 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.8.6（2026-08-12）
+
+**维护态批9（Sprint-34）：CQ-P1-003 事务边界 UoW——service 层原子事务 + rollback 真语义验证。纯事务边界重构、非功能，不改 Phase / 交付物范围 / 对外 API 语义 / DB / 依赖。CQ-P1-003 全闭环（Slice A 地基 + Slice B service 包 + Slice C rollback 测试），聚合 bump PATCH。**
+
+- **Slice A UoW 地基（PR #141 `5f017b6`）**：新增 `backend/repository/uow.py`——contextvar 感知 `_session_scope`（PgRepository 统一经此取得 session，收口 commit）+ `UnitOfWork`（PG 真实事务，enter 开 session / exit commit/rollback，支持 nested join）/ `DemoUnitOfWork`（内存 no-op）+ `unit_of_work` 工厂（按 `is_demo` 分流）+ `UnitOfWorkProtocol`；pg_repository 96 处 `with SessionLocal()`→`with _session_scope()` 机械替换 + 删 50 处 `session.commit()`（commit 收口 `_session_scope` else 分支，3 处 flush 保留）；`test_uow_contract.py` 5 测试守护双实现契约 + 工厂分流。
+- **Slice B service 包 UoW（PR #142 `09137a4`）**：`document.py` `create_document`/`update_document`/`restore_version` 三函数写步（主表 + sync_chunks + sync_wikilinks）包 `with unit_of_work(repository):`，权限校验读在事务外，imports 嵌套调用 nested join；`imports.py` `import_extracted_text` 主流程（create_document + chunk 统计 + complete_import_job）原子提交，`create_import_job`/`fail_import_job` 在事务外独立提交（失败标记不随 rollback 抹掉、不掩盖原异常），删 :108 重复 `replace_document_chunks`（create_document 内 sync_chunks 已写），chunk_count 改 `list_document_chunks` 取（数值不变）。
+- **Slice C rollback 真语义 + 隐藏缺陷修复（PR #143 `7c64545`）**：新增 `tests/backend/test_uow_rollback.py`（integration，patch `replace_document_wikilinks` 注入 RuntimeError）验证 import 主事务真正回滚（文档/版本/chunks 全撤销）+ import_job 不残留 done（fail_import_job 事务外独立写 failed）；**修复 `create_import_job` pending-id 缺陷**——`_to_import` 读 `job.id` 前显式 `flush`（SQLAlchemy autoflush 不因访问 pending 主键触发 → 真实 PG 下 `ImportJob.id=None` → complete/fail_import_job KeyError）。
+- **验证**：Slice A/B 默认 **306 passed 零回归** + ruff 37 不增；Slice C `test_uow_rollback` + `test_import_lifecycle`（PG integration）PASSED + 默认 306 零回归 + ruff 干净；PR CI required 全绿（backend-test + frontend-build + project-check；ruff advisory 不阻断）。
+- **已知债**：PG integration 首次全量跑暴露 **7 个存量失败**（`create_term` 等 pending-id 类 / datetime `isoformat` 序列化 / LLM mock 环境）——与本次无关、此前被默认 `not integration` 跳过，已登记 `docs/05 §4.2.4`，待单独立项整治。
+
+> PATCH 依据（`ai/project-rules.md` §2.4.1）：纯事务边界重构，不改对外 API 契约语义、不新增可演示能力；CQ-P1-003 聚合 bump（三 slice 闭环）。验证：默认 306 零回归 ×3 + ruff 37 不增 + Slice C PG integration PASSED。**CQ-P1-003 全闭环（Slice A 地基 + Slice B service 包 + Slice C rollback 测试）**；诊断 `docs/research/2026-08-10-code-quality-maintainability-assessment.md` §4.6 CQ-P1-003；实施口径 `docs/research/2026-08-10-code-governance-rollout-plan.md` §4 轨道3 + §5 轨道C。
+
 ## v3.8.5（2026-08-12）
 
 **维护态批8（Sprint-33）：CQ-P1-002 repository 契约 Slice C——service 层 repository 参数类型注解 + 动态调用收口。纯契约化 + 类型注解、非功能，不改 Phase / 交付物范围 / 对外 API 语义 / DB / 依赖。CQ-P1-002 全闭环（Slice A 契约 + Slice C 注解；Slice B 按域拆评估搁置），聚合 bump PATCH。**
