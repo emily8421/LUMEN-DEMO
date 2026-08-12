@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from backend.model.entities import DocLinkDraft, Document, DocumentPermission, DocumentVersion, SpaceMember
 from backend.model.error_codes import ApiError, ErrorCode
 from backend.repository.protocol import RepositoryProtocol
+from backend.repository.uow import unit_of_work
 from backend.service.chunking import clean_text, split_text_into_chunks
 from backend.service.permission import can_write_document, can_view_document, filter_visible_documents, is_space_member
 
@@ -86,16 +87,19 @@ def create_document(
         if folder is None or folder.space_id != current_space_id:
             raise DocumentValidationError("target folder not found in this space")
 
-    document = repository.create_document(
-        space_id=current_space_id,
-        title=request.title,
-        content_md=request.content_md,
-        owner_id=user_id,
-        permission=request.permission,
-        folder_id=request.folder_id,
-    )
-    sync_document_chunks(repository, document)
-    sync_document_wikilinks(repository, document)
+    # 写路径：主表 + chunks + wikilinks 三写步共享一个事务（CQ-P1-003 Slice B）；
+    # 权限校验读在事务外，service→service 嵌套（imports → create_document）时 join 外层事务。
+    with unit_of_work(repository):
+        document = repository.create_document(
+            space_id=current_space_id,
+            title=request.title,
+            content_md=request.content_md,
+            owner_id=user_id,
+            permission=request.permission,
+            folder_id=request.folder_id,
+        )
+        sync_document_chunks(repository, document)
+        sync_document_wikilinks(repository, document)
     return document
 
 
@@ -119,15 +123,17 @@ def update_document(
 ) -> Document:
     document = get_visible_document(repository, user_id, current_space_id, document_id)
     _ensure_can_write(repository, user_id, current_space_id, document)
-    updated = repository.update_document(
-        document_id=document_id,
-        title=request.title,
-        content_md=request.content_md,
-        permission=request.permission,
-        editor_id=user_id,
-    )
-    sync_document_chunks(repository, updated)
-    sync_document_wikilinks(repository, updated)
+    # 写路径：主表 + chunks + wikilinks 三写步共享一个事务（CQ-P1-003 Slice B）。
+    with unit_of_work(repository):
+        updated = repository.update_document(
+            document_id=document_id,
+            title=request.title,
+            content_md=request.content_md,
+            permission=request.permission,
+            editor_id=user_id,
+        )
+        sync_document_chunks(repository, updated)
+        sync_document_wikilinks(repository, updated)
     return updated
 
 
@@ -178,9 +184,11 @@ def restore_version(
     _ensure_can_write(repository, user_id, current_space_id, document)
     if repository.get_document_version(document_id, version_no) is None:
         raise VersionNotFoundError("version not found")
-    restored = repository.restore_document_version(document_id, version_no, editor_id=user_id)
-    sync_document_chunks(repository, restored)
-    sync_document_wikilinks(repository, restored)
+    # 写路径：恢复主表 + chunks + wikilinks 三写步共享一个事务（CQ-P1-003 Slice B）。
+    with unit_of_work(repository):
+        restored = repository.restore_document_version(document_id, version_no, editor_id=user_id)
+        sync_document_chunks(repository, restored)
+        sync_document_wikilinks(repository, restored)
     return restored
 
 

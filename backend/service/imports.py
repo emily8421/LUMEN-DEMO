@@ -2,17 +2,21 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from uuid import uuid4
 
 from backend.model.entities import DocumentPermission, ImportJob
 from backend.model.error_codes import ApiError, ErrorCode
 from backend.repository.protocol import RepositoryProtocol
-from backend.service.chunking import clean_text, split_text_into_chunks
+from backend.repository.uow import unit_of_work
+from backend.service.chunking import clean_text
 from backend.service.document import DocumentCreate, create_document, sync_document_wikilinks
 from backend.service.permission import can_view_document
 from backend.service.space import ensure_space_access
 
+
+logger = logging.getLogger(__name__)
 
 SUPPORTED_TEXT_EXTENSIONS = {".md", ".markdown", ".txt"}
 
@@ -91,30 +95,40 @@ def import_extracted_text(repository: RepositoryProtocol, user_id: int, current_
     if not cleaned_text:
         raise ImportValidationError("uploaded text is empty")
 
+    # CQ-P1-003 Slice B：任务记录在 UoW 外独立提交——失败后 fail_import_job 才能
+    # 找到并改写该行（若在事务内，rollback 会连带抹掉 job 行，掩盖原始异常）。
     import_job = repository.create_import_job(current_space_id, request.filename, user_id)
     title = _resolve_title(request.filename, request.title)
 
     try:
-        document = create_document(
-            repository=repository,
-            user_id=user_id,
-            current_space_id=current_space_id,
-            request=DocumentCreate(
-                title=title,
-                content_md=cleaned_text,
-                permission=request.permission,
-            ),
-        )
-        chunks = repository.replace_document_chunks(document.id, split_text_into_chunks(cleaned_text))
-        completed_job = repository.complete_import_job(import_job.id, document.id, len(chunks))
+        # 主流程（create_document 写步 + chunk 统计 + 标记完成）共享一个事务；
+        # create_document 内层 UoW nested join 本事务。chunk_count 用 list_document_chunks
+        # 取（create_document 已 sync chunks，不再重复 replace_document_chunks）。
+        with unit_of_work(repository):
+            document = create_document(
+                repository=repository,
+                user_id=user_id,
+                current_space_id=current_space_id,
+                request=DocumentCreate(
+                    title=title,
+                    content_md=cleaned_text,
+                    permission=request.permission,
+                ),
+            )
+            chunk_count = len(repository.list_document_chunks(document.id))
+            completed_job = repository.complete_import_job(import_job.id, document.id, chunk_count)
     except Exception as exc:
-        repository.fail_import_job(import_job.id, str(exc))
+        # 失败标记在 UoW 外独立写 failed（不随主事务回滚）；自身失败不得掩盖原异常。
+        try:
+            repository.fail_import_job(import_job.id, str(exc))
+        except Exception as fail_exc:
+            logger.warning("fail_import_job failed for import job %s: %s", import_job.id, fail_exc)
         raise
 
     return ImportResult(
         import_job=completed_job,
         parsed_doc_id=document.id,
-        chunk_count=len(chunks),
+        chunk_count=chunk_count,
     )
 
 
