@@ -6,6 +6,17 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.8.5（2026-08-12）
+
+**维护态批8（Sprint-33）：CQ-P1-002 repository 契约 Slice C——service 层 repository 参数类型注解 + 动态调用收口。纯契约化 + 类型注解、非功能，不改 Phase / 交付物范围 / 对外 API 语义 / DB / 依赖。CQ-P1-002 全闭环（Slice A 契约 + Slice C 注解；Slice B 按域拆评估搁置），聚合 bump PATCH。**
+
+- **Slice C service repository 参数注解（PR #140 `8faa68c`）**：`backend/repository/__init__.py` 模块级单例 `repository: RepositoryProtocol = PgRepository()` + 17 个 service 文件 ~80 个 `repository` 参数加 `: RepositoryProtocol` 注解（覆盖全部接收 repository 的 service 函数，含跨行签名；`auth_context.py` 用模块级单例无需注解）；`timeline.py` + `search.py` 动态 `getattr(repository,"search_chunks",None)` 死兜底收口为直接调用 `repository.search_chunks(...)`（contract test 已守护双实现都有此方法）。
+- **设计裁决：Slice B（按域拆 god object）评估后搁置/转方案 B 候选**：service 平均跨 3-4 域（timeline 跨 7）→ 细拆后 god object 从 repository 转移到 service 签名；`DemoRepository` 已抵消 mock 痛点；项目无类型检查器 CI 不守护类型 → 细拆 ROI 不足。
+- **ROI 诚实声明**：项目无 mypy/pyright（ruff 只选 E4/E7/E9/F），CI 不守护类型，本次注解收益当前只在 IDE（补全/跳转/越界提示）+ 动态调用收口 + 为类型检查器铺路；后续候选：引入 mypy/pyright 到 CI。
+- **验证**：contract test **4 passed**（双实现契约守护未破）+ 全量 **301 passed / 47 deselected 零回归**（24.87s）+ ruff advisory **37** 基线不增（17 新 import 全被注解用到无新 F401）+ PR CI required 全绿（Linux backend-test 3m17s + frontend-build 24s + project-check；ruff advisory fail 不阻断）。
+
+> PATCH 依据（`ai/project-rules.md` §2.4.1）：纯契约化 + 类型注解，不改对外 API 契约语义、不新增可演示能力；CQ-P1-002 聚合 bump（Slice A 契约未单独 bump + Slice C 注解）。验证：contract 4 + 全量 301 零回归 + ruff 37 不增 + PR #140 CI required 全绿。**CQ-P1-002 全闭环（Slice A RepositoryProtocol 契约 + Slice C service 注解；Slice B 按域拆搁置）**；为 CQ-P1-003 事务边界 UoW 提供 Protocol 基础。诊断 `docs/research/2026-08-10-code-quality-maintainability-assessment.md` §4.5 CQ-P1-002；实施口径 `docs/research/2026-08-10-code-governance-rollout-plan.md` §4 轨道3 + §5 轨道C。
+
 ## v3.8.4（2026-08-11）
 
 **维护态批7（Sprint-32）：CQ-P1-005 错误契约收口 Slice B-6 + Slice C——main.py HTTPException else 分支 code 二义收口 + 前端错误契约收口。纯契约收口、非功能，不改 Phase / 交付物范围 / 对外 API 语义。CQ-P1-005 全闭环（Slice A + B-1..B-6 + C），聚合 bump PATCH。**
