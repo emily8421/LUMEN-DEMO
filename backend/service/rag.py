@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 from backend.model.entities import Document, DocumentChunk
 from backend.model.error_codes import ApiError, ErrorCode
+from backend.repository.protocol import RepositoryProtocol
 from backend.service import llm_adapter
 from backend.service.permission import filter_visible_documents
 from backend.service.term import find_matching_terms
@@ -54,7 +55,7 @@ class _CandidateChunk:
 
 
 def answer_question(
-    repository,
+    repository: RepositoryProtocol,
     user_id: int,
     current_space_id: int,
     question: str,
@@ -98,7 +99,7 @@ def answer_question(
     return RagAnswer(answer=answer, sources=sources)
 
 
-def _find_term_sources(repository, current_space_id: int, text: str) -> list[RagSource]:
+def _find_term_sources(repository: RepositoryProtocol, current_space_id: int, text: str) -> list[RagSource]:
     return [
         RagSource(
             doc_id=term.source_document_id,
@@ -130,7 +131,7 @@ def _normalize_question(question: str) -> str:
 
 
 def _find_candidate_chunks(
-    repository,
+    repository: RepositoryProtocol,
     user_id: int,
     current_space_id: int,
     terms: list[str],

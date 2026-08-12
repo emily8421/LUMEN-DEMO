@@ -5,5 +5,6 @@ Production runtime singleton ``repository`` is imported by API/service layers.
 """
 
 from backend.repository.pg_repository import PgRepository
+from backend.repository.protocol import RepositoryProtocol
 
-repository = PgRepository()
+repository: RepositoryProtocol = PgRepository()

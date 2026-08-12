@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 from backend.model.entities import Term, TermStatus
 from backend.model.error_codes import ApiError, ErrorCode
+from backend.repository.protocol import RepositoryProtocol
 from backend.service.permission import can_view_document
 from backend.service.space import SpaceAccessError, ensure_space_access
 
@@ -45,7 +46,7 @@ class TermWrite:
 
 
 def list_visible_terms(
-    repository,
+    repository: RepositoryProtocol,
     user_id: int,
     current_space_id: int,
     query: str = "",
@@ -63,7 +64,7 @@ def list_visible_terms(
     return _dedupe_space_priority(terms, current_space_id)
 
 
-def create_term(repository, user_id: int, current_space_id: int, request: TermWrite) -> Term:
+def create_term(repository: RepositoryProtocol, user_id: int, current_space_id: int, request: TermWrite) -> Term:
     _ensure_space_member(repository, user_id, current_space_id)
     _validate_write_request(repository, user_id, current_space_id, request)
     _validate_category(repository, current_space_id, request.category_id)
@@ -81,7 +82,7 @@ def create_term(repository, user_id: int, current_space_id: int, request: TermWr
     )
 
 
-def get_visible_term(repository, user_id: int, current_space_id: int, term_id: int) -> Term:
+def get_visible_term(repository: RepositoryProtocol, user_id: int, current_space_id: int, term_id: int) -> Term:
     _ensure_space_member(repository, user_id, current_space_id)
     term = repository.get_term(term_id)
     if term is None or term.space_id not in {None, current_space_id}:
@@ -89,7 +90,7 @@ def get_visible_term(repository, user_id: int, current_space_id: int, term_id: i
     return term
 
 
-def update_term(repository, user_id: int, current_space_id: int, term_id: int, request: TermWrite) -> Term:
+def update_term(repository: RepositoryProtocol, user_id: int, current_space_id: int, term_id: int, request: TermWrite) -> Term:
     existing_term = get_visible_term(repository, user_id, current_space_id, term_id)
     if existing_term.space_id is None:
         raise TermAccessError("global terms are read-only in Phase1 demo")
@@ -108,14 +109,14 @@ def update_term(repository, user_id: int, current_space_id: int, term_id: int, r
     )
 
 
-def delete_term(repository, user_id: int, current_space_id: int, term_id: int) -> None:
+def delete_term(repository: RepositoryProtocol, user_id: int, current_space_id: int, term_id: int) -> None:
     existing_term = get_visible_term(repository, user_id, current_space_id, term_id)
     if existing_term.space_id is None:
         raise TermAccessError("global terms are read-only in Phase1 demo")
     repository.delete_term(term_id)
 
 
-def find_matching_terms(repository, current_space_id: int, text: str) -> list[Term]:
+def find_matching_terms(repository: RepositoryProtocol, current_space_id: int, text: str) -> list[Term]:
     normalized_text = text.lower()
     matching_terms = [
         term
@@ -127,14 +128,14 @@ def find_matching_terms(repository, current_space_id: int, text: str) -> list[Te
     return _dedupe_space_priority(matching_terms, current_space_id)
 
 
-def _ensure_space_member(repository, user_id: int, current_space_id: int) -> None:
+def _ensure_space_member(repository: RepositoryProtocol, user_id: int, current_space_id: int) -> None:
     try:
         ensure_space_access(user_id, current_space_id, repository.list_memberships())
     except SpaceAccessError as exc:
         raise TermAccessError("space access denied") from exc
 
 
-def _validate_write_request(repository, user_id: int, current_space_id: int, request: TermWrite) -> None:
+def _validate_write_request(repository: RepositoryProtocol, user_id: int, current_space_id: int, request: TermWrite) -> None:
     if not request.term.strip():
         raise TermValidationError("term is required")
     if not request.definition.strip():
@@ -145,7 +146,7 @@ def _validate_write_request(repository, user_id: int, current_space_id: int, req
             raise TermValidationError("source document not found")
 
 
-def _validate_category(repository, current_space_id: int, category_id: int | None) -> None:
+def _validate_category(repository: RepositoryProtocol, current_space_id: int, category_id: int | None) -> None:
     """校验 category_id（若提供）属于当前空间的领域树节点；跨空间→4220。"""
     if category_id is None:
         return

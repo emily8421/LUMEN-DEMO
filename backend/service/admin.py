@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from backend.model.entities import User
 from backend.model.error_codes import ApiError
+from backend.repository.protocol import RepositoryProtocol
 from backend.service.auth import audit_event
 
 
@@ -28,13 +29,13 @@ def require_global_admin(user: User) -> None:
         raise AdminError(4030, "admin access required")
 
 
-def list_users(repository, actor: User, q: str = "", role: str = "", status: str = "") -> list[User]:
+def list_users(repository: RepositoryProtocol, actor: User, q: str = "", role: str = "", status: str = "") -> list[User]:
     """admin 域用户列表（API-044）：q 匹配 name/email，可按 role / status 过滤。"""
     require_global_admin(actor)
     return repository.list_users(q=q, role=role, status=status)
 
 
-def update_user_role(repository, actor: User, user_id: int, role: str) -> User:
+def update_user_role(repository: RepositoryProtocol, actor: User, user_id: int, role: str) -> User:
     """改全局角色（API-045）；role 非法 4220，用户不存在 4004。"""
     require_global_admin(actor)
     if role not in VALID_GLOBAL_ROLES:
@@ -46,7 +47,7 @@ def update_user_role(repository, actor: User, user_id: int, role: str) -> User:
     return user
 
 
-def set_user_status(repository, actor: User, user_id: int, status: str) -> User:
+def set_user_status(repository: RepositoryProtocol, actor: User, user_id: int, status: str) -> User:
     """禁用 / 启用账号（API-045）；禁用后撤销全部会话（既有会话失效）。"""
     require_global_admin(actor)
     if status not in VALID_USER_STATUSES:
@@ -60,7 +61,7 @@ def set_user_status(repository, actor: User, user_id: int, status: str) -> User:
     return user
 
 
-def list_user_spaces_for_admin(repository, actor: User, user_id: int) -> dict[str, list[dict]]:
+def list_user_spaces_for_admin(repository: RepositoryProtocol, actor: User, user_id: int) -> dict[str, list[dict]]:
     """admin 域查询用户所属空间（API-054，REQ-050，维护态批5）。
 
     返回 ``{joined, available}``：joined = 该用户已加入空间 + 各空间角色 / 加入时间；

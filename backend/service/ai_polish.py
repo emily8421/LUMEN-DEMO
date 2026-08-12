@@ -22,6 +22,7 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass
 
+from backend.repository.protocol import RepositoryProtocol
 from backend.service import llm_adapter
 from backend.service.document import (
     DocumentAccessError,
@@ -75,7 +76,7 @@ class PolishView:
 
 
 def polish_selection(
-    repository,
+    repository: RepositoryProtocol,
     user_id: int,
     space_id: int,
     document_id: int,
@@ -140,12 +141,12 @@ def _resolve_chat_fn(chat_fn):
     raise LlmUnavailableError("LLM not configured")
 
 
-def _collect_term_context(repository, space_id: int, selection: str, instruction: str | None) -> list:
+def _collect_term_context(repository: RepositoryProtocol, space_id: int, selection: str, instruction: str | None) -> list:
     text = selection if not instruction else f"{selection}\n{instruction}"
     return find_matching_terms(repository, space_id, text)
 
 
-def _retrieve_citation_sources(repository, user_id: int, space_id: int, instruction: str | None, selection: str):
+def _retrieve_citation_sources(repository: RepositoryProtocol, user_id: int, space_id: int, instruction: str | None, selection: str):
     """citation 复用 RAG 检索（已做权限收敛），sources 仅取有 chunk_id 的可见候选。"""
     query = instruction.strip() if instruction and instruction.strip() else selection
     terms = _extract_terms(query)

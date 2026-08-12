@@ -20,6 +20,7 @@ import json
 import logging
 from datetime import timedelta
 
+from backend.repository.protocol import RepositoryProtocol
 from backend.service.auth import (
     MAX_PASSWORD_LENGTH,
     MIN_PASSWORD_LENGTH,
@@ -43,7 +44,7 @@ _reset_logger = logging.getLogger("lumen.auth.reset")
 RESET_REQUEST_RESPONSE = "若该邮箱已注册，重置链接已发送（demo 模式请从后端日志取 token）。"
 
 
-def request_password_reset(repository, email: str) -> str:
+def request_password_reset(repository: RepositoryProtocol, email: str) -> str:
     """REQ-051 reset 申请（API-055）：恒响应，不泄露账号是否存在。
 
     - 找到用户 → 签发 reset token（sha256_hex 入库，明文写 WARNING 日志）；
@@ -80,7 +81,7 @@ def request_password_reset(repository, email: str) -> str:
     return RESET_REQUEST_RESPONSE
 
 
-def confirm_password_reset(repository, token: str, new_password: str) -> None:
+def confirm_password_reset(repository: RepositoryProtocol, token: str, new_password: str) -> None:
     """REQ-051 reset 确认（API-056）：成功返回 None，失败抛 AuthenticationError。
 
     校验：新密码长度 8-64 → token 有效（未使用 / 未过期）→ 改密 + 置 used + 吊销全部 session。

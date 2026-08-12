@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from backend.model.entities import SpaceRole, User
 from backend.model.error_codes import ApiError
+from backend.repository.protocol import RepositoryProtocol
 from backend.service.auth import audit_event
 from backend.service.permission import can_access_space
 
@@ -22,7 +23,7 @@ class SpaceMemberError(ApiError):
 VALID_SPACE_ROLES = ("admin", "member")
 
 
-def _require_space(repository, space_id: int) -> None:
+def _require_space(repository: RepositoryProtocol, space_id: int) -> None:
     if repository.find_space(space_id) is None:
         raise SpaceMemberError(4004, "space not found")
 
@@ -46,14 +47,14 @@ def require_space_member(user_id: int, space_id: int, memberships) -> None:
         raise SpaceMemberError(4003, "space access denied")
 
 
-def list_space_members(repository, actor: User, space_id: int):
+def list_space_members(repository: RepositoryProtocol, actor: User, space_id: int):
     """空间成员列表（API-046）：空间成员可读；非成员 4003；空间不存在 4004。"""
     _require_space(repository, space_id)
     require_space_member(actor.id, space_id, repository.list_memberships())
     return repository.list_space_members(space_id)
 
 
-def add_member_by_email(repository, actor: User, space_id: int, email: str, role: str = "member"):
+def add_member_by_email(repository: RepositoryProtocol, actor: User, space_id: int, email: str, role: str = "member"):
     """按 email 添加成员（API-047）：用户不存在 4004 / 已是成员 4090 / 角色非法 4220。"""
     _require_space(repository, space_id)
     memberships = repository.list_memberships()
@@ -83,7 +84,7 @@ def add_member_by_email(repository, actor: User, space_id: int, email: str, role
     return detail
 
 
-def update_member_role(repository, actor: User, space_id: int, user_id: int, role: str):
+def update_member_role(repository: RepositoryProtocol, actor: User, space_id: int, user_id: int, role: str):
     """改空间角色（API-048）：最后一个空间 admin 降级 4090（C-ROLE-006）。"""
     _require_space(repository, space_id)
     memberships = repository.list_memberships()
@@ -116,7 +117,7 @@ def update_member_role(repository, actor: User, space_id: int, user_id: int, rol
     return detail
 
 
-def remove_member(repository, actor: User, space_id: int, user_id: int) -> bool:
+def remove_member(repository: RepositoryProtocol, actor: User, space_id: int, user_id: int) -> bool:
     """移除成员（API-049）：文档归属不变；最后一个空间 admin 4090（C-ROLE-006）。"""
     _require_space(repository, space_id)
     memberships = repository.list_memberships()
@@ -145,7 +146,7 @@ def remove_member(repository, actor: User, space_id: int, user_id: int) -> bool:
     return True
 
 
-def search_users(repository, actor: User, q: str) -> list[User]:
+def search_users(repository: RepositoryProtocol, actor: User, q: str) -> list[User]:
     """成员添加时用户搜索（API-050）：全局 admin 或任一空间 admin 可用；防普通用户枚举。"""
     memberships = repository.list_memberships()
     if actor.role != "admin":

@@ -7,6 +7,7 @@ from dataclasses import dataclass
 
 from backend.model.entities import DocLinkDraft, Document, DocumentPermission, DocumentVersion, SpaceMember
 from backend.model.error_codes import ApiError, ErrorCode
+from backend.repository.protocol import RepositoryProtocol
 from backend.service.chunking import clean_text, split_text_into_chunks
 from backend.service.permission import can_write_document, can_view_document, filter_visible_documents, is_space_member
 
@@ -70,7 +71,7 @@ def list_visible_documents(
 
 
 def create_document(
-    repository,
+    repository: RepositoryProtocol,
     user_id: int,
     current_space_id: int,
     request: DocumentCreate,
@@ -98,7 +99,7 @@ def create_document(
     return document
 
 
-def get_visible_document(repository, user_id: int, current_space_id: int, document_id: int) -> Document:
+def get_visible_document(repository: RepositoryProtocol, user_id: int, current_space_id: int, document_id: int) -> Document:
     document = repository.get_document(document_id)
     if document is None:
         raise DocumentNotFoundError("document not found")
@@ -110,7 +111,7 @@ def get_visible_document(repository, user_id: int, current_space_id: int, docume
 
 
 def update_document(
-    repository,
+    repository: RepositoryProtocol,
     user_id: int,
     current_space_id: int,
     document_id: int,
@@ -131,7 +132,7 @@ def update_document(
 
 
 def move_document_to_folder(
-    repository,
+    repository: RepositoryProtocol,
     user_id: int,
     current_space_id: int,
     document_id: int,
@@ -155,19 +156,19 @@ def move_document_to_folder(
     return moved
 
 
-def delete_document(repository, user_id: int, current_space_id: int, document_id: int) -> None:
+def delete_document(repository: RepositoryProtocol, user_id: int, current_space_id: int, document_id: int) -> None:
     document = get_visible_document(repository, user_id, current_space_id, document_id)
     _ensure_can_write(repository, user_id, current_space_id, document)
     repository.delete_document(document_id)
 
 
-def list_versions(repository, user_id: int, current_space_id: int, document_id: int) -> list[DocumentVersion]:
+def list_versions(repository: RepositoryProtocol, user_id: int, current_space_id: int, document_id: int) -> list[DocumentVersion]:
     get_visible_document(repository, user_id, current_space_id, document_id)
     return repository.list_document_versions(document_id)
 
 
 def restore_version(
-    repository,
+    repository: RepositoryProtocol,
     user_id: int,
     current_space_id: int,
     document_id: int,
@@ -183,18 +184,18 @@ def restore_version(
     return restored
 
 
-def sync_document_chunks(repository, document: Document) -> None:
+def sync_document_chunks(repository: RepositoryProtocol, document: Document) -> None:
     cleaned_text = clean_text(document.content_md)
     chunk_texts = split_text_into_chunks(cleaned_text) if cleaned_text else []
     repository.replace_document_chunks(document.id, chunk_texts)
 
 
-def _ensure_can_write(repository, user_id: int, current_space_id: int, document: Document) -> None:
+def _ensure_can_write(repository: RepositoryProtocol, user_id: int, current_space_id: int, document: Document) -> None:
     if not can_write_document(user_id, current_space_id, document, repository.list_memberships()):
         raise DocumentAccessError("no write permission on external document")
 
 
-def ensure_documents_indexed(repository) -> int:
+def ensure_documents_indexed(repository: RepositoryProtocol) -> int:
     """Sprint-12②：回填无分块文档的 chunks（+ embedding）。
 
     ``migrations/005_sprint8_seed_demo.sql`` 直接 INSERT 文档不经服务层，导致 seed
@@ -224,7 +225,7 @@ def extract_wikilinks(content_md: str) -> list[str]:
     return _WIKILINK_PATTERN.findall(content_md)
 
 
-def sync_document_wikilinks(repository, document: Document) -> None:
+def sync_document_wikilinks(repository: RepositoryProtocol, document: Document) -> None:
     """解析正文 ``[[target]]``，按标题匹配当前空间文档，幂等重建该文档的 wikilink 索引。
 
     命中且非自链 → resolved；未命中 → unresolved（target_document_id=None）；

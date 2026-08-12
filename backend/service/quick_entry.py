@@ -21,6 +21,7 @@ from dataclasses import dataclass
 
 from backend.model.entities import DocumentPermission, QuickEntry
 from backend.model.error_codes import ApiError, ErrorCode
+from backend.repository.protocol import RepositoryProtocol
 from backend.service.document import (
     DocumentCreate,
     DocumentUpdate,
@@ -75,19 +76,19 @@ class QuickEntryCaptureRequest:
     mode: str = "draft"
 
 
-def _ensure_space_member(repository, user_id: int, space_id: int) -> None:
+def _ensure_space_member(repository: RepositoryProtocol, user_id: int, space_id: int) -> None:
     if not is_space_member(user_id, space_id, repository.list_memberships()):
         raise QuickEntryAccessError("space access denied")
 
 
-def _validate_tag_ids(repository, space_id: int, tag_ids: tuple[int, ...]) -> None:
+def _validate_tag_ids(repository: RepositoryProtocol, space_id: int, tag_ids: tuple[int, ...]) -> None:
     active_tag_ids = {tag.id for tag in repository.list_tags(space_id, status="active")}
     for tag_id in tag_ids:
         if tag_id not in active_tag_ids:
             raise QuickEntryValidationError("tag_ids must reference active tags in this space")
 
 
-def _apply_tags(repository, document_id: int, tag_ids: tuple[int, ...], user_id: int) -> None:
+def _apply_tags(repository: RepositoryProtocol, document_id: int, tag_ids: tuple[int, ...], user_id: int) -> None:
     for tag_id in tag_ids:
         repository.upsert_document_tag(tag_id, document_id, "quick_entry", user_id)
 
@@ -103,7 +104,7 @@ def _build_entry_block(title: str, content_md: str, source: str | None) -> str:
 
 
 def capture_quick_entry(
-    repository,
+    repository: RepositoryProtocol,
     user_id: int,
     space_id: int,
     request: QuickEntryCaptureRequest,
@@ -165,7 +166,7 @@ def capture_quick_entry(
     return _to_view(entry)
 
 
-def discard_quick_entry(repository, user_id: int, space_id: int, entry_id: int) -> QuickEntryView:
+def discard_quick_entry(repository: RepositoryProtocol, user_id: int, space_id: int, entry_id: int) -> QuickEntryView:
     _ensure_space_member(repository, user_id, space_id)
     entry = repository.get_quick_entry(entry_id)
     # draft 私有：非 owner 或跨空间一律按不存在处理（4004，不泄露存在性）。
