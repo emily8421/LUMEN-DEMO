@@ -19,6 +19,13 @@ envelope ``{code,msg,data}``，消除 ``str(exc)`` 直传与硬编码 code。
 
 from __future__ import annotations
 
+from backend.model.schemas import (
+    ApiEnvelope,
+    DeletedOk,
+    FolderDetail,
+    FolderListPage,
+    OkStatus,
+)
 from backend.repository import repository
 from backend.service.auth_context import TokenContext, get_current_user
 from backend.service.folder import (
@@ -51,7 +58,7 @@ class FolderReorderBody(BaseModel):
     parent_id: int | None = None
     ordered_ids: list[int]
 
-@router.get("/api/folders")
+@router.get("/api/folders", response_model=ApiEnvelope[FolderListPage])
 def list_folders_endpoint(
     parent_id: int | None = None,
     ctx: TokenContext = Depends(get_current_user),
@@ -60,7 +67,7 @@ def list_folders_endpoint(
     items = [_folder_view(v) for v in views]
     return {"code": 0, "msg": "ok", "data": {"items": items, "total": len(items)}}
 
-@router.post("/api/folders")
+@router.post("/api/folders", response_model=ApiEnvelope[FolderDetail])
 def create_folder_endpoint(
     request: FolderCreateBody,
     ctx: TokenContext = Depends(get_current_user),
@@ -73,7 +80,7 @@ def create_folder_endpoint(
     )
     return {"code": 0, "msg": "ok", "data": _folder_detail(folder)}
 
-@router.patch("/api/folders/{folder_id}")
+@router.patch("/api/folders/{folder_id}", response_model=ApiEnvelope[FolderDetail])
 def update_folder_endpoint(
     folder_id: int,
     request: FolderUpdateBody,
@@ -91,7 +98,7 @@ def update_folder_endpoint(
     )
     return {"code": 0, "msg": "ok", "data": _folder_detail(folder)}
 
-@router.delete("/api/folders/{folder_id}")
+@router.delete("/api/folders/{folder_id}", response_model=ApiEnvelope[DeletedOk])
 def delete_folder_endpoint(
     folder_id: int,
     ctx: TokenContext = Depends(get_current_user),
@@ -99,7 +106,7 @@ def delete_folder_endpoint(
     delete_folder(repository, ctx.user_id, ctx.current_space_id, folder_id)
     return {"code": 0, "msg": "ok", "data": {"deleted": True}}
 
-@router.post("/api/folders/reorder")
+@router.post("/api/folders/reorder", response_model=ApiEnvelope[OkStatus])
 def reorder_folders_endpoint(
     request: FolderReorderBody,
     ctx: TokenContext = Depends(get_current_user),

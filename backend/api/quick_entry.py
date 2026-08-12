@@ -7,6 +7,7 @@ DELETE /api/quick-entry/{id}（discard：仅 status=draft → discarded）。
 
 from __future__ import annotations
 
+from backend.model.schemas import ApiEnvelope, QuickEntryView as QuickEntryResponseView
 from backend.repository import repository
 from backend.service.auth_context import TokenContext, get_current_user
 from backend.service.quick_entry import (
@@ -30,7 +31,7 @@ class QuickEntryCaptureBody(BaseModel):
     tag_ids: list[int] = []
     mode: str = "draft"
 
-@router.post("/api/quick-entry")
+@router.post("/api/quick-entry", response_model=ApiEnvelope[QuickEntryResponseView])
 def capture_quick_entry_endpoint(
     request: QuickEntryCaptureBody,
     ctx: TokenContext = Depends(get_current_user),
@@ -50,7 +51,7 @@ def capture_quick_entry_endpoint(
     )
     return {"code": 0, "msg": "ok", "data": _quick_entry_view(view)}
 
-@router.delete("/api/quick-entry/{entry_id}")
+@router.delete("/api/quick-entry/{entry_id}", response_model=ApiEnvelope[QuickEntryResponseView])
 def discard_quick_entry_endpoint(
     entry_id: int,
     ctx: TokenContext = Depends(get_current_user),

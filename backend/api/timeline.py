@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from backend.model.schemas import ApiEnvelope, TimelineView
 from backend.repository import repository
 from backend.service.auth_context import TokenContext, get_current_user
 from backend.service.timeline import (
@@ -15,7 +16,7 @@ from fastapi import APIRouter, Depends, Query
 
 router = APIRouter(prefix="/api/spaces", tags=["timeline"])
 
-@router.get("/{space_id}/timeline")
+@router.get("/{space_id}/timeline", response_model=ApiEnvelope[TimelineView])
 def timeline_endpoint(
     space_id: int,
     q: str | None = None,

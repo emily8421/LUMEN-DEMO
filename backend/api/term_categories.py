@@ -10,6 +10,13 @@ PATCH/DELETE /api/term-categories/{id}；POST /api/term-categories/reorder。
 
 from __future__ import annotations
 
+from backend.model.schemas import (
+    ApiEnvelope,
+    DeletedOk,
+    OkStatus,
+    TermCategoryDetail,
+    TermCategoryListPage,
+)
 from backend.repository import repository
 from backend.service.auth_context import TokenContext, get_current_user
 from backend.service.term_category import (
@@ -42,7 +49,7 @@ class TermCategoryReorderBody(BaseModel):
     parent_id: int | None = None
     ordered_ids: list[int]
 
-@router.get("/api/term-categories")
+@router.get("/api/term-categories", response_model=ApiEnvelope[TermCategoryListPage])
 def list_term_categories_endpoint(
     parent_id: int | None = None,
     ctx: TokenContext = Depends(get_current_user),
@@ -51,7 +58,7 @@ def list_term_categories_endpoint(
     items = [_term_category_view(v) for v in views]
     return {"code": 0, "msg": "ok", "data": {"items": items, "total": len(items)}}
 
-@router.post("/api/term-categories")
+@router.post("/api/term-categories", response_model=ApiEnvelope[TermCategoryDetail])
 def create_term_category_endpoint(
     request: TermCategoryCreateBody,
     ctx: TokenContext = Depends(get_current_user),
@@ -64,7 +71,7 @@ def create_term_category_endpoint(
     )
     return {"code": 0, "msg": "ok", "data": _term_category_detail(category)}
 
-@router.patch("/api/term-categories/{category_id}")
+@router.patch("/api/term-categories/{category_id}", response_model=ApiEnvelope[TermCategoryDetail])
 def update_term_category_endpoint(
     category_id: int,
     request: TermCategoryUpdateBody,
@@ -82,7 +89,7 @@ def update_term_category_endpoint(
     )
     return {"code": 0, "msg": "ok", "data": _term_category_detail(category)}
 
-@router.delete("/api/term-categories/{category_id}")
+@router.delete("/api/term-categories/{category_id}", response_model=ApiEnvelope[DeletedOk])
 def delete_term_category_endpoint(
     category_id: int,
     ctx: TokenContext = Depends(get_current_user),
@@ -90,7 +97,7 @@ def delete_term_category_endpoint(
     delete_term_category(repository, ctx.user_id, ctx.current_space_id, category_id)
     return {"code": 0, "msg": "ok", "data": {"deleted": True}}
 
-@router.post("/api/term-categories/reorder")
+@router.post("/api/term-categories/reorder", response_model=ApiEnvelope[OkStatus])
 def reorder_term_categories_endpoint(
     request: TermCategoryReorderBody,
     ctx: TokenContext = Depends(get_current_user),

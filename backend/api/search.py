@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from backend.model.schemas import ApiEnvelope, SearchPageView
 from backend.repository import repository
 from backend.service.auth_context import TokenContext, get_current_user
 from backend.service.search import SearchResult, search_documents
@@ -11,7 +12,7 @@ from fastapi import APIRouter, Depends
 
 router = APIRouter(prefix="/api/search", tags=["search"])
 
-@router.get("")
+@router.get("", response_model=ApiEnvelope[SearchPageView])
 def search_endpoint(
     q: str = "",
     page: int = 1,

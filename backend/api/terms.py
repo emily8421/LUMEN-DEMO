@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from backend.model.schemas import ApiEnvelope, DeletedOk, TermDetail, TermListPage
 from backend.model.entities import Term, TermStatus
 from backend.repository import repository
 from backend.service.auth_context import TokenContext, get_current_user
@@ -31,7 +32,7 @@ class TermWriteRequest(BaseModel):
     category: str | None = None
     source: str | None = None
 
-@router.get("")
+@router.get("", response_model=ApiEnvelope[TermListPage])
 def list_terms_endpoint(
     q: str = "",
     status: TermStatus | None = None,
@@ -40,17 +41,17 @@ def list_terms_endpoint(
     terms = list_visible_terms(repository, ctx.user_id, ctx.current_space_id, query=q, status=status)
     return {"code": 0, "msg": "ok", "data": {"items": [_term_detail(term) for term in terms], "total": len(terms), "page": 1}}
 
-@router.post("")
+@router.post("", response_model=ApiEnvelope[TermDetail])
 def create_term_endpoint(request: TermWriteRequest, ctx: TokenContext = Depends(get_current_user)) -> dict[str, object]:
     term = create_term(repository, ctx.user_id, ctx.current_space_id, _term_write(request))
     return {"code": 0, "msg": "ok", "data": _term_detail(term)}
 
-@router.get("/{term_id}")
+@router.get("/{term_id}", response_model=ApiEnvelope[TermDetail])
 def get_term_endpoint(term_id: int, ctx: TokenContext = Depends(get_current_user)) -> dict[str, object]:
     term = get_visible_term(repository, ctx.user_id, ctx.current_space_id, term_id)
     return {"code": 0, "msg": "ok", "data": _term_detail(term)}
 
-@router.put("/{term_id}")
+@router.put("/{term_id}", response_model=ApiEnvelope[TermDetail])
 def update_term_endpoint(
     term_id: int,
     request: TermWriteRequest,
@@ -59,7 +60,7 @@ def update_term_endpoint(
     term = update_term(repository, ctx.user_id, ctx.current_space_id, term_id, _term_write(request))
     return {"code": 0, "msg": "ok", "data": _term_detail(term)}
 
-@router.delete("/{term_id}")
+@router.delete("/{term_id}", response_model=ApiEnvelope[DeletedOk])
 def delete_term_endpoint(term_id: int, ctx: TokenContext = Depends(get_current_user)) -> dict[str, object]:
     delete_term(repository, ctx.user_id, ctx.current_space_id, term_id)
     return {"code": 0, "msg": "ok", "data": {"deleted": True}}

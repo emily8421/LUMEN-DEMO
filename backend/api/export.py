@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from urllib.parse import quote
 
+from backend.model.schemas import ApiEnvelope, PdfExportView
 from backend.repository import repository
 from backend.service.auth_context import TokenContext, get_current_user
 from backend.service.export import (
@@ -82,7 +83,7 @@ def export_space_endpoint(
         headers={"Content-Disposition": 'attachment; filename="lumen-space-export.zip"'},
     )
 
-@router.post("/export-pdf")
+@router.post("/export-pdf", response_model=ApiEnvelope[PdfExportView])
 def export_pdf_endpoint(
     request: PdfExportRequestBody,
     ctx: TokenContext = Depends(get_current_user),

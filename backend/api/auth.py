@@ -6,6 +6,14 @@ demo 模式保留无密码快捷登录（seed 用户），PG 模式强制真实�
 
 from __future__ import annotations
 
+from backend.model.schemas import (
+    ApiEnvelope,
+    LoginView,
+    PasswordResetMessageView,
+    RefreshView,
+    RegisterView,
+    SessionView,
+)
 from backend.repository import repository
 from backend.service.auth import (
     TOKEN_SIGNING_KEY,  # noqa: F401  # re-export：测试经 backend.api.auth 读取 demo signing key
@@ -38,7 +46,7 @@ class LoginRequest(BaseModel):
     external_id: str | None = None
     current_space_id: int | None = None
 
-@router.post("/register")
+@router.post("/register", response_model=ApiEnvelope[RegisterView])
 def register_endpoint(request: RegisterRequest) -> dict[str, object]:
     # 鉴权失败（AuthenticationError）冒泡 main.py ApiError handler → 对应 HTTP 码 envelope
     user = register(repository, request.email, request.name, request.password)
@@ -48,7 +56,7 @@ def register_endpoint(request: RegisterRequest) -> dict[str, object]:
         "data": {"user_id": user.id, "name": user.name, "email": user.email},
     }
 
-@router.post("/login")
+@router.post("/login", response_model=ApiEnvelope[LoginView])
 def login(request: LoginRequest) -> dict[str, object]:
     login_id = request.login_id or request.external_id or ""
     # 鉴权失败（AuthenticationError）冒泡 main.py ApiError handler → 对应 HTTP 码 envelope
@@ -80,7 +88,7 @@ def login(request: LoginRequest) -> dict[str, object]:
         },
     }
 
-@router.post("/logout")
+@router.post("/logout", response_model=ApiEnvelope[None])
 def logout(ctx: TokenContext = Depends(get_current_user)) -> dict[str, object]:
     if ctx.session_id is not None:
         revoke_session(repository, ctx.session_id, ctx.user_id)
@@ -89,7 +97,7 @@ def logout(ctx: TokenContext = Depends(get_current_user)) -> dict[str, object]:
     audit_logout(ctx.user_id)
     return {"code": 0, "msg": "ok", "data": None}
 
-@router.post("/refresh")
+@router.post("/refresh", response_model=ApiEnvelope[RefreshView])
 def refresh(authorization: str = Header(default="")) -> dict[str, object]:
     token = _extract_token(authorization)
     # 鉴权失败（AuthenticationError）冒泡 main.py ApiError handler → 对应 HTTP 码 envelope
@@ -107,7 +115,7 @@ def refresh(authorization: str = Header(default="")) -> dict[str, object]:
         },
     }
 
-@router.get("/sessions")
+@router.get("/sessions", response_model=ApiEnvelope[list[SessionView]])
 def sessions(ctx: TokenContext = Depends(get_current_user)) -> dict[str, object]:
     rows = list_active_sessions(repository, ctx.user_id)
     return {
@@ -127,7 +135,7 @@ def sessions(ctx: TokenContext = Depends(get_current_user)) -> dict[str, object]
         ],
     }
 
-@router.delete("/sessions/{session_id}")
+@router.delete("/sessions/{session_id}", response_model=ApiEnvelope[None])
 def revoke_session_endpoint(session_id: int, ctx: TokenContext = Depends(get_current_user)) -> dict[str, object]:
     if not revoke_session(repository, session_id, ctx.user_id):
         raise HTTPException(status_code=404, detail={"code": 4004, "msg": "session not found"})
@@ -141,13 +149,13 @@ class PasswordResetConfirm(BaseModel):
     token: str
     new_password: str
 
-@router.post("/password-reset/request")
+@router.post("/password-reset/request", response_model=ApiEnvelope[PasswordResetMessageView])
 def password_reset_request(request: PasswordResetRequest) -> dict[str, object]:
     # REQ-051：恒响应防枚举（service 层保证账号不存在时也走 dummy bcrypt + 同文案）
     msg = request_password_reset(repository, request.email)
     return {"code": 0, "msg": "ok", "data": {"message": msg}}
 
-@router.post("/password-reset/confirm")
+@router.post("/password-reset/confirm", response_model=ApiEnvelope[None])
 def password_reset_confirm(request: PasswordResetConfirm) -> dict[str, object]:
     # 鉴权失败（AuthenticationError）冒泡 main.py ApiError handler → 对应 HTTP 码 envelope
     confirm_password_reset(repository, request.token, request.new_password)

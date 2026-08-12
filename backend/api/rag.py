@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from backend.model.schemas import ApiEnvelope, LlmConfigView, QueryAnswerView
 from backend.repository import repository
 from backend.service import llm_adapter
 from backend.service.auth_context import TokenContext, get_current_user
@@ -22,7 +23,7 @@ class QueryRequest(BaseModel):
     # 多通道切换（2026-08-07）：命名 LLM 配置名（LLM_PROVIDERS 列表项），None=默认。
     llm_provider: str | None = None
 
-@router.post("")
+@router.post("", response_model=ApiEnvelope[QueryAnswerView])
 def query_endpoint(request: QueryRequest, ctx: TokenContext = Depends(get_current_user)) -> dict[str, object]:
     answer = answer_question(
         repository=repository,
@@ -56,6 +57,6 @@ def _source_item(source: RagSource) -> dict[str, object]:
 # 多通道切换（2026-08-07）：返回可用 LLM 配置元信息（脱敏，不含 api_key），供前端下拉。
 config_router = APIRouter(prefix="/api/llm-configs", tags=["llm"])
 
-@config_router.get("")
+@config_router.get("", response_model=ApiEnvelope[list[LlmConfigView]])
 def list_llm_configs(ctx: TokenContext = Depends(get_current_user)) -> dict[str, object]:
     return {"code": 0, "msg": "ok", "data": llm_adapter.list_configs()}
