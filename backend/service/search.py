@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from backend.model.entities import Document, DocumentChunk
 from backend.model.error_codes import ApiError, ErrorCode
 from backend.repository.protocol import RepositoryProtocol
-from backend.service.permission import filter_visible_documents
 
 
 DEFAULT_PAGE_SIZE = 20
@@ -52,12 +51,7 @@ def search_documents(
     if page_size < 1:
         raise SearchValidationError("page_size must be greater than or equal to 1")
 
-    visible_documents = filter_visible_documents(
-        user_id=user_id,
-        current_space_id=current_space_id,
-        documents=repository.list_documents(),
-        memberships=repository.list_memberships(),
-    )
+    visible_documents = repository.list_visible_documents(user_id, current_space_id)
     documents_by_id = {document.id: document for document in visible_documents}
     visible_document_ids = list(documents_by_id)
     chunks = repository.list_all_document_chunks()

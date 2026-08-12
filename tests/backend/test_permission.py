@@ -211,7 +211,6 @@ class MultiUserIsolationTest(unittest.TestCase):
             create_document,
             get_visible_document,
             list_versions,
-            list_visible_documents,
             move_document_to_folder,
         )
         from backend.service.export import export_space_zip
@@ -251,7 +250,7 @@ class MultiUserIsolationTest(unittest.TestCase):
         )
 
         # 1) 文档列表：只返回 team + external
-        visible = list_visible_documents(bob.id, shared, repository.list_documents(), repository.list_memberships())
+        visible = repository.list_visible_documents(bob.id, shared)
         self.assertEqual({document.title for document in visible}, {"Alice Team", "Alice External"})
 
         # 2) 搜索：私有文档零命中
@@ -345,4 +344,3 @@ class MultiUserIsolationTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

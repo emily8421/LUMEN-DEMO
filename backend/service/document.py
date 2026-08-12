@@ -5,12 +5,12 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-from backend.model.entities import DocLinkDraft, Document, DocumentPermission, DocumentVersion, SpaceMember
+from backend.model.entities import DocLinkDraft, Document, DocumentPermission, DocumentVersion
 from backend.model.error_codes import ApiError, ErrorCode
 from backend.repository.protocol import RepositoryProtocol
 from backend.repository.uow import unit_of_work
 from backend.service.chunking import clean_text, split_text_into_chunks
-from backend.service.permission import can_write_document, can_view_document, filter_visible_documents, is_space_member
+from backend.service.permission import can_write_document, can_view_document, is_space_member
 
 
 class DocumentAccessError(ApiError):
@@ -60,15 +60,6 @@ class DocumentUpdate:
 @dataclass(frozen=True)
 class DocumentMove:
     folder_id: int | None
-
-
-def list_visible_documents(
-    user_id: int,
-    current_space_id: int,
-    documents: list[Document],
-    memberships: list[SpaceMember],
-) -> list[Document]:
-    return filter_visible_documents(user_id, current_space_id, documents, memberships)
 
 
 def create_document(

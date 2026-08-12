@@ -119,6 +119,19 @@ class PgRepositoryTest(unittest.TestCase):
         versions = self.repo.list_document_versions(doc.id)
         self.assertEqual([v.version_no for v in versions], [1, 2])
 
+    def test_list_visible_documents_scopes_by_space_and_permission(self) -> None:
+        team = self.repo.create_document(self.space_ids[0], "Team", "c", self.user_ids[0], DocumentPermission.TEAM)
+        private = self.repo.create_document(self.space_ids[0], "Private", "c", self.user_ids[0], DocumentPermission.PRIVATE)
+        self.repo.create_document(self.space_ids[1], "Other", "c", self.user_ids[0], DocumentPermission.TEAM)
+
+        alice_nova = {d.id for d in self.repo.list_visible_documents(self.user_ids[0], self.space_ids[0])}
+        self.assertEqual(alice_nova, {team.id, private.id})
+        self.assertEqual(self.repo.list_visible_documents(self.user_ids[0], self.space_ids[1]), [])
+
+        kira_nova = {d.id for d in self.repo.list_visible_documents(self.user_ids[1], self.space_ids[0])}
+        self.assertEqual(kira_nova, {team.id})
+        self.assertEqual(self.repo.list_visible_documents(self.user_ids[1], self.space_ids[1]), [])
+
     def test_restore_does_not_create_new_version(self) -> None:
         doc = self.repo.create_document(self.space_ids[0], "T", "c1", self.user_ids[0], DocumentPermission.TEAM)
         self.repo.update_document(doc.id, "T2", "c2", DocumentPermission.TEAM, self.user_ids[0])

@@ -635,6 +635,30 @@ class PgRepository(RepositoryProtocol):
             rows = session.scalars(select(DocumentORM)).all()
             return [_to_document(r) for r in rows]
 
+    def list_visible_documents(self, user_id: int, space_id: int) -> list[Document]:
+        """安全默认查询：仅返回 (user_id, space_id) 有查看权限的文档（CQ-P1-004）。
+
+        两段式：先校验空间成员（非成员直接返回空），再 SQL 下推权限过滤
+        （space_id + 非 private 或 owner）——与 service/permission.can_view_document
+        语义同构，行为零漂移。
+        """
+        if not any(
+            membership.user_id == user_id and membership.space_id == space_id
+            for membership in self.list_memberships()
+        ):
+            return []
+        with _session_scope() as session:
+            rows = session.scalars(
+                select(DocumentORM).where(
+                    DocumentORM.space_id == space_id,
+                    or_(
+                        DocumentORM.permission != DocumentPermission.PRIVATE.value,
+                        DocumentORM.owner_id == user_id,
+                    ),
+                )
+            ).all()
+            return [_to_document(r) for r in rows]
+
     def get_document(self, document_id: int) -> Document | None:
         with _session_scope() as session:
             row = session.get(DocumentORM, document_id)

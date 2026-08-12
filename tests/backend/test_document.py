@@ -2,7 +2,7 @@
 
 import importlib.util
 
-from backend.model.entities import Document, DocumentPermission, SpaceMember, SpaceRole
+from backend.model.entities import DocumentPermission
 from backend.service.document import (
     DocumentCreate,
     DocumentAccessError,
@@ -13,7 +13,6 @@ from backend.service.document import (
     create_document,
     get_visible_document,
     list_versions,
-    list_visible_documents,
     move_document_to_folder,
     restore_version,
     update_document,
@@ -35,17 +34,15 @@ def _demo_ctx(user_id: int = 1, current_space_id: int = 10):
 
 class DocumentServiceTest(unittest.TestCase):
     def test_list_visible_documents_filters_by_space_and_permission(self) -> None:
-        documents = [
-            Document(id=1, space_id=10, title="team", content_md="", owner_id=1, permission=DocumentPermission.TEAM),
-            Document(id=2, space_id=10, title="private owner", content_md="", owner_id=1, permission=DocumentPermission.PRIVATE),
-            Document(id=3, space_id=10, title="private other", content_md="", owner_id=2, permission=DocumentPermission.PRIVATE),
-            Document(id=4, space_id=20, title="other space", content_md="", owner_id=1, permission=DocumentPermission.TEAM),
-        ]
-        memberships = [SpaceMember(user_id=1, space_id=10, role=SpaceRole.MEMBER)]
-
-        visible = list_visible_documents(1, 10, documents, memberships)
-
-        self.assertEqual([document.id for document in visible], [1, 2])
+        repository = DemoRepository()
+        visible = repository.list_visible_documents(user_id=1, space_id=10)
+        self.assertEqual([document.id for document in visible], [100])
+        visible = repository.list_visible_documents(user_id=2, space_id=10)
+        self.assertEqual([document.id for document in visible], [100])
+        self.assertEqual(repository.list_visible_documents(user_id=3, space_id=10), [])
+        self.assertEqual(repository.list_visible_documents(user_id=1, space_id=20), [])
+        visible = repository.list_visible_documents(user_id=3, space_id=20)
+        self.assertEqual([document.id for document in visible], [200])
 
     def test_create_update_versions_and_restore(self) -> None:
         repository = DemoRepository()
