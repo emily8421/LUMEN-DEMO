@@ -461,7 +461,7 @@ class ExportApiTest(unittest.TestCase):
         original_repository = export_api.repository
         export_api.repository = DemoRepository()
         try:
-            token = create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
+            create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
             response = export_api.export_document_endpoint(
                 document_id=100,
                 format="md",
@@ -494,7 +494,7 @@ class ExportApiTest(unittest.TestCase):
         original_repository = export_api.repository
         export_api.repository = repository
         try:
-            token = create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
+            create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
             response = export_api.export_document_endpoint(
                 document_id=document.id,
                 format="md",
@@ -530,7 +530,7 @@ class ExportApiTest(unittest.TestCase):
         original_repository = export_api.repository
         export_api.repository = repository
         try:
-            token = create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
+            create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
             # Slice B：DocumentNotFoundError 已继承 ApiError，异常冒泡到 main.py handler 转 envelope（code 4004）。
             with self.assertRaises(DocumentNotFoundError) as context:
                 export_api.export_document_endpoint(
@@ -552,7 +552,7 @@ class ExportApiTest(unittest.TestCase):
         original_repository = export_api.repository
         export_api.repository = DemoRepository()
         try:
-            token = create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
+            create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
             response = export_api.export_space_endpoint(
                 format="zip",
                 ctx=_demo_ctx(),
@@ -605,7 +605,7 @@ class ExportApiTest(unittest.TestCase):
             try:
                 export_api.create_pdf_export = create_pdf_export_in_temp
                 export_api.download_pdf_export = download_pdf_export_in_temp
-                token = create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
+                create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
                 response = export_api.export_pdf_endpoint(
                     request=export_api.PdfExportRequestBody(document_id=100),
                     ctx=_demo_ctx(),
@@ -638,7 +638,7 @@ class ExportApiTest(unittest.TestCase):
         from backend.service.auth import create_demo_token
         from backend.service.export import PdfExportDependencyError
 
-        token = create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
+        create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
         with patch.object(export_api, "create_pdf_export", side_effect=PdfExportDependencyError("missing font")):
             # Slice B：PdfExportDependencyError 已继承 ApiError，异常冒泡到 main.py handler 转 envelope（code 5030）。
             with self.assertRaises(PdfExportDependencyError) as context:
@@ -655,7 +655,7 @@ class ExportApiTest(unittest.TestCase):
         from backend.service.auth import create_demo_token
         from backend.service.export import PdfExportNotReadyError
 
-        token = create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
+        create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
         with patch.object(export_api, "download_pdf_export", side_effect=PdfExportNotReadyError("PDF export is not ready")):
             # Slice B：PdfExportNotReadyError 已继承 ApiError，异常冒泡到 main.py handler 转 envelope（code 4090）。
             with self.assertRaises(PdfExportNotReadyError) as context:

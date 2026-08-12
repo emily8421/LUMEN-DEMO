@@ -6,6 +6,18 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.8.9（2026-08-12）
+
+**维护态批12（Sprint-37）：ruff 37 条存量 lint 旧债清零。纯 lint 债清理、非功能，不改 Phase / 交付物范围 / 对外 API 语义 / DB / 依赖。聚合 bump PATCH。**
+
+- **37 条分布**：F841×15（未用局部变量）/ E402×11（模块级 import 未在顶部）/ F401×10（未用 import）/ F811×1（重复 import）。
+- **自动修复 26 条**（`ruff check --fix --unsafe-fixes`）：10 F401 删未用 import + 1 F811 删 `auth.py` 重复 `import json` + 15 F841 去未用赋值**保留调用**（`token = create_demo_token(...)` / `a = create_folder(...)`，纯函数无副作用、行为不变）。
+- **手工结构修复 11 条 E402**：`backend/service/auth.py` 6 处（os / secrets / datetime / bcrypt / entities / logging import 上移文件顶部，纯结构重排、bcrypt 本为模块级 import 无惰性语义）+ `tests/backend/test_document.py` 4 处（import 块上移 `_demo_ctx` 定义之前）。
+- **re-export 保留**：`backend/api/auth.py` 的 `TOKEN_SIGNING_KEY` 被 ruff 判 F401 但实为 **re-export**（8 个测试文件 13 处经 `backend.api.auth` 读取 demo signing key）——恢复并 `# noqa: F401` 标注，保留既有 API 面。
+- **验证**：ruff **37→0** + 默认 **306 passed / 48 deselected** 零回归。
+
+> PATCH 依据（`ai/project-rules.md` §2.4.1）：纯 lint 债清理 / 代码结构整理，非功能、不改对外 API 契约语义、不新增可演示能力。验证：ruff 37→0 + 默认 306 零回归。实施口径 `tasks/task-044-ruff-debt-cleanup.md`；rollout §4 轨道3 ratchet（指标只减不增）。
+
 ## v3.8.8（2026-08-12）
 
 **维护态批11（Sprint-36）：PG integration 全量入 CI gate——新增独立 `backend-integration` job。纯工程治理配置、非功能，不改 Phase / 交付物范围 / 对外 API 语义 / DB / 依赖。聚合 bump PATCH。**

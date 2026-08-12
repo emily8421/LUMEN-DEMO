@@ -227,7 +227,7 @@ class DocLinkApiTest(unittest.TestCase):
         original_repository = doc_links_api.repository
         doc_links_api.repository = repository
         try:
-            token = create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
+            create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
             ctx = _demo_ctx()
 
             listed = doc_links_api.list_links_endpoint(document_id=source.id, direction="outbound", ctx=ctx)

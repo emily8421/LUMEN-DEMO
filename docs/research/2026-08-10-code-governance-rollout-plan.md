@@ -167,6 +167,7 @@ README / backend README / demo-guide 推荐的 `unittest discover` 在开发库�
 - **轨道 1 回流节奏**：L0 基线提案（已入库）立即 submit-proposal；test DB guard 规则文本（`TEMPLATE-UPGRADE-db-safety-concern`）待 P0-1 落地后起草（用实现经验写准 `DB-SAFE-001`）。
 - 轨道 2/3 代码改动均未开始。下一步：立项回写（02/03/05/08/09/project-rules）→ 编码 P0-1/P0-2（走 PR）。
 - **2026-08-12 追加（维护态批11 / v3.8.8）**：轨道 3 P1 已按序闭环 005（v3.8.4）/ 002（v3.8.5）/ 003（v3.8.6）+ 7 个存量 integration 失败整治（v3.8.7）+ **integration 全量入 CI gate**（新增独立 `backend-integration` job，闭环 docs/05 §4.2.4「另议」；免费版私有仓库无分支保护未强制 required；merge 前人工核对后端 checks 绿为流程约定）。详见 `docs/research/2026-08-12-code-governance-closure-summary.md`。
+- **2026-08-12 追加（维护态批12 / v3.8.9）**：轨道 3 ratchet「ruff 旧债」清零——`ruff check backend tests` **37→0**（F841×15 / E402×11 / F401×10 / F811×1）。自动修 26 条 + 手工 E402 11 条；`api/auth.py` `TOKEN_SIGNING_KEY` re-export 保留并 `# noqa: F401` 标注。验证：默认 306 passed 零回归。详见 `tasks/task-044-ruff-debt-cleanup.md`。
 
 ## 9. 待人工确认项
 

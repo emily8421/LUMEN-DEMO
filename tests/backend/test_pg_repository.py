@@ -13,7 +13,6 @@ import unittest
 
 import pytest
 from sqlalchemy import text
-from sqlalchemy.orm import Session
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from pg_test_support import assert_test_database_safe_from_engine  # noqa: E402
