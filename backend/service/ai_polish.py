@@ -25,8 +25,6 @@ from dataclasses import dataclass
 from backend.repository.protocol import RepositoryProtocol
 from backend.service import llm_adapter
 from backend.service.document import (
-    DocumentAccessError,
-    DocumentNotFoundError,
     _ensure_can_write,
     get_visible_document,
 )

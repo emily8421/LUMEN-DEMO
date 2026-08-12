@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from backend.repository import repository
 from backend.service.auth import (
-    TOKEN_SIGNING_KEY,
+    TOKEN_SIGNING_KEY,  # noqa: F401  # re-export：测试经 backend.api.auth 读取 demo signing key
     authenticate,
     list_active_sessions,
     refresh_session,

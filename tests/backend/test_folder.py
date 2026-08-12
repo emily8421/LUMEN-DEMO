@@ -46,7 +46,7 @@ class FolderServiceTest(unittest.TestCase):
 
     def test_create_folder_same_name_different_parent_ok(self) -> None:
         from backend.repository.demo_repository import DemoRepository
-        from backend.service.folder import FolderCreateRequest, create_folder, list_folders
+        from backend.service.folder import FolderCreateRequest, create_folder
 
         repository = DemoRepository()
         parent = create_folder(repository, 1, 10, FolderCreateRequest(name="P"))
@@ -88,13 +88,12 @@ class FolderServiceTest(unittest.TestCase):
             FolderConflictError,
             FolderCreateRequest,
             FolderUpdateRequest,
-            UNSET,
             create_folder,
             update_folder,
         )
 
         repository = DemoRepository()
-        a = create_folder(repository, 1, 10, FolderCreateRequest(name="A"))
+        create_folder(repository, 1, 10, FolderCreateRequest(name="A"))
         b = create_folder(repository, 1, 10, FolderCreateRequest(name="B"))
 
         renamed = update_folder(repository, 1, 10, b.id, FolderUpdateRequest(name="B改名"))
@@ -283,7 +282,7 @@ class FolderApiTest(unittest.TestCase):
         original_repository = folders_api.repository
         folders_api.repository = repository
         try:
-            token = create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
+            create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
             ctx = _demo_ctx()
 
             created = folders_api.create_folder_endpoint(

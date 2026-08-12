@@ -47,7 +47,6 @@ class TermCategoryServiceTest(unittest.TestCase):
         from backend.service.term_category import (
             TermCategoryCreateRequest,
             create_term_category,
-            list_term_categories,
         )
 
         repository = DemoRepository()
@@ -99,7 +98,6 @@ class TermCategoryServiceTest(unittest.TestCase):
     def test_rename_category_and_conflict(self) -> None:
         from backend.repository.demo_repository import DemoRepository
         from backend.service.term_category import (
-            UNSET,
             TermCategoryConflictError,
             TermCategoryCreateRequest,
             TermCategoryUpdateRequest,
@@ -108,7 +106,7 @@ class TermCategoryServiceTest(unittest.TestCase):
         )
 
         repository = DemoRepository()
-        a = create_term_category(repository, 1, 10, TermCategoryCreateRequest(name="A"))
+        create_term_category(repository, 1, 10, TermCategoryCreateRequest(name="A"))
         b = create_term_category(repository, 1, 10, TermCategoryCreateRequest(name="B"))
 
         renamed = update_term_category(repository, 1, 10, b.id, TermCategoryUpdateRequest(name="B改名"))

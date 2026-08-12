@@ -31,7 +31,7 @@ class ImportApiTest(unittest.TestCase):
         imports_api.repository = repository
         documents_api.repository = repository
         try:
-            token = create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
+            create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
             ctx = _demo_ctx()
 
             class FakeUploadFile:

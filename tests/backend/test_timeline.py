@@ -190,7 +190,7 @@ class TimelineApiTest(unittest.TestCase):
         original_repository = timeline_api.repository
         timeline_api.repository = DemoRepository()
         try:
-            token = create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
+            create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
             ctx = _demo_ctx()
             # Slice B：TimelineValidationError 已继承 ApiError，异常冒泡到 main.py handler 转 envelope（code 4220）。
             with self.assertRaises(TimelineValidationError) as context:

@@ -25,7 +25,6 @@ from backend.model.entities import Document
 from backend.model.error_codes import ApiError, ErrorCode
 from backend.repository.protocol import RepositoryProtocol
 from backend.service.document import (
-    DocumentNotFoundError,
     VersionNotFoundError,
     get_visible_document,
     list_visible_documents,

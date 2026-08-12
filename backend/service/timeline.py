@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Literal
 
-from backend.model.entities import Document, DocumentChunk
+from backend.model.entities import Document
 from backend.model.error_codes import ApiError, ErrorCode
 from backend.repository.protocol import RepositoryProtocol
 from backend.service.permission import filter_visible_documents, is_space_member

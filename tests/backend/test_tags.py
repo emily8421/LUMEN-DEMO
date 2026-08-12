@@ -232,7 +232,7 @@ class TagApiTest(unittest.TestCase):
         original_repository = tags_api.repository
         tags_api.repository = repository
         try:
-            token = create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
+            create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
             ctx = _demo_ctx()
 
             created = tags_api.create_tag_endpoint(

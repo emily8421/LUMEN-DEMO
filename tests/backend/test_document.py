@@ -1,17 +1,5 @@
 ﻿import unittest
 
-def _demo_ctx(user_id: int = 1, current_space_id: int = 10):
-    from backend.model.entities import User
-    from backend.service.auth_context import TokenContext
-
-    return TokenContext(
-        user_id=user_id,
-        current_space_id=current_space_id,
-        session_id=None,
-        user=User(id=user_id, external_id="demo", name="Demo"),
-    )
-
-
 import importlib.util
 
 from backend.model.entities import Document, DocumentPermission, SpaceMember, SpaceRole
@@ -31,6 +19,18 @@ from backend.service.document import (
     update_document,
 )
 from backend.repository.demo_repository import DemoRepository
+
+
+def _demo_ctx(user_id: int = 1, current_space_id: int = 10):
+    from backend.model.entities import User
+    from backend.service.auth_context import TokenContext
+
+    return TokenContext(
+        user_id=user_id,
+        current_space_id=current_space_id,
+        session_id=None,
+        user=User(id=user_id, external_id="demo", name="Demo"),
+    )
 
 
 class DocumentServiceTest(unittest.TestCase):
@@ -179,7 +179,7 @@ class DocumentApiTest(unittest.TestCase):
         original_repository = documents_api.repository
         documents_api.repository = repository
         try:
-            token = create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
+            create_demo_token(user_id=1, current_space_id=10, signing_key=TOKEN_SIGNING_KEY)
             ctx = _demo_ctx()
             folder = create_folder(repository, 1, 10, FolderCreateRequest(name="API Target"))
 
