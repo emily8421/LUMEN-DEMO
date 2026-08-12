@@ -1,4 +1,4 @@
-﻿"""FastAPI router for Sprint-2 document CRUD and versions."""
+"""FastAPI router for Sprint-2 document CRUD and versions."""
 
 from __future__ import annotations
 
@@ -216,4 +216,3 @@ def _version_detail(version: DocumentVersion) -> dict[str, object]:
         "editor_id": version.editor_id,
         "created_at": version.created_at,
     }
-

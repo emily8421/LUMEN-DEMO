@@ -1,4 +1,4 @@
-﻿name: Project Check
+name: Project Check
 
 on:
   pull_request:
@@ -273,6 +273,3 @@ jobs:
         run: python scripts/export-openapi.py
       - name: Check schema drift
         run: git diff --exit-code -- openapi/openapi.json
-
-
-
