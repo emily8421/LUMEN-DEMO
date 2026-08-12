@@ -59,7 +59,7 @@ from backend.model.orm import (
     TermORM,
     UserORM,
 )
-from backend.service.db import SessionLocal
+from backend.repository.uow import _session_scope
 
 
 # --- ORM row -> frozen dataclass entity converters ---
@@ -332,17 +332,17 @@ class PgRepository(RepositoryProtocol):
     # --- users / spaces / members ---
 
     def find_user_by_external_id(self, external_id: str) -> User | None:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             row = session.scalars(select(UserORM).where(UserORM.external_id == external_id)).first()
             return _to_user(row) if row else None
 
     def find_user_by_id(self, user_id: int) -> User | None:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             row = session.get(UserORM, user_id)
             return _to_user(row) if row else None
 
     def find_user_by_email(self, email: str) -> User | None:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             row = session.scalars(select(UserORM).where(UserORM.email == email)).first()
             return _to_user(row) if row else None
 
@@ -354,7 +354,7 @@ class PgRepository(RepositoryProtocol):
         password_hash: str,
     ) -> User:
         """注册用户 + 自动创建个人空间（C-AUTH-001：归属个人空间，role=admin 可管理）。"""
-        with SessionLocal() as session:
+        with _session_scope() as session:
             user = UserORM(
                 external_id=external_id,
                 name=name,
@@ -369,51 +369,46 @@ class PgRepository(RepositoryProtocol):
             session.add(space)
             session.flush()
             session.add(SpaceMemberORM(user_id=user.id, space_id=space.id, role="admin"))
-            session.commit()
             return _to_user(user)
 
     def record_login_failure(self, user_id: int) -> int:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             row = session.get(UserORM, user_id)
             if row is None:
                 return 0
             row.failed_login_count = (row.failed_login_count or 0) + 1
-            session.commit()
             return row.failed_login_count
 
     def set_locked_until(self, user_id: int, locked_until: str) -> None:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             row = session.get(UserORM, user_id)
             if row is None:
                 return
             row.locked_until = datetime.fromisoformat(locked_until)
-            session.commit()
 
     def reset_login_failures(self, user_id: int) -> None:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             row = session.get(UserORM, user_id)
             if row is None:
                 return
             row.failed_login_count = 0
             row.locked_until = None
             row.last_login_at = func.now()
-            session.commit()
 
     # --- Sprint-30（REQ-051，migration 018）：忘记密码 reset token ---
 
     def set_reset_token(self, user_id: int, token_hash: str, expires_at: str) -> None:
         """签发 reset token：写入 sha256 摘要 + 过期时刻，清空 used_at（覆盖任何进行中的 token）。"""
-        with SessionLocal() as session:
+        with _session_scope() as session:
             row = session.get(UserORM, user_id)
             if row is None:
                 return
             row.reset_token_hash = token_hash
             row.reset_expires_at = datetime.fromisoformat(expires_at)
             row.reset_used_at = None
-            session.commit()
 
     def find_user_by_reset_token_hash(self, token_hash: str) -> User | None:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             row = session.scalars(
                 select(UserORM).where(UserORM.reset_token_hash == token_hash)
             ).first()
@@ -421,27 +416,25 @@ class PgRepository(RepositoryProtocol):
 
     def update_password(self, user_id: int, password_hash: str) -> None:
         """更新密码哈希；顺带重置失败计数 / 解锁（重置成功后不应仍处于锁定态）。"""
-        with SessionLocal() as session:
+        with _session_scope() as session:
             row = session.get(UserORM, user_id)
             if row is None:
                 return
             row.password_hash = password_hash
             row.failed_login_count = 0
             row.locked_until = None
-            session.commit()
 
     def clear_reset_token(self, user_id: int, used_at: str) -> None:
         """置位 reset_used_at（token 一次性）；保留 hash / expires_at 留审计。"""
-        with SessionLocal() as session:
+        with _session_scope() as session:
             row = session.get(UserORM, user_id)
             if row is None:
                 return
             row.reset_used_at = datetime.fromisoformat(used_at)
-            session.commit()
 
     def revoke_all_sessions(self, user_id: int) -> int:
         """重置密码后吊销该用户全部活跃 session；返回撤销条数。"""
-        with SessionLocal() as session:
+        with _session_scope() as session:
             rows = session.scalars(
                 select(SessionORM).where(
                     SessionORM.user_id == user_id, SessionORM.revoked_at.is_(None)
@@ -449,7 +442,6 @@ class PgRepository(RepositoryProtocol):
             ).all()
             for row in rows:
                 row.revoked_at = func.now()
-            session.commit()
             return len(rows)
 
     def create_session(
@@ -461,7 +453,7 @@ class PgRepository(RepositoryProtocol):
         client_ua: str | None = None,
         client_ip: str | None = None,
     ) -> Session:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             row = SessionORM(
                 user_id=user_id,
                 current_space_id=current_space_id,
@@ -471,16 +463,15 @@ class PgRepository(RepositoryProtocol):
                 client_ip=client_ip,
             )
             session.add(row)
-            session.commit()
             return _to_session(row)
 
     def find_session_by_token_hash(self, token_hash: str) -> Session | None:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             row = session.scalars(select(SessionORM).where(SessionORM.token_hash == token_hash)).first()
             return _to_session(row) if row else None
 
     def list_sessions(self, user_id: int) -> list[Session]:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             rows = session.scalars(
                 select(SessionORM)
                 .where(SessionORM.user_id == user_id, SessionORM.revoked_at.is_(None))
@@ -489,36 +480,34 @@ class PgRepository(RepositoryProtocol):
             return [_to_session(r) for r in rows]
 
     def revoke_session(self, session_id: int, user_id: int) -> bool:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             row = session.get(SessionORM, session_id)
             if row is None or row.user_id != user_id:
                 return False
             row.revoked_at = func.now()
-            session.commit()
             return True
 
     def update_session_space(self, session_id: int, space_id: int) -> Session:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             row = session.get(SessionORM, session_id)
             if row is None:
                 raise KeyError(session_id)
             row.current_space_id = space_id
             row.last_used_at = func.now()
-            session.commit()
             return _to_session(row)
 
     def list_memberships(self) -> list[SpaceMember]:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             rows = session.scalars(select(SpaceMemberORM)).all()
             return [_to_member(r) for r in rows]
 
     def list_spaces(self) -> list[Space]:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             rows = session.scalars(select(SpaceORM)).all()
             return [_to_space(r) for r in rows]
 
     def first_space_id_for_user(self, user_id: int) -> int | None:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             row = session.scalars(
                 select(SpaceMemberORM)
                 .where(SpaceMemberORM.user_id == user_id)
@@ -530,7 +519,7 @@ class PgRepository(RepositoryProtocol):
 
     def list_users(self, q: str = "", role: str = "", status: str = "") -> list[User]:
         """admin 域用户列表（API-044）：q 匹配 name/email，可按 role / status 过滤。"""
-        with SessionLocal() as session:
+        with _session_scope() as session:
             stmt = select(UserORM).order_by(UserORM.id)
             if q:
                 like = f"%{q}%"
@@ -543,7 +532,7 @@ class PgRepository(RepositoryProtocol):
 
     def search_users(self, q: str = "") -> list[User]:
         """成员添加时用户搜索（API-050）：q 匹配 name/email，返回最小字段子集（上限 20）。"""
-        with SessionLocal() as session:
+        with _session_scope() as session:
             stmt = select(UserORM).order_by(UserORM.id)
             if q:
                 like = f"%{q}%"
@@ -552,43 +541,40 @@ class PgRepository(RepositoryProtocol):
 
     def update_user_role(self, user_id: int, role: str) -> User | None:
         """改全局角色（API-045）；不存在返回 None。"""
-        with SessionLocal() as session:
+        with _session_scope() as session:
             row = session.get(UserORM, user_id)
             if row is None:
                 return None
             row.role = role
-            session.commit()
             return _to_user(row)
 
     def set_user_status(self, user_id: int, status: str) -> User | None:
         """禁用 / 启用账号（API-045）；不存在返回 None。禁用后登录 4030 由 auth service 处理。"""
-        with SessionLocal() as session:
+        with _session_scope() as session:
             row = session.get(UserORM, user_id)
             if row is None:
                 return None
             row.status = status
-            session.commit()
             return _to_user(row)
 
     def revoke_user_sessions(self, user_id: int) -> int:
         """禁用账号时撤销全部活跃会话（API-045：既有会话失效）。"""
-        with SessionLocal() as session:
+        with _session_scope() as session:
             rows = session.scalars(
                 select(SessionORM).where(SessionORM.user_id == user_id, SessionORM.revoked_at.is_(None))
             ).all()
             for row in rows:
                 row.revoked_at = func.now()
-            session.commit()
             return len(rows)
 
     def find_space(self, space_id: int) -> Space | None:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             row = session.get(SpaceORM, space_id)
             return _to_space(row) if row else None
 
     def list_space_members(self, space_id: int) -> list[SpaceMemberDetail]:
         """空间成员列表（API-046）：含用户展示字段 + 加入时间 joined_at。"""
-        with SessionLocal() as session:
+        with _session_scope() as session:
             rows = session.execute(
                 select(SpaceMemberORM, UserORM)
                 .join(UserORM, UserORM.id == SpaceMemberORM.user_id)
@@ -599,12 +585,11 @@ class PgRepository(RepositoryProtocol):
 
     def add_space_member(self, space_id: int, user_id: int, role: str) -> SpaceMemberDetail | None:
         """按 email 添加成员（API-047）；已是成员返回 None。"""
-        with SessionLocal() as session:
+        with _session_scope() as session:
             existing = session.get(SpaceMemberORM, (user_id, space_id))
             if existing is not None:
                 return None
             session.add(SpaceMemberORM(user_id=user_id, space_id=space_id, role=role))
-            session.commit()
             user = session.get(UserORM, user_id)
             row = session.get(SpaceMemberORM, (user_id, space_id))
             if row is None:
@@ -613,27 +598,25 @@ class PgRepository(RepositoryProtocol):
 
     def update_space_member_role(self, space_id: int, user_id: int, role: str) -> SpaceMemberDetail | None:
         """改空间角色（API-048）；非成员返回 None。"""
-        with SessionLocal() as session:
+        with _session_scope() as session:
             row = session.get(SpaceMemberORM, (user_id, space_id))
             if row is None:
                 return None
             row.role = role
-            session.commit()
             user = session.get(UserORM, user_id)
             return _to_member_detail(row, user)
 
     def remove_space_member(self, space_id: int, user_id: int) -> bool:
         """移除成员（API-049）；文档归属不变（仅删成员关系）。"""
-        with SessionLocal() as session:
+        with _session_scope() as session:
             row = session.get(SpaceMemberORM, (user_id, space_id))
             if row is None:
                 return False
             session.delete(row)
-            session.commit()
             return True
 
     def count_space_admins(self, space_id: int) -> int:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             rows = session.scalars(
                 select(SpaceMemberORM).where(SpaceMemberORM.space_id == space_id, SpaceMemberORM.role == "admin")
             ).all()
@@ -642,12 +625,12 @@ class PgRepository(RepositoryProtocol):
     # --- documents ---
 
     def list_documents(self) -> list[Document]:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             rows = session.scalars(select(DocumentORM)).all()
             return [_to_document(r) for r in rows]
 
     def get_document(self, document_id: int) -> Document | None:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             row = session.get(DocumentORM, document_id)
             return _to_document(row) if row else None
 
@@ -666,7 +649,7 @@ class PgRepository(RepositoryProtocol):
         permission: DocumentPermission,
         folder_id: int | None = None,
     ) -> Document:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             doc = DocumentORM(
                 space_id=space_id,
                 title=title,
@@ -684,7 +667,6 @@ class PgRepository(RepositoryProtocol):
                 content_md=content_md,
                 editor_id=owner_id,
             ))
-            session.commit()
             return _to_document(doc)
 
     def update_document(
@@ -695,7 +677,7 @@ class PgRepository(RepositoryProtocol):
         permission: DocumentPermission,
         editor_id: int,
     ) -> Document:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             doc = session.get(DocumentORM, document_id)
             if doc is None:
                 raise KeyError(document_id)
@@ -711,11 +693,10 @@ class PgRepository(RepositoryProtocol):
                 content_md=content_md,
                 editor_id=editor_id,
             ))
-            session.commit()
             return _to_document(doc)
 
     def delete_document(self, document_id: int) -> None:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             # imports keep a parsed_doc_id FK without ON DELETE CASCADE: unbind first,
             # otherwise deleting an imported document violates lumen_imports_parsed_doc_id_fkey.
             session.execute(
@@ -725,12 +706,11 @@ class PgRepository(RepositoryProtocol):
             )
             # versions + chunks removed by ON DELETE CASCADE
             session.execute(delete(DocumentORM).where(DocumentORM.id == document_id))
-            session.commit()
 
     # --- versions ---
 
     def list_document_versions(self, document_id: int) -> list[DocumentVersion]:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             rows = session.scalars(
                 select(DocumentVersionORM)
                 .where(DocumentVersionORM.document_id == document_id)
@@ -739,7 +719,7 @@ class PgRepository(RepositoryProtocol):
             return [_to_version(r) for r in rows]
 
     def get_document_version(self, document_id: int, version_no: int) -> DocumentVersion | None:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             row = session.scalars(
                 select(DocumentVersionORM)
                 .where(
@@ -753,7 +733,7 @@ class PgRepository(RepositoryProtocol):
         # Mirrors DemoRepository: does NOT create a new version row — only rolls
         # back content_md and the current_version pointer. editor_id is accepted
         # for signature parity but not used (same as the in-memory version).
-        with SessionLocal() as session:
+        with _session_scope() as session:
             doc = session.get(DocumentORM, document_id)
             if doc is None:
                 raise KeyError(document_id)
@@ -769,7 +749,6 @@ class PgRepository(RepositoryProtocol):
             doc.content_md = version.content_md
             doc.current_version = version_no
             doc.updated_at = func.now()
-            session.commit()
             return _to_document(doc)
 
     def _next_version_no(self, session, document_id: int) -> int:
@@ -783,7 +762,7 @@ class PgRepository(RepositoryProtocol):
     # --- import jobs ---
 
     def create_import_job(self, space_id: int, source_filename: str, created_by: int) -> ImportJob:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             job = ImportJobORM(
                 space_id=space_id,
                 source_filename=source_filename,
@@ -791,11 +770,10 @@ class PgRepository(RepositoryProtocol):
                 status="processing",
             )
             session.add(job)
-            session.commit()
             return _to_import(job)
 
     def complete_import_job(self, import_id: int, parsed_doc_id: int, chunk_count: int) -> ImportJob:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             job = session.get(ImportJobORM, import_id)
             if job is None:
                 raise KeyError(import_id)
@@ -803,21 +781,19 @@ class PgRepository(RepositoryProtocol):
             job.parsed_doc_id = parsed_doc_id
             job.chunk_count = chunk_count
             job.error = None
-            session.commit()
             return _to_import(job)
 
     def fail_import_job(self, import_id: int, error: str) -> ImportJob:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             job = session.get(ImportJobORM, import_id)
             if job is None:
                 raise KeyError(import_id)
             job.status = "failed"
             job.error = error
-            session.commit()
             return _to_import(job)
 
     def require_import_job(self, import_id: int) -> ImportJob:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             job = session.get(ImportJobORM, import_id)
             if job is None:
                 raise KeyError(import_id)
@@ -826,7 +802,7 @@ class PgRepository(RepositoryProtocol):
     # --- chunks ---
 
     def replace_document_chunks(self, document_id: int, chunk_texts: list[str]) -> list[DocumentChunk]:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             session.execute(delete(DocumentChunkORM).where(DocumentChunkORM.document_id == document_id))
             created = [
                 DocumentChunkORM(document_id=document_id, ordinal=ordinal, text=text)
@@ -839,11 +815,10 @@ class PgRepository(RepositoryProtocol):
             for chunk, vector in zip(created, vectors):
                 chunk.embedding = vector
             session.add_all(created)
-            session.commit()
             return [_to_chunk(c) for c in created]
 
     def list_document_chunks(self, document_id: int) -> list[DocumentChunk]:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             rows = session.scalars(
                 select(DocumentChunkORM)
                 .where(DocumentChunkORM.document_id == document_id)
@@ -852,7 +827,7 @@ class PgRepository(RepositoryProtocol):
             return [_to_chunk(r) for r in rows]
 
     def list_all_document_chunks(self) -> list[DocumentChunk]:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             rows = session.scalars(
                 select(DocumentChunkORM).order_by(DocumentChunkORM.document_id, DocumentChunkORM.ordinal)
             ).all()
@@ -861,7 +836,7 @@ class PgRepository(RepositoryProtocol):
     # --- doc links (REQ-026) ---
 
     def list_doc_links(self, space_id: int, document_id: int, direction: str) -> list[DocLink]:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             query = select(DocLinkORM).where(DocLinkORM.space_id == space_id)
             if direction == "backlink":
                 query = query.where(DocLinkORM.target_document_id == document_id)
@@ -871,7 +846,7 @@ class PgRepository(RepositoryProtocol):
             return [_to_doc_link(r) for r in rows]
 
     def find_document_id_by_title(self, space_id: int, title: str) -> int | None:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             row = session.scalars(
                 select(DocumentORM).where(DocumentORM.space_id == space_id, DocumentORM.title == title)
             ).first()
@@ -883,7 +858,7 @@ class PgRepository(RepositoryProtocol):
         source_document_id: int,
         drafts: list[DocLinkDraft],
     ) -> list[DocLink]:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             session.execute(
                 delete(DocLinkORM).where(
                     DocLinkORM.source_document_id == source_document_id,
@@ -903,7 +878,6 @@ class PgRepository(RepositoryProtocol):
                 for draft in drafts
             ]
             session.add_all(created)
-            session.commit()
             return [_to_doc_link(r) for r in created]
 
     def upsert_manual_link(
@@ -915,7 +889,7 @@ class PgRepository(RepositoryProtocol):
         link_text: str,
     ) -> DocLink:
         status = "resolved" if target_document_id is not None else "unresolved"
-        with SessionLocal() as session:
+        with _session_scope() as session:
             row = DocLinkORM(
                 space_id=space_id,
                 source_document_id=source_document_id,
@@ -926,13 +900,12 @@ class PgRepository(RepositoryProtocol):
                 status=status,
             )
             session.add(row)
-            session.commit()
             return _to_doc_link(row)
 
     # --- tags (REQ-012) ---
 
     def list_tags(self, space_id: int, q: str | None = None, status: str | None = "active") -> list[Tag]:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             query = select(TagORM).where(TagORM.space_id == space_id)
             if status is not None:
                 query = query.where(TagORM.status == status)
@@ -942,7 +915,7 @@ class PgRepository(RepositoryProtocol):
             return [_to_tag(r) for r in rows]
 
     def get_tag(self, tag_id: int) -> Tag | None:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             row = session.scalars(select(TagORM).where(TagORM.id == tag_id)).first()
             return None if row is None else _to_tag(row)
 
@@ -955,7 +928,7 @@ class PgRepository(RepositoryProtocol):
         color: str | None = None,
         description: str | None = None,
     ) -> Tag:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             row = TagORM(
                 space_id=space_id,
                 name=name,
@@ -966,7 +939,6 @@ class PgRepository(RepositoryProtocol):
                 created_by=created_by,
             )
             session.add(row)
-            session.commit()
             return _to_tag(row)
 
     def update_tag(
@@ -978,7 +950,7 @@ class PgRepository(RepositoryProtocol):
         description: str | None = None,
         status: str | None = None,
     ) -> Tag | None:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             row = session.scalars(select(TagORM).where(TagORM.id == tag_id)).first()
             if row is None:
                 return None
@@ -991,11 +963,10 @@ class PgRepository(RepositoryProtocol):
                 row.description = description
             if status is not None:
                 row.status = status
-            session.commit()
             return _to_tag(row)
 
     def list_document_tag_links(self, document_id: int) -> list[TagLink]:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             rows = session.scalars(
                 select(TagLinkORM).where(TagLinkORM.document_id == document_id)
             ).all()
@@ -1008,7 +979,7 @@ class PgRepository(RepositoryProtocol):
         link_source: str,
         created_by: int,
     ) -> TagLink:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             existing = session.scalars(
                 select(TagLinkORM).where(
                     TagLinkORM.tag_id == tag_id,
@@ -1024,7 +995,6 @@ class PgRepository(RepositoryProtocol):
                 created_by=created_by,
             )
             session.add(row)
-            session.commit()
             return _to_tag_link(row)
 
     # --- quick entries (REQ-025) ---
@@ -1040,7 +1010,7 @@ class PgRepository(RepositoryProtocol):
         created_document_id: int | None = None,
         status: str = "draft",
     ) -> QuickEntry:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             row = QuickEntryORM(
                 space_id=space_id,
                 owner_id=owner_id,
@@ -1052,11 +1022,10 @@ class PgRepository(RepositoryProtocol):
                 status=status,
             )
             session.add(row)
-            session.commit()
             return _to_quick_entry(row)
 
     def get_quick_entry(self, entry_id: int) -> QuickEntry | None:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             row = session.scalars(select(QuickEntryORM).where(QuickEntryORM.id == entry_id)).first()
             return None if row is None else _to_quick_entry(row)
 
@@ -1066,7 +1035,7 @@ class PgRepository(RepositoryProtocol):
         owner_id: int,
         status: str | None = None,
     ) -> list[QuickEntry]:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             query = select(QuickEntryORM).where(
                 QuickEntryORM.space_id == space_id,
                 QuickEntryORM.owner_id == owner_id,
@@ -1083,7 +1052,7 @@ class PgRepository(RepositoryProtocol):
         target_document_id: int | None = None,
         created_document_id: int | None = None,
     ) -> QuickEntry | None:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             row = session.scalars(select(QuickEntryORM).where(QuickEntryORM.id == entry_id)).first()
             if row is None:
                 return None
@@ -1093,7 +1062,6 @@ class PgRepository(RepositoryProtocol):
                 row.target_document_id = target_document_id
             if created_document_id is not None:
                 row.created_document_id = created_document_id
-            session.commit()
             return _to_quick_entry(row)
 
     # --- ai drafts (REQ-014, API-028) ---
@@ -1110,7 +1078,7 @@ class PgRepository(RepositoryProtocol):
         cited_chunk_ids: tuple[int, ...] = (),
         status: str = "generated",
     ) -> AiDraft:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             row = AiDraftORM(
                 space_id=space_id,
                 document_id=document_id,
@@ -1123,7 +1091,6 @@ class PgRepository(RepositoryProtocol):
                 status=status,
             )
             session.add(row)
-            session.commit()
             return _to_ai_draft(row)
 
     # --- document exports (REQ-027, API-019) ---
@@ -1138,7 +1105,7 @@ class PgRepository(RepositoryProtocol):
         artifact_path: str | None = None,
         error_message: str | None = None,
     ) -> DocExport:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             row = DocExportORM(
                 space_id=space_id,
                 document_id=document_id,
@@ -1152,11 +1119,10 @@ class PgRepository(RepositoryProtocol):
             if status in {"done", "failed"}:
                 row.finished_at = func.now()
             session.add(row)
-            session.commit()
             return _to_doc_export(row)
 
     def get_doc_export(self, export_id: int) -> DocExport | None:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             row = session.get(DocExportORM, export_id)
             return _to_doc_export(row) if row else None
 
@@ -1167,7 +1133,7 @@ class PgRepository(RepositoryProtocol):
         artifact_path: str | None = None,
         error_message: str | None = None,
     ) -> DocExport:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             row = session.get(DocExportORM, export_id)
             if row is None:
                 raise KeyError(export_id)
@@ -1177,22 +1143,20 @@ class PgRepository(RepositoryProtocol):
             row.error_message = error_message
             if status in {"done", "failed"}:
                 row.finished_at = func.now()
-            session.commit()
             return _to_doc_export(row)
 
     def remove_document_tag(self, tag_id: int, document_id: int) -> bool:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             deleted = session.execute(
                 delete(TagLinkORM).where(
                     TagLinkORM.tag_id == tag_id,
                     TagLinkORM.document_id == document_id,
                 )
             ).rowcount
-            session.commit()
             return deleted > 0
 
     def list_tag_document_ids(self, tag_id: int) -> list[int]:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             rows = session.scalars(
                 select(TagLinkORM.document_id).where(TagLinkORM.tag_id == tag_id)
             ).all()
@@ -1209,7 +1173,7 @@ class PgRepository(RepositoryProtocol):
         if not document_ids or not query.strip() or limit < 1:
             return []
         ts_query = "websearch_to_tsquery(lumen_search_regconfig(), :query)"
-        with SessionLocal() as session:
+        with _session_scope() as session:
             rows = session.scalars(
                 select(DocumentChunkORM)
                 .where(
@@ -1249,7 +1213,7 @@ class PgRepository(RepositoryProtocol):
             return []
         query_vector = vectors[0]
         max_distance = 1.0 - threshold  # similarity >= threshold  <=>  distance <= 1 - threshold
-        with SessionLocal() as session:
+        with _session_scope() as session:
             distance = DocumentChunkORM.embedding.cosine_distance(query_vector)
             rows = session.scalars(
                 select(DocumentChunkORM)
@@ -1268,7 +1232,7 @@ class PgRepository(RepositoryProtocol):
     def list_terms(self) -> list[Term]:
         # Global terms (space_id NULL) first, then space terms — matches
         # DemoRepository's (space_id is not None, space_id or 0, term, id) key.
-        with SessionLocal() as session:
+        with _session_scope() as session:
             rows = session.scalars(
                 select(TermORM).order_by(
                     TermORM.space_id.is_not(None),
@@ -1280,7 +1244,7 @@ class PgRepository(RepositoryProtocol):
             return [_to_term(r) for r in rows]
 
     def get_term(self, term_id: int) -> Term | None:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             row = session.get(TermORM, term_id)
             return _to_term(row) if row else None
 
@@ -1303,7 +1267,7 @@ class PgRepository(RepositoryProtocol):
         category: str | None = None,
         source: str | None = None,
     ) -> Term:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             t = TermORM(
                 space_id=space_id,
                 term=term,
@@ -1317,7 +1281,6 @@ class PgRepository(RepositoryProtocol):
                 source=source,
             )
             session.add(t)
-            session.commit()
             return _to_term(t)
 
     def update_term(
@@ -1332,7 +1295,7 @@ class PgRepository(RepositoryProtocol):
         category: str | None = None,
         source: str | None = None,
     ) -> Term:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             t = session.get(TermORM, term_id)
             if t is None:
                 raise KeyError(term_id)
@@ -1345,13 +1308,11 @@ class PgRepository(RepositoryProtocol):
             t.category = category
             t.source = source
             t.updated_at = func.now()
-            session.commit()
             return _to_term(t)
 
     def delete_term(self, term_id: int) -> None:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             session.execute(delete(TermORM).where(TermORM.id == term_id))
-            session.commit()
 
     # --- folders (REQ-039) ---
 
@@ -1365,7 +1326,7 @@ class PgRepository(RepositoryProtocol):
         return (max_order or 0) + 1
 
     def list_folders(self, space_id: int) -> list[Folder]:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             rows = session.scalars(
                 select(FolderORM)
                 .where(FolderORM.space_id == space_id)
@@ -1374,12 +1335,12 @@ class PgRepository(RepositoryProtocol):
             return [_to_folder(r) for r in rows]
 
     def get_folder(self, folder_id: int) -> Folder | None:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             row = session.get(FolderORM, folder_id)
             return _to_folder(row) if row else None
 
     def find_folder_by_name(self, space_id: int, parent_id: int | None, name: str) -> Folder | None:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             query = select(FolderORM).where(FolderORM.space_id == space_id, FolderORM.name == name)
             if parent_id is None:
                 query = query.where(FolderORM.parent_id.is_(None))
@@ -1389,7 +1350,7 @@ class PgRepository(RepositoryProtocol):
             return _to_folder(row) if row else None
 
     def create_folder(self, space_id: int, parent_id: int | None, name: str, created_by: int) -> Folder:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             row = FolderORM(
                 space_id=space_id,
                 parent_id=parent_id,
@@ -1398,37 +1359,33 @@ class PgRepository(RepositoryProtocol):
                 created_by=created_by,
             )
             session.add(row)
-            session.commit()
             return _to_folder(row)
 
     def rename_folder(self, folder_id: int, name: str) -> Folder | None:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             row = session.scalars(select(FolderORM).where(FolderORM.id == folder_id)).first()
             if row is None:
                 return None
             row.name = name
             row.updated_at = func.now()
-            session.commit()
             return _to_folder(row)
 
     def move_folder(self, folder_id: int, parent_id: int | None) -> Folder | None:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             row = session.scalars(select(FolderORM).where(FolderORM.id == folder_id)).first()
             if row is None:
                 return None
             row.parent_id = parent_id
             row.order = self._next_folder_order(session, row.space_id, parent_id)
             row.updated_at = func.now()
-            session.commit()
             return _to_folder(row)
 
     def delete_folder(self, folder_id: int) -> None:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             session.execute(delete(FolderORM).where(FolderORM.id == folder_id))
-            session.commit()
 
     def is_folder_empty(self, space_id: int, folder_id: int) -> bool:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             has_child = session.scalars(
                 select(FolderORM.id)
                 .where(FolderORM.space_id == space_id, FolderORM.parent_id == folder_id)
@@ -1447,7 +1404,7 @@ class PgRepository(RepositoryProtocol):
         用于移动 folder 时的防环校验：移动 folder 到 target 时，若 target 是 folder
         自身或其后代则拒绝（4220）。
         """
-        with SessionLocal() as session:
+        with _session_scope() as session:
             result = session.scalars(
                 sql_text(
                     """
@@ -1465,7 +1422,7 @@ class PgRepository(RepositoryProtocol):
             return result is not None
 
     def list_folder_document_ids(self, space_id: int, folder_id: int) -> list[int]:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             rows = session.scalars(
                 select(DocumentORM.id).where(
                     DocumentORM.space_id == space_id, DocumentORM.folder_id == folder_id
@@ -1475,16 +1432,15 @@ class PgRepository(RepositoryProtocol):
 
     def set_document_folder(self, document_id: int, folder_id: int | None) -> None:
         """预留：文档归属写入（Flow-D-012 导入保留结构 / 文档 CRUD 复用）。本轮 service 不调用。"""
-        with SessionLocal() as session:
+        with _session_scope() as session:
             doc = session.get(DocumentORM, document_id)
             if doc is None:
                 raise KeyError(document_id)
             doc.folder_id = folder_id
             doc.updated_at = func.now()
-            session.commit()
 
     def reorder_folders(self, space_id: int, ordered_folder_ids: list[int]) -> None:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             for order, folder_id in enumerate(ordered_folder_ids, start=1):
                 row = session.scalars(
                     select(FolderORM).where(FolderORM.id == folder_id, FolderORM.space_id == space_id)
@@ -1492,7 +1448,6 @@ class PgRepository(RepositoryProtocol):
                 if row is not None:
                     row.order = order
                     row.updated_at = func.now()
-            session.commit()
 
     # --- term categories (REQ-036 领域树, migration 017) ---
 
@@ -1506,7 +1461,7 @@ class PgRepository(RepositoryProtocol):
         return (max_order or 0) + 1
 
     def list_term_categories(self, space_id: int) -> list[TermCategory]:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             rows = session.scalars(
                 select(TermCategoryORM)
                 .where(TermCategoryORM.space_id == space_id)
@@ -1515,12 +1470,12 @@ class PgRepository(RepositoryProtocol):
             return [_to_term_category(r) for r in rows]
 
     def get_term_category(self, category_id: int) -> TermCategory | None:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             row = session.get(TermCategoryORM, category_id)
             return _to_term_category(row) if row else None
 
     def find_term_category_by_name(self, space_id: int, parent_id: int | None, name: str) -> TermCategory | None:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             query = select(TermCategoryORM).where(TermCategoryORM.space_id == space_id, TermCategoryORM.name == name)
             if parent_id is None:
                 query = query.where(TermCategoryORM.parent_id.is_(None))
@@ -1530,7 +1485,7 @@ class PgRepository(RepositoryProtocol):
             return _to_term_category(row) if row else None
 
     def create_term_category(self, space_id: int, parent_id: int | None, name: str, created_by: int) -> TermCategory:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             row = TermCategoryORM(
                 space_id=space_id,
                 parent_id=parent_id,
@@ -1539,37 +1494,33 @@ class PgRepository(RepositoryProtocol):
                 created_by=created_by,
             )
             session.add(row)
-            session.commit()
             return _to_term_category(row)
 
     def rename_term_category(self, category_id: int, name: str) -> TermCategory | None:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             row = session.scalars(select(TermCategoryORM).where(TermCategoryORM.id == category_id)).first()
             if row is None:
                 return None
             row.name = name
             row.updated_at = func.now()
-            session.commit()
             return _to_term_category(row)
 
     def move_term_category(self, category_id: int, parent_id: int | None) -> TermCategory | None:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             row = session.scalars(select(TermCategoryORM).where(TermCategoryORM.id == category_id)).first()
             if row is None:
                 return None
             row.parent_id = parent_id
             row.order_idx = self._next_term_category_order(session, row.space_id, parent_id)
             row.updated_at = func.now()
-            session.commit()
             return _to_term_category(row)
 
     def delete_term_category(self, category_id: int) -> None:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             session.execute(delete(TermCategoryORM).where(TermCategoryORM.id == category_id))
-            session.commit()
 
     def is_term_category_empty(self, space_id: int, category_id: int) -> bool:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             has_child = session.scalars(
                 select(TermCategoryORM.id)
                 .where(TermCategoryORM.space_id == space_id, TermCategoryORM.parent_id == category_id)
@@ -1584,7 +1535,7 @@ class PgRepository(RepositoryProtocol):
 
     def is_descendant_term_category(self, space_id: int, ancestor_id: int, candidate_id: int) -> bool:
         """``candidate`` 是否是 ``ancestor`` 的后代（含自身）。用 PG ``WITH RECURSIVE`` 递归 CTE 防 N+1。"""
-        with SessionLocal() as session:
+        with _session_scope() as session:
             result = session.scalars(
                 sql_text(
                     """
@@ -1602,7 +1553,7 @@ class PgRepository(RepositoryProtocol):
             return result is not None
 
     def list_term_category_term_ids(self, space_id: int, category_id: int) -> list[int]:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             rows = session.scalars(
                 select(TermORM.id).where(
                     TermORM.space_id == space_id, TermORM.category_id == category_id
@@ -1611,7 +1562,7 @@ class PgRepository(RepositoryProtocol):
             return list(rows)
 
     def reorder_term_categories(self, space_id: int, ordered_category_ids: list[int]) -> None:
-        with SessionLocal() as session:
+        with _session_scope() as session:
             for order, category_id in enumerate(ordered_category_ids, start=1):
                 row = session.scalars(
                     select(TermCategoryORM).where(TermCategoryORM.id == category_id, TermCategoryORM.space_id == space_id)
@@ -1619,4 +1570,3 @@ class PgRepository(RepositoryProtocol):
                 if row is not None:
                     row.order_idx = order
                     row.updated_at = func.now()
-            session.commit()
