@@ -22,6 +22,7 @@
 | `2026-08-05-rg009-vault-local-mount-poc.md` | RG-009 Vault PoC 验证（REQ-018 模式 B） | 已落盘；**Go**（八项能力 + 五场景通过，刷新后句柄自动恢复 granted） | 待用户决策是否进入 REQ-018 阶段升级（不在本次落盘范围） |
 | `2026-08-07-term-domain-tree-analysis.md` | 术语管理领域树增强分析（输入材料评审 + 设计 + 实施计划草案） | 已落盘；**AI 评估 · 待人工确认** | TM-C-001..007 确认后回写 02/03/06/07/08/09 与 term-management.md，再独立编码 |
 | `2026-08-12-frontend-eslint-b1-assessment.md` | 前端 ESLint B1 引入前现状评估（规模/质量基线/文件膨胀/工具链） | 已落盘；**只读评估 · 待人工确认治理范围** | 为 ESLint B1 方案设计提供实证；候选 ESLINT-C1..C5（规则集 / advisory·required / prettier / 存量基线 / CI job）待方案设计拍板 |
+| `2026-08-12-backend-mypy-b1-assessment.md` | 后端 mypy B1 引入前现状评估（覆盖度/工具链/首跑基线 190/§3 根因/价值兑现） | 已落盘；**只读评估 · 待人工确认治理范围** | 为 mypy B1 方案设计提供实证；首跑基线 190 error（§3 optional-import 簇 120 主导 + current_space_id None 传播 45 + reportlab 缺 stub 8 + 真实 bug ~17）；Slice A advisory 起步 / Slice B 清零升 required 候选待立项 |
 
 ## 2. 历史 research 清单
 
