@@ -770,6 +770,9 @@ class PgRepository(RepositoryProtocol):
                 status="processing",
             )
             session.add(job)
+            # _to_import 需读取 job.id；autoflush 不因访问 pending 主键触发，须显式 flush
+            # 分配 BIGSERIAL id（否则返回的 ImportJob.id=None，complete/fail_import_job KeyError）。
+            session.flush()
             return _to_import(job)
 
     def complete_import_job(self, import_id: int, parsed_doc_id: int, chunk_count: int) -> ImportJob:
