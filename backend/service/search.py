@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 from backend.model.entities import Document, DocumentChunk
 from backend.model.error_codes import ApiError, ErrorCode
+from backend.repository.protocol import RepositoryProtocol
 from backend.service.permission import filter_visible_documents
 
 
@@ -38,7 +39,7 @@ class SearchPage:
 
 
 def search_documents(
-    repository,
+    repository: RepositoryProtocol,
     user_id: int,
     current_space_id: int,
     query: str,
@@ -104,11 +105,8 @@ def search_documents(
     return SearchPage(items=matches[offset : offset + page_size], total=len(matches), page=page)
 
 
-def _search_text_chunks(repository, document_ids: list[int], normalized_query: str, limit: int) -> list[DocumentChunk]:
-    search_chunks = getattr(repository, "search_chunks", None)
-    if search_chunks is None:
-        return []
-    return search_chunks(document_ids, normalized_query, limit=limit)
+def _search_text_chunks(repository: RepositoryProtocol, document_ids: list[int], normalized_query: str, limit: int) -> list[DocumentChunk]:
+    return repository.search_chunks(document_ids, normalized_query, limit=limit)
 
 
 def _normalize_query(query: str) -> str:

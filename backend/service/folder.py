@@ -23,6 +23,7 @@ from typing import Any
 
 from backend.model.entities import Folder
 from backend.model.error_codes import ApiError, ErrorCode
+from backend.repository.protocol import RepositoryProtocol
 from backend.service.permission import filter_visible_documents, is_space_member
 
 
@@ -87,12 +88,12 @@ class FolderUpdateRequest:
     parent_id: Any = UNSET
 
 
-def _ensure_space_member(repository, user_id: int, space_id: int) -> None:
+def _ensure_space_member(repository: RepositoryProtocol, user_id: int, space_id: int) -> None:
     if not is_space_member(user_id, space_id, repository.list_memberships()):
         raise FolderAccessError("space access denied")
 
 
-def _get_space_folder(repository, space_id: int, folder_id: int) -> Folder:
+def _get_space_folder(repository: RepositoryProtocol, space_id: int, folder_id: int) -> Folder:
     folder = repository.get_folder(folder_id)
     if folder is None or folder.space_id != space_id:
         raise FolderNotFoundError("folder not found")
@@ -100,7 +101,7 @@ def _get_space_folder(repository, space_id: int, folder_id: int) -> Folder:
 
 
 def _ensure_no_name_clash(
-    repository,
+    repository: RepositoryProtocol,
     space_id: int,
     parent_id: int | None,
     name: str,
@@ -111,7 +112,7 @@ def _ensure_no_name_clash(
         raise FolderConflictError("folder name already exists under this parent")
 
 
-def _visible_document_count(repository, user_id: int, space_id: int, folder_id: int) -> int:
+def _visible_document_count(repository: RepositoryProtocol, user_id: int, space_id: int, folder_id: int) -> int:
     doc_ids = set(repository.list_folder_document_ids(space_id, folder_id))
     if not doc_ids:
         return 0
@@ -122,7 +123,7 @@ def _visible_document_count(repository, user_id: int, space_id: int, folder_id: 
 
 
 def list_folders(
-    repository,
+    repository: RepositoryProtocol,
     user_id: int,
     space_id: int,
     parent_id: int | None = None,
@@ -150,7 +151,7 @@ def list_folders(
     return views
 
 
-def create_folder(repository, user_id: int, space_id: int, request: FolderCreateRequest) -> Folder:
+def create_folder(repository: RepositoryProtocol, user_id: int, space_id: int, request: FolderCreateRequest) -> Folder:
     _ensure_space_member(repository, user_id, space_id)
     name = request.name.strip()
     if not name:
@@ -165,7 +166,7 @@ def create_folder(repository, user_id: int, space_id: int, request: FolderCreate
 
 
 def update_folder(
-    repository,
+    repository: RepositoryProtocol,
     user_id: int,
     space_id: int,
     folder_id: int,
@@ -198,7 +199,7 @@ def update_folder(
     return folder
 
 
-def delete_folder(repository, user_id: int, space_id: int, folder_id: int) -> None:
+def delete_folder(repository: RepositoryProtocol, user_id: int, space_id: int, folder_id: int) -> None:
     _ensure_space_member(repository, user_id, space_id)
     folder = _get_space_folder(repository, space_id, folder_id)
     if not repository.is_folder_empty(space_id, folder.id):
@@ -207,7 +208,7 @@ def delete_folder(repository, user_id: int, space_id: int, folder_id: int) -> No
 
 
 def reorder_folders(
-    repository,
+    repository: RepositoryProtocol,
     user_id: int,
     space_id: int,
     parent_id: int | None,

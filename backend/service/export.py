@@ -23,6 +23,7 @@ from pathlib import Path
 
 from backend.model.entities import Document
 from backend.model.error_codes import ApiError, ErrorCode
+from backend.repository.protocol import RepositoryProtocol
 from backend.service.document import (
     DocumentNotFoundError,
     VersionNotFoundError,
@@ -112,7 +113,7 @@ _PDF_FONT_CANDIDATES = (
 
 
 def export_document_md(
-    repository,
+    repository: RepositoryProtocol,
     user_id: int,
     current_space_id: int,
     document_id: int,
@@ -134,7 +135,7 @@ def export_document_md(
     )
 
 
-def export_space_zip(repository, user_id: int, current_space_id: int) -> SpaceExport:
+def export_space_zip(repository: RepositoryProtocol, user_id: int, current_space_id: int) -> SpaceExport:
     memberships = repository.list_memberships()
     ensure_space_access(user_id, current_space_id, memberships)
 
@@ -159,7 +160,7 @@ def export_space_zip(repository, user_id: int, current_space_id: int) -> SpaceEx
 
 
 def create_pdf_export(
-    repository,
+    repository: RepositoryProtocol,
     user_id: int,
     current_space_id: int,
     document_id: int,
@@ -216,7 +217,7 @@ def create_pdf_export(
 
 
 def download_pdf_export(
-    repository,
+    repository: RepositoryProtocol,
     user_id: int,
     current_space_id: int,
     export_id: int,
@@ -252,7 +253,7 @@ def download_pdf_export(
     return PdfArtifactDownload(content=content, filename=artifact_path.name, export_id=export_task.id)
 
 
-def _read_export_version(repository, document: Document, version_no: int | None) -> tuple[int, str]:
+def _read_export_version(repository: RepositoryProtocol, document: Document, version_no: int | None) -> tuple[int, str]:
     if version_no is None:
         return document.current_version, document.content_md
 

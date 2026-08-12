@@ -18,6 +18,7 @@ from typing import Any
 
 from backend.model.entities import TermCategory
 from backend.model.error_codes import ApiError, ErrorCode
+from backend.repository.protocol import RepositoryProtocol
 from backend.service.permission import is_space_member
 
 
@@ -82,12 +83,12 @@ class TermCategoryUpdateRequest:
     parent_id: Any = UNSET
 
 
-def _ensure_space_member(repository, user_id: int, space_id: int) -> None:
+def _ensure_space_member(repository: RepositoryProtocol, user_id: int, space_id: int) -> None:
     if not is_space_member(user_id, space_id, repository.list_memberships()):
         raise TermCategoryAccessError("space access denied")
 
 
-def _get_space_category(repository, space_id: int, category_id: int) -> TermCategory:
+def _get_space_category(repository: RepositoryProtocol, space_id: int, category_id: int) -> TermCategory:
     category = repository.get_term_category(category_id)
     if category is None or category.space_id != space_id:
         raise TermCategoryNotFoundError("category not found")
@@ -95,7 +96,7 @@ def _get_space_category(repository, space_id: int, category_id: int) -> TermCate
 
 
 def _ensure_no_name_clash(
-    repository,
+    repository: RepositoryProtocol,
     space_id: int,
     parent_id: int | None,
     name: str,
@@ -107,7 +108,7 @@ def _ensure_no_name_clash(
 
 
 def list_term_categories(
-    repository,
+    repository: RepositoryProtocol,
     user_id: int,
     space_id: int,
     parent_id: int | None = None,
@@ -136,7 +137,7 @@ def list_term_categories(
 
 
 def create_term_category(
-    repository,
+    repository: RepositoryProtocol,
     user_id: int,
     space_id: int,
     request: TermCategoryCreateRequest,
@@ -155,7 +156,7 @@ def create_term_category(
 
 
 def update_term_category(
-    repository,
+    repository: RepositoryProtocol,
     user_id: int,
     space_id: int,
     category_id: int,
@@ -188,7 +189,7 @@ def update_term_category(
     return category
 
 
-def delete_term_category(repository, user_id: int, space_id: int, category_id: int) -> None:
+def delete_term_category(repository: RepositoryProtocol, user_id: int, space_id: int, category_id: int) -> None:
     _ensure_space_member(repository, user_id, space_id)
     category = _get_space_category(repository, space_id, category_id)
     if not repository.is_term_category_empty(space_id, category.id):
@@ -197,7 +198,7 @@ def delete_term_category(repository, user_id: int, space_id: int, category_id: i
 
 
 def reorder_term_categories(
-    repository,
+    repository: RepositoryProtocol,
     user_id: int,
     space_id: int,
     parent_id: int | None,

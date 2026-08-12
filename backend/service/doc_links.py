@@ -15,6 +15,7 @@ from dataclasses import dataclass
 
 from backend.model.entities import DocLink
 from backend.model.error_codes import ApiError, ErrorCode
+from backend.repository.protocol import RepositoryProtocol
 from backend.service.document import get_visible_document
 from backend.service.permission import can_view_document
 
@@ -46,7 +47,7 @@ class DocLinkCreateRequest:
     link_type: str = "manual"
 
 
-def list_links(repository, user_id: int, current_space_id: int, document_id: int, direction: str) -> list[DocLinkView]:
+def list_links(repository: RepositoryProtocol, user_id: int, current_space_id: int, document_id: int, direction: str) -> list[DocLinkView]:
     # Sprint-27 P0：查询前先校验文档可见性（不可见 → DocumentNotFoundError → API 4004）。
     # 否则同空间成员可枚举他人 PRIVATE 文档 id，从出链 link_text 泄露私有正文片段。
     get_visible_document(repository, user_id, current_space_id, document_id)
@@ -82,7 +83,7 @@ def list_links(repository, user_id: int, current_space_id: int, document_id: int
     return views
 
 
-def upsert_link(repository, user_id: int, current_space_id: int, request: DocLinkCreateRequest) -> DocLink:
+def upsert_link(repository: RepositoryProtocol, user_id: int, current_space_id: int, request: DocLinkCreateRequest) -> DocLink:
     if request.link_type != "manual":
         raise DocLinkValidationError("only manual links can be registered; wikilinks are parsed from document content")
 

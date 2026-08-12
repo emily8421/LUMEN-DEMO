@@ -17,6 +17,7 @@ from dataclasses import dataclass
 
 from backend.model.entities import Document, Tag
 from backend.model.error_codes import ApiError, ErrorCode
+from backend.repository.protocol import RepositoryProtocol
 from backend.service.document import get_visible_document
 from backend.service.permission import (
     can_view_document,
@@ -91,19 +92,19 @@ def _normalize_tag_name(name: str) -> str:
     return name.strip().lower()
 
 
-def _ensure_space_member(repository, user_id: int, space_id: int) -> None:
+def _ensure_space_member(repository: RepositoryProtocol, user_id: int, space_id: int) -> None:
     if not is_space_member(user_id, space_id, repository.list_memberships()):
         raise TagAccessError("space access denied")
 
 
-def _get_space_tag(repository, space_id: int, tag_id: int) -> Tag:
+def _get_space_tag(repository: RepositoryProtocol, space_id: int, tag_id: int) -> Tag:
     tag = repository.get_tag(tag_id)
     if tag is None or tag.space_id != space_id:
         raise TagNotFoundError("tag not found")
     return tag
 
 
-def _visible_document_ids(repository, user_id: int, space_id: int, memberships) -> set[int]:
+def _visible_document_ids(repository: RepositoryProtocol, user_id: int, space_id: int, memberships) -> set[int]:
     return {
         document.id
         for document in repository.list_documents()
@@ -112,7 +113,7 @@ def _visible_document_ids(repository, user_id: int, space_id: int, memberships) 
 
 
 def list_tags(
-    repository,
+    repository: RepositoryProtocol,
     user_id: int,
     space_id: int,
     q: str | None = None,
@@ -137,7 +138,7 @@ def list_tags(
     return views
 
 
-def get_tag_detail(repository, user_id: int, space_id: int, tag_id: int) -> TagView:
+def get_tag_detail(repository: RepositoryProtocol, user_id: int, space_id: int, tag_id: int) -> TagView:
     _ensure_space_member(repository, user_id, space_id)
     tag = _get_space_tag(repository, space_id, tag_id)
     visible_ids = _visible_document_ids(repository, user_id, space_id, repository.list_memberships())
@@ -152,7 +153,7 @@ def get_tag_detail(repository, user_id: int, space_id: int, tag_id: int) -> TagV
     )
 
 
-def create_tag(repository, user_id: int, space_id: int, request: TagCreateRequest) -> Tag:
+def create_tag(repository: RepositoryProtocol, user_id: int, space_id: int, request: TagCreateRequest) -> Tag:
     _ensure_space_member(repository, user_id, space_id)
     name = request.name.strip()
     if not name:
@@ -170,7 +171,7 @@ def create_tag(repository, user_id: int, space_id: int, request: TagCreateReques
     )
 
 
-def update_tag(repository, user_id: int, space_id: int, tag_id: int, request: TagUpdateRequest) -> Tag:
+def update_tag(repository: RepositoryProtocol, user_id: int, space_id: int, tag_id: int, request: TagUpdateRequest) -> Tag:
     _ensure_space_member(repository, user_id, space_id)
     tag = _get_space_tag(repository, space_id, tag_id)
     new_name = request.name.strip() if request.name is not None else None
@@ -194,12 +195,12 @@ def update_tag(repository, user_id: int, space_id: int, tag_id: int, request: Ta
     )
 
 
-def archive_tag(repository, user_id: int, space_id: int, tag_id: int) -> Tag:
+def archive_tag(repository: RepositoryProtocol, user_id: int, space_id: int, tag_id: int) -> Tag:
     return update_tag(repository, user_id, space_id, tag_id, TagUpdateRequest(status="archived"))
 
 
 def list_document_tags(
-    repository,
+    repository: RepositoryProtocol,
     user_id: int,
     space_id: int,
     document_id: int,
@@ -219,7 +220,7 @@ def list_document_tags(
     return views
 
 
-def add_document_tag(repository, user_id: int, space_id: int, document_id: int, tag_id: int):
+def add_document_tag(repository: RepositoryProtocol, user_id: int, space_id: int, document_id: int, tag_id: int):
     document = get_visible_document(repository, user_id, space_id, document_id)
     if not can_write_document(user_id, space_id, document, repository.list_memberships()):
         raise TagAccessError("document not writable")
@@ -229,7 +230,7 @@ def add_document_tag(repository, user_id: int, space_id: int, document_id: int, 
     return repository.upsert_document_tag(tag_id, document_id, "manual", user_id)
 
 
-def remove_document_tag(repository, user_id: int, space_id: int, document_id: int, tag_id: int) -> bool:
+def remove_document_tag(repository: RepositoryProtocol, user_id: int, space_id: int, document_id: int, tag_id: int) -> bool:
     document = get_visible_document(repository, user_id, space_id, document_id)
     if not can_write_document(user_id, space_id, document, repository.list_memberships()):
         raise TagAccessError("document not writable")
@@ -237,7 +238,7 @@ def remove_document_tag(repository, user_id: int, space_id: int, document_id: in
 
 
 def list_documents_by_tag(
-    repository,
+    repository: RepositoryProtocol,
     user_id: int,
     space_id: int,
     tag_id: int,

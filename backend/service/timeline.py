@@ -12,6 +12,7 @@ from typing import Literal
 
 from backend.model.entities import Document, DocumentChunk
 from backend.model.error_codes import ApiError, ErrorCode
+from backend.repository.protocol import RepositoryProtocol
 from backend.service.permission import filter_visible_documents, is_space_member
 
 
@@ -62,7 +63,7 @@ class TimelineView:
 
 
 def get_timeline(
-    repository,
+    repository: RepositoryProtocol,
     user_id: int,
     space_id: int,
     q: str | None = None,
@@ -130,7 +131,7 @@ def _parse_datetime(value: str) -> datetime:
     return parsed.replace(tzinfo=None)
 
 
-def _match_topic_document_ids(repository, visible_documents: list[Document], query: str) -> set[int]:
+def _match_topic_document_ids(repository: RepositoryProtocol, visible_documents: list[Document], query: str) -> set[int]:
     visible_ids = [document.id for document in visible_documents]
     title_matches = {document.id for document in visible_documents if query in document.title.lower()}
     chunk_matches = {
@@ -138,14 +139,12 @@ def _match_topic_document_ids(repository, visible_documents: list[Document], que
         for chunk in repository.list_all_document_chunks()
         if chunk.document_id in visible_ids and query in chunk.text.lower()
     }
-    search_chunks = getattr(repository, "search_chunks", None)
-    if search_chunks is not None:
-        recall_limit = max(len(visible_ids) * 5, 20)
-        chunk_matches.update(chunk.document_id for chunk in search_chunks(visible_ids, query, limit=recall_limit))
+    recall_limit = max(len(visible_ids) * 5, 20)
+    chunk_matches.update(chunk.document_id for chunk in repository.search_chunks(visible_ids, query, limit=recall_limit))
     return title_matches | chunk_matches
 
 
-def _match_tag_document_ids(repository, space_id: int, tag_ids: tuple[int, ...]) -> set[int]:
+def _match_tag_document_ids(repository: RepositoryProtocol, space_id: int, tag_ids: tuple[int, ...]) -> set[int]:
     matched: set[int] = set()
     for tag_id in tag_ids:
         tag = repository.get_tag(tag_id)
@@ -156,7 +155,7 @@ def _match_tag_document_ids(repository, space_id: int, tag_ids: tuple[int, ...])
 
 
 def _collect_events(
-    repository,
+    repository: RepositoryProtocol,
     space_id: int,
     documents: list[Document],
     range_start: datetime | None,
@@ -191,7 +190,7 @@ def _document_events(
 
 
 def _tag_events(
-    repository,
+    repository: RepositoryProtocol,
     document: Document,
     range_start: datetime | None,
     range_end: datetime | None,
@@ -205,7 +204,7 @@ def _tag_events(
 
 
 def _link_events(
-    repository,
+    repository: RepositoryProtocol,
     space_id: int,
     document: Document,
     range_start: datetime | None,
