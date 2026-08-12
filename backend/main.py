@@ -5,15 +5,8 @@ from __future__ import annotations
 import logging
 import os
 
-try:
-    from fastapi import FastAPI, HTTPException, Request
-    from fastapi.responses import JSONResponse
-except ImportError:  # pragma: no cover - allows tests before dependencies are installed
-    FastAPI = None
-    HTTPException = None
-    Request = None
-    JSONResponse = None
-
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
 
 from contextlib import asynccontextmanager
 
@@ -51,9 +44,6 @@ async def lifespan(_app):
 
 
 def create_app():
-    if FastAPI is None:
-        raise RuntimeError("FastAPI is not installed")
-
     from backend.api.admin import router as admin_router
     from backend.api.auth import router as auth_router
     from backend.api.doc_links import router as doc_links_router

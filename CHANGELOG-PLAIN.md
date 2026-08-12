@@ -7,7 +7,21 @@
 - 继承的母模板版本：`TEMPLATE-BASE.md`
 - 母模板发布说明：`upstream/CHANGELOG.md` / `upstream/CHANGELOG-PLAIN.md`
 
-历史上随模板同步带入的 `v1.x` 记录不再在本文重复展开；需要审计时看 `CHANGELOG.md` 的“历史模板同步记录”和 `sync-records/template-sync/`。
+历史上随模板同步带入的 `v1.x` 记录不再在本文重复展开；需要审计时看 `CHANGELOG.md` 的”历史模板同步记录”和 `sync-records/template-sync/`。
+
+## v3.8.11（2026-08-12）
+
+这版给后端补了一个”类型检查器”（mypy）——之前后端只有 ruff（查代码规范）和 pytest（查行为），没人查”类型对不对”（比如函数声明接收 `int`，调用方却传了 `int | None`，运行时可能出 None bug）。这次补上，复刻之前给前端加 ESLint 的”先软后硬”三步走：
+
+1. **装检查器 + 摸清家底**（Slice A）：引入 mypy，首跑发现 **190 个类型问题**。
+2. **揪出真问题 + 清存量**（Slice B，分两刀）：
+   - 最有价值的一刀：发现 **45 处 `current_space_id`（可能为 None）传给了声明”必填 int”的函数**——这是真实的类型契约缺口（”未选空间时调文档操作”的 None 路径没被后端处理），ruff 和编译器都抓不到，mypy 一跑就抓到。修法是把入口的 `TokenContext.current_space_id` 收紧成”必填 int”，并在鉴权入口拦截 None（要求重新登录选空间）。
+   - 顺手修了 ~20 个真实类型 bug（`re.match` 结果可能 None 却直接取值、SQLAlchemy `rowcount` 用法、几处”更新后可能 None”没守卫等）。
+   - 清掉 120 处”以防 fastapi 没装”的死代码（19 个文件里 `try: import fastapi except: 用假的顶上`——fastapi 是必装依赖，这段从来跑不到，代码自己都标了”覆盖不到”）。
+3. **CI 接入**：加 `backend-typecheck` 检查任务到 CI，从”不阻断”起步，清完 190 个问题后升为”必须通过”。
+4. **验证**：类型检查 **190→0 问题** + ruff 通过 + 307 个测试全过（新增 1 个”None 拦截”单测）+ CI 检查任务绿灯。
+
+> 版本从 3.8.10 升到 3.8.11（PATCH——纯工程治理引入类型检查工具，不改任何功能）。详见 `CHANGELOG.md`。
 
 ## v3.8.10（2026-08-12）
 

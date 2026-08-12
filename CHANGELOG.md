@@ -6,6 +6,18 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.8.11（2026-08-12）
+
+**维护态批14（Sprint-39）：后端引入 mypy 类型检查（mypy B1，NFR-006 P1 落地 / CQ-P1-002 Slice C 收益兑现前提）。纯工程治理引入类型检查器、非功能，不改 Phase / 交付物范围 / 对外 API 语义 / DB；新增 1 个后端 devDep（mypy）。聚合 bump PATCH。**
+
+- **Slice A**（PR #148 `de88d3a`，装依赖 + 配置 + advisory CI）：`backend/requirements-dev.txt` 加 `mypy==2.3.0`（支持 python_version=3.14）+ 根 `mypy.ini`（默认非 strict，查 `backend/` 不含 tests；ASCII 注释避 Windows gbk 编码坑）+ `.github/workflows/project-check.yml` 加 `backend-typecheck` job（advisory 起步 `continue-on-error`）。首跑基线 **190 errors / 28 files**。
+- **Slice B-1**（PR #149 `18a6a63`，current_space_id C + reportlab + 真实 bug，190→119）：`TokenContext.current_space_id` `int|None`→`int` + `get_current_user` 入口 fail-closed guard（None→401/4001 重登录；DB 列 nullable 不动）——清 45 条 api arg-type（**mypy 核心价值兑现：current_space_id None 传播契约缺口，ruff/tsc 抓不到**）；`mypy.ini` reportlab override（清 8 import-untyped）；真实 bug 修复 ~18（export re.match if/elif、uow _token 注解+assert、pg_repository cast(CursorResult) rowcount + user None guard、demo replace dict[str,Any]、quick_entry/db/tag guard）。
+- **Slice B-2**（本 PR，§3 删 try/except + 补 assert + 升 required，119→0）：删 19 文件（17 api + main.py + auth_context.py）的 `try: from fastapi import except ImportError` 防御块 + `if APIRouter is not None:` 包裹（改直接 import + 顶层代码，main.py/auth_context.py 特殊 guard 删）；补 6 处 service 层 `repository.move/rename/update_X` 返回 `X|None` 临时变量 narrow（term_category/folder/quick_entry，与 B-1 tag.py:188 同类）。`mypy backend` **0 error** + 移除 `continue-on-error` 升 required。
+- **关键价值兑现**：mypy 抓到 ruff/tsc 都抓不到的 ① **current_space_id `int|None`→service(int) None 传播缺口** 45 条（api 层契约不一致）；② 真实类型 bug ~20（re.match None 守卫 / Result.rowcount 误用 / tuple|None 未守卫 / repository.update 返回 None 未守卫 等）。
+- **验证**：mypy **190→0** + ruff passed + 默认 **307 passed**（+1 None guard 单测）零回归 + CI `backend-typecheck` required 绿。
+
+> PATCH 依据（`ai/project-rules.md` §2.4.1）：纯工程治理引入类型检查器 + CI 门，不改对外 API 契约语义 / DB / 不新增可演示能力（mypy 属 dev 依赖，非运行时）。验证：mypy 0 + ruff passed + pytest 307 零回归 + CI backend-typecheck required 绿。实施口径 `tasks/task-046-backend-mypy.md`；实证 `docs/research/2026-08-12-backend-mypy-b1-assessment.md`。
+
 ## v3.8.10（2026-08-12）
 
 **维护态批13（Sprint-38）：前端引入 ESLint（eslint B1，NFR-006 P1 落地）。纯工程治理引入 lint 工具、非功能，不改 Phase / 交付物范围 / 对外 API 语义 / DB；新增 5 个前端 devDeps（eslint 工具链）。聚合 bump PATCH。**

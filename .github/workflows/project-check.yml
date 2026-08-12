@@ -225,15 +225,14 @@ jobs:
       - name: Ruff check (E4/E7/E9/F, no format)
         run: ruff check backend/ tests/backend/
 
-  # --- 维护态批14 / mypy B1 Slice A：后端类型检查 advisory 起步 ---
+  # --- 维护态批14 / mypy B1 全闭环：后端类型检查 required ---
   # 复刻 eslint B1 三段式（rollout §4 轨道3 + docs/research/2026-08-12-backend-mypy-b1-assessment.md）：
-  # Slice A advisory 起步量化基线（首跑 190）→ Slice B 清零 + 升 required。
+  # Slice A advisory 起步（基线 190）→ Slice B 清零（current_space_id C + reportlab + 真实 bug + §3 删 try/except）→ 升 required。
   # mypy 默认非 strict（根 mypy.ini），查 backend/（不含 tests）；
   # mypy 需运行依赖 py.typed stub（fastapi 等），故装 requirements.txt + requirements-dev.txt。
   backend-typecheck:
-    name: Backend mypy typecheck (advisory baseline)
+    name: Backend mypy typecheck
     runs-on: ubuntu-latest
-    continue-on-error: true   # advisory 起步（Slice A）；Slice B 清零后移除升 required
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

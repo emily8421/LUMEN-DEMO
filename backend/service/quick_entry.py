@@ -142,9 +142,11 @@ def capture_quick_entry(
                 permission=DocumentPermission.PRIVATE,
             ),
         )
-        entry = repository.update_quick_entry(
+        updated = repository.update_quick_entry(
             entry.id, status="converted", created_document_id=document.id
         )
+        assert updated is not None
+        entry = updated
         _apply_tags(repository, document.id, request.tag_ids, user_id)
     elif request.mode == "append_document":
         if request.target_document_id is None:
@@ -160,9 +162,11 @@ def capture_quick_entry(
             document.id,
             DocumentUpdate(title=document.title, content_md=appended, permission=document.permission),
         )
-        entry = repository.update_quick_entry(
+        updated = repository.update_quick_entry(
             entry.id, status="converted", target_document_id=document.id
         )
+        assert updated is not None
+        entry = updated
         _apply_tags(repository, document.id, request.tag_ids, user_id)
 
     return _to_view(entry)

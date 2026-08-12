@@ -33,114 +33,106 @@ from backend.service.folder import (
     update_folder,
 )
 
-try:
-    from fastapi import APIRouter, Depends
-    from pydantic import BaseModel
-except ImportError:  # pragma: no cover - allows service tests before dependencies are installed
-    APIRouter = None
-    BaseModel = object
+from fastapi import APIRouter, Depends
+from pydantic import BaseModel
 
 
-if APIRouter is not None:
-    router = APIRouter(tags=["folders"])
+router = APIRouter(tags=["folders"])
 
-    class FolderCreateBody(BaseModel):
-        name: str
-        parent_id: int | None = None
+class FolderCreateBody(BaseModel):
+    name: str
+    parent_id: int | None = None
 
-    class FolderUpdateBody(BaseModel):
-        name: str | None = None
-        parent_id: int | None = None
+class FolderUpdateBody(BaseModel):
+    name: str | None = None
+    parent_id: int | None = None
 
-    class FolderReorderBody(BaseModel):
-        parent_id: int | None = None
-        ordered_ids: list[int]
+class FolderReorderBody(BaseModel):
+    parent_id: int | None = None
+    ordered_ids: list[int]
 
-    @router.get("/api/folders")
-    def list_folders_endpoint(
-        parent_id: int | None = None,
-        ctx: TokenContext = Depends(get_current_user),
-    ) -> dict[str, object]:
-        views = list_folders(repository, ctx.user_id, ctx.current_space_id, parent_id)
-        items = [_folder_view(v) for v in views]
-        return {"code": 0, "msg": "ok", "data": {"items": items, "total": len(items)}}
+@router.get("/api/folders")
+def list_folders_endpoint(
+    parent_id: int | None = None,
+    ctx: TokenContext = Depends(get_current_user),
+) -> dict[str, object]:
+    views = list_folders(repository, ctx.user_id, ctx.current_space_id, parent_id)
+    items = [_folder_view(v) for v in views]
+    return {"code": 0, "msg": "ok", "data": {"items": items, "total": len(items)}}
 
-    @router.post("/api/folders")
-    def create_folder_endpoint(
-        request: FolderCreateBody,
-        ctx: TokenContext = Depends(get_current_user),
-    ) -> dict[str, object]:
-        folder = create_folder(
-            repository,
-            ctx.user_id,
-            ctx.current_space_id,
-            FolderCreateRequest(name=request.name, parent_id=request.parent_id),
-        )
-        return {"code": 0, "msg": "ok", "data": _folder_detail(folder)}
+@router.post("/api/folders")
+def create_folder_endpoint(
+    request: FolderCreateBody,
+    ctx: TokenContext = Depends(get_current_user),
+) -> dict[str, object]:
+    folder = create_folder(
+        repository,
+        ctx.user_id,
+        ctx.current_space_id,
+        FolderCreateRequest(name=request.name, parent_id=request.parent_id),
+    )
+    return {"code": 0, "msg": "ok", "data": _folder_detail(folder)}
 
-    @router.patch("/api/folders/{folder_id}")
-    def update_folder_endpoint(
-        folder_id: int,
-        request: FolderUpdateBody,
-        ctx: TokenContext = Depends(get_current_user),
-    ) -> dict[str, object]:
-        fields = _fields_set(request)
-        name = request.name if "name" in fields else UNSET
-        target_parent = request.parent_id if "parent_id" in fields else UNSET
-        folder = update_folder(
-            repository,
-            ctx.user_id,
-            ctx.current_space_id,
-            folder_id,
-            FolderUpdateRequest(name=name, parent_id=target_parent),
-        )
-        return {"code": 0, "msg": "ok", "data": _folder_detail(folder)}
+@router.patch("/api/folders/{folder_id}")
+def update_folder_endpoint(
+    folder_id: int,
+    request: FolderUpdateBody,
+    ctx: TokenContext = Depends(get_current_user),
+) -> dict[str, object]:
+    fields = _fields_set(request)
+    name = request.name if "name" in fields else UNSET
+    target_parent = request.parent_id if "parent_id" in fields else UNSET
+    folder = update_folder(
+        repository,
+        ctx.user_id,
+        ctx.current_space_id,
+        folder_id,
+        FolderUpdateRequest(name=name, parent_id=target_parent),
+    )
+    return {"code": 0, "msg": "ok", "data": _folder_detail(folder)}
 
-    @router.delete("/api/folders/{folder_id}")
-    def delete_folder_endpoint(
-        folder_id: int,
-        ctx: TokenContext = Depends(get_current_user),
-    ) -> dict[str, object]:
-        delete_folder(repository, ctx.user_id, ctx.current_space_id, folder_id)
-        return {"code": 0, "msg": "ok", "data": {"deleted": True}}
+@router.delete("/api/folders/{folder_id}")
+def delete_folder_endpoint(
+    folder_id: int,
+    ctx: TokenContext = Depends(get_current_user),
+) -> dict[str, object]:
+    delete_folder(repository, ctx.user_id, ctx.current_space_id, folder_id)
+    return {"code": 0, "msg": "ok", "data": {"deleted": True}}
 
-    @router.post("/api/folders/reorder")
-    def reorder_folders_endpoint(
-        request: FolderReorderBody,
-        ctx: TokenContext = Depends(get_current_user),
-    ) -> dict[str, object]:
-        reorder_folders(
-            repository,
-            ctx.user_id,
-            ctx.current_space_id,
-            request.parent_id,
-            request.ordered_ids,
-        )
-        return {"code": 0, "msg": "ok", "data": {"ok": True}}
+@router.post("/api/folders/reorder")
+def reorder_folders_endpoint(
+    request: FolderReorderBody,
+    ctx: TokenContext = Depends(get_current_user),
+) -> dict[str, object]:
+    reorder_folders(
+        repository,
+        ctx.user_id,
+        ctx.current_space_id,
+        request.parent_id,
+        request.ordered_ids,
+    )
+    return {"code": 0, "msg": "ok", "data": {"ok": True}}
 
-    def _fields_set(model) -> set[str]:
-        # Pydantic v2: model_fields_set；v1: __fields_set__
-        return getattr(model, "model_fields_set", None) or getattr(model, "__fields_set__", set()) or set()
+def _fields_set(model) -> set[str]:
+    # Pydantic v2: model_fields_set；v1: __fields_set__
+    return getattr(model, "model_fields_set", None) or getattr(model, "__fields_set__", set()) or set()
 
-    def _folder_view(view: FolderView) -> dict[str, object]:
-        return {
-            "id": view.id,
-            "name": view.name,
-            "parent_id": view.parent_id,
-            "order": view.order,
-            "document_count": view.document_count,
-            "child_folder_count": view.child_folder_count,
-            "created_at": view.created_at,
-            "updated_at": view.updated_at,
-        }
+def _folder_view(view: FolderView) -> dict[str, object]:
+    return {
+        "id": view.id,
+        "name": view.name,
+        "parent_id": view.parent_id,
+        "order": view.order,
+        "document_count": view.document_count,
+        "child_folder_count": view.child_folder_count,
+        "created_at": view.created_at,
+        "updated_at": view.updated_at,
+    }
 
-    def _folder_detail(folder) -> dict[str, object]:
-        return {
-            "id": folder.id,
-            "name": folder.name,
-            "parent_id": folder.parent_id,
-            "order": folder.order,
-        }
-
-else:
-    router = None
+def _folder_detail(folder) -> dict[str, object]:
+    return {
+        "id": folder.id,
+        "name": folder.name,
+        "parent_id": folder.parent_id,
+        "order": folder.order,
+    }

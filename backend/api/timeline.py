@@ -10,66 +10,59 @@ from backend.service.timeline import (
     get_timeline,
 )
 
-try:
-    from fastapi import APIRouter, Depends, Query
-except ImportError:  # pragma: no cover - allows service tests before dependencies are installed
-    APIRouter = None
-    Query = None
+from fastapi import APIRouter, Depends, Query
 
 
-if APIRouter is not None:
-    router = APIRouter(prefix="/api/spaces", tags=["timeline"])
+router = APIRouter(prefix="/api/spaces", tags=["timeline"])
 
-    @router.get("/{space_id}/timeline")
-    def timeline_endpoint(
-        space_id: int,
-        q: str | None = None,
-        from_: str | None = Query(default=None, alias="from"),
-        to: str | None = None,
-        tag_ids: list[int] | None = Query(default=None),
-        density: bool = True,
-        ctx: TokenContext = Depends(get_current_user),
-    ) -> dict[str, object]:
-        view = get_timeline(
-            repository=repository,
-            user_id=ctx.user_id,
-            space_id=space_id,
-            q=q,
-            from_date=from_,
-            to_date=to,
-            tag_ids=tuple(tag_ids or ()),
-            density=density,
-        )
+@router.get("/{space_id}/timeline")
+def timeline_endpoint(
+    space_id: int,
+    q: str | None = None,
+    from_: str | None = Query(default=None, alias="from"),
+    to: str | None = None,
+    tag_ids: list[int] | None = Query(default=None),
+    density: bool = True,
+    ctx: TokenContext = Depends(get_current_user),
+) -> dict[str, object]:
+    view = get_timeline(
+        repository=repository,
+        user_id=ctx.user_id,
+        space_id=space_id,
+        q=q,
+        from_date=from_,
+        to_date=to,
+        tag_ids=tuple(tag_ids or ()),
+        density=density,
+    )
 
-        return {
-            "code": 0,
-            "msg": "ok",
-            "data": {
-                "items": [_event_view(item) for item in view.items],
-                "density": [_density_view(item) for item in view.density],
-                "degraded": view.degraded,
-                "window": view.window,
-            },
-        }
+    return {
+        "code": 0,
+        "msg": "ok",
+        "data": {
+            "items": [_event_view(item) for item in view.items],
+            "density": [_density_view(item) for item in view.density],
+            "degraded": view.degraded,
+            "window": view.window,
+        },
+    }
 
 
-    def _event_view(event: TimelineEvent) -> dict[str, object]:
-        return {
-            "date": event.date,
-            "document_id": event.document_id,
-            "title": event.title,
-            "event_type": event.event_type,
-            "permission": event.permission,
-            "actor": event.actor,
-        }
+def _event_view(event: TimelineEvent) -> dict[str, object]:
+    return {
+        "date": event.date,
+        "document_id": event.document_id,
+        "title": event.title,
+        "event_type": event.event_type,
+        "permission": event.permission,
+        "actor": event.actor,
+    }
 
-    def _density_view(item: TimelineDensityWindow) -> dict[str, object]:
-        return {
-            "window_start": item.window_start,
-            "window_end": item.window_end,
-            "event_count": item.event_count,
-            "level": item.level,
-            "ratio": item.ratio,
-        }
-else:
-    router = None
+def _density_view(item: TimelineDensityWindow) -> dict[str, object]:
+    return {
+        "window_start": item.window_start,
+        "window_end": item.window_end,
+        "event_count": item.event_count,
+        "level": item.level,
+        "ratio": item.ratio,
+    }
