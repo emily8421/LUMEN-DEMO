@@ -6,6 +6,17 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.8.8（2026-08-12）
+
+**维护态批11（Sprint-36）：PG integration 全量入 CI gate——新增独立 `backend-integration` job。纯工程治理配置、非功能，不改 Phase / 交付物范围 / 对外 API 语义 / DB / 依赖。聚合 bump PATCH。**
+
+- **新增 CI job**（`.github/workflows/project-check.yml`）`backend-integration`：独立 job 跑 PG integration 全量 48 用例——`pgvector/pgvector:pg16` 服务容器（healthcheck `pg_isready -h 127.0.0.1` 走 TCP，不挂 `/docker-entrypoint-initdb.d/`）+ guard 三 env + fail-closed 预检（复用 `tests/backend/pg_test_support.assert_test_database_safe` → 连 `DATABASE_URL` → `InvalidCatalogName` 幂等补建 `lumen_test` → 校验 `pg_available_extensions` 含 vector）+ pytest `-m integration` + 行尾 grep `passed` 防全 skip 假绿。单元 gate（backend-test）保持无 DB 依赖 hermetic；integration gate 可单独 required。
+- **关键实现点**：不挂 `/docker-entrypoint-initdb.d/`（服务容器先于 checkout 启动，缺失源 bind-mount 成空目录会炸容器）；healthcheck 走 TCP（官方镜像 init 阶段临时 server 仅 unix socket）；预检 fail-closed 杜绝「PG 不可达 / 库缺失 / 镜像缺 pgvector → 整类 `SkipTest` 静默假绿」。
+- **验证**：本地 integration 全量 **48 passed**（32s，零 skip 零失败）+ 预检脚本本地跑通（PG OK + pgvector 可装）+ 负向 smoke（开发库 `lumen` / 缺 `ALLOW_DESTRUCTIVE_TEST_DB` → `UnsafeTestDatabaseError` 硬失败）+ 默认 **306 passed** 零回归 + ruff 37 不增 + PR CI `backend-integration` 绿。
+- **回写**：`docs/05 §4.2.4`（integration 入 gate「另议」→ 已落地）+ `docs/08` Sprint-36 + `ai/project-rules.md §1` 维护态批11 + `docs/research/2026-08-10-code-governance-rollout-plan.md` §8。
+
+> PATCH 依据（`ai/project-rules.md` §2.4.1）：CI 配置 / 工程治理调整，非功能、不改对外 API 契约语义、不新增可演示能力。验证：本地 integration 48 passed + 默认 306 零回归 + ruff 37 不增。**integration 全量入 CI gate 已落地（闭环 `docs/05 §4.2.4` 另议）**；merge 后待管理员将 `backend-integration` 升为 main required check（先 merge 再设 required，观察 2-3 PR 稳定）。实施口径 `docs/research/2026-08-10-code-governance-rollout-plan.md` §5 轨道C。
+
 ## v3.8.7（2026-08-12）
 
 **维护态批10（Sprint-35）：7 个存量 PG integration 失败整治——补 17 处缺失的 `session.flush()`。纯债修复、非功能，不改 Phase / 交付物范围 / 对外 API 语义 / DB / 依赖。聚合 bump PATCH。**

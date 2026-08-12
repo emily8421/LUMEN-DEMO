@@ -156,6 +156,7 @@ README / backend README / demo-guide 推荐的 `unittest discover` 在开发库�
 | 前端 ratchet | 3 | ⏳ | — | P2 |
 | 配置集中 | 3 | ⏳ | — | P2 |
 | 日志统一 | 3 | ⏳ | — | P2 |
+| integration 全量入 CI gate | 2/3 | ✅ 已落地（维护态批11 / v3.8.8） | PR | 独立 `backend-integration` job（pgvector 服务容器 + fail-closed 预检 + 48 用例），闭环 docs/05 §4.2.4「另议」；merge 后待管理员升 required |
 
 （状态记号：⏳ 未开始 / 🚧 进行中 / ✅ 完成 / ⛔ 阻塞）
 
@@ -165,6 +166,7 @@ README / backend README / demo-guide 推荐的 `unittest discover` 在开发库�
 - **P0-1/P0-2 联合裁决定稿**（2026-08-10 裁决 / 2026-08-11 落盘 §3）：rollout 原方案 × 评估报告 → §3 已按评估修订口径重写并经代码核实。关键裁决：① PG 测试面 **4 个**（非 1 个）；② guard 落 `tests/backend/pg_test_support.py`（不进生产 service），三重 fail-closed 抛 `UnsafeTestDatabaseError` 不降级 skip；③ 根 `pytest.ini` + 根 `ruff.toml`；④ CI **A1**：backend-test / frontend-build advisory 起步 → 同 PR 内基线清完、合并前升 required，ruff 恒 advisory；⑤ **B1**：eslint 暂缓记 P1（05 §4.2.4 留痕）；⑥ 不新增前端 typecheck（build 已含 `tsc -b`）；⑦ 拟定 `NFR-005/006 + task-041/042 + TC-P2-GOV-001/002`，Sprint-31（维护态批6），目标版本 **v3.8.0**（MINOR，project-rules §2.4.2「Sprint 验收触发」）。
 - **轨道 1 回流节奏**：L0 基线提案（已入库）立即 submit-proposal；test DB guard 规则文本（`TEMPLATE-UPGRADE-db-safety-concern`）待 P0-1 落地后起草（用实现经验写准 `DB-SAFE-001`）。
 - 轨道 2/3 代码改动均未开始。下一步：立项回写（02/03/05/08/09/project-rules）→ 编码 P0-1/P0-2（走 PR）。
+- **2026-08-12 追加（维护态批11 / v3.8.8）**：轨道 3 P1 已按序闭环 005（v3.8.4）/ 002（v3.8.5）/ 003（v3.8.6）+ 7 个存量 integration 失败整治（v3.8.7）+ **integration 全量入 CI gate**（新增独立 `backend-integration` job，闭环 docs/05 §4.2.4「另议」；merge 后待管理员升 main required check，先 merge 再设、观察 2-3 PR 稳定）。详见 `docs/research/2026-08-12-code-governance-closure-summary.md`。
 
 ## 9. 待人工确认项
 
