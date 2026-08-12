@@ -32,3 +32,8 @@
 | `TEMPLATE-UPGRADE-web-fullstack-skeleton-gate.md`（issue #187） | `v1.48.0` / `v1.57.0`，本项目已同步至 `v1.59.0` | Web Fullstack Profile 先落地为 Web 特化结构门禁，后续由 v1.57.0 通用 System Skeleton Gate 吸收并保留 Web 特化扩展。 |
 | `TEMPLATE-UPGRADE-windows-utf8-rule-reading.md`（issue #207） | `v1.52.5`，本项目已同步至 `v1.59.0` | `ai/rules-core.md`、`ai/session-rules.md`、`ai/commands/resume.md` 已补 Windows / PowerShell 中文规则显式 UTF-8 读取与乱码处理。 |
 | `TEMPLATE-UPGRADE-app-main-file-size-rule.md`（issue #232） | `v1.56.3`，本项目已同步至 `v1.59.0` | `template-docs/web-fullstack-profile.md` 已补主应用文件职责边界、业务下沉约束和 state / handler 软上限；行数阈值已由 Web Profile 覆盖。 |
+| `TEMPLATE-UPGRADE-powershell-start-process-path-normalization.md`（issue #293 / #296） | v1.59.1 / v1.59.2（PR #295 / #298），LUMEN 待下行同步 | `Repair-ProcessPathEnvironment` 脚本 helper + `demo-runbook-template §4` Windows Start-Process 指南；core ask 由 #295 覆盖、#296 补文档 residual。 |
+| `TEMPLATE-UPGRADE-token-hotspot-trigger-nudge.md`（issue #312） | v1.60.3（PR #315），LUMEN 待下行同步 | `session-rules §4` 收尾自检项 + §4.1 触发强化 + §4.2 收尾即查未汇总计数。 |
+| `TEMPLATE-UPGRADE-handoff-checkpoint-rollup.md`（issue #314） | v1.61.0（PR #327），LUMEN 待下行同步 | `session-rules §6.1` handoff Latest checkpoint rollup 机制；派生项目已按 §6.1 实战验证（265KB→19KB），实证评论已补 #314。 |
+| `TEMPLATE-UPGRADE-db-safety-concern.md`（issue #320） | v1.61.0（PR #326 Batch A），LUMEN 待下行同步 | `implementation-lifecycle-rules §6` 破坏性测试数据库安全 guard。 |
+| `TEMPLATE-UPGRADE-global-rules-l0-code-principles.md`（issue #322） | v1.61.0（PR #326 Batch A），LUMEN 待下行同步 | `global-rules §2` L0 通用代码原则基线。 |
