@@ -185,7 +185,7 @@ def update_tag(repository: RepositoryProtocol, user_id: int, space_id: int, tag_
             raise TagConflictError("tag name already exists in this space")
     if request.status is not None and request.status not in ("active", "archived"):
         raise TagValidationError("status must be active or archived")
-    return repository.update_tag(
+    updated = repository.update_tag(
         tag_id=tag_id,
         name=new_name,
         normalized_name=new_norm,
@@ -193,6 +193,9 @@ def update_tag(repository: RepositoryProtocol, user_id: int, space_id: int, tag_
         description=request.description,
         status=request.status,
     )
+    if updated is None:
+        raise TagNotFoundError("tag not found")
+    return updated
 
 
 def archive_tag(repository: RepositoryProtocol, user_id: int, space_id: int, tag_id: int) -> Tag:

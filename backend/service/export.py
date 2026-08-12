@@ -433,11 +433,14 @@ def _markdown_to_pdf_story(content_md: str, styles, Table, TableStyle, colors, P
 
         unordered = re.match(r"^[-*]\s+(.+)$", stripped)
         ordered = re.match(r"^(\d+)\.\s+(.+)$", stripped)
-        if unordered or ordered:
+        if unordered:
             flush_paragraph()
-            prefix = "-" if unordered else f"{ordered.group(1)}."
-            text = unordered.group(1) if unordered else ordered.group(2)
-            story.append(Paragraph(f"{prefix} {_escape_inline(text)}", styles["bullet"]))
+            story.append(Paragraph(f"- {_escape_inline(unordered.group(1))}", styles["bullet"]))
+            index += 1
+            continue
+        elif ordered:
+            flush_paragraph()
+            story.append(Paragraph(f"{ordered.group(1)}. {_escape_inline(ordered.group(2))}", styles["bullet"]))
             index += 1
             continue
 

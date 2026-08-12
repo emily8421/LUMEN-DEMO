@@ -15,7 +15,7 @@ session（有则复用、无则自建并自行 commit）；多步用例在 servi
 from __future__ import annotations
 
 from contextlib import contextmanager
-from contextvars import ContextVar
+from contextvars import ContextVar, Token
 from typing import Iterator, Protocol, runtime_checkable
 
 from sqlalchemy.orm import Session
@@ -57,7 +57,7 @@ class UnitOfWork:
 
     def __init__(self) -> None:
         self._session: Session | None = None
-        self._token = None
+        self._token: Token[Session | None] | None = None
         self._joined = False
 
     def __enter__(self) -> "UnitOfWork":
@@ -84,6 +84,7 @@ class UnitOfWork:
                 session.rollback()
         finally:
             session.close()
+            assert self._token is not None  # 非 joined 路径 __enter__ 已 set token
             _current_session.reset(self._token)
         # 返回 None → 不吞异常，原样冒泡走 main.py ApiError handler
 

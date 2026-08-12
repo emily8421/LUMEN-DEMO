@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from datetime import UTC, datetime
+from typing import Any
 
 from backend.model.entities import (
     AiDraft,
@@ -828,7 +829,7 @@ class DemoRepository(RepositoryProtocol):
         for index, tag in enumerate(self.tags):
             if tag.id != tag_id:
                 continue
-            fields: dict[str, object] = {"updated_at": _now_iso()}
+            fields: dict[str, Any] = {"updated_at": _now_iso()}
             if name is not None and normalized_name is not None:
                 fields["name"] = name
                 fields["normalized_name"] = normalized_name
@@ -931,7 +932,7 @@ class DemoRepository(RepositoryProtocol):
         for index, entry in enumerate(self.quick_entries):
             if entry.id != entry_id:
                 continue
-            fields: dict[str, object] = {"updated_at": _now_iso()}
+            fields: dict[str, Any] = {"updated_at": _now_iso()}
             if status is not None:
                 fields["status"] = status
             if target_document_id is not None:

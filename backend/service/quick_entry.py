@@ -147,6 +147,8 @@ def capture_quick_entry(
         )
         _apply_tags(repository, document.id, request.tag_ids, user_id)
     elif request.mode == "append_document":
+        if request.target_document_id is None:
+            raise QuickEntryValidationError("target_document_id required for append_document mode")
         document = get_visible_document(repository, user_id, space_id, request.target_document_id)
         if not can_write_document(user_id, space_id, document, repository.list_memberships()):
             raise QuickEntryAccessError("target document not writable")
@@ -175,6 +177,7 @@ def discard_quick_entry(repository: RepositoryProtocol, user_id: int, space_id: 
     if entry.status != "draft":
         raise QuickEntryValidationError("only draft entries can be discarded")
     updated = repository.update_quick_entry(entry_id, status="discarded")
+    assert updated is not None  # entry 存在已由上方 get_quick_entry + 归属校验守卫
     return _to_view(updated)
 
 

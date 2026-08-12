@@ -30,13 +30,13 @@ except ImportError:  # pragma: no cover - allows service tests before dependenci
 @dataclass(frozen=True)
 class TokenContext:
     user_id: int
-    current_space_id: int | None
+    current_space_id: int
     session_id: int | None
     user: User
 
 
-def _unauthorized() -> HTTPException:
-    return HTTPException(status_code=401, detail={"code": 4001, "msg": "invalid token"})
+def _unauthorized(msg: str = "invalid token") -> HTTPException:
+    return HTTPException(status_code=401, detail={"code": 4001, "msg": msg})
 
 
 def get_current_user(authorization: str = Header(default="")) -> TokenContext:
@@ -53,6 +53,10 @@ def get_current_user(authorization: str = Header(default="")) -> TokenContext:
         user = repository.find_user_by_id(session.user_id)
         if user is None:
             raise _unauthorized()
+        # fail-closed：session.current_space_id 为 None（DB ON DELETE SET NULL 空间被删 / 用户被全清空间）
+        # 非合法工作态——要求重新登录选空间（前端 isAuthTokenError code===4001 → 清 session 重登）
+        if session.current_space_id is None:
+            raise _unauthorized("session 空间已失效，请重新登录")
         return TokenContext(
             user_id=user.id,
             current_space_id=session.current_space_id,
