@@ -150,8 +150,13 @@ ESLint 在本项目的价值不是「清理存量」，而是：
 - 真实安装 ESLint 与首次基线实跑（方案设计 / 编码阶段）。
 - 引入前端类型检查器到 CI（本项目已 `tsc -b`；mypy/pyright 对应物在维护态批8 已记「后续候选」）。
 
-## 7. 下一步
+## 7. 落地结果（2026-08-12 全闭环 v3.8.10）
 
-1. 本文作为实证依据，进入 **ESLint B1 方案设计**（plan）：读 `frontend/tsconfig.json` 严格度 + React 18.2 对应的 `eslint-plugin-react-hooks` 版本，就 §5 五个候选项（ESLINT-C1..C5）给出推荐方案与依赖清单。
-2. 方案确认后立项：`tasks/task-045-*.md` + `docs/05 §4.2.4` 回写（eslint 留痕「P1」→ 落地）+ `docs/08` Sprint-38 + `ai/project-rules.md §1` 维护态批13 + CI job。
-3. 编码：装依赖（eslint + @typescript-eslint + eslint-plugin-react-hooks）+ flat config + `npm run lint` 脚本 + CI `frontend-lint` job，首跑 advisory 看基线。
+本文作为实证依据已完成使命，ESLint B1 全闭环：
+
+- **方案设计**（plan）：C1 偏严规则集 / C2 advisory→required / C3 不引入 prettier / C4 存量基线登法 / C5 独立 `frontend-lint` job——全按推荐执行。
+- **Slice A**（PR #146 `92ea36a`）：装依赖 + flat config + advisory CI。首跑基线 **10 problems（5 error + 5 warning）**，印证本文 §3.1「前端基线极干净」+ §4.3「React Hooks 规则是高价值区」（QuickEntryFeature 2 个 `rules-of-hooks` 真 bug，tsc 没拦住）。
+- **Slice B**（PR #147 `c9d8911`）：5 error + 5 warning 全清零 + 升 required。验证：`npm run lint` 0 problem + `npm run build` 301 modules 零回归 + CI `frontend-lint` required 绿（21s）。
+- **回写**：`docs/05 §4.2.4`（L164/L165/L171 + 新增批13 条）+ `docs/08` Sprint-38 + `ai/project-rules.md §1` 维护态批13 + `tasks/task-045-frontend-eslint.md` + bump v3.8.10。
+
+本文 §3.2 登记的「19 文件膨胀」不在 eslint B1 范围（拆分问题，非 lint 问题），未随本次处理，仍为单独立项候选（E4）。

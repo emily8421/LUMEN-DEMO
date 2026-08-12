@@ -6,6 +6,17 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.8.10（2026-08-12）
+
+**维护态批13（Sprint-38）：前端引入 ESLint（eslint B1，NFR-006 P1 落地）。纯工程治理引入 lint 工具、非功能，不改 Phase / 交付物范围 / 对外 API 语义 / DB；新增 5 个前端 devDeps（eslint 工具链）。聚合 bump PATCH。**
+
+- **Slice A**（PR #146 `92ea36a`，装依赖 + flat config + advisory CI）：`frontend/package.json` 加 eslint^9 / @eslint/js^9 / typescript-eslint^8 / eslint-plugin-react-hooks^5.2 / globals^15 devDeps + `lint` / `lint:fix` 脚本；`frontend/eslint.config.js`（新）flat config——typescript-eslint recommended（非 type-checked，避开 tsc strict 重叠）+ react-hooks（`rules-of-hooks` error / `exhaustive-deps` warn）+ `no-explicit-any`（warn）/ `no-unused-vars`（error）；`.github/workflows/project-check.yml` 加 `frontend-lint` job（advisory 起步 `continue-on-error`，对称 backend-lint）。
+- **Slice B**（PR #147 `c9d8911`，存量整治 + 升 required）：5 error 清零（**QuickEntryFeature `rules-of-hooks` 真 bug**——`useRef`/`useEffect` 原在 `if(!isOpen)` early return 之后调用，移到之前；**tsc 完全没拦住** + 3 trivial `no-useless-escape` / `no-irregular-whitespace`）+ 5 warning 清零（`useLocalVaultMount` createFile 加 `mountNameOf` 依赖 + `useCommandPalette` items `useMemo` + `App`/`DocumentsFeature` `exhaustive-deps` 有意忽略加 disable + 删冗余 disable）+ 升 required（移除 `continue-on-error`）。
+- **关键价值兑现**：QuickEntryFeature 条件调 hook 是 React 运行时崩溃级真 bug，tsc 不管——ESLint 的 React Hooks 规则补了 tsc 最大盲区，印证评估报告 §4.3。
+- **验证**：首跑基线 10 problems（5 error + 5 warning）→ Slice B 清零；`npm run lint` **0 problem** + `npm run build` **301 modules** exit 0 零回归 + CI `frontend-lint` required 绿（21s）。
+
+> PATCH 依据（`ai/project-rules.md` §2.4.1）：纯工程治理引入 lint 工具，不改对外 API 契约语义 / DB / 不新增可演示能力（新增 5 devDeps 属 lint 工具链，非运行时依赖）。验证：lint 0 problem + build 301 modules 零回归 + CI `frontend-lint` required 绿。实施口径 `tasks/task-045-frontend-eslint.md`；实证 `docs/research/2026-08-12-frontend-eslint-b1-assessment.md`。
+
 ## v3.8.9（2026-08-12）
 
 **维护态批12（Sprint-37）：ruff 37 条存量 lint 旧债清零。纯 lint 债清理、非功能，不改 Phase / 交付物范围 / 对外 API 语义 / DB / 依赖。聚合 bump PATCH。**
