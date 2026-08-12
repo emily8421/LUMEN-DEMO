@@ -31,6 +31,7 @@ from backend.model.entities import (
     User,
 )
 from backend.repository.protocol import RepositoryProtocol
+from backend.service.permission import filter_visible_documents
 
 
 class DemoRepository(RepositoryProtocol):
@@ -421,6 +422,14 @@ class DemoRepository(RepositoryProtocol):
 
     def list_documents(self) -> list[Document]:
         return list(self.documents)
+
+    def list_visible_documents(self, user_id: int, space_id: int) -> list[Document]:
+        """安全默认查询：仅返回 (user_id, space_id) 有查看权限的文档（CQ-P1-004）。
+
+        复用 service/permission.filter_visible_documents 单一事实源（demo fake
+        不重复实现权限谓词，与 pg 语义保持同构）。
+        """
+        return filter_visible_documents(user_id, space_id, self.documents, self.memberships)
 
     def get_document(self, document_id: int) -> Document | None:
         return next((document for document in self.documents if document.id == document_id), None)

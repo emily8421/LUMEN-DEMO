@@ -13,7 +13,6 @@ from backend.service.document import (
     delete_document,
     get_visible_document,
     list_versions,
-    list_visible_documents,
     move_document_to_folder,
     restore_version,
     update_document,
@@ -44,12 +43,7 @@ class DocumentMoveRequest(BaseModel):
 
 @router.get("")
 def list_documents(ctx: TokenContext = Depends(get_current_user)) -> dict[str, object]:
-    documents = list_visible_documents(
-        user_id=ctx.user_id,
-        current_space_id=ctx.current_space_id,
-        documents=repository.list_documents(),
-        memberships=repository.list_memberships(),
-    )
+    documents = repository.list_visible_documents(ctx.user_id, ctx.current_space_id)
     return {"code": 0, "msg": "ok", "data": [_document_summary(document) for document in documents]}
 
 @router.post("")

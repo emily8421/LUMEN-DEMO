@@ -13,7 +13,7 @@ from typing import Literal
 from backend.model.entities import Document
 from backend.model.error_codes import ApiError, ErrorCode
 from backend.repository.protocol import RepositoryProtocol
-from backend.service.permission import filter_visible_documents, is_space_member
+from backend.service.permission import is_space_member
 
 
 MAX_DOCUMENTS_BEFORE_DEGRADE = 500
@@ -72,8 +72,7 @@ def get_timeline(
     to_date: str | None = None,
     density: bool = True,
 ) -> TimelineView:
-    memberships = repository.list_memberships()
-    if not is_space_member(user_id, space_id, memberships):
+    if not is_space_member(user_id, space_id, repository.list_memberships()):
         raise TimelineAccessError("space access denied")
 
     query = _normalize_query(q)
@@ -82,12 +81,7 @@ def get_timeline(
     if range_start and range_end and range_start > range_end:
         raise TimelineValidationError("from must be before to")
 
-    visible_documents = filter_visible_documents(
-        user_id=user_id,
-        current_space_id=space_id,
-        documents=repository.list_documents(),
-        memberships=memberships,
-    )
+    visible_documents = repository.list_visible_documents(user_id, space_id)
     visible_by_id = {document.id: document for document in visible_documents}
     selected_ids = set(visible_by_id)
 

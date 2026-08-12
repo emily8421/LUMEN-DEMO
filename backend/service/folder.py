@@ -24,7 +24,7 @@ from typing import Any
 from backend.model.entities import Folder
 from backend.model.error_codes import ApiError, ErrorCode
 from backend.repository.protocol import RepositoryProtocol
-from backend.service.permission import filter_visible_documents, is_space_member
+from backend.service.permission import is_space_member
 
 
 class FolderValidationError(ApiError):
@@ -116,9 +116,7 @@ def _visible_document_count(repository: RepositoryProtocol, user_id: int, space_
     doc_ids = set(repository.list_folder_document_ids(space_id, folder_id))
     if not doc_ids:
         return 0
-    memberships = repository.list_memberships()
-    candidates = [d for d in repository.list_documents() if d.id in doc_ids]
-    visible = filter_visible_documents(user_id, space_id, candidates, memberships)
+    visible = [d for d in repository.list_visible_documents(user_id, space_id) if d.id in doc_ids]
     return len(visible)
 
 

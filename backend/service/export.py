@@ -6,8 +6,8 @@
 
 权限口径（见 ``docs/design/export-delivery.md`` Flow-007 与 ``docs/07-api-spec.md`` API-030）：
 - 单文档：复用 ``get_visible_document``，不可见 → ``DocumentNotFoundError``（API 映射 4004）。
-- 空间 ZIP：``ensure_space_access`` 校验成员（4003），再 ``list_visible_documents`` 只取当前
-  用户可见文档；不可见文档不进入 ZIP，也不在响应中泄露隐藏数量。
+- 空间 ZIP：``ensure_space_access`` 校验成员（4003），再 ``repository.list_visible_documents``
+  只取当前用户可见文档；不可见文档不进入 ZIP，也不在响应中泄露隐藏数量。
 - PDF：复用同一文档可见性校验；创建 ``lumen_doc_exports`` 任务记录并绑定版本；产物落
   gitignored ``tmp/pdf_exports``；下载时再次复用文档可见性校验，不生成公开长期链接。
 """
@@ -27,7 +27,6 @@ from backend.repository.protocol import RepositoryProtocol
 from backend.service.document import (
     VersionNotFoundError,
     get_visible_document,
-    list_visible_documents,
 )
 from backend.service.space import ensure_space_access
 
@@ -138,12 +137,7 @@ def export_space_zip(repository: RepositoryProtocol, user_id: int, current_space
     memberships = repository.list_memberships()
     ensure_space_access(user_id, current_space_id, memberships)
 
-    visible_documents = list_visible_documents(
-        user_id=user_id,
-        current_space_id=current_space_id,
-        documents=repository.list_documents(),
-        memberships=memberships,
-    )
+    visible_documents = repository.list_visible_documents(user_id, current_space_id)
 
     buffer = io.BytesIO()
     try:

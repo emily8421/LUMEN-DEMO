@@ -151,7 +151,7 @@ README / backend README / demo-guide 推荐的 `unittest discover` 在开发库�
 | repository Protocol | 3 | ⏳ | — | P1 |
 | 事务 UoW | 3 | ⏳ | — | P1 |
 | response_model/codegen | 3 | ⏳ | — | P1 |
-| scoped query | 3 | ⏳ | — | P1 |
+| scoped query | 3 | 🚧 已立项（Sprint-40 / task-047） | — | P1 |
 | fail-fast | 3 | ⏳ | — | P1 |
 | 前端 ratchet | 3 | ⏳ | — | P2 |
 | 配置集中 | 3 | ⏳ | — | P2 |

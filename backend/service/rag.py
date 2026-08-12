@@ -8,7 +8,6 @@ from backend.model.entities import Document, DocumentChunk
 from backend.model.error_codes import ApiError, ErrorCode
 from backend.repository.protocol import RepositoryProtocol
 from backend.service import llm_adapter
-from backend.service.permission import filter_visible_documents
 from backend.service.term import find_matching_terms
 from backend.service.rag_text import _build_snippet, _extract_terms, _score_chunk
 
@@ -137,12 +136,7 @@ def _find_candidate_chunks(
     terms: list[str],
     question: str,
 ) -> list[_CandidateChunk]:
-    visible_documents = filter_visible_documents(
-        user_id=user_id,
-        current_space_id=current_space_id,
-        documents=repository.list_documents(),
-        memberships=repository.list_memberships(),
-    )
+    visible_documents = repository.list_visible_documents(user_id, current_space_id)
     documents_by_id = {document.id: document for document in visible_documents}
     candidates: list[_CandidateChunk] = []
     matched_document_ids: set[int] = set()

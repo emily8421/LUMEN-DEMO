@@ -58,3 +58,13 @@ def test_protocol_mirrors_pg_public_methods():
     assert protocol == pg, (
         f"protocol/pg drift: protocol_only={sorted(protocol - pg)} pg_only={sorted(pg - protocol)}"
     )
+
+
+def test_demo_list_visible_documents_scopes_by_space_and_permission():
+    """安全默认查询语义（CQ-P1-004）：space + 成员 + private/owner 过滤。"""
+    repository = DemoRepository()
+    assert [d.id for d in repository.list_visible_documents(user_id=1, space_id=10)] == [100]
+    assert [d.id for d in repository.list_visible_documents(user_id=2, space_id=10)] == [100]
+    assert repository.list_visible_documents(user_id=3, space_id=10) == []
+    assert repository.list_visible_documents(user_id=1, space_id=20) == []
+    assert [d.id for d in repository.list_visible_documents(user_id=3, space_id=20)] == [200]

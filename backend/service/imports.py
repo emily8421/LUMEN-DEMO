@@ -12,7 +12,6 @@ from backend.repository.protocol import RepositoryProtocol
 from backend.repository.uow import unit_of_work
 from backend.service.chunking import clean_text
 from backend.service.document import DocumentCreate, create_document, sync_document_wikilinks
-from backend.service.permission import can_view_document
 from backend.service.space import ensure_space_access
 
 
@@ -134,8 +133,7 @@ def import_extracted_text(repository: RepositoryProtocol, user_id: int, current_
 
 def import_batch(repository: RepositoryProtocol, user_id: int, current_space_id: int, request: BatchImportRequest) -> BatchImportResult:
     # space access 直接冒泡 SpaceAccessError（4003，07 契约 API-029）；不再转 ImportValidationError 造成 msg 判断二义。
-    memberships = repository.list_memberships()
-    ensure_space_access(user_id, current_space_id, memberships)
+    ensure_space_access(user_id, current_space_id, repository.list_memberships())
 
     if not request.files:
         raise ImportValidationError("at least one file is required")
@@ -164,7 +162,6 @@ def import_batch(repository: RepositoryProtocol, user_id: int, current_space_id:
                 user_id,
                 current_space_id,
                 title,
-                memberships,
                 folder_id=folder_id if request.preserve_structure else None,
                 scoped_to_folder=request.preserve_structure,
             ):
@@ -296,15 +293,13 @@ def _document_title_exists(
     user_id: int,
     current_space_id: int,
     title: str,
-    memberships,
     folder_id: int | None = None,
     scoped_to_folder: bool = False,
 ) -> bool:
     return any(
         document.title == title
         and (not scoped_to_folder or document.folder_id == folder_id)
-        and can_view_document(user_id, current_space_id, document, memberships)
-        for document in repository.list_documents()
+        for document in repository.list_visible_documents(user_id, current_space_id)
     )
 
 

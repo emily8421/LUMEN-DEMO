@@ -20,9 +20,7 @@ from backend.model.error_codes import ApiError, ErrorCode
 from backend.repository.protocol import RepositoryProtocol
 from backend.service.document import get_visible_document
 from backend.service.permission import (
-    can_view_document,
     can_write_document,
-    filter_visible_documents,
     is_space_member,
 )
 
@@ -104,12 +102,8 @@ def _get_space_tag(repository: RepositoryProtocol, space_id: int, tag_id: int) -
     return tag
 
 
-def _visible_document_ids(repository: RepositoryProtocol, user_id: int, space_id: int, memberships) -> set[int]:
-    return {
-        document.id
-        for document in repository.list_documents()
-        if document.space_id == space_id and can_view_document(user_id, space_id, document, memberships)
-    }
+def _visible_document_ids(repository: RepositoryProtocol, user_id: int, space_id: int) -> set[int]:
+    return {document.id for document in repository.list_visible_documents(user_id, space_id)}
 
 
 def list_tags(
@@ -119,9 +113,8 @@ def list_tags(
     q: str | None = None,
     status: str | None = "active",
 ) -> list[TagView]:
-    memberships = repository.list_memberships()
     _ensure_space_member(repository, user_id, space_id)
-    visible_ids = _visible_document_ids(repository, user_id, space_id, memberships)
+    visible_ids = _visible_document_ids(repository, user_id, space_id)
     views: list[TagView] = []
     for tag in repository.list_tags(space_id, q, status):
         count = len(set(repository.list_tag_document_ids(tag.id)) & visible_ids)
@@ -141,7 +134,7 @@ def list_tags(
 def get_tag_detail(repository: RepositoryProtocol, user_id: int, space_id: int, tag_id: int) -> TagView:
     _ensure_space_member(repository, user_id, space_id)
     tag = _get_space_tag(repository, space_id, tag_id)
-    visible_ids = _visible_document_ids(repository, user_id, space_id, repository.list_memberships())
+    visible_ids = _visible_document_ids(repository, user_id, space_id)
     count = len(set(repository.list_tag_document_ids(tag_id)) & visible_ids)
     return TagView(
         id=tag.id,
@@ -252,9 +245,4 @@ def list_documents_by_tag(
     if status is not None and tag.status != status:
         return []  # 默认 status=active：归档标签不列入其文档（API-032 status 过滤）
     doc_ids = set(repository.list_tag_document_ids(tag_id))
-    documents = [
-        document
-        for document in repository.list_documents()
-        if document.id in doc_ids and document.space_id == space_id
-    ]
-    return filter_visible_documents(user_id, space_id, documents, repository.list_memberships())
+    return [document for document in repository.list_visible_documents(user_id, space_id) if document.id in doc_ids]
