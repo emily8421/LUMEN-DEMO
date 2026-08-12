@@ -6,6 +6,7 @@ POST /api/doc-links 手动登记 manual 链接（wikilink 由文档保存时正�
 
 from __future__ import annotations
 
+from backend.model.schemas import ApiEnvelope, DocLinkCreated, DocLinkView
 from backend.repository import repository
 from backend.service.auth_context import TokenContext, get_current_user
 from backend.service.doc_links import (
@@ -27,7 +28,7 @@ class DocLinkCreateBody(BaseModel):
     target_title: str | None = None
     link_type: str = "manual"
 
-@router.get("")
+@router.get("", response_model=ApiEnvelope[list[DocLinkView]])
 def list_links_endpoint(
     document_id: int,
     direction: str = "outbound",
@@ -38,7 +39,7 @@ def list_links_endpoint(
     views = list_links(repository, ctx.user_id, ctx.current_space_id, document_id, direction)
     return {"code": 0, "msg": "ok", "data": [_link_view(view) for view in views]}
 
-@router.post("")
+@router.post("", response_model=ApiEnvelope[DocLinkCreated])
 def create_link_endpoint(
     request: DocLinkCreateBody,
     ctx: TokenContext = Depends(get_current_user),

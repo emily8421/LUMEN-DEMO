@@ -154,7 +154,7 @@ flowchart TB
 
 - **【已落地】** 前端零 `any` + `ReturnType<typeof useXxx>` 导出类型零重复；泛型 `request<T>` 贯穿 API → hook → 组件。
 - **【已落地】** 前端 HTTP 单出口：`fetch` 仅存于 `api/client.ts`（2 处），所有域模块经 `request()` / `downloadBlob()`；`api.ts` barrel re-export 渐进拆分（调用方 `import from './api'` 不变）。
-- **【待对齐】** 前后端类型手工双写（`model/entities.py` `Document` ↔ `api/documents.ts` `KnowledgeDocument`），无 codegen、无 schema diff → 后端补 `response_model`，OpenAPI → `openapi-typescript` 生成前端类型，CI 加 schema diff 防漂移。
+- **【已落地（2026-08-13，CQ-P1-006 / 维护态批16）】** 后端 62 个 JSON 端点全部标注 `response_model=ApiEnvelope[X]`（`backend/model/schemas.py` 泛型信封 + 域响应模型），OpenAPI 快照固定于 `openapi/openapi.json`（`scripts/export-openapi.py` 生成），CI 新增 `schema-diff` job（required）防漂移——后端改响应契约必须同步快照；前端 `api/*.ts` 手工双写待后续 codegen（`openapi-typescript` 需新增 devDependency，另立项）替换为生成类型。
 - **【待对齐】** repository 双实现靠鸭子类型 + docstring 声明对齐（无 Protocol / ABC）→ 定义 `RepositoryProtocol`，`DemoRepository` / `PgRepository` 显式 implement，避免单侧静默缺方法。
 - **【待对齐】** service 函数 `repository` 形参全程无类型注解 → 标注 `RepositoryProtocol`，恢复 IDE 补全 / 安全重构。
 

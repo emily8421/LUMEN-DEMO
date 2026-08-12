@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from backend.model.schemas import ApiEnvelope, SpaceView, SwitchSpaceView
 from backend.repository import repository
 from backend.service.auth_context import TokenContext, get_current_user
 from backend.service.space import list_user_spaces, switch_space
@@ -15,7 +16,7 @@ router = APIRouter(prefix="/api/spaces", tags=["spaces"])
 class SwitchSpaceRequest(BaseModel):
     space_id: int
 
-@router.get("")
+@router.get("", response_model=ApiEnvelope[list[SpaceView]])
 def list_spaces(ctx: TokenContext = Depends(get_current_user)) -> dict[str, object]:
     spaces = list_user_spaces(
         user_id=ctx.user_id,
@@ -31,7 +32,7 @@ def list_spaces(ctx: TokenContext = Depends(get_current_user)) -> dict[str, obje
         ],
     }
 
-@router.post("/switch")
+@router.post("/switch", response_model=ApiEnvelope[SwitchSpaceView])
 def switch_space_endpoint(
     request: SwitchSpaceRequest,
     ctx: TokenContext = Depends(get_current_user),

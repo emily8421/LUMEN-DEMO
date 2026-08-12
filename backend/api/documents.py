@@ -3,6 +3,14 @@
 from __future__ import annotations
 
 from backend.model.entities import Document, DocumentPermission, DocumentVersion
+from backend.model.schemas import (
+    ApiEnvelope,
+    DeletedOk,
+    DocumentDetail,
+    DocumentSummary,
+    DocumentVersionView,
+    PolishView as PolishResponseView,
+)
 from backend.repository import repository
 from backend.service.auth_context import TokenContext, get_current_user
 from backend.service.document import (
@@ -41,12 +49,12 @@ class DocumentWriteRequest(BaseModel):
 class DocumentMoveRequest(BaseModel):
     folder_id: int | None = None
 
-@router.get("")
+@router.get("", response_model=ApiEnvelope[list[DocumentSummary]])
 def list_documents(ctx: TokenContext = Depends(get_current_user)) -> dict[str, object]:
     documents = repository.list_visible_documents(ctx.user_id, ctx.current_space_id)
     return {"code": 0, "msg": "ok", "data": [_document_summary(document) for document in documents]}
 
-@router.post("")
+@router.post("", response_model=ApiEnvelope[DocumentDetail])
 def create_document_endpoint(
     request: DocumentWriteRequest,
     ctx: TokenContext = Depends(get_current_user),
@@ -64,7 +72,7 @@ def create_document_endpoint(
     )
     return {"code": 0, "msg": "ok", "data": _document_detail(document)}
 
-@router.get("/{document_id}")
+@router.get("/{document_id}", response_model=ApiEnvelope[DocumentDetail])
 def get_document_endpoint(
     document_id: int,
     ctx: TokenContext = Depends(get_current_user),
@@ -72,7 +80,7 @@ def get_document_endpoint(
     document = _read_document_or_404(ctx.user_id, ctx.current_space_id, document_id)
     return {"code": 0, "msg": "ok", "data": _document_detail(document)}
 
-@router.put("/{document_id}")
+@router.put("/{document_id}", response_model=ApiEnvelope[DocumentDetail])
 def update_document_endpoint(
     document_id: int,
     request: DocumentWriteRequest,
@@ -91,7 +99,7 @@ def update_document_endpoint(
     )
     return {"code": 0, "msg": "ok", "data": _document_detail(document)}
 
-@router.patch("/{document_id}/folder")
+@router.patch("/{document_id}/folder", response_model=ApiEnvelope[DocumentDetail])
 def move_document_folder_endpoint(
     document_id: int,
     request: DocumentMoveRequest,
@@ -106,7 +114,7 @@ def move_document_folder_endpoint(
     )
     return {"code": 0, "msg": "ok", "data": _document_detail(document)}
 
-@router.delete("/{document_id}")
+@router.delete("/{document_id}", response_model=ApiEnvelope[DeletedOk])
 def delete_document_endpoint(
     document_id: int,
     ctx: TokenContext = Depends(get_current_user),
@@ -114,7 +122,7 @@ def delete_document_endpoint(
     delete_document(repository, ctx.user_id, ctx.current_space_id, document_id)
     return {"code": 0, "msg": "ok", "data": {"deleted": True}}
 
-@router.get("/{document_id}/versions")
+@router.get("/{document_id}/versions", response_model=ApiEnvelope[list[DocumentVersionView]])
 def list_document_versions(
     document_id: int,
     ctx: TokenContext = Depends(get_current_user),
@@ -122,7 +130,7 @@ def list_document_versions(
     versions = list_versions(repository, ctx.user_id, ctx.current_space_id, document_id)
     return {"code": 0, "msg": "ok", "data": [_version_detail(version) for version in versions]}
 
-@router.post("/{document_id}/versions/{version_no}/restore")
+@router.post("/{document_id}/versions/{version_no}/restore", response_model=ApiEnvelope[DocumentDetail])
 def restore_document_version(
     document_id: int,
     version_no: int,
@@ -137,7 +145,7 @@ class PolishRequestBody(BaseModel):
     instruction: str | None = None
     use_sources: bool = True
 
-@router.post("/{document_id}/polish")
+@router.post("/{document_id}/polish", response_model=ApiEnvelope[PolishResponseView])
 def polish_document_endpoint(
     document_id: int,
     request: PolishRequestBody,

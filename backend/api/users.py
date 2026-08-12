@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from backend.model.schemas import ApiEnvelope, UserSearchView
 from backend.repository import repository
 from backend.service.auth_context import TokenContext, get_current_user
 from backend.service.space_members import search_users
@@ -11,7 +12,7 @@ from fastapi import APIRouter, Depends
 
 router = APIRouter(prefix="/api/users", tags=["users"])
 
-@router.get("/search")
+@router.get("/search", response_model=ApiEnvelope[list[UserSearchView]])
 def search_users_endpoint(
     q: str = "",
     ctx: TokenContext = Depends(get_current_user),

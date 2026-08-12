@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from backend.model.schemas import ApiEnvelope, SpaceMemberView
 from backend.repository import repository
 from backend.service.auth_context import TokenContext, get_current_user
 from backend.service.space_members import (
@@ -34,7 +35,7 @@ class AddMemberRequest(BaseModel):
 class UpdateMemberRoleRequest(BaseModel):
     role: str
 
-@router.get("/{space_id}/members")
+@router.get("/{space_id}/members", response_model=ApiEnvelope[list[SpaceMemberView]])
 def list_members_endpoint(
     space_id: int,
     ctx: TokenContext = Depends(get_current_user),
@@ -43,7 +44,7 @@ def list_members_endpoint(
     rows = list_space_members(repository, ctx.user, space_id)
     return {"code": 0, "msg": "ok", "data": [_member_payload(row) for row in rows]}
 
-@router.post("/{space_id}/members")
+@router.post("/{space_id}/members", response_model=ApiEnvelope[SpaceMemberView])
 def add_member_endpoint(
     space_id: int,
     request: AddMemberRequest,
@@ -53,7 +54,7 @@ def add_member_endpoint(
     detail = add_member_by_email(repository, ctx.user, space_id, request.email, request.role)
     return {"code": 0, "msg": "ok", "data": _member_payload(detail)}
 
-@router.patch("/{space_id}/members/{user_id}")
+@router.patch("/{space_id}/members/{user_id}", response_model=ApiEnvelope[SpaceMemberView])
 def update_member_role_endpoint(
     space_id: int,
     user_id: int,
@@ -64,7 +65,7 @@ def update_member_role_endpoint(
     detail = update_member_role(repository, ctx.user, space_id, user_id, request.role)
     return {"code": 0, "msg": "ok", "data": _member_payload(detail)}
 
-@router.delete("/{space_id}/members/{user_id}")
+@router.delete("/{space_id}/members/{user_id}", response_model=ApiEnvelope[None])
 def remove_member_endpoint(
     space_id: int,
     user_id: int,

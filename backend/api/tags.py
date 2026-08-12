@@ -8,6 +8,16 @@ GET /api/tags/{id}/documents。全部带空间隔离与文档权限过滤（serv
 
 from __future__ import annotations
 
+from backend.model.schemas import (
+    ApiEnvelope,
+    DeletedOk,
+    DocumentTagListPage,
+    TagDetail,
+    TaggedDocumentListPage,
+    TagLinkView,
+    TagListPage,
+    TagView as TagResponseView,
+)
 from backend.repository import repository
 from backend.service.auth_context import TokenContext, get_current_user
 from backend.service.tag import (
@@ -47,7 +57,7 @@ class TagUpdateBody(BaseModel):
 class DocumentTagCreateBody(BaseModel):
     tag_id: int
 
-@router.get("/api/tags")
+@router.get("/api/tags", response_model=ApiEnvelope[TagListPage])
 def list_tags_endpoint(
     q: str | None = None,
     status: str | None = "active",
@@ -57,7 +67,7 @@ def list_tags_endpoint(
     items = [_tag_view(view) for view in views]
     return {"code": 0, "msg": "ok", "data": {"items": items, "total": len(items)}}
 
-@router.post("/api/tags")
+@router.post("/api/tags", response_model=ApiEnvelope[TagDetail])
 def create_tag_endpoint(
     request: TagCreateBody,
     ctx: TokenContext = Depends(get_current_user),
@@ -70,12 +80,12 @@ def create_tag_endpoint(
     )
     return {"code": 0, "msg": "ok", "data": _tag_detail(tag)}
 
-@router.get("/api/tags/{tag_id}")
+@router.get("/api/tags/{tag_id}", response_model=ApiEnvelope[TagResponseView])
 def get_tag_endpoint(tag_id: int, ctx: TokenContext = Depends(get_current_user)) -> dict[str, object]:
     view = get_tag_detail(repository, ctx.user_id, ctx.current_space_id, tag_id)
     return {"code": 0, "msg": "ok", "data": _tag_view(view)}
 
-@router.put("/api/tags/{tag_id}")
+@router.put("/api/tags/{tag_id}", response_model=ApiEnvelope[TagDetail])
 def update_tag_endpoint(
     tag_id: int,
     request: TagUpdateBody,
@@ -95,12 +105,12 @@ def update_tag_endpoint(
     )
     return {"code": 0, "msg": "ok", "data": _tag_detail(tag)}
 
-@router.delete("/api/tags/{tag_id}")
+@router.delete("/api/tags/{tag_id}", response_model=ApiEnvelope[TagDetail])
 def archive_tag_endpoint(tag_id: int, ctx: TokenContext = Depends(get_current_user)) -> dict[str, object]:
     tag = archive_tag(repository, ctx.user_id, ctx.current_space_id, tag_id)
     return {"code": 0, "msg": "ok", "data": _tag_detail(tag)}
 
-@router.get("/api/documents/{document_id}/tags")
+@router.get("/api/documents/{document_id}/tags", response_model=ApiEnvelope[DocumentTagListPage])
 def list_document_tags_endpoint(
     document_id: int,
     ctx: TokenContext = Depends(get_current_user),
@@ -109,7 +119,7 @@ def list_document_tags_endpoint(
     items = [_document_tag_view(view) for view in views]
     return {"code": 0, "msg": "ok", "data": {"items": items, "total": len(items)}}
 
-@router.post("/api/documents/{document_id}/tags")
+@router.post("/api/documents/{document_id}/tags", response_model=ApiEnvelope[TagLinkView])
 def add_document_tag_endpoint(
     document_id: int,
     request: DocumentTagCreateBody,
@@ -128,7 +138,7 @@ def add_document_tag_endpoint(
         },
     }
 
-@router.delete("/api/documents/{document_id}/tags/{tag_id}")
+@router.delete("/api/documents/{document_id}/tags/{tag_id}", response_model=ApiEnvelope[DeletedOk])
 def remove_document_tag_endpoint(
     document_id: int,
     tag_id: int,
@@ -137,7 +147,7 @@ def remove_document_tag_endpoint(
     remove_document_tag(repository, ctx.user_id, ctx.current_space_id, document_id, tag_id)
     return {"code": 0, "msg": "ok", "data": {"deleted": True}}
 
-@router.get("/api/tags/{tag_id}/documents")
+@router.get("/api/tags/{tag_id}/documents", response_model=ApiEnvelope[TaggedDocumentListPage])
 def list_documents_by_tag_endpoint(
     tag_id: int,
     status: str | None = "active",

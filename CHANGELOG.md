@@ -6,6 +6,14 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.8.13（2026-08-13）
+
+**维护态批16（Sprint-41）：API 响应契约 response_model·codegen（CQ-P1-006，轨道3 P1）。纯工程治理给全部 JSON 端点补机器可执行响应契约、非功能，不改 Phase / 交付物范围 / 对外 API 语义 / DB；不新增依赖。聚合 bump PATCH。**
+
+- **Slice A（地基）**：`backend/model/schemas.py` 新增 `ApiEnvelope[T]` 泛型（`{code,msg,data}` envelope，对齐 CQ-P1-005 NFR-007 契约）；`scripts/export-openapi.py` 生成并固定 `openapi/openapi.json` 快照；CI 新增 `schema-diff` job（advisory 起步，复刻 eslint/mypy B1 三段式）。
+- **Slice B-1..B-3（按域接入，62/62 JSON 端点）**：内容域 `documents/tags/folders/doc_links/timeline/search`（27）+ 术语/导入域 `terms/term_categories/quick_entry/imports/rag`（16）+ 账户/空间域 `auth/spaces/space_members/users/admin/export(JSON)`（19）全部标注 `response_model=ApiEnvelope[X]`，响应序列化按模型校验 / 过滤，OpenAPI 快照随之携带精确字段与可空性；二进制端点 3 个（md/zip/pdf 下载）明确排除；`schema-diff` 升 required（Slice B-3 收尾）。另修正评估遗漏：实际 65 端点（含 `config_router` llm-configs，评估数 64 漏 1）。
+- 验证：本地路由全量 smoke **60/60 通过**（62 JSON 端点 + 3 二进制端点经 TestClient + DemoRepository 实测，response_model 校验零失配）；mypy **0 error**（56 files）+ ruff passed + 默认 pytest **304 passed / 4 skipped** 零回归；快照再生成 `git diff --exit-code` 绿；CI `schema-diff` required（integration 48 用例由 CI 兜底，本地 docker 不可用未跑）。
+
 ## v3.8.12（2026-08-13）
 
 **维护态批15（Sprint-40）：权限查询边界 scoped query（CQ-P1-004，轨道3 P1）。纯工程治理收敛用户态查询的权限边界、非功能，不改 Phase / 交付物范围 / 对外 API 语义 / DB；不新增依赖。聚合 bump PATCH。**

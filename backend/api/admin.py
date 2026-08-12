@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+from backend.model.schemas import (
+    AdminUserSpacesView,
+    AdminUserView,
+    ApiEnvelope,
+)
 from backend.repository import repository
 from backend.service.admin import (
     AdminError,
@@ -33,7 +38,7 @@ class UpdateUserRequest(BaseModel):
     role: str | None = None
     status: str | None = None
 
-@router.get("")
+@router.get("", response_model=ApiEnvelope[list[AdminUserView]])
 def list_users_endpoint(
     q: str = "",
     role: str = "",
@@ -44,7 +49,7 @@ def list_users_endpoint(
     rows = admin_list_users(repository, ctx.user, q=q, role=role, status=status)
     return {"code": 0, "msg": "ok", "data": [_user_payload(row) for row in rows]}
 
-@router.patch("/{user_id}")
+@router.patch("/{user_id}", response_model=ApiEnvelope[AdminUserView])
 def update_user_endpoint(
     user_id: int,
     request: UpdateUserRequest,
@@ -60,7 +65,7 @@ def update_user_endpoint(
         raise AdminError(4220, "role or status required")
     return {"code": 0, "msg": "ok", "data": _user_payload(row)}
 
-@router.get("/{user_id}/spaces")
+@router.get("/{user_id}/spaces", response_model=ApiEnvelope[AdminUserSpacesView])
 def list_user_spaces_endpoint(
     user_id: int,
     ctx: TokenContext = Depends(get_current_user),

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from backend.model.schemas import ApiEnvelope, BatchImportView, ImportFileView
 from backend.model.entities import DocumentPermission
 from backend.repository import repository
 from backend.service.auth_context import TokenContext, get_current_user
@@ -18,7 +19,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
 router = APIRouter(prefix="/api/import", tags=["imports"])
 
-@router.post("")
+@router.post("", response_model=ApiEnvelope[ImportFileView])
 async def import_file_endpoint(
     file: UploadFile = File(...),
     title: str | None = Form(default=None),
@@ -55,7 +56,7 @@ async def import_file_endpoint(
         },
     }
 
-@router.post("/batch")
+@router.post("/batch", response_model=ApiEnvelope[BatchImportView])
 async def import_batch_endpoint(
     files: list[UploadFile] = File(...),
     relative_paths: list[str] | None = Form(default=None),
