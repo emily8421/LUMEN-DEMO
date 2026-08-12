@@ -175,7 +175,9 @@ def update_term_category(
             if target_parent == category.id or repository.is_descendant_term_category(space_id, category.id, target_parent):
                 raise TermCategoryValidationError("cannot move category into itself or its descendant")
         if target_parent != category.parent_id:
-            category = repository.move_term_category(category_id, target_parent)
+            moved = repository.move_term_category(category_id, target_parent)
+            assert moved is not None
+            category = moved
 
     # rename（在最终 parent 下查重名）
     if request.name is not UNSET:
@@ -184,7 +186,9 @@ def update_term_category(
             raise TermCategoryValidationError("category name must not be empty")
         if name != category.name:
             _ensure_no_name_clash(repository, space_id, category.parent_id, name, exclude_id=category_id)
-            category = repository.rename_term_category(category_id, name)
+            renamed = repository.rename_term_category(category_id, name)
+            assert renamed is not None
+            category = renamed
 
     return category
 

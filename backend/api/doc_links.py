@@ -14,65 +14,56 @@ from backend.service.doc_links import (
     upsert_link,
 )
 
-try:
-    from fastapi import APIRouter, Depends, HTTPException
-    from pydantic import BaseModel
-except ImportError:  # pragma: no cover - allows service tests before dependencies are installed
-    APIRouter = None
-    BaseModel = object
-    HTTPException = Exception
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 
 
-if APIRouter is not None:
-    router = APIRouter(prefix="/api/doc-links", tags=["doc-links"])
+router = APIRouter(prefix="/api/doc-links", tags=["doc-links"])
 
-    class DocLinkCreateBody(BaseModel):
-        source_document_id: int
-        link_text: str
-        target_document_id: int | None = None
-        target_title: str | None = None
-        link_type: str = "manual"
+class DocLinkCreateBody(BaseModel):
+    source_document_id: int
+    link_text: str
+    target_document_id: int | None = None
+    target_title: str | None = None
+    link_type: str = "manual"
 
-    @router.get("")
-    def list_links_endpoint(
-        document_id: int,
-        direction: str = "outbound",
-        ctx: TokenContext = Depends(get_current_user),
-    ) -> dict[str, object]:
-        if direction not in ("outbound", "backlink"):
-            raise HTTPException(status_code=422, detail={"code": 4220, "msg": "direction must be outbound or backlink"})
-        views = list_links(repository, ctx.user_id, ctx.current_space_id, document_id, direction)
-        return {"code": 0, "msg": "ok", "data": [_link_view(view) for view in views]}
+@router.get("")
+def list_links_endpoint(
+    document_id: int,
+    direction: str = "outbound",
+    ctx: TokenContext = Depends(get_current_user),
+) -> dict[str, object]:
+    if direction not in ("outbound", "backlink"):
+        raise HTTPException(status_code=422, detail={"code": 4220, "msg": "direction must be outbound or backlink"})
+    views = list_links(repository, ctx.user_id, ctx.current_space_id, document_id, direction)
+    return {"code": 0, "msg": "ok", "data": [_link_view(view) for view in views]}
 
-    @router.post("")
-    def create_link_endpoint(
-        request: DocLinkCreateBody,
-        ctx: TokenContext = Depends(get_current_user),
-    ) -> dict[str, object]:
-        link = upsert_link(
-            repository,
-            ctx.user_id,
-            ctx.current_space_id,
-            DocLinkCreateRequest(
-                source_document_id=request.source_document_id,
-                link_text=request.link_text,
-                target_document_id=request.target_document_id,
-                target_title=request.target_title,
-                link_type=request.link_type,
-            ),
-        )
-        return {"code": 0, "msg": "ok", "data": {"id": link.id, "status": link.status}}
+@router.post("")
+def create_link_endpoint(
+    request: DocLinkCreateBody,
+    ctx: TokenContext = Depends(get_current_user),
+) -> dict[str, object]:
+    link = upsert_link(
+        repository,
+        ctx.user_id,
+        ctx.current_space_id,
+        DocLinkCreateRequest(
+            source_document_id=request.source_document_id,
+            link_text=request.link_text,
+            target_document_id=request.target_document_id,
+            target_title=request.target_title,
+            link_type=request.link_type,
+        ),
+    )
+    return {"code": 0, "msg": "ok", "data": {"id": link.id, "status": link.status}}
 
-    def _link_view(view) -> dict[str, object]:
-        return {
-            "id": view.id,
-            "source_document_id": view.source_document_id,
-            "target_document_id": view.target_document_id,
-            "target_title": view.target_title,
-            "link_text": view.link_text,
-            "link_type": view.link_type,
-            "status": view.status,
-        }
-
-else:
-    router = None
+def _link_view(view) -> dict[str, object]:
+    return {
+        "id": view.id,
+        "source_document_id": view.source_document_id,
+        "target_document_id": view.target_document_id,
+        "target_title": view.target_title,
+        "link_text": view.link_text,
+        "link_type": view.link_type,
+        "status": view.status,
+    }

@@ -185,7 +185,9 @@ def update_folder(
             if target_parent == folder.id or repository.is_descendant_folder(space_id, folder.id, target_parent):
                 raise FolderValidationError("cannot move folder into itself or its descendant")
         if target_parent != folder.parent_id:
-            folder = repository.move_folder(folder_id, target_parent)
+            moved = repository.move_folder(folder_id, target_parent)
+            assert moved is not None
+            folder = moved
 
     # rename（在最终 parent 下查重名）
     if request.name is not UNSET:
@@ -194,7 +196,9 @@ def update_folder(
             raise FolderValidationError("folder name must not be empty")
         if name != folder.name:
             _ensure_no_name_clash(repository, space_id, folder.parent_id, name, exclude_id=folder_id)
-            folder = repository.rename_folder(folder_id, name)
+            renamed = repository.rename_folder(folder_id, name)
+            assert renamed is not None
+            folder = renamed
 
     return folder
 

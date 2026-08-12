@@ -19,12 +19,7 @@ from backend.service.auth import (
     resolve_session,
 )
 
-try:
-    from fastapi import Depends, Header, HTTPException
-except ImportError:  # pragma: no cover - allows service tests before dependencies are installed
-    Depends = None
-    Header = None
-    HTTPException = Exception
+from fastapi import Depends, Header, HTTPException
 
 
 @dataclass(frozen=True)
@@ -41,8 +36,6 @@ def _unauthorized(msg: str = "invalid token") -> HTTPException:
 
 def get_current_user(authorization: str = Header(default="")) -> TokenContext:
     """解析 Authorization Bearer token → 活跃 session；demo 模式兼容 HMAC demo token → TokenContext。"""
-    if Header is None:
-        raise RuntimeError("FastAPI is not installed")
     try:
         token = extract_bearer_token(authorization)
     except TokenError as exc:
