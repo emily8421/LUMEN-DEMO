@@ -286,5 +286,37 @@ class PasswordResetServiceTest(unittest.TestCase):
         self.assertEqual(ctx.exception.code, 4010)
 
 
+class GetCurrentUserSpaceGuardTest(unittest.TestCase):
+    """current_space_id None fail-closed guard（mypy B1 Slice B-1，C 方案）。
+
+    session.current_space_id 为 None（DB ON DELETE SET NULL / 用户被全清空间）
+    非合法工作态 → get_current_user 入口 fail-closed 拦截（401/4001，前端清 session 重登）。
+    """
+
+    def test_rejects_session_with_none_current_space(self) -> None:
+        from unittest.mock import MagicMock, patch
+
+        from fastapi import HTTPException
+
+        from backend.service.auth_context import get_current_user
+
+        fake_session = MagicMock()
+        fake_session.current_space_id = None  # 模拟 DB 置 None
+        fake_session.user_id = 1
+        fake_session.id = 1
+        fake_user = MagicMock()
+        fake_user.id = 1
+
+        with patch("backend.service.auth_context.resolve_session", return_value=fake_session), patch(
+            "backend.service.auth_context.repository"
+        ) as mock_repo:
+            mock_repo.find_user_by_id.return_value = fake_user
+            with self.assertRaises(HTTPException) as cm:
+                get_current_user("Bearer dummy")
+            self.assertEqual(cm.exception.status_code, 401)
+            self.assertEqual(cm.exception.detail["code"], 4001)
+            self.assertIn("空间", cm.exception.detail["msg"])
+
+
 if __name__ == "__main__":
     unittest.main()

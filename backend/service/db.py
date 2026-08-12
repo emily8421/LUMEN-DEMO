@@ -67,7 +67,9 @@ def ping() -> str:
     """连通性 + pgvector 自检：返回 PostgreSQL 版本字符串。"""
     with psycopg.connect(_DATABASE_URL) as conn, conn.cursor() as cur:
         cur.execute("SELECT version()")
-        return cur.fetchone()[0]
+        row = cur.fetchone()
+        assert row is not None  # SELECT version() 必返回一行
+        return row[0]
 
 
 # --- SQLAlchemy engine / sessions（T3：ORM + PgRepository）---

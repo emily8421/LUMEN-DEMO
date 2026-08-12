@@ -12,8 +12,10 @@ only; embedding is left NULL (filled in T4) and ts_vector is owned by a DB trigg
 from __future__ import annotations
 
 from datetime import datetime
+from typing import cast
 
 from sqlalchemy import delete, func, or_, select, text as sql_text, update
+from sqlalchemy.engine import CursorResult
 
 from backend.model.entities import (
     AiDraft,
@@ -594,7 +596,7 @@ class PgRepository(RepositoryProtocol):
             session.add(SpaceMemberORM(user_id=user_id, space_id=space_id, role=role))
             user = session.get(UserORM, user_id)
             row = session.get(SpaceMemberORM, (user_id, space_id))
-            if row is None:
+            if row is None or user is None:
                 return None
             return _to_member_detail(row, user)
 
@@ -606,6 +608,8 @@ class PgRepository(RepositoryProtocol):
                 return None
             row.role = role
             user = session.get(UserORM, user_id)
+            if user is None:
+                return None
             return _to_member_detail(row, user)
 
     def remove_space_member(self, space_id: int, user_id: int) -> bool:
@@ -1159,11 +1163,14 @@ class PgRepository(RepositoryProtocol):
 
     def remove_document_tag(self, tag_id: int, document_id: int) -> bool:
         with _session_scope() as session:
-            deleted = session.execute(
-                delete(TagLinkORM).where(
-                    TagLinkORM.tag_id == tag_id,
-                    TagLinkORM.document_id == document_id,
-                )
+            deleted = cast(
+                CursorResult,
+                session.execute(
+                    delete(TagLinkORM).where(
+                        TagLinkORM.tag_id == tag_id,
+                        TagLinkORM.document_id == document_id,
+                    )
+                ),
             ).rowcount
             return deleted > 0
 
