@@ -6,6 +6,12 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.8.12（2026-08-13）
+
+**维护态批15（Sprint-40）：权限查询边界 scoped query（CQ-P1-004，轨道3 P1）。纯工程治理收敛用户态查询的权限边界、非功能，不改 Phase / 交付物范围 / 对外 API 语义 / DB；不新增依赖。聚合 bump PATCH。**
+
+- **PR #151 `945bf8f`（squash merge main）**：`RepositoryProtocol` 新增 `list_visible_documents(user_id, space_id)` 安全默认查询（pg 两段式：membership 校验 + SQL where 下推 `space_id` + 非 private 或 owner；demo 复用 `filter_visible_documents` 单一事实源）+ `list_documents()` / `list_memberships()` 标 internal + 用户态 8 处调用点收口（timeline / search / rag / folder / export / tag / imports / api documents）+ repository 级 cross-space / cross-user 负向单测与契约测试守护双实现。验证：mypy **0 error**（55 files）+ ruff passed + 默认 pytest **304 passed / 4 skipped** 零回归 + CI **7 job 全绿**（含 backend-integration 48 用例）。实施口径 `tasks/task-047-scoped-query.md`。
+
 ## v3.8.11（2026-08-12）
 
 **维护态批14（Sprint-39）：后端引入 mypy 类型检查（mypy B1，NFR-006 P1 落地 / CQ-P1-002 Slice C 收益兑现前提）。纯工程治理引入类型检查器、非功能，不改 Phase / 交付物范围 / 对外 API 语义 / DB；新增 1 个后端 devDep（mypy）。聚合 bump PATCH。**

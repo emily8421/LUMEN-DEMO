@@ -1,7 +1,7 @@
 # task-047：权限查询边界 scoped query（CQ-P1-004）
 
 > 维护态批15 / Sprint-40 / CQ-P1-004 / governance rollout §4 轨道3 P1。
-> 状态：**已立项（2026-08-12）·编码中**。
+> 状态：**已完成（2026-08-13，PR #151 squash merge main `945bf8f`，bump v3.8.12）**。
 > 依据：评估 `docs/research/2026-08-10-code-quality-maintainability-assessment.md` §4.7；rollout 口径 `docs/research/2026-08-10-code-governance-rollout-plan.md` §4 轨道3。
 
 ## 背景 / 目标
@@ -28,3 +28,10 @@
 
 - SQL 全量下推（含 membership JOIN 单查询，方案 B）
 - 模板回流 R4 Auth Concern（去项目化后提交提案）
+
+## 完成记录（2026-08-13）
+
+- 编码：Slice A（repository 契约 + pg/demo 双实现）+ Slice B（用户态 8 处调用点收口）+ 负向 / 契约测试；PR #151 `870898a` squash merge main `945bf8f`。
+- 验证：mypy 0 error（55 files）+ ruff passed + 默认 pytest 304 passed / 4 skipped 零回归；CI PR #151 7 job 全绿（含 backend-integration 48 用例）。
+- 收尾：bump v3.8.12（VERSION / CHANGELOG / CHANGELOG-PLAIN）+ docs 08/09/05 + ai/project-rules §1 + rollout §4 状态回写。
+- 残留候选：SQL 全量下推（方案 B）、模板回流 R4 Auth Concern——均不在本次范围。
