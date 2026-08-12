@@ -38,7 +38,7 @@ function buildHeadingIds(content: string): Map<number, string> {
 }
 
 // 与后端 backend/service/document.py 的 _WIKILINK_PATTERN 保持同语法（仅 [[target]]，无 alias）。
-const WIKILINK_PATTERN = /\[\[([^\[\]]+?)\]\]/g;
+const WIKILINK_PATTERN = /\[\[([^[\]]+?)\]\]/g;
 const WIKILINK_HREF_PREFIX = 'lumen-wikilink:';
 
 export function MarkdownBlock({

@@ -178,7 +178,6 @@ export function DocumentsFeature({
   // 切换文档 / 新建 / 保存后重置撤销栈（编辑会话结束）。
   useEffect(() => {
     undoStackRef.current = [];
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isCreating, selectedDocument?.id, savedRevision]);
 
   const updateSplitRatio = (ratio: number) => {
@@ -260,6 +259,7 @@ export function DocumentsFeature({
     if (selectedDocument) {
       setDocumentMode('read');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 仅响应 selectedDocument.id 变化（切换文档）；selectedDocument 整对象不列入，避免同文档刷新触发多余 mode 重置
   }, [isCreating, selectedDocument?.id]);
 
   // 并排模式：自动收起右栏（Inspector 与编辑/预览抢横向空间），把宽度留给两侧，避免挤压变形。

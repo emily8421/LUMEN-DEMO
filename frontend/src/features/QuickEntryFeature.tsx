@@ -61,6 +61,13 @@ export function QuickEntryFeature({
   onClose,
   onOpenDocument,
 }: QuickEntryFeatureProps) {
+  const resultRef = useRef<HTMLElement>(null);
+  // 录入后结果区可能落在抽屉视口下方，自动滚入视野，避免 draft 录入后看不到反馈。
+  // hooks 必须在 early return 之前调用（rules-of-hooks）；isOpen=false 时 ref.current=null，可选链不操作。
+  useEffect(() => {
+    resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, [lastEntry]);
+
   if (!isOpen) {
     return null;
   }
@@ -69,12 +76,6 @@ export function QuickEntryFeature({
     isBusy || title.trim().length === 0 || (mode === 'append_document' && targetDocumentId == null);
   const targetDocumentTitle = (id: number | null) =>
     documents.find((document) => document.id === id)?.title ?? (id == null ? '' : `文档 #${id}`);
-
-  const resultRef = useRef<HTMLElement>(null);
-  // 录入后结果区可能落在抽屉视口下方，自动滚入视野，避免 draft 录入后看不到反馈。
-  useEffect(() => {
-    resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }, [lastEntry]);
 
   return (
     <div className="quick-entry-overlay" onClick={onClose}>

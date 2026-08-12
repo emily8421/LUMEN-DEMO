@@ -14,7 +14,7 @@ export function slugify(text: string): string {
   const slug = text
     .trim()
     .toLowerCase()
-    .replace(/[^\w一-鿿　-〿＀-￯-]+/g, '-')
+    .replace(/[^\w一-鿿\u3000-\u303f＀-￯-]+/g, '-')
     .replace(/^-+|-+$/g, '');
   return slug || 'section';
 }

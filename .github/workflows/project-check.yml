@@ -194,9 +194,8 @@ jobs:
       - run: npm run build   # build 已含 tsc -b（package.json），不加 typecheck
 
   frontend-lint:
-    name: Frontend ESLint (advisory baseline)
+    name: Frontend ESLint
     runs-on: ubuntu-latest
-    continue-on-error: true   # advisory 起步（eslint B1 / 维护态批13）：记 10 基线，Slice B 清完升 required 移除此行
     defaults:
       run:
         working-directory: frontend

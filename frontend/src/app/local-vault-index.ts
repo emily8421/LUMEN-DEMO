@@ -30,7 +30,7 @@ export interface LocalVaultSearchHit {
 }
 
 // 分词：中英文标点 / 空白拆分，过滤长度 ≤1 的碎片（与 PoC tokenize 一致）。
-const TOKEN_SPLIT = /[\s,，。.;；:：!！?？()（）\[\]]+/;
+const TOKEN_SPLIT = /[\s,，。.;；:：!！?？()（）[\]]+/;
 
 /** 分词为小写 token 数组。 */
 export function tokenize(s: string): string[] {
