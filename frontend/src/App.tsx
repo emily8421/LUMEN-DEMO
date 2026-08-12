@@ -153,6 +153,7 @@ function App() {
     if (session.session?.role !== 'admin' && workspace.activeView === 'admin-users') {
       workspace.setActiveView('home');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 仅响应 token 变化（登录/登出/换账号）；aiAssistant/session.role/workspace 不列入依赖，避免对象引用每次渲染变化触发跨用户重置
   }, [session.session?.token]);
 
   // session / 空间变化 → 刷新工作区（spaces + documents + terms）。

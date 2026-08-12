@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
 import type { SearchResponse } from '../api';
 import { searchDocuments } from '../api';
@@ -118,25 +118,28 @@ export function useCommandPalette({
     return () => clearTimeout(timer);
   }, [isOpen, query, token]);
 
-  // 构建扁平项（顺序即分组顺序：AI → 文档 → 跳转 → 操作）。
-  const trimmed = query.trim();
-  const items: PaletteItem[] = [];
-  if (trimmed) {
-    items.push({ kind: 'ai', label: `问 AI：${trimmed}`, query: trimmed, hint: '⌘↵' });
-  }
-  const docItems = results?.items.slice(0, MAX_DOCS) ?? [];
-  for (const item of docItems) {
-    items.push({ kind: 'document', id: item.doc_id, title: item.title, snippet: item.snippet });
-  }
-  if (!trimmed) {
-    for (const item of NAV_ITEMS) {
-      items.push({ kind: 'navigate', view: item.view, label: item.label, hint: item.hint });
+  // 构建扁平项（顺序即分组顺序：AI → 文档 → 跳转 → 操作）。useMemo 避免每次渲染新建致下游 useCallback（onKeyDown）频繁重建。
+  const items: PaletteItem[] = useMemo(() => {
+    const trimmed = query.trim();
+    const list: PaletteItem[] = [];
+    if (trimmed) {
+      list.push({ kind: 'ai', label: `问 AI：${trimmed}`, query: trimmed, hint: '⌘↵' });
     }
-  }
-  items.push({ kind: 'action', label: '新建文档', hint: '操作', run: onCreateDocument });
-  if (!trimmed) {
-    items.push({ kind: 'action', label: '导入文档', hint: '操作', run: onOpenImport });
-  }
+    const docItems = results?.items.slice(0, MAX_DOCS) ?? [];
+    for (const item of docItems) {
+      list.push({ kind: 'document', id: item.doc_id, title: item.title, snippet: item.snippet });
+    }
+    if (!trimmed) {
+      for (const item of NAV_ITEMS) {
+        list.push({ kind: 'navigate', view: item.view, label: item.label, hint: item.hint });
+      }
+    }
+    list.push({ kind: 'action', label: '新建文档', hint: '操作', run: onCreateDocument });
+    if (!trimmed) {
+      list.push({ kind: 'action', label: '导入文档', hint: '操作', run: onOpenImport });
+    }
+    return list;
+  }, [query, results, onCreateDocument, onOpenImport]);
 
   // query 变化 → 重置高亮；列表变短 → clamp。
   useEffect(() => {

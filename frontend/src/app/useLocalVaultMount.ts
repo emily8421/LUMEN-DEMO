@@ -337,6 +337,12 @@ export function useLocalVaultMount(): UseLocalVaultMount {
     setEditingText('');
   }, []);
 
+  /** 从目录句柄反查挂载 id（dirPath 为空 = 根目录新建）。 */
+  const mountNameOf = useCallback((handle: FileSystemDirectoryHandle): string | null => {
+    const mount = mountsRef.current.find((m) => m.handle === handle);
+    return mount?.name ?? null;
+  }, []);
+
   const createFile = useCallback(async (dirPath: string, name: string, content: string) => {
     const parent = parentHandleForPath(dirPath);
     if (!parent || !name.trim()) return;
@@ -354,13 +360,7 @@ export function useLocalVaultMount(): UseLocalVaultMount {
     } catch (e) {
       setError(`新建失败：${e instanceof Error ? e.message : String(e)}`);
     }
-  }, [parentHandleForPath, mountForPath, buildMountIndex]);
-
-  /** 从目录句柄反查挂载 id（dirPath 为空 = 根目录新建）。 */
-  const mountNameOf = useCallback((handle: FileSystemDirectoryHandle): string | null => {
-    const mount = mountsRef.current.find((m) => m.handle === handle);
-    return mount?.name ?? null;
-  }, []);
+  }, [parentHandleForPath, mountForPath, buildMountIndex, mountNameOf]);
 
   const deleteFile = useCallback(async (path: string) => {
     const doc = docs.find((d) => d.path === path);
