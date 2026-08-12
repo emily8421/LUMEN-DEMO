@@ -156,17 +156,18 @@ jobs:
                   if cur.fetchone() is None:
                       raise SystemExit("pgvector extension unavailable (image should be pgvector/pgvector:pg16)")
 
-          try:
-              ping(url)
-          except psycopg.errors.InvalidCatalogName:        # 3D000：库不存在 → 幂等补建
-              print(f"db {db!r} missing -> creating (idempotent fallback)")
-              admin = url.rsplit("/", 1)[0] + "/postgres"  # postgres 库 initdb 必建
-              with psycopg.connect(admin, connect_timeout=10, autocommit=True) as conn, conn.cursor() as cur:
-                  try:
-                      cur.execute("CREATE DATABASE " + sql.Identifier(db))
-                  except psycopg.errors.DuplicateDatabase:  # 竞态兜底（理论上不会走到）
-                      pass
-              ping(url)
+          # 幂等确保 lumen_test 存在：连接失败时 psycopg 抛的是通用 OperationalError（非 InvalidCatalogName
+          # 子类，SQLSTATE 只在 diag），不能依赖 except 精确匹配；改经必建的 postgres 管理库查 pg_database 后建。
+          admin = url.rsplit("/", 1)[0] + "/postgres"  # postgres 库 initdb 必建
+          with psycopg.connect(admin, connect_timeout=10, autocommit=True) as conn, conn.cursor() as cur:
+              cur.execute("SELECT 1 FROM pg_database WHERE datname = %s", (db,))
+              if cur.fetchone() is None:
+                  cur.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(db)))
+                  print(f"db {db!r} missing -> created")
+              else:
+                  print(f"db {db!r} already exists")
+
+          ping(url)
 
       # 48 用例；预检已保证 PG 可达 → 唯一合法 skip 是 embedding 软依赖（≤1）。
       # 行尾 grep guard 防假绿：断言至少 1 个 passed（杜绝「48 skipped」静默全绿）。
