@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
-import type { DocumentTagView, KnowledgeDocument, TagView } from '../api';
+import type { DocumentTagView, TaggedDocumentItem, TagView } from '../api';
 import {
   addDocumentTag,
   archiveTag,
@@ -37,7 +37,7 @@ export function useTags({ token, currentSpaceId, selectedDocumentId, runAction, 
   const [tags, setTags] = useState<TagView[]>([]);
   const [documentTags, setDocumentTags] = useState<DocumentTagView[]>([]);
   const [selectedTagId, setSelectedTagId] = useState<number | null>(null);
-  const [tagDocuments, setTagDocuments] = useState<KnowledgeDocument[]>([]);
+  const [tagDocuments, setTagDocuments] = useState<TaggedDocumentItem[]>([]);
   const [newTagName, setNewTagName] = useState('');
   const [addTagSelection, setAddTagSelection] = useState<number | null>(null);
 

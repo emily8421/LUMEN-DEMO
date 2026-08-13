@@ -1,4 +1,4 @@
-import type { KnowledgeDocument } from './documents';
+import type { DocumentPermission } from './documents';
 import type { components } from './generated';
 import { request } from './client';
 
@@ -95,7 +95,19 @@ export async function removeDocumentTag(token: string, documentId: number, tagId
   });
 }
 
-export async function listDocumentsByTag(token: string, tagId: number): Promise<KnowledgeDocument[]> {
-  const result = await request<ListEnvelope<KnowledgeDocument>>(`/api/tags/${tagId}/documents`, { token });
+/**
+ * 标签下可见文档（Slice B-4 契约修正）：后端返回瘦身 DocumentTagItemView
+ * （仅 id/title/permission/owner_id/updated_at，无 space_id/folder_id/type/current_version），
+ * 旧手写误标为完整 KnowledgeDocument（运行时字段少于声明）；permission narrow 保 union。
+ */
+export type TaggedDocumentItem = Omit<components['schemas']['DocumentTagItemView'], 'permission'> & {
+  permission: DocumentPermission;
+};
+
+export async function listDocumentsByTag(token: string, tagId: number): Promise<TaggedDocumentItem[]> {
+  const result = await request<{ items: TaggedDocumentItem[]; total: number }>(
+    `/api/tags/${tagId}/documents`,
+    { token },
+  );
   return result.items;
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { DocLinkView, DocumentVersion, KnowledgeDocument } from '../api';
-import { getDocument, listDocLinks, listVersions } from '../api';
+import { getDocument, isDocumentDetail, listDocLinks, listVersions } from '../api';
 import { isAuthTokenError } from './session-store';
 
 type UseDocumentSideDataArgs = {
@@ -78,7 +78,7 @@ export function useDocumentSideData({
     }
 
     if (selectedDocument) {
-      if (selectedDocument.content_md === undefined && token) {
+      if (!isDocumentDetail(selectedDocument) && token) {
         void loadDocumentDetail(token, selectedDocument.id);
         return;
       }
@@ -89,7 +89,7 @@ export function useDocumentSideData({
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isCreating, selectedDocument?.id, selectedDocument?.content_md, token]);
+  }, [isCreating, selectedDocument?.id, selectedDocument && isDocumentDetail(selectedDocument), token]);
 
   /** 空间无文档时清空侧数据（reloadDocuments 调用）。 */
   function resetSideData() {
