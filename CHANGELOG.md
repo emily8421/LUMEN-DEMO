@@ -6,6 +6,14 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.8.17（2026-08-13）
+
+**维护态批20（Sprint-45）：前端 ratchet + App 减压（CQ-P1-008，轨道3 P2）。纯工程治理收敛前端文件膨胀、非功能，不改 Phase / 交付物范围 / 对外 API 语义 / DB；不新增依赖。聚合 bump PATCH。**
+
+- **App 减压**：`App.tsx` 546→360 行——拆 `AuthShell`（登录 / 注册 + 忘记密码）/ `WorkspaceShell`（主工作区容器）/ `OverlayShell`（命令面板 + AI 助手）三个 shell 组件，App 只留状态编排 + 装配（职责分离，对齐 L0-11 体量克制）。
+- **文件膨胀 ratchet**：新 `scripts/check-frontend-file-size.mjs`（Node 零依赖）+ `frontend/.file-size-baseline.json`（19 个既有超限文件基线）+ `package.json` `check:file-size` + CI `project-check` step——拦「新增超限文件」+「既有超限文件继续膨胀」（棘轮只进不退）。
+- 验证：`npm run lint` 0 problem + `npm run build` 304 modules（+3 shell）+ `npm run check:file-size` OK + 负向探针（260 行临时文件 fail）；CI **8 job 全绿**。PR #157 squash merge main `7b5444f`。
+
 ## v3.8.16（2026-08-13）
 
 **维护态批19（Sprint-44）：配置集中 + secret 校验（CQ-P2-003，轨道3 P2）。纯工程治理 + 生产安全加固，集中 env 读取并为生产补弱默认签名 key 的 fail-closed 校验；不改 Phase / 交付物范围 / 对外 API 语义 / DB。新增依赖 pydantic-settings（pydantic 生态标准扩展，已确认）。聚合 bump PATCH。**
