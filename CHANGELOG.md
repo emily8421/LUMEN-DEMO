@@ -6,6 +6,15 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.8.16（2026-08-13）
+
+**维护态批19（Sprint-44）：配置集中 + secret 校验（CQ-P2-003，轨道3 P2）。纯工程治理 + 生产安全加固，集中 env 读取并为生产补弱默认签名 key 的 fail-closed 校验；不改 Phase / 交付物范围 / 对外 API 语义 / DB。新增依赖 pydantic-settings（pydantic 生态标准扩展，已确认）。聚合 bump PATCH。**
+
+- **集中配置**：新 `backend/config.py`（pydantic-settings `Settings`：`lumen_env` / `database_url` / `demo_token_key` 三字段显式 alias + `get_settings()` lru_cache 单例 + `validate_runtime_secrets`）；`db.py` / `main.py` / `auth.py` 三处静态 env 读取收敛到 settings（单一事实源）。
+- **secret 校验（安全加固）**：`main.py` lifespan 生产 fail-closed——`LUMEN_ENV=production` 且 `TOKEN_SIGNING_KEY` 为弱默认 / 空时拒绝启动；补既有生产护栏（只挡 demo 仓储、不挡弱 key）的安全缺口。test / 本地开发 / demo 为受控豁免（理由见 docs/05 §4.2.4 / implementation-lifecycle §6.2）。
+- **显式豁免**：`llm_adapter.py` `LLM_<NAME>_*` 动态命名配置（key 运行时拼接）、`embedding.py` `HF_HUB_DISABLE_XET` 环境约束注入（huggingface 导入前 setdefault）不收敛。
+- 验证：mypy **0 error**（58 files）+ ruff passed（含 T20）+ 默认 pytest **321 passed / 49 deselected**（+8 config 用例）零回归 + secret 校验单测 8/8。PR #156 squash merge main `7388ff6`。
+
 ## v3.8.15（2026-08-13）
 
 **维护态批18（Sprint-43）：日志统一（CQ-P2-002，轨道3 P2）。纯工程治理收敛 print 债与静默吞异常日志、非功能，不改 Phase / 交付物范围 / 对外 API 语义 / DB；不新增依赖。聚合 bump PATCH。**
