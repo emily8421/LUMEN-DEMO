@@ -6,8 +6,7 @@ import type { KnowledgeDocument } from '../api';
 import {
   createDocument,
   deleteDocument,
-  isDocumentDetail,
-  listDocuments,
+  isDocumentDetail, listDocuments,
   moveDocument,
   restoreVersion,
   updateDocument,
