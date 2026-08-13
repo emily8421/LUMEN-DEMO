@@ -6,6 +6,14 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.8.20（2026-08-13）
+
+**维护态批23（Sprint-48）：前端文件膨胀拆分 Slice C——CSS 拆分（CQ-P1-008 候选 E4，轨道3 P2 剩余候选）。纯工程治理收敛前端文件膨胀、非功能，不改 Phase / 交付物范围 / 对外 API 语义 / DB；不新增依赖。聚合 bump PATCH。**
+
+- **CSS 拆分**：4 个超限 CSS（阈值 300）全拆——`workspace` 722 行拆 tree/editor/workspace 三份；`local-mount` 589 行拆 pane/tree/doc-preview/menu 四份；`layout` 458 行拆 topbar/workspace-layout 两份；`onboarding` 317 行的新手清单并入 welcome.css。所有新文件按层叠顺序原位引入。
+- **baseline 收窄**：15→11（CSS 全出基线；剩余 9 个 .tsx 组件 + 2 个核心编排 hook）。
+- 验证：`npm run build` 320 modules + CSS bundle **65.60 kB**（= 拆分前，内容无丢失）+ `npm run check:file-size` OK（11 基线）+ 负向探针（280 行 fail）+ 浏览器 smoke（headless Edge 登录页渲染正常）；CI **8 job 全绿**。PR #160 squash merge main `071a73b`。
+
 ## v3.8.19（2026-08-13）
 
 **维护态批22（Sprint-47）：前端文件膨胀拆分 Slice B——hooks/工具拆分（CQ-P1-008 候选 E4，轨道3 P2 剩余候选）。纯工程治理收敛前端文件膨胀、非功能，不改 Phase / 交付物范围 / 对外 API 语义 / DB；不新增依赖。聚合 bump PATCH。**
