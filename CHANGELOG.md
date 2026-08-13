@@ -6,6 +6,14 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.8.19（2026-08-13）
+
+**维护态批22（Sprint-47）：前端文件膨胀拆分 Slice B——hooks/工具拆分（CQ-P1-008 候选 E4，轨道3 P2 剩余候选）。纯工程治理收敛前端文件膨胀、非功能，不改 Phase / 交付物范围 / 对外 API 语义 / DB；不新增依赖。聚合 bump PATCH。**
+
+- **hooks/工具拆分**：4 个超限 `.ts` 按风险低→高拆——`local-vault-fs` 310 行拆 3 个纯工具（walk 目录遍历 / idb 句柄持久化 / fs 授权+读写）；`useFolders` 300 行拆 folder-utils 纯函数 + useFolderInlineEdit 内联编辑组；`useDocuments` 335 行拆 useDocumentSideData（版本/出入链/反链）+ download-actions；`useLocalVaultMount` 442 行拆 tree/types/useLocalVaultEditor（REQ-049 本地读写）+ 主 hook 236。
+- **baseline 收窄**：18→15（useLocalVaultMount / local-vault-fs / useFolders 出基线）；useDocuments 286 因文档域核心 CRUD 强拆需大 prop-drill 登记（核心编排例外，与 useAppState 同类，Slice A 确认模式）。
+- 验证：`npm run lint` 0 + `tsc` 0 + `npm run build` 314 modules（+9 文件）+ `npm run check:file-size` OK（15 基线）+ 负向探针（280 行 fail）+ 浏览器 smoke（headless Edge 登录页无错误）；CI **8 job 全绿**。PR #159 squash merge main `bad7e4c`。
+
 ## v3.8.18（2026-08-13）
 
 **维护态批21（Sprint-46）：前端文件膨胀拆分 Slice A——App 减压收口 + ratchet 分层阈值（CQ-P1-008 候选 E4，轨道3 P2 剩余候选）。纯工程治理收敛前端文件膨胀、非功能，不改 Phase / 交付物范围 / 对外 API 语义 / DB；不新增依赖。聚合 bump PATCH。**
