@@ -6,6 +6,8 @@ demo 模式保留无密码快捷登录（seed 用户），PG 模式强制真实�
 
 from __future__ import annotations
 
+import logging
+
 from backend.model.schemas import (
     ApiEnvelope,
     LoginView,
@@ -31,6 +33,7 @@ from backend.service.space import SpaceAccessError, ensure_space_access
 from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel
 
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -70,7 +73,12 @@ def login(request: LoginRequest) -> dict[str, object]:
             if session.id is not None:
                 update_session_space(repository, session.id, current_space_id)
         except SpaceAccessError:
-            pass  # 无权限空间静默回退当前会话空间
+            # 无权限空间回退当前会话空间；记录以便审计
+            logger.warning(
+                "user %s requested space %s without access; fallback to current session space",
+                session.user_id,
+                request.current_space_id,
+            )
 
     # Sprint-28（REQ-045）：登录响应附带全局角色，支撑前端管理入口显隐（additive，非破坏性）
     current_user = repository.find_user_by_id(session.user_id)

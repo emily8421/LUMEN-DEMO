@@ -6,9 +6,11 @@
 # - 不自动格式化：本配置只供 `ruff check`；不配 [format]，CI 不跑 `ruff format`
 #   （py314 target 的 formatter 多 except 改写 bug #25901/#25550 不影响 check-only）。
 # - backend-lint CI job 恒 advisory（continue-on-error），仅建旧债基线，不阻断 P0。
+# - T20（flake8-print）2026-08-13 日志统一 CQ-P2-002：禁 print()，后端生产代码必须用 logging；
+#   scripts/ 不在扫描范围（smoke/CLI 脚本 stdout 输出属合理用途）。
 # - E501（line-too-long，属 E5）不在选择集内，故 line-length 不影响检查结果。
 
 target-version = "py314"
 
 [lint]
-select = ["E4", "E7", "E9", "F"]
+select = ["E4", "E7", "E9", "F", "T20"]
