@@ -6,8 +6,9 @@
 ## 0. 覆盖边界
 
 - **已覆盖（`ai-records/token-hotspots/` 入库）**：2026-07-13 ~ 07-19（5 份单条，阶段 A）
-- **已覆盖（`.ai/token-hotspots/` 本地，本次纳入汇总）**：2026-07-31 ~ 08-13（30 份单条 + 1 份会话级分析，阶段 B）
-- **未覆盖**：无（截至 2026-08-13 全部纳入）
+- **已覆盖（`.ai/token-hotspots/` 本地，首次汇总纳入）**：2026-07-31 ~ 08-13（30 份单条 + 1 份会话级分析，阶段 B）
+- **已覆盖（本次追加）**：2026-08-13 codegen Slice B-2/B-3/B-4（3 份单条，阶段 C，见 §7）
+- **未覆盖**：无（截至 2026-08-13 深夜全部纳入）
 - **下一次 rollup 起点**：2026-08-14 起，只统计 `汇总状态：未汇总` 的本地 `.ai/token-hotspots/` 记录（已纳入本次 SUMMARY 的本地单条建议补标 `已纳入 SUMMARY.md（2026-07-13~08-13）`，逐步补齐）
 
 ## 1. 阶段 A：2026-07-13 ~ 07-19（5 份，前端体验 / UI Gate / REQ vertical slice / 用户手册）
@@ -84,3 +85,18 @@
 - 2026-08-13：handoff rollup（848→174）。
 - 2026-08-13：`session-rules §4.2 / §4.3 / §6.1` 经 v1.61.4 同步落地（#312 / #314）。
 - 阶段 A（07-13~07-19）原 5 份单条已入库 `ai-records/token-hotspots/`；阶段 B（07-31~08-13）30 份单条留本地 `.ai/token-hotspots/`（gitignored），本 SUMMARY 为其阶段性提炼。
+
+## 7. 阶段 C：2026-08-13 深夜（codegen Slice B-2/B-3/B-4，3 份，前端 codegen 全量闭环）
+
+| 记录 | 任务类型 | 主要热点 |
+|---|---|---|
+| `frontend-codegen-slice-b2` | 术语导入域编码 + PR 闭环 | 规则包全量加载（快速续接→编码）、generated.ts 分段定位、消费方核验 grep ×2 轮 |
+| `frontend-codegen-slice-b3` | 账户空间域编码 + PR 闭环 | **§3.2 同会话规则复用首次完整生效（规则加载成本 0）**、grep-offset 模式定位（~300 行）、union/optionality 消费链 1 轮 grep |
+| `frontend-codegen-slice-b4` | documents 梳理 + 编码 + PR 闭环（收口批） | **前置全景 grep 兑现收益**（plan→编码零返工）、smoke 调试 4 轮（脚本 bug ×2 + 既有应用行为未知 ×2）、CI ratchet 一次往返（本地漏跑 file-size） |
+
+### 7.1 阶段 C 结论
+
+- **有效模式沉淀**（后续批次沿用）：① 前置消费方全景 grep → plan 按消费方分类给改动面（B-4 验证，plan→编码零返工）；② generated.ts schema 先 grep offset 再批量读（B-3 起）；③ §3.2 同会话规则复用（B-3 验证，成本归零）。
+- **待改进**：① 涉及登记基线文件（useAppState/useDocuments）的改动，本地验证包须加 `npm run check:file-size`（B-4 CI 一次往返教训）；② 写 UI smoke 前先读目标组件渲染条件（模式切换 / handler 挂载点），可省 1-2 轮试错（B-4 4 轮教训）。
+- **机制层产出**：AI 代码问题记录机制讨论 → 模板提案（pitfall 触发口径扩展）+ 首次 pitfall SUMMARY rollup（见 `ai-records/pitfalls/SUMMARY.md`）。
+- 热点强度趋势：规则加载与 schema 定位成本经 A/B/C 三阶段迭代**收敛**（全量 → 复用 → 定向），codegen 类任务的剩余主要成本为消费方核验与 smoke 调试（随域数线性，模式已稳定）。
