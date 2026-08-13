@@ -6,6 +6,16 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.8.22（2026-08-13）
+
+**维护态批25（Sprint-50）：前端文件膨胀拆分 Slice E——组件拆分·中风险 + baseline 收窄（CQ-P1-008 候选 E4 收口 / GOV-015，轨道3 P2 剩余候选）。纯工程治理收敛前端文件膨胀、非功能，不改 Phase / 交付物范围 / 对外 API 语义 / DB；不新增依赖。聚合 bump PATCH。**
+
+- **组件拆分·中风险**：3 个超限 .tsx 组件全拆——`WorkspaceMain`（279 行）抽 documents 视图分支为 `app/WorkspaceMainDocuments`；`DocumentsFeature`（485 行）拆 `features/documents/`（useSplitDragController + useEditorUndoStack + MarkdownToolbar + DocumentEditorForm + DocumentPreviewPane）；`LocalMountPane`（563 行）拆 `features/local-mount/`（useLocalMountImport + LocalMountHeader + LocalMountImportBar + LocalMountTreeView + LocalMountContextMenus + useInlineEdit + LocalMountInlineInput）。
+- **textareaRef 三方共享内聚**：编辑器撤销栈 / AI 选区 / MD 工具插入共用同一 textarea ref，内聚于 DocumentEditorForm（内部 useRef + 装配三处），不拆成三组件各持一份。
+- **TreeView 二次拆**：LocalMountTreeView 302 行抽右键菜单（DirContextMenu / FileContextMenu）+ 内联编辑（useInlineEdit / LocalMountInlineInput）落到 242。
+- **baseline 收窄**：5→2（3 个组件全出基线；剩 useAppState / useDocuments 两核心编排 hook 登记例外）。
+- 验证：`npm run lint` 0 + `tsc` 0 + `npm run build` **350 modules**（+13 文件，无新依赖）+ CSS bundle **65.60 kB**（不变）+ `npm run check:file-size` OK（2 基线）+ 负向探针（280 行 fail）+ 浏览器 smoke（smoke-vault-local-mount OK：登录 alice → documents → `.local-mount-pane` 渲染）；CI **8 job 全绿**。PR #162 squash merge main `9f5c967`。
+
 ## v3.8.21（2026-08-13）
 
 **维护态批24（Sprint-49）：前端文件膨胀拆分 Slice D——组件拆分（CQ-P1-008 候选 E4，轨道3 P2 剩余候选）。纯工程治理收敛前端文件膨胀、非功能，不改 Phase / 交付物范围 / 对外 API 语义 / DB；不新增依赖。聚合 bump PATCH。**
