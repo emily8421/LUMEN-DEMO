@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import logging
-import os
+
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 
-from contextlib import asynccontextmanager
+from backend.config import get_settings, validate_runtime_secrets
 
 logger = logging.getLogger("lumen")
 
@@ -26,7 +27,9 @@ async def lifespan(_app):
     from backend.repository import repository
     from backend.service.auth import is_demo_repository
 
-    if os.environ.get("LUMEN_ENV", "").lower() == "production" and is_demo_repository(repository):
+    # CQ-P2-003：生产环境 fail-closed 校验弱默认 signing key
+    validate_runtime_secrets(get_settings())
+    if get_settings().lumen_env.lower() == "production" and is_demo_repository(repository):
         raise RuntimeError("[AUTH] LUMEN_ENV=production must not use the demo repository")
     try:
         from backend.service.db import init_db
