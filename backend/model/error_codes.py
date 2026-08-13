@@ -32,6 +32,7 @@ class ErrorCode(IntEnum):
     VALIDATION_FAILED = 4220    # 参数校验失败
     INTERNAL = 5000             # 服务端错误（兜底）
     SERVICE_UNAVAILABLE = 5030  # 外部 AI / OCR 服务不可用
+    DB_NOT_READY = 5031         # 依赖的数据库未就绪（readiness 探测失败）
 
 
 #: ``code → HTTP status`` 集中映射（单一事实源；Slice B 收口散落的 ``_status_for``）。
@@ -45,6 +46,7 @@ CODE_TO_HTTP: dict[int, int] = {
     ErrorCode.VALIDATION_FAILED: 422,
     ErrorCode.INTERNAL: 500,
     ErrorCode.SERVICE_UNAVAILABLE: 503,
+    ErrorCode.DB_NOT_READY: 503,
 }
 
 

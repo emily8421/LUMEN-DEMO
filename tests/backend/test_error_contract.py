@@ -91,7 +91,7 @@ client = TestClient(_build_app(), raise_server_exceptions=False)
 
 def test_error_code_matches_authoritative_set():
     """ErrorCode 覆盖 ``docs/07-api-spec.md`` §1 权威业务码全集。"""
-    expected = {4001, 4003, 4004, 4010, 4030, 4090, 4220, 5000, 5030}
+    expected = {4001, 4003, 4004, 4010, 4030, 4090, 4220, 5000, 5030, 5031}
     assert {int(c) for c in ErrorCode} == expected
 
 
@@ -109,6 +109,7 @@ def test_code_to_http_complete_and_sensible():
     assert CODE_TO_HTTP[ErrorCode.VALIDATION_FAILED] == 422
     assert CODE_TO_HTTP[ErrorCode.INTERNAL] == 500
     assert CODE_TO_HTTP[ErrorCode.SERVICE_UNAVAILABLE] == 503
+    assert CODE_TO_HTTP[ErrorCode.DB_NOT_READY] == 503
 
 
 def test_api_error_status_derived_from_code():

@@ -47,6 +47,16 @@ class OkStatus(BaseModel):
     ok: bool
 
 
+# --- health（CQ-P1-001）---
+
+
+class HealthView(BaseModel):
+    """``/api/health/*`` 端点 data：存活 / 就绪状态。"""
+
+    status: str
+    db: str | None = None
+
+
 # --- documents ---
 
 
