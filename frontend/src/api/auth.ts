@@ -1,30 +1,30 @@
+import type { components } from './generated';
 import { request } from './client';
 
-export type LoginResponse = {
-  token: string;
-  user_id: number;
-  /** 用户名（注册时填写；登录响应附带，支撑顶栏显示，additive）。 */
-  name: string;
+// ── 混合接入（openapi codegen · Slice B-3）──
+/**
+ * LoginResponse —— 主体字段来自生成 LoginView（命名错位 Response↔View）。
+ * `current_space_id` 生成 `number|null`（后端 schema 宽口径），narrow 为 `number`：
+ * 运行时哨兵——注册即建个人空间（C-AUTH-001），登录用户必有当前空间；
+ * 与 `Session.currentSpaceId` / session-store 校验对齐。
+ * `role` 生成裸 string，narrow 保 union（Sprint-28 REQ-045，支撑管理入口显隐）。
+ */
+export type LoginResponse = Omit<components['schemas']['LoginView'], 'current_space_id' | 'role'> & {
   current_space_id: number;
-  /** Sprint-28（REQ-045）：全局角色，支撑前端管理入口显隐。 */
   role: 'admin' | 'member';
 };
 
-export type RegisterResponse = {
-  user_id: number;
-  name: string;
+/**
+ * RegisterResponse —— 主体字段来自生成 RegisterView（命名错位）。
+ * `email` 生成 `string|null`，narrow 为 `string`：注册入参 email 必填，运行时必有值
+ * （useSession 注册后拿 created.email 自动转登录）。
+ */
+export type RegisterResponse = Omit<components['schemas']['RegisterView'], 'email'> & {
   email: string;
 };
 
-export type SessionInfo = {
-  id: number;
-  created_at: string;
-  expires_at: string;
-  last_used_at: string | null;
-  client_ua: string | null;
-  client_ip: string | null;
-  current: boolean;
-};
+/** 多设备会话条目（REQ-042），与生成 SessionView 零差异，直接 alias。 */
+export type SessionInfo = components['schemas']['SessionView'];
 
 /** 凭证登录（Sprint-26，REQ-041）：login_id 支持 email 或 external_id；demo 模式可空密码。 */
 export async function login(loginId: string, password: string): Promise<LoginResponse> {
@@ -58,8 +58,8 @@ export async function revokeSession(token: string, sessionId: number): Promise<v
 }
 
 /** 忘记密码申请（REQ-051，API-055）：恒响应防枚举；demo 模式 token 写后端日志（无 SMTP 降级）。 */
-export async function requestPasswordReset(email: string): Promise<{ message: string }> {
-  return request<{ message: string }>('/api/auth/password-reset/request', {
+export async function requestPasswordReset(email: string): Promise<components['schemas']['PasswordResetMessageView']> {
+  return request('/api/auth/password-reset/request', {
     method: 'POST',
     body: JSON.stringify({ email }),
   });

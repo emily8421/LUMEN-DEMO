@@ -1,20 +1,17 @@
-﻿import { request } from './client';
+﻿import type { components } from './generated';
+import { request } from './client';
 
+// ── 混合接入（openapi codegen · Slice B-3）──
+/** 空间角色 —— 生成字段为裸 string，保留手写 union 保编译期 narrow。 */
 export type SpaceMemberRole = 'admin' | 'member';
 
-export type SpaceMemberView = {
-  user_id: number;
-  name: string;
-  email: string | null;
+/** SpaceMemberView —— 主体字段来自生成类型；role narrow 为手写 union。 */
+export type SpaceMemberView = Omit<components['schemas']['SpaceMemberView'], 'role'> & {
   role: SpaceMemberRole;
-  joined_at: string;
 };
 
-export type UserSearchResult = {
-  id: number;
-  name: string;
-  email: string | null;
-};
+/** 成员添加时用户搜索结果（users 域 API-050），与生成 UserSearchView 零差异（命名错位），直接 alias。 */
+export type UserSearchResult = components['schemas']['UserSearchView'];
 
 /** 空间成员列表（API-046）：空间成员可读。 */
 export async function listSpaceMembers(token: string, spaceId: number): Promise<SpaceMemberView[]> {

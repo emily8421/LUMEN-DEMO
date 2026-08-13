@@ -1,16 +1,16 @@
-﻿import { request } from './client';
+﻿import type { components } from './generated';
+import { request } from './client';
 import type { SpaceMemberRole } from './spaceMembers';
 
+// ── 混合接入（openapi codegen · Slice B-3）──
+/** 全局角色 / 用户状态 —— 生成字段为裸 string，保留手写 union 保编译期 narrow。 */
 export type UserRole = 'admin' | 'member';
 export type UserStatus = 'active' | 'disabled';
 
-export type AdminUserView = {
-  id: number;
-  name: string;
-  email: string | null;
+/** AdminUserView —— 主体字段来自生成类型；role / status narrow 为手写 union。 */
+export type AdminUserView = Omit<components['schemas']['AdminUserView'], 'role' | 'status'> & {
   role: UserRole;
   status: UserStatus;
-  last_login_at: string;
 };
 
 export type AdminUserFilters = {
@@ -42,23 +42,17 @@ export async function updateAdminUser(
   });
 }
 
-export type AdminUserSpaceView = {
-  space_id: number;
-  space_code: string;
-  space_name: string;
+/** 用户已加入空间条目（命名错位 AdminUserSpaceView↔AdminJoinedSpaceView）；role narrow 保 union。 */
+export type AdminUserSpaceView = Omit<components['schemas']['AdminJoinedSpaceView'], 'role'> & {
   role: SpaceMemberRole;
-  joined_at: string;
 };
 
-export type AdminUserSpaceAvailable = {
-  space_id: number;
-  space_code: string;
-  space_name: string;
-};
+/** 可授予空间条目（命名错位 AdminUserSpaceAvailable↔AdminAvailableSpaceView），零差异 alias。 */
+export type AdminUserSpaceAvailable = components['schemas']['AdminAvailableSpaceView'];
 
-export type AdminUserSpacesResult = {
+/** joined 元素需 narrow，生成 AdminUserSpacesView 的 joined 是未 narrow 元素，嵌套 narrow。 */
+export type AdminUserSpacesResult = Omit<components['schemas']['AdminUserSpacesView'], 'joined'> & {
   joined: AdminUserSpaceView[];
-  available: AdminUserSpaceAvailable[];
 };
 
 /** admin 查询用户已加入空间 + 可授予空间（API-054，REQ-050）。仅全局 admin。 */
