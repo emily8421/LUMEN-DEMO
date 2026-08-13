@@ -1,31 +1,23 @@
+import type { components } from './generated';
 import { request } from './client';
 
-export type SearchResult = {
-  doc_id: number;
-  title: string;
-  snippet: string;
-  chunk_id: number;
-  ordinal: number;
-};
+// ── 混合接入（openapi codegen · Slice B-1）──
+// SearchResult / SearchResponse / LlmConfigMeta：与生成类型零差异（无 union），直接 alias（命名错位 Result↔ResultView / Response↔PageView / Meta↔View）。
+export type SearchResult = components['schemas']['SearchResultView'];
+export type SearchResponse = components['schemas']['SearchPageView'];
+export type LlmConfigMeta = components['schemas']['LlmConfigView'];
 
-export type SearchResponse = {
-  items: SearchResult[];
-  total: number;
-  page: number;
-};
-
-export type RagSource = {
-  doc_id: number | null;
-  title: string;
-  snippet: string;
+/** RagSource —— 主体 alias 生成 RagSourceView；source_type narrow 为 'document'|'term'（手写 optional，生成 required string）。 */
+export type RagSource = Omit<components['schemas']['RagSourceView'], 'source_type'> & {
   source_type?: 'document' | 'term';
 };
 
-export type QueryResponse = {
-  answer: string;
+/** QueryResponse —— alias 生成 QueryAnswerView + sources narrow 为 RagSource[]。 */
+export type QueryResponse = Omit<components['schemas']['QueryAnswerView'], 'sources'> & {
   sources: RagSource[];
 };
 
+// QueryTurn（前端组装对话历史，role union）+ QueryKnowledgeBaseOptions（前端专属请求选项）手写保留。
 export type QueryTurn = {
   role: 'user' | 'assistant';
   content: string;
@@ -38,14 +30,6 @@ export type QueryKnowledgeBaseOptions = {
   useKnowledgeBase?: boolean;
   /** 多通道切换（2026-08-08）：命名 LLM 配置名（LLM_PROVIDERS 列表项），空 = 后端默认。 */
   llmProvider?: string;
-};
-
-export type LlmConfigMeta = {
-  name: string;
-  provider: string;
-  model: string;
-  base_url: string;
-  enabled: boolean;
 };
 
 export async function searchDocuments(token: string, query: string): Promise<SearchResponse> {

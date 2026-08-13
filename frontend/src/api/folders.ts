@@ -1,25 +1,17 @@
+import type { components } from './generated';
 import { request } from './client';
 
-export type FolderView = {
-  id: number;
-  name: string;
-  parent_id: number | null;
-  order: number;
-  document_count: number;
-  child_folder_count: number;
-  created_at: string;
-  updated_at: string;
-};
+// ── 混合接入（openapi codegen · Slice B-1）──
+// 主体类型对齐生成类型（字段以 openapi 为准）；FolderView 纯字段无 union，直接 alias。
+export type FolderView = components['schemas']['FolderView'];
+// 生成 FolderDetail 仅 { id, name, parent_id, order }；前端旧手写的 created_at?/updated_at? 后端 schema 不返回、
+// 无消费方引用（grep 确认仅本文件内部），alias 清理冗余字段。
+export type FolderDetail = components['schemas']['FolderDetail'];
 
-export type FolderDetail = {
-  id: number;
-  name: string;
-  parent_id: number | null;
-  order: number;
-  created_at?: string;
-  updated_at?: string;
-};
+// 分页：FolderView 无 union，生成 FolderListPage 与手写一致，直接 alias。
+type FolderListResponse = components['schemas']['FolderListPage'];
 
+// 请求体（前端组装，无 union 价值）手写保留。
 export type FolderCreatePayload = {
   name: string;
   parent_id?: number | null;
@@ -28,11 +20,6 @@ export type FolderCreatePayload = {
 export type FolderUpdatePayload = {
   name?: string;
   parent_id?: number | null;
-};
-
-type FolderListResponse = {
-  items: FolderView[];
-  total: number;
 };
 
 type FolderReorderPayload = {
