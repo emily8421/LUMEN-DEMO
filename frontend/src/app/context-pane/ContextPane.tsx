@@ -5,7 +5,7 @@ import { FolderTree } from '../folder-tree/FolderTree';
 import { PaneEdgeToggle } from '../PaneEdgeToggle';
 import type { FolderManager } from '../useFolders';
 import type { TermCategoryManager } from '../useTermCategories';
-import { LocalMountPane } from '../../features/LocalMountPane';
+import { LocalMountPane } from '../../features/local-mount/LocalMountPane';
 import type { UseLocalVaultMount } from '../useLocalVaultMount';
 import { useLocalMountHeight } from '../useLocalMountHeight';
 import { usePaneSectionHeight } from '../usePaneSectionHeight';

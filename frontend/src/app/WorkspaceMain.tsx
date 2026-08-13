@@ -1,5 +1,4 @@
-import { DocumentsFeature } from '../features/DocumentsFeature';
-import { LocalDocPreview } from '../features/LocalDocPreview';
+import { WorkspaceMainDocuments } from './WorkspaceMainDocuments';
 import type { LocalVaultDoc } from './local-vault-index';
 import type { UseLocalVaultMount } from './useLocalVaultMount';
 import { SearchFeature } from '../features/SearchFeature';
@@ -106,50 +105,20 @@ export function WorkspaceMain({
       ) : null}
 
       {activeView === 'documents' ? (
-        localPreviewDoc ? (
-          <LocalDocPreview
-            doc={localPreviewDoc}
-            onClose={onCloseLocalDoc}
-            editingPath={localVault.editingPath}
-            editingText={localVault.editingText}
-            onBeginEdit={localVault.beginEdit}
-            onEditingTextChange={localVault.setEditingText}
-            onSaveEdit={() => void localVault.saveEdit()}
-            onCancelEdit={localVault.cancelEdit}
-          />
-        ) : (
-        <DocumentsFeature
-          isCreating={documents.isCreating}
-          selectedDocument={documents.selectedDocument}
+        <WorkspaceMainDocuments
           isBusy={isBusy}
           rightPaneOpen={rightPaneOpen}
           onToggleRightPane={onToggleRightPane}
-          draft={documents.draft}
-          onDraftChange={documents.setDraft}
-          versions={documents.versions}
-          outboundLinks={documents.outboundLinks}
-          backlinks={documents.backlinks}
-          documents={documents.documents}
-          onOpenDocument={documents.handleOpenDocument}
-          onCreateDocument={documents.handleCreateDocument}
-          savedRevision={documents.savedRevision}
-          onSave={documents.handleSave}
-          onRestore={documents.handleRestore}
-          onDownloadMarkdown={documents.handleDownloadMarkdown}
-          onExportPdf={documents.handleExportPdf}
-          onOpenImport={onOpenImport}
-          documentTags={tags.documentTags}
-          availableTags={tags.tags}
-          addTagSelection={tags.addTagSelection}
-          onAddTagSelectionChange={tags.setAddTagSelection}
-          onAddTag={tags.handleAddDocumentTag}
-          onCreateAndTag={tags.handleCreateAndTag}
-          onRemoveTag={tags.handleRemoveDocumentTag}
+          documents={documents}
+          tags={tags}
           aiPolish={aiPolish}
+          localPreviewDoc={localPreviewDoc}
+          onCloseLocalDoc={onCloseLocalDoc}
+          localVault={localVault}
+          onOpenImport={onOpenImport}
           onExpandLeftPane={onExpandLeftPane}
           onExitToEmpty={onExitToEmpty}
         />
-        )
       ) : null}
 
       {activeView === 'search' ? (

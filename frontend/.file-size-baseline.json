@@ -1,7 +1,4 @@
 {
-  "features/LocalMountPane.tsx": 563,
-  "features/DocumentsFeature.tsx": 485,
   "app/useAppState.ts": 339,
-  "app/useDocuments.ts": 286,
-  "app/WorkspaceMain.tsx": 279
+  "app/useDocuments.ts": 286
 }
