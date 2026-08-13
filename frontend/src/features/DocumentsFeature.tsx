@@ -12,7 +12,7 @@ import type { Draft } from '../app/types';
 import { permissionLabels } from '../app/constants';
 import { MarkdownBlock } from '../components/MarkdownBlock';
 import { DocumentEmptyState } from './DocumentEmptyState';
-import { DocumentInspectorFeature } from './DocumentInspectorFeature';
+import { DocumentInspectorFeature } from './document-inspector/DocumentInspectorFeature';
 import { useTextareaSelection } from '../app/useTextareaSelection';
 import type { useAiPolish } from '../app/useAiPolish';
 import { applyMarkdownAction, type MarkdownToolbarAction } from '../app/markdown-editor-actions';

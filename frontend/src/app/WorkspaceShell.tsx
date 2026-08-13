@@ -2,7 +2,7 @@
 // props 传聚合对象（useXxx hook 返回引用），内部原样转发给子组件，App 只做装配。
 import type { CSSProperties } from 'react';
 import { WorkspaceViewNav } from './WorkspaceViewNav';
-import { ContextPane } from './ContextPane';
+import { ContextPane } from './context-pane/ContextPane';
 import { WorkspaceMain } from './WorkspaceMain';
 import { QuickEntryFeature } from '../features/QuickEntryFeature';
 import { ImportFeature } from '../features/ImportFeature';
