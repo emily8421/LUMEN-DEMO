@@ -6,6 +6,16 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.8.25（2026-08-13）
+
+**维护态批28（Sprint-53）：前端 codegen Slice B-2 术语导入域混合接入（CQ-P1-006 后续）。纯类型层重构、非功能，不改对外 API / DB；无新依赖。聚合 bump PATCH。**
+
+- 术语导入域 6 域接入生成类型（**范围修正**：原计划 7 域中 rag 已随 Slice B-1 `search.ts` 完成）：`terms` / `termCategories` / `quickEntry` / `aiPolish` / `imports` / `exports`。
+- 混合接入（Slice A/B-1 验证模式）：主体 alias 生成类型 + union literal（status 等）保留手写 narrow + 分页容器 / 请求体 / 前端专属手写。
+- 特殊处理：terms `TermStatus` alias 生成 enum（openapi 唯二 enum）+ `Term=Omit<TermDetail,'status'>` narrow（命名错位）+ `TermWritePayload=TermWriteRequest` 零差异 alias；termCategories 零差异 alias；imports 命名错位 alias（ImportResponse↔ImportFileView）+ ImportBatchItem status narrow（import_id 等对齐后端必填）+ ImportBatchResponse 嵌套 narrow + `failedBatchFromSlice` 本地构造补 3 个必填 null；exports `PdfExportResponse` status narrow + `artifact_path` 对齐必填。
+- 接入后类型定义行数减少（alias 替代手写，6 文件 +52/-90）。
+- 验证：`npm run lint` 0 + `npm run build` **350 modules** 0 error（零回归）+ 浏览器 smoke PASS（术语树 / 详情 pending 分支 + 快速录入 converted 分支 + AI 润色面板，无运行时 / console 错误；imports/exports 纯类型层由 build + tsc 覆盖）。CI PR #167 **9 job 全绿**。PR #167 squash merge main `397382f`。
+
 ## v3.8.24（2026-08-13）
 
 **维护态批27（Sprint-52）：前端 codegen Slice B-1 内容域混合接入（CQ-P1-006 后续）。纯类型层重构、非功能，不改对外 API / DB；无新依赖。聚合 bump PATCH。**

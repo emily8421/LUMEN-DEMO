@@ -1,7 +1,7 @@
 # task-058：前端 codegen openapi-typescript（CQ-P1-006 后续 / Slice A 试点）
 
 > 维护态批26 / Sprint-51 / CQ-P1-006 后续 / governance rollout §4 轨道3 P1（前端 codegen）。
-> 状态：**Slice A 试点（2026-08-13）**。
+> 状态：**Slice B-2 术语导入域完成（2026-08-13，PR #167 / v3.8.25）；Slice B-3/B-4 待续**。
 > 依据：task-048 后续候选；`docs/05-tech-spec.md §4.2.3`；`docs/research/2026-08-10-code-governance-rollout-plan.md §4` 轨道3。
 
 ## 背景 / 目标
@@ -35,12 +35,16 @@
 - 浏览器 smoke：**留 Slice B**（tags.ts 纯类型改动 + build 强保证，风险低；Slice B 全量接入 16 域时系统性跑）
 - CI `frontend-schema-diff` advisory（PR 上验证）
 
-## Slice B（全量 · 待续）
+## Slice B（全量 · 分批推进）
 
-其余 16 域按 task-048 B-1/B-2/B-3 分组（内容域 / 术语导入域 / 账户空间域）批量接入；**documents 单独最高风险批**（`KnowledgeDocument = Summary|Detail` union + narrowing + `useDocuments`/`useDocumentSideData` state 重构）；CI drift 门升 required。
+- **B-1 内容域（已完成，批27 / PR #166 / v3.8.24）**：folders / docLinks / timeline / search（含 rag 域 RagSource/QueryResponse）。
+- **B-2 术语导入域（已完成，批28 / PR #167 / v3.8.25）**：terms / termCategories / quickEntry / aiPolish / imports / exports（**范围修正**：原计划 7 域中 rag 已随 B-1 完成）。逐文件：terms（TermStatus alias 生成 enum + Term=Omit<TermDetail,'status'> narrow + TermWritePayload=TermWriteRequest 零差异 alias + TermListResponse 手写保留）；termCategories（View/Detail/ListPage 零差异 alias + 请求体手写）；quickEntry（QuickEntryView status narrow）；aiPolish（PolishView status narrow + PolishSource alias）；imports（ImportResponse=ImportFileView 命名错位 + ImportBatchItem status narrow（import_id 等对齐必填）+ ImportBatchResponse 嵌套 narrow + failedBatchFromSlice 补 3 个必填 null + File/FormData payload 手写）；exports（PdfExportResponse status narrow + artifact_path 对齐必填）。验证：lint 0 + build 350 modules 0 error + 浏览器 smoke（`.tmp/sliceB2-codegen-smoke.mjs`：术语树/详情 pending 分支 + 快速录入 converted 分支 + AI 润色面板）PASS；CI 9 job 全绿。
+- **B-3 账户空间域（待续）**：auth / spaces / spaceMembers / admin / users / config（命名错位 alias LoginResponse↔LoginView / Space↔SpaceView + role/status union narrow）。
+- **B-4 documents（待续·最高风险单独 plan）**：`KnowledgeDocument = DocumentSummary|DocumentDetail` union + narrowing + useDocuments/useDocumentSideData state 重构（content_md 运行时哨兵）；批末 CI drift 门升 required + 浏览器 smoke 系统性跑。
 
 ## 完成记录
 
 - **编码**：`frontend/package.json`（+ openapi-typescript@^7.13.0 devDep + gen:api script）+ `frontend/src/api/generated.ts`（新生成入库）+ `frontend/src/api/tags.ts`（混合接入试点）+ `.github/workflows/project-check.yml`（+ frontend-schema-diff job advisory）。
 - **验证**：gen 幂等 drift exit 0 + lint 0 + build 350 modules 0 error + tags 消费方零回归；浏览器 smoke 留 Slice B。
 - **收尾**：PR merge 后回写 `docs/05 §4.2.3` + `project-rules §1` 批26 + `docs/08/09` + rollout §4 + bump（PATCH）。
+- **Slice B-2 收尾（批28）**：PR #167 squash merge main `397382f`；回写 docs/08 Sprint-53 + docs/09 TC-P2-GOV-018 + project-rules §1 批28 + 本文件；bump v3.8.25。
