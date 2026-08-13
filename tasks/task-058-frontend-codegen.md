@@ -1,7 +1,7 @@
 # task-058：前端 codegen openapi-typescript（CQ-P1-006 后续 / Slice A 试点）
 
 > 维护态批26 / Sprint-51 / CQ-P1-006 后续 / governance rollout §4 轨道3 P1（前端 codegen）。
-> 状态：**Slice B-2 术语导入域完成（2026-08-13，PR #167 / v3.8.25）；Slice B-3/B-4 待续**。
+> 状态：**Slice B-3 账户空间域完成（2026-08-13，PR #168 / v3.8.26）；Slice B-4 待续**。
 > 依据：task-048 后续候选；`docs/05-tech-spec.md §4.2.3`；`docs/research/2026-08-10-code-governance-rollout-plan.md §4` 轨道3。
 
 ## 背景 / 目标
@@ -39,7 +39,7 @@
 
 - **B-1 内容域（已完成，批27 / PR #166 / v3.8.24）**：folders / docLinks / timeline / search（含 rag 域 RagSource/QueryResponse）。
 - **B-2 术语导入域（已完成，批28 / PR #167 / v3.8.25）**：terms / termCategories / quickEntry / aiPolish / imports / exports（**范围修正**：原计划 7 域中 rag 已随 B-1 完成）。逐文件：terms（TermStatus alias 生成 enum + Term=Omit<TermDetail,'status'> narrow + TermWritePayload=TermWriteRequest 零差异 alias + TermListResponse 手写保留）；termCategories（View/Detail/ListPage 零差异 alias + 请求体手写）；quickEntry（QuickEntryView status narrow）；aiPolish（PolishView status narrow + PolishSource alias）；imports（ImportResponse=ImportFileView 命名错位 + ImportBatchItem status narrow（import_id 等对齐必填）+ ImportBatchResponse 嵌套 narrow + failedBatchFromSlice 补 3 个必填 null + File/FormData payload 手写）；exports（PdfExportResponse status narrow + artifact_path 对齐必填）。验证：lint 0 + build 350 modules 0 error + 浏览器 smoke（`.tmp/sliceB2-codegen-smoke.mjs`：术语树/详情 pending 分支 + 快速录入 converted 分支 + AI 润色面板）PASS；CI 9 job 全绿。
-- **B-3 账户空间域（待续）**：auth / spaces / spaceMembers / admin / users / config（命名错位 alias LoginResponse↔LoginView / Space↔SpaceView + role/status union narrow）。
+- **B-3 账户空间域（已完成，批29 / PR #168 / v3.8.26）**：auth / spaces / spaceMembers / admin（**范围修正**：config 域已随 B-1 search.ts、users 域本在 spaceMembers.ts）。逐文件：auth（LoginResponse=Omit<LoginView,'current_space_id'|'role'> narrow——后端 `number|null`/裸 string → 前端 number/union，运行时哨兵=注册即建个人空间；RegisterResponse email narrow；SessionInfo/PasswordResetMessageView 零差异 alias）；spaces（Space=SpaceView / SwitchSpaceView 零差异 alias）；spaceMembers（SpaceMemberView role narrow + UserSearchResult=UserSearchView 命名错位 alias）；admin（AdminUserView role/status narrow + AdminUserSpaceView role narrow 命名错位 + AdminUserSpaceAvailable alias + AdminUserSpacesResult 嵌套 narrow）。验证：lint 0 + build 350 modules 0 error（bundle 逐字节不变）+ 浏览器 smoke（登录/空间切换/成员表/用户管理/用户空间抽屉）PASS；CI 9 job 全绿。
 - **B-4 documents（待续·最高风险单独 plan）**：`KnowledgeDocument = DocumentSummary|DocumentDetail` union + narrowing + useDocuments/useDocumentSideData state 重构（content_md 运行时哨兵）；批末 CI drift 门升 required + 浏览器 smoke 系统性跑。
 
 ## 完成记录
@@ -48,3 +48,4 @@
 - **验证**：gen 幂等 drift exit 0 + lint 0 + build 350 modules 0 error + tags 消费方零回归；浏览器 smoke 留 Slice B。
 - **收尾**：PR merge 后回写 `docs/05 §4.2.3` + `project-rules §1` 批26 + `docs/08/09` + rollout §4 + bump（PATCH）。
 - **Slice B-2 收尾（批28）**：PR #167 squash merge main `397382f`；回写 docs/08 Sprint-53 + docs/09 TC-P2-GOV-018 + project-rules §1 批28 + 本文件；bump v3.8.25。
+- **Slice B-3 收尾（批29）**：PR #168 squash merge main `90d06d5`；回写 docs/08 Sprint-54 + docs/09 TC-P2-GOV-019 + project-rules §1 批29 + 本文件；bump v3.8.26。

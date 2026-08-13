@@ -6,6 +6,16 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.8.26（2026-08-13）
+
+**维护态批29（Sprint-54）：前端 codegen Slice B-3 账户空间域混合接入（CQ-P1-006 后续）。纯类型层重构、非功能，不改对外 API / DB；无新依赖。聚合 bump PATCH。**
+
+- 账户空间域 4 域接入生成类型（**范围修正**：原计划 6 域中 config 域已随 Slice B-1 `search.ts`、users 域本在 `spaceMembers.ts`）：`auth` / `spaces` / `spaceMembers` / `admin`。
+- 混合接入（Slice A/B-1/B-2 验证模式）：主体 alias 生成类型 + union literal（role / status）保留手写 narrow + 请求体手写。
+- 特殊处理：auth `LoginResponse = Omit<LoginView,'current_space_id'|'role'> & narrow`（命名错位；后端 `current_space_id: number|null` / `role: string` → 前端 `number` / union，运行时哨兵=注册即建个人空间 C-AUTH-001，与 `Session` 类型 / session-store 校验对齐）；`RegisterResponse` email narrow；`SessionInfo` / `PasswordResetMessageView` / `Space` / `SwitchSpaceView` / `UserSearchResult` / `AdminUserSpaceAvailable` 零差异 alias（多处命名错位）；admin 嵌套 narrow（`AdminUserSpacesResult.joined` 元素 role）。
+- 接入后类型定义行数微减（alias 替代手写，4 文件 +50/-56）；JS / CSS bundle 逐字节不变（纯类型层）。
+- 验证：`npm run lint` 0 + `npm run build` **350 modules** 0 error + 浏览器 smoke PASS（登录 → 空间下拉 + 真实切换 + 还原 → 成员管理表 → 用户管理表 → 用户空间抽屉，无运行时 / console 错误）。CI PR #168 **9 job 全绿**。PR #168 squash merge main `90d06d5`。
+
 ## v3.8.25（2026-08-13）
 
 **维护态批28（Sprint-53）：前端 codegen Slice B-2 术语导入域混合接入（CQ-P1-006 后续）。纯类型层重构、非功能，不改对外 API / DB；无新依赖。聚合 bump PATCH。**
