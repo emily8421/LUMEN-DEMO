@@ -58,6 +58,12 @@ jobs:
             echo "Not a template sync commit; skip derived sync boundary check."
           fi
 
+      # CQ-P1-008 前端文件膨胀 ratchet：拦新增超限文件 + 既有超限文件继续膨胀（棘轮只进不退）。
+      # 基线 frontend/.file-size-baseline.json 登记既有超限文件；runner 自带 node，零依赖。
+      - name: Check frontend file-size ratchet
+        working-directory: frontend
+        run: node ../scripts/check-frontend-file-size.mjs
+
   # --- P0-2 / NFR-006 / task-042：CI 最小代码门 ---
   # 口径：rollout §3 P0-2 / evaluation §4.3 联合裁决定稿（A1）。
   # backend-test / frontend-build 基线已清（CI 运行不强制阻断——免费版私有仓库无分支保护）；backend-lint(ruff) 恒 advisory（记旧债基线，不阻断）。

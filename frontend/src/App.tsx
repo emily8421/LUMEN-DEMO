@@ -1,10 +1,7 @@
 import { useEffect, useState } from 'react';
-import type { CSSProperties } from 'react';
 import { exportSpaceZip, triggerBrowserDownload } from './api';
 import { StatusBar } from './components/StatusBar';
-import { WorkspaceViewNav } from './app/WorkspaceViewNav';
 import { TopBar } from './app/TopBar';
-import { ContextPane } from './app/ContextPane';
 import { useTags } from './app/useTags';
 import { useQuickEntry } from './app/useQuickEntry';
 import { useSearch } from './app/useSearch';
@@ -24,17 +21,12 @@ import { useSpaceMembers } from './app/useSpaceMembers';
 import { useTimeline } from './app/useTimeline';
 import { isAuthTokenError } from './app/session-store';
 import type { LocalVaultDoc } from './app/local-vault-index';
-import { QuickEntryFeature } from './features/QuickEntryFeature';
-import { ImportFeature } from './features/ImportFeature';
-import { WorkspaceMain } from './app/WorkspaceMain';
 import { useCommandPalette } from './app/useCommandPalette';
 import { useAiAssistant } from './app/useAiAssistant';
 import { useLocalVaultMount } from './app/useLocalVaultMount';
-import { CommandPalette } from './features/CommandPalette';
-import { AiAssistant } from './features/AiAssistant';
-import { OnboardingGuide } from './features/OnboardingGuide';
-import { PasswordInput } from './features/auth/PasswordInput';
-import { PasswordResetModal } from './features/auth/PasswordResetModal';
+import { WorkspaceShell } from './app/WorkspaceShell';
+import { OverlayShell } from './app/OverlayShell';
+import { AuthShell } from './features/auth/AuthShell';
 import { ONBOARDING_STEPS, isOnboardingDone, loadOnboardingState, persistOnboardingState } from './app/onboarding-store';
 import type { OnboardingState, OnboardingStepId } from './app/onboarding-store';
 
@@ -309,235 +301,56 @@ function App() {
       />
 
       {!session.session ? (
-        <section className="login-panel card">
-          <div className="auth-tabs" role="tablist" aria-label="登录或注册">
-            <button
-              type="button"
-              className={session.authMode === 'login' ? 'active' : ''}
-              onClick={() => session.setAuthMode('login')}
-            >
-              登录
-            </button>
-            <button
-              type="button"
-              className={session.authMode === 'register' ? 'active' : ''}
-              onClick={() => session.setAuthMode('register')}
-            >
-              注册
-            </button>
-          </div>
-          {session.authMode === 'login' ? (
-            <form onSubmit={session.handleLogin}>
-              <h2>登录</h2>
-              <p>演示账号 alice / kira / brightlite-member（密码 demo-pass-1234），或使用注册邮箱登录。</p>
-              <label>
-                账号（邮箱或 external_id）
-                <input value={session.loginId} onChange={(event) => session.setLoginId(event.target.value)} />
-              </label>
-              <label>
-                密码
-                <PasswordInput value={session.password} onChange={session.setPassword} />
-              </label>
-              <button type="button" className="auth-link-button" onClick={() => setResetModalOpen(true)}>
-                忘记密码？
-              </button>
-              <button type="submit" disabled={workspace.isBusy || session.loginId.trim().length === 0}>登录</button>
-            </form>
-          ) : (
-            <form onSubmit={session.handleRegister}>
-              <h2>注册新账号</h2>
-              <p>注册后自动创建个人空间并登录（REQ-040）。</p>
-              <label>
-                邮箱
-                <input type="email" value={session.registerEmail} onChange={(event) => session.setRegisterEmail(event.target.value)} />
-              </label>
-              <label>
-                显示名
-                <input value={session.registerName} onChange={(event) => session.setRegisterName(event.target.value)} />
-              </label>
-              <label>
-                密码（至少 8 位）
-                <PasswordInput value={session.registerPassword} onChange={session.setRegisterPassword} />
-              </label>
-              <button
-                type="submit"
-                disabled={
-                  workspace.isBusy ||
-                  session.registerEmail.trim().length === 0 ||
-                  session.registerName.trim().length === 0 ||
-                  session.registerPassword.length < 8
-                }
-              >
-                注册并登录
-              </button>
-            </form>
-          )}
-          <PasswordResetModal open={resetModalOpen} onClose={() => setResetModalOpen(false)} />
-        </section>
+        <AuthShell
+          session={session}
+          isBusy={workspace.isBusy}
+          resetModalOpen={resetModalOpen}
+          onOpenResetModal={() => setResetModalOpen(true)}
+          onCloseResetModal={() => setResetModalOpen(false)}
+        />
       ) : (
-        <div
-          className={`workspace-layout workspace-shell${leftPaneOpen ? '' : ' pane-left-collapsed'}`}
-          style={{ '--left-pane-width': `${leftPaneWidth.width}px` } as CSSProperties}
-        >
-          <WorkspaceViewNav
-            activeView={workspace.activeView}
-            disabled={workspace.isBusy}
-            onChange={workspace.setActiveView}
-            showMembers={spaceMembers.canManageMembers}
-          />
-
-          <ContextPane
-            activeView={workspace.activeView}
-            currentSpace={currentSpace}
-            documents={documents.documents}
-            folders={folders}
-            selectedId={documents.selectedId}
-            isCreating={documents.isCreating}
-            isBusy={workspace.isBusy}
-            onCreateDocument={handleCreateDocument}
-            onSelectDocument={documents.handleSelectDocument}
-            onMoveDocument={documents.handleMoveDocument}
-            onDeleteDocument={documents.handleDeleteDocument}
-            terms={terms.terms}
-            selectedTermId={terms.selectedTermId}
-            onSelectTerm={terms.selectTerm}
-            onNewTerm={terms.newTerm}
-            termCategories={termCategories}
-            token={token}
-            onImported={() => handleImported(null)}
-            onOpenLocalDoc={handleOpenLocalDoc}
-            onToggleLeftPane={paneLayout.toggleLeftPane}
-            localVault={localVault}
-          />
-
-          {leftPaneOpen ? (
-            <div
-              className={leftPaneWidth.resizing ? 'pane-resizer pane-resizer-left resizing' : 'pane-resizer pane-resizer-left'}
-              role="separator"
-              aria-orientation="vertical"
-              aria-label="调整左侧栏宽度"
-              tabIndex={0}
-              onPointerDown={leftPaneWidth.startResize}
-              onPointerMove={leftPaneWidth.moveResize}
-              onPointerUp={leftPaneWidth.endResize}
-              onPointerCancel={leftPaneWidth.endResize}
-              onDoubleClick={leftPaneWidth.resetWidth}
-              onKeyDown={leftPaneWidth.handleKeyDown}
-            />
-          ) : null}
-
-          <WorkspaceMain
-            activeView={workspace.activeView}
-            isBusy={workspace.isBusy}
-            rightPaneOpen={paneLayout.rightPaneOpen}
-            onToggleRightPane={paneLayout.toggleRightPane}
-            documents={documents}
-            search={search}
-            query={query}
-            terms={terms}
-            termCategories={termCategories}
-            tags={tags}
-            timeline={timeline}
-            aiPolish={aiPolish}
-            adminUsers={adminUsers}
-            spaceMembers={spaceMembers}
-            currentSpaceName={currentSpace?.name ?? ''}
-            onQuickEntryOpen={quickEntry.open}
-            onNavigate={workspace.setActiveView}
-            onCreateDocument={handleCreateDocument}
-            onOpenImport={() => setImportModalOpen(true)}
-            onExpandLeftPane={() => paneLayout.setLeftPaneOpen(true)}
-            onExitToEmpty={() => { documents.setSelectedId(null); documents.setIsCreating(false); }}
-            localPreviewDoc={localPreviewDoc}
-            onCloseLocalDoc={() => setLocalPreviewDoc(null)}
-            onboardingSteps={onboarding.steps}
-            onOnboardingStep={handleOnboardingStep}
-            localVault={localVault}
-          />
-
-          <QuickEntryFeature
-            isOpen={quickEntry.isOpen}
-            isBusy={workspace.isBusy}
-            title={quickEntry.title}
-            source={quickEntry.source}
-            contentMd={quickEntry.contentMd}
-            tagIds={quickEntry.tagIds}
-            mode={quickEntry.mode}
-            targetDocumentId={quickEntry.targetDocumentId}
-            tags={tags.tags}
-            documents={documents.documents}
-            lastEntry={quickEntry.lastEntry}
-            onTitleChange={quickEntry.setTitle}
-            onSourceChange={quickEntry.setSource}
-            onContentMdChange={quickEntry.setContentMd}
-            onToggleTag={quickEntry.toggleTag}
-            onModeChange={quickEntry.changeMode}
-            onTargetDocumentChange={quickEntry.setTargetDocumentId}
-            onSubmit={quickEntry.handleSubmit}
-            onDiscard={quickEntry.handleDiscard}
-            onClose={quickEntry.close}
-            onOpenDocument={documents.handleOpenDocument}
-          />
-
-          <ImportFeature
-            isOpen={importModalOpen}
-            isBusy={workspace.isBusy}
-            importDraft={imports.importDraft}
-            onImportDraftChange={imports.setImportDraft}
-            importFiles={imports.importFiles}
-            onImportFilesChange={imports.setImportFiles}
-            importInputKey={imports.importInputKey}
-            lastImportSummary={imports.lastImportSummary}
-            lastImportItems={imports.lastImportItems}
-            onImport={imports.handleImport}
-            onClose={() => setImportModalOpen(false)}
-          />
-
-          {session.session && !onboarding.completed && !guideDismissed ? (
-            <OnboardingGuide
-              isBusy={workspace.isBusy}
-              steps={onboarding.steps}
-              onStep={handleOnboardingStep}
-              onSkip={handleSkipOnboarding}
-              onDismiss={() => setGuideDismissed(true)}
-            />
-          ) : null}
-        </div>
+        <WorkspaceShell
+          workspace={workspace}
+          paneLayout={paneLayout}
+          leftPaneWidth={leftPaneWidth}
+          currentSpace={currentSpace}
+          token={token}
+          documents={documents}
+          folders={folders}
+          tags={tags}
+          terms={terms}
+          termCategories={termCategories}
+          search={search}
+          query={query}
+          timeline={timeline}
+          aiPolish={aiPolish}
+          adminUsers={adminUsers}
+          spaceMembers={spaceMembers}
+          quickEntry={quickEntry}
+          imports={imports}
+          importModalOpen={importModalOpen}
+          onOpenImport={() => setImportModalOpen(true)}
+          onCloseImport={() => setImportModalOpen(false)}
+          onboarding={onboarding}
+          guideDismissed={guideDismissed}
+          localVault={localVault}
+          localPreviewDoc={localPreviewDoc}
+          handleCreateDocument={handleCreateDocument}
+          handleImported={handleImported}
+          handleOnboardingStep={handleOnboardingStep}
+          handleSkipOnboarding={handleSkipOnboarding}
+          handleDismissGuide={() => setGuideDismissed(true)}
+          handleOpenLocalDoc={handleOpenLocalDoc}
+          handleCloseLocalDoc={() => setLocalPreviewDoc(null)}
+        />
       )}
 
-      {session.session ? (
-        <CommandPalette
-          isOpen={palette.isOpen}
-          query={palette.query}
-          searching={palette.searching}
-          items={palette.items}
-          activeIndex={palette.activeIndex}
-          onQueryChange={palette.setQuery}
-          onActiveIndexChange={palette.setActiveIndex}
-          onKeyDown={palette.onKeyDown}
-          onExecute={palette.execute}
-          onClose={palette.close}
-        />
-      ) : null}
-
-      {session.session ? (
-        <AiAssistant
-          isOpen={aiAssistant.isOpen}
-          messages={aiAssistant.messages}
-          draft={aiAssistant.draft}
-          sending={aiAssistant.sending}
-          useKnowledgeBase={aiAssistant.useKnowledgeBase}
-          llmConfigs={aiAssistant.llmConfigs}
-          llmProvider={aiAssistant.llmProvider}
-          onLlmProviderChange={aiAssistant.setLlmProvider}
-          onOpen={() => aiAssistant.open()}
-          onClose={aiAssistant.close}
-          onDraftChange={aiAssistant.setDraft}
-          onToggleKnowledgeBase={aiAssistant.toggleKnowledgeBase}
-          onSend={() => void aiAssistant.handleSend()}
-          onOpenDocument={documents.handleOpenDocument}
-        />
-      ) : null}
+      <OverlayShell
+        sessionActive={Boolean(session.session)}
+        palette={palette}
+        aiAssistant={aiAssistant}
+        handleOpenDocument={documents.handleOpenDocument}
+      />
       <StatusBar notice={workspace.notice} error={workspace.error} />
     </main>
   );
