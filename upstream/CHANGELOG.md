@@ -9,6 +9,96 @@
 
 模板版本采用三段式 `vMAJOR.MINOR.PATCH`，以根目录 `VERSION` 为单一审计入口。版本是发布边界，不是提案数量边界；提案收件箱增长不触发版本递增，只有合并到同步范围内并改变模板行为或下游同步判断的 PR 才判断 `PATCH / MINOR / MAJOR`。`ai/global-rules.md` 顶部仅记录全局规则自身版本。
 
+## v1.61.4（2026-08-13）
+
+通用层代码一致性补充（PATCH）：落地 #332 退回重写稿——把 LUMEN 回流的三条跨项目通用代码一致性原则（CI 质量门 / 关键 secret 启动校验 / 多实现显式契约）从原稿「固定实现」改写为「原则 + 适用条件 + 项目化落地」，作为 `implementation-lifecycle-rules §6.2` 的应用说明补齐。来源：LUMEN_demo_T2.1（emily8421/LUMEN-DEMO）派生项目回流 issue #332；重写依据 `docs/research/2026-08-12-c1-proposal-triage-reassessment.md` §3 / §15.7；提案见 `_proposals/TEMPLATE-UPGRADE-code-consistency-general-layer.md`。
+
+- **`ai/implementation-lifecycle-rules.md §6.2` 末尾追加「应用说明」块（3 条）**：① 质量门常见形态对照（示例，非新增规则——有类型系统纳入 type、build 已覆盖则不重复跑、CLI / 脚本以 smoke / 手动验证替代、纯文档 / 纯配置豁免，与 §6.2 第 2 条适用性裁剪口径一致）；② 关键 secret 启动校验 fail-closed（生产 / 安全敏感运行态禁弱默认值、缺失或为默认值即启动失败；本地 / 测试 / Mock 允许受控替代，豁免时点写入 `docs/05-tech-spec.md` 与验证计划；具体实现由技术栈决定，模板不预置写法）；③ 多实现显式契约（同一接口的多个可替换实现须共享机器可检查契约或兼容性测试，禁仅靠 docstring + 鸭子类型；机制由技术栈决定；为 `global-rules §2.1` L0-12「先契约后实现」在多实现场景的应用说明）。不触碰 §6.2 现有 3 条归位准则与 blockquote 口径、§6 主节、§6.1 DB guard、L0 §2.1 正文。
+
+本版是 patch 级治理说明补强：在已纳入同步清单的规则文件内追加一段应用说明，不新增同步结构文件 / 目录、不新增必填入口、不新增强制 Gate 或 `check-template` 断言；默认行为与下游必做流程不变。派生项目同步后，质量门声明、secret 底线与多实现契约有统一适用口径。patch 豁免 L3 端到端回归。
+
+## v1.61.3（2026-08-12）
+
+去重声明必填 + 自动检查归位准则（PATCH）：把 #335 选 A 关闭时认可的两个真实 gap 落地——提案流程补"与既有规则关系（去重）"必填章节（gap A），实现层补"自动检查归位"统一准则（gap B）。来源：模板维护者基于 #335 评估（`docs/research/2026-08-12-c1-proposal-triage-reassessment.md` §6）+ handoff C-007；提案见 `_proposals/TEMPLATE-UPGRADE-rule-dedup-and-check-gate.md`。
+
+- **gap A 去重声明必填（5 文件）**：`_proposals/README.md` 新增「提案正文章节」小节，把 `## 1.1 与既有规则的关系（去重）` 列为必填并给范式（关系标签：对象不同 / 层级不同 / 机制不同 / 互补不重复 / 合并入 / 指向）；`CONTRIBUTING §3.1` 追加必填要求；`ai/commands/submit-proposal.md §2` + `ai/prompts/maintainers/17-submit-proposal.md` 校验清单追加"去重声明"项（command / Prompt 配对不漂移）；`ai/global-rules.md §9` 在提案去项目化字段后追加"/ 与既有规则关系（去重）"，下沉到通用层让派生项目 AI 也读到。把 LUMEN 回流批次的自觉范式（#312 / #314 / #320 / #322 / #332 / #333 / #334 §1.1）提升为流程必填。
+- **gap B 自动检查归位准则（1 文件）**：`ai/implementation-lifecycle-rules.md` 新增 §6.2「自动检查归位与质量门口径」，照 §6.1 结构——重申 §6 主节"按形态裁剪"口径；3 条归位准则（不与 L0 §2.1 重复定义 / 适用性裁剪显式说明不适用项 / 声明位置 `project-rules §5` 或 `05-tech-spec`）；blockquote「口径」列触发 / 豁免 / 验证。采 #335 立场（按适用性裁剪，不强制固定工具组合），定 #332 / #335 冲突口径；兑现 `web-fullstack-profile §9.4 → §6` 外部引用。
+
+本版是 patch 级治理说明补强：提案流程字段追加（现有五字段本就必填，追加一个并给范式）+ 规则文件内新增小节，不新增同步结构文件 / 目录、不新增必填入口、不新增强制 Gate 或 `check-template` 断言；默认行为与下游必做流程不变。派生项目同步后，新提案按 §1.1 写去重声明、自动检查按 §6.2 声明适用质量门。patch 豁免 L3 端到端回归。
+
+## v1.61.2（2026-08-12）
+
+Web Profile 代码层一致性基线（PATCH）：给 `template-docs/web-fullstack-profile.md` 新增 §9 Web 代码契约精简版，兑现 `ai/global-rules.md §2.1` L0 引言与 L0-8 口径对 `web-fullstack-profile §9/§9.4` 的前向引用（原为悬空引用）。来源：LUMEN_demo_T2.1（emily8421/LUMEN-DEMO）派生项目回流 issue #333；评估与裁剪见 `docs/research/2026-08-12-c1-proposal-triage-reassessment.md` §15。
+
+- **`template-docs/web-fullstack-profile.md` 新增 §9 代码层一致性基线（Web 形态）**：§9.1 错误与响应契约（机器可读错误标识、兜底异常 envelope 复用 L0-7、结构化客户端错误）；§9.2 传输边界（统一 API client / transport，禁裸 `fetch`）；§9.3 类型与契约同步（机器可校验契约源，禁手工双写漂移）；§9.4 工程化护栏（真实 HTTP 路径回归 + CI 必须跑测试复用 L0-8 + 质量门按形态裁剪指向 `implementation-lifecycle-rules §6`）。跨形态通用基本功指向 L0，具体栈写法留项目 `05-tech-spec` / `project-rules §5`；不引 R1-R7、不强制固定工具组合、不新增硬 Gate。部分采纳 #333——裁掉固定 envelope 结构 / 读写分层二选一 / barrel re-export / 端点后缀等项目特定或栈特定条目。
+
+本版是 patch 级治理说明补强：在已有同步清单文件内新增一节可选代码契约，兑现已有规则的前向引用，不新增同步结构文件 / 目录、不新增必填入口、不新增强制 Gate 或 `check-template` 断言；默认行为与下游必做流程不变。派生项目同步后按需在 `project-rules §5` / `05-tech-spec` 落地具体口径。patch 豁免 L3 端到端回归。
+
+## v1.61.1（2026-08-11）
+
+新增坑 / 问题观察日志（pitfall observation log）机制（PATCH）：与 `ai/session-rules.md` §4.1 token-hotspot 平行，提供 AI 引入或踩到的坑 / 问题 / 教训（bug、流程坑、低效行为导致返工或缺陷）的轻量记录载体，作为定期审视、归纳、转提案的原始材料。提案见 `_proposals/TEMPLATE-UPGRADE-pitfall-observation-log.md`。
+
+- **`ai/session-rules.md` 新增 §4.3**：与 §4.1 / §4.2 同构——载体分层（本地单条 `.ai/pitfalls/` gitignored + 可选入库 `ai-records/pitfalls/SUMMARY.md` 默认不建）、单条最小字段（建议非必填）、收尾自检触发与写入、rollup ≥3 提示、归档（`.ai/pitfalls-archive/`，归档不删除）、汇总状态字段、派生项目自行 `.gitignore` 提示；与 token-hotspot 边界划清（成本 / 上下文热点 → §4.1，问题 / 教训 → §4.3）；C1 只负责提案 triage，不承担坑日志计数。§4 触发点新增 pitfall 收尾自检条。
+- **`template-docs/rd-data-chain.md` 索引同步**：§2 辅助留痕表新增「AI 引入的问题 / 教训」类别行；§4「无门禁」枚举补 pitfalls，保持索引自洽。
+- **`.gitignore` 新增 `.ai/pitfalls/`**：本地单条记录纯本地、不询问、不上传。
+
+本版是 patch 级可选能力补强：新增一个与 token-hotspot 同构的本地观察载体 + 索引行 + 一条触发句，不改变同步结构、不加下游采用面、不新增 CI 门禁或 `check-template` 断言；派生项目按需采用。patch 豁免 L3 端到端回归。
+
+## v1.61.0（2026-08-11）
+
+代码治理分层（MINOR）：把派生项目回流的三份代码治理提案聚合为一次 MINOR 发布，填补 Core 层「写代码基本功」与实现层「破坏性测试 DB 安全」两处空白，并补会话续接文件 rollup 机制。来源：LUMEN_demo_T2.1（emily8421/LUMEN-DEMO）派生项目回流，issue #322 / #320 / #314 镜像见 `_proposals/_remote-issues/`。
+
+**Batch A（PR #326，已合入）**：
+- **`ai/global-rules.md` §2.1 L0 通用代码原则基线**（#322）：新增 12 条跨语言 / 跨技术栈 / 跨项目形态通用代码原则（命名传达意图、单一职责、一致性优先、失败必须可见、DRY、显式优于隐式、对外信息最小化、可测试性、变更最小与可追溯、import / 依赖卫生、体量克制、先契约后实现），每条附可执行口径；与形态特化 L1/L2（各 profile §9）、项目专属 L3（`project-rules §5`）正交分层。全局规则版本 `v1.14` → `v1.15`。不引入硬 CI 门禁。
+- **`ai/implementation-lifecycle-rules.md` §6.1 破坏性测试数据库安全 guard**（#320）：新增独立测试库 + 三重 fail-closed guard（环境标记 / `DATABASE_URL` 指向测试库 / 显式破坏性开关，全部满足才放行）、guard 为测试侧纯函数且不降级 skip、错误信息不含连接串 / 凭证；无持久化项目豁免。
+
+**Batch B（PR #327，进行中）**：
+- **`ai/session-rules.md` handoff Latest checkpoint rollup**（#314）：§6 新增 §6.1 rollup 机制（触发阈值 ≥N 个 checkpoint 或 ≥M 行 → 保留近 3-5 个原文 + 更早压缩为历史阶段摘要 + 原文归档 `.ai/session-handoff-archive/` + 原位指针），用归档不删除、不违背「只增不删」、不引入 CI；§4 新增 handoff rollup 收尾自检触发点；§1 措辞补「handoff 体积受 rollup 约束」。类比 §4.2 token-hotspot rollup。
+
+本版为 MINOR 能力补强：新增代码治理、测试安全与续接文件压缩规范条目，不改变默认行为、不新增同步结构文件或强制迁移；派生项目同步后按需在代码 review / DB 集成测试 / 续接文件维护中应用。合并后下行同步各派生项目。
+
+## v1.60.6（2026-08-11）
+
+会话 worktree 登记与恢复可见性（P0）：把活跃 worktree 纳入会话恢复的只读检查 + 续接文件登记 + 建 / 删登记责任，解决跨会话 / 跨 CLI 接手时 worktree 及其未提交工作不可见的问题。提案见 `_proposals/TEMPLATE-UPGRADE-worktree-registration.md`。
+
+- **恢复流程加 `git worktree list`**：`ai/session-rules.md` §3 恢复流程第 3 步与 §3.1 快速续接只读检查清单、`ai/commands/resume.md` 执行节点均加 `git worktree list`；除主工作区外存在活跃 worktree 时，报告其路径 / 分支 / HEAD 是否落后主仓 / 是否含未提交改动。
+- **续接文件登记「活跃 worktree」段**：`ai/session-rules.md` §6 推荐结构与 `template-docs/session-handoff.example.md` 增加「活跃 worktree」段（路径 / 分支 / 主题 / 未提交改动摘要 / 处置状态）。
+- **建 / 删登记责任**：`ai/session-rules.md` §8 与 `git-guide.md` §4 补充——创建 worktree 后立即登记，合并进 main 或明确废弃后移除 worktree 并清除登记；`ai/session-rules.md` §1 裁决优先级补充 worktree 内被动中断以该 worktree 的 Git 事实为锚点。
+- **P1 advisory 未实施**：`check-template` advisory 自检（只查规则文件含机制说明）留候选池，本次不新增断言 / 脚本 / CI 门禁。
+
+本版是 patch 级治理补强：只强化会话恢复检查与续接文件登记，不改变 worktree 的 git 语义、不要求派生项目迁移、不新增同步结构或采用面；patch 可豁免 L3 端到端回归。
+
+## v1.60.5（2026-08-11）
+
+新增正式工程文档语言与表述规范（`ai/global-rules.md` §10），并把它接入文档生成与修改的执行节点，使 AI 在生成前、生成后、修改前、修改后都受约束。提案见 `_proposals/TEMPLATE-UPGRADE-document-language-style.md`。
+
+- **全局规则 §10 七条**：准确专业、平实简洁、具体可核对、逻辑与状态明确、规范性用词、避免不当表达、例外与渐进适用；不拆多级子节，不新增关键词 CI。全局规则版本 `v1.13` → `v1.14`。
+- **抗误伤边界**：已成行业通用术语的比喻（心跳 / 沙箱 / 灰度 / 容器等）视为专业术语；愿景 / 路线图可方向性表述但须在需求或验收层落到可核对项；“尽量 / 原则上”上下文明确时可用；面向人的说明性文档（README / 教程 / `CHANGELOG-PLAIN.md`）保留通俗例外——避免机械拦截误伤合法技术表达。
+- **执行接入点（生成 / 修改前后自检）**：`document-lifecycle-rules.md` §10 生成前声明 + §11 生成后自检、`prompts/docs/00-generate-or-complete-docs.md` 硬约束、`prompts/docs/04-edit-single-doc.md` 修订要求、`prompts/review/10-docs-checklist.md` 验收、`prompts/review/24-docs-health-review.md` 语气检查各加一条问句式语言自检；`document-lifecycle-rules.md` §1 加引用。自检用问句式（“是否…若有，是否说明…”），不做关键词硬拦。
+- **不改动 `rules-core`**：面向用户的决策说明保持原样；正式工程文档规范与对话式说明分离，互不波及。
+
+本版是 patch 级规则补强：不新增同步文件、文档字段、命令、脚本或 CI 门禁，不改变同步清单结构。派生项目同步后在后续新增或修改文档时应用该规范；patch 可豁免 L3 端到端回归。
+
+## v1.60.4（2026-08-11）
+
+同步预检失败隔离（P0）：把「同步前辅助检查失败吞掉已取得的关键事实」的风险收敛为核心规则通用约束 + 同步两阶段预检契约。来源：模板维护者提案 `_proposals/TEMPLATE-UPGRADE-agent-command-preflight.md`（2026-08-10 Codex CLI 同步预检因 PowerShell `Get-ChildItem -Name` 参数构造错误中止；事故无越界，但暴露预检未按失败域隔离、辅助失败掩盖 Git / 版本 / lineage 事实的缺口）。
+
+- **核心规则通用约束**：`ai/rules-core.md` §4 新增「预检精确查询与失败域隔离」——对有限已知目标用与数量 / 类型匹配的精确查询，不得把目录枚举或输出格式开关当筛选；关键事实（Git / 版本 / lineage）与辅助能力检查按失败域隔离、逐项输出 `pass / fail / not-checked`、不共用 all-or-nothing 聚合，辅助失败不掩盖已取得关键事实；同一失败点不自动连续重试。不绑 shell / API，适用所有 Agent / CLI。
+- **同步两阶段预检契约**：`ai/commands/sync-methodology.md` + `ai/prompts/maintainers/12-sync-template.md` 把预检细化为 A 阶段（身份与安全事实：路径 / Git 仓 / 分支与工作区 / stash / `VERSION` / `TEMPLATE-BASE.md` lineage / registry `Sync mode`，任一关键项失败即停仅报告）+ B 阶段（同步能力：`sync-template.*` / `check-derived-sync.*` / `template-sync.json` / 运行入口，记缺项不抹 A 结果）；逐项输出状态、按失败域隔离；给 PowerShell `Test-Path -LiteralPath` / Bash `test -f` 精确查询示例，明确禁用 `Get-ChildItem -Name` 当筛选。
+- **未实施（P1 留候选池）**：对称只读预检脚本 `scripts/preflight-derived-sync.sh/.ps1` 作为同主题后续 Batch 留在提案候选池，本次不新增脚本、不改 `template-sync.json`、不改 `check-template` 断言。
+
+本版是 patch 级治理增强：仅强化现有同步命令 / Prompt 的预检组织方式 + 核心规则补一条通用约束，无新文件 / 脚本 / CI / 同步清单变更，不新增能力层级或下游采用面，默认同步语义与下游必做流程不变。按 CONTRIBUTING 兼容性默认规则判定 patch；patch 可豁免 L3 端到端回归。
+
+## v1.60.3（2026-08-10）
+
+token-hotspot 触发强化为收尾自检项（`session-rules §4` 收尾触发点 +hotspot 自检项 / `§4.1` 措辞「主动提示」→「必须自检 + 默认写入不询问」/ `§4.2` 收尾即查未汇总计数），把 advisory 软行为锚定到 §4 收尾必经清单，降低长会话 / 上下文压缩 / 跨 CLI 接手后的执行漂移（issue #312，来自 LUMEN_demo_T2.1 回流）。不引入 CI 门禁，hotspot 路径分层与 §4.2「无门禁」底线不变。
+
+- **§4 收尾触发点 +1 项**：在「结束回复前：刷新下次优先做」之后追加 hotspot 收尾自检——命中 §4.1 触发条件则默认本地写入单条（不询问、不上传），未汇总累计 ≥3 份则按 §4.2 提示 rollup。
+- **§4.1 措辞强化**：「AI 应在收尾前主动提示……并默认写入」→「AI 必须在每次任务收尾（§4 触发点）做 hotspot 自检：命中则默认本地写入（不询问、不上传），不命中则跳过」，消除「问用户是否记录」歧义路径——默认写入是硬行为，不是可询问项。
+- **§4.2 收尾即查**：rollup 阈值从「事后想起」变「收尾自检时顺带核对未汇总计数，≥3 份即提示」。
+
+本版是 patch 级治理说明补强：仅 `session-rules.md` 同文件内 §4 / §4.1 / §4.2 措辞与清单结构调整，无新文件 / 脚本 / CI 变更，不新增能力层级或下游采用面，默认行为 / 同步清单结构 / 下游必做流程不变。按 CONTRIBUTING 兼容性默认规则判定 patch（issue 原建议 minor，但无新能力层级 / 采用面 / 同步结构，故降为 patch）；patch 可豁免 L3 端到端回归。
+
 ## v1.60.2（2026-08-09）
 
 新增「文档体系周期性健康度复核」机制（`docs-health-review` 命令 + 24 号 Prompt + `global-rules §8.4` 整理例外 + `session-rules §4` 触发点 + A8 场景接入），补位现有「阶段触发型」审计命令缺少的「周期性 / 收尾触发的可读性与信息密度检查」。来源 issue #307（LUMEN 派生项目回流），提案镜像 `_proposals/_remote-issues/issue-307.md`。

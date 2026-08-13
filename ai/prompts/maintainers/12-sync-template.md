@@ -33,7 +33,7 @@
 执行要求：
 
 1. 用 registry 的 `Project` / `Aliases` / `Status` 解析用户目标；用户说“全部 / 4 派生”时，列出 active 项，并区分 `Path status=verified`、missing、stale-risk。
-2. 对 `Path status=verified` 的目标，逐个进入 `Local path` 做只读预检：路径存在、是 git 仓、工作区干净、`TEMPLATE-BASE.md` lineage 与 registry 的 `Sync mode` 不冲突。
+2. 对 `Path status=verified` 的目标，逐个进入 `Local path` 做**两阶段只读预检、逐项输出 `pass / fail / not-checked`、按失败域隔离**：A 阶段（身份与安全事实）——路径存在、是 git 仓、工作区干净、`TEMPLATE-BASE.md` lineage 与 registry 的 `Sync mode` 不冲突，任一关键项失败即停仅报告；B 阶段（同步能力）——`scripts/sync-template.*` / `check-derived-sync.*` / `template-sync.json` / 运行入口是否存在，记缺项不抹 A 阶段结果。已知文件存在性用精确路径查询（PowerShell：`Test-Path -LiteralPath <path> -PathType Leaf`；Bash：`test -f <path>`），不得把目录枚举或输出格式开关（如 `Get-ChildItem -Name`）当筛选机制。
 3. 对 missing / stale-risk 目标，先停下列待确认项，不得改用全盘递归猜路径继续同步。
 4. 输出逐项目同步计划，说明每个项目的同步模式：普通派生 `--preserve-project-version`，领域模板 `--domain-template`。
 5. 用户确认后，再在每个派生项目内按下方标准 SOP 执行 A13 闭环。
@@ -51,6 +51,9 @@
 先说明本次标准闭环计划：同步预检 → dry-run → 同步提交 → `check-derived-sync` 边界验证 → `post-sync-cleanup` 整理计划 → `docs-system-audit` 同步后审计 → 项目验证建议 → `sync-records/template-sync/` 同步报告。每一步说明是否只读、是否会写文件；写入前等待确认。若用户明确说已同步但只需补后续，或 Git 显示最近已有 `sync template vX.Y.Z from ai-project-template` 同步提交，则进入“同步后续接模式”：不要重新执行 dry-run / commit，先核对同步提交、`VERSION`、`TEMPLATE-BASE.md`（若存在）、工作区和既有同步记录，再从 `check-derived-sync` 边界验证开始补完后续闭环。
 
 执行要求：
+
+预检两阶段契约（失败域隔离）：只读预检分 A/B 两阶段，逐项输出 pass / fail / not-checked、按失败域隔离、不共用 all-or-nothing 聚合——B 阶段辅助检查失败不得掩盖 A 阶段已取得的关键事实。已知文件存在性用精确路径查询（PowerShell：Test-Path -LiteralPath <path> -PathType Leaf；Bash：test -f <path>），不得把目录枚举或输出格式开关（如 Get-ChildItem -Name）当筛选机制。A 阶段（身份与安全事实）：Git 仓 / 分支与工作区 / stash / VERSION / TEMPLATE-BASE.md lineage / registry Sync mode，任一关键项失败或冲突即停，仅报告、不进入 dry-run。B 阶段（同步能力）：scripts/sync-template.* / check-derived-sync.* / template-sync.json / 必要运行入口，记录缺项和原因、不抹 A 阶段结果；缺项即停或转旧项目 bootstrap 路径。
+
 1. 先阅读 ai/index.md 及其列出的全部规则文件。
 2. 检查 git status；若有未提交改动，立即停止并说明，不要覆盖。
 3. 判断是否为同步后续接模式：

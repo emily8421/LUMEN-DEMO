@@ -105,3 +105,28 @@ UI Brief / UI Exploration / frontend experience brief / frontend-interaction / U
 ## 8. 与 scaffold 实验的关系
 
 本 Profile 只定义结构基线和 Gate，不在母模板内生成真实 Web App scaffold。若需要验证 `template-docs/web-app/`、`new-project --profile web-app` 或领域模板是否值得推进，先按 `template-docs/web-app-scaffold-experiment.md` 在真实项目或独立实验仓记录候选结构、Walking Skeleton 验证、文件膨胀观察和推广结论。
+
+## 9. 代码层一致性基线（Web 形态）
+
+§5 / §5.1 管「文件结构与膨胀」，本节管「Web 全栈代码层契约」——只要项目形态是 Web / 全栈就应成立的错误响应、前后端类型、HTTP 出口与契约测试基线，避免 AI 自主编码时每个端点 / 模块各写各的、漂移成「同一项目像 N 个人写的」。跨形态通用基本功（命名意图 / 失败可见 / import 卫生 / 对外信息最小化等）见 `ai/global-rules.md §2.1` L0 基线，本节不重复；具体语言 / 框架写法（FastAPI / React 等）由项目在 `docs/05-tech-spec.md` / `ai/project-rules.md §5` 落地。本节为治理提醒 + 落地口径，非硬性 Gate。
+
+### 9.1 错误与响应契约
+
+- **机器可读的错误标识**：错误响应须带结构化业务标识（命名常量 / Enum）；HTTP 状态码单独承载。同一字段不得既是业务标识又是 HTTP 码——否则消费者无法稳定分流。客户端按业务标识分流（认证失效 → 登出、降级标识 → 降级提示），**不得靠匹配错误文案判断状态**（文案一改即崩）。
+- **兜底异常 envelope**：注册通用异常处理器返回项目统一的响应结构（示例 `{code, status_code, msg, data}`，仅作示例、不作唯一结构；项目也可用 RFC Problem Details、GraphQL error 等稳定协议）。生产环境**不得回传堆栈 / 内部路径 / 原始异常文本**（复用 L0-7 对外信息最小化，见 `ai/global-rules.md §2.1`）。
+- **结构化客户端错误**：前端 HTTP 客户端对错误响应抛**结构化错误（含业务标识）**供调用方分流，而非裸 `Error(msg)` 丢弃标识。
+
+### 9.2 传输边界
+
+- **统一 API client / transport 层**：前端调用后端原则上经统一 API 客户端模块，便于统一处理认证、超时、错误与观测；禁止在 hook / 组件内裸 `fetch` 直连后端。
+
+### 9.3 类型与契约同步
+
+- **机器可校验的契约同步**：前后端共享的 API 契约须有机器可检查的同步或兼容性校验。选定一个机器可读契约源（OpenAPI / `response_model` / GraphQL schema / protobuf / 共享 IDL 均可），前端类型经 codegen 生成或入库基线比对，禁止无守护的长期手工双写任其漂移。
+
+### 9.4 工程化护栏
+
+- **真实协议边界回归**：全局异常处理、错误响应序列化、状态码映射必须经**真实 HTTP / 框架客户端路径**（如 `TestClient`）的回归测试，不能只直接调用端点函数——否则序列化层在异常路径无守护。
+- **测试分层与质量门**：unit / integration 分目录或 marker 区分；**CI 必须跑测试**（口径见 L0-8 可测试性，`ai/global-rules.md §2.1`）。具体 test / type / lint / build 质量门按项目形态裁剪、说明适用 / 不适用项，不强制固定工具组合（裁剪口径见 `ai/implementation-lifecycle-rules.md §6`）。
+
+> 与 §5 / §5.1 一致，本节为治理提醒，非硬性；派生项目可在 `ai/project-rules.md §5` / `docs/05-tech-spec.md` 覆盖或写明豁免。

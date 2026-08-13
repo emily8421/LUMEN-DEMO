@@ -37,3 +37,7 @@
 | `TEMPLATE-UPGRADE-handoff-checkpoint-rollup.md`（issue #314） | v1.61.0（PR #327），LUMEN 待下行同步 | `session-rules §6.1` handoff Latest checkpoint rollup 机制；派生项目已按 §6.1 实战验证（265KB→19KB），实证评论已补 #314。 |
 | `TEMPLATE-UPGRADE-db-safety-concern.md`（issue #320） | v1.61.0（PR #326 Batch A），LUMEN 待下行同步 | `implementation-lifecycle-rules §6` 破坏性测试数据库安全 guard。 |
 | `TEMPLATE-UPGRADE-global-rules-l0-code-principles.md`（issue #322） | v1.61.0（PR #326 Batch A），LUMEN 待下行同步 | `global-rules §2` L0 通用代码原则基线。 |
+| `TEMPLATE-UPGRADE-universal-code-consistency-supplement.md`（issue #332） | v1.61.4（PR #341），本项目已同步至 v1.61.4 | 通用层代码一致性补充已落地 `global-rules §2.1` 应用说明（#332 退回重写稿）。 |
+| `TEMPLATE-UPGRADE-web-profile-code-consistency.md`（issue #333） | v1.61.2（PR #338），本项目已同步至 v1.61.4 | Web Profile 代码层一致性基线已落地 `template-docs/web-fullstack-profile.md §9`（#333 Batch A）。 |
+| `TEMPLATE-UPGRADE-ai-code-governance-routing-map.md`（issue #335） | v1.61.3（PR #339），本项目已同步至 v1.61.4 | 规则分层地图选 A 不引入；gap A/B 已落地「去重声明必填 + 自动检查归位」（v1.61.3）。 |
+| `TEMPLATE-UPGRADE-web-fullstack-code-consistency-baseline.md` | 已拆分 | 实证索引·已拆分：回流走 A/B/C（#332/#333/#334）；A/B 已落地，C（#334）暂缓保留。 |

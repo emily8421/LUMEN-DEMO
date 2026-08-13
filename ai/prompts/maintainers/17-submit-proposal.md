@@ -36,6 +36,7 @@
    - 去项目化：无客户/账号/路径/业务细节。
    - 来源标识：头部 "> 来源：<派生>(owner/repo) 派生项目回流"（缺则补）。
    - 字段完整：动机/拟改/版本影响/影响面/验证方式。
+   - 去重声明：正文含 "## 1.1 与既有规则的关系（去重）" 或等价章节，列出相关既有规则与关系类型（对象不同/层级不同/机制不同/互补不重复/合并入/指向）；范式见 _proposals/README.md「提案正文章节」。
 3. 创建 issue 前先做只读预检：
    - `gh auth status -h github.com`
    - `gh repo view emily8421/ai-project-template --json nameWithOwner,viewerPermission`

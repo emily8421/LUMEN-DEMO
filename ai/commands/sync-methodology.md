@@ -31,13 +31,15 @@
 
 ## 执行流程
 
+> **预检两阶段契约（失败域隔离）**：只读预检分 A 阶段（身份与安全事实：本地路径 / Git 仓 / 分支与工作区 / stash / `VERSION` / `TEMPLATE-BASE.md` lineage / registry `Sync mode`）与 B 阶段（同步能力：`scripts/sync-template.*` / `scripts/check-derived-sync.*` / `template-sync.json` / 必要运行入口）。逐项输出 `pass / fail / not-checked`、按失败域隔离——B 阶段辅助检查失败不得掩盖 A 阶段已取得的关键事实；A 阶段任一关键项失败或冲突即停，仅报告、不进入 dry-run。已知文件存在性用精确路径查询（逐条 `Test-Path` / 显式 `git` 检查），不得把目录枚举或输出格式开关当筛选。详见 `ai/prompts/maintainers/12-sync-template.md`。
+
 1. 判断当前仓库角色：
    - 若当前在普通派生项目根目录，按常规 A13 同步流程执行。
    - 若当前在领域模板根目录，按 A13 的领域模板角色口径执行，使用 `--domain-template` 保留领域模板自身版本空间。
    - 若当前在领域派生项目且目标是同步领域标准件，停止跨层操作，转对应领域模板的 L2→L3 场景剧本。
    - 若当前在 `ai-project-template` 模板仓，且用户要求“同步至派生项目 / 同步 N 个派生 / 同步 LUMEN、zhiyan 等”，进入**模板仓发起模式**：先读取 `ai-records/project-registry/README.md` 与 `registry.md`，用 `Project` / `Aliases` / `Status` / `Path status` 解析目标项目和本地路径；不得先全盘递归找目录，除非 registry 缺失或记录不完整。
-2. 模板仓发起模式下，对每个目标项目做只读预检：`Local path` 存在且 `Path status=verified`、路径是 git 仓、工作区干净、`TEMPLATE-BASE.md` lineage 与 `Sync mode` 不冲突；若路径为 missing / stale-risk，先列为待确认项并停下。
-3. 进入每个派生项目后，检查 Git 状态、当前 `VERSION`、`TEMPLATE-BASE.md`（若存在）、同步脚本与 `template-sync.json` 是否存在。
+2. 模板仓发起模式下，对每个目标项目按预检两阶段契约做只读预检：A 阶段逐项检查 `Local path` 存在且 `Path status=verified`、路径是 git 仓、工作区干净、`TEMPLATE-BASE.md` lineage 与 `Sync mode` 不冲突；若路径为 missing / stale-risk，先列为待确认项并停下。A 阶段任一关键项失败或冲突即停，仅报告。
+3. 进入每个派生项目后，补全 A 阶段事实（Git 状态、当前 `VERSION`、`TEMPLATE-BASE.md` 若存在、lineage 一致性）；再执行 B 阶段，逐项检查 `scripts/sync-template.*`、`scripts/check-derived-sync.*`、`template-sync.json` 与必要运行入口是否存在，记录缺项和原因，**不得抹去 A 阶段已取得的关键事实**；缺项即停或转旧项目 bootstrap 路径（步骤 7）。
 4. 按 `git-guide.md` §5 和 `12-sync-template` 判断是旧项目首次同步、v1.6.8+ 后续同步，还是“已同步但只补后续”的同步后续接模式。
 5. 先输出标准闭环计划；若为同步后续接模式，明确跳过 dry-run / commit，从 `check-derived-sync` 开始。
 6. 用户确认后执行同步命令；普通派生项目优先使用 `--preserve-project-version` 保留项目自身 `VERSION` 并更新 `TEMPLATE-BASE.md`，领域模板改用 `--domain-template` 保留领域模板自身 `VERSION` / `CHANGELOG.md` 并更新领域版 `TEMPLATE-BASE.md`；同步后续接模式不重新执行同步命令。
