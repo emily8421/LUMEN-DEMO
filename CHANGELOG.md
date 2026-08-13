@@ -6,6 +6,16 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.8.24（2026-08-13）
+
+**维护态批27（Sprint-52）：前端 codegen Slice B-1 内容域混合接入（CQ-P1-006 后续）。纯类型层重构、非功能，不改对外 API / DB；无新依赖。聚合 bump PATCH。**
+
+- 内容域 4 模块接入生成类型（tags 已 Slice A）：`folders` / `docLinks` / `timeline` / `search`。
+- 混合接入（Slice A 验证模式）：主体 alias 生成类型 + union（status / event_type / level / permission / source_type）保留手写 narrow + 分页 / 请求体 / 前端专属手写。
+- 特殊处理：folders `FolderDetail` 清理冗余 `created_at`/`updated_at`（后端 schema 不返回、grep 确认无消费方）；timeline 嵌套 narrow（items / density / window）；search 命名错位 alias（Result↔ResultView / Response↔PageView / Meta↔View）+ RagSource optionality。
+- 接入后类型定义行数减少（alias 替代手写，4 文件 +45/-74）。
+- 验证：`npm run lint` 0 + `npm run build` **350 modules** 0 error（零回归）。CI PR #166 **9 job 全绿**。PR #166 squash merge main `59dea01`。
+
 ## v3.8.23（2026-08-13）
 
 **维护态批26（Sprint-51）：前端 codegen Slice A 试点——openapi-typescript 引入 + tags 混合接入（CQ-P1-006 后续，轨道3 P1 剩余候选）。纯工程治理引入前端类型 codegen、消除手工双写、非功能，不改 Phase / 交付物范围 / 对外 API 语义 / DB；新增 devDep openapi-typescript。聚合 bump PATCH。**
