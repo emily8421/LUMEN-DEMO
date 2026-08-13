@@ -1,4 +1,5 @@
 {
+  "app/useAppState.ts": 339,
   "styles/workspace.css": 722,
   "styles/local-mount.css": 589,
   "app/FolderTree.tsx": 569,
@@ -8,7 +9,6 @@
   "app/useLocalVaultMount.ts": 442,
   "app/TermCategoryTree.tsx": 405,
   "app/ContextPane.tsx": 366,
-  "App.tsx": 360,
   "features/ImportFeature.tsx": 335,
   "app/useDocuments.ts": 335,
   "styles/onboarding.css": 317,
@@ -16,6 +16,5 @@
   "app/useFolders.ts": 300,
   "app/WorkspaceMain.tsx": 279,
   "app/TopBar.tsx": 274,
-  "styles/ai-assistant.css": 271,
   "features/DocumentInspectorFeature.tsx": 266
 }
