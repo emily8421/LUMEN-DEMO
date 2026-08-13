@@ -2,23 +2,18 @@ import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { Draft } from './types';
 import type { ActiveView } from './WorkspaceViewNav';
-import type { DocLinkView, DocumentVersion, KnowledgeDocument } from '../api';
+import type { KnowledgeDocument } from '../api';
 import {
   createDocument,
   deleteDocument,
-  downloadDocumentMarkdown,
-  exportAndDownloadDocumentPdf,
-  getDocument,
-  listDocLinks,
   listDocuments,
-  listVersions,
   moveDocument,
   restoreVersion,
-  triggerBrowserDownload,
   updateDocument,
 } from '../api';
 import { emptyDraft, normalizeDraft } from './drafts';
-import { isAuthTokenError } from './session-store';
+import { useDocumentSideData } from './useDocumentSideData';
+import { createDownloadActions } from './download-actions';
 
 type RunAction = (progressMessage: string, action: () => Promise<void>) => Promise<void>;
 
@@ -35,12 +30,12 @@ type UseDocumentsArgs = {
 /**
  * 文档域 state + handler（REQ-004/005/006：CRUD / 行内编辑 / 版本）。
  *
- * 抽成独立 hook（APP-SIZE-C-011），App.tsx 最大的一摊。封装文档列表 / 选中 / 版本 /
- * 出入链 / 反链 / 草稿 / 新建态 + selectedDocument effect（同步 draft/versions/links）
- * + 文档 CRUD / 版本恢复 / 下载 / 打开 / reloadDocuments。
+ * 抽成独立 hook（APP-SIZE-C-011），App.tsx 最大的一摊。封装文档列表 / 选中 / 草稿 /
+ * 新建态 / selectedDocument draft 同步 effect + 文档 CRUD / 版本恢复 / 下载 / 打开 /
+ * reloadDocuments。版本 / 出入链 / 反链侧数据在 useDocumentSideData（E4 拆分）。
  *
- * 写操作经 App 注入的 runAction 包装；文档变更后经 refreshWorkspace 回调刷新工作区；
- * doc-links 加载遇登录失效经 onAuthError 回调交回 App。
+ * 写操作经 App 注入的 runAction 包装；文档变更后经 onDocumentsChanged 回调刷新工作区；
+ * 登录失效经 onAuthError 回调交回 App。
  */
 export function useDocuments({
   token,
@@ -53,9 +48,6 @@ export function useDocuments({
 }: UseDocumentsArgs) {
   const [documents, setDocuments] = useState<KnowledgeDocument[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
-  const [versions, setVersions] = useState<DocumentVersion[]>([]);
-  const [outboundLinks, setOutboundLinks] = useState<DocLinkView[]>([]);
-  const [backlinks, setBacklinks] = useState<DocLinkView[]>([]);
   const [draft, setDraft] = useState<Draft>(emptyDraft);
   const [isCreating, setIsCreating] = useState(false);
   // ⑥：新建目标文件夹（文件夹右键「在此新建文档」传入；null=根目录）。
@@ -67,20 +59,35 @@ export function useDocuments({
     [documents, selectedId],
   );
 
-  // 新建态 / 选中文档变化 → 同步草稿、版本、出入链与反链。
+  const sideData = useDocumentSideData({
+    token,
+    selectedDocument,
+    isCreating,
+    onAuthError,
+    setNotice,
+    setError,
+    onDetailLoaded: (detail) => {
+      setDocuments((currentDocuments) => {
+        const hasDocument = currentDocuments.some((document) => document.id === detail.id);
+        if (!hasDocument) {
+          return [detail, ...currentDocuments];
+        }
+        return currentDocuments.map((document) => (document.id === detail.id ? detail : document));
+      });
+    },
+  });
+
+  // 新建态 / 选中文档变化 → 同步草稿（版本 / 出入链 / 反链同步在 useDocumentSideData）。
   useEffect(() => {
     if (isCreating) {
       // ⑥：新建草稿携带目标文件夹（文件夹右键新建时设置 creatingFolderId）。
       setDraft({ ...emptyDraft, folder_id: creatingFolderId ?? null });
-      setVersions([]);
-      setOutboundLinks([]);
-      setBacklinks([]);
       return;
     }
 
     if (selectedDocument) {
-      if (selectedDocument.content_md === undefined && token) {
-        void loadDocumentDetail(token, selectedDocument.id);
+      if (selectedDocument.content_md === undefined) {
+        // 详情加载中（useDocumentSideData 负责 loadDocumentDetail），草稿不动。
         return;
       }
 
@@ -89,50 +96,9 @@ export function useDocuments({
         content_md: selectedDocument.content_md ?? '',
         permission: selectedDocument.permission,
       });
-      if (token) {
-        void loadVersions(token, selectedDocument.id);
-        void loadDocLinks(token, selectedDocument.id);
-      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isCreating, creatingFolderId, selectedDocument?.id, selectedDocument?.content_md, selectedDocument?.permission, selectedDocument?.title, token]);
-
-  async function loadVersions(loadToken: string, documentId: number) {
-    setVersions(await listVersions(loadToken, documentId));
-  }
-
-  async function loadDocLinks(loadToken: string, documentId: number) {
-    try {
-      const [outbound, back] = await Promise.all([
-        listDocLinks(loadToken, documentId, 'outbound'),
-        listDocLinks(loadToken, documentId, 'backlink'),
-      ]);
-      setOutboundLinks(outbound);
-      setBacklinks(back);
-    } catch (caughtError) {
-      // doc-links 加载失败不阻塞文档编辑；仅处理登录失效，其余静默以免覆盖主流程错误提示。
-      if (isAuthTokenError(caughtError)) {
-        onAuthError();
-        setNotice('登录已失效，请重新登录。');
-      }
-    }
-  }
-
-  async function loadDocumentDetail(loadToken: string, documentId: number) {
-    try {
-      const detail = await getDocument(loadToken, documentId);
-      setDocuments((currentDocuments) => {
-        const hasDocument = currentDocuments.some((document) => document.id === detail.id);
-        if (!hasDocument) {
-          return [detail, ...currentDocuments];
-        }
-        return currentDocuments.map((document) => (document.id === detail.id ? detail : document));
-      });
-    } catch (caughtError) {
-      const message = caughtError instanceof Error ? caughtError.message : '文档详情加载失败';
-      setError(message);
-    }
-  }
 
   // 拉取文档列表 + 仅保留有效 selectedId（不自动选首篇；无选中由引导卡引导，Doc-First §9.5.7 F-impl-10）。供 refreshWorkspace 调用。
   async function reloadDocuments(loadToken: string) {
@@ -148,7 +114,7 @@ export function useDocuments({
     if (documentResult.length === 0) {
       // 空间无文档：清空草稿/版本，由 DocumentEmptyState 引导新建（Doc-First §9.5.7 F-impl-10）。
       setDraft(emptyDraft);
-      setVersions([]);
+      sideData.resetSideData();
     }
   }
 
@@ -166,7 +132,7 @@ export function useDocuments({
       await reloadDocuments(token);
       setSelectedId(savedDocument.id);
       setIsCreating(false);
-      await loadVersions(token, savedDocument.id);
+      await sideData.loadVersions(token, savedDocument.id);
       setNotice(`已保存：${savedDocument.title}（版本 ${savedDocument.current_version}）`);
       setSavedRevision((revision) => revision + 1);
     });
@@ -187,7 +153,7 @@ export function useDocuments({
       });
       await reloadDocuments(token);
       setSelectedId(savedDocument.id);
-      await loadVersions(token, savedDocument.id);
+      await sideData.loadVersions(token, savedDocument.id);
       setNotice(`已应用 AI 润色（版本 ${savedDocument.current_version}）`);
     });
   };
@@ -253,32 +219,17 @@ export function useDocuments({
       const restored = await restoreVersion(token, selectedDocument.id, versionNo);
       await reloadDocuments(token);
       setSelectedId(restored.id);
-      await loadVersions(token, restored.id);
+      await sideData.loadVersions(token, restored.id);
       setNotice(`已恢复到版本 ${versionNo}。`);
     });
   };
 
-  const handleDownloadMarkdown = () => {
-    if (!token || !selectedDocument) {
-      return;
-    }
-    void runAction('正在下载文档...', async () => {
-      const { blob, filename } = await downloadDocumentMarkdown(token, selectedDocument.id);
-      triggerBrowserDownload(blob, filename);
-      setNotice(`已下载：${filename}`);
-    });
-  };
-
-  const handleExportPdf = () => {
-    if (!token || !selectedDocument) {
-      return;
-    }
-    void runAction('正在导出 PDF...', async () => {
-      const { blob, filename } = await exportAndDownloadDocumentPdf(token, selectedDocument.id);
-      triggerBrowserDownload(blob, filename);
-      setNotice(`已下载 PDF：${filename}`);
-    });
-  };
+  const downloadActions = createDownloadActions({
+    token,
+    selectedDocument,
+    runAction,
+    setNotice,
+  });
 
   const handleOpenDocument = async (documentId: number | null, title: string) => {
     if (!documentId) {
@@ -296,14 +247,14 @@ export function useDocuments({
     const documentRecord = documents.find((document) => document.id === documentId);
     if (!documentRecord || documentRecord.content_md === undefined) {
       await runAction('正在打开来源文档...', async () => {
-        await loadDocumentDetail(token, documentId);
-        await loadVersions(token, documentId);
+        await sideData.loadDocumentDetail(token, documentId);
+        await sideData.loadVersions(token, documentId);
         setNotice(`已打开来源文档：${title}`);
       });
       return;
     }
 
-    await loadVersions(token, documentId);
+    await sideData.loadVersions(token, documentId);
     setNotice(`已打开来源文档：${title}`);
   };
 
@@ -311,9 +262,9 @@ export function useDocuments({
     documents,
     selectedId,
     setSelectedId,
-    versions,
-    outboundLinks,
-    backlinks,
+    versions: sideData.versions,
+    outboundLinks: sideData.outboundLinks,
+    backlinks: sideData.backlinks,
     draft,
     setDraft,
     isCreating,
@@ -327,8 +278,8 @@ export function useDocuments({
     handleMoveDocument,
     handleDeleteDocument,
     handleRestore,
-    handleDownloadMarkdown,
-    handleExportPdf,
+    handleDownloadMarkdown: downloadActions.handleDownloadMarkdown,
+    handleExportPdf: downloadActions.handleExportPdf,
     handleOpenDocument,
     savedRevision,
   };
