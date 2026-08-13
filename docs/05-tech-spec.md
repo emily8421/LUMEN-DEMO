@@ -155,6 +155,7 @@ flowchart TB
 - **【已落地】** 前端零 `any` + `ReturnType<typeof useXxx>` 导出类型零重复；泛型 `request<T>` 贯穿 API → hook → 组件。
 - **【已落地】** 前端 HTTP 单出口：`fetch` 仅存于 `api/client.ts`（2 处），所有域模块经 `request()` / `downloadBlob()`；`api.ts` barrel re-export 渐进拆分（调用方 `import from './api'` 不变）。
 - **【已落地（2026-08-13，CQ-P1-006 / 维护态批16）】** 后端 62 个 JSON 端点全部标注 `response_model=ApiEnvelope[X]`（`backend/model/schemas.py` 泛型信封 + 域响应模型），OpenAPI 快照固定于 `openapi/openapi.json`（`scripts/export-openapi.py` 生成），CI 新增 `schema-diff` job（required）防漂移——后端改响应契约必须同步快照；前端 `api/*.ts` 手工双写待后续 codegen（`openapi-typescript` 需新增 devDependency，另立项）替换为生成类型。
+- **【部分落地（2026-08-13，CQ-P1-006 后续 / 维护态批26·Slice A）】** 前端 codegen 引入 `openapi-typescript@^7`（devDep）+ `gen:api` 脚本，从 `openapi/openapi.json` 生成 `frontend/src/api/generated.ts`（入库）；tags 域试点**混合接入**（主体 alias 生成类型 + union 保留手写 narrow overlay + 分页/请求体/前端专属类型手写保留）；CI `frontend-schema-diff` advisory job（`gen:api` + `git diff --exit-code`）；`check-frontend-file-size.mjs` 豁免 codegen 产物。Explore 评估揭示 openapi 几乎无 enum → 全量替换会丢 ~12 处 union narrow，故混合接入；documents（Summary|Detail 合并 + useDocuments 运行时哨兵）留 Slice B 单独批。验证：gen 幂等 drift 0 + lint 0 + build 350 modules 0 error + file-size OK。实施口径 `tasks/task-058-frontend-codegen.md`；Slice B（其余 16 域 + documents + CI 升 required）待续。
 - **【待对齐】** repository 双实现靠鸭子类型 + docstring 声明对齐（无 Protocol / ABC）→ 定义 `RepositoryProtocol`，`DemoRepository` / `PgRepository` 显式 implement，避免单侧静默缺方法。
 - **【待对齐】** service 函数 `repository` 形参全程无类型注解 → 标注 `RepositoryProtocol`，恢复 IDE 补全 / 安全重构。
 

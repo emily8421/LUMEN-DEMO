@@ -6,6 +6,16 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.8.23（2026-08-13）
+
+**维护态批26（Sprint-51）：前端 codegen Slice A 试点——openapi-typescript 引入 + tags 混合接入（CQ-P1-006 后续，轨道3 P1 剩余候选）。纯工程治理引入前端类型 codegen、消除手工双写、非功能，不改 Phase / 交付物范围 / 对外 API 语义 / DB；新增 devDep openapi-typescript。聚合 bump PATCH。**
+
+- **codegen 引入**：`openapi-typescript@^7.13.0`（devDep）+ `gen:api` 脚本（`openapi-typescript ../openapi/openapi.json -o src/api/generated.ts`），从后端 OpenAPI 快照生成 `frontend/src/api/generated.ts`（入库；避开 `--immutable` v7 bug #1368）。前端类型与后端 Pydantic 同为 snake_case，零命名转换冲突。
+- **混合接入试点（tags）**：响应主体类型 alias 生成类型（字段对齐消除双写）；union literal（TagStatus 等）保留手写 narrow overlay（Explore 评估揭示 openapi 几乎无 enum，全量替换会让 ~12 处 union 退化为 `string`、丢编译期 narrow）；分页容器 / 请求体 / 前端专属类型保留手写。TagView `Omit<生成,'status'> & {status: TagStatus}` narrow；DocumentTagView·TagLinkView 零差异 alias。
+- **CI drift 门**：`frontend-schema-diff` job（advisory，`gen:api` + `git diff --exit-code`，复用 schema-diff 模式）；Slice B 全量后升 required。
+- **file-size ratchet 豁免**：`check-frontend-file-size.mjs` 豁免 codegen 产物（`*generated.ts` 机器生成、行数随契约可增可减，不适用手写膨胀 ratchet）。
+- 验证：`npm run gen:api` 幂等（drift 0）+ `npm run lint` 0 + `npm run build` **350 modules** 0 error（零回归）+ `npm run check:file-size` OK + tags 消费方 tsc 零回归；浏览器 smoke 留 Slice B（纯类型改动 + build 强保证）。CI **9 job 全绿**（含新 frontend-schema-diff 首跑）。PR #165 squash merge main `1a06f8d`。
+
 ## v3.8.22（2026-08-13）
 
 **维护态批25（Sprint-50）：前端文件膨胀拆分 Slice E——组件拆分·中风险 + baseline 收窄（CQ-P1-008 候选 E4 收口 / GOV-015，轨道3 P2 剩余候选）。纯工程治理收敛前端文件膨胀、非功能，不改 Phase / 交付物范围 / 对外 API 语义 / DB；不新增依赖。聚合 bump PATCH。**
