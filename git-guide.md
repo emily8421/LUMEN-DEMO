@@ -134,6 +134,8 @@ cd ../ai-tpl-wt2          # B 在这里改 / 提交 / 推送，完全不碰 A �
 cd /path/ai-project-template && git worktree remove ../ai-tpl-wt2
 ```
 
+**worktree 建 / 删登记责任**：创建 worktree 的会话应把路径 / 分支 / 主题登记到 `.ai/session-handoff.md` 的「活跃 worktree」段（不登记 = 其他会话 / CLI 看不见）；合并进 main 或明确废弃后移除 worktree 并从续接文件清除登记。worktree 内被动中断（改动未提交）时，接手会话靠 `git worktree list` + 续接文件登记发现它，按 `ai/session-rules.md` §1 以该 worktree 的 Git 事实重建上下文。
+
 > 详见 `ai/session-rules.md` §8（多会话并发操作）。
 
 ## 5. 场景 C：派生项目同步模板（使用者）

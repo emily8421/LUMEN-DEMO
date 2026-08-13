@@ -37,7 +37,7 @@ Get-Content -Path ai/session-rules.md -Encoding UTF8 -Raw
 ## 执行流程
 
 1. 进入 `ai/session-rules.md` §3.1 的快速续接模式。
-2. 只运行本地只读检查：`git status --short --branch`、`git log --oneline -3`、`git stash list`，并读取 `VERSION`。
+2. 只运行本地只读检查：`git status --short --branch`、`git log --oneline -3`、`git stash list`、`git worktree list`，并读取 `VERSION`；除主工作区外存在活跃 worktree 时，一并报告其路径 / 分支 / 未提交改动。
 3. 读取续接文件的元数据、当前状态、下次优先做和阻塞 / 待确认。
 4. 比对 Git 客观事实与 handoff 的分支、HEAD、VERSION 和任务进度。
 5. 输出恢复摘要：当前分支 / 版本 / 最近提交、handoff 新鲜度、可继续事项、待确认项、未复核远端事项。
