@@ -185,7 +185,7 @@ flowchart TB
 - **【已落地】** API 类型与域模块同文件（`api/documents.ts` 类型贴 CRUD 函数）；`app/types.ts` 只放跨域 UI 态类型。
 - **【已落地】** 每个 hook 头部 JSDoc 写明职责 / 依赖注入约定 / 跨域回调语义 / 拆分溯源（关联 APP-SIZE ticket）；新 hook 照此格式。
 
-> **本节待对齐项不强制当前维护态回改**：新增代码必须对齐【已落地】项、不得再引入【待对齐】项的同类问题；【待对齐】项登记为技术债，若启动重构 Sprint，优先处理 **§4.2.1 错误契约收口** 与 **§4.2.4 CI 代码门** 两类（契约稳定性与回归保护风险最高）。超长文件（`repository/pg_repository.py` 1621 行、`demo_repository.py` 1251 行、`App.tsx` 360 行、`styles/workspace.css` 722 行等）按 §4.1 阈值另列拆分计划；前端文件膨胀已由 CQ-P1-008 ratchet（`scripts/check-frontend-file-size.mjs` + 基线）机器守护，`App.tsx` 已随维护态批20 拆三 shell（546→360）。
+> **本节待对齐项不强制当前维护态回改**：新增代码必须对齐【已落地】项、不得再引入【待对齐】项的同类问题；【待对齐】项登记为技术债，若启动重构 Sprint，优先处理 **§4.2.1 错误契约收口** 与 **§4.2.4 CI 代码门** 两类（契约稳定性与回归保护风险最高）。超长文件（`repository/pg_repository.py` 1621 行、`demo_repository.py` 1251 行、`styles/workspace.css` 722 行等）按 §4.1 阈值另列拆分计划；前端文件膨胀已由 CQ-P1-008 ratchet（`scripts/check-frontend-file-size.mjs` + 分层阈值基线，.css/App→300 / .ts/.tsx→250）机器守护，`App.tsx` 已随维护态批20 拆三 shell（546→360）+ 维护态批21 抽 `useAppState`（359→90，剩余 18 个超限文件见 `frontend/.file-size-baseline.json`，含 `app/useAppState.ts` 339 编排宿主例外）。
 
 ## 5. 运行环境与资源评估
 

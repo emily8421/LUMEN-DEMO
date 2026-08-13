@@ -6,6 +6,14 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.8.18（2026-08-13）
+
+**维护态批21（Sprint-46）：前端文件膨胀拆分 Slice A——App 减压收口 + ratchet 分层阈值（CQ-P1-008 候选 E4，轨道3 P2 剩余候选）。纯工程治理收敛前端文件膨胀、非功能，不改 Phase / 交付物范围 / 对外 API 语义 / DB；不新增依赖。聚合 bump PATCH。**
+
+- **App 减压收口（②useAppState 再抽）**：`App.tsx` 359→90 行——新 `app/useAppShellState.ts`（UI/布局派生 + 局部弹窗/引导 state）+ 新 `app/useAppState.ts`（17 个域 hook 编排 + cross-cutting 回调 + 3 effects，依赖顺序原样搬移，登记基线）+ App 只剩 import + 装配。
+- **ratchet 分层阈值**：`scripts/check-frontend-file-size.mjs` 按 docs/05 §4.1 分层（`.css` / `App.tsx` 主应用入口→300，`.ts/.tsx`→250，原统一 250 与文档口径不一致）；baseline 重生成（19→18，App.tsx / ai-assistant.css 出基线，useAppState.ts 进）。
+- 验证：`npm run lint` 0 problem + `npm run build` 306 modules（+2 hook）+ `npm run check:file-size` OK + 负向探针（280 行临时文件 fail）+ 浏览器 smoke（demo + headless Edge 渲染登录页无运行时错误）；CI **8 job 全绿**。PR #158 squash merge main `ee95523`。
+
 ## v3.8.17（2026-08-13）
 
 **维护态批20（Sprint-45）：前端 ratchet + App 减压（CQ-P1-008，轨道3 P2）。纯工程治理收敛前端文件膨胀、非功能，不改 Phase / 交付物范围 / 对外 API 语义 / DB；不新增依赖。聚合 bump PATCH。**
