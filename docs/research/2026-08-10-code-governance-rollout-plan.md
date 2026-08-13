@@ -92,7 +92,7 @@ README / backend README / demo-guide 推荐的 `unittest discover` 在开发库�
 | 错误契约收口 | CQ-P1-005（code 二义/str(exc)/无兜底 5xx/前端丢 code） | `ApiError(code,msg,status)` + 集中 `code→HTTP` 映射 + 兜底 `Exception` handler + 禁 `str(exc)` | 前端不再靠文案判 auth → R3 Web Profile + R5 Adapter |
 | repository Protocol + 按域拆 | CQ-P1-002（pg 1621/demo 1251，无 Protocol） | 定义 `RepositoryProtocol`，按域 `DocumentRepository` 等，双实现 contract test | 接口变更不再靠人工同步 → R1 模块化 + R5 |
 | 事务边界 UoW | CQ-P1-003（多步写各自 commit） | service/UoW 拥有事务，repository 不独立 commit；故障注入 rollback 测试 | import/document 关键用例可回滚 → R4 DB Concern |
-| response_model/codegen | CQ-P1-006（64 endpoint/0 response_model，类型双写；实为 65，漏 `config_router`） | FastAPI `response_model` + OpenAPI → 前端 codegen / schema diff | 后端加字段前端自动同步 → R3 + R5（后端契约 + CI schema diff 已闭环；前端 codegen Slice A / B-1..B-3 已落地·批26-29 v3.8.23-26 / B-4 documents 待续） |
+| response_model/codegen | CQ-P1-006（64 endpoint/0 response_model，类型双写；实为 65，漏 `config_router`） | FastAPI `response_model` + OpenAPI → 前端 codegen / schema diff | 后端加字段前端自动同步 → R3 + R5（后端契约 + CI schema diff 已闭环；前端 codegen **全量闭环**：Slice A / B-1..B-4 · 批26-30 v3.8.23-27 · 17 域 + drift 门 required） |
 | scoped repository query | CQ-P1-004（全量读取再过滤） | `list_visible_documents(actor,space)` 等安全默认 API，全量法标 internal | 越权不依赖调用者记忆 → R4 Auth Concern |
 | fail-fast / readiness | CQ-P1-001（DB 失败仍启动） | production 强依赖失败 raise；liveness vs readiness 分离 | 端口可用≠可服务 → R4 可靠性 |
 | 前端 ratchet + App 减压 | CQ-P1-008（App.tsx 545，超限回堆） | changed-file ratchet 脚本；拆 auth/workspace/overlay shell | 新 PR 不增加超限文件职责 → R3 + R6 |
@@ -150,7 +150,7 @@ README / backend README / demo-guide 推荐的 `unittest discover` 在开发库�
 | 错误契约收口 | 3 | ⏳ | — | P1 |
 | repository Protocol | 3 | ⏳ | — | P1 |
 | 事务 UoW | 3 | ⏳ | — | P1 |
-| response_model/codegen | 3 | ✅ 已闭环（Sprint-41 / task-048 / 62 JSON 端点 response_model + OpenAPI 快照 + CI schema-diff required，v3.8.13） | — | P1（前端 codegen Slice A / B-1..B-3 已落地·批26-29 v3.8.23-26 / B-4 documents 待续） |
+| response_model/codegen | 3 | ✅ 已闭环（Sprint-41 / task-048 / 62 JSON 端点 response_model + OpenAPI 快照 + CI schema-diff required，v3.8.13） | — | P1（前端 codegen **全量闭环**：Slice A / B-1..B-4 · 批26-30 v3.8.23-27 · 17 域 + drift 门 required） |
 | scoped query | 3 | ✅ 已闭环（Sprint-40 / task-047 / PR #151，v3.8.12） | — | P1 |
 | fail-fast | 3 | ✅ 已闭环（Sprint-42 / task-049 / PR #154 lifespan PG fail-fast + /api/health live·ready + DB_NOT_READY 5031，v3.8.14） | PR #154 `dd75329` | P1 |
 | 前端 ratchet | 3 | ✅ 已闭环（Sprint-45 / task-052 / PR #157，v3.8.17） | PR #157 `7b5444f` | P2（App 拆三 shell + file-size ratchet 脚本，拦新增超限/膨胀） |
@@ -183,6 +183,7 @@ README / backend README / demo-guide 推荐的 `unittest discover` 在开发库�
 - **2026-08-13 追加（维护态批27 / v3.8.24）**：轨道3 P1 `前端 codegen`（CQ-P1-006 后续）Slice B-1 内容域——`folders`/`docLinks`/`timeline`/`search` 4 模块混合接入（tags 已批26 Slice A）：主体 alias 生成类型 + union（status/event_type/level/permission/source_type）保留手写 narrow + 分页/请求体/前端专属手写；folders `FolderDetail` 清理冗余 created_at/updated_at；timeline 嵌套 narrow（items/density/window）；search 命名错位 alias + RagSource optionality。验证：lint 0 + build 350 modules 0 error（零回归）；CI PR #166 9 job 全绿。PR #166 squash merge main `59dea01`。详见 `tasks/task-058-frontend-codegen.md`。
 - **2026-08-13 追加（维护态批28 / v3.8.25）**：轨道3 P1 `前端 codegen`（CQ-P1-006 后续）Slice B-2 术语导入域——6 域混合接入（**范围修正**：原计划 7 域中 rag 已随 B-1 search.ts 完成）：`terms`（TermStatus alias 生成 enum + Term narrow + TermWritePayload 零差异 alias）/ `termCategories`（零差异 alias）/ `quickEntry`（status narrow）/ `aiPolish`（status narrow + PolishSource alias）/ `imports`（命名错位 alias + 嵌套 narrow + failedBatchFromSlice 补必填 null + File/FormData 手写）/ `exports`（status narrow）；6 文件 +52/-90。验证：lint 0 + build 350 modules 0 error + 浏览器 smoke（术语树/详情 + 快速录入 converted 分支 + AI 润色面板）PASS；CI PR #167 9 job 全绿。PR #167 squash merge main `397382f`。详见 `tasks/task-058-frontend-codegen.md`。
 - **2026-08-13 追加（维护态批29 / v3.8.26）**：轨道3 P1 `前端 codegen`（CQ-P1-006 后续）Slice B-3 账户空间域——4 域混合接入（**范围修正**：config 域已随 B-1 search.ts、users 域本在 spaceMembers.ts）：`auth`（LoginResponse narrow：current_space_id 后端 `number|null`→前端 number（运行时哨兵=注册即建个人空间）+ role union）/ `spaces`（零差异 alias）/ `spaceMembers`（role narrow + UserSearchView 命名错位 alias）/ `admin`（role/status narrow + 嵌套 narrow）；4 文件 +50/-56。验证：lint 0 + build 350 modules 0 error（bundle 逐字节不变）+ 浏览器 smoke（登录/空间切换/成员表/用户管理/用户空间抽屉）PASS；CI PR #168 9 job 全绿。PR #168 squash merge main `90d06d5`。详见 `tasks/task-058-frontend-codegen.md`。
+- **2026-08-13 追加（维护态批30 / v3.8.27·前端 codegen 全量闭环）**：轨道3 P1 `前端 codegen`（CQ-P1-006 后续）Slice B-4 documents——`KnowledgeDocument = DocumentSummaryView|DetailView` 真 union（替代旧 `content_md?: string` 压平哨兵）+ `isDocumentDetail` 守卫 + 5 处运行时哨兵改 narrow + 函数签名精确化；契约失配修正（`listDocumentsByTag` 瘦身 shape）；CI `frontend-schema-diff` 升 **required**（drift 门收口）。验证：lint 0 + build 350 modules 0 error + 浏览器 smoke 全链路 PASS；CI PR #169 9 job 全绿（ratchet 拦截 useDocuments 286→287 后修正复绿）。PR #169 squash merge main `f66b00f`。**前端 codegen Slice A+B 全量闭环（17 域 + drift required）**。发现的「AI 生成代码类型撒谎」模式记 pitfall（候选模板提案）。详见 `tasks/task-058-frontend-codegen.md`。
 
 ## 9. 待人工确认项
 

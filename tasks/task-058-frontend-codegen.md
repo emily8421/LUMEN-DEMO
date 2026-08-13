@@ -1,7 +1,7 @@
 # task-058：前端 codegen openapi-typescript（CQ-P1-006 后续 / Slice A 试点）
 
 > 维护态批26 / Sprint-51 / CQ-P1-006 后续 / governance rollout §4 轨道3 P1（前端 codegen）。
-> 状态：**Slice B-3 账户空间域完成（2026-08-13，PR #168 / v3.8.26）；Slice B-4 待续**。
+> 状态：**全量闭环（2026-08-13）：Slice A + Slice B-1..B-4，17 域全部接入生成类型 + CI drift 门 required（批30 / PR #169 / v3.8.27）**。
 > 依据：task-048 后续候选；`docs/05-tech-spec.md §4.2.3`；`docs/research/2026-08-10-code-governance-rollout-plan.md §4` 轨道3。
 
 ## 背景 / 目标
@@ -40,7 +40,7 @@
 - **B-1 内容域（已完成，批27 / PR #166 / v3.8.24）**：folders / docLinks / timeline / search（含 rag 域 RagSource/QueryResponse）。
 - **B-2 术语导入域（已完成，批28 / PR #167 / v3.8.25）**：terms / termCategories / quickEntry / aiPolish / imports / exports（**范围修正**：原计划 7 域中 rag 已随 B-1 完成）。逐文件：terms（TermStatus alias 生成 enum + Term=Omit<TermDetail,'status'> narrow + TermWritePayload=TermWriteRequest 零差异 alias + TermListResponse 手写保留）；termCategories（View/Detail/ListPage 零差异 alias + 请求体手写）；quickEntry（QuickEntryView status narrow）；aiPolish（PolishView status narrow + PolishSource alias）；imports（ImportResponse=ImportFileView 命名错位 + ImportBatchItem status narrow（import_id 等对齐必填）+ ImportBatchResponse 嵌套 narrow + failedBatchFromSlice 补 3 个必填 null + File/FormData payload 手写）；exports（PdfExportResponse status narrow + artifact_path 对齐必填）。验证：lint 0 + build 350 modules 0 error + 浏览器 smoke（`.tmp/sliceB2-codegen-smoke.mjs`：术语树/详情 pending 分支 + 快速录入 converted 分支 + AI 润色面板）PASS；CI 9 job 全绿。
 - **B-3 账户空间域（已完成，批29 / PR #168 / v3.8.26）**：auth / spaces / spaceMembers / admin（**范围修正**：config 域已随 B-1 search.ts、users 域本在 spaceMembers.ts）。逐文件：auth（LoginResponse=Omit<LoginView,'current_space_id'|'role'> narrow——后端 `number|null`/裸 string → 前端 number/union，运行时哨兵=注册即建个人空间；RegisterResponse email narrow；SessionInfo/PasswordResetMessageView 零差异 alias）；spaces（Space=SpaceView / SwitchSpaceView 零差异 alias）；spaceMembers（SpaceMemberView role narrow + UserSearchResult=UserSearchView 命名错位 alias）；admin（AdminUserView role/status narrow + AdminUserSpaceView role narrow 命名错位 + AdminUserSpaceAvailable alias + AdminUserSpacesResult 嵌套 narrow）。验证：lint 0 + build 350 modules 0 error（bundle 逐字节不变）+ 浏览器 smoke（登录/空间切换/成员表/用户管理/用户空间抽屉）PASS；CI 9 job 全绿。
-- **B-4 documents（待续·最高风险单独 plan）**：`KnowledgeDocument = DocumentSummary|DocumentDetail` union + narrowing + useDocuments/useDocumentSideData state 重构（content_md 运行时哨兵）；批末 CI drift 门升 required + 浏览器 smoke 系统性跑。
+- **B-4 documents（已完成·最高风险批，批30 / PR #169 / v3.8.27，Slice B 收口）**：前置做了 KnowledgeDocument 消费方全景梳理（15 文件：2 文件 5 处哨兵 + 11 文件公共字段只读 + tagDocuments 链 3 处）。`documents.ts` 真 union（`KnowledgeDocument = DocumentSummaryView|DocumentDetailView`）+ `isDocumentDetail` 守卫 + 函数签名精确化（list→Summary[] / 详情与写操作→Detail）；`useDocuments`/`useDocumentSideData` 5 处哨兵改 narrow + 冗余 `??` 清理；契约失配修正：`listDocumentsByTag` 瘦身 `DocumentTagItemView[]` → `TaggedDocumentItem`；CI `frontend-schema-diff` 升 required。验证：lint 0 + build 350 modules 0 error + 浏览器 smoke 全链路 PASS（list→详情→草稿回填→编辑保存→移动→版本→标签打开）；CI 9 job 全绿（ratchet 曾拦 useDocuments 286→287，import 合并修正）。
 
 ## 完成记录
 
@@ -49,3 +49,4 @@
 - **收尾**：PR merge 后回写 `docs/05 §4.2.3` + `project-rules §1` 批26 + `docs/08/09` + rollout §4 + bump（PATCH）。
 - **Slice B-2 收尾（批28）**：PR #167 squash merge main `397382f`；回写 docs/08 Sprint-53 + docs/09 TC-P2-GOV-018 + project-rules §1 批28 + 本文件；bump v3.8.25。
 - **Slice B-3 收尾（批29）**：PR #168 squash merge main `90d06d5`；回写 docs/08 Sprint-54 + docs/09 TC-P2-GOV-019 + project-rules §1 批29 + 本文件；bump v3.8.26。
+- **Slice B-4 收尾（批30·全量闭环）**：PR #169 squash merge main `f66b00f`；回写 docs/08 Sprint-55 + docs/09 TC-P2-GOV-020 + project-rules §1 批30 + 本文件；bump v3.8.27。**前端 codegen 全链路闭环**：17 域（Slice A tags + B-1 内容域 4 + B-2 术语导入域 6 + B-3 账户空间域 4 + B-4 documents）+ CI drift required。

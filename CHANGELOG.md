@@ -6,6 +6,16 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.8.27（2026-08-13）
+
+**维护态批30（Sprint-55）：前端 codegen Slice B-4 documents——union 接入 + 契约失配修正 + CI drift 门升 required（CQ-P1-006 后续·**前端 codegen Slice A+B 全量闭环**）。纯类型层 + CI 门收口、非功能，不改对外 API / DB；无新依赖。聚合 bump PATCH。**
+
+- **documents 真 union**：后端对文档有两种形状（列表 → `DocumentSummary` 无正文；详情 / 写操作 → `DocumentDetail` 必带正文），旧手写压平为 `content_md?: string` 用字段存在性当运行时哨兵；本批改为 `KnowledgeDocument = DocumentSummaryView | DocumentDetailView` 真 union + 导出 `isDocumentDetail` 类型守卫 + 函数签名精确化（list→Summary[]；get/create/update/move/restore→Detail）。
+- **哨兵重写**：`useDocuments` / `useDocumentSideData` 5 处「字段存在性」判断改 `isDocumentDetail` narrow + 冗余 `??` 清理（Detail 必有 content_md）+ effect deps 同步；11 个公共字段只读消费方 union 直接兼容零改动。
+- **契约失配修正**：`listDocumentsByTag` 后端实际返回瘦身 `DocumentTagItemView[]`（旧手写谎称完整 `KnowledgeDocument[]`，运行时字段少于声明）→ `TaggedDocumentItem` narrow + useTags / TagsFeature 类型链。
+- **CI drift 门收口**：`frontend-schema-diff` 删 `continue-on-error` 升 **required**——前端 codegen 17 域全量接入完成，后端改契约 + 前端忘重新生成直接红灯。
+- 验证：`npm run lint` 0 + `npm run build` **350 modules** 0 error + 浏览器 smoke **全链路 PASS**（list→选中→详情加载→草稿回填→编辑保存→右键移动→版本 tab→标签瘦身列表→从标签打开→编辑器回填，fixture 自建自清）；CI PR #169 **9 job 全绿**（drift 门首跑 required 通过；project-check ratchet 拦截 useDocuments 286→287 → import 合并修正复绿）。PR #169 squash merge main `f66b00f`。
+
 ## v3.8.26（2026-08-13）
 
 **维护态批29（Sprint-54）：前端 codegen Slice B-3 账户空间域混合接入（CQ-P1-006 后续）。纯类型层重构、非功能，不改对外 API / DB；无新依赖。聚合 bump PATCH。**
