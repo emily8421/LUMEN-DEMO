@@ -6,6 +6,15 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.8.14（2026-08-13）
+
+**维护态批17（Sprint-42）：强依赖 fail-fast / readiness（CQ-P1-001，轨道3 P1）。纯工程治理补强依赖失败语义与运维探针、非功能，不改 Phase / 交付物范围 / 对外 API 语义 / DB；不新增依赖。聚合 bump PATCH。**
+
+- **Slice A（启动 fail-fast）**：`backend/main.py` lifespan 改 except 分支化——PG 模式（非 demo 仓储）`init_db` / `ensure_documents_indexed` 失败时 `logger.error(exc_info=True)` + re-raise 拒绝启动（避免带病运行）；demo 仓储模式保留容忍降级（`logger.warning`）。顺带收口 `main.py` 2 处 `print` → `logger.info` / `logger.warning`（`docs/05` §4.2.4 print 债 main.py 部分）。
+- **Slice B（liveness / readiness）**：`backend/model/error_codes.py` 新增 `ErrorCode.DB_NOT_READY=5031`（→ HTTP 503，与 5030「外部 AI / OCR 不可用」语义分离，单一含义）；`backend/model/schemas.py` 新增 `HealthView`（status / db）；新 `backend/api/health.py`——`GET /api/health/live` 进程存活 200、`GET /api/health/ready` demo 200 / PG 模式 `db.ping()` 失败 503 + 5031，均 `response_model=ApiEnvelope[HealthView]`；`create_app` 注册 `health_router`；`openapi/openapi.json` 重生成（+91）。prod `docker-compose.prod.yml` 后端 healthcheck 接 `/api/health/ready`、frontend `depends_on: backend: service_healthy`。
+- **Slice C（测试）**：`tests/backend/test_health.py` 5 用例（live / ready demo / ready PG 503 / PG 启动 fail-fast RuntimeError / demo 容忍仍启动）；`test_error_contract.py` 码集断言 + 5031。
+- 验证：mypy **0 error**（57 files）+ ruff passed + 默认 pytest **313 passed / 49 deselected** 零回归；openapi 快照 `git diff --exit-code` 绿；CI **8 job 全绿**（含 backend-integration 48 用例 / schema-diff required）。PR #154 squash merge main `dd75329`。
+
 ## v3.8.13（2026-08-13）
 
 **维护态批16（Sprint-41）：API 响应契约 response_model·codegen（CQ-P1-006，轨道3 P1）。纯工程治理给全部 JSON 端点补机器可执行响应契约、非功能，不改 Phase / 交付物范围 / 对外 API 语义 / DB；不新增依赖。聚合 bump PATCH。**

@@ -49,6 +49,13 @@ services:
     expose:
       - "8000"
     restart: unless-stopped
+    healthcheck:
+      # readiness 探针：PG 模式 db.ping() 失败 → 503（CQ-P1-001 / API-058）
+      test: ["CMD", "python", "-c", "import urllib.request;exit(0 if urllib.request.urlopen('http://localhost:8000/api/health/ready').status==200 else 1)"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 30s
 
   frontend:
     build:
@@ -56,7 +63,8 @@ services:
       dockerfile: frontend/Dockerfile
     container_name: lumen-frontend-prod
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     environment:
       LUMEN_BACKEND_URL: http://backend:8000
     ports:

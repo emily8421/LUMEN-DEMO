@@ -152,7 +152,7 @@ README / backend README / demo-guide 推荐的 `unittest discover` 在开发库�
 | 事务 UoW | 3 | ⏳ | — | P1 |
 | response_model/codegen | 3 | ✅ 已闭环（Sprint-41 / task-048 / 62 JSON 端点 response_model + OpenAPI 快照 + CI schema-diff required，v3.8.13） | — | P1（前端 codegen 留后续候选） |
 | scoped query | 3 | ✅ 已闭环（Sprint-40 / task-047 / PR #151，v3.8.12） | — | P1 |
-| fail-fast | 3 | ⏳ | — | P1 |
+| fail-fast | 3 | ✅ 已闭环（Sprint-42 / task-049 / PR #154 lifespan PG fail-fast + /api/health live·ready + DB_NOT_READY 5031，v3.8.14） | PR #154 `dd75329` | P1 |
 | 前端 ratchet | 3 | ⏳ | — | P2 |
 | 配置集中 | 3 | ⏳ | — | P2 |
 | 日志统一 | 3 | ⏳ | — | P2 |

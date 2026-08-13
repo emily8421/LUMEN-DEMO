@@ -18,7 +18,7 @@
 - **鉴权**：Phase1 使用 Demo Bearer Token；Sprint-26（Phase2D，REQ-041/042）起 `POST /api/auth/login` 改为**凭证登录**（bcrypt verify），返回**不透明 token**（`secrets.token_urlsafe(32)`），`lumen_sessions` 只存 SHA-256 摘要（TTL 8h / 撤销 / 滑动续期 / 多设备会话），前端通过 `Authorization: Bearer <token>` 传递；`POST /api/auth/refresh` 轮换 token，`GET/DELETE /api/auth/sessions` 管理多设备会话；demo 内存仓储兼容旧 HMAC demo token（无密码快捷登录），PG 仓储强制真实凭证。
 - **权限**：空间 + 文档两级校验；列表 / 搜索 / RAG 均按 `current_space_id` 与文档 `permission` 过滤。
 - **响应**：统一 `{ code, msg, data }`；成功 `code=0`；列表分页 `{ items, total, page }`。
-- **错误码体系**：HTTP 状态码表达协议层结果，`code` 表达业务结果：`0` 成功，`4001` 未登录 / token 无效，`4003` 无权限，`4004` 资源不存在，`4010` 凭证错误 / session 无效（统一防枚举），`4030` 账号锁定 / 禁用，`4090` 业务冲突，`4220` 参数校验失败，`5000` 服务端错误，`5030` 外部 AI / OCR 服务不可用。
+- **错误码体系**：HTTP 状态码表达协议层结果，`code` 表达业务结果：`0` 成功，`4001` 未登录 / token 无效，`4003` 无权限，`4004` 资源不存在，`4010` 凭证错误 / session 无效（统一防枚举），`4030` 账号锁定 / 禁用，`4090` 业务冲突，`4220` 参数校验失败，`5000` 服务端错误，`5030` 外部 AI / OCR 服务不可用，`5031` 数据库未就绪（readiness 探测失败）。
 
 ## 2. 接口清单（完整）
 
@@ -45,6 +45,8 @@
 | API-054 | GET | /api/admin/users/{user_id}/spaces | 查询用户已加入空间 + 可授予空间（admin 域只读，一次返回 joined + available） | [P2] | 维护态批5·已实现（v3.7.0） | 仅全局 admin（4030）；用户不存在 4004 | REQ-050 |
 | API-055 | POST | /api/auth/password-reset/request | 请求重置密码（恒响应防枚举；demo 无 SMTP，token 写后端日志人工下发） | [P2] | 维护态批5·已实现（v3.7.0） | 公开端点；恒返回"若已注册则已发送" | REQ-051 |
 | API-056 | POST | /api/auth/password-reset/confirm | 重置密码（token + 新密码 → 更新 password_hash + 吊销该用户全部活跃 session） | [P2] | 维护态批5·已实现（v3.7.0） | token 无效 / 过期 / 已用 4010；密码不合规 4220 | REQ-051 |
+| API-057 | GET | /api/health/live | 进程存活探针（liveness，不检查依赖） | [P2] | 维护态批17·已实现（v3.8.14） | 恒 200；`response_model=ApiEnvelope[HealthView]` | NFR-006 运维 |
+| API-058 | GET | /api/health/ready | 就绪探针（readiness，demo 200 / PG `db.ping()` 失败 503+5031） | [P2] | 维护态批17·已实现（v3.8.14） | demo 200；PG 失败 503 / 5031 DB_NOT_READY | NFR-006 运维 |
 | API-002 | GET | /api/spaces | 列出我的空间 | [P1] | P1-已实现 | 已实现（PG 空间 / 成员） | REQ-001/002 |
 | API-003 | POST | /api/spaces/switch | 切换当前空间 | [P1] | P1-已实现 | 已实现（PG 成员校验） | REQ-002 |
 | API-004 | GET | /api/documents | 文档列表 | [P1] | P1-已实现 | 已实现（PG 文档 + 权限过滤） | REQ-004 |
@@ -213,6 +215,7 @@
 | 4090 | 409 | 业务冲突（如唯一约束、批量导入同名且策略不允许覆盖、PDF 导出任务未就绪） | 冲突 | — | — | — | 已实现（tags / folders / PDF 下载未就绪） |
 | 5000 | 500 | 服务端错误 | 服务异常 | 稍后重试 | 记录 | 是 | 已实现为部分接口兜底 |
 | 5030 | 503 | 外部 AI / OCR / PDF 导出依赖不可用 | 服务暂不可用 | 稍后重试 | 记录 | 是 | 已实现（API-019 PDF 依赖不可用；API-028 LLM 不可用） |
+| 5031 | 503 | 数据库未就绪（readiness 探测失败；PG 模式 `db.ping()` 失败） | 服务未就绪 | 稍后重试 | 记录 | 是 | 已实现（API-058 `/api/health/ready` PG 探测失败） |
 
 > 注：文档级越权（`GET/PUT/DELETE /api/documents/{id}`）在查询层吸收为 4004 或空结果，不返回 4003，避免暴露资源存在性（见 `docs/design/permissions.md`）。
 
@@ -341,6 +344,8 @@ sequenceDiagram
 | API-054 `GET /api/admin/users/{user_id}/spaces` | — | `{code,msg,data:{joined:[{space_id,space_code,space_name,role,joined_at}],available:[{space_id,space_code,space_name}]}}` | 全局 admin（member 4030）；用户不存在 4004 | `lumen_space_members`、`lumen_spaces` | **维护态批5·已实现**（REQ-050，Sprint-30，v3.7.0）；复用 `list_spaces` + `list_memberships` + `find_user_by_id`，service/repo 零改动；一次返回 joined（已加入 + 角色）+ available（可授予），避免改 `GET /api/spaces`（那会破坏 admin 空间切换下拉）；前端用户详情抽屉读此接口 |
 | API-055 `POST /api/auth/password-reset/request` | `email` | `{code,msg,data:{message:"若该邮箱已注册，重置链接已发送"}}`（**恒响应防枚举**；demo 无 SMTP，reset token 写后端 WARNING 日志供运维人工下发） | 公开端点；不泄露账号是否存在（dummy bcrypt 延迟） | `lumen_users.reset_token_hash` / `reset_expires_at` / `reset_used_at` | **维护态批5·已实现**（REQ-051，migration 018，Sprint-30，v3.7.0） |
 | API-056 `POST /api/auth/password-reset/confirm` | `token`、`new_password`（8-64） | `{code,msg,data:{message:"密码已重置，请用新密码登录"}}` | token 无效 / 过期 / 已用 → 4010；密码 <8 或 >64 → 4220；成功后吊销该用户全部活跃 session | `lumen_users`、`lumen_sessions` | **维护态批5·已实现**（REQ-051，Sprint-30，v3.7.0）；一次性 token（`reset_used_at` 防重放） |
+| API-057 `GET /api/health/live` | — | `{code,msg,data:{status:"ok"}}` | 无（恒 200） | — | **维护态批17·已实现**（CQ-P1-001，Sprint-42，v3.8.14）；进程存活探针，不检查依赖 |
+| API-058 `GET /api/health/ready` | — | `{code,msg,data:{status:"ready",db:"<pg version>"\|null}}`（demo `db:null`） | PG 模式 `db.ping()` 失败 → 503 / 5031 DB_NOT_READY | — | **维护态批17·已实现**（CQ-P1-001，Sprint-42，v3.8.14）；就绪探针，供容器编排 healthcheck |
 
 **Phase1.5 / Phase2 错误码补充**：
 
