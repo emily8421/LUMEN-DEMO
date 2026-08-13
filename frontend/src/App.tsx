@@ -3,7 +3,7 @@
 // UI/布局派生 + 局部弹窗/引导 state 在 app/useAppShellState.ts。
 import { useAppState } from './app/useAppState';
 import { StatusBar } from './components/StatusBar';
-import { TopBar } from './app/TopBar';
+import { TopBar } from './app/topbar/TopBar';
 import { WorkspaceShell } from './app/WorkspaceShell';
 import { OverlayShell } from './app/OverlayShell';
 import { AuthShell } from './features/auth/AuthShell';

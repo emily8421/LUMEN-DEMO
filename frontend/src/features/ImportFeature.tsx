@@ -1,8 +1,11 @@
 import { useEffect } from 'react';
-import type { DragEvent, FormEvent, MouseEvent } from 'react';
+import type { FormEvent, MouseEvent } from 'react';
 import type { DocumentPermission, ImportBatchItem } from '../api';
 import type { ImportDraft, ImportFileSelection } from '../app/types';
 import { permissionLabels } from '../app/constants';
+import { fileListToSelections } from './import-files';
+import { ImportDropZone } from './import/ImportDropZone';
+import { ImportResultsList } from './import/ImportResultsList';
 
 type ImportFeatureProps = {
   isOpen: boolean;
@@ -18,6 +21,11 @@ type ImportFeatureProps = {
   onClose: () => void;
 };
 
+/**
+ * 批量导入弹窗（.md / .txt 文件或文件夹拖拽 / 选择 → 权限 → 批量导入）。
+ * E4 Slice D 拆分：拖拽/文件选择区 → import/ImportDropZone、结果列表 → import/ImportResultsList、
+ * 文件收集纯工具 → import-files；本组件保留弹窗壳与表单编排。
+ */
 export function ImportFeature({
   isOpen,
   isBusy,
@@ -56,17 +64,7 @@ export function ImportFeature({
       return;
     }
 
-    onImportFilesChange(filterImportable(Array.from(fileList).map(fileToSelection)));
-  }
-
-  async function handleDrop(event: DragEvent<HTMLLabelElement>) {
-    event.preventDefault();
-    if (isBusy) {
-      return;
-    }
-
-    const droppedFiles = await collectDroppedFiles(event.dataTransfer);
-    onImportFilesChange(droppedFiles);
+    onImportFilesChange(fileListToSelections(fileList));
   }
 
   function handleOverlayClick(event: MouseEvent<HTMLDivElement>) {
@@ -108,22 +106,12 @@ export function ImportFeature({
 
         <div className="import-modal-body">
           <form className="compact-form import-modal-form" onSubmit={onImport}>
-            <label
-              className="drop-zone import-drop-zone"
-              onDragOver={(event) => event.preventDefault()}
-              onDrop={handleDrop}
-            >
-              <strong>拖拽文件或文件夹到这里</strong>
-              <span>{selectedFileLabel}</span>
-              <input
-                key={importInputKey}
-                type="file"
-                accept=".md,.txt,text/markdown,text/plain"
-                multiple
-                disabled={isBusy}
-                onChange={(event) => selectFiles(event.target.files)}
-              />
-            </label>
+            <ImportDropZone
+              isBusy={isBusy}
+              importInputKey={importInputKey}
+              selectedFileLabel={selectedFileLabel}
+              onFilesSelected={onImportFilesChange}
+            />
             <label className="folder-picker import-folder-picker">
               选择文件夹
               <input
@@ -162,174 +150,9 @@ export function ImportFeature({
             <button type="submit" disabled={isBusy || importFiles.length === 0}>批量导入</button>
           </form>
           {lastImportSummary ? <p className="import-summary">{lastImportSummary}</p> : null}
-          {renderImportResults(lastImportItems)}
+          <ImportResultsList items={lastImportItems} />
         </div>
       </section>
     </div>
-  );
-}
-
-type FileWithRelativePath = File & { webkitRelativePath?: string };
-
-type FileSystemEntryLike = {
-  isFile: boolean;
-  isDirectory: boolean;
-  name: string;
-  fullPath?: string;
-  file?: (successCallback: (file: File) => void, errorCallback?: () => void) => void;
-  createReader?: () => {
-    readEntries: (
-      successCallback: (entries: FileSystemEntryLike[]) => void,
-      errorCallback?: () => void,
-    ) => void;
-  };
-};
-
-type DataTransferItemWithEntry = DataTransferItem & {
-  webkitGetAsEntry?: () => FileSystemEntryLike | null;
-};
-
-function fileToSelection(file: File): ImportFileSelection {
-  const relativePath = (file as FileWithRelativePath).webkitRelativePath || file.name;
-  return { file, relativePath: normalizeImportPath(relativePath) };
-}
-
-const IMPORTABLE_EXTENSIONS = ['.md', '.markdown', '.txt'];
-
-/**
- * 过滤掉 Obsidian vault 导入不应上传的文件：隐藏文件 / 目录（路径任一段以 `.` 开头，
- * 含 `.obsidian` 元目录、`.DS_Store` 等）与非白名单附件（后端仅接受 .md/.markdown/.txt，
- * 其余会被拒并记为 failed 噪音）。三个文件入口（单文件 / 文件夹 input、拖拽）统一调用。
- */
-function filterImportable(selections: ImportFileSelection[]): ImportFileSelection[] {
-  return selections.filter((selection) => {
-    const isHiddenSegment = selection.relativePath
-      .split('/')
-      .some((segment) => segment.startsWith('.'));
-    if (isHiddenSegment) {
-      return false;
-    }
-    const lowerPath = selection.relativePath.toLowerCase();
-    return IMPORTABLE_EXTENSIONS.some((ext) => lowerPath.endsWith(ext));
-  });
-}
-
-async function collectDroppedFiles(dataTransfer: DataTransfer): Promise<ImportFileSelection[]> {
-  const entries: FileSystemEntryLike[] = [];
-  Array.from(dataTransfer.items).forEach((item) => {
-    const entry = (item as DataTransferItemWithEntry).webkitGetAsEntry?.() as FileSystemEntryLike | null | undefined;
-    if (entry) {
-      entries.push(entry);
-    }
-  });
-
-  if (entries.length === 0) {
-    return filterImportable(Array.from(dataTransfer.files).map(fileToSelection));
-  }
-
-  const nestedFiles = await Promise.all(entries.map(readEntryFiles));
-  return filterImportable(nestedFiles.flat());
-}
-
-async function readEntryFiles(entry: FileSystemEntryLike): Promise<ImportFileSelection[]> {
-  if (entry.isFile) {
-    return readFileEntry(entry);
-  }
-  if (entry.isDirectory) {
-    return readDirectoryEntry(entry);
-  }
-  return [];
-}
-
-function readFileEntry(entry: FileSystemEntryLike): Promise<ImportFileSelection[]> {
-  return new Promise((resolve) => {
-    if (!entry.file) {
-      resolve([]);
-      return;
-    }
-
-    entry.file(
-      (file) => resolve([{ file, relativePath: normalizeImportPath(entry.fullPath || file.name) }]),
-      () => resolve([]),
-    );
-  });
-}
-
-function readDirectoryEntry(entry: FileSystemEntryLike): Promise<ImportFileSelection[]> {
-  const reader = entry.createReader?.();
-  if (!reader) {
-    return Promise.resolve([]);
-  }
-
-  const entries: FileSystemEntryLike[] = [];
-  return new Promise((resolve) => {
-    const readBatch = () => {
-      reader.readEntries(
-        async (batch) => {
-          if (batch.length === 0) {
-            const nestedFiles = await Promise.all(entries.map(readEntryFiles));
-            resolve(nestedFiles.flat());
-            return;
-          }
-          entries.push(...batch);
-          readBatch();
-        },
-        () => resolve([]),
-      );
-    };
-
-    readBatch();
-  });
-}
-
-function normalizeImportPath(path: string): string {
-  return path
-    .replace(/\\/g, '/')
-    .split('/')
-    .map((part) => part.trim())
-    .filter((part) => part && part !== '.' && part !== '..')
-    .join('/');
-}
-
-/**
- * 成功项最多渲染条数。失败 / 跳过项是用户需要处理的对象，始终全量渲染；仅对成功项截断，
- * 避免 1000+ 条 DOM 拖慢弹窗，同时不把失败项淹没在成功项之后。
- */
-const IMPORT_DONE_PREVIEW = 50;
-
-function renderImportResults(items: ImportBatchItem[]) {
-  if (items.length === 0) {
-    return null;
-  }
-
-  const failedOrSkipped = items.filter((item) => item.status !== 'done');
-  const doneItems = items.filter((item) => item.status === 'done');
-  const shownDone = doneItems.slice(0, IMPORT_DONE_PREVIEW);
-  const hiddenDone = doneItems.length - shownDone.length;
-
-  return (
-    <ul className="import-result-list">
-      {failedOrSkipped.map((item) => (
-        <li
-          key={`${item.status}:${item.relative_path}:${item.parsed_doc_id ?? item.error ?? ''}`}
-          className={`import-result-${item.status}`}
-        >
-          <strong>{item.title}</strong>
-          <span>{item.status === 'skipped' ? '跳过' : '失败'} · {item.error ?? '未知原因'}</span>
-        </li>
-      ))}
-      {shownDone.map((item) => (
-        <li
-          key={`${item.status}:${item.relative_path}:${item.parsed_doc_id ?? ''}`}
-          className="import-result-done"
-        >
-          <strong>{item.title}</strong>
-          <span>成功 · {item.chunk_count} chunks</span>
-        </li>
-      ))}
-      {hiddenDone > 0 ? (
-        <li className="import-result-done">还有 {hiddenDone} 个成功未展示（详见汇总数字）</li>
-      ) : null}
-    </ul>
   );
 }
