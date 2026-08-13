@@ -18,8 +18,9 @@ async def lifespan(_app):
     """启动时初始化 PG + pgvector（task-008 T1）。
 
     task-008 T5 起，单例 ``repository`` 切到 PgRepository，后端运行时强依赖
-    PostgreSQL（不再降级到内存 demo）。init 失败时仅记录、不崩溃启动；此时 API
-    查询会在连接时报错，而非走内存兜底。生产/demo 均需 lumen-pg 容器 healthy。
+    PostgreSQL（不再降级到内存 demo）。CQ-P1-001 起 fail-fast：PG 模式（非 demo
+    仓储）``init_db`` / ``ensure_documents_indexed`` 失败时记录后 re-raise 拒绝
+    启动，避免带病运行；demo 仓储模式保留容忍降级（仅记录），供本地无 PG 环境启动。
     """
     # Sprint-26 护栏（accounts-auth §7/§10）：生产环境禁用 demo 仓储，fail-fast
     from backend.repository import repository
@@ -37,15 +38,22 @@ async def lifespan(_app):
 
         indexed = ensure_documents_indexed(repository)
         if indexed:
-            print(f"[seed] indexed {indexed} previously unindexed document(s)")
+            logger.info("seed indexed %d previously unindexed document(s)", indexed)
     except Exception as exc:  # pragma: no cover - 依赖外部 PG 容器
-        print(f"[db] init skipped: {exc} (PG required since T5; queries will error)")
+        if is_demo_repository(repository):
+            # demo 仓储模式：容忍降级（本地无 PG 仍可启动，查询走内存兜底）
+            logger.warning("db init skipped in demo mode: %s", exc)
+        else:
+            # PG 模式：强依赖 PG，init 失败 fail-fast 拒绝启动（CQ-P1-001）
+            logger.error("db init failed in PG mode, refusing to start", exc_info=True)
+            raise
     yield
 
 
 def create_app():
     from backend.api.admin import router as admin_router
     from backend.api.auth import router as auth_router
+    from backend.api.health import router as health_router
     from backend.api.doc_links import router as doc_links_router
     from backend.api.tags import router as tags_router
     from backend.api.quick_entry import router as quick_entry_router
@@ -112,6 +120,8 @@ def create_app():
 
     if auth_router is not None:
         app.include_router(auth_router)
+    if health_router is not None:
+        app.include_router(health_router)
     if admin_router is not None:
         app.include_router(admin_router)
     if spaces_router is not None:

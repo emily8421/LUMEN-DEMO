@@ -350,6 +350,50 @@
         }
       }
     },
+    "/api/health/live": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Live",
+        "description": "进程存活探针：恒 200。",
+        "operationId": "live_api_health_live_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope_HealthView_"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/health/ready": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Ready",
+        "description": "就绪探针：demo 模式恒 200；PG 模式 db.ping() 失败 → 503 + 5031。",
+        "operationId": "ready_api_health_ready_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope_HealthView_"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/users": {
       "get": {
         "tags": [
@@ -3971,6 +4015,28 @@
         ],
         "title": "ApiEnvelope[FolderListPage]"
       },
+      "ApiEnvelope_HealthView_": {
+        "properties": {
+          "code": {
+            "type": "integer",
+            "title": "Code",
+            "default": 0
+          },
+          "msg": {
+            "type": "string",
+            "title": "Msg",
+            "default": "ok"
+          },
+          "data": {
+            "$ref": "#/components/schemas/HealthView"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "ApiEnvelope[HealthView]"
+      },
       "ApiEnvelope_ImportFileView_": {
         "properties": {
           "code": {
@@ -5588,6 +5654,31 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "HealthView": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "db": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Db"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "HealthView",
+        "description": "``/api/health/*`` 端点 data：存活 / 就绪状态。"
       },
       "ImportFileView": {
         "properties": {
