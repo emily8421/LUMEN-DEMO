@@ -1,12 +1,14 @@
 import { useMemo, useState } from 'react';
 import type { FolderView } from '../api';
 import {
-  createFolder as createFolderRequest,
   deleteFolder,
   listFolders,
   reorderFolders,
   updateFolder as updateFolderRequest,
 } from '../api';
+import { parentKey, buildMoveTargets, buildDocumentMoveTargets } from './folder-utils';
+import type { FolderMoveTarget } from './folder-utils';
+import { useFolderInlineEdit } from './useFolderInlineEdit';
 
 type RunAction = (progressMessage: string, action: () => Promise<void>) => Promise<void>;
 
@@ -16,29 +18,13 @@ type UseFoldersArgs = {
   setNotice: (message: string) => void;
 };
 
-export type FolderMoveTarget = {
-  id: number | null;
-  label: string;
-};
+export { parentKey } from './folder-utils';
 
-export type FolderInlineEdit =
-  | {
-      mode: 'create';
-      parentId: number | null;
-    }
-  | {
-      mode: 'rename';
-      folder: FolderView;
-    };
-
-export function parentKey(parentId: number | null): string {
-  return parentId === null ? 'root' : String(parentId);
-}
+export type { FolderInlineEdit } from './useFolderInlineEdit';
 
 export function useFolders({ token, runAction, setNotice }: UseFoldersArgs) {
   const [foldersByParent, setFoldersByParent] = useState<Record<string, FolderView[]>>({});
   const [expandedFolderIds, setExpandedFolderIds] = useState<Set<number>>(new Set());
-  const [inlineEdit, setInlineEdit] = useState<FolderInlineEdit | null>(null);
 
   const knownFolders = useMemo(() => {
     const byId = new Map<number, FolderView>();
@@ -86,26 +72,6 @@ export function useFolders({ token, runAction, setNotice }: UseFoldersArgs) {
     setExpandedFolderIds(new Set(knownFolders.map((folder) => folder.id)));
   }
 
-  function beginCreateFolder(parentId: number | null) {
-    if (parentId !== null) {
-      setExpandedFolderIds((current) => new Set(current).add(parentId));
-      if (!foldersByParent[parentKey(parentId)] && token) {
-        void runAction('正在加载文件夹...', async () => {
-          await loadParent(token, parentId);
-        });
-      }
-    }
-    setInlineEdit({ mode: 'create', parentId });
-  }
-
-  function beginRenameFolder(folder: FolderView) {
-    setInlineEdit({ mode: 'rename', folder });
-  }
-
-  function cancelInlineEdit() {
-    setInlineEdit(null);
-  }
-
   function toggleFolder(folderId: number) {
     const isExpanded = expandedFolderIds.has(folderId);
     if (isExpanded) {
@@ -118,66 +84,26 @@ export function useFolders({ token, runAction, setNotice }: UseFoldersArgs) {
     }
 
     setExpandedFolderIds((current) => new Set(current).add(folderId));
-    if (!foldersByParent[parentKey(folderId)] && token) {
+    ensureParentLoaded(folderId);
+  }
+
+  // inline 编辑的「未加载则加载」判定收敛在此（foldersByParent 不直传子 hook）。
+  function ensureParentLoaded(parentId: number | null) {
+    if (parentId !== null && !foldersByParent[parentKey(parentId)] && token) {
       void runAction('正在加载文件夹...', async () => {
-        await loadParent(token, folderId);
+        await loadParent(token, parentId);
       });
     }
   }
 
-  async function createFolderWithName(parentId: number | null, name: string): Promise<boolean> {
-    const trimmedName = name.trim();
-    if (!token || !trimmedName) {
-      return false;
-    }
-
-    let succeeded = false;
-    await runAction('正在新建文件夹...', async () => {
-      await createFolderRequest(token, { name: trimmedName, parent_id: parentId });
-      if (parentId !== null) {
-        setExpandedFolderIds((current) => new Set(current).add(parentId));
-      }
-      await reloadParents(token, [parentId]);
-      setNotice(`已新建文件夹：${trimmedName}`);
-      succeeded = true;
-    });
-    return succeeded;
-  }
-
-  async function renameFolderWithName(folder: FolderView, name: string): Promise<boolean> {
-    const trimmedName = name.trim();
-    if (!trimmedName || trimmedName === folder.name) {
-      return true;
-    }
-
-    if (!token) {
-      return false;
-    }
-
-    let succeeded = false;
-    await runAction('正在重命名文件夹...', async () => {
-      await updateFolderRequest(token, folder.id, { name: trimmedName });
-      await reloadParents(token, [folder.parent_id]);
-      setNotice(`已重命名为：${trimmedName}`);
-      succeeded = true;
-    });
-    return succeeded;
-  }
-
-  async function submitInlineEdit(name: string): Promise<boolean> {
-    if (!inlineEdit) {
-      return false;
-    }
-
-    const succeeded =
-      inlineEdit.mode === 'create'
-        ? await createFolderWithName(inlineEdit.parentId, name)
-        : await renameFolderWithName(inlineEdit.folder, name);
-    if (succeeded) {
-      setInlineEdit(null);
-    }
-    return succeeded;
-  }
+  const inline = useFolderInlineEdit({
+    token,
+    runAction,
+    setNotice,
+    reloadParents,
+    setExpandedFolderIds,
+    ensureParentLoaded,
+  });
 
   function handleDeleteFolder(folder: FolderView) {
     if (!token) {
@@ -241,41 +167,17 @@ export function useFolders({ token, runAction, setNotice }: UseFoldersArgs) {
   }
 
   function getMoveTargets(folderId: number): FolderMoveTarget[] {
-    const byId = new Map(knownFolders.map((folder) => [folder.id, folder]));
-    const isKnownDescendant = (candidate: FolderView) => {
-      let parentId = candidate.parent_id;
-      while (parentId !== null) {
-        if (parentId === folderId) {
-          return true;
-        }
-        const parent = byId.get(parentId);
-        if (!parent) {
-          return false;
-        }
-        parentId = parent.parent_id;
-      }
-      return false;
-    };
-
-    return [
-      { id: null, label: '根目录' },
-      ...knownFolders
-        .filter((folder) => folder.id !== folderId && !isKnownDescendant(folder))
-        .map((folder) => ({ id: folder.id, label: folder.name })),
-    ];
+    return buildMoveTargets(knownFolders, folderId);
   }
 
   function getDocumentMoveTargets(): FolderMoveTarget[] {
-    return [
-      { id: null, label: '根目录' },
-      ...knownFolders.map((folder) => ({ id: folder.id, label: folder.name })),
-    ];
+    return buildDocumentMoveTargets(knownFolders);
   }
 
   return {
     foldersByParent,
     expandedFolderIds,
-    inlineEdit,
+    inlineEdit: inline.inlineEdit,
     knownFolders,
     getFoldersForParent,
     getMoveTargets,
@@ -284,13 +186,13 @@ export function useFolders({ token, runAction, setNotice }: UseFoldersArgs) {
     resetFolders,
     collapseAll,
     expandAll,
-    beginCreateFolder,
-    beginRenameFolder,
-    cancelInlineEdit,
-    submitInlineEdit,
+    beginCreateFolder: inline.beginCreateFolder,
+    beginRenameFolder: inline.beginRenameFolder,
+    cancelInlineEdit: inline.cancelInlineEdit,
+    submitInlineEdit: inline.submitInlineEdit,
     toggleFolder,
-    handleCreateFolder: beginCreateFolder,
-    handleRenameFolder: beginRenameFolder,
+    handleCreateFolder: inline.beginCreateFolder,
+    handleRenameFolder: inline.beginRenameFolder,
     handleDeleteFolder,
     handleMoveFolder,
     handleMoveFolderOrder,
