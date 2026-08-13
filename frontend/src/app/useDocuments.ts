@@ -6,7 +6,7 @@ import type { KnowledgeDocument } from '../api';
 import {
   createDocument,
   deleteDocument,
-  listDocuments,
+  isDocumentDetail, listDocuments,
   moveDocument,
   restoreVersion,
   updateDocument,
@@ -86,19 +86,19 @@ export function useDocuments({
     }
 
     if (selectedDocument) {
-      if (selectedDocument.content_md === undefined) {
+      if (!isDocumentDetail(selectedDocument)) {
         // 详情加载中（useDocumentSideData 负责 loadDocumentDetail），草稿不动。
         return;
       }
 
       setDraft({
         title: selectedDocument.title,
-        content_md: selectedDocument.content_md ?? '',
+        content_md: selectedDocument.content_md,
         permission: selectedDocument.permission,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isCreating, creatingFolderId, selectedDocument?.id, selectedDocument?.content_md, selectedDocument?.permission, selectedDocument?.title, token]);
+  }, [isCreating, creatingFolderId, selectedDocument?.id, selectedDocument && isDocumentDetail(selectedDocument), selectedDocument?.permission, selectedDocument?.title, token]);
 
   // 拉取文档列表 + 仅保留有效 selectedId（不自动选首篇；无选中由引导卡引导，Doc-First §9.5.7 F-impl-10）。供 refreshWorkspace 调用。
   async function reloadDocuments(loadToken: string) {
@@ -148,7 +148,7 @@ export function useDocuments({
       const savedDocument = await updateDocument(token, selectedDocument.id, payload);
       setDraft({
         title: savedDocument.title,
-        content_md: savedDocument.content_md ?? newContentMd,
+        content_md: savedDocument.content_md,
         permission: savedDocument.permission,
       });
       await reloadDocuments(token);
@@ -245,7 +245,7 @@ export function useDocuments({
     setSelectedId(documentId);
 
     const documentRecord = documents.find((document) => document.id === documentId);
-    if (!documentRecord || documentRecord.content_md === undefined) {
+    if (!documentRecord || !isDocumentDetail(documentRecord)) {
       await runAction('正在打开来源文档...', async () => {
         await sideData.loadDocumentDetail(token, documentId);
         await sideData.loadVersions(token, documentId);

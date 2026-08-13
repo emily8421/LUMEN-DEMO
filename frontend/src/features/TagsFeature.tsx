@@ -1,12 +1,12 @@
 import type { FormEvent } from 'react';
-import type { KnowledgeDocument, TagView } from '../api';
+import type { TaggedDocumentItem, TagView } from '../api';
 import { permissionLabels } from '../app/constants';
 
 type TagsFeatureProps = {
   isBusy: boolean;
   tags: TagView[];
   selectedTagId: number | null;
-  tagDocuments: KnowledgeDocument[];
+  tagDocuments: TaggedDocumentItem[];
   newTagName: string;
   onNewTagNameChange: (name: string) => void;
   onSelectTag: (tagId: number | null) => void;

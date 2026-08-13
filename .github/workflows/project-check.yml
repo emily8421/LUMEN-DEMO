@@ -281,9 +281,8 @@ jobs:
         run: git diff --exit-code -- openapi/openapi.json
 
   frontend-schema-diff:
-    name: Frontend OpenAPI codegen drift (advisory)
+    name: Frontend OpenAPI codegen drift
     runs-on: ubuntu-latest
-    continue-on-error: true   # advisory 起步（前端 codegen Slice A）；Slice B 全量接入后升 required
     defaults:
       run:
         working-directory: frontend
