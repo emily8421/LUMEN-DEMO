@@ -6,6 +6,15 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.8.15（2026-08-13）
+
+**维护态批18（Sprint-43）：日志统一（CQ-P2-002，轨道3 P2）。纯工程治理收敛 print 债与静默吞异常日志、非功能，不改 Phase / 交付物范围 / 对外 API 语义 / DB；不新增依赖。聚合 bump PATCH。**
+
+- **print()→logging**：`backend/repository/pg_repository.py` embedding 降级 `print` → `logger.warning`（后端生产代码 print 债清零，对齐 L0-4「失败必须可见」）。
+- **静默吞 except 补日志**：`service/document.py` 索引回填单文档失败、`service/rag.py` RAG / 通用对话 LLM 降级 ×2、`api/auth.py` 登录 `SpaceAccessError` 回退——均补 `logger.warning` 记原因（故障有诊断证据）。
+- **ratchet 机制**：`ruff.toml` select 加 `T20`（flake8-print）禁 print；`scripts/` smoke / CLI 脚本 stdout 输出豁免（不在 ruff 扫描范围，属合理用途）。本地 `ruff check` + CI backend-lint 均会检查。
+- 验证：mypy **0 error**（57 files）+ ruff passed（含 T20）+ 默认 pytest **313 passed / 49 deselected** 零回归 + `grep` 复核 backend/ 无 print 残留 + T20 负向探针确认可抓 print。PR #155 squash merge main `edb5df1`。
+
 ## v3.8.14（2026-08-13）
 
 **维护态批17（Sprint-42）：强依赖 fail-fast / readiness（CQ-P1-001，轨道3 P1）。纯工程治理补强依赖失败语义与运维探针、非功能，不改 Phase / 交付物范围 / 对外 API 语义 / DB；不新增依赖。聚合 bump PATCH。**
