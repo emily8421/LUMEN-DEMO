@@ -1,0 +1,236 @@
+/* 本地挂载树 + 搜索结果 + 导入条（E4 拆分溯源：local-mount.css 拆分——L157-390 原段）。 */
+
+.local-mount-tree {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+  padding: 4px 0 8px;
+}
+
+.local-mount-node {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.local-mount-node:hover {
+  background: #f3f4f6;
+}
+
+.local-mount-node.cur {
+  background: #eff6ff;
+}
+
+.local-mount-arrow {
+  width: 10px;
+  color: #6b7280;
+}
+
+.local-mount-ic {
+  font-size: 12px;
+  line-height: 1;
+}
+
+.local-mount-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.local-mount-tag {
+  margin-left: auto;
+  font-size: 10px;
+  padding: 0 5px;
+  border-radius: 6px;
+  background: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+  flex-shrink: 0;
+}
+
+.local-mount-results {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.local-mount-results li button {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  text-align: left;
+  padding: 4px 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+}
+
+.local-mount-results li button:hover {
+  background: #f3f4f6;
+}
+
+.local-mount-results li button.active {
+  background: #eff6ff;
+}
+
+.local-mount-results li button strong {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.local-mount-results li button small {
+  font-size: 10px;
+  color: #6b7280;
+}
+
+.local-mount-preview {
+  border-top: 1px solid #e5e7eb;
+  padding: 6px 12px;
+  max-height: 160px;
+  overflow: auto;
+  background: #fffbeb;
+  flex-shrink: 0;
+}
+
+.local-mount-preview-meta {
+  font-size: 10px;
+  color: #b45309;
+  margin-bottom: 4px;
+}
+
+.local-mount-preview pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: inherit;
+  font-size: 12px;
+  margin: 0;
+}
+
+.local-mount-error {
+  color: #dc2626;
+  font-size: 11px;
+  padding: 4px 12px;
+  margin: 0;
+}
+
+.local-mount-import-bar {
+  display: flex;
+  gap: 4px;
+  padding: 6px 12px;
+  border-top: 1px solid #e5e7eb;
+  flex-shrink: 0;
+}
+
+.local-mount-import {
+  flex: 1;
+  font-size: 11px;
+  padding: 4px 8px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.local-mount-import:hover:not(:disabled) {
+  background: #f3f4f6;
+}
+
+.local-mount-import:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.local-mount-import-msg {
+  font-size: 11px;
+  color: #6b7280;
+  padding: 2px 12px 6px;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+/* 子树导入：目录行 hover 浮现「导入此文件夹」（Obsidian / VS Code 式行内操作） */
+.local-mount-node .local-mount-import-node {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-size: 10px;
+  padding: 1px 6px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #374151;
+  opacity: 0;
+  transition: opacity 0.1s ease;
+}
+
+.local-mount-node:hover .local-mount-import-node,
+.local-mount-node:focus-within .local-mount-import-node {
+  opacity: 1;
+}
+
+.local-mount-node .local-mount-import-node:hover:not(:disabled) {
+  background: #eff6ff;
+  border-color: #2563eb;
+}
+
+.local-mount-node .local-mount-import-node:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* 批量导入确认条（子树 / 全部，防误触大 vault 一次入库） */
+.local-mount-confirm-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-top: 1px solid #e5e7eb;
+  background: #fffbeb;
+  font-size: 11px;
+  color: #374151;
+  flex-shrink: 0;
+}
+
+.local-mount-confirm-bar strong {
+  font-weight: 600;
+}
+
+.local-mount-confirm-actions {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.local-mount-confirm-actions button {
+  font-size: 11px;
+  padding: 2px 8px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #374151;
+}
+
+.local-mount-confirm-actions button.primary {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+
+.local-mount-confirm-actions button:hover:not(:disabled) {
+  background: #f3f4f6;
+}
+
+.local-mount-confirm-actions button.primary:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.local-mount-confirm-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

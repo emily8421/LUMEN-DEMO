@@ -1,0 +1,75 @@
+/* 本地挂载文件右键菜单 + 多挂载列表（E4 拆分溯源：local-mount.css 拆分——L517-589 原段）。 */
+
+/* --- 文件右键菜单（REQ-049 优化：重命名 / 删除入口） --- */
+.local-mount-menu {
+  position: fixed;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  min-width: 140px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.14);
+}
+
+.local-mount-menu button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text);
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.local-mount-menu button:hover {
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+
+.local-mount-menu button.danger:hover {
+  background: var(--red-soft);
+  color: var(--red);
+}
+
+.local-mount-menu button span {
+  width: 14px;
+  text-align: center;
+}
+
+/* --- 多挂载（REQ-049 增强）：待重授权挂载列表 --- */
+.local-mount-mount-list {
+  display: grid;
+  gap: 4px;
+  margin: 4px 0 8px;
+}
+
+.local-mount-mount-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border: 1px solid var(--line-soft);
+  border-radius: 5px;
+  background: var(--panel-soft);
+  font-size: 12px;
+}
+
+.local-mount-mount-row span {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.local-mount-mount-row button {
+  flex: 0 0 auto;
+  padding: 2px 6px;
+}
