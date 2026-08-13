@@ -279,3 +279,22 @@ jobs:
         run: python scripts/export-openapi.py
       - name: Check schema drift
         run: git diff --exit-code -- openapi/openapi.json
+
+  frontend-schema-diff:
+    name: Frontend OpenAPI codegen drift (advisory)
+    runs-on: ubuntu-latest
+    continue-on-error: true   # advisory 起步（前端 codegen Slice A）；Slice B 全量接入后升 required
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.17.1"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run gen:api
+      - name: Check generated.ts drift
+        run: git -C .. diff --exit-code -- frontend/src/api/generated.ts

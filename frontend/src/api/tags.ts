@@ -1,24 +1,35 @@
 import type { KnowledgeDocument } from './documents';
+import type { components } from './generated';
 import { request } from './client';
 
+// ── 混合接入（openapi codegen · Slice A 试点）──────────────────────────
+// 主体响应类型对齐生成类型（字段名 / 类型 / optionality 以 openapi 为准，消除手工双写）；
+// openapi 几乎无 enum（仅 DocumentPermission / TermStatus），响应字段多为裸 string，
+// 故 union literal 保留手写作 narrow overlay（保住 switch / 分支的编译期保护）。
+
+/** Tag status —— openapi 是裸 `string`，保留手写 union 保编译期 narrow。 */
 export type TagStatus = 'active' | 'archived';
 
-export type TagView = {
-  id: number;
-  name: string;
-  color: string | null;
-  description: string | null;
-  document_count: number;
+/**
+ * TagView —— 主体字段来自生成类型；`status` 字段 narrow 为手写 TagStatus
+ *（Omit + 覆盖：后端加字段自动同步，status 保 union 保护）。
+ */
+export type TagView = Omit<components['schemas']['TagView'], 'status'> & {
   status: TagStatus;
 };
 
-export type DocumentTagView = {
-  tag_id: number;
-  name: string;
-  color: string | null;
-  link_source: string;
-};
+/** DocumentTagView —— 与生成类型零差异（无 union），直接 alias。 */
+export type DocumentTagView = components['schemas']['DocumentTagView'];
 
+/** 文档↔标签关联视图（addDocumentTag 返回），与生成 TagLinkView 一致。 */
+type TagLinkView = components['schemas']['TagLinkView'];
+// ──────────────────────────────────────────────────────────────────────
+
+/**
+ * 分页容器。生成类型有 TagListPage / DocumentTagListPage，但其 `items` 元素是
+ * 生成 TagView（status: string），与上面 narrow 后的 TagView 不匹配；保留手写泛型
+ * 搭配 narrow 元素类型，避免 union 退化。
+ */
 type ListEnvelope<T> = { items: T[]; total: number };
 
 export async function listTags(token: string, q?: string): Promise<ListEnvelope<TagView>> {
@@ -69,8 +80,8 @@ export async function addDocumentTag(
   token: string,
   documentId: number,
   tagId: number,
-): Promise<{ tag_id: number; document_id: number; link_source: string }> {
-  return request(`/api/documents/${documentId}/tags`, {
+): Promise<TagLinkView> {
+  return request<TagLinkView>('/api/documents/${documentId}/tags', {
     method: 'POST',
     token,
     body: JSON.stringify({ tag_id: tagId }),

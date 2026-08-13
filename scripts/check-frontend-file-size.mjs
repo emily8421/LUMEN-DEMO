@@ -35,6 +35,9 @@ for (const file of collectTsFiles(srcDir)) {
   const lines = readFileSync(file, 'utf8').match(/\n/g)?.length ?? 0;
   const key = relative(srcDir, file).replace(/\\/g, '/');
   const threshold = thresholdFor(key);
+  // codegen 产物（openapi-typescript 生成的 *generated.ts）不适用手写膨胀 ratchet：
+  // 机器生成、行数随 openapi 契约变（可增可减）、不该手工拆分；ratchet 只约束人工维护的文件。
+  if (key.endsWith('generated.ts')) continue;
   if (lines <= threshold) continue;
   if (!(key in baseline)) {
     failures.push(`新增超限文件 ${key}（${lines} 行 > ${threshold}）：需拆分或登记基线`);
