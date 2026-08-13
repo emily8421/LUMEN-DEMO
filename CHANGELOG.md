@@ -6,6 +6,15 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.8.21（2026-08-13）
+
+**维护态批24（Sprint-49）：前端文件膨胀拆分 Slice D——组件拆分（CQ-P1-008 候选 E4，轨道3 P2 剩余候选）。纯工程治理收敛前端文件膨胀、非功能，不改 Phase / 交付物范围 / 对外 API 语义 / DB；不新增依赖。聚合 bump PATCH。**
+
+- **组件拆分**：6 个超限 .tsx 组件全拆——`FolderTree`（569 行）拆「主树 / 文件夹节点 / 文档行」；`TermCategoryTree`（405 行）拆「主树 / 领域节点」；`TopBar`（274 行）拆「顶栏 / 帮助弹层 / 用户菜单 / 栏开关」；`ContextPane`（366 行）拆「面板 / 文件头 / 术语区 / 上下文列表」；`ImportFeature`（335 行）拆「文件收集工具 / 拖拽区 / 结果列表」；`DocumentInspectorFeature`（266 行）拆「主面板 / 版本 / 链接 / 标签 tab」。
+- **共享 tree/ 抽取**：文件夹树与术语树的「内联改名输入框」和「右键菜单关闭」是复制粘贴的重复代码（共约 170 行），抽成共享组件 `app/tree/TreeInlineEditor` + `useTreeMenuDismiss` 消除。
+- **baseline 收窄**：11→5（6 个组件全出基线；剩 3 个复杂组件 + 2 个核心编排 hook）。
+- 验证：`npm run lint` 0 + `tsc` 0 + `npm run build` **337 modules**（+17 文件，无新依赖）+ CSS bundle **65.60 kB**（不变）+ `npm run check:file-size` OK（5 基线）+ 负向探针（280 行 fail）+ 浏览器 smoke（真实登录 → 工作区渲染全部拆分组件 + 文件夹右键菜单 / 内联编辑器 / Esc 关闭 + 文档侧栏四 tab，无运行时 / JS 错误）；CI **8 job 全绿**。PR #161 squash merge main `8ea9031`。
+
 ## v3.8.20（2026-08-13）
 
 **维护态批23（Sprint-48）：前端文件膨胀拆分 Slice C——CSS 拆分（CQ-P1-008 候选 E4，轨道3 P2 剩余候选）。纯工程治理收敛前端文件膨胀、非功能，不改 Phase / 交付物范围 / 对外 API 语义 / DB；不新增依赖。聚合 bump PATCH。**
