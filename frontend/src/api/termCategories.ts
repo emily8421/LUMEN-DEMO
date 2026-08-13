@@ -1,24 +1,10 @@
+import type { components } from './generated';
 import { request } from './client';
 
-// REQ-036 术语领域树（migration 017）。仿 folders.ts（REQ-039 文档目录树）。
-
-export type TermCategoryView = {
-  id: number;
-  name: string;
-  parent_id: number | null;
-  order_idx: number;
-  term_count: number;
-  child_category_count: number;
-  created_at: string;
-  updated_at: string;
-};
-
-export type TermCategoryDetail = {
-  id: number;
-  name: string;
-  parent_id: number | null;
-  order_idx: number;
-};
+// ── 混合接入（openapi codegen · Slice B-2）──
+// REQ-036 术语领域树（migration 017）。仿 folders.ts 混合接入：纯字段无 union，直接 alias。
+export type TermCategoryView = components['schemas']['TermCategoryView'];
+export type TermCategoryDetail = components['schemas']['TermCategoryDetail'];
 
 export type TermCategoryCreatePayload = {
   name: string;
@@ -30,10 +16,8 @@ export type TermCategoryUpdatePayload = {
   parent_id?: number | null;
 };
 
-type TermCategoryListResponse = {
-  items: TermCategoryView[];
-  total: number;
-};
+// 分页：TermCategoryView 无 union，生成 TermCategoryListPage 与手写一致，直接 alias。
+type TermCategoryListResponse = components['schemas']['TermCategoryListPage'];
 
 type TermCategoryReorderPayload = {
   parent_id?: number | null;

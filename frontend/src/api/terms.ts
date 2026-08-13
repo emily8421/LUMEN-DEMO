@@ -1,38 +1,27 @@
+import type { components } from './generated';
 import { request } from './client';
 
-export type TermStatus = 'confirmed' | 'pending';
+// ── 混合接入（openapi codegen · Slice B-2）──
+// TermStatus：openapi 两个 enum 之一（DocumentPermission / TermStatus），直接 alias。
+export type TermStatus = components['schemas']['TermStatus'];
 
-export type Term = {
-  id: number;
-  space_id: number | null;
-  term: string;
-  definition: string;
-  aliases: string[];
-  owner_id: number;
+/**
+ * Term —— 主体字段来自生成 TermDetail（命名错位 Term↔TermDetail，含 REQ-036 领域树
+ * migration 017 扩展字段）；status narrow 为 TermStatus。
+ */
+export type Term = Omit<components['schemas']['TermDetail'], 'status'> & {
   status: TermStatus;
-  source_document_id: number | null;
-  // 术语管理增强（REQ-036 领域树，migration 017）。
-  category_id: number | null;
-  category: string | null;
-  source: string | null;
 };
 
+// 分页：生成 TermListPage.items 是未 narrow 的 TermDetail，与 narrow Term 不匹配，保留手写。
 export type TermListResponse = {
   items: Term[];
   total: number;
   page: number;
 };
 
-export type TermWritePayload = {
-  term: string;
-  definition: string;
-  aliases: string[];
-  status: TermStatus;
-  source_document_id?: number | null;
-  category_id?: number | null;
-  category?: string | null;
-  source?: string | null;
-};
+// 请求体：生成 TermWriteRequest 与手写零差异（status 同为 TermStatus enum），直接 alias。
+export type TermWritePayload = components['schemas']['TermWriteRequest'];
 
 export async function listTerms(token: string): Promise<TermListResponse> {
   return request<TermListResponse>('/api/terms', { token });
