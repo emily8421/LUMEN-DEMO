@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 
 from backend.model.entities import Document, DocumentChunk
@@ -11,6 +12,7 @@ from backend.service import llm_adapter
 from backend.service.term import find_matching_terms
 from backend.service.rag_text import _build_snippet, _extract_terms, _score_chunk
 
+logger = logging.getLogger(__name__)
 
 NOT_FOUND_ANSWER = "未在当前空间知识库找到相关内容"
 MAX_CANDIDATES = 3
@@ -230,7 +232,8 @@ def _build_answer(
     user_prompt = f"问题：{question}\n\n{_format_context(sources, term_sources)}"
     try:
         llm_answer = chat_fn(system_prompt, user_prompt)
-    except Exception:
+    except Exception as exc:
+        logger.warning("RAG LLM call failed; degrade to keyword-only answer: %s", exc)
         return degraded
     return llm_answer or degraded
 
@@ -255,7 +258,8 @@ def _answer_without_knowledge_base(
     user_prompt = f"{history_text}当前问题：{question}" if history_text else f"问题：{question}"
     try:
         answer = chat_fn(system_prompt, user_prompt)
-    except Exception:
+    except Exception as exc:
+        logger.warning("general-chat LLM call failed; degraded answer: %s", exc)
         return RagAnswer(answer="降级模式：LLM 调用失败，通用对话不可用。请稍后重试。", sources=[])
     if not answer:
         return RagAnswer(answer="降级模式：LLM 返回为空。请重新提问。", sources=[])

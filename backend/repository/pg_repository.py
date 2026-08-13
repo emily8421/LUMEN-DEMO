@@ -12,6 +12,7 @@ only; embedding is left NULL (filled in T4) and ts_vector is owned by a DB trigg
 from __future__ import annotations
 
 from datetime import datetime
+import logging
 from typing import cast
 
 from sqlalchemy import delete, func, or_, select, text as sql_text, update
@@ -62,6 +63,8 @@ from backend.model.orm import (
     UserORM,
 )
 from backend.repository.uow import _session_scope
+
+logger = logging.getLogger(__name__)
 
 
 # --- ORM row -> frozen dataclass entity converters ---
@@ -324,7 +327,7 @@ def _safe_embed(texts: list[str]) -> list[list[float]]:
 
         return embed_texts(texts)
     except Exception as exc:  # pragma: no cover - env-dependent
-        print(f"[embedding] embed failed (text-only / vector recall skipped): {exc}")
+        logger.warning("embedding failed (text-only / vector recall skipped): %s", exc)
         return []
 
 

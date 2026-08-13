@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import re
 from dataclasses import dataclass
 
@@ -11,6 +12,8 @@ from backend.repository.protocol import RepositoryProtocol
 from backend.repository.uow import unit_of_work
 from backend.service.chunking import clean_text, split_text_into_chunks
 from backend.service.permission import can_write_document, can_view_document, is_space_member
+
+logger = logging.getLogger(__name__)
 
 
 class DocumentAccessError(ApiError):
@@ -211,7 +214,8 @@ def ensure_documents_indexed(repository: RepositoryProtocol) -> int:
         try:
             sync_document_chunks(repository, document)
             indexed += 1
-        except Exception:
+        except Exception as exc:
+            logger.warning("sync_document_chunks failed for document %s: %s", document.id, exc)
             continue
     return indexed
 
