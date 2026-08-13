@@ -18,6 +18,8 @@ import psycopg
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
+from backend.config import get_settings
+
 _DEFAULT_CONNECT_TIMEOUT_SECONDS = "5"
 
 
@@ -31,9 +33,7 @@ def _with_default_connect_timeout(url: str) -> str:
     return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(query), parts.fragment))
 
 
-_DATABASE_URL = _with_default_connect_timeout(
-    os.environ.get("DATABASE_URL", "postgresql://lumen:lumen@localhost:15432/lumen")
-)
+_DATABASE_URL = _with_default_connect_timeout(get_settings().database_url)
 
 _MIGRATIONS_DIR = os.path.join(os.path.dirname(__file__), "..", "migrations")
 

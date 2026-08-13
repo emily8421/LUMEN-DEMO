@@ -7,7 +7,6 @@ import hashlib
 import hmac
 import json
 import logging
-import os
 import secrets
 import time
 from dataclasses import dataclass
@@ -16,6 +15,7 @@ from typing import Any
 
 import bcrypt
 
+from backend.config import get_settings
 from backend.model.entities import Session, User
 from backend.model.error_codes import ApiError
 from backend.repository.protocol import RepositoryProtocol
@@ -100,7 +100,7 @@ def _require_int(payload: dict[str, Any], key: str) -> int:
 
 # --- Sprint-26 / Phase2D 账号体系（REQ-040/041/042，task-038 / accounts-auth.md）---
 # bcrypt 依赖（RG-011 Go 2026-08-07，Python 3.14.3 实测，cost 12 ≈0.21s，恒定时序）
-TOKEN_SIGNING_KEY = os.environ.get("LUMEN_DEMO_TOKEN_KEY", "local-demo-signing-key")
+TOKEN_SIGNING_KEY = get_settings().demo_token_key
 
 BCRYPT_ROUNDS = 12
 SESSION_TTL_SECONDS = 8 * 60 * 60
