@@ -28,7 +28,7 @@ Thumbs.db
 tmp/
 .tmp-sprint28/
 
-# AI 会话本地状态（续接点 / token hotspot，不提交；见 ai/session-rules.md）
+# AI 会话本地状态（续接点 / token hotspot / pitfall / handoff-archive，不提交；见 ai/session-rules.md）
 .ai/
 
 # 构建产物
