@@ -1,35 +1,23 @@
 import type { DocumentPermission } from './documents';
+import type { components } from './generated';
 import { request } from './client';
 
-export type ImportResponse = {
-  import_id: number;
-  status: string;
-  parsed_doc_id: number;
-  chunk_count: number;
-  mode: string;
-};
+// ── 混合接入（openapi codegen · Slice B-2）──
+// ImportResponse —— alias 生成 ImportFileView（命名错位）；parsed_doc_id 对齐后端契约 number|null。
+export type ImportResponse = components['schemas']['ImportFileView'];
 
-export type ImportBatchItem = {
-  filename: string;
-  relative_path: string;
-  title: string;
+// ImportBatchItem —— 主体来自生成 BatchImportItemView；status narrow 保 union（生成裸 string）；
+// import_id/parsed_doc_id/folder_id 对齐后端为必填 number|null（本地构造点已补齐）。
+export type ImportBatchItem = Omit<components['schemas']['BatchImportItemView'], 'status'> & {
   status: 'done' | 'failed' | 'skipped';
-  import_id?: number | null;
-  parsed_doc_id?: number | null;
-  folder_id?: number | null;
-  chunk_count: number;
-  error?: string | null;
 };
 
-export type ImportBatchResponse = {
-  batch_id: string;
-  total: number;
-  success_count: number;
-  failed_count: number;
-  skipped_count: number;
+// ImportBatchResponse —— 生成 BatchImportView.items 是未 narrow 元素，嵌套 narrow。
+export type ImportBatchResponse = Omit<components['schemas']['BatchImportView'], 'items'> & {
   items: ImportBatchItem[];
 };
 
+// File/FormData payload 为前端专属（openapi 无对应），手写保留。
 export type ImportDocumentPayload = {
   file: File;
   title: string;
@@ -135,6 +123,9 @@ function failedBatchFromSlice(
     relative_path: entry.relativePath || entry.file.name,
     title: entry.file.name,
     status: 'failed',
+    import_id: null,
+    parsed_doc_id: null,
+    folder_id: null,
     chunk_count: 0,
     error: reason,
   }));

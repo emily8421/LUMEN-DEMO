@@ -1,3 +1,4 @@
+import type { components } from './generated';
 import { request } from './client';
 
 /**
@@ -17,16 +18,15 @@ export type QuickEntryMode = 'draft' | 'create_document' | 'append_document';
 /** 条目状态：draft 草稿 / converted 已转文档或追加 / discarded 已丢弃。 */
 export type QuickEntryStatus = 'draft' | 'converted' | 'discarded';
 
-/** POST /api/quick-entry 与 DELETE /api/quick-entry/{id} 返回的条目视图。 */
-export type QuickEntryView = {
-  id: number;
+/**
+ * POST /api/quick-entry 与 DELETE /api/quick-entry/{id} 返回的条目视图。
+ * ── 混合接入（openapi codegen · Slice B-2）：主体字段来自生成类型；status narrow 为手写 union。
+ */
+export type QuickEntryView = Omit<components['schemas']['QuickEntryView'], 'status'> & {
   status: QuickEntryStatus;
-  created_document_id: number | null;
-  target_document_id: number | null;
-  title: string;
-  owner_id: number;
 };
 
+// 请求体（mode 为手写 union，生成是裸 string）手写保留。
 export type QuickEntryCapturePayload = {
   title: string;
   content_md?: string;

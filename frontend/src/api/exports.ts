@@ -1,12 +1,13 @@
 import { downloadBlob, request } from './client';
 import type { DownloadResult } from './client';
+import type { components } from './generated';
 
 export type PdfExportStatus = 'queued' | 'running' | 'done' | 'failed';
 
-export type PdfExportResponse = {
-  export_id: number;
+// ── 混合接入（openapi codegen · Slice B-2）──
+// 主体字段来自生成 PdfExportView（命名错位）；status narrow 保 union；artifact_path 对齐为必填。
+export type PdfExportResponse = Omit<components['schemas']['PdfExportView'], 'status'> & {
   status: PdfExportStatus;
-  artifact_path?: string | null;
 };
 
 export async function downloadDocumentMarkdown(token: string, documentId: number): Promise<DownloadResult> {

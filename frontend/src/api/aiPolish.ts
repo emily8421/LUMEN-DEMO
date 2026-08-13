@@ -1,3 +1,4 @@
+import type { components } from './generated';
 import { request } from './client';
 
 /**
@@ -16,22 +17,18 @@ export type PolishMode = 'polish' | 'citation';
 /** 草稿状态：generated 已生成 / applied 已写回 / discarded 已丢弃 / failed 生成失败。 */
 export type PolishStatus = 'generated' | 'applied' | 'discarded' | 'failed';
 
-/** citation 引用来源：可追溯到 chunk / 文档（仅当前用户可见 chunk）。 */
-export type PolishSource = {
-  chunk_id: number;
-  document_id: number;
-  title: string;
-  snippet: string;
-};
+/** citation 引用来源：可追溯到 chunk / 文档（仅当前用户可见 chunk）；与生成 PolishSourceView 零差异，直接 alias。 */
+export type PolishSource = components['schemas']['PolishSourceView'];
 
-/** POST /api/documents/{id}/polish 返回的草稿视图。 */
-export type PolishView = {
-  draft_id: number;
-  output_md: string;
-  sources: PolishSource[];
+/**
+ * POST /api/documents/{id}/polish 返回的草稿视图。
+ * ── 混合接入（openapi codegen · Slice B-2）：主体字段来自生成类型；status narrow 为手写 union。
+ */
+export type PolishView = Omit<components['schemas']['PolishView'], 'status'> & {
   status: PolishStatus;
 };
 
+// 请求体（mode 为手写 union，生成是裸 string）手写保留。
 export type PolishPayload = {
   mode: PolishMode;
   selection_md: string;
