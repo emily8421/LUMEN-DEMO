@@ -41,7 +41,7 @@ jobs:
             echo "::error::CHANGELOG.md 缺少当前 VERSION 的标题：## $version（"
             exit 1
           fi
-          first="$(grep -E '^## v[0-9]+\.[0-9]+\.[0-9]+（' CHANGELOG.md | head -n 1 | sed -E 's/^## (v[0-9]+\.[0-9]+\.[0-9]+).*/\1/')"
+          first="$(grep -m1 -E '^## v[0-9]+\.[0-9]+\.[0-9]+（' CHANGELOG.md | sed -E 's/^## (v[0-9]+\.[0-9]+\.[0-9]+).*/\1/')"
           if [[ "$first" != "$version" ]]; then
             echo "::error::CHANGELOG 顶部第一个版本标题（${first:-未找到}）不等于 VERSION（$version）；项目版本必须在顶部。"
             exit 1
