@@ -194,6 +194,7 @@
 - **类型纪律**：前端禁 `any`，泛型贯穿 API → hook → 组件；跨层 props 用 `ReturnType<typeof useXxx>` 导出，不手写重复接口。
 - **日志 / 配置**：统一 `logging`（**禁 `print`**）；降级 `except` 必须 `logger.warning` 记原因，禁静默吞。env 读取向 `backend/config.py` 收敛，禁止各模块裸 `os.environ.get`（集中化属【待对齐】，新代码先行遵循）。
 - **未对齐项**：`docs/05 §4.2` 标注【待对齐】的技术债（错误码集中映射、兜底 5xx envelope、CI 代码门、类型 codegen、`*-store` 重命名等），新代码不得再引入同类问题；旧代码登记为债、不强制当前维护态回改。
+- **验证纪律（执行纪律，非新增门禁）**：① 涉及登记基线文件（`useAppState` / `useDocuments` 等）改动时，本地验证须加 `npm run check:file-size`，避免 CI `frontend-file-size` ratchet 拦截往返；② 写 UI smoke 前先读目标组件渲染条件（模式切换 / handler 挂载点），减少试错轮次。来源：token-hotspot SUMMARY §7.1 阶段 C（2026-08-13 codegen 批次教训）。
 
 ### 5.2 禁区（未经人工确认不得触碰）
 - 不得擅改的文件 / 模块：ai/ 规则文件、docs/00–08 编号文档的编号与既有结构
