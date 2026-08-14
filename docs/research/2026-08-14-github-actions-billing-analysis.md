@@ -89,7 +89,20 @@
 - **候选**：若后续仍有额度压力，评估方案 3（后端依赖安装合并）——当前后端 job 占比 90%，是该方向主攻点。
 - **长期**：维护态发版频率低后，2,000 分钟/月免费额度应充足，无需绑卡。
 
-## 7. 追溯索引
+## 7. 模板回流判断
+
+**候选回流点**：模板的 CI 质量门指引（`template-docs/web-fullstack-profile.md` §测试分层与质量门 / `ai/implementation-lifecycle-rules.md` §6.2）目前只有「按项目形态裁剪、说明适用 / 不适用项」，**缺一个成本 / 配额维度**——派生项目在私有仓库 + 免费账户下建 CI 时，没有「路径过滤 / 配额意识」的模板级指引。这是一个真实的模板缺口（通用性高：任何私有仓库免费账户的派生项目都可能踩）。
+
+**回流形态**：应为 `template-docs/web-fullstack-profile.md`（或 `remote-ci-sop-profile.md`）的一条指引性条目，而非硬规则——「CI 质量门 + 路径过滤（paths）按域拆分 workflow，避免全量 job 常态跑；私有仓库注意 Actions 分钟配额」。去项目化：只写机制，不写本项目 job 集 / 路径 / 版本。
+
+**决策（2026-08-14 人工确认）：暂不回流，攒实证。** 理由：
+1. 本轮 CI 拆分的实际效果（paths 过滤省额度）**尚未实测**——PR #172 因账号额度耗尽未跑 CI，真实触发行为待验证。
+2. 符合 `ai-records/token-hotspots/SUMMARY.md` §5「避免过度治理，先当执行纪律、回流等实证」定调。
+3. 待本项目用 1-2 个批次实证 paths 生效 + 配额压力确实缓解后，再起草 `_proposals/TEMPLATE-UPGRADE-ci-budget-paths-filter.md` 回流。
+
+**实证触发点**：① PR #172 merge 后首个纯文档批 PR 只跑 project-check（~0.1min）；② 连续 1-2 个维护批次未再触发额度停跑。
+
+## 8. 追溯索引
 
 - 实测数据来源：GitHub REST API（`repos/emily8421/LUMEN-DEMO/actions/runs`、`/jobs`），2026-08-14 查询
 - 计费口径：[GitHub docs — GitHub's plans](https://docs.github.com/en/get-started/learning-about-github/githubs-plans)、[GitHub Actions Pricing](https://docs.github.com/en/billing/managing-billing-for-your-products/managing-billing-for-github-actions)
