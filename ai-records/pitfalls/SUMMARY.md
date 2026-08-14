@@ -1,7 +1,8 @@
-# Pitfall 汇总：2026-08-13（AI 生成代码缺陷观察 · 首次 rollup）
+# Pitfall 汇总：2026-08-13 ~ 2026-08-14（阶段一 AI 代码缺陷 + 阶段二工具/环境坑）
 
 > 记录类型：AI 协作观察材料的阶段性汇总；不属于项目事实文档，不替代 handoff / docs/08 / docs/09。
 > 隐私口径：不记录 token、密钥、账号密码、客户敏感数据或完整对话正文。
+> 结构说明：阶段一（2026-08-13，9 份，AI 代码缺陷 + 流程坑）为首次 rollup 原文；阶段二（2026-08-14，2 份，工具 / 环境坑）追加于 §7 起。
 
 ## 0. 覆盖边界
 
@@ -10,6 +11,7 @@
   + `ai-records-git-info-exclude` / `cq-p1-001-code-reuse-precheck` / `e4-slice-d-browser-smoke-setup` / `explore-agent-line-estimate-drift` / `grep-head-pipefail-sigpipe` / `lint-rule-over-grep`（流程 / 工具坑 6 份，简要归入 §3）
 - 未覆盖：无。
 - 下一次 rollup 起点：2026-08-14 起，只统计 `汇总状态：未汇总` 的本地记录。
+  （2026-08-14 阶段二追加后更新：08-14 两份已纳入 §7，下一次 rollup 起点改为 2026-08-15。）
 
 ## 1. 汇总范围
 
@@ -41,7 +43,32 @@
 
 git info/exclude 与 .gitignore 优先级坑 / 代码复用前置检查 / smoke 环境一键启动缺失（Explore 行数估算漂移 + 浏览器环境多轮往返）/ `grep | head` SIGPIPE / lint 规则优先于 ad-hoc grep——均已在对应批次内闭环，其中「smoke 一键启动」与 token-hotspot SUMMARY §4 P1 建议合流。
 
-## 6. 模板回流判断
+## 6. 模板回流判断（阶段一）
 
 - **回流 1 项**：`_proposals/TEMPLATE-UPGRADE-pitfall-legacy-code-trigger.md`（§4.3 触发口径扩展）——本汇总 §2/§3 为其证据基础。
 - **不回流**：三样本的规避手段（codegen / mypy / eslint）已是模板 L0 / 形态 profile 既有方向的实例验证，无需重复回流。
+
+---
+
+## 7. 阶段二（2026-08-14 · 工具 / 环境坑 2 份）
+
+### 0. 覆盖边界（阶段二）
+
+- 已覆盖（本地 `.ai/pitfalls/`，共 2 份，均 2026-08-14）：`powershell-array-splat` / `volta-default-toolchain-path-prepended`
+- 未覆盖：无（本地 11 份中 9 份属阶段一、2 份属本阶段）
+- 下一次 rollup 起点：2026-08-15 起，只统计 `汇总状态：未汇总` 的本地记录
+
+### 1. 记录归纳
+
+| 记录 | 现象 | 根因 | 规避 / 修复 | 通用性 |
+|---|---|---|---|---|
+| `powershell-array-splat` | `& $script @("-Param", val)` 数组 splat 报类型转换错——`-` 前缀字符串**不被当作参数名**，被当成位置参数的值 | PS 语言细节：数组 splat 无参数名语义 | 命名参数透传用**哈希表 splat**（`@{Param=val}` + `@hash`），开关参数显式 `$true` | 高（任何 PS 脚本透传命名参数都会踩） |
+| `volta-default-toolchain-path-prepended` | 项目 volta 钉 node 22，会话却跑 node 16（`where node` 命中裸 image 目录），vite 5 起不来 | volta **shim 启动链**把全局默认工具链裸目录前置进进程 PATH，裸 exe 优先级高于一切 shim；注册表 PATH 无此条目，纯进程继承 | `volta install node@<项目版本>` 对齐全局默认（根除）；当次用全路径直启绕过；**诊断口径：先查会话 PATH，勿只看注册表** | 高（volta + 多 node + shim 启动 CLI 的 Windows 机器） |
+
+### 2. 与阶段一的关联
+
+两者同属「验证 / 诊断手段不覆盖缺陷维度」的变体：数组 splat 坑是「语法合法但语义与直觉相反」（类比阶段一「类型障眼法」）；volta PATH 坑是「诊断依据看错层」（注册表 ≠ 进程继承的会话 PATH）。无新增共性模式，不重复归纳。
+
+### 3. 模板回流判断（阶段二）
+
+- **不回流**：PowerShell 语法细节不属模板规则范围（阶段一单条记录已注明）；volta PATH 坑为环境诊断经验，通用但低频，单条记录已含完整诊断口径——若后续再积累同类「工具链版本漂移」样本（nvm/fnm/asdf 等），可合并起草「运行时版本诊断先查会话环境」提案，暂攒证据。
