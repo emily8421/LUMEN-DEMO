@@ -376,6 +376,14 @@ function Invoke-NativeTemplateCheck {
   return 1
 }
 
+function Invoke-MarkdownCleanPreflight {
+  # CI template-check runs check-markdown-clean on _proposals/ and ai-records/
+  # (see .github/workflows/template-check.yml); running it here keeps the local
+  # one-command preflight aligned with CI and avoids "local green, CI red".
+  & powershell -ExecutionPolicy Bypass -File "scripts/check-markdown-clean.ps1" _proposals ai-records
+  return $LASTEXITCODE
+}
+
 $root = Resolve-Path (Join-Path $PSScriptRoot "..")
 $bash = Find-TemplateBash
 $probe = Test-TemplateBash -BashPath $bash
@@ -391,11 +399,16 @@ try {
     }
 
     $fallbackExit = Invoke-NativeTemplateCheck -Root $root
-    exit $fallbackExit
+    $cleanExit = Invoke-MarkdownCleanPreflight
+    if ($fallbackExit -ne 0) { exit $fallbackExit }
+    exit $cleanExit
   }
 
   & $bash "scripts/check-template.sh"
-  exit $LASTEXITCODE
+  $templateExit = $LASTEXITCODE
+  $cleanExit = Invoke-MarkdownCleanPreflight
+  if ($templateExit -ne 0) { exit $templateExit }
+  exit $cleanExit
 }
 finally {
   Pop-Location

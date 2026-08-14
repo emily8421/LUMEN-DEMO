@@ -33,11 +33,13 @@
 - docs/README.md（文档分区规则）
 - template-docs/ui-brief-intake-template.md
 - template-docs/ui-prototype-exploration-template.md
+- template-docs/frontend-ui-reference-analysis-template.md
+- template-docs/ui-knowledge/README.md（按 scope 选读 visual-patterns.md / interaction-patterns.md / source-registry.md）
 - docs/inputs/*、docs/vision/product-vision.md、docs/00-03（如已存在）
 
 执行要求：
 1. 先说明本次原型定位：探索 / 待确认，不是正式需求、架构、技术栈、接口、数据库、任务或验收事实。
-2. 先收敛最小输入：目标用户、核心场景、用户目标、主任务、非目标、成功标准、参考产品 / 截图、页面结构、信息密度、设备范围、视觉禁区和需要通过原型确认的问题；若 UI brief 缺失，先输出 UI 输入缺口并建议写入 `docs/inputs/ui-brief.md` 或 `docs/research/YYYY-MM-DD-ui-brief-intake.md`。
+2. 先收敛最小输入：目标用户、核心场景、用户目标、主任务、非目标、成功标准、参考产品 / 截图、页面结构、信息密度、设备范围、视觉禁区和需要通过原型确认的问题；若 UI brief 缺失，先输出 UI 输入缺口并建议写入 `docs/inputs/ui-brief.md` 或 `docs/research/YYYY-MM-DD-ui-brief-intake.md`。若已有或需生成参考分析，按 scope（产品类型 / 页面类型 / 问题类别）读取 `template-docs/ui-knowledge/` 的 `visual-patterns.md` / `interaction-patterns.md` / `source-registry.md`，把命中模式作为页面 / 流程 / 状态候选的依据，并输出证据分级与采纳 / 排除矩阵（满足 UI-G-002）；参考分析落盘用 `template-docs/frontend-ui-reference-analysis-template.md`。
 3. 先判断原型主类型：需求探索原型 / 视觉效果探索 / 实现前 UI 原型（只能选一个主类型）。若属于实现前 UI 原型，停止本命令并转 UI 原型策略 / `edit-single-doc`，不得把实现前确认混入需求探索。
 4. 输出 2-3 个原型形式选项并推荐一种：低保真草图 / Figma / Penpot / 截图标注 / HTML 静态页 / 代码静态 Mock / 其他；没有用户特殊要求时，AI 应给出默认成熟产品 / 设计系统基线、信息密度和布局建议。
 5. 生成页面 / 视图清单、主流程草案、关键状态（加载 / 空态 / 错误 / 禁用 / 成功 / 无权限 / 降级 / 风险提示）、文案 / 信息密度注意点和视觉候选；每个候选要标状态：视觉候选 / 已确认视觉方向 / 视觉验证失败。

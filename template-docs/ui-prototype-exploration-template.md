@@ -18,6 +18,7 @@
 | 原型位置 | URL / 仓库路径 / 截图目录 / 会话输出 |
 | 评审对象 | 用户 / 客户 / 内部团队 / 待确认 |
 | 生成日期 | YYYY-MM-DD |
+| 引用知识 | `PAT-*` / `SRC-*`（来自 `template-docs/ui-knowledge/`），可追溯至参考分析 `docs/research/*frontend-ui-reference-analysis.md` |
 | 建议晋级目标 | open items / `00-03` / `docs/design/frontend-experience-brief.md` / `docs/design/frontend-interaction.md` / UI 原型策略 / `08/09` |
 
 ## 1. 探索目的
