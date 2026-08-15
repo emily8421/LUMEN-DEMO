@@ -1,0 +1,65 @@
+# .dockerignore（⑪ 部署方案 A 配套，2026-08-15）
+#
+# 目的：两个生产镜像的 build context 都是仓库根（backend/Dockerfile `COPY . /app`、
+# frontend/Dockerfile `COPY frontend/ ./`），无本文件时 .env（LLM key）会进镜像层，
+# 且 .venv / node_modules / 研发文档全部入镜像，体积膨胀。
+# 依据：docs/research/2026-08-15-deployment-readiness-laptop-plan.md §2 gap #1（C-001）。
+# 注意：.env.example 是模板、无密钥，保留在 context 外无影响（后端镜像运行不需要它）。
+
+# --- 密钥 / 环境变量（安全：绝不进镜像） ---
+.env
+.env.*
+
+# --- VCS / CI / 本地状态 ---
+.git
+.gitignore
+.github
+.history
+.ai
+.tmp
+.tmp-sprint28
+tmp
+.claude
+.cursor
+.agents
+.mypy_cache
+.pytest_cache
+.ruff_cache
+
+# --- 依赖与构建产物（镜像内各自重新安装/构建） ---
+.venv
+node_modules
+frontend/node_modules
+frontend/dist
+__pycache__
+*.pyc
+
+# --- 研发文档与模板体系（运行时不需要） ---
+docs
+ai
+ai-records
+tasks
+_proposals
+_archive
+sync-records
+template-docs
+upstream
+tests
+scripts
+
+# --- 项目治理元文件（运行时不需要） ---
+CLAUDE.md
+AGENTS.md
+INIT-PROMPT.md
+MAINTAINERS.md
+CONTRIBUTING.md
+SOP.md
+TEMPLATE-BASE.md
+template-sync.json
+VERSION
+CHANGELOG.md
+CHANGELOG-PLAIN.md
+README.md
+mypy.ini
+pytest.ini
+ruff.toml
