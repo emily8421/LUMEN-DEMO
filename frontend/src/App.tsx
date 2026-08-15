@@ -44,6 +44,7 @@ function App() {
           workspace={app.workspace}
           paneLayout={app.paneLayout}
           leftPaneWidth={app.leftPaneWidth}
+          leftPaneOpen={app.leftPaneOpen}
           currentSpace={app.currentSpace}
           token={app.token}
           documents={app.documents}

@@ -1,15 +1,16 @@
-/** 侧栏可见性偏好 localStorage 持久化（Doc-First §9.5，Sprint-21）。 */
+/** 侧栏可见性偏好 localStorage 持久化（Doc-First §9.5，Sprint-21）。
+ *  key v2（2026-08-14）：左栏默认值翻转为展开（用户裁决，见 §9.5.1 修订），升版让老偏好作废重置到新默认。 */
 
-export const PANE_LAYOUT_STORAGE_KEY = 'lumen-demo-pane-layout';
+export const PANE_LAYOUT_STORAGE_KEY = 'lumen-demo-pane-layout-v2';
 
 export type PaneLayout = {
   leftPaneOpen: boolean;
   rightPaneOpen: boolean;
 };
 
-/** 默认收起（Doc-First §9.5.1：宽屏也默认收起，沉浸阅读）。 */
+/** 左栏默认展开（2026-08-14 用户裁决修订 §9.5.1 原「宽屏也默认收起」；首页等无左栏视图由 useAppShellState 过滤）；右栏维持默认收起。 */
 export const DEFAULT_PANE_LAYOUT: PaneLayout = {
-  leftPaneOpen: false,
+  leftPaneOpen: true,
   rightPaneOpen: false,
 };
 
