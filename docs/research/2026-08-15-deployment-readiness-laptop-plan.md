@@ -107,6 +107,7 @@
 | C-002 | migration 018 是否被 `init_db` 自动执行 | 部署实测时以容器日志验证，再回填 deploy-guide 口径 | gap #6 文档写 014..017 与实际 018 漂移 | 现在读代码核对 | 不阻塞；防「018 漏跑」误判 |
 | C-003 | 备份方案（每日 pg_dump 计划任务） | 部署跑通后第 2 步做 | gap #4；零额外花费（无云备份依赖） | 购买云存储异地备份 | 不阻塞部署；阻塞「数据安全底线」 |
 | C-004 | 剥离产品仓时机 | 缓 1-2 个月，实际用起来再定 | §4 单向风险 + sync 依赖；现部署不剥离零成本 | 立即剥离 | 立即剥离断模板同步，维护成本上升 |
+| C-006 | 「开发/测试/生产环境分离」方法回流模板（2026-08-15 会话评估，用户已定） | **选项 A：部署实证后（约 2026-09）起草完整提案 `TEMPLATE-UPGRADE-env-separation-deploy-readiness.md` 一次提交**；已实证部分（`.dockerignore` build context 含密钥坑）先落 `.ai/pitfalls/2026-08-15-docker-build-context-secrets.md` | 模板现状查证：`template-docs/` 27 份 + doc-standards 对环境分离零覆盖（RG-001 只管「能否进 Sprint」，demo-runbook 只管本机 demo）；单实例 + 部署未执行，等实证变「已验证」采纳率更高；落点轻量（deploy-guide-template + doc-standards/05 触发规则 + 检查清单项，不新建规则包） | B 现在起草挂 `_proposals/`；C 只回流检查清单小项 | 不阻塞部署；提案时点 = 部署验收后（handoff「下次优先做」跟踪） |
 | C-005 | 笔记本具体型号 / CPU / 磁盘 | 已确认 32GB 内存；CPU / 磁盘在装 WSL2 时顺带核对（磁盘需 ≥20GB 余量） | deploy-guide §1 前置条件 | 不够时先清磁盘或换机 | 不阻塞方案，阻塞执行 |
 
 ## 6. 追溯与后续动作
