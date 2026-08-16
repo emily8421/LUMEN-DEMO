@@ -1,6 +1,7 @@
-/* Markdown 渲染 + wikilink 三态 + compact（从 panels.css 拆出，WSG）。 */
+/* Markdown 渲染 + wikilink 三态 + compact（从 panels.css 拆出，WSG）。
+   2026-08-16 主题化：字面色值收编 tokens；代码块固定深色（C-RA-002）。 */
 .markdown-body {
-  color: #334155;
+  color: var(--text-2);
   font-size: 12.5px;
   line-height: 1.42;
 }
@@ -12,7 +13,7 @@
 .markdown-body h1,
 .markdown-body h2,
 .markdown-body h3 {
-  color: #0f172a;
+  color: var(--text);
   line-height: 1.25;
 }
 
@@ -40,8 +41,8 @@
 
 .markdown-body code {
   border-radius: 5px;
-  background: #e2e8f0;
-  color: #0f172a;
+  background: var(--code-inline-bg);
+  color: var(--code-inline-text);
   font-family: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
   font-size: 0.92em;
   padding: 2px 5px;
@@ -50,8 +51,8 @@
 .markdown-body pre {
   overflow: auto;
   border-radius: var(--radius-panel);
-  background: #0f172a;
-  color: #e2e8f0;
+  background: var(--code-bg);
+  color: var(--code-text);
   padding: var(--space-2);
 }
 
@@ -63,8 +64,8 @@
 
 .markdown-body blockquote {
   margin: 0;
-  border-left: 4px solid #93c5fd;
-  color: #475569;
+  border-left: 4px solid var(--blue-border);
+  color: var(--text-3);
   padding-left: var(--space-3);
 }
 
@@ -75,7 +76,7 @@
 
 .markdown-body th,
 .markdown-body td {
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--line);
   padding: 5px 7px;
 }
 
@@ -94,21 +95,21 @@
 }
 
 .markdown-body .wikilink-unresolved {
-  color: #94a3b8;
-  border-bottom: 1px dashed #cbd5e1;
+  color: var(--faint);
+  border-bottom: 1px dashed var(--line);
   cursor: help;
 }
 
 .markdown-body .wikilink-noaccess {
-  color: #94a3b8;
+  color: var(--faint);
   font-style: italic;
-  background: #f1f5f9;
+  background: var(--panel-soft);
   cursor: not-allowed;
 }
 
 .markdown-body .wikilink-pending {
-  color: #cbd5e1;
-  border-bottom: 1px dotted #e2e8f0;
+  color: var(--text-3);
+  border-bottom: 1px dotted var(--line-soft);
 }
 
 .compact-markdown {

@@ -18,7 +18,7 @@ button {
   border: 1px solid transparent;
   border-radius: var(--radius-control);
   background: var(--blue);
-  color: #ffffff;
+  color: var(--on-accent);
   cursor: pointer;
   font-size: 12px;
   font-weight: 650;
@@ -26,7 +26,7 @@ button {
 }
 
 button:hover:not(:disabled) {
-  background: #1d4ed8;
+  background: var(--accent-strong);
 }
 
 button:disabled {
@@ -36,7 +36,7 @@ button:disabled {
 
 button.secondary {
   border-color: var(--line);
-  background: #ffffff;
+  background: var(--panel);
   color: var(--text);
 }
 
@@ -45,20 +45,20 @@ button.secondary:hover:not(:disabled) {
 }
 
 button.danger {
-  border-color: #fecaca;
+  border-color: var(--red-border);
   background: var(--red-soft);
   color: var(--red);
 }
 
 button.danger:hover:not(:disabled) {
-  background: #fee2e2;
+  background: var(--red-soft-hover);
 }
 
 button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 3px solid rgba(37, 99, 235, 0.22);
+  outline: var(--focus-ring);
   outline-offset: 2px;
 }
 
@@ -68,7 +68,7 @@ textarea {
   width: 100%;
   border: 1px solid var(--line);
   border-radius: var(--radius-control);
-  background: #ffffff;
+  background: var(--panel);
   color: var(--text);
   font-size: 12.5px;
   padding: 6px 8px;

@@ -1,4 +1,17 @@
-﻿:root {
+/* ============================================================
+   LUMEN 设计令牌（唯一定义点——组件 CSS 只准 var(--xxx) 引用，见 ai/project-rules.md §5.1 CSS 纪律）
+   多主题（2026-08-16 主题试点，UI-G-003 已确认四套）：
+   - light（默认，:root 即 A 套浅色精修）
+   - dark（B 套深色）／ paper（C 套暖米纸）／ legacy（试点前原稿冻结对照）
+   切换由 document.documentElement.dataset.theme 驱动（index.html 内联预置脚本防 FOUC）。
+   对比度：四套均已过 WCAG 2.2 门槛（正文 ≥4.5:1 / 大字·组件 ≥3:1，
+   校验脚本 .tmp/theme-contrast.mjs + docs/research/2026-08-16-ui-visual-exploration.md）；
+   legacy 例外——muted(#64748b on 画布 4.40) 与 focus-ring(1.68) 为历史缺陷留证不改。
+   代码块固定深色（C-RA-002 拍板）：--code-bg/--code-text 四套同值，不随主题。
+   ============================================================ */
+
+:root,
+[data-theme='light'] {
   color: #172033;
   background: #f4f6f9;
   font-family:
@@ -7,27 +20,226 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  --bg: #f4f6f9;
+  /* 画布与面板（2026-08-16 用户反馈过渡优化：画布加深一档，白面板层次可读；
+     对比度复核 muted 4.54 / 主色 4.60 / 正文 14.47 仍全过 ≥4.5） */
+  --bg: #eef2f7;
   --panel: #ffffff;
   --panel-soft: #f8fafc;
-  --line: #dbe3ee;
-  --line-soft: #e8edf4;
+  --panel-raised: #ffffff;
+  /* 线 */
+  --line: #d7dfeb;
+  --line-soft: #e6ebf3;
+  /* 文字阶梯（text-3 用于列表 small / 占位等次级标签） */
   --text: #172033;
-  --muted: #64748b;
+  --text-2: #3d4a5f;
+  --text-3: #66788f;
+  --muted: #5f6f88;
+  --faint: #9aa6b8; /* 仅禁用态（WCAG 豁免正文门槛） */
+  /* 主色（--blue 语义=主色；C 套为珊瑚） */
   --blue: #2563eb;
+  --on-accent: #ffffff;
+  --accent-strong: #1d4ed8;
   --blue-soft: #eaf2ff;
+  --blue-soft-hover: #dbeafe;
+  --blue-border: #bfdbfe;
+  /* 语义色 */
   --green: #047857;
   --green-soft: #ecfdf5;
-  --red: #dc2626;
+  --green-border: #a7f3d0;
+  --red: #c81e1e;
   --red-soft: #fef2f2;
+  --red-strong: #991b1b;
+  --red-border: #fecaca;
+  --red-soft-hover: #fee2e2;
   --amber: #b45309;
   --amber-soft: #fff7ed;
+  --amber-border: #fde68a;
+  /* 头像 / 悬停底 */
+  --avatar-bg: #0f172a;
+  --hover: #eef1f6;
+  /* 遮罩 / 阴影（整值令牌） */
+  --overlay: rgba(15, 23, 42, 0.35);
+  --shadow-sm: 0 8px 24px rgba(15, 23, 42, 0.14);
+  --shadow-md: 0 10px 24px rgba(15, 23, 42, 0.12);
+  --shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.18);
+  --shadow-xl: 0 20px 48px rgba(15, 23, 42, 0.22);
+  --shadow-drawer: -12px 0 32px rgba(15, 23, 42, 0.16);
+  --shadow-accent: 0 6px 18px rgb(37 99 235 / 0.35);
+  /* 卡片轻浮起（过渡柔化：替代「纯边线贴片」观感） */
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04);
+  /* 焦点环（整值令牌；实色 5.17:1） */
+  --focus-ring: 3px solid #2563eb;
+  /* 代码块（固定深色，四套同值）与行内代码（随主题） */
+  --code-bg: #1c1c1e;
+  --code-text: #e6e6e6;
+  --code-inline-bg: #e2e8f0;
+  --code-inline-text: #0f172a;
+  /* 时间轴密度热力（数据强调 ramp） */
+  --heat-0: #e2e8f0;
+  --heat-1: #bfdbfe;
+  --heat-2: #60a5fa;
+  --heat-3: #2563eb;
+  /* 间距 / 圆角 */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
   --space-4: 16px;
   --radius-control: 6px;
   --radius-panel: 8px;
+}
+
+/* B 套深色：近黑画布 + 面板阶梯 + 提亮主色（#2563eb→#5b8cff 保持品牌连续）；
+   语义色提亮一档 + 13-14% 透明软底（raycast 配方）。 */
+[data-theme='dark'] {
+  color: #eef0f4;
+  background: #0d0e12;
+  --bg: #0d0e12;
+  --panel: #14151a;
+  --panel-soft: #1a1c22;
+  --panel-raised: #22242c;
+  --line: rgba(255, 255, 255, 0.14);
+  --line-soft: rgba(255, 255, 255, 0.08);
+  --text: #eef0f4;
+  --text-2: #b8bcc6;
+  --text-3: #9298a4;
+  --muted: #9298a4;
+  --faint: #6a7080;
+  --blue: #5b8cff;
+  --on-accent: #0d0e12;
+  --accent-strong: #8fb0ff;
+  --blue-soft: rgba(91, 140, 255, 0.14);
+  --blue-soft-hover: rgba(91, 140, 255, 0.22);
+  --blue-border: rgba(91, 140, 255, 0.45);
+  --green: #34d399;
+  --green-soft: rgba(52, 211, 153, 0.13);
+  --green-border: rgba(52, 211, 153, 0.4);
+  --red: #f87171;
+  --red-soft: rgba(248, 113, 113, 0.13);
+  --red-strong: #fca5a5;
+  --red-border: rgba(248, 113, 113, 0.4);
+  --red-soft-hover: rgba(248, 113, 113, 0.22);
+  --amber: #fbbf24;
+  --amber-soft: rgba(251, 191, 36, 0.13);
+  --amber-border: rgba(251, 191, 36, 0.4);
+  --avatar-bg: #8fb0ff;
+  --hover: rgba(255, 255, 255, 0.06);
+  --overlay: rgba(0, 0, 0, 0.55);
+  --shadow-sm: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 10px 24px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 20px 48px rgba(0, 0, 0, 0.55);
+  --shadow-drawer: -12px 0 32px rgba(0, 0, 0, 0.5);
+  --shadow-accent: 0 6px 18px rgb(91 140 255 / 0.35);
+  --focus-ring: 3px solid #8fb0ff;
+  --code-inline-bg: #22242c;
+  --code-inline-text: #eef0f4;
+  --heat-0: #22242c;
+  --heat-1: rgba(91, 140, 255, 0.3);
+  --heat-2: rgba(91, 140, 255, 0.6);
+  --heat-3: #5b8cff;
+}
+
+/* C 套暖米纸：暖纸画布 + 暖墨 + 珊瑚主色（按钮 #b5542f / 文字 #a84a28 双档制）；
+   蓝系语义在暖底发灰 → info 并入主色、语义四色暖底重校。 */
+[data-theme='paper'] {
+  color: #1c1b18;
+  background: #faf9f5;
+  --bg: #faf9f5;
+  --panel: #ffffff;
+  --panel-soft: #f5f0e8;
+  --panel-raised: #ffffff;
+  --line: #e8e1d6;
+  --line-soft: #efe9de;
+  --text: #1c1b18;
+  --text-2: #46413a;
+  --text-3: #6e675c;
+  --muted: #6e675c;
+  --faint: #8f887c;
+  --blue: #b5542f;
+  --on-accent: #ffffff;
+  --accent-strong: #a84a28;
+  --blue-soft: #f9ece5;
+  --blue-soft-hover: #f3dfd5;
+  --blue-border: #e3c4b4;
+  --green: #047857;
+  --green-soft: #eaf5ee;
+  --green-border: #b9dccc;
+  --red: #b91c1c;
+  --red-soft: #faeee8;
+  --red-strong: #991b1b;
+  --red-border: #eecfc6;
+  --red-soft-hover: #f5ded4;
+  --amber: #92610a;
+  --amber-soft: #f7efe2;
+  --amber-border: #e5d5b8;
+  --avatar-bg: #46413a;
+  --hover: #f0ebe2;
+  --overlay: rgba(46, 40, 30, 0.4);
+  --shadow-sm: 0 8px 24px rgba(60, 50, 35, 0.14);
+  --shadow-md: 0 10px 24px rgba(60, 50, 35, 0.12);
+  --shadow-lg: 0 12px 32px rgba(60, 50, 35, 0.18);
+  --shadow-xl: 0 20px 48px rgba(60, 50, 35, 0.22);
+  --shadow-drawer: -12px 0 32px rgba(60, 50, 35, 0.16);
+  --shadow-accent: 0 6px 18px rgb(181 84 47 / 0.3);
+  --focus-ring: 3px solid #c0593a;
+  --code-inline-bg: #efe9dd;
+  --code-inline-text: #1c1b18;
+  --heat-0: #efe9dd;
+  --heat-1: #eed3c2;
+  --heat-2: #d99a75;
+  --heat-3: #b5542f;
+}
+
+/* legacy 原稿冻结（试点前现状对照，2026-08-16；视觉等效口径：同色系近似灰合并为单 token，
+   非逐字节复刻）。对比度历史缺陷留证：--muted on 画布 4.40:1、--focus-ring 1.68:1。 */
+[data-theme='legacy'] {
+  color: #172033;
+  background: #f4f6f9;
+  --bg: #f4f6f9;
+  --panel: #ffffff;
+  --panel-soft: #f8fafc;
+  --panel-raised: #ffffff;
+  --line: #dbe3ee;
+  --line-soft: #e8edf4;
+  --text: #172033;
+  --text-2: #374151;
+  --text-3: #94a3b8;
+  --muted: #64748b;
+  --faint: #a8a8a8;
+  --blue: #2563eb;
+  --on-accent: #ffffff;
+  --accent-strong: #1d4ed8;
+  --blue-soft: #eaf2ff;
+  --blue-soft-hover: #dbeafe;
+  --blue-border: #bfdbfe;
+  --green: #047857;
+  --green-soft: #ecfdf5;
+  --green-border: #a7f3d0;
+  --red: #dc2626;
+  --red-soft: #fef2f2;
+  --red-strong: #b91c1c;
+  --red-border: #fecaca;
+  --red-soft-hover: #fee2e2;
+  --amber: #b45309;
+  --amber-soft: #fff7ed;
+  --amber-border: #fde68a;
+  --avatar-bg: #0f172a;
+  --hover: #f3f4f6;
+  --overlay: rgba(15, 23, 42, 0.35);
+  --shadow-sm: 0 8px 24px rgba(15, 23, 42, 0.14);
+  --shadow-md: 0 10px 24px rgba(15, 23, 42, 0.12);
+  --shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.18);
+  --shadow-xl: 0 20px 48px rgba(15, 23, 42, 0.22);
+  --shadow-drawer: -12px 0 32px rgba(15, 23, 42, 0.16);
+  --shadow-accent: 0 6px 18px rgb(37 99 235 / 0.35);
+  /* 历史缺陷留证（1.68:1 < 3:1），不修——对照价值优先 */
+  --focus-ring: 3px solid rgba(37, 99, 235, 0.22);
+  --code-inline-bg: #e2e8f0;
+  --code-inline-text: #0f172a;
+  --heat-0: #e2e8f0;
+  --heat-1: #bfdbfe;
+  --heat-2: #60a5fa;
+  --heat-3: #2563eb;
 }
 
 * {

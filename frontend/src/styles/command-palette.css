@@ -7,7 +7,7 @@
   display: grid;
   align-items: start;
   justify-items: center;
-  background: rgba(15, 23, 42, 0.35);
+  background: var(--overlay);
   padding-top: 12vh;
 }
 
@@ -19,7 +19,7 @@
   border: 1px solid var(--line);
   border-radius: 12px;
   background: var(--panel);
-  box-shadow: 0 20px 48px rgba(15, 23, 42, 0.22);
+  box-shadow: var(--shadow-xl);
   overflow: hidden;
 }
 
@@ -170,7 +170,7 @@
 
 .global-search-bar:hover,
 .global-search-bar:focus-visible {
-  border-color: #bfdbfe;
+  border-color: var(--blue-border);
   background: var(--blue-soft);
   outline: none;
 }

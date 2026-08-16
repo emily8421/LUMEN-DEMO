@@ -10,7 +10,7 @@
   /* grid item（workspace-layout 列 4）需显式高度，内部 flex/grid 子项的 min-height:0
      才有约束基准（阅读态复用 .markdown-preview 依赖此链，2026-08-16 滚动修复）。 */
   height: 100%;
-  color: #374151;
+  color: var(--text-2);
 }
 
 .local-doc-preview-header {
@@ -19,8 +19,8 @@
   justify-content: space-between;
   gap: 12px;
   padding: 12px 20px;
-  border-bottom: 1px solid #e5e7eb;
-  background: #fffbeb;
+  border-bottom: 1px solid var(--line);
+  background: var(--amber-soft);
   flex-shrink: 0;
 }
 
@@ -28,28 +28,28 @@
   margin: 0;
   font-size: 16px;
   font-weight: 600;
-  color: #374151;
+  color: var(--text-2);
 }
 
 .local-doc-preview-meta {
   margin: 2px 0 0;
   font-size: 12px;
-  color: #b45309;
+  color: var(--amber);
 }
 
 .local-doc-preview-close {
   font-size: 12px;
   padding: 4px 12px;
-  border: 1px solid #d1d5db;
-  background: #fff;
-  color: #374151;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--text-2);
   border-radius: 4px;
   cursor: pointer;
   flex-shrink: 0;
 }
 
 .local-doc-preview-close:hover {
-  background: #f3f4f6;
+  background: var(--hover);
 }
 
 /* 阅读态（2026-08-16 起复用 DocumentPreviewPane）：滚动 / TOC sticky / 840px 限宽

@@ -5,6 +5,7 @@
   border: 1px solid var(--line);
   border-radius: var(--radius-panel);
   background: var(--panel);
+  box-shadow: var(--shadow-card);
 }
 
 .login-panel {
@@ -85,7 +86,7 @@
   align-content: start;
   gap: 0;
   border-right: 1px solid var(--line);
-  background: #fbfdff;
+  background: var(--panel-soft);
   padding-top: var(--space-2);
 }
 
