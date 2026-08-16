@@ -6,6 +6,17 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.10.0（2026-08-17）
+
+**前端设计系统规范工作流全 6 步（charter 立项 → 收口）：视觉语言审计 → 结构专项 RA → 令牌升级 → 去框化试点与全站铺开 → 规范成文 → CI 白名单。全站观感变化 + 首份完整设计规范文档，bump MINOR。目标「AI 依据规范与约束生成代码，而非各写各的」落地为三道闸：规范可查（design-system.md）→ 参数单点（tokens.css）→ 违规可拦（CI）。**
+
+- **审计与 RA**（docs/research/）：10 层视觉语言实证（22 种字号 / 65 处全边框 / 3 处 outline:none 可达性缺陷等 gap 表 P0-P4）+ 6 案例结构配方提取（linear/sanity/notion/claude/raycast/mintlify，D 级封顶、参数按 LUMEN 现状对齐）。
+- **令牌升级**：tokens.css 新增正交维度令牌——字阶 5 档（`--font-micro/caption/body/emphasis/title`，22 种字面收敛）/ 字重 3 档（400/500/600，650 历史遗留与 700/800 归并）/ 行高 3 档 / 圆角 4 档 + pill（9 种字面收敛）/ 动效 2 档；**3 处裸 `outline:none` 可达性缺陷修复**（resizer×2 / 编辑器工具栏按钮补 `:focus-visible` 焦点环）。
+- **去框化**（用户试点确认「配方照单全收」后铺开）：一视图一容器 + 分隔四手段（留白/分隔线/边框/投影）——列表行改分隔线、次要按钮幽灵化、输入框保留框但边线降档 `--line-soft`、hover 两路统一 `--hover`；全站 31 处定性处置（容器壳/浮层/品牌触发器/分组壳/数据表保留 `--line`）。
+- **规范成文**：`docs/design/frontend-design-system.md` v1.0——§1 基础层 10+1 项三段式（规则/token/边界豁免表）+ §2 组件契约 8 类与新增组件 checklist + §3 模式层 + §4 治理（token 变更流程/CI 门禁/豁免登记）+ §5 回流清单（5 项 PAT-VIS 候选，跨仓另议）。
+- **CI 扩展**：`check-frontend-css.mjs` 增字号/字重/圆角白名单（token 引用或登记豁免），全仓一次通过；`ai/project-rules.md` §5.1 CSS 纪律升级为规范执行入口。
+- 验证：check:css（扩展版）/ eslint / build / file-size ratchet / 主题 smoke 19/19 每步全过；三主题截图留档。PR #180 squash merge main `3faf365`，4 job 全绿（paths 过滤：前端 + project-check）。
+
 ## v3.9.0（2026-08-16）
 
 **多主题试点（UI-G-003 用户确认四套）：CSS 设计令牌单点 → `[data-theme]` 多主题全量落地 + 组件样式硬编码色值清零 + CSS 纪律成文。新增可演示能力（主题切换器 + 四套主题），bump MINOR。母模板 UI 知识层（ui-knowledge v1.62.0）首个消费试点，双层评估落盘。**
