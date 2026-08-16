@@ -44,7 +44,7 @@
   border-radius: var(--radius-control);
   background: var(--blue-soft);
   color: var(--text);
-  font-size: 13px;
+  font-size: var(--font-body);
 }
 
 /* 用户管理表格操作列：空间 / 禁用按钮并排 */

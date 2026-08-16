@@ -21,8 +21,8 @@
 }
 
 .top-quick-entry > span:first-child {
-  font-size: 16px;
-  font-weight: 800;
+  font-size: var(--font-emphasis);
+  font-weight: var(--weight-title);
   line-height: 1;
 }
 
@@ -59,7 +59,7 @@
 
 .quick-entry-close {
   align-self: flex-start;
-  font-size: 15px;
+  font-size: var(--font-emphasis);
   padding: 2px 6px;
 }
 
@@ -79,7 +79,7 @@
 .quick-entry-field > span,
 .quick-entry-field legend {
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--font-caption);
 }
 
 .quick-entry-field input:not([type='radio']):not([type='checkbox']),
@@ -106,7 +106,7 @@
   background: var(--panel-soft);
   color: var(--text);
   cursor: pointer;
-  font-size: 12px;
+  font-size: var(--font-caption);
   padding: 3px 8px;
 }
 
@@ -144,7 +144,7 @@
 
 .quick-entry-mode small {
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--font-micro);
 }
 
 .quick-entry-result {

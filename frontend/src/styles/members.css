@@ -1,4 +1,4 @@
-﻿/* Sprint-28 用户管理 + 空间成员管理（REQ-045/046/047，task-040）。 */
+/* Sprint-28 用户管理 + 空间成员管理（REQ-045/046/047，task-040）。 */
 
 .admin-users-filters {
   display: flex;
@@ -23,7 +23,7 @@
 .members-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
+  font-size: var(--font-body);
 }
 
 .admin-users-table th,
@@ -39,8 +39,8 @@
 .admin-users-table th,
 .members-table th {
   color: var(--muted);
-  font-weight: 600;
-  font-size: 12px;
+  font-weight: var(--weight-title);
+  font-size: var(--font-caption);
   letter-spacing: 0.02em;
   white-space: nowrap;
 }
@@ -49,7 +49,7 @@
 .members-table select,
 .member-add-form select {
   height: 30px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-soft);
   border-radius: var(--radius-control);
   background: var(--panel);
   color: var(--text);
@@ -60,7 +60,7 @@
   display: inline-block;
   padding: 2px 8px;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: var(--font-caption);
   line-height: 18px;
   white-space: nowrap;
 }

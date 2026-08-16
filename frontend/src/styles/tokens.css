@@ -79,13 +79,33 @@
   --heat-1: #bfdbfe;
   --heat-2: #60a5fa;
   --heat-3: #2563eb;
-  /* 间距 / 圆角 */
+  /* 间距 / 圆角 / 字阶 / 行高 / 字重 / 动效（设计系统步骤 3，RA-structure §3 草案）
+     ——字阶 5 档与字重 3 档跨主题一致（不进 [data-theme] 变体，属正交维度） */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
   --space-4: 16px;
+  --radius-xs: 4px;
   --radius-control: 6px;
   --radius-panel: 8px;
+  --radius-overlay: 12px;
+  /* 字阶：micro 标签 / caption 辅助 / body 正文 / emphasis 次标题 / title 标题 */
+  --font-micro: 11px;
+  --font-caption: 12px;
+  --font-body: 13px;
+  --font-emphasis: 15px;
+  --font-title: 16px;
+  /* 行高 3 档：控件 / 紧凑列表 / 正文 */
+  --lh-tight: 1.2;
+  --lh-list: 1.45;
+  --lh-body: 1.5;
+  /* 字重 3 档（sanity 纪律：不用 700+） */
+  --weight-body: 400;
+  --weight-medium: 500;
+  --weight-title: 600;
+  /* 动效 2 档 */
+  --transition-fast: 0.12s ease;
+  --transition-container: 0.2s ease;
 }
 
 /* B 套深色：近黑画布 + 面板阶梯 + 提亮主色（#2563eb→#5b8cff 保持品牌连续）；

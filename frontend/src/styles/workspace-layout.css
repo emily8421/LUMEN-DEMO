@@ -51,7 +51,9 @@
 .workspace-layout > .pane-resizer-left { grid-column: 3; }
 .workspace-layout > .workspace-main { grid-column: 4; }
 
-/* 侧栏宽度拖拽分隔条（左/右共用，样式同并排分隔条）。 */
+/* 侧栏宽度拖拽分隔条（左/右共用，样式同并排分隔条）。
+   焦点可达性（设计系统步骤 3）：拖拽条可键盘聚焦，:focus-visible 显补偿环——
+   裸 outline:none 属缺陷（审计 2026-08-16）。 */
 .pane-resizer {
   position: relative;
   cursor: col-resize;
@@ -59,6 +61,11 @@
   user-select: none;
   outline: none;
   background: transparent;
+}
+
+.pane-resizer:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: -3px;
 }
 
 .pane-resizer::after {
@@ -69,7 +76,7 @@
   left: 50%;
   width: 2px;
   transform: translateX(-50%);
-  border-radius: 2px;
+  border-radius: var(--radius-xs);
   background: transparent;
 }
 
@@ -117,8 +124,8 @@
 
 .view-nav span,
 .nav-item span:first-child {
-  font-size: 13px;
-  font-weight: 800;
+  font-size: var(--font-body);
+  font-weight: var(--weight-title);
 }
 
 .view-nav small {
@@ -126,7 +133,7 @@
   max-width: 52px;
   overflow: hidden;
   color: inherit;
-  font-size: 10px;
+  font-size: var(--font-micro);
   text-overflow: ellipsis;
   white-space: nowrap;
 }

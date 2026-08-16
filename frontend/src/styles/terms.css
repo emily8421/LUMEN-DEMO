@@ -74,7 +74,7 @@
 
 .term-reader-name {
   font-size: 1.25rem;
-  font-weight: 600;
+  font-weight: var(--weight-title);
   margin: 0 0 var(--space-2);
 }
 
@@ -90,9 +90,9 @@
   align-items: center;
   padding: 2px 8px;
   border-radius: 999px;
-  font-size: 0.75rem;
+  font-size: var(--font-micro);
   line-height: 1.5;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-soft);
   background: var(--panel);
   color: var(--text);
 }
@@ -123,8 +123,8 @@
 }
 
 .term-reader-fields dt {
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: var(--font-caption);
+  font-weight: var(--weight-title);
   color: var(--text);
   margin-top: var(--space-2);
 }
@@ -154,7 +154,7 @@
 .term-categories-heading .secondary {
   flex: 0 0 auto;
   padding: 2px 8px;
-  font-size: 12px;
+  font-size: var(--font-caption);
   white-space: nowrap;
 }
 
@@ -166,7 +166,7 @@
 /* 领域节点计数 */
 .tree-folder-count {
   margin-left: auto;
-  font-size: 0.72rem;
+  font-size: var(--font-micro);
   color: var(--text);
   opacity: 0.8;
 }

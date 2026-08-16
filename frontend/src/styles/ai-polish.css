@@ -19,13 +19,13 @@
 
 .ai-polish-mode-fieldset legend,
 .ai-polish-field > span {
-  font-size: 12px;
+  font-size: var(--font-caption);
   color: var(--muted);
 }
 
 .ai-polish-instruction {
   padding: 6px var(--space-2);
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-soft);
   border-radius: var(--radius-control);
 }
 
@@ -47,7 +47,7 @@
   border-right: 1px solid var(--line);
   background: transparent;
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--font-caption);
   cursor: pointer;
 }
 
@@ -82,7 +82,7 @@
   background: var(--panel-soft);
   border: 1px solid var(--line-soft);
   border-radius: var(--radius-control);
-  font-size: 13px;
+  font-size: var(--font-body);
 }
 
 .ai-polish-sources {
@@ -117,7 +117,7 @@
 
 .ai-polish-source small {
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--font-caption);
 }
 
 .ai-polish-actions {
@@ -131,5 +131,5 @@
   border-radius: var(--radius-control);
   background: var(--red-soft);
   color: var(--red);
-  font-size: 13px;
+  font-size: var(--font-body);
 }
