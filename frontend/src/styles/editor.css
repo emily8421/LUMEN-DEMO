@@ -47,8 +47,10 @@
   color: var(--blue);
 }
 
+/* 焦点补偿环（设计系统步骤 3 修复：原裸 outline:none 属可达性缺陷） */
 .editor-md-toolbar-btn:focus-visible {
-  outline: none;
+  outline: var(--focus-ring);
+  outline-offset: 1px;
 }
 
 /* 工具栏分组：格式 | 结构 | 插入，组间细分隔线（参考主流编辑器）。 */
@@ -168,6 +170,11 @@
   user-select: none;
   outline: none;
   background: transparent;
+}
+
+.split-resizer:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: -3px;
 }
 
 .split-resizer::after {

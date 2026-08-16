@@ -21,7 +21,7 @@ button {
   color: var(--on-accent);
   cursor: pointer;
   font-size: 12px;
-  font-weight: 650;
+  font-weight: 600;
   padding: 6px 9px;
 }
 
