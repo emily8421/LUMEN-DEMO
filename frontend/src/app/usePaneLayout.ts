@@ -18,7 +18,7 @@ type UsePaneLayout = {
 /**
  * 侧栏可见性（Doc-First §9.5，Sprint-21）：左目录 / 右栏 open 状态 +
  * 快捷键唤出（Ctrl+B 左 / Ctrl+R 右；input/textarea/contenteditable 聚焦时不触发）+
- * localStorage 记忆偏好。默认收起（沉浸阅读）。
+ * localStorage 记忆偏好。左栏默认展开（2026-08-14 修订），右栏默认收起；无左栏内容的视图由 useAppShellState 派生过滤。
  */
 export function usePaneLayout(): UsePaneLayout {
   const [layout, setLayout] = useState<PaneLayout>(

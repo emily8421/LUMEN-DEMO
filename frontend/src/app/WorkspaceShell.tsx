@@ -32,6 +32,8 @@ interface WorkspaceShellProps {
   workspace: ReturnType<typeof useWorkspace>;
   paneLayout: ReturnType<typeof usePaneLayout>;
   leftPaneWidth: ReturnType<typeof usePaneWidth>;
+  /** 左栏实际可见性（useAppShellState 派生：无左栏内容的视图恒 false，勿直接用 paneLayout.leftPaneOpen 渲染）。 */
+  leftPaneOpen: boolean;
   currentSpace: ReturnType<typeof useSession>['spaces'][number] | null;
   token: string | undefined;
   documents: ReturnType<typeof useDocuments>;
@@ -68,6 +70,7 @@ export function WorkspaceShell(props: WorkspaceShellProps) {
     workspace,
     paneLayout,
     leftPaneWidth,
+    leftPaneOpen,
     currentSpace,
     token,
     documents,
@@ -101,7 +104,7 @@ export function WorkspaceShell(props: WorkspaceShellProps) {
 
   return (
     <div
-      className={`workspace-layout workspace-shell${paneLayout.leftPaneOpen ? '' : ' pane-left-collapsed'}`}
+      className={`workspace-layout workspace-shell${leftPaneOpen ? '' : ' pane-left-collapsed'}`}
       style={{ '--left-pane-width': `${leftPaneWidth.width}px` } as CSSProperties}
     >
       <WorkspaceViewNav
@@ -135,7 +138,7 @@ export function WorkspaceShell(props: WorkspaceShellProps) {
         localVault={localVault}
       />
 
-      {paneLayout.leftPaneOpen ? (
+      {leftPaneOpen ? (
         <div
           className={leftPaneWidth.resizing ? 'pane-resizer pane-resizer-left resizing' : 'pane-resizer pane-resizer-left'}
           role="separator"

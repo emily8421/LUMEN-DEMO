@@ -49,14 +49,21 @@
   background: #f3f4f6;
 }
 
+/* 阅读态容器自适应主区宽度（2026-08-15 与 DB 阅读态对齐）：
+   TOC 布局层不限宽（TOC 贴左 sticky，正文列自适应），
+   仅正文 .markdown-body 限宽 840px 居中——与 DB document-reading-preview 同构
+   （editor.css「.markdown-preview .markdown-body」同规则）。 */
 .local-doc-preview-body {
   flex: 1;
   overflow: auto;
   padding: 20px 28px;
-  max-width: 840px;
-  margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
+}
+
+.local-doc-preview-body .markdown-body {
+  max-width: 840px;
+  margin-inline: auto;
 }
 
 /* --- REQ-049 本地挂载可编辑（增删改查） --- */
