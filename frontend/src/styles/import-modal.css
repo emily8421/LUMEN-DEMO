@@ -62,8 +62,8 @@
   border-radius: var(--radius-control);
   background: var(--panel-soft);
   color: var(--text);
-  font-size: 12px;
-  font-weight: 700;
+  font-size: var(--font-caption);
+  font-weight: var(--weight-title);
   padding: 7px 10px;
   cursor: pointer;
 }

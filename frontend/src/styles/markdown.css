@@ -2,7 +2,7 @@
    2026-08-16 主题化：字面色值收编 tokens；代码块固定深色（C-RA-002）。 */
 .markdown-body {
   color: var(--text-2);
-  font-size: 12.5px;
+  font-size: var(--font-caption);
   line-height: 1.42;
 }
 
@@ -18,15 +18,15 @@
 }
 
 .markdown-body h1 {
-  font-size: 18px;
+  font-size: var(--font-title);
 }
 
 .markdown-body h2 {
-  font-size: 15px;
+  font-size: var(--font-emphasis);
 }
 
 .markdown-body h3 {
-  font-size: 13.5px;
+  font-size: var(--font-body);
 }
 
 .markdown-body ul,
@@ -40,7 +40,7 @@
 }
 
 .markdown-body code {
-  border-radius: 5px;
+  border-radius: var(--radius-control);
   background: var(--code-inline-bg);
   color: var(--code-inline-text);
   font-family: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
@@ -86,7 +86,7 @@
 
 /* REQ-026 wikilink 渲染：正文 [[target]] 三态（resolved 可点 / unresolved 未创建 / no_access 无权限隐藏锚文本 / pending 编辑未同步） */
 .markdown-body .wikilink {
-  border-radius: 2px;
+  border-radius: var(--radius-xs);
   padding: 0 1px;
 }
 
@@ -113,14 +113,14 @@
 }
 
 .compact-markdown {
-  font-size: 12px;
+  font-size: var(--font-caption);
   line-height: 1.42;
 }
 
 .compact-markdown h1,
 .compact-markdown h2,
 .compact-markdown h3 {
-  font-size: 13px;
+  font-size: var(--font-body);
 }
 
 /* --- ④ 标题目录导航（TOC） --- */
@@ -144,7 +144,7 @@
   display: block;
   margin-bottom: var(--space-1);
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--font-micro);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -162,10 +162,10 @@
   width: 100%;
   padding: 3px 6px;
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   background: transparent;
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--font-caption);
   line-height: 1.45;
   text-align: left;
   cursor: pointer;

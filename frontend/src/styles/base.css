@@ -4,7 +4,7 @@ body {
   overflow: hidden;
   background: var(--bg);
   color: var(--text);
-  font-size: 13px;
+  font-size: var(--font-body);
 }
 
 button,
@@ -20,8 +20,8 @@ button {
   background: var(--blue);
   color: var(--on-accent);
   cursor: pointer;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: var(--font-caption);
+  font-weight: var(--weight-title);
   padding: 6px 9px;
 }
 
@@ -70,7 +70,7 @@ textarea {
   border-radius: var(--radius-control);
   background: var(--panel);
   color: var(--text);
-  font-size: 12.5px;
+  font-size: var(--font-caption);
   padding: 6px 8px;
 }
 
@@ -84,8 +84,8 @@ label {
   display: grid;
   gap: 4px;
   color: var(--muted);
-  font-size: 11.5px;
-  font-weight: 700;
+  font-size: var(--font-micro);
+  font-weight: var(--weight-title);
 }
 
 h1,

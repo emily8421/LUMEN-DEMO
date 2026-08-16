@@ -31,10 +31,10 @@
   flex: 0 0 auto;
   padding: 3px 7px;
   border: none;
-  border-radius: 5px;
+  border-radius: var(--radius-control);
   background: transparent;
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--font-caption);
   line-height: 1.4;
   cursor: pointer;
   white-space: nowrap;
@@ -73,15 +73,15 @@
 .editor-title-input {
   flex: 1 1 auto;
   min-width: 0;
-  font-size: 17px;
-  font-weight: 600;
+  font-size: var(--font-title);
+  font-weight: var(--weight-title);
 }
 
 .editor-permission-select {
   flex: 0 0 auto;
   width: auto;
   color: var(--muted);
-  font-weight: 600;
+  font-weight: var(--weight-title);
   white-space: nowrap;
 }
 
@@ -185,7 +185,7 @@
   left: 50%;
   width: 2px;
   transform: translateX(-50%);
-  border-radius: 2px;
+  border-radius: var(--radius-xs);
   background: transparent;
 }
 
@@ -250,13 +250,13 @@
 .document-empty-state h3 {
   margin: 0;
   color: var(--text);
-  font-size: 16px;
+  font-size: var(--font-emphasis);
 }
 
 .document-empty-state p {
   margin: 0;
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--font-body);
 }
 
 .document-empty-state-actions {

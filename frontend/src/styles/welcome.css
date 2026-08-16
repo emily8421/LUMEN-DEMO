@@ -17,13 +17,13 @@
 .welcome-header h1 {
   margin: 0 0 var(--space-2);
   font-size: 26px;
-  font-weight: 600;
+  font-weight: var(--weight-title);
 }
 
 .welcome-header p {
   margin: 0;
   color: var(--muted);
-  font-size: 14px;
+  font-size: var(--font-body);
 }
 
 .welcome-cards {
@@ -65,19 +65,19 @@
 }
 
 .welcome-card-title {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: var(--font-body);
+  font-weight: var(--weight-title);
 }
 
 .welcome-card small {
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--font-caption);
 }
 
 .welcome-hint {
   margin: 0;
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--font-body);
 }
 
 /* --- 欢迎页新手清单 + 未建索引提示（L1） --- */
@@ -90,7 +90,7 @@
   border-radius: var(--radius-panel);
   background: var(--amber-soft);
   color: var(--amber);
-  font-size: 13px;
+  font-size: var(--font-body);
   text-align: left;
 }
 
@@ -110,12 +110,12 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: var(--space-2);
-  font-size: 13px;
+  font-size: var(--font-body);
 }
 
 .welcome-checklist > header span {
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--font-caption);
 }
 
 .welcome-checklist-tools {
@@ -134,7 +134,7 @@
   border-radius: 999px;
   background: transparent;
   color: var(--muted);
-  font-size: 16px;
+  font-size: var(--font-emphasis);
   line-height: 1;
   cursor: pointer;
 }
@@ -155,7 +155,7 @@
   border: none;
   background: transparent;
   color: var(--blue);
-  font-size: 12px;
+  font-size: var(--font-caption);
   cursor: pointer;
 }
 
@@ -204,7 +204,7 @@
   border: 1px solid var(--line);
   border-radius: 999px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--font-caption);
 }
 
 .welcome-checklist li.done .check {
@@ -215,17 +215,17 @@
 
 .welcome-checklist li button strong {
   display: block;
-  font-size: 13px;
+  font-size: var(--font-body);
 }
 
 .welcome-checklist li button small {
   display: block;
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--font-caption);
 }
 
 .welcome-checklist li button em {
   color: var(--blue);
-  font-size: 12px;
+  font-size: var(--font-caption);
   font-style: normal;
 }

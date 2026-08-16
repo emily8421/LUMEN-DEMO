@@ -17,7 +17,7 @@
   grid-template-rows: auto minmax(0, 1fr) auto;
   max-height: 70vh;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--radius-overlay);
   background: var(--panel);
   box-shadow: var(--shadow-xl);
   overflow: hidden;
@@ -49,14 +49,14 @@
   outline: none;
   background: transparent;
   color: var(--text);
-  font-size: 15px;
+  font-size: var(--font-emphasis);
   padding: 4px 0;
 }
 
 .cmdk-spinner {
   flex: 0 0 auto;
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--font-caption);
 }
 
 .cmdk-list {
@@ -69,15 +69,15 @@
   margin: 0;
   padding: 20px 12px;
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--font-body);
   text-align: center;
 }
 
 .cmdk-group {
   padding: 8px 10px 4px;
   color: var(--muted);
-  font-size: 11px;
-  font-weight: 700;
+  font-size: var(--font-micro);
+  font-weight: var(--weight-title);
   letter-spacing: 0.04em;
 }
 
@@ -87,10 +87,10 @@
   gap: 10px;
   width: 100%;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--radius-panel);
   background: transparent;
   color: var(--text);
-  font-size: 14px;
+  font-size: var(--font-body);
   padding: 8px 10px;
   text-align: left;
   cursor: pointer;
@@ -122,7 +122,7 @@
 .cmdk-item-hint {
   flex: 0 0 auto;
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--font-micro);
 }
 
 .cmdk-footer {
@@ -131,7 +131,7 @@
   gap: 14px;
   border-top: 1px solid var(--line-soft);
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--font-micro);
   padding: 8px 14px;
 }
 
@@ -143,10 +143,10 @@
   height: 18px;
   margin-right: 4px;
   border: 1px solid var(--line);
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   background: var(--panel-soft);
   color: var(--muted);
-  font-size: 10px;
+  font-size: var(--font-micro);
   padding: 0 4px;
 }
 
@@ -159,10 +159,10 @@
   min-width: 0;
   max-width: 420px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius-panel);
   background: var(--panel-soft);
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--font-body);
   padding: 6px 10px;
   cursor: pointer;
   transition: border-color 0.12s ease, background 0.12s ease;

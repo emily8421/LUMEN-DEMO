@@ -76,7 +76,7 @@
   left: 50%;
   width: 2px;
   transform: translateX(-50%);
-  border-radius: 2px;
+  border-radius: var(--radius-xs);
   background: transparent;
 }
 
@@ -124,8 +124,8 @@
 
 .view-nav span,
 .nav-item span:first-child {
-  font-size: 13px;
-  font-weight: 800;
+  font-size: var(--font-body);
+  font-weight: var(--weight-title);
 }
 
 .view-nav small {
@@ -133,7 +133,7 @@
   max-width: 52px;
   overflow: hidden;
   color: inherit;
-  font-size: 10px;
+  font-size: var(--font-micro);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
