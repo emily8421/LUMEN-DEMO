@@ -10,8 +10,8 @@
 |---|---|
 | 输入来源 | `docs/00-scenario.md`、`docs/01-user-requirements.md`、`docs/02-srs.md`、`docs/03-prd.md`、`docs/env/local-env.md`、`ai/project-rules.md`、`docs/research/2026-07-15-overall-design-04-05-audit.md`、`docs/decisions/ADR-010-db-authority-derived-data-rebuildability.md` |
 | 覆盖功能 / REQ | Phase1：REQ-001..REQ-011、REQ-036；Phase1.5A：REQ-037/038；Phase1.5B：REQ-027；Phase2A：REQ-012/025/026；Phase2B / 后续 / 愿景保留架构骨架 |
-| 当前状态 | 目标架构基线已定；Sprint-7/8 后运行时已接入 PostgreSQL+pgvector、`PgRepository`、本机 Embedding 与 GLM LLM。Phase1.5A 批量 / 文件夹导入与 `.md` / ZIP 导出备份已完成；Phase1.5B 单文档 PDF 导出已完成 API-019 + `lumen_doc_exports` + 前端入口并通过 TC-P1-017；Phase2A 个人知识组织（标签、内链 / 反链、快速录入）已完成。仍降级 / 候选：真实 Word/PDF 解析、OCR、Phase2B 后续团队能力。Web App Structure Profile / WSG 自 P1.5A 起生效；2026-07-21 新增 ADR-010 固化 DB 权威运行态 + 衍生数据可重建原则 |
-| 最后更新 | 2026-08-04（Sprint-18 PDF 导出产品闭环：ReportLab 路线 + API-019 + TC-P1-017 通过） |
+| 当前状态 | 目标架构基线已定；Sprint-7/8 后运行时已接入 PostgreSQL+pgvector、`PgRepository`、本机 Embedding 与 GLM LLM。Phase1.5A 批量 / 文件夹导入与 `.md` / ZIP 导出备份已完成；Phase1.5B 单文档 PDF 导出已完成 API-019 + `lumen_doc_exports` + 前端入口并通过 TC-P1-017；Phase2A 个人知识组织（标签、内链 / 反链、快速录入）已完成。仍降级 / 候选：真实 Word/PDF 解析、OCR、Phase2B 后续团队能力。Web App Structure Profile / WSG 自 P1.5A 起生效；2026-07-21 新增 ADR-010 固化 DB 权威运行态 + 衍生数据可重建原则。2026-08-08 起生产部署拓扑（方案 A 全容器化）已落盘并回填本文 §4（v3.5.0）；2026-08-07 Phase2D 账户与多人权限收口，MOD-011 与 §6 矩阵回填（本文 2026-08-17 修订） |
+| 最后更新 | 2026-08-17（架构文档反向同步：分层视图补齐 + 运行形态 / 部署拓扑回填 + Phase2D / 维护态 REQ 矩阵回填 + 后端四层修正）；前次 2026-08-04（Sprint-18 PDF 导出产品闭环） |
 
 ### 0.1 架构目标与约束
 
@@ -25,7 +25,7 @@
 | 权威源 | 阶段边界 = `ai/project-rules.md` §1；技术禁令 = §2 / `05 §3`；运行环境 = `docs/env/local-env.md` |
 | 下游影响 | `05` 技术栈 / readiness gate；`06/07` 数据 / 接口边界；`docs/design/*` 模块详细设计；`08/09` Sprint / 验收路径 |
 
-## 1. 整体架构图
+## 1. 整体架构图（DIAG-ARCH-01）
 
 ```mermaid
 flowchart TB
@@ -48,8 +48,10 @@ flowchart TB
 ```
 
 > 注：上图承载 Phase1 Demo 基线，并已叠加 Phase1.5A 导入 / 导出与 Phase2A 个人知识组织能力。Sprint-8 后 `db` 节点已由 PostgreSQL+pgvector / `PgRepository` 承载，`ai` 节点已接入 GLM LLM 与本机 `bge-small-zh` Embedding；`ingestion` 的真实 Word/PDF 解析与 OCR 仍降级（仅 `.md`/`.txt` 已提取文本）。逐模块实现状态见 §2，技术门禁见 `docs/05-tech-spec.md §5.1`。
+>
+> **当前态（2026-08-17）**：图中虚线「P2 追加」内容大部分已实现——Phase2A（标签 / 内链 / 反链 / 快速录入）、Phase2B（AI 润色 / 时间线 / 目录树）、Phase2C（Vault 模式 B 仅本地挂载）、Phase2D（账户与多人权限，新增 `auth` / `users` / `admin` / `space_members` API 域，见 MOD-011）均已收口（2026-08-05~07）；维护态批1-30（2026-08-08~13）完成工程治理与增强。虚线保留作演进痕迹，**未实现项仅剩愿景层**（Vault 服务端增强、录音转写、飞书同步、情报分析 / 交付）及明确候选（REQ-016 多人实时协作、移除用户 / 邀请码、真实 Word/PDF 解析、OCR、zhparser）。运行形态已扩展至生产部署（§4）。
 
-### 1.1 系统上下文图（信任边界）
+### 1.1 系统上下文图（信任边界 · DIAG-ARCH-01a）
 
 > 标外部参与者 / 系统与信任边界（对照 `ai/doc-standards/04-architecture.md` §3 系统上下文检查表）。明确哪些外部系统是真实 / Mock / 候选 / 默认关闭。
 
@@ -77,9 +79,53 @@ flowchart LR
 | COMP-ID | 组件 / 进程 | 职责 | 部署位置 | 通信方式 | 阶段 | 状态 | 关联 REQ |
 |---|---|---|---|---|---|---|---|
 | COMP-001 | React 前端 SPA | 桌面浏览器 UI（文档 / 搜索 / 问答 / 术语） | 浏览器 | REST / JSON | [P1] | P1-已实现（代码原型 + smoke） | REQ-011、004~008、036 |
-| COMP-002 | FastAPI 后端（api / service / model 三层） | REST API、权限校验、业务逻辑 | 本机单进程 | HTTP | [P1] | 已实现（PG 仓储 `PgRepository`，Sprint-8） | 全 P1 |
-| COMP-003 | 数据存储 | PostgreSQL + pgvector | Docker Compose（lumen-pg:pg16） | SQL + pgvector | [P1] | 已接入（Sprint-8；RG-001 Go） | REQ-003~010、036 |
+| COMP-002 | FastAPI 后端（api / service / repository / model 四层） | REST API、权限校验、业务逻辑、持久化 | 本机单进程（开发 / Demo）；容器（生产） | HTTP | [P1] | 已实现（PG 仓储 `PgRepository`，Sprint-8；repository 独立成层见 project-rules §5.1） | 全 P1 |
+| COMP-003 | 数据存储 | PostgreSQL + pgvector | Docker Compose（lumen-pg:pg16；生产 lumen-pg-prod） | SQL + pgvector | [P1] | 已接入（Sprint-8；RG-001 Go） | REQ-003~010、036 |
 | COMP-004 | AI 服务 | LLM 中转（GLM）+ 本机 Embedding（bge-small-zh） | 本机 + 内网 | OpenAI 兼容 API | [P1] | 已接入（Sprint-7/8；RG-002/004 Go） | REQ-008、036 |
+| COMP-005 | Nginx 反向代理（生产） | 前端静态资源 + `/api` 同源反代到 backend（无跨域） | 生产前端容器内 | HTTP 反代 | [P2] | 已落盘（v3.5.0 ⑪ 方案 A；生产专用，本地形态不启用） | 全部浏览器访问 |
+
+### 1.2.1 分层架构视图（DIAG-ARCH-01b）
+
+> 补齐 COMP（4+1 个部署单元）与 MOD（功能模块）之间的分层结构：浏览器 SPA → 后端四层 → 存储 / 外部 AI。目录边界权威源 = `ai/project-rules.md` §4 / §5.1 与 `docs/05-tech-spec.md` §4.1；本图承载结构事实，不展开业务逻辑。
+
+```mermaid
+flowchart TB
+  subgraph FE[COMP-001 React SPA · frontend/src]
+    direction TB
+    feApi[api/ 域 API 模块<br/>+ client.ts HTTP 单出口<br/>+ codegen 类型]
+    feApp[app/ 页面与路由]
+    feFeat[features/ 业务功能域]
+    feComp[components/ 通用组件]
+    feStyle[styles/ tokens.css 设计令牌]
+  end
+  subgraph BE[COMP-002 FastAPI 后端 · backend/]
+    direction TB
+    beApi[api/ 路由层<br/>19 域 router<br/>HTTPException 转换 · 请求校验]
+    beSvc[service/ 业务层<br/>25 service<br/>领域异常 · 不 import fastapi]
+    beRepo[repository/ 持久化层<br/>PgRepository / DemoRepository<br/>RepositoryProtocol 契约]
+    beModel[model/ ORM 与数据模型]
+  end
+  subgraph DATA
+    pg[(COMP-003 PostgreSQL + pgvector<br/>lumen_* 表族)]
+  end
+  subgraph AIX
+    ai[COMP-004 LLM 中转 + 本机 Embedding<br/>经 llm_adapter / embedding adapter]
+  end
+  feApi -->|REST / JSON / Bearer| beApi
+  beApi --> beSvc
+  beSvc --> beRepo
+  beRepo --> beModel
+  beModel --> pg
+  beSvc -->|adapter 隔离| ai
+```
+
+| 层 | 职责 | 关键约束（权威源 project-rules §5.1） |
+|---|---|---|
+| 前端 `api/` + `client.ts` | 后端调用唯一出口；域模块 → barrel 追加 `export *` | 禁绕过 client.ts 直接 fetch |
+| 后端 `api/` | 对外接口唯入口；web 适配（Depends / HTTPException）只在此层 | service 不得 import fastapi |
+| 后端 `service/` | 业务逻辑 + 领域异常；读可直连 repository，写必经 service | 错误码业务语义（4001/4030/5030…） |
+| 后端 `repository/` | 持久化抽象；PG / Demo 双实现共享 RepositoryProtocol 契约 | 多实现机器可检契约（CQ-P1-002） |
+| 后端 `model/` | ORM 模型与迁移映射 | 表契约权威在 `docs/06-db-design.md` |
 
 ### 1.3 Web App Structure Profile / Walking Skeleton Gate（Batch A 回填）
 
@@ -108,6 +154,7 @@ flowchart LR
 | MOD-008 | 存量接入 | Vault 兼容（导入数据库 / 仅本地挂载）、录音转写、飞书同步 | 本地文件夹 / 外部源 → LUMEN 文档或个人本地来源 | 不把仅本地挂载内容默认写入团队知识库；不绕过文档权限进入共享 RAG | COMP-001 / 002 / 003 / 004 | [P2]（Vault REQ-018 模式 B）/ [愿景]（录音/飞书） | Vault 模式 B Phase2C·已设计（RG-009 Go）；录音转写 / 飞书同步仍愿景 | DB 为正式知识库权威；本地挂载为个人连接器 | docs/design/ingestion.md（Flow-D-014）+ docs/design/frontend-interaction.md §9.3（CMP-P2-TREE） |
 | MOD-009 | 情报分析（i2 精神） | 关联图↔时间轴联动、路径推理、人物网络、矛盾检测、证据地图、信号追踪 | — | — | — | [愿景] | 骨架 | — | docs/design/intelligence-analysis.md |
 | MOD-010 | 情报交付 | 对外只读简报、管理层摘要、分析包 A Kit | — | — | — | [愿景] | 骨架 | — | 待技术验证 |
+| MOD-011 | 账户与认证（多人权限） | 真实多用户账号（注册 / 凭证登录 bcrypt / 登出会话 `lumen_sessions`）、owner 过滤与跨用户隔离、全局角色 admin/member、admin 用户管理、space 域成员 CRUD、忘记密码自助重置（token 写日志降级） | 注册 / 凭证 / 会话 → 认证上下文 + 用户 / 成员治理能力 | 不负责 REQ-016 多人实时协作、邀请码 / 移除用户（候选）；不负责空间内文档权限规则本体（属 MOD-001） | COMP-001 / 002 / 003 | [P2] | Phase2D·已实现（2026-08-07 三 slice 收口） | 13 router 统一 `get_current_user`；demo 模式 env 开关 + 物理隔离护栏（PG 仓储强制真实认证） | docs/design/accounts-auth.md |
 
 ## 3. 架构决策与取舍（ADR）
 
@@ -136,17 +183,49 @@ flowchart LR
 | ADR-011 | Vault 兼容采用“数据库权威 + 个人本地连接器”双模式 | 已确认（RG-009 PoC Go 2026-08-05）/ 浏览器路线采纳 | [P2] | LUMEN 的搜索 / RAG / 权限 / 版本能力依赖 PostgreSQL + chunks；用户也需要低摩擦查看 Obsidian vault | 把本地文件夹直接当团队知识库唯一源；或强制全部导入 DB | 导入数据库获得完整知识库能力；仅本地挂载保留个人 / 当前设备边界；Phase2C 浏览器 File System Access + IndexedDB 已验证（句柄持久化 + 刷新恢复 granted） | REQ-018；RG-009 Go / TC-P2-VAULT-001 |
 | ADR-010 | DB 权威运行态 + 衍生数据可重建 | 已接受 | Phase1+ | 保留 PostgreSQL 作为权限 / 版本 / 文档权威，同时要求 chunks / embedding / 反链索引 / 计数等派生数据可从权威内容与元数据重建 | `.md` / frontmatter 唯一权威；DB 全权威不设重建约束 | 避免多头权威并降低索引漂移 / 灾备风险；不声明已实现重建脚本 | `docs/decisions/ADR-010-db-authority-derived-data-rebuildability.md`；06 §1.1 |
 
-## 4. 部署 / 运行拓扑约束
+## 4. 运行形态与部署拓扑
 
-> 受 `ai/project-rules.md` §2.1 与 `docs/env/local-env.md` 约束。Demo 本机优先；资源不足再上公司服务器。
+> 受 `ai/project-rules.md` §2.1 与 `docs/env/local-env.md` 约束。系统支持三种运行形态：**本地开发**（日常编码 / 测试）、**本机 Demo**（单机演示 / 个人使用）、**生产部署**（团队多人访问，⑪ 方案 A 全容器化，v3.5.0 落盘）。操作步骤（clone / .env / 命令 / HTTPS 配置）见 `docs/env/deploy-guide.md` 与 `docs/env/local-demo-runbook.md`，本节只承载架构拓扑与约束。
+>
+> 历史口径（Phase1 时「暂不使用公司服务器」）已被 ⑪ 部署落地（2026-08-08，v3.5.0）取代；服务器资源预案（内网 Embedding / reranker）仍保留为触发式预案，见下。
 
-- 进程 / 端口（Demo）：FastAPI 后端 `uvicorn` :18000；React 前端 Vite :5173；PostgreSQL+pgvector `lumen-pg` :5432（Docker Compose）。
+### 4.1 三种运行形态对照
 
-- 本机单机（Demo 默认）：React 前端 + FastAPI（api/service/model 三层）+ Docker Compose PostgreSQL+pgvector（lumen-pg）+ 本机 `bge-small-zh` Embedding + 公司内网 GLM LLM 中转。内存 `demo_repository` 保留为单测 fake；真实 Word/PDF 解析、OCR 与 search 向量化仍降级 / 后续。
-- 数据边界：默认使用已标注的虚构 Demo 数据；允许按需导入部分真实团队文档，真实文档必须显式标注来源 / 敏感级别；RAG / 术语场景优先避免发送到外部模型，**Phase2B AI 润色（REQ-014）允许真实片段外发（风险已接受，见 §1.1 / `docs/05-tech-spec.md` RG-008）**。
-- 资源边界：Demo 峰值内存 < 8GB、显存 < 4GB、磁盘 < 20GB；允许本机安装项目所需依赖与镜像。
-- 远程 / 公司服务器边界：Phase1 Demo 暂不使用公司服务器；若本机 Embedding 在导入规模、响应时间或检索质量上不够用，再申请内网 Embedding / reranker 服务。
-- 重资源项归属：禁止本机运行大参数 LLM / 大型 Embedding / reranker；`bge-small-zh` 本机 Embedding 属 Phase1 可接受范围。
+| 形态 | 进程 / 拓扑 | 端口 | 存储 / 登录 | 用途与约束 |
+|---|---|---|---|---|
+| 本地开发 | Vite dev server + `uvicorn` 后端直跑 + Docker `lumen-pg`（`docker/compose.yml`） | 前端 :5173 / 后端 :18000 / PG :15432（宿主映射） | PG `lumen` 库；demo 或凭证登录 | 日常编码、单测 / 集成测试、浏览器 smoke |
+| 本机 Demo | `scripts/run-sprint16-demo.ps1`（内存）或同脚本 `-UsePostgres`（PG）+ Vite | 同上 | 内存（重启清空）/ `lumen-pg` 容器；alice 免密或凭证 | 单机演示、个人使用（详见 `local-demo-runbook.md`） |
+| 生产部署（⑪ 方案 A） | **全容器化三服务**：`docker/docker-compose.prod.yml` 起 frontend（Nginx）+ backend + postgres，Nginx 同源反代 `/api` | 对外仅 :80（可改映射）；PG / backend 仅容器内 `expose`，不暴露宿主机 | `lumen_pgdata_prod` 卷；`LUMEN_ENV=production` 强制 PG 仓储 + 真实凭证（demo 免密 fail-fast） | 团队多人访问（内网服务器 / 闲置笔记本）；restart: unless-stopped；Embedding 模型缓存 `lumen_hf_cache` 卷 |
+
+### 4.2 生产部署拓扑图（DIAG-ARCH-02）
+
+```mermaid
+flowchart TB
+  users((团队成员<br/>桌面浏览器)) -->|http://服务器IP| nginx
+  subgraph server[Linux 服务器 / 闲置笔记本 · Docker Compose]
+    nginx[COMP-005 frontend 容器<br/>Nginx :80<br/>静态资源 + 同源反代]
+    backend[lumen-backend-prod<br/>uvicorn :8000 容器内<br/>LUMEN_ENV=production<br/>migration+seed 启动]
+    pg[lumen-pg-prod<br/>pgvector/pg16 :5432<br/>仅容器内]
+    hf[lumen_hf_cache 卷<br/>bge-small-zh 模型缓存]
+    pgdata[lumen_pgdata_prod 卷<br/>业务数据持久化]
+  end
+  llm[公司内网 LLM 中转<br/>OpenAI 兼容]
+  nginx -->|/api 反代| backend
+  backend --> pg
+  backend --- hf
+  pg --- pgdata
+  backend -->|.env 注入 LLM_**| llm
+```
+
+拓扑要点：① 单入口 Nginx，浏览器只访问 :80，无跨域；② PG / backend 不暴露宿主机端口，缩小攻击面；③ 数据边界与外发口径不变（§1.1 信任边界对生产形态同样成立，唯一外发点仍是 LLM 中转）；④ 备份 = PG 数据卷（自动备份 job 未做，见 deploy-guide §7 遗留）。
+
+### 4.3 通用约束（各形态共用）
+
+- 数据边界：默认使用已标注的虚构 Demo 数据；允许按需导入部分真实团队文档，真实文档必须显式标注来源 / 敏感级别；RAG / 术语场景优先避免发送到外部模型，**Phase2B AI 润色（REQ-014）允许真实片段外发（风险已接受，见 §1.1 / `docs/05-tech-spec.md` RG-008）**。生产形态凭证 / 密钥经 `.env` 注入容器，不入 git。
+- 资源边界：本机 Demo 峰值内存 < 8GB、显存 < 4GB、磁盘 < 20GB；生产底线 ≥ 8GB 内存 / ≥ 20GB 磁盘（torch CPU 镜像 ~2GB + 模型缓存）。允许安装项目所需依赖与镜像。
+- 远程 / 公司服务器边界：生产部署已使用内网服务器 / 闲置笔记本（⑪ 方案 A）；若本机 / 服务器 Embedding 在导入规模、响应时间或检索质量上不够用，再申请内网 Embedding / reranker 服务（触发式预案，`docs/env/local-env.md`「服务器资源预案」）。
+- 重资源项归属：禁止本机运行大参数 LLM / 大型 Embedding / reranker；`bge-small-zh` 本机 / 容器 CPU Embedding 属 Phase1 可接受范围。
+- 部署遗留（未做，权威源 deploy-guide §7）：多节点 / 负载均衡、自动备份 job、邮件通道（REQ-051 忘记密码 token 写日志降级）、公网 HTTPS（内网 HTTP 可用）。
 
 ## 5. 关键流程与权限过滤
 
@@ -247,9 +326,18 @@ flowchart TB
 | REQ-015 / 016 / 017 | [P2] | — | MOD-007 | — | 后续 Phase 时细化 | 不进 Phase2B 首批 |
 | REQ-018 | [P2] | COMP-001 / 002 / 003 / 004 | MOD-008 | Flow-010 | `docs/design/ingestion.md` Flow-D-014 + `docs/design/frontend-interaction.md` §9.3 | Phase2C·已设计（模式 B 浏览器，RG-009 Go）；模式 A 已随 Phase2B |
 | REQ-019..023 / 028..035 | [愿景] | — | MOD-008 / 009 / 010 | — | 技术验证通过后细化 | 骨架 |
+| REQ-039 | [P2] | COMP-001 / 002 / 003 | MOD-003（导入结构）+ MOD-002 | Flow-006（`preserve_structure` 扩展） | `docs/07-api-spec.md` API-034..038、`docs/08-dev-plan.md` Phase2B 第三 slice | Phase2B-已实现（TC-P2-FOLDER-001 通过；`lumen_folders` 嵌套树 + 前端文件管理器；folder 不独立设权限） |
+| REQ-040 / 041 / 042 | [P2] | COMP-001 / 002 / 003 | MOD-011 | Flow-001（真实凭证化升级） | `docs/design/accounts-auth.md`、`docs/06-db-design.md`（migration 014）、`docs/07-api-spec.md` auth 域 | Phase2D-已实现（Sprint-26，TC-P2-AUTH-001 通过；bcrypt + `lumen_sessions` 不透明 token） |
+| REQ-043 / 044 | [P2] | COMP-002 / 003 | MOD-011（+ MOD-001 权限过滤扩展） | Flow-002（owner 过滤升级） | `docs/design/accounts-auth.md` §17、TC-P2-ACC-001 | Phase2D-已实现（Sprint-27；owner_id 跨用户过滤 + 跨用户隔离回归） |
+| REQ-045 / 046 / 047 | [P2] | COMP-001 / 002 / 003 | MOD-011 | Flow-001 / 002 | `docs/design/accounts-auth.md` §18、migration 016、TC-P2-ACC-002 | Phase2D-已实现（Sprint-28；admin/member 角色 + admin 用户管理 + space 域成员 CRUD） |
+| REQ-048 | [P1] | COMP-001 / 002 / 003 | MOD-005 | Flow-002 | `docs/07-api-spec.md` API-051..053、TC-P2-TERM-001 | 维护态增强-已实现（2026-08-07，migration 017，术语领域树） |
+| REQ-049 | [P2] | COMP-001 | MOD-008（模式 B 浏览器侧） | Flow-010 | `docs/design/ingestion.md` Flow-D-014、`docs/08-dev-plan.md` REQ-049 批次 | 维护态-已实现（2026-08-08；本地挂载可编辑，纯前端 FSA 写路径） |
+| REQ-050 | [P2] | COMP-001 / 002 / 003 | MOD-011 | — | `docs/07-api-spec.md` API-054、TC-P2-ACC-003 | 维护态批5-已实现（2026-08-08，Sprint-30；admin 用户空间可见性） |
+| REQ-051 | [P2] | COMP-001 / 002 / 003 | MOD-011 | Flow-001 | `docs/07-api-spec.md` API-055/056、migration 018、TC-P2-AUTH-002 | 维护态批5-已实现（2026-08-08；忘记密码自助重置，无 SMTP → token 写日志降级） |
 
 ## 7. 待人工确认项
 
+- （2026-08-17 修订注记）本次为架构文档反向同步（分层视图 + 部署拓扑 + Phase2D / 维护态 REQ 回填），**未改变任何架构决策**；生产部署为已落盘事实（v3.5.0）回填，非新增候选。若后续部署形态演进（多节点 / 公网 HTTPS / 独立 Embedding 服务），须先修订本节 §4 与 `docs/env/deploy-guide.md`。
 - Phase1.5A Sprint-16/17 已完成；若后续扩展真实目录表、长期导出产物或新依赖，必须先同步修订 `05/06/07/08/09` 与对应 design。
 - Phase1.5B PDF 已通过 RG-006 并随 Sprint-18 完成 REQ-027 / API-019 / TC-P1-017；v1.7.0 已补 PDF 下载端点与前端下载闭环；后续若做异步导出、过期清理 job 或水印，须先同步修订 `05/06/07/08/09`。
 - Phase2B 团队 MVP 候选（AI 润色 / 写作引用、时间轴候选）需重新确认范围、进入 / 退出标准、详细设计与 UI / WSG 门禁；Phase2A 已完成能力如需扩展，先同步修订 `06/07/08/09`。
