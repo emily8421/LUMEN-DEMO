@@ -98,12 +98,9 @@ export function useAppState() {
     query.setQueryResult(null);
   }
 
+  // 双向互斥（正向）：开本地预览清 DB 选中，防 selectedId 不变时互斥 effect 不触发（2026-08-15 实测）。
   function handleOpenLocalDoc(doc: LocalVaultDoc | null) {
-    // 双向互斥（正向）：开本地预览时显式清 DB 文档选中，防止 selectedId 无变化时
-    // 互斥 effect 不触发、本地预览压住 DB 文档（用户实测 2026-08-15 场景）。
-    if (doc) {
-      documents.setSelectedId(null);
-    }
+    if (doc) documents.setSelectedId(null);
     setLocalPreviewDoc(doc);
   }
 
@@ -290,13 +287,9 @@ export function useAppState() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session.session?.token, session.session?.currentSpaceId]);
 
-  // 点 DB 文档时关闭本地预览（主区互斥：本地预览 vs DB 文档）。
-  // 兜底 effect 保留（覆盖 selectedId 变化的常规路径）；同 ID 重选场景由
-  // handleOpenLocalDoc 正向显式清 + handleSelectDocument 调用点保证，见上。
+  // 点 DB 文档时关闭本地预览（主区互斥）。兜底 effect 覆盖常规路径；同 ID 重选由 handleOpenLocalDoc 正向清（见上）。
   useEffect(() => {
-    if (documents.selectedId !== null) {
-      setLocalPreviewDoc(null);
-    }
+    if (documents.selectedId !== null) setLocalPreviewDoc(null);
   }, [documents.selectedId, setLocalPreviewDoc]);
 
   return {
