@@ -5,13 +5,13 @@
   align-items: center;
   justify-content: center;
   gap: 5px;
-  border-color: #93c5fd;
+  border-color: var(--blue-border);
   background: var(--blue-soft);
-  color: #1d4ed8;
+  color: var(--accent-strong);
 }
 
 .quick-entry-trigger:hover:not(:disabled) {
-  background: #dbeafe;
+  background: var(--blue-soft-hover);
 }
 
 .top-quick-entry {
@@ -32,7 +32,7 @@
   z-index: 50;
   display: flex;
   justify-content: flex-end;
-  background: rgba(15, 23, 42, 0.35);
+  background: var(--overlay);
 }
 
 .quick-entry-drawer {
@@ -103,7 +103,7 @@
   gap: 4px;
   border: 1px solid var(--line-soft);
   border-radius: var(--radius-control);
-  background: #f8fafc;
+  background: var(--panel-soft);
   color: var(--text);
   cursor: pointer;
   font-size: 12px;
@@ -126,7 +126,7 @@
   gap: 6px;
   border: 1px solid var(--line-soft);
   border-radius: var(--radius-control);
-  background: #ffffff;
+  background: var(--panel);
   color: var(--text);
   cursor: pointer;
   padding: 7px 9px;

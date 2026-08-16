@@ -34,7 +34,7 @@
   height: 28px;
   border-radius: var(--radius-panel);
   background: var(--blue);
-  color: #ffffff;
+  color: var(--on-accent);
   font-weight: 800;
 }
 
@@ -136,14 +136,14 @@
   height: 34px;
   border: 1px solid var(--line);
   border-radius: 999px;
-  background: #ffffff;
+  background: var(--panel);
   color: var(--text);
   padding: 0;
 }
 
 .user-menu-trigger:hover:not(:disabled),
 .user-menu-trigger:focus-visible:not(:disabled) {
-  border-color: #bfdbfe;
+  border-color: var(--blue-border);
   background: var(--blue-soft);
 }
 
@@ -153,8 +153,8 @@
   width: 28px;
   height: 28px;
   border-radius: 999px;
-  background: #0f172a;
-  color: #ffffff;
+  background: var(--avatar-bg);
+  color: var(--on-accent);
   font-size: 11px;
   font-weight: 800;
   line-height: 1;
@@ -170,8 +170,8 @@
   min-width: 160px;
   border: 1px solid var(--line);
   border-radius: var(--radius-panel);
-  background: #ffffff;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+  background: var(--panel-raised);
+  box-shadow: var(--shadow-md);
   font-size: 12px;
   padding: 8px 10px;
 }
@@ -186,6 +186,19 @@
   white-space: nowrap;
 }
 
+/* 主题切换器（2026-08-16 主题试点）：label 结构与 base.css 全局 label 网格布局解耦 */
+.user-menu-theme {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) 0;
+}
+
+.user-menu-theme select {
+  max-width: 140px;
+}
+
 .help-wrap {
   position: relative;
 }
@@ -197,7 +210,7 @@
   height: 34px;
   border: 1px solid var(--line);
   border-radius: 999px;
-  background: #ffffff;
+  background: var(--panel);
   color: var(--text);
   font-size: 14px;
   font-weight: 700;
@@ -206,7 +219,7 @@
 
 .help-trigger:hover:not(:disabled),
 .help-trigger:focus-visible:not(:disabled) {
-  border-color: #bfdbfe;
+  border-color: var(--blue-border);
   background: var(--blue-soft);
 }
 
@@ -218,8 +231,8 @@
   width: 320px;
   border: 1px solid var(--line);
   border-radius: var(--radius-panel);
-  background: #ffffff;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+  background: var(--panel-raised);
+  box-shadow: var(--shadow-md);
   font-size: 12px;
   padding: 10px 12px;
 }

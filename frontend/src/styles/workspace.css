@@ -90,7 +90,7 @@
 .document-list button.active,
 .term-list button.active,
 .info-row.active {
-  border-color: #bfdbfe;
+  border-color: var(--blue-border);
   background: var(--blue-soft);
 }
 
@@ -212,7 +212,7 @@
 .folder-icon-button:hover:not(:disabled),
 .folder-icon-button:focus-visible:not(:disabled) {
   border-color: transparent;
-  background: #e9e9e9;
+  background: var(--hover);
   color: var(--text);
 }
 
@@ -235,7 +235,7 @@
 }
 
 .badge.success {
-  border-color: #bbf7d0;
+  border-color: var(--green-border);
   background: var(--green-soft);
   color: var(--green);
 }

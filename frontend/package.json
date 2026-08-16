@@ -10,6 +10,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "check:file-size": "node ../scripts/check-frontend-file-size.mjs",
+    "check:css": "node ../scripts/check-frontend-css.mjs",
     "gen:api": "openapi-typescript ../openapi/openapi.json -o src/api/generated.ts"
   },
   "dependencies": {

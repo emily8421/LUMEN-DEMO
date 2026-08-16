@@ -54,7 +54,7 @@
 .timeline-tag {
   border: 1px solid var(--line-soft);
   border-radius: var(--radius-control);
-  background: #f8fafc;
+  background: var(--panel-soft);
   color: var(--text);
   padding: 5px 9px;
   font-size: 12px;
@@ -105,19 +105,19 @@
 .timeline-density-cell {
   min-height: 18px;
   border-radius: 3px;
-  background: #e2e8f0;
+  background: var(--heat-0);
 }
 
 .timeline-density-cell.level-1 {
-  background: #bfdbfe;
+  background: var(--heat-1);
 }
 
 .timeline-density-cell.level-2 {
-  background: #60a5fa;
+  background: var(--heat-2);
 }
 
 .timeline-density-cell.level-3 {
-  background: #2563eb;
+  background: var(--heat-3);
 }
 
 .timeline-event-list {

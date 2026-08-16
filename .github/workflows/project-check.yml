@@ -69,3 +69,9 @@ jobs:
       - name: Check frontend file-size ratchet
         working-directory: frontend
         run: node ../scripts/check-frontend-file-size.mjs
+
+      # 2026-08-16 主题试点 CSS 纪律：styles/ 除 tokens.css 外零字面色值（ai/project-rules.md §5.1）。
+      # tokens.css 是唯一定义点；组件文件只准 var(--xxx)，防硬编码欠账回潮。
+      - name: Check frontend CSS token discipline
+        working-directory: frontend
+        run: node ../scripts/check-frontend-css.mjs

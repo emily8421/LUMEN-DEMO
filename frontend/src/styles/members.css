@@ -77,7 +77,7 @@
 
 button.secondary.danger {
   color: var(--red);
-  border-color: #f3c6c6;
+  border-color: var(--red-border);
 }
 
 button.secondary.danger:hover {
@@ -120,7 +120,7 @@ button.secondary.danger:hover {
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: var(--radius-panel);
-  box-shadow: 0 8px 24px rgba(23, 32, 51, 0.12);
+  box-shadow: var(--shadow-sm);
   max-height: 220px;
   overflow: auto;
 }

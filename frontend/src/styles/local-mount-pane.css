@@ -1,6 +1,7 @@
 /* 本地挂载分区壳 + 面板头部 / 徽标 / 操作 / 空态 / 搜索（E4 拆分溯源：local-mount.css 拆分——L1-156 原段）。
    ⚠ 顺序约束：`.local-mount-pane button`（0,1,1）与 `.local-mount-actions button`（0,1,1）同特异性，
-   本文件必须在 local-mount-tree.css 等之后不被打乱——main.tsx 中原位顺序引入。 */
+   本文件必须在 local-mount-tree.css 等之后不被打乱——main.tsx 中原位顺序引入。
+   2026-08-16 主题化：字面色值全部收编 tokens。 */
 
 /* documents 分支上下分区：上层 LUMEN DB（FolderTree）/ 下层本地挂载，垂直分隔条调高。 */
 .context-tree-split {
@@ -44,7 +45,7 @@
 .pane-resizer-row:hover::after,
 .pane-resizer-row:focus-visible::after,
 .pane-resizer-row.resizing::after {
-  background: #2563eb;
+  background: var(--blue);
 }
 
 .local-mount-pane {
@@ -53,15 +54,15 @@
   flex: 0 0 var(--local-mount-height, 300px);
   min-height: 0;
   overflow: hidden;
-  background: #fff;
-  color: #374151;
+  background: var(--panel);
+  color: var(--text-2);
 }
 
-/* 覆盖全局按钮白字（本分区为白底，按钮需深色文字） */
+/* 覆盖全局按钮白字（本分区按钮需深色文字） */
 .local-mount-pane button,
 .local-mount-pane input,
 .local-mount-pane pre {
-  color: #374151;
+  color: var(--text-2);
 }
 
 .local-mount-header {
@@ -69,8 +70,8 @@
   align-items: center;
   gap: 6px;
   padding: 8px 12px;
-  background: #fafcff;
-  border-bottom: 1px solid #e5e7eb;
+  background: var(--panel-soft);
+  border-bottom: 1px solid var(--line);
 }
 
 .local-mount-header h2 {
@@ -88,7 +89,7 @@
   border: none;
   cursor: pointer;
   padding: 0 2px;
-  color: #6b7280;
+  color: var(--muted);
   font-size: 12px;
 }
 
@@ -96,25 +97,25 @@
   font-size: 11px;
   padding: 1px 6px;
   border-radius: 8px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--line);
   white-space: nowrap;
 }
 
 .local-mount-badge.ok {
-  background: #ecfdf5;
-  color: #047857;
-  border-color: #a7f3d0;
+  background: var(--green-soft);
+  color: var(--green);
+  border-color: var(--green-border);
 }
 
 .local-mount-badge.warn {
-  background: #fffbeb;
-  color: #b45309;
-  border-color: #fde68a;
+  background: var(--amber-soft);
+  color: var(--amber);
+  border-color: var(--amber-border);
 }
 
 .local-mount-badge.idle {
-  background: #f3f4f6;
-  color: #6b7280;
+  background: var(--hover);
+  color: var(--muted);
 }
 
 .local-mount-actions {
@@ -125,14 +126,14 @@
 .local-mount-actions button {
   font-size: 11px;
   padding: 2px 8px;
-  border: 1px solid #e5e7eb;
-  background: #fff;
+  border: 1px solid var(--line);
+  background: var(--panel);
   border-radius: 4px;
   cursor: pointer;
 }
 
 .local-mount-actions button:hover:not(:disabled) {
-  background: #f3f4f6;
+  background: var(--hover);
 }
 
 .local-mount-actions button:disabled {
@@ -149,7 +150,7 @@
   padding: 5px 8px;
   font: inherit;
   font-size: 12px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--line);
   border-radius: 4px;
   width: calc(100% - 24px);
   box-sizing: border-box;

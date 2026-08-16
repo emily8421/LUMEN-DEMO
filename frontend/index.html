@@ -8,6 +8,19 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // 主题预置（防 FOUC，C-RA-003）：在任何样式渲染前同步读 localStorage 设置 data-theme。
+      // 与 src/theme.ts 的 KEY/THEMES 契约对应；非法值回退 light。
+      (function () {
+        try {
+          var t = localStorage.getItem('lumen-theme');
+          var ok = t === 'light' || t === 'dark' || t === 'paper' || t === 'legacy';
+          document.documentElement.dataset.theme = ok ? t : 'light';
+        } catch (e) {
+          document.documentElement.dataset.theme = 'light';
+        }
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

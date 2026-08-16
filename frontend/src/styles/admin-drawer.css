@@ -6,7 +6,7 @@
   z-index: 60;
   display: flex;
   justify-content: flex-end;
-  background: rgba(15, 23, 42, 0.35);
+  background: var(--overlay);
 }
 
 .user-spaces-drawer {
@@ -20,7 +20,7 @@
   background: var(--panel);
   display: flex;
   flex-direction: column;
-  box-shadow: -12px 0 32px rgba(15, 23, 42, 0.16);
+  box-shadow: var(--shadow-drawer);
 }
 
 .user-spaces-drawer .drawer-header {

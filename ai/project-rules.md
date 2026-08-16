@@ -195,6 +195,12 @@
 - **日志 / 配置**：统一 `logging`（**禁 `print`**）；降级 `except` 必须 `logger.warning` 记原因，禁静默吞。env 读取向 `backend/config.py` 收敛，禁止各模块裸 `os.environ.get`（集中化属【待对齐】，新代码先行遵循）。
 - **未对齐项**：`docs/05 §4.2` 标注【待对齐】的技术债（错误码集中映射、兜底 5xx envelope、CI 代码门、类型 codegen、`*-store` 重命名等），新代码不得再引入同类问题；旧代码登记为债、不强制当前维护态回改。
 - **验证纪律（执行纪律，非新增门禁）**：① 涉及登记基线文件（`useAppState` / `useDocuments` 等）改动时，本地验证须加 `npm run check:file-size`，避免 CI `frontend-file-size` ratchet 拦截往返；② 写 UI smoke 前先读目标组件渲染条件（模式切换 / handler 挂载点），减少试错轮次。来源：token-hotspot SUMMARY §7.1 阶段 C（2026-08-13 codegen 批次教训）。
+- **CSS 纪律（2026-08-16 主题试点随批成文；详见 `docs/design/frontend-experience-brief.md` §3.1.1）**：
+  - 色值 / 间距 / 圆角只准引用 `var(--xxx)`（定义单点 = `frontend/src/styles/tokens.css`）；新颜色 / 新间距先登记 tokens 再使用，**组件 CSS 内不得出现字面色值**（`#hex` / `rgb()` / `rgba()`；`transparent` / `inherit` / 语义色透明软底按主题 token 提供的不在此列）。
+  - 多主题约束：主题差异只允许通过 `[data-theme]` 变量切换表达，组件文件内不得写主题分支选择器（如 `[data-theme='dark'] .foo { … }`）；层级 / 密度 / 布局信号与主题正交。
+  - 一文件一功能域（现状 29 文件按 topbar / tree / editor 等拆分即基准）；单 CSS 文件超 300 行先拆分再续写（与既有文件膨胀阈值一致）。
+  - 禁 `!important`（现状全仓 0 处，保持）。
+  - CI 守门：`scripts/check-frontend-css.mjs`（随主题改造引入）校验 styles/ 内 tokens.css 以外文件零字面色值；新增文件同样受检。
 
 ### 5.2 禁区（未经人工确认不得触碰）
 - 不得擅改的文件 / 模块：ai/ 规则文件、docs/00–08 编号文档的编号与既有结构

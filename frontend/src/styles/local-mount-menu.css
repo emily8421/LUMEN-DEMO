@@ -10,8 +10,8 @@
   padding: 4px;
   border: 1px solid var(--line);
   border-radius: 6px;
-  background: #ffffff;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.14);
+  background: var(--panel-raised);
+  box-shadow: var(--shadow-sm);
 }
 
 .local-mount-menu button {

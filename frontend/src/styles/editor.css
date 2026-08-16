@@ -40,8 +40,8 @@
   white-space: nowrap;
 }
 
-/* hover / focus：仅文字变蓝、无底色块——必须用 :not(:disabled) 压过 base.css 全局
-   `button:hover:not(:disabled)`（其背景 #1d4ed8 深蓝，特异性 0,2,1 高于本类 0,1,0）。 */
+/* hover / focus：仅文字变主色、无底色块——必须用 :not(:disabled) 压过 base.css 全局
+   `button:hover:not(:disabled)`（其背景 var(--accent-strong)，特异性 0,2,1 高于本类 0,1,0）。 */
 .editor-md-toolbar-btn:hover:not(:disabled) {
   background: transparent;
   color: var(--blue);

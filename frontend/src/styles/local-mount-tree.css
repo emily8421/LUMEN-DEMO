@@ -1,4 +1,5 @@
-/* 本地挂载树 + 搜索结果 + 导入条（E4 拆分溯源：local-mount.css 拆分——L157-390 原段）。 */
+/* 本地挂载树 + 搜索结果 + 导入条（E4 拆分溯源：local-mount.css 拆分——L157-390 原段）。
+   2026-08-16 主题化：字面色值全部收编 tokens（--hover/--blue-soft/--text-2/--amber 系/--line/--panel/--blue/--accent-strong/--red）。 */
 
 .local-mount-tree {
   flex: 1;
@@ -18,16 +19,16 @@
 }
 
 .local-mount-node:hover {
-  background: #f3f4f6;
+  background: var(--hover);
 }
 
 .local-mount-node.cur {
-  background: #eff6ff;
+  background: var(--blue-soft);
 }
 
 .local-mount-arrow {
   width: 10px;
-  color: #6b7280;
+  color: var(--muted);
 }
 
 .local-mount-ic {
@@ -45,9 +46,9 @@
   font-size: 10px;
   padding: 0 5px;
   border-radius: 6px;
-  background: #fff7ed;
-  color: #c2410c;
-  border: 1px solid #fed7aa;
+  background: var(--amber-soft);
+  color: var(--amber);
+  border: 1px solid var(--amber-border);
   flex-shrink: 0;
 }
 
@@ -70,11 +71,11 @@
 }
 
 .local-mount-results li button:hover {
-  background: #f3f4f6;
+  background: var(--hover);
 }
 
 .local-mount-results li button.active {
-  background: #eff6ff;
+  background: var(--blue-soft);
 }
 
 .local-mount-results li button strong {
@@ -84,21 +85,21 @@
 
 .local-mount-results li button small {
   font-size: 10px;
-  color: #6b7280;
+  color: var(--muted);
 }
 
 .local-mount-preview {
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--line);
   padding: 6px 12px;
   max-height: 160px;
   overflow: auto;
-  background: #fffbeb;
+  background: var(--amber-soft);
   flex-shrink: 0;
 }
 
 .local-mount-preview-meta {
   font-size: 10px;
-  color: #b45309;
+  color: var(--amber);
   margin-bottom: 4px;
 }
 
@@ -111,7 +112,7 @@
 }
 
 .local-mount-error {
-  color: #dc2626;
+  color: var(--red);
   font-size: 11px;
   padding: 4px 12px;
   margin: 0;
@@ -121,7 +122,7 @@
   display: flex;
   gap: 4px;
   padding: 6px 12px;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--line);
   flex-shrink: 0;
 }
 
@@ -129,14 +130,14 @@
   flex: 1;
   font-size: 11px;
   padding: 4px 8px;
-  border: 1px solid #d1d5db;
-  background: #fff;
+  border: 1px solid var(--line);
+  background: var(--panel);
   border-radius: 4px;
   cursor: pointer;
 }
 
 .local-mount-import:hover:not(:disabled) {
-  background: #f3f4f6;
+  background: var(--hover);
 }
 
 .local-mount-import:disabled {
@@ -146,7 +147,7 @@
 
 .local-mount-import-msg {
   font-size: 11px;
-  color: #6b7280;
+  color: var(--muted);
   padding: 2px 12px 6px;
   margin: 0;
   flex-shrink: 0;
@@ -158,11 +159,11 @@
   flex-shrink: 0;
   font-size: 10px;
   padding: 1px 6px;
-  border: 1px solid #d1d5db;
-  background: #fff;
+  border: 1px solid var(--line);
+  background: var(--panel);
   border-radius: 4px;
   cursor: pointer;
-  color: #374151;
+  color: var(--text-2);
   opacity: 0;
   transition: opacity 0.1s ease;
 }
@@ -173,8 +174,8 @@
 }
 
 .local-mount-node .local-mount-import-node:hover:not(:disabled) {
-  background: #eff6ff;
-  border-color: #2563eb;
+  background: var(--blue-soft);
+  border-color: var(--blue);
 }
 
 .local-mount-node .local-mount-import-node:disabled {
@@ -188,10 +189,10 @@
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  border-top: 1px solid #e5e7eb;
-  background: #fffbeb;
+  border-top: 1px solid var(--line);
+  background: var(--amber-soft);
   font-size: 11px;
-  color: #374151;
+  color: var(--text-2);
   flex-shrink: 0;
 }
 
@@ -209,25 +210,25 @@
 .local-mount-confirm-actions button {
   font-size: 11px;
   padding: 2px 8px;
-  border: 1px solid #d1d5db;
-  background: #fff;
+  border: 1px solid var(--line);
+  background: var(--panel);
   border-radius: 4px;
   cursor: pointer;
-  color: #374151;
+  color: var(--text-2);
 }
 
 .local-mount-confirm-actions button.primary {
-  background: #2563eb;
-  border-color: #2563eb;
-  color: #fff;
+  background: var(--blue);
+  border-color: var(--blue);
+  color: var(--on-accent);
 }
 
 .local-mount-confirm-actions button:hover:not(:disabled) {
-  background: #f3f4f6;
+  background: var(--hover);
 }
 
 .local-mount-confirm-actions button.primary:hover:not(:disabled) {
-  background: #1d4ed8;
+  background: var(--accent-strong);
 }
 
 .local-mount-confirm-actions button:disabled {
