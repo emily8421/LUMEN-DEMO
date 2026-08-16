@@ -34,14 +34,17 @@ button:disabled {
   opacity: 0.55;
 }
 
+/* 次要按钮幽灵化（设计系统步骤 4，RA-structure §1②）：透明底无边框，
+   hover 淡洗色——从「白底矩形块」退为文字级操作。
+   danger 变体保留语义描边（破坏性操作需可辨识）。 */
 button.secondary {
-  border-color: var(--line);
-  background: var(--panel);
-  color: var(--text);
+  border-color: transparent;
+  background: transparent;
+  color: var(--text-2);
 }
 
 button.secondary:hover:not(:disabled) {
-  background: var(--panel-soft);
+  background: var(--hover);
 }
 
 button.danger {
@@ -62,11 +65,12 @@ textarea:focus-visible {
   outline-offset: 2px;
 }
 
+/* 输入框：唯一保留全边框的行内元素（RA §1②），边线降档 line→line-soft */
 input:not([type='radio']):not([type='checkbox']),
 select,
 textarea {
   width: 100%;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-soft);
   border-radius: var(--radius-control);
   background: var(--panel);
   color: var(--text);

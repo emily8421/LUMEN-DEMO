@@ -49,7 +49,7 @@
 .members-table select,
 .member-add-form select {
   height: 30px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-soft);
   border-radius: var(--radius-control);
   background: var(--panel);
   color: var(--text);
