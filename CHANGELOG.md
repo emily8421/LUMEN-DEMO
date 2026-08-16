@@ -6,6 +6,19 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.9.0（2026-08-16）
+
+**多主题试点（UI-G-003 用户确认四套）：CSS 设计令牌单点 → `[data-theme]` 多主题全量落地 + 组件样式硬编码色值清零 + CSS 纪律成文。新增可演示能力（主题切换器 + 四套主题），bump MINOR。母模板 UI 知识层（ui-knowledge v1.62.0）首个消费试点，双层评估落盘。**
+
+- **四套主题**：`light`（默认，对比度精修）/ `dark`（深色）/ `paper`（暖米纸，衔接 brief 既有米白候选）/ `legacy`（试点前原稿冻结对照，2 处历史对比度缺陷留证不改）；代码块四套统一固定深色（C-RA-002 拍板）。
+- **tokens.css 单点化**：重写为四套 `[data-theme]` 变量 + 新增 20 余个整值令牌（文字阶梯 4 级 / 语义色 border 三件套 / 阴影遮罩 / 焦点环实色 / 时间线热力 ramp / `--on-accent` / `--hover` 等）。
+- **硬编码清零**：28 个组件 CSS 字面色值 **202 处 → 0**（含 `var(--x, #fallback)` 死 fallback 清理、阴影 / 遮罩整值收编）；新增 `scripts/check-frontend-css.mjs` CI 守门防回潮。
+- **切换器**：用户菜单内 select（`frontend/src/theme.ts` 单点）+ localStorage 持久化 + `index.html` 内联预置脚本防首帧闪烁（FOUC）。
+- **light 套过渡优化**（用户实测反馈）：画布 `#f4f6f9`→`#eef2f7` 加深一档 + 卡片 `--shadow-card` 轻投影，白面板层次可读；对比度复核全过（muted 4.54 / 主色 4.60）。
+- **规范成文**：`ai/project-rules.md` §5.1 CSS 纪律 5 条（色值只准 var() / 禁主题分支选择器 / 一文件一域 300 行 / 禁 !important / CI 守门）；brief §3.1.1 多主题方向 + 新增主题三步法。
+- **证据链**（docs/research/）：RA（theme-pilot，UI-G-002/003 双 Gate 过）→ 视觉探索（WCAG 2.2 全 token 组合对比度校验，4 处起点值否决修订）→ 静态原型 → 双层评估（第 1 层五维全过；第 2 层机制复盘含母模板回流候选 5 条）；设计系统规范工作流立项（charter）。
+- 验证：eslint 0 error / tsc+build / file-size ratchet / check:css 全过；CDP 浏览器 smoke **19/19**（四套切换生效 + 背景期望值 + 持久化 + 刷新保持 + 每套正文对比度实算 14.47-16.91:1）；用户浏览器实测通过。PR #179 squash merge main `fcecdfe`，9 job 全绿。
+
 ## v3.8.27（2026-08-13）
 
 **维护态批30（Sprint-55）：前端 codegen Slice B-4 documents——union 接入 + 契约失配修正 + CI drift 门升 required（CQ-P1-006 后续·**前端 codegen Slice A+B 全量闭环**）。纯类型层 + CI 门收口、非功能，不改对外 API / DB；无新依赖。聚合 bump PATCH。**
