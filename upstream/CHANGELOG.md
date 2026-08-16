@@ -9,6 +9,38 @@
 
 模板版本采用三段式 `vMAJOR.MINOR.PATCH`，以根目录 `VERSION` 为单一审计入口。版本是发布边界，不是提案数量边界；提案收件箱增长不触发版本递增，只有合并到同步范围内并改变模板行为或下游同步判断的 PR 才判断 `PATCH / MINOR / MAJOR`。`ai/global-rules.md` 顶部仅记录全局规则自身版本。
 
+## v1.62.0（2026-08-13）
+
+Web UI 设计知识核心层（MINOR）：落地 `_proposals/TEMPLATE-UPGRADE-web-ui-design-knowledge-base.md` Batch 1——给「UI 探索 → 交付」流水线（`ai/document-lifecycle-rules.md` §5.2.1）已有的「前端参考分析」阶段补上**项目级落盘模板 + 可查询的设计知识来源层**，让 AI 做参考分析时有标好来源与证据等级的依据可查，而非每次靠临场记忆或临时搜截图。Batch 0 已用 zhiyan + flowkit 双项目验证 schema 跨场景可产出可追溯、防机械套用的参考分析。
+
+- **新增 `template-docs/ui-knowledge/` 核心层（4 文件）**：`README.md`（知识模型 Source/Principle/Pattern/Case + A-D 证据等级 + 十维度 + 按 scope 选择流程 + 版权与许可状态机 + 评审升级路径；吸收 flowkit 评估更细结构——原型输入包契约 / Phase 分期）、`source-registry.md`（6 类来源：W3C WAI-ARIA / WCAG / GOV.UK / USWDS / MS HAX / awesome-design-md）、`visual-patterns.md`（6 条视觉模式）、`interaction-patterns.md`（7 条交互模式）。首批 13 条模式（12 条经维护者评审升 reviewed，`PAT-VIS-004` D 级维持 candidate）。
+- **新增 `template-docs/frontend-ui-reference-analysis-template.md`**：项目级参考分析落盘模板（八节结构，强制采纳 / 调整 / 排除矩阵 + UI-G-002 判断）。
+- **接入现有流程（5 文件）**：`ui-prototype-exploration` command / Prompt 补参考分析路由（按 scope 读 ui-knowledge，输出证据分级 + 采纳 / 排除矩阵，满足 UI-G-002）；`document-lifecycle-rules.md` §5.2.1 补知识来源指针；`ui-prototype-exploration-template.md` 加 `PAT-*` / `SRC-*` 引用位；`capability-packages.md` §7.3 登记 reference analysis 模板与 ui-knowledge 入口（不新增机制 ID）。
+- **同步与自检**：`template-sync.json` files_all + `sync-template.sh` fallback 各纳入 5 个新文件；`check-template.sh` 补断言（5 文件存在性 + 关键内容 + 同步清单 / fallback 一致性）。
+
+本版为 MINOR 能力补强：新增同步目录 `template-docs/ui-knowledge/` + 项目参考分析模板 + UI 任务推荐工作流采用面变化，派生项目可通过现有 `ui-prototype-exploration` 入口发现并使用。首批 13 条模式中 12 条已在 PR 评审中经维护者确认升 reviewed（`PAT-VIS-004` D 级维持 candidate，来源记录待联网复核）；core 晋升与证据升降级属 Batch 2，不写已验证结论；不新增 Gate、不改变默认行为。合并后下行同步各派生项目。
+
+## v1.61.6（2026-08-13）
+
+治理机制与工具资产登记（PATCH）：落地 `_proposals/TEMPLATE-UPGRADE-governance-handbook-agent-tool-registry.md` 的 Batch 1，在不改变规则路由、脚本行为、同步范围或自动化门禁的前提下，建立现有机制和脚本的统一人读总账。
+
+- **`template-docs/capability-packages.md`**：标题由抽象的“Capability Packages 与 Profile 契约索引”改为“模板机制与专项使用说明”，按“如何使用 → 新增专项说明要求 → 工作分区 → 现有机制 → 多机制协作 → 具体专项”的顺序重写。14 类机制统一说明负责人、使用时机、主要依据、产出边界和完成判断；保留现有机制 ID、文件路径和自检兼容关键词。纠正 5 类失效引用：文档审计命令、文档评估 Prompt、待确认事项 Prompt、开发计划和研发数据链 / CHANGELOG 路径。
+- **`scripts/README.md`**：把 15 个可执行脚本归并为 12 类工具能力，补齐运行位置、Owner、消费者、输入输出、副作用、风险、权威实现、失败语义和生命周期规则；补登记原说明遗漏的 `check-github-context.ps1` 与 `check-markdown-clean.ps1`。
+- **审计结论**：3 组 Bash / PowerShell 双入口属于主实现与 wrapper / fallback 配对；当前未发现完全无用途的脚本。`scripts/README.md` 尚未进入 `template-sync.json`，已登记为后续决策缺口，本版不扩大同步边界。
+
+本版只增强人读可见性：不创建可执行 Agent，不拆规则，不新增自检断言，不改变默认执行行为。`template-docs/capability-packages.md` 已在同步范围内，派生项目可获得机制总览；工具注册表是否下行留待后续单独评估。patch 豁免 L3 端到端回归。
+
+## v1.61.5（2026-08-13）
+
+本地预检对齐 CI check-markdown-clean（PATCH）：落地 `_proposals/TEMPLATE-UPGRADE-local-preflight-coverage.md`——`scripts/check-template.ps1`（本地落地预检入口）在 Bash 主路径与 PowerShell fallback 两条路径末尾都追加调用 `check-markdown-clean.ps1 _proposals ai-records`，使本地一键预检覆盖 CI `template-check` 的两个独立 step（`check-template` + `check-markdown-clean`），消除「本地全绿、CI fail」返工；`scripts/check-template.sh` 补防回归断言；`template-docs/remote-ci-sop-profile.md` §B 补一句说明。来源：模板维护者（pitfall 2026-08-11 + 2026-08-13 双实证，见 `ai-records/pitfalls/SUMMARY.md` §1 / §4）。
+
+- **`scripts/check-template.ps1`**：新增 `Invoke-MarkdownCleanPreflight` helper（以子进程运行 `check-markdown-clean.ps1 _proposals ai-records`，返回其退出码）；主路径与 fallback 路径均与模板检查退出码合并（任一失败即非零退出）。不扩大 fallback 断言范围。
+- **`scripts/check-template.sh`**：新增 `require_contains` 断言，校验 `check-template.ps1` 内含 `check-markdown-clean.ps1` + `_proposals ai-records` 调用（防回归）。
+- **`template-docs/remote-ci-sop-profile.md`**：§B「提交与推送」第 2 条补说明（模板仓跑 `check-template.ps1` 即覆盖 markdown clean 预检）。
+- 归档 `local-preflight-coverage` 提案到 `_archive/proposals/`（本 PR 内）。
+
+本版是 patch 级自检脚本增强：不改 CI workflow、不改 `check-markdown-clean.ps1` 本身、不改 `template-sync.json` 结构、不新增必填入口；本地预检多跑一步（对齐 CI）。派生项目同步后，本地 `check-template.ps1` 同样覆盖 markdown clean 预检。patch 豁免 L3 端到端回归。
+
 ## v1.61.4（2026-08-13）
 
 通用层代码一致性补充（PATCH）：落地 #332 退回重写稿——把 LUMEN 回流的三条跨项目通用代码一致性原则（CI 质量门 / 关键 secret 启动校验 / 多实现显式契约）从原稿「固定实现」改写为「原则 + 适用条件 + 项目化落地」，作为 `implementation-lifecycle-rules §6.2` 的应用说明补齐。来源：LUMEN_demo_T2.1（emily8421/LUMEN-DEMO）派生项目回流 issue #332；重写依据 `docs/research/2026-08-12-c1-proposal-triage-reassessment.md` §3 / §15.7；提案见 `_proposals/TEMPLATE-UPGRADE-code-consistency-general-layer.md`。
