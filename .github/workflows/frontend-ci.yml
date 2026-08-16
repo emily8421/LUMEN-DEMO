@@ -1,0 +1,80 @@
+# 前端 CI：build / eslint / openapi codegen drift。
+# 按路径触发（paths）：只有 frontend/、openapi/（契约变更 → 前端 codegen 联动）、
+# 本 workflow 变更时才跑——纯文档 / 后端 / 规则改动不触发本 workflow（省 GitHub Actions 额度，
+# 见 docs/research/2026-08-14-token-optimization-candidate-analysis.md §2 A1）。
+# push main 同 paths 过滤：合并进 main 时只跑实际改动的域，不再 9 job 全量重跑。
+name: Frontend CI
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'frontend/**'
+      - 'openapi/**'
+      - '.github/workflows/frontend-ci.yml'
+      - '.github/workflows/project-check.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'frontend/**'
+      - 'openapi/**'
+      - '.github/workflows/frontend-ci.yml'
+      - '.github/workflows/project-check.yml'
+
+jobs:
+  frontend-build:
+    name: Frontend build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.17.1"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run build   # build 已含 tsc -b（package.json），不加 typecheck
+
+  frontend-lint:
+    name: Frontend ESLint
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.17.1"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+
+  # --- CQ-P1-006 / codegen：前端 OpenAPI 生成类型 drift 防漂移 ---
+  # 口径：assessment §4.9 + rollout §4 轨道3 + docs/05-tech-spec.md §4.2.3。
+  # openapi-typescript 重生成 frontend/src/api/generated.ts 并与仓库固定版本比对；
+  # 后端契约变更（openapi/）触发本 job：确保 generated.ts 随契约同步，失配即失败。
+  # Slice A/B advisory 起步，17 域全量接入后升 required（Slice B-4，2026-08-13）。
+  frontend-schema-diff:
+    name: Frontend OpenAPI codegen drift
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.17.1"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run gen:api
+      - name: Check generated.ts drift
+        run: git -C .. diff --exit-code -- frontend/src/api/generated.ts
