@@ -130,7 +130,7 @@
   flex: 1;
   font-size: var(--font-micro);
   padding: 4px 8px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-soft);
   background: var(--panel);
   border-radius: var(--radius-xs);
   cursor: pointer;
@@ -159,7 +159,7 @@
   flex-shrink: 0;
   font-size: var(--font-micro);
   padding: 1px 6px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-soft);
   background: var(--panel);
   border-radius: var(--radius-xs);
   cursor: pointer;
@@ -210,7 +210,7 @@
 .local-mount-confirm-actions button {
   font-size: var(--font-micro);
   padding: 2px 8px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-soft);
   background: var(--panel);
   border-radius: var(--radius-xs);
   cursor: pointer;

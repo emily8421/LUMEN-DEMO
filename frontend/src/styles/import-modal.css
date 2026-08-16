@@ -58,7 +58,7 @@
   align-items: center;
   justify-content: center;
   justify-self: start;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-soft);
   border-radius: var(--radius-control);
   background: var(--panel-soft);
   color: var(--text);

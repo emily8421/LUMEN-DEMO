@@ -219,7 +219,7 @@
 }
 
 .ai-assistant-provider select {
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-soft);
   border-radius: var(--radius-control);
   background: var(--panel);
   color: var(--text);
@@ -236,7 +236,7 @@
 
 .ai-assistant-input {
   width: 100%;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-soft);
   border-radius: var(--radius-control);
   padding: var(--space-2) var(--space-3);
   font: inherit;

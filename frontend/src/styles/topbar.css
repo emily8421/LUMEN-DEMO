@@ -115,7 +115,7 @@
 }
 
 .pane-toggle:hover {
-  background: var(--panel-soft);
+  background: var(--hover);
   color: var(--text);
 }
 
@@ -265,7 +265,7 @@
 }
 
 .help-close:hover:not(:disabled) {
-  background: var(--panel-soft);
+  background: var(--hover);
   color: var(--text);
 }
 

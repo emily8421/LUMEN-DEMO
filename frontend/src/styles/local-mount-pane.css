@@ -97,7 +97,7 @@
   font-size: var(--font-micro);
   padding: 1px 6px;
   border-radius: var(--radius-panel);
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-soft);
   white-space: nowrap;
 }
 
@@ -126,7 +126,7 @@
 .local-mount-actions button {
   font-size: var(--font-micro);
   padding: 2px 8px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-soft);
   background: var(--panel);
   border-radius: var(--radius-xs);
   cursor: pointer;
@@ -150,7 +150,7 @@
   padding: 5px 8px;
   font: inherit;
   font-size: var(--font-caption);
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-soft);
   border-radius: var(--radius-xs);
   width: calc(100% - 24px);
   box-sizing: border-box;

@@ -130,7 +130,7 @@
 }
 
 .backlink-link:hover {
-  background: var(--panel-soft);
+  background: var(--hover);
 }
 
 .backlink-link small {

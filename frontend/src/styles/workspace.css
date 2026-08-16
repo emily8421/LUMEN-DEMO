@@ -157,11 +157,6 @@
   color: var(--text);
 }
 
-.workspace-toolbar .secondary:hover:not(:disabled) {
-  background: var(--panel-soft);
-  color: var(--text);
-}
-
 .workspace-toolbar .danger {
   color: var(--red);
 }
@@ -224,7 +219,7 @@
 .badge {
   display: inline-flex;
   align-items: center;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-soft);
   border-radius: 999px;
   background: var(--panel-soft);
   color: var(--muted);

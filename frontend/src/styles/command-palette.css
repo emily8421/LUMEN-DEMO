@@ -142,7 +142,7 @@
   min-width: 18px;
   height: 18px;
   margin-right: 4px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-soft);
   border-radius: var(--radius-xs);
   background: var(--panel-soft);
   color: var(--muted);
@@ -158,7 +158,7 @@
   flex: 1 1 auto;
   min-width: 0;
   max-width: 420px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-soft);
   border-radius: var(--radius-panel);
   background: var(--panel-soft);
   color: var(--muted);

@@ -135,7 +135,7 @@
   width: 44px;
   height: 26px;
   padding: 0;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-soft);
   border-radius: var(--radius-xs);
   background: var(--panel);
   cursor: pointer;

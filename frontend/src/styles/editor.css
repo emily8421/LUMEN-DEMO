@@ -86,7 +86,7 @@
 }
 
 .editor-permission-select:hover:not(:disabled) {
-  background: var(--panel-soft);
+  background: var(--hover);
 }
 
 .editor-toolbar-actions {

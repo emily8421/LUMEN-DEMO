@@ -107,7 +107,7 @@
 .tree-inline-row input {
   min-width: 0;
   height: 22px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-soft);
   border-radius: var(--radius-xs);
   background: var(--panel);
   color: var(--text);
