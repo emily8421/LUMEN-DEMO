@@ -7,6 +7,9 @@
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
+  /* grid item（workspace-layout 列 4）需显式高度，内部 flex/grid 子项的 min-height:0
+     才有约束基准（阅读态复用 .markdown-preview 依赖此链，2026-08-16 滚动修复）。 */
+  height: 100%;
   color: #374151;
 }
 
@@ -49,24 +52,26 @@
   background: #f3f4f6;
 }
 
-/* 阅读态容器自适应主区宽度（2026-08-15 与 DB 阅读态对齐）：
-   TOC 布局层不限宽（TOC 贴左 sticky，正文列自适应），
-   仅正文 .markdown-body 限宽 840px 居中——与 DB document-reading-preview 同构
-   （editor.css「.markdown-preview .markdown-body」同规则）。 */
+/* 阅读态（2026-08-16 起复用 DocumentPreviewPane）：滚动 / TOC sticky / 840px 限宽
+   全部由 editor.css + document-mode.css 的 .markdown-preview.document-reading-preview 提供，
+   此处只锚定 flex 高度链，不再自建滚动容器。 */
+.local-doc-preview > .markdown-preview {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* --- REQ-049 本地挂载可编辑（增删改查） --- */
+/* 编辑态容器（阅读态已复用 .markdown-preview，此 body class 仅编辑分支使用）。 */
 .local-doc-preview-body {
   flex: 1;
+  min-height: 0;
   overflow: auto;
   padding: 20px 28px;
   width: 100%;
   box-sizing: border-box;
 }
-
-.local-doc-preview-body .markdown-body {
-  max-width: 840px;
-  margin-inline: auto;
-}
-
-/* --- REQ-049 本地挂载可编辑（增删改查） --- */
 .local-doc-preview-actions {
   display: flex;
   align-items: center;

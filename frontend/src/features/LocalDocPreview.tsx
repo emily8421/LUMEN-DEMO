@@ -1,13 +1,13 @@
 // 主区本地文档预览（REQ-018 模式 B / REQ-049 本地可编辑）
 // 本地挂载文件在主区渲染（markdown）；标注「本地·未入库·不上传」。
 // 正文本地读取，不进服务端 RAG（硬天花板）；「导入到 LUMEN」走左栏 LocalMountPane / API-029。
-// ④：复用 MarkdownBlock（showToc）获得长文档目录导航，与 DB 文档阅读态体验一致。
+// 阅读态直接复用 DocumentPreviewPane（read 模式）——滚动容器 / TOC / 限宽与 DB 文档同构。
 // REQ-049：主区可切换「编辑 / 并排」——编辑体复用 shared/MarkdownEditorBody（2026-08-14 统一，
 // 工具栏 / 撤销 / split 与 DB 文档一致；AI 润色不出现——服务端依赖，硬天花板）。
 // 保存写回本地文件系统（仅本地，不进服务端 / RAG）。
 
 import { useState } from 'react';
-import { MarkdownBlock } from '../components/MarkdownBlock';
+import { DocumentPreviewPane } from './documents/DocumentPreviewPane';
 import { MarkdownEditorBody } from './shared/MarkdownEditorBody';
 import type { Draft } from '../app/types';
 import type { LocalVaultDoc } from '../app/local-vault-index';
@@ -45,9 +45,10 @@ export function LocalDocPreview({
   // 编辑/并排局部态（不入持久层——单篇本地文档的临时预览形态）。
   const [editMode, setEditMode] = useState<LocalEditMode>('edit');
   // 共享编辑体契约是 Draft；本地文档标题即文件名（不可编辑），仅正文可变。
+  // 阅读态读 doc.text（挂载缓存）；编辑态才读 editingText（仅编辑本文时有值）。
   const localDraft: Draft = {
     title: doc.title || doc.name,
-    content_md: editingText,
+    content_md: isEditing ? editingText : doc.text,
     permission: 'private',
   };
 
@@ -94,9 +95,15 @@ export function LocalDocPreview({
           />
         </div>
       ) : (
-        <div className="local-doc-preview-body">
-          <MarkdownBlock content={doc.text} showToc />
-        </div>
+        /* 阅读态直接复用 DB 文档预览容器（.markdown-preview.document-reading-preview）：
+           滚动 / TOC sticky / 840px 限宽与知识库同构（此前自建容器高度链断裂致
+           scrollIntoView 滚掉 overflow:hidden 祖先、TOC 与正文滚丢回不来，2026-08-16）。 */
+        <DocumentPreviewPane
+          draft={localDraft}
+          outboundLinks={[]}
+          onOpenDocument={() => undefined}
+          effectiveMode="read"
+        />
       )}
     </section>
   );
