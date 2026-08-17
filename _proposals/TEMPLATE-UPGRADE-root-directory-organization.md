@@ -3,7 +3,7 @@
 > 来源：LUMEN-DEMO（emily8421/LUMEN-DEMO）派生项目回流
 > 提案日期：2026-08-17
 > 目标文件：模板根目录（方法论文档归拢）、`ai/global-rules.md` §5（通用目录标准补充）、`template-sync.json`（同步清单路径）、派生项目根 README 模板（项目结构说明）
-> 状态：待提交模板维护者（跨仓 issue）
+> 状态：**已提交模板维护者**——issue [#357](https://github.com/emily8421/ai-project-template/issues/357)（2026-08-17 开，OPEN，等维护者 triage）；本文件留作审计底稿，**勿重复提交**
 
 ## 1. 动机
 

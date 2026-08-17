@@ -3,7 +3,7 @@
 > 来源：LUMEN-DEMO（emily8421/LUMEN-DEMO）派生项目回流
 > 提案日期：2026-08-17
 > 目标文件：`ai/document-lifecycle-rules.md`（§5 生成矩阵旁 / §13 图表规范附注）、`docs/README.md` scaffold（子目录分区表）、`template-docs/`（可选附脚本样例 `scripts/extract-diagrams.*`）
-> 状态：待提交模板维护者（跨仓 issue）
+> 状态：**已提交模板维护者**——issue [#358](https://github.com/emily8421/ai-project-template/issues/358)（2026-08-17 开，OPEN，等维护者 triage）；本文件留作审计底稿，**勿重复提交**
 
 ## 1. 动机
 

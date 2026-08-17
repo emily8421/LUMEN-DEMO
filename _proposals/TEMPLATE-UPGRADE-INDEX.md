@@ -19,26 +19,26 @@
 
 | 提案 | 改模板的什么 | 优先级 | 状态 |
 |---|---|---|---|
-| `doc-system-oo-diagrams.md` | doc-standards `00-02`、`04`、`06`、`design-doc` 增可选 OO 建模 overlay（用例图 / 领域模型 / 概设交互·类图 / 详细类图 / **状态图族 / ERD 图 ID 合规 / 五阶段产物映射表**）+ `document-lifecycle-rules §13` 增「用例图用 plantuml」指引 | 中 | 待提交 |
+| `doc-system-oo-diagrams.md` | doc-standards `00-02`、`04`、`06`、`design-doc` 增可选 OO 建模 overlay（用例图 / 领域模型 / 概设交互·类图 / 详细类图 / **状态图族 / ERD 图 ID 合规 / 五阶段产物映射表**）+ `document-lifecycle-rules §13` 增「用例图用 plantuml」指引 | 中 | **已提交 [#354](https://github.com/emily8421/ai-project-template/issues/354)（2026-08-17，OPEN）——勿重复提交** |
 
 ### 主题 B · 阶段分离机制
 
 | 提案 | 改模板的什么 | 优先级 | 状态 |
 |---|---|---|---|
-| `back-sync-placement-audit.md` | `document-lifecycle-rules §2` E6 补「反向同步落点约束」（实现证据落 09/design/CHANGELOG，不倒灌 00-05）+ `19-docs-evaluation.md` 增「阶段归属审计」维度 | 中 | 待提交 |
+| `back-sync-placement-audit.md` | `document-lifecycle-rules §2` E6 补「反向同步落点约束」（实现证据落 09/design/CHANGELOG，不倒灌 00-05）+ `19-docs-evaluation.md` 增「阶段归属审计」维度 | 中 | **已提交 [#355](https://github.com/emily8421/ai-project-template/issues/355)（2026-08-17，OPEN）——勿重复提交** |
 
 ### 主题 C · 文档骨架与目录
 
 | 提案 | 改模板的什么 | 优先级 | 状态 |
 |---|---|---|---|
-| `doc-overview-skeleton-alignment.md` | doc-standards `02`、`04`、`00-05` 增引用式概述章（引言 / 任务 / 数据 / 性能 / 运行 / 接口 / 数据结构 / 安全 / 维护）+ 元信息「当前状态」精简口径 + scaffold README 三核心节点定位 | 低（低风险先做） | 待提交 |
-| `root-directory-organization.md` | `global-rules §5` 补目录分类框架 + 来源标注；模板根目录方法论文档归 `methodology/`（2.1，MAJOR 单独评估）；派生项目 README 模板加「项目结构」三大区说明 | 低（2.2）/ 后（2.1） | 待提交 |
+| `doc-overview-skeleton-alignment.md` | doc-standards `02`、`04`、`00-05` 增引用式概述章（引言 / 任务 / 数据 / 性能 / 运行 / 接口 / 数据结构 / 安全 / 维护）+ 元信息「当前状态」精简口径 + scaffold README 三核心节点定位 | 低（低风险先做） | **已提交 [#356](https://github.com/emily8421/ai-project-template/issues/356)（2026-08-17，OPEN）——勿重复提交** |
+| `root-directory-organization.md` | `global-rules §5` 补目录分类框架 + 来源标注；模板根目录方法论文档归 `methodology/`（2.1，MAJOR 单独评估）；派生项目 README 模板加「项目结构」三大区说明 | 低（2.2）/ 后（2.1） | **已提交 [#357](https://github.com/emily8421/ai-project-template/issues/357)（2026-08-17，OPEN）——勿重复提交** |
 
 ### 主题 D · 图表审核动线（2026-08-17 新增）
 
 | 提案 | 改模板的什么 | 优先级 | 状态 |
 |---|---|---|---|
-| `diagrams-tables-mirror.md` | 生成式镜像目录机制：`docs/diagrams/` + `docs/tables/` + manifest 驱动抽取脚本（附样例）+ 双 INDEX（图按阶段分组 / 表分两档）+ CI `--check` 同步校验；`docs/README` scaffold 分区登记 | 中 | 待提交 |
+| `diagrams-tables-mirror.md` | 生成式镜像目录机制：`docs/diagrams/` + `docs/tables/` + manifest 驱动抽取脚本（附样例）+ 双 INDEX（图按阶段分组 / 表分两档）+ CI `--check` 同步校验；`docs/README` scaffold 分区登记 | 中 | **已提交 [#358](https://github.com/emily8421/ai-project-template/issues/358)（2026-08-17，OPEN）——勿重复提交** |
 
 ## 3. 之前独立提案（不同主题）
 
