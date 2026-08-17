@@ -18,6 +18,8 @@
 
 一句话：**人把原始材料放入 `docs/inputs/` → AI 评审是否足以生成 `product-vision` → AI 生成 `00-09` 与 `design/` → `00-09` 约束代码**。原始输入不直接驱动开发，必须先经评审（`ai/prompts/docs/01-review-inputs.md`）再进入 `docs/vision/product-vision.md` 或 `00-09`。
 
+> **图表镜像机制（2026-08-17）**：`docs/diagrams/` 与 `docs/tables/` 是 `scripts/extract-diagrams.mjs` 从文档正文抽取的**生成式镜像**，用于审核时单点查阅；文档内图表是**唯一权威源**，改图请改源文档后重跑脚本（`node scripts/extract-diagrams.mjs`），不手改镜像。CI `docs-mirror` job 以 `--check` 模式校验镜像未过期。方案与裁决见 `docs/research/2026-08-17-oo-coverage-evaluation-and-diagram-mirror-plan.md`。
+
 ## 2. 核心文档 00-09 各自干什么
 
 | 文档 | 阶段 | 一句话作用 | 何时省略 |
@@ -91,6 +93,8 @@
 | `docs/env/` | 本机环境、资源约束、服务器预案、演示 SOP | `local-env.md`、`server-plan.md`、`local-demo-runbook.md` |
 | `docs/meetings/` | 会议纪要、访谈记录、评审记录 | `YYYY-MM-DD-topic.md` |
 | `docs/archive/` | 已废弃但需留痕的项目文档 | 保留原名或加日期前缀 |
+| `docs/diagrams/` | **图表镜像（生成式产物，不手改）**：从 `00-09` / `design/*` 正文抽取的全部 mermaid / plantuml 图块，每图一文件 + `INDEX.md`（按 OO 五阶段分组 + 按文档反查，审核主入口） | `DIAG-*.md`（与源图 ID 同名） |
+| `docs/tables/` | **核心表镜像（生成式产物，不手改）**：核心矩阵表（REQ / MOD / API / TC / RG 等）抽取镜像 + `INDEX.md`；增量日志型（08 完成包 / 09 验收记录）只挂锚点不抽镜像 | `<doc>-<matrix>.md` |
 | `template-docs/web-fullstack-profile.md` | 复杂 Web / 全栈交互项目的可选结构 Profile 与 Walking Skeleton Gate；**人读参考、非项目事实、不直接落入 docs/** | 触发后把 App Shell、目录边界、vertical slice、文件膨胀阈值和 smoke 验证回填到 `04/05/08/09` |
 | `template-docs/docs-scaffold/` | 模板 `docs/inputs/*`、`docs/vision/*`、`docs/00-09`、`docs/design/*`、`docs/decisions/*`、`docs/research/*` 长期结构副本，保留原始大纲、占位表格和 `【撰写提要：...】`；**人读参考、非项目事实、不自动覆盖 `docs/` 项目事实** | 随模板同步；旧项目可能残留 `docs/_scaffold/` |
 | `ai/doc-standards/` | 模板 `docs/00-09` 与详细设计的撰写规范 / 审计基线；**只读、非项目事实、不直接驱动开发**；改动须走 `_proposals/` 回流模板 | 由 `sync-template` 同步，勿手改 |
