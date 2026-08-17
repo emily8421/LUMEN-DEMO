@@ -3,7 +3,7 @@
 > 来源：LUMEN-DEMO（emily8421/LUMEN-DEMO）派生项目回流
 > 提案日期：2026-08-17（2026-08-17 同日二次更新：并入五阶段覆盖度补全 Batch A1/A2 结论）
 > 目标文件：`ai/doc-standards/00-scenario.md` ~ `02-srs.md`、`ai/doc-standards/04-architecture.md`、`ai/doc-standards/06-db-design.md`、`ai/doc-standards/design-doc.md`、`ai/document-lifecycle-rules.md` §13
-> 状态：待提交模板维护者（跨仓 issue）
+> 状态：**已提交模板维护者**——issue [#354](https://github.com/emily8421/ai-project-template/issues/354)（2026-08-17 开，OPEN，等维护者 triage）；本文件留作审计底稿，**勿重复提交**
 
 ## 1. 动机
 
