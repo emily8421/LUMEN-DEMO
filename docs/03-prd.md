@@ -9,8 +9,13 @@
 |---|---|
 | 输入来源 | `docs/01-user-requirements.md`、`docs/02-srs.md`、`ai/project-rules.md` §1 |
 | 覆盖 REQ | REQ-001..REQ-051（按 Phase1 / Phase1.5A / Phase1.5B / Phase2A / Phase2B / Phase2C / Phase2D / 维护态 / 愿景分阶段；REQ-040..047 为 Phase2D 账户与多人权限（已完成 2026-08-07 收口）；REQ-049..051 为维护态使用反馈立项（已实现，见 §4 矩阵与 `docs/design/batch-maintenance-2026-08-08.md`）） |
-| 当前状态 | 已确认（§3 为阶段标签唯一来源；Phase1.5B 单文档 PDF 导出已完成；Phase2A 个人知识组织已完成；Phase2B 团队 MVP 已完成（2026-08-05 收口）；Phase2C 本地知识源接入已完成（2026-08-06，Sprint-23C TC-P2-VAULT-001 通过 / PR#108 v2.0.0）；**Phase2D 账户与多人权限已完成（2026-08-07 收口）：Sprint-26 账号体系基础（TC-P2-AUTH-001 / PR#112 v3.0.0）+ Sprint-27 权限多人化（TC-P2-ACC-001 / PR#114）+ Sprint-28 角色分层 + 用户管理 + 团队空间加入（TC-P2-ACC-002 / PR#117 v3.1.0）三 slice 全部验收通过、退出标准达成；**项目 demo 目标已达成（2026-08-07 评估收尾），进入维护态，下一阶段未定义；成果总结见 `docs/research/2026-08-07-project-closure-summary.md`**） |
-| 最后更新 | 2026-08-17（§4 覆盖矩阵补齐 REQ-043..047 / 049 / 050 / 051 行——状态自 §1/§3/§4.1 与 `docs/08-dev-plan.md` Sprint 表收敛为单点索引，无状态变更）；前次 2026-08-07（Phase2D 收口） |
+| 当前状态 | 已确认（§3 为阶段标签唯一来源；Phase1.5B 单文档 PDF 导出已完成；Phase2A 个人知识组织已完成；Phase2B 团队 MVP 已完成（2026-08-05 收口）；Phase2C 本地知识源接入已完成（2026-08-06，Sprint-23C，TC-P2-VAULT-001 通过）；**Phase2D 账户与多人权限已完成（2026-08-07 收口）：Sprint-26 账号体系基础（TC-P2-AUTH-001）+ Sprint-27 权限多人化（TC-P2-ACC-001）+ Sprint-28 角色分层 + 用户管理 + 团队空间加入（TC-P2-ACC-002）三 slice 全部验收通过、退出标准达成；**项目 demo 目标已达成（2026-08-07 评估收尾），进入维护态，下一阶段未定义；成果总结见 `docs/research/2026-08-07-project-closure-summary.md`**） |
+| 最后更新 | 2026-08-17（模板对齐调整：新增 §0.1 文档定位与阅读导读，明确 03=PRD / 02=SRS 分工；同日完成 OO 方法论收敛 §3/§4 实现细节归 req-implementation-index；无 REQ / 阶段 / 状态变更）；前次 2026-08-07（Phase2D 收口） |
+
+## 0.1 文档定位与阅读导读
+
+> **03 是产品决策层 PRD，不是需求规格说明书**。系统需求逐条（REQ 可验证口径）在 `docs/02-srs.md` §1；本文只定「功能范围、优先级、阶段路线图、非目标」产品决策，作为 02（系统层）→ 08（计划）的衔接。REQ 实现证据见 `docs/design/req-implementation-index.md`。
+> 本文各节职责：§1 功能范围（总览）· §2 优先级（跨阶段取舍）· §2.1 功能清单（F-ID 聚合）· §3 阶段路线图（阶段标签唯一来源）· §4 REQ 覆盖矩阵（REQ → F-ID → 阶段 → 状态）· §5 非目标 · §6 待确认。同一批功能会在多节出现，属「多视角」而非重复：§2 答多重要、§3 答何时做、§4 答每个 REQ 落哪。
 
 ## 1. 功能范围（完整，对齐 01 / 02）
 
@@ -19,7 +24,7 @@
 - 已完成基线：Phase1（U-01..U-12、U-42 / REQ-001..REQ-011、REQ-036）、Phase1.5A（U-43 / REQ-037、REQ-038）、Phase2A（U-13、U-31、U-32 / REQ-012、REQ-025、REQ-026）
 - 个人增强（Phase1.5B）：U-33 / REQ-027 已实现并通过 TC-P1-017；真实 Word/PDF 文本提取、zhparser 中文分词增强仍为后续候选
 - 团队 MVP（Phase2B）：U-14..U-20、U-30 / REQ-013..REQ-017、REQ-024（其中 U-18..U-20 不进首批团队 MVP）；REQ-039 文档目录树（第三 slice 候选）
-- Phase2C 本地知识源接入：U-21 / REQ-018 模式 B（仅本地挂载，浏览器 File System Access，RG-009 Go；**已完成 Sprint-23C**）；模式 A 导入数据库已随 Phase2B 交付
+- Phase2C 本地知识源接入：U-21 / REQ-018 模式 B（仅本地挂载，RG-009 Go；**已完成 Sprint-23C**）；模式 A 导入数据库已随 Phase2B 交付
 - Phase2D 账户与多人权限（已完成 2026-08-07 收口）：真实多用户账号体系（注册 / 凭证登录 / 登出会话，REQ-040..042）+ 多人权限（REQ-043/044 owner 过滤 + 跨用户隔离）+ 团队治理（REQ-045..047 角色分层 + 用户管理 + 团队空间加入）；从 Demo 占位账号侧升级，交付物形态团队验证；Sprint-26/27/28 三 slice 全部验收通过；**维护态批5（Sprint-30，v3.7.0，2026-08-09 已完成）：REQ-050 成员空间可见性（admin 用户详情抽屉，跨空间授予 / 撤销）+ REQ-051 登录密码小眼睛 / 忘记密码自助重置**
 - 远期愿景：U-22..U-29、U-34..U-41 / REQ-019..REQ-023、REQ-028..REQ-035
 
@@ -55,13 +60,13 @@
 | F-007 | 个人知识组织增强 | REQ-012 / REQ-025 / REQ-026 / REQ-039 | `[P2]` | 个人知识组织 | Phase2A 已完成（TC-P2-TAG-001 / LINK-001 / QUICK-001 通过）；REQ-039 文档目录树为 Phase2B 第三 slice 候选 |
 | F-008 | 写作、团队协作与跨端体验 | REQ-013 / REQ-014 / REQ-015 / REQ-016 / REQ-017 / REQ-024 | `[P2]` | 团队 MVP / 后续 | 骨架，Phase2B 时细化 |
 | F-009 | 存量知识源与交付能力 | REQ-019 / REQ-022 / REQ-023 / REQ-028 / REQ-035 | `[愿景]` | 产品 | 待技术验证 |
-| F-009a | 本地知识源挂载（Obsidian Vault / 本地 Markdown 文件夹） | REQ-018 | `[P2]` | 本地知识源接入 MVP | Phase2C·已设计（模式 B 浏览器 File System Access，RG-009 Go）；模式 A 导入数据库已随 Phase2B 交付 |
+| F-009a | 本地知识源挂载（Obsidian Vault / 本地 Markdown 文件夹） | REQ-018 | `[P2]` | 本地知识源接入 MVP | Phase2C·已实现（模式 B 仅本地挂载，RG-009 Go，TC-P2-VAULT-001）；模式 A 已随 Phase2B 交付 |
 | F-010 | 情报分析与高风险 AI 能力 | REQ-020 / REQ-021 / REQ-029 / REQ-030 / REQ-031 / REQ-032 / REQ-033 / REQ-034 | `[愿景]` | 产品 | 高风险，待技术验证 |
 | F-011 | P1.5 导入 / 导出可用性收口 | REQ-027 / REQ-037 / REQ-038 | `[P1]` | 个人可用增强 | REQ-037/038 为 Alpha 已实现；REQ-027 为 Beta 已实现 |
-| F-012 | 账户与认证 | REQ-040 / REQ-041 / REQ-042 | `[P2]` | 团队验证 | Phase2D·Sprint-26 已完成（PR#112 v3.0.0，TC-P2-AUTH-001 通过）：注册 / 凭证登录 bcrypt / 登出会话·不透明 token + `lumen_sessions`；权限多人化 Sprint-27 已完成 / 角色与用户管理 UI 已随 Sprint-28 完成 |
-| F-013 | 权限多人化（owner 过滤与隔离） | REQ-043 / REQ-044（REQ-001/002/003 扩展） | `[P2]` | 团队验证 | Phase2D·Sprint-27 已完成（2026-08-07，PR#114，TC-P2-ACC-001 通过）：owner_id 跨用户过滤 + 私有按 owner 过滤 + 跨用户隔离回归；全局角色 / 用户管理 UI 已随 Sprint-28 完成 |
-| F-014 | 角色分层与用户管理 | REQ-045 / REQ-046 | `[P2]` | 团队验证 | Phase2D·已完成（2026-08-07，Sprint-28，PR#117 v3.1.0，TC-P2-ACC-002 通过）：全局角色 admin/member（`lumen_users.role`）+ admin 域用户管理后台（用户列表 / 改角色 / 禁用启用）；管理接口仅 admin（4030） |
-| F-015 | 团队空间加入 | REQ-047 | `[P2]` | 团队验证 | Phase2D·已完成（2026-08-07，Sprint-28，PR#117 v3.1.0，TC-P2-ACC-002 通过）：space 域成员 CRUD（按 email 搜索添加 / 改空间角色 / 移除）+ 空间设置成员管理 UI |
+| F-012 | 账户与认证 | REQ-040 / REQ-041 / REQ-042 | `[P2]` | 团队验证 | Phase2D·已实现（Sprint-26，TC-P2-AUTH-001）；Sprint-27/28 权限与角色 UI 已完成（见 req-implementation-index） |
+| F-013 | 权限多人化（owner 过滤与隔离） | REQ-043 / REQ-044（REQ-001/002/003 扩展） | `[P2]` | 团队验证 | Phase2D·已实现（Sprint-27，TC-P2-ACC-001） |
+| F-014 | 角色分层与用户管理 | REQ-045 / REQ-046 | `[P2]` | 团队验证 | Phase2D·已实现（Sprint-28，TC-P2-ACC-002） |
+| F-015 | 团队空间加入 | REQ-047 | `[P2]` | 团队验证 | Phase2D·已实现（Sprint-28，TC-P2-ACC-002） |
 
 ## 3. 阶段路线图
 
@@ -112,7 +117,7 @@
 
 ### Phase2B —— 已完成（功能范围 `[P2]` · 交付物形态 **团队 MVP**）
 - **目标**：从个人可用推进到小团队可真实使用，补写作辅助与团队化体验。
-- **功能范围 `[P2]`**：REQ-014 AI 润色 + 写作引用（**首批核心，已落地**）；**REQ-013a 主题时间线（按关键词/标签生成事件时间线）** + REQ-024 时间轴密度热条（**第二 slice，已实现并补齐验证**：候选 A 实时聚合 + 关键词/标签驱动 + TL-C-001..011 已确认，运行态 API smoke / Edge headless 浏览器 smoke / 真实 PG 大数据性能 smoke 已通过；**关联图 REQ-013b 愿景**）；REQ-039 文档目录树（**第三 slice**，folder-tree 基础能力已完成，浏览器自动化 smoke 已补）；REQ-015 / 016 / 017 延后确认。
+- **功能范围 `[P2]`**：REQ-014 AI 润色 + 写作引用（**首批核心，已落地**，TC-P2-AI-001）；REQ-013a 主题时间线（按关键词/标签生成事件时间线）+ REQ-024 时间轴密度热条（**第二 slice，已实现并补齐验证**，TC-P2-TL-001；关联图 REQ-013b 愿景）；REQ-039 文档目录树（**第三 slice，已实现**，TC-P2-FOLDER-001）；REQ-015 / 016 / 017 延后确认。实现细节见 `req-implementation-index`。
 - **交付物形态 MVP**：可真实上线给小团队试用，补齐 Phase1 Demo 缺的生产要素，而非演示原型。
 - **进入标准**：Phase2A 稳定；`04/05` Phase2 设计补强、**RG-008（AI 数据外发风险接受）Go**、`06/07/09` MVP 级契约齐备、Sprint-11 UI/WSG 门禁重跑。
 - **退出标准**：团队使用场景有真实验收 TC；**AI 润色数据外发风险已接受（真实外发 + 权限护栏，见 `ai/project-rules.md` §2.1 / `docs/05-tech-spec.md` RG-008）**；产品红线未被破坏。
@@ -121,18 +126,18 @@
 ### Phase2C —— 本地知识源接入（功能范围 `[P2]` · 交付物形态 **本地知识源接入 MVP**）
 - **目标**：让用户把涉隐私 / 不愿入库的本地知识库（Obsidian vault / 本地 Markdown 文件夹）以"仅本地挂载"方式在 LUMEN 内一并浏览与本地搜索，数据不出本机。
 - **功能范围 `[P2]`**：REQ-018 模式 B「仅本地挂载」（U-21）。模式 A「导入数据库」已随 Phase2B 交付（复用 REQ-037/039），不在本阶段重复。
-- **交付物形态 本地知识源接入 MVP**：浏览器 File System Access 句柄 + IndexedDB 持久化 + 本地索引 / 搜索 + 左侧文件管理器上下分区（上层 LUMEN DB / 下层本地挂载·未入库）+ 按需导入走 API-029；可真实用于本人管理私密库。**硬天花板**：仅本地挂载内容不进服务端 RAG（浏览器句柄后端读不到），要 AI 能力须导入（模式 A）或上桌面 agent（留更后）。
-- **进入标准**：RG-009 PoC Go（2026-08-05，8 能力 + 5 场景，刷新自动恢复 granted）；`06/07/09` 契约齐备（`lumen_vault_mounts` 仅元数据 / 模式 B 后端零新 API / TC-P2-VAULT-001 已定义）。
-- **退出标准**：TC-P2-VAULT-001 通过（授权+刷新恢复 / 1000+ 本地树 / IndexedDB 本地搜索 / 左侧分区视觉隔离+不进团队 RAG / 按需导入走 API-029 / 隐私红线不上传）；产品红线（不上传、不越权）未被破坏。
+- **交付物形态 本地知识源接入 MVP**：仅本地挂载方式在 LUMEN 内浏览与本地搜索本地知识库，数据不出本机，可真实用于本人管理私密库；左侧文件管理器上下分区（上层 LUMEN DB / 下层本地挂载·未入库）。**硬天花板**：仅本地挂载内容不进服务端 RAG，要 AI 能力须导入（模式 A）或上桌面 agent（留更后）。实现细节见 `docs/design/ingestion.md` + `req-implementation-index`。
+- **进入标准**：RG-009 PoC Go（2026-08-05）；`06/07/09` 契约齐备（`lumen_vault_mounts` 仅元数据 / 模式 B 后端零新 API / TC-P2-VAULT-001 已定义）。
+- **退出标准**：TC-P2-VAULT-001 通过（授权 + 刷新恢复 / 大规模本地树 / 本地搜索 / 左侧分区视觉隔离 + 不进团队 RAG / 按需导入 / 隐私红线不上传）；产品红线（不上传、不越权）未被破坏。
 
 ### Phase2D —— 账户与多人权限（功能范围 `[P2]` · 交付物形态 **团队验证** · **已完成 2026-08-07 收口**）
 - **目标**：把 Demo 占位的账号侧（无密码 / 3 seed 用户 / 手撸 token）升级为真实多用户账号体系，完成「账号 → 权限 → 团队协作」闭环，为团队验证打基础。
-- **功能范围 `[P2]`**：REQ-040/041/042 账号体系基础（注册 / 凭证登录 bcrypt / 登出会话，不透明 token + `lumen_sessions`）+ REQ-043/044 权限多人化（REQ-001/002/003 扩展：owner_id 跨用户过滤 + 私有按 owner 过滤 + external 仅 owner 可写 + 跨用户隔离回归）+ REQ-045/046/047 角色分层 + 用户管理 + 团队空间加入（`lumen_users.role` admin/member + admin 域用户管理 + space 域成员 CRUD，migration 016）；REQ-016 多人实时协作留后续。三 slice 拆分（Sprint-26/27/28）见 `docs/08-dev-plan.md` Sprint 总览 + `docs/design/accounts-auth.md` §17/§18。
-- **交付物形态 团队验证**：真实账号可注册 / 凭证登录 / 登出，凭证安全（bcrypt 哈希、token 可撤销），13 router 统一 `get_current_user` 鉴权；**demo 模式（`create_demo_token` + alice/kira/brightlite-member 无密码快速登录）保留为 env 开关 + 物理隔离护栏（PG 仓储强制真实认证，内存仓储 `demo_repository` 允许 demo）**，真实账号为正式路径；admin 可治理用户与空间成员（管理能力后端强制鉴权，非 admin 4030，用户列表不暴露 `password_hash`）。
-- **进入标准**：Phase2C 完成；认证选型确认（bcrypt + 不透明 token session，`secrets` 标准库零新 token 依赖）；readiness gate——密码哈希选型 / token session 安全（密钥 env 注入、TTL、撤销）/ 跨用户隔离回归——Go（RG-011/012/013，见 `docs/05-tech-spec.md` + `docs/design/accounts-auth.md`）。
-- **退出标准**：TC-P2-AUTH-001（注册 / 凭证登录 / 登出 / 会话撤销 / 续期轮换）+ TC-P2-ACC-001（私有仅 owner / 全路径跨用户隔离 / 空间隔离切换回归）+ TC-P2-ACC-002（admin/member 角色校验 + admin 域用户管理 + space 域成员管理）通过；13 router 统一鉴权且 demo 模式开关可切；登录失败锁定 + 审计日志生效；权限红线（凭证安全 / 跨用户隔离 / 管理接口仅 admin / 用户列表不暴露 `password_hash`）未被破坏。
+- **功能范围 `[P2]`**：REQ-040/041/042 账号体系基础（注册 / 凭证登录 / 登出会话）+ REQ-043/044 权限多人化（REQ-001/002/003 扩展：owner 过滤 + 私有仅 owner 可见 + external 仅 owner 可写 + 跨用户隔离回归）+ REQ-045/046/047 角色分层 + 用户管理 + 团队空间加入；REQ-016 多人实时协作留后续。三 slice 拆分（Sprint-26/27/28）与实现细节见 `docs/design/accounts-auth.md` §17/§18 + `docs/08-dev-plan.md` Sprint 总览 + `req-implementation-index`。
+- **交付物形态 团队验证**：真实账号可注册 / 凭证登录 / 登出，凭证安全（密码哈希、token 可撤销），统一鉴权；**demo 模式（无密码快速登录）保留为 env 开关 + 物理隔离护栏**，真实账号为正式路径；admin 可治理用户与空间成员（管理能力后端强制鉴权，用户列表不暴露敏感字段）。实现细节见 `docs/design/accounts-auth.md` + `req-implementation-index`。
+- **进入标准**：Phase2C 完成；认证选型确认；readiness gate——密码哈希选型 / token session 安全 / 跨用户隔离回归——Go（RG-011/012/013，见 `docs/05-tech-spec.md` + `docs/design/accounts-auth.md`）。
+- **退出标准**：TC-P2-AUTH-001 + TC-P2-ACC-001 + TC-P2-ACC-002 通过；统一鉴权且 demo 模式开关可切；登录失败锁定 + 审计日志生效；权限红线（凭证安全 / 跨用户隔离 / 管理接口仅 admin / 用户列表不暴露 `password_hash`）未被破坏。
 - **硬约束**：Sprint-26 只立账号基础不做权限多人化实质改造；不做 REQ-016 多人实时协作、移除用户 / 重置密码 / 邀请码 / 邀请链接（留候选或后续）；不引入新依赖；不因 demo 仓储类型旁路管理鉴权。
-- **收口结论（2026-08-07）**：Phase2D 三 slice（Sprint-26/27/28）退出标准全部达成——TC-P2-AUTH-001 / TC-P2-ACC-001 / TC-P2-ACC-002 通过（PR#114 / PR#117 v3.1.0），权限红线（凭证安全 / 跨用户隔离 / 管理接口仅 admin / 用户列表不暴露 `password_hash`）未被破坏，「账号 → 权限 → 团队协作」闭环成形。已知偏差经用户确认全接受、留后续，不阻塞收口——`accounts-auth` §18.9（API-044/046 未分页 / `last_login_at` 未显式排序 / API-045/048 无 `updated_at` / refresh 不含 `role`）+ Sprint-27 P2（`visible_document_where_clause` 未使用 / `upsert_link` 目标解析）。不升 Phase；下一阶段范围待用户定义（候选：移除用户 / 重置密码 / 邀请码 / REQ-016 / 真实团队端到端验证 / 产品化）。
+- **收口结论（2026-08-07）**：Phase2D 三 slice（Sprint-26/27/28）退出标准全部达成——TC-P2-AUTH-001 / TC-P2-ACC-001 / TC-P2-ACC-002 通过，权限红线（凭证安全 / 跨用户隔离 / 管理接口仅 admin / 用户列表不暴露 `password_hash`）未被破坏，「账号 → 权限 → 团队协作」闭环成形。已知偏差经用户确认全接受、留后续，不阻塞收口（偏差清单见 `docs/design/accounts-auth.md` §18.9 + Sprint-27 P2）。不升 Phase；下一阶段范围待用户定义（候选：移除用户 / 重置密码 / 邀请码 / REQ-016 / 真实团队端到端验证 / 产品化）。
 
 > **维护态工程治理（2026-08-11 立项，非功能 Phase）**：P0 test DB guard（NFR-005）+ CI 最小门（NFR-006）属工程非功能要求，**不改变功能 Phase / 交付物范围 / REQ 覆盖**；Sprint-31（维护态批6）/ task-041/042，实施口径见 `docs/research/2026-08-10-code-governance-rollout-plan.md` §3。
 
@@ -144,37 +149,37 @@
 
 ## 4. REQ 覆盖矩阵
 
-> 本表用于固定 `02-srs` 的全部 REQ 在 PRD 层的阶段归属与交付物形态；不得据此扩大 Phase1 范围。
+> 本表用于固定 `02-srs` 的全部 REQ 在 PRD 层的阶段归属与交付物形态；不得据此扩大 Phase1 范围。覆盖状态列只保留阶段状态与 TC 验收锚点；实现证据（表 / API / migration / Sprint / PR）见 `docs/design/req-implementation-index.md`。
 
 | REQ-ID | F-ID | 功能 / 产品能力 | 阶段 | 交付物形态 | 覆盖状态 |
 |---|---|---|---|---|---|
-| REQ-001 | F-001 | 多空间隔离 | `[P1]` | Demo | Phase1 必演示 |
-| REQ-002 | F-001 | 空间切换 | `[P1]` | Demo | Phase1 必演示 |
-| REQ-003 | F-001 | 文档权限分级 / 私有文档 | `[P1]` | Demo | Phase1 必演示 |
-| REQ-004 | F-002 | Markdown 文档 CRUD | `[P1]` | Demo | Phase1 必演示 |
-| REQ-005 | F-002 | 行内编辑 | `[P1]` | Demo | Phase1 必演示 |
-| REQ-006 | F-002 | 版本历史 | `[P1]` | Demo | Phase1 必演示 |
-| REQ-007 | F-003 | 全文 / 语义搜索 | `[P1]` | Demo | Phase1 必演示（hybrid：关键词 + `ts_vector` SQL 候选 + pgvector 语义召回） |
-| REQ-008 | F-003 | AI 问答（RAG） | `[P1]` | Demo | Phase1 必演示 |
-| REQ-009 | F-004 | 多格式导入 | `[P1]` | Demo | Phase1 降级演示：`.md` / `.txt` 已提取文本入库；真实 Word / PDF 解析留后续真实化 |
-| REQ-010 | F-004 | 图片 / 白板 OCR | `[P1]` | Demo | Phase1 降级演示：以已提取文本替代；OCR 引擎真实化留后续阶段（RG-003 No-Go） |
-| REQ-011 | F-005 | 桌面浏览器访问 | `[P1]` | Demo | Phase1 必演示 |
-| REQ-012 | F-007 | 标签视图 | `[P2]` | 个人知识组织 | Phase2A 最小版已细化（扁平标签 + 独立视图 + 单标签筛选 + 文档详情打标签；见 02/06/07/09） |
-| REQ-013 | F-008 | **主题时间线（REQ-013a）+ 关联图视图（REQ-013b）** | `[P2]` | 团队 MVP | **REQ-013a 主题时间线·Phase2B 首批·第二 slice（紧随 REQ-014）·已实现并补齐验证**：关键词/标签驱动（API-033 `q`/`tag_ids`）+ 候选 A 实时聚合不建表 + 标题 ILIKE/chunk.ts_vector 命中 + actor（linked=null）+ 密度 ratio + 逃生舱；TC-P2-TL-001 自动化、运行态 API smoke、Edge headless 浏览器 smoke、真实 PG 大数据性能 smoke 已通过（TL-C-001..011 已确认，见 `docs/design/timeline.md`）。**REQ-013b 关联图愿景**，待主题时间线试用反馈后评估 |
-| REQ-014 | F-008 | AI 润色 + 写作侧边栏引用 | `[P2]` | 团队 MVP | **Phase2B 首批核心·已实现（MVP 级，前端 vertical slice 闭环：PR#89–95 / v1.1.0 / TC-P2-AI-001 live 通过）**；数据外发风险已接受（RG-008 Go）；详见 `docs/design/ai-polish.md` |
+| REQ-001 | F-001 | 多空间隔离 | `[P1]` | Demo | P1-已实现（TC-P1-001） |
+| REQ-002 | F-001 | 空间切换 | `[P1]` | Demo | P1-已实现（TC-P1-002） |
+| REQ-003 | F-001 | 文档权限分级 / 私有文档 | `[P1]` | Demo | P1-已实现（TC-P1-003） |
+| REQ-004 | F-002 | Markdown 文档 CRUD | `[P1]` | Demo | P1-已实现（TC-P1-004） |
+| REQ-005 | F-002 | 行内编辑 | `[P1]` | Demo | P1-已实现（TC-P1-005） |
+| REQ-006 | F-002 | 版本历史 | `[P1]` | Demo | P1-已实现（TC-P1-006） |
+| REQ-007 | F-003 | 全文 / 语义搜索 | `[P1]` | Demo | P1-已实现（hybrid search，TC-P1-007；见 req-implementation-index） |
+| REQ-008 | F-003 | AI 问答（RAG） | `[P1]` | Demo | P1-已实现（TC-P1-008） |
+| REQ-009 | F-004 | 多格式导入 | `[P1]` | Demo | P1-降级实现：`.md` / `.txt` 已提取文本入库；真实 Word / PDF 解析留后续（TC-P1-009） |
+| REQ-010 | F-004 | 图片 / 白板 OCR | `[P1]` | Demo | P1-降级实现：以已提取文本替代；OCR 真实化留后续（TC-P1-010） |
+| REQ-011 | F-005 | 桌面浏览器访问 | `[P1]` | Demo | P1-已实现（TC-P1-011） |
+| REQ-012 | F-007 | 标签视图 | `[P2]` | 个人知识组织 | P2-已实现（TC-P2-TAG-001） |
+| REQ-013 | F-008 | **主题时间线（REQ-013a）+ 关联图视图（REQ-013b）** | `[P2]` | 团队 MVP | REQ-013a·P2-已实现（Phase2B 第二 slice，TC-P2-TL-001；见 req-implementation-index + `docs/design/timeline.md`）；REQ-013b·愿景骨架 |
+| REQ-014 | F-008 | AI 润色 + 写作侧边栏引用 | `[P2]` | 团队 MVP | P2-已实现（MVP 级，TC-P2-AI-001；数据外发风险已接受 RG-008，见 req-implementation-index + `docs/design/ai-polish.md`） |
 | REQ-015 | F-008 | 跨空间文档推送 | `[P2]` | 后续 Phase | 不进 Phase2B 首批，重依赖 / 安全敏感 |
 | REQ-016 | F-008 | 多人协作 | `[P2]` | 后续 Phase | 不进 Phase2B 首批，重依赖 / 并发复杂 |
 | REQ-017 | F-008 | 跨设备 / 移动端 | `[P2]` | 后续 Phase | 不进 Phase2B 首批，移动端禁止进入近期 |
-| REQ-018 | F-009a | Obsidian Vault 兼容（导入数据库 / 仅本地挂载） | `[P2]` | 本地知识源接入 MVP | Phase2C·已设计（模式 B 浏览器 File System Access，RG-009 Go）；模式 A 导入数据库已随 Phase2B 交付；仅本地挂载=个人/当前设备来源，与 LUMEN DB 文档左侧分区，不进服务端 RAG |
+| REQ-018 | F-009a | Obsidian Vault 兼容（导入数据库 / 仅本地挂载） | `[P2]` | 本地知识源接入 MVP | Phase2C·已实现（模式 B 浏览器仅本地挂载，RG-009 Go，TC-P2-VAULT-001）；模式 A 已随 Phase2B 交付；仅本地挂载内容不进服务端 RAG |
 | REQ-019 | F-009 | 录音转文字 + 摘要 | `[愿景]` | 产品 | 待技术验证 |
 | REQ-020 | F-010 | 问题热力矩阵 | `[愿景]` | 产品 | 高风险，待技术验证 |
 | REQ-021 | F-010 | 事件因果展开 | `[愿景]` | 产品 | 高风险，待技术验证 |
 | REQ-022 | F-009 | 对外只读简报 | `[愿景]` | 产品 | 待技术验证 |
 | REQ-023 | F-009 | 文档包 / 管理层摘要 / 气泡图谱 / 跨组织复用 | `[愿景]` | 产品 | 粗粒度骨架，升阶段前需拆分 |
-| REQ-024 | F-008 | 时间轴密度热条 | `[P2]` | 团队 MVP | **Phase2B 首批·第二 slice（依赖 REQ-013a）**；**已实现（随 REQ-013a 第二 slice 落地：候选 A 4 档色阶 + 量化 ratio + 事件数密度，传 `q` 反映主题活跃节奏；TC-P2-TL-001 通过）** |
+| REQ-024 | F-008 | 时间轴密度热条 | `[P2]` | 团队 MVP | Phase2B 第二 slice·已实现（随 REQ-013a，TC-P2-TL-001；见 req-implementation-index） |
 | REQ-025 | F-007 | 快速录入索引条目 | `[P2]` | 个人知识组织 | Phase2A 已完成（TC-P2-QUICK-001 通过） |
 | REQ-026 | F-007 | 内部链接 + 反向链接 | `[P2]` | 个人知识组织 | Phase2A 已完成（TC-P2-LINK-001 通过） |
-| REQ-027 | F-011 | 单文档导出 PDF | `[P1]` | 个人增强 Beta | P1.5B 已实现（Sprint-18 / TC-P1-017 通过）；从 Phase2 提前 |
+| REQ-027 | F-011 | 单文档导出 PDF | `[P1]` | 个人增强 Beta | P1.5B-已实现（TC-P1-017；从 Phase2 提前） |
 | REQ-028 | F-009 | 飞书自动同步 | `[愿景]` | 产品 | 待技术验证 |
 | REQ-029 | F-010 | 多视角联动闭环 | `[愿景]` | 产品 | 待技术验证 |
 | REQ-030 | F-010 | 路径推理 | `[愿景]` | 产品 | 高风险，待技术验证 |
@@ -183,22 +188,22 @@
 | REQ-033 | F-010 | 假设检验 / 证据地图 | `[愿景]` | 产品 | 高风险，待技术验证 |
 | REQ-034 | F-010 | 信号追踪 | `[愿景]` | 产品 | 待技术验证 |
 | REQ-035 | F-009 | 分析包 A Kit | `[愿景]` | 产品 | 待技术验证 |
-| REQ-036 | F-006 | 术语管理 | `[P1]` | Demo | Phase1 必演示 |
-| REQ-048 | F-006 | 术语领域树（REQ-036 增强：领域树组织 + 内容分类 + 来源追溯） | `[P1]` | Demo | 维护态增强·已实现（2026-08-07，migration 017，API-051..053，TC-P2-TERM-001） |
-| REQ-037 | F-011 | 批量 / 文件夹导入（`.md` / `.txt`） | `[P1]` | 个人可用 Alpha | P1.5A 已完成（TC-P1-015 通过） |
-| REQ-038 | F-011 | 单文档 `.md` + 空间 ZIP 导出 | `[P1]` | 个人可用 Alpha | P1.5A 已完成（TC-P1-016 通过） |
-| REQ-039 | F-007 | 文档目录树（嵌套文件夹 CRUD / 移动 / 排序 + 导入保留结构） | `[P2]` | 团队 MVP | **Phase2B 第三 slice（folder-tree）已实现**：`lumen_folders` 嵌套树 + 文档 `folder_id` + CRUD / 移动 / 排序（API-034..038）+ 导入 `preserve_structure`（API-029 扩展）+ 前端文件管理器；TC-P2-FOLDER-001 通过；folder 不独立设权限 |
-| REQ-040 | F-012 | 账户注册 | `[P2]` | 团队验证 | Phase2D·已完成（2026-08-07，Sprint-26，PR#112 v3.0.0，TC-P2-AUTH-001 通过）：bcrypt 哈希 + `lumen_users` 扩列 + 默认个人空间 |
-| REQ-041 | F-012 | 凭证登录 | `[P2]` | 团队验证 | Phase2D·已完成（Sprint-26）：bcrypt verify + 不透明 token + `lumen_sessions` + 失败锁定 |
-| REQ-042 | F-012 | 登出 / 会话管理 | `[P2]` | 团队验证 | Phase2D·已完成（Sprint-26）：会话撤销 + TTL + 续期轮换 + 多设备会话 |
-| REQ-043 | F-013 | 权限多人化：owner 过滤（REQ-001/002/003 扩展） | `[P2]` | 团队验证 | Phase2D·Sprint-27 已完成（2026-08-07，PR#114，TC-P2-ACC-001 通过）：owner_id 跨用户过滤全路径回归 |
-| REQ-044 | F-013 | 跨用户隔离（私有仅 owner / external 仅 owner 可写） | `[P2]` | 团队验证 | Phase2D·Sprint-27 已完成：私有按 owner 过滤 + external 仅 owner 可写 + 跨用户隔离回归 |
-| REQ-045 | F-014 | 全局角色分层（admin/member） | `[P2]` | 团队验证 | Phase2D·Sprint-28 已完成（2026-08-07，PR#117 v3.1.0，TC-P2-ACC-002 通过）：`lumen_users.role` + migration 016 |
-| REQ-046 | F-014 | admin 用户管理后台 | `[P2]` | 团队验证 | Phase2D·Sprint-28 已完成：用户列表 / 改角色 / 禁用启用；管理接口仅 admin（4030），不暴露 `password_hash` |
-| REQ-047 | F-015 | 团队空间加入（space 域成员 CRUD） | `[P2]` | 团队验证 | Phase2D·Sprint-28 已完成：按 email 搜索添加 / 改空间角色 / 移除 + 空间设置成员管理 UI |
-| REQ-049 | F-009a | 本地挂载可编辑（增删查改，REQ-018 模式 B 增强） | `[P2]` | 团队验证 | 维护态·已实现（2026-08-08，v3.5.0）：纯前端 FSA 写路径 + 挂载编辑态 + 批4 多挂载增强；立项见 `docs/design/batch-maintenance-2026-08-08.md` |
-| REQ-050 | F-012 | admin 成员空间可见性（用户详情抽屉跨空间授予 / 撤销） | `[P2]` | 团队验证 | 维护态批5·已实现（2026-08-09，Sprint-30，v3.7.0，PR#120，TC-P2-ACC-003）：API-054 admin 只读接口 + `GET /api/spaces` admin 全空间分支 |
-| REQ-051 | F-012 | 登录密码小眼睛 + 忘记密码自助重置 | `[P2]` | 团队验证 | 维护态批5·已实现（2026-08-09，Sprint-30，TC-P2-AUTH-002）：API-055/056 + migration 018 reset 3 字段；无 SMTP → reset token 降级写日志；重置吊销全部 session |
+| REQ-036 | F-006 | 术语管理 | `[P1]` | Demo | P1-已实现（TC-P1-012） |
+| REQ-048 | F-006 | 术语领域树（REQ-036 增强：领域树组织 + 内容分类 + 来源追溯） | `[P1]` | Demo | 维护态增强·已实现（TC-P2-TERM-001；见 req-implementation-index） |
+| REQ-037 | F-011 | 批量 / 文件夹导入（`.md` / `.txt`） | `[P1]` | 个人可用 Alpha | P1.5A-已实现（TC-P1-015） |
+| REQ-038 | F-011 | 单文档 `.md` + 空间 ZIP 导出 | `[P1]` | 个人可用 Alpha | P1.5A-已实现（TC-P1-016） |
+| REQ-039 | F-007 | 文档目录树（嵌套文件夹 CRUD / 移动 / 排序 + 导入保留结构） | `[P2]` | 团队 MVP | Phase2B 第三 slice·已实现（TC-P2-FOLDER-001；folder 不独立设权限，见 req-implementation-index） |
+| REQ-040 | F-012 | 账户注册 | `[P2]` | 团队验证 | Phase2D·已实现（Sprint-26，TC-P2-AUTH-001；见 req-implementation-index） |
+| REQ-041 | F-012 | 凭证登录 | `[P2]` | 团队验证 | Phase2D·已实现（Sprint-26，TC-P2-AUTH-001） |
+| REQ-042 | F-012 | 登出 / 会话管理 | `[P2]` | 团队验证 | Phase2D·已实现（Sprint-26，TC-P2-AUTH-001） |
+| REQ-043 | F-013 | 权限多人化：owner 过滤（REQ-001/002/003 扩展） | `[P2]` | 团队验证 | Phase2D·已实现（Sprint-27，TC-P2-ACC-001） |
+| REQ-044 | F-013 | 跨用户隔离（私有仅 owner / external 仅 owner 可写） | `[P2]` | 团队验证 | Phase2D·已实现（Sprint-27，TC-P2-ACC-001） |
+| REQ-045 | F-014 | 全局角色分层（admin/member） | `[P2]` | 团队验证 | Phase2D·已实现（Sprint-28，TC-P2-ACC-002；见 req-implementation-index） |
+| REQ-046 | F-014 | admin 用户管理后台 | `[P2]` | 团队验证 | Phase2D·已实现（Sprint-28，TC-P2-ACC-002） |
+| REQ-047 | F-015 | 团队空间加入（space 域成员 CRUD） | `[P2]` | 团队验证 | Phase2D·已实现（Sprint-28，TC-P2-ACC-002） |
+| REQ-049 | F-009a | 本地挂载可编辑（增删查改，REQ-018 模式 B 增强） | `[P2]` | 团队验证 | 维护态·已实现（2026-08-08，v3.5.0）；见 req-implementation-index + `docs/design/batch-maintenance-2026-08-08.md` |
+| REQ-050 | F-012 | admin 成员空间可见性（用户详情抽屉跨空间授予 / 撤销） | `[P2]` | 团队验证 | 维护态批5·已实现（Sprint-30，v3.7.0，TC-P2-ACC-003；见 req-implementation-index） |
+| REQ-051 | F-012 | 登录密码小眼睛 + 忘记密码自助重置 | `[P2]` | 团队验证 | 维护态批5·已实现（Sprint-30，v3.7.0，TC-P2-AUTH-002；见 req-implementation-index） |
 
 ## 4.1 证据 / 验收引用
 
