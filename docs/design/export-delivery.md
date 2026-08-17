@@ -14,8 +14,55 @@
 | 交付物形态 | 个人可用 Alpha / 个人增强 Beta |
 | 当前状态 | Phase1.5A `.md` / ZIP 导出已完成并通过 TC-P1-016；Phase1.5B PDF 已随 Sprint-18 完成并通过 TC-P1-017，v1.7.0 已补下载端点 + 前端下载闭环 |
 | 流程 ID | Flow-007（`.md` / ZIP 导出备份）/ Flow-008（PDF 导出） |
-| 最后更新 | 2026-08-04（v1.7.0：API-019 `GET /api/export-pdf/{export_id}/download` + 前端下载闭环已实现，TC-P1-017 补充通过） |
+| 最后更新 | 2026-08-17（新增 §0.5 详细类图 DIAG-CLS-EXPORT-01 + §3.3 PDF 任务状态机 DIAG-STATE-EXPORT-01，OO 覆盖度补全 Batch A2）；前次 2026-08-04（v1.7.0：API-019 `GET /api/export-pdf/{export_id}/download` + 前端下载闭环已实现，TC-P1-017 补充通过） |
 | 下游影响 | 08 Sprint-17 / Sprint-18、09 TC-P1-016 / TC-P1-017、07 API-030 / API-019 |
+
+### 0.5 详细类图（DIAG-CLS-EXPORT-01）
+
+> 图纸驱动编码：导出交付子系统的类级视图（数据类 + `RepositoryProtocol` 契约 + 服务层函数）。类图挂 REQ-038（`.md` / ZIP）/ REQ-027（PDF）；方法签名以 `backend/service/export.py` 与 `backend/repository/protocol.py` 为准。PDF 导出任务状态机（running / done / failed）见 §3.2 与 `DIAG-STATE-EXPORT-01`（`ingestion.md` 同批补）。
+
+```mermaid
+classDiagram
+  direction LR
+  class DocumentExport {
+    +document_id
+    +content_md
+    +version_no
+  }
+  class SpaceExport {
+    +documents
+    +zip_bytes
+  }
+  class PdfExportOptions {
+    +font_paths
+  }
+  class PdfExportResult {
+    +export_id
+    +status
+    +artifact_path
+  }
+  class RepositoryProtocol {
+    <<interface>>
+    +get_visible_document(user_id, space_id, document_id) Document
+    +read_export_version(document, version_no) tuple
+    +create_pdf_export(...) DocExport
+    +get_pdf_export(export_id) DocExport
+  }
+  class ExportService {
+    +export_document_md(repository, user_id, current_space_id, document_id, version_no) DocumentExport
+    +export_space_zip(repository, user_id, current_space_id) SpaceExport
+    +create_pdf_export(repository, ...) PdfExportResult
+    +download_pdf_export(repository, ...) PdfArtifactDownload
+    -_render_markdown_pdf(content_md, options) bytes
+    -_resolve_pdf_font(font_paths) str
+  }
+
+  ExportService --> RepositoryProtocol : 可见性复验 + 导出任务读写
+  ExportService ..> DocumentExport : .md 下载（直接响应）
+  ExportService ..> SpaceExport : ZIP 打包（仅可见文档）
+  ExportService ..> PdfExportResult : ReportLab 渲染 + artifact
+  PdfExportOptions ..> PdfExportResult : 中文字体解析
+```
 
 ## 1. 职责与边界
 
@@ -71,6 +118,20 @@ flowchart TB
 5. 前端使用 `export_id` 请求 `GET /api/export-pdf/{export_id}/download`，后端复验当前空间、源文档可见性、任务状态与 artifact 目录边界后返回 `application/pdf`。
 6. PDF 渲染库不可用、字体缺失或导出失败时返回 5030 / failed，不生成坏文件；下载任务未完成 / failed / 无 artifact 返回 4090。
 7. 导出产物首版写入 `tmp/pdf_exports`，继承源文档权限，不生成公开长期链接；过期清理 job 留后续。
+
+### 3.3 PDF 导出任务状态机（DIAG-STATE-EXPORT-01）
+
+> 详细设计层对象状态图（对照 OO 方法论转换⑧）。`lumen_doc_exports.status`；挂 REQ-027；异常路径：依赖不可用 / 字体缺失 / 渲染失败 → `failed` + 5030，不生成坏文件（EX-008）；下载复验失败返回 4004 / 4090，不泄露越权信息。artifact 首版写 `tmp/pdf_exports`，继承源文档权限。
+
+```mermaid
+stateDiagram-v2
+  [*] --> running : 创建导出任务（复验文档可见后）
+  running --> done : ReportLab 渲染成功（写 artifact_path）
+  running --> failed : 依赖不可用 / 字体缺失 / 渲染异常（5030）
+  done --> downloaded : GET download 复验通过（application/pdf）
+  failed --> [*]
+  downloaded --> [*]
+```
 
 ## 4. 数据、接口与权限契约
 

@@ -3,7 +3,7 @@
 > 定位：本文是**详细设计节点**的入口清单，帮助从「子系统 → 详细设计文档」一眼定位。它不新增需求、接口、数据表或验收目标。
 > **详细设计节点总清单** = `docs/06-db-design.md`（数据契约）+ `docs/07-api-spec.md`（接口契约）+ 本文所列 `docs/design/*`（逐子系统 / 前端详细设计）。
 > 子系统 ↔ 设计文档的权威映射见 `docs/04-architecture.md` §2 MOD 表「详细设计」列；本文按子系统分组复核。
-> 子系统详细设计统一含「职责 → 流程 / 状态机 → 数据 / 接口契约 → **详细类图 `DIAG-CLS-*`** → 失败降级 → 验收追溯 → 实现偏差」结构（OO 图纸驱动编码）；已落地 `DIAG-CLS-AUTH/INGEST/RAG/PERM-01`。
+> 子系统详细设计统一含「职责 → 流程 / 状态机 → 数据 / 接口契约 → **详细类图 `DIAG-CLS-*`** → 失败降级 → 验收追溯 → 实现偏差」结构（OO 图纸驱动编码）；已落地 `DIAG-CLS-AUTH/INGEST/RAG/PERM/TERM/FOLDER/EXPORT/POLISH/AI-01`（2026-08-17 Batch A2 补齐后 9/12；timeline / intelligence-analysis / frontend-interaction 按上表豁免或由前端交互设计承载），有状态对象另挂 `DIAG-STATE-*`（IMPORT / EXPORT / DRAFT / SESSION）。
 > 首版建立于 2026-07-21；2026-08-17 重建为「按子系统分组」清单（区分文档类型）。
 
 ## 1. 子系统详细设计（对应 04 §2 MOD）
@@ -11,17 +11,17 @@
 | 文档 | 对应 MOD · 子系统 | 承接 REQ | 状态 | 图 |
 |---|---|---|---|---|
 | `permissions.md` | MOD-001 空间与权限 | REQ-001/002/003 | P1-已实现 | flowchart + DIAG-CLS-PERM-01 |
-| `ingestion.md` | MOD-003 内容导入 | REQ-009/010/037（+ Flow-D-014 REQ-018） | P1 降级 / Phase1.5A·2B 已实现 | flowchart ×3 + DIAG-CLS-INGEST-01 |
+| `ingestion.md` | MOD-003 内容导入 | REQ-009/010/037（+ Flow-D-014 REQ-018） | P1 降级 / Phase1.5A·2B 已实现 | flowchart ×3 + DIAG-CLS-INGEST-01 + DIAG-STATE-IMPORT-01 |
 | `rag-retrieval.md` | MOD-004 检索问答 | REQ-007/008 | P1-已实现 | flowchart + DIAG-CLS-RAG-01 |
-| `ai-assistant.md` | MOD-004 扩展（AI 助手） | REQ-008 | 已实现（维护态批3） | — |
-| `term-management.md` | MOD-005 术语管理 | REQ-036 | P1-已实现 | flowchart |
+| `ai-assistant.md` | MOD-004 扩展（AI 助手） | REQ-008 | 已实现（维护态批3） | DIAG-CLS-AI-01 |
+| `term-management.md` | MOD-005 术语管理 | REQ-036 | P1-已实现 | flowchart + DIAG-CLS-TERM-01 |
 | `frontend-interaction.md` | MOD-006 个人知识组织（前端交互） | REQ-001..011、P1/P2 UI | P1-P2 已实现 | sequenceDiagram + flowchart |
-| `folder-tree.md` | MOD-006 文档目录树 | REQ-039 | Phase2B 已实现 | flowchart |
-| `timeline.md` | MOD-006 主题时间线 | REQ-013a/024 | Phase2B 已实现 | — |
-| `export-delivery.md` | MOD-007 导出交付 | REQ-038/027 | Phase1.5A/B 已实现 | flowchart |
-| `ai-polish.md` | MOD-007 写作增强（AI 润色 / 引用） | REQ-014 | Phase2B 已实现 | stateDiagram |
-| `intelligence-analysis.md` | MOD-009 情报分析 | REQ-029..034 | 愿景骨架 | flowchart |
-| `accounts-auth.md` | MOD-011 账户与认证（多人权限） | REQ-040..047/050/051 | Phase2D 已实现 | DIAG-CLS-AUTH-01 |
+| `folder-tree.md` | MOD-006 文档目录树 | REQ-039 | Phase2B 已实现 | flowchart + DIAG-CLS-FOLDER-01 |
+| `timeline.md` | MOD-006 主题时间线 | REQ-013a/024 | Phase2B 已实现 | —（详细类图豁免：时间切片与密度聚合为无状态查询逻辑，无服务对象状态机；流程见 04 §5 Flow-013） |
+| `export-delivery.md` | MOD-007 导出交付 | REQ-038/027 | Phase1.5A/B 已实现 | flowchart + DIAG-CLS-EXPORT-01 + DIAG-STATE-EXPORT-01 |
+| `ai-polish.md` | MOD-007 写作增强（AI 润色 / 引用） | REQ-014 | Phase2B 已实现 | DIAG-CLS-POLISH-01 + DIAG-STATE-DRAFT-01 |
+| `intelligence-analysis.md` | MOD-009 情报分析 | REQ-029..034 | 愿景骨架 | flowchart（详细类图豁免：愿景骨架未立项，待技术验证进入某 Phase 时按图纸驱动补 DIAG-CLS-*） |
+| `accounts-auth.md` | MOD-011 账户与认证（多人权限） | REQ-040..047/050/051 | Phase2D 已实现 | DIAG-CLS-AUTH-01 + DIAG-STATE-SESSION-01 |
 
 > MOD-002（文档管理）逻辑简单，无独立 design，见 06/07；MOD-010（情报交付）待技术验证，骨架见 06 §1。
 

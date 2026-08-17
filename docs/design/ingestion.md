@@ -15,7 +15,7 @@
 | 交付物形态 | Demo / 个人可用 Alpha |
 | 当前状态 | P1 已降级实现（`.md`/`.txt` + Embedding/pgvector 已落地；真实 Word/PDF/OCR 未实现）；Phase1.5A 批量 / 文件夹导入已完成并通过 TC-P1-015；Phase2B folder-tree 扩展 `preserve_structure=true` 已完成后端/API（task-028，真实 PG smoke 通过），前端文件管理器基础能力已由 task-029 补齐 |
 | 流程 ID | Flow-D-001（单文件导入主流水线）/ Flow-006（批量 / 文件夹导入，见 §2.2）/ Flow-D-012（导入保留目录结构，Phase2B 候选，见 `docs/design/folder-tree.md`）/ Flow-D-014（Vault 兼容双模式，见 §2.3） |
-| 最后更新 | 2026-08-04（REQ-018 Vault 兼容方向确认：导入数据库 / 仅本地挂载双模式；仅本地挂载内容默认个人 / 当前设备可见，不写入团队知识库） |
+| 最后更新 | 2026-08-17（新增 §2.4 导入任务状态机 DIAG-STATE-IMPORT-01，OO 覆盖度补全 Batch A2）；前次 2026-08-04（REQ-018 Vault 兼容方向确认：导入数据库 / 仅本地挂载双模式；仅本地挂载内容默认个人 / 当前设备可见，不写入团队知识库） |
 | 下游影响 | 08 Sprint-3、Sprint-16；09 TC-P1-009/010/015；07 API-011 / API-029 |
 
 ### 0.5 详细类图（DIAG-CLS-INGEST-01）
@@ -140,6 +140,32 @@ flowchart TB
 ### 2.3 Flow-D-014：Vault 兼容双模式（[P2]，REQ-018，Phase2C·已设计）
 
 > 状态：Phase2C·已设计（RG-009 PoC Go 2026-08-05）；模式 B 浏览器 File System Access MVP 路线采纳；不代表当前已实现。
+
+### 2.4 导入任务状态机（DIAG-STATE-IMPORT-01）
+
+> 详细设计层对象状态图（对照 OO 方法论转换⑧：交互图 → 活动 / 状态图）。`lumen_imports.status` 单文件任务态；批量导入（Flow-006）的逐文件结果（`items[].status`：`done / failed / skipped`）是响应级汇总，不落 `lumen_imports`，见 §2.2。挂 REQ-009 / REQ-037；异常路径：解析失败 / 编码不合法 → `failed` 并记原因，不生成脏文档（EX-003）；同名冲突默认 `skipped` 不静默覆盖（EX-006）。
+
+```mermaid
+stateDiagram-v2
+  [*] --> processing : 接收 .md / .txt（记 lumen_imports）
+  processing --> done : 清洗→切块→Embedding→入库成功（parsed_doc_id）
+  processing --> failed : 解析失败 / 编码不合法 / 异常（记原因）
+  done --> [*]
+  failed --> [*]
+```
+
+> 批量级逐文件结果（不落库，随响应返回）：
+
+```mermaid
+stateDiagram-v2
+  [*] --> itemCheck : 逐文件校验
+  itemCheck --> itemDone : 合法且无同名冲突（复用 Flow-D-001）
+  itemCheck --> itemFailed : 扩展名不支持 / 解析失败
+  itemCheck --> itemSkipped : 同名冲突（默认跳过）
+  itemDone --> [*]
+  itemFailed --> [*]
+  itemSkipped --> [*]
+```
 >
 > 已知天花板：浏览器 File System Access 句柄只活在浏览器进程、后端读不到，仅本地挂载内容无法进服务端 RAG / 全文搜索；要进 RAG 必须 (a) 本地 agent / 桌面端增量索引 或 (b) 导入数据库（见 §3 Vault 兼容策略）。
 

@@ -11,7 +11,7 @@
 | 输入来源 | `docs/00-scenario.md`、`docs/01-user-requirements.md`、`docs/02-srs.md`、`docs/03-prd.md`、`docs/env/local-env.md`、`ai/project-rules.md`、`docs/research/2026-07-15-overall-design-04-05-audit.md`、`docs/decisions/ADR-010-db-authority-derived-data-rebuildability.md` |
 | 覆盖功能 / REQ | Phase1：REQ-001..REQ-011、REQ-036；Phase1.5A：REQ-037/038；Phase1.5B：REQ-027；Phase2A：REQ-012/025/026；Phase2B / 后续 / 愿景保留架构骨架 |
 | 当前状态 | 目标架构基线已定，Phase1→Phase2D 各阶段架构事实均已实现并随代码反向同步（逐模块实现状态见 §2、验证见 `docs/09-verification.md`）；仍降级 / 候选：真实 Word/PDF 解析、OCR 与愿景能力；生产部署拓扑（⑪ 方案 A）已落盘（v3.5.0，见 §4） |
-| 最后更新 | 2026-08-17（模板对齐调整：§0 当前状态精简、新增 §0.2 需求概述 + §5.7-5.10 接口 / 数据结构 / 安全 / 维护设计概述 + §1.2.2 概设类图 DIAG-CLS-PRELIM-01；同日完成 OO 方法论收敛 §5.1/§5.4/§1.3/§1.2.1/ADR-006 + 新增 §5.5/§5.6 + MOD 表详细设计列补全；无架构决策变更）；前次 2026-08-04（Sprint-18 PDF 导出产品闭环） |
+| 最后更新 | 2026-08-17（§5.6 补概设交互图 DIAG-ARCH-SEQ-03/04（AI 润色 / 批量导入），OO 覆盖度补全 Batch A2；同日早前：模板对齐调整 §0 精简 / §0.2 / §5.7-5.10 / §1.2.2 概设类图 + OO 方法论收敛 §5.1/§5.4/§1.3/§1.2.1/ADR-006 + 新增 §5.5/§5.6 + MOD 表详细设计列补全；无架构决策变更）；前次 2026-08-04（Sprint-18 PDF 导出产品闭环） |
 
 ### 0.1 架构目标与约束
 
@@ -418,7 +418,7 @@ flowchart TB
 | 外部不可用 / 降级 | LLM / 导出依赖不可用时返回 5030 或明确 Mock 降级，不编造、不生成坏文件；库外问答明确「未找到」 | REQ-008、RG-003/004/006 |
 | 鉴权强制 | 权限必须由后端 API / service / DB 查询过滤执行；前端隐藏 / 禁用 / 路由守卫不是权限边界 | `document-lifecycle-rules §5.2` |
 
-### 5.6 概要级交互图（DIAG-ARCH-SEQ-01 / 02）
+### 5.6 概要级交互图（DIAG-ARCH-SEQ-01..04）
 
 > 概要设计层交互图：以「角色 / 子系统 → 子系统」消息级表达核心用例的交互（不写具体 endpoint 路径，接口契约见 07）。图 ID 规范：`DIAG-ARCH-SEQ-NN`（对照 `document-lifecycle-rules §13`）。
 
@@ -466,6 +466,61 @@ sequenceDiagram
   Auth-->>API: 已撤销
   API-->>Browser: 登出成功
 ```
+
+**DIAG-ARCH-SEQ-03 · Flow-005 AI 润色 / 写作引用（Phase2B）**
+
+```mermaid
+sequenceDiagram
+  participant Browser as React 前端
+  participant API as FastAPI API
+  participant Polish as 润色 service
+  participant RAG as 检索 service
+  participant LLM as 内网 LLM 中转
+
+  Browser->>API: 润色请求（选中文本 + 指令，Bearer token）
+  API->>Polish: 校验文档可见性（权限过滤）
+  Polish->>RAG: 写作引用模式检索候选来源（权限过滤）
+  Polish->>Polish: 收集空间术语上下文
+  Polish->>LLM: 构造 Prompt（片段 + 来源 + 术语）
+  alt LLM 可用
+    LLM-->>Polish: 草稿文本
+    Polish-->>API: 草稿（只存 hash + 摘要，不存敏感原文）
+    API-->>Browser: 草稿预览（应用 / 丢弃待用户确认）
+  else LLM 不可用且未降级
+    Polish-->>API: 5030 依赖不可用
+    API-->>Browser: 失败提示（不生成半成品）
+  end
+```
+
+> 数据外发护栏（RG-008，风险已接受 2026-07-30）：sources 仅限当前用户有权限的 chunk；草稿只存 `input_excerpt_hash` + `prompt_summary`；LLM 不可用返回 5030 或 Mock 降级。详细契约见 `docs/design/ai-polish.md`、`docs/07-api-spec.md`。
+
+**DIAG-ARCH-SEQ-04 · Flow-006 批量 / 文件夹导入（Phase1.5A → Phase2B folder-tree 扩展）**
+
+```mermaid
+sequenceDiagram
+  participant Browser as React 前端
+  participant API as FastAPI API
+  participant Ingest as 导入 service
+  participant Emb as 本机 Embedding
+  participant DB as PostgreSQL
+
+  Browser->>API: 批量导入（files[] + relative_paths[]）
+  API->>Ingest: 逐文件校验（.md / .txt）
+  alt 格式合法且无同名冲突
+    Ingest->>Ingest: preserve_structure 建复用 folder（Phase2B）
+    Ingest->>Emb: 清洗 → 切块 → Embedding（512 维）
+    Emb-->>Ingest: 向量
+    Ingest->>DB: 写文档 + chunks（权限 / 空间归属）
+    Ingest-->>API: 单文件 done（parsed_doc_id + folder_id）
+  else 不支持格式 / 解析失败
+    Ingest-->>API: 逐条 failed（记原因）
+  else 同名冲突
+    Ingest-->>API: 逐条 skipped（不静默覆盖）
+  end
+  API-->>Browser: 汇总（success / failed / skipped + items[]）
+```
+
+> 失败隔离原则：单文件失败不阻塞其他文件；成功项保留不回滚（EX-006）。详细流程与状态机见 `docs/design/ingestion.md`（含 DIAG-STATE-IMPORT-01）。
 
 ### 5.7 接口设计概述
 

@@ -16,8 +16,51 @@
 | 交付物形态 | Demo |
 | 当前状态 | **已编码 + 验证通过 + 用户浏览器验收通过**（2026-08-08：后端 310 tests OK / 前端 build 294 modules 绿 / `scripts/smoke-ai-assistant-browser.mjs` PASS；含 LLM 多配置切换：deepseek 通道真实出文） |
 | 流程 ID | Flow-D-ASSIST-01（多轮对话 / RAG），见 §3 |
-| 最后更新 | 2026-08-08 |
+| 最后更新 | 2026-08-17（新增 §0.5 详细类图 DIAG-CLS-AI-01，OO 覆盖度补全 Batch A2）；前次 2026-08-08 |
 | 下游影响 | `07`（API-010 请求体扩 history + use_knowledge_base）、`09`（验收记录已回写，TC-P2-ASSIST-001）、`08`（维护态批次进度）、`frontend/src`（useAiAssistant / AiAssistant / App 接线） |
+
+### 0.5 详细类图（DIAG-CLS-AI-01）
+
+> 图纸驱动编码：AI 助手子系统的类级视图（复用 RAG 检索问答服务 + 前端 hook/组件职责）。类图挂 REQ-008（RAG 扩展）/ NFR-004；后端方法签名以 `backend/service/rag.py` 为准（`answer_question` 支持 `history` + `use_knowledge_base`），LLM 经 `service/llm_adapter.py` 多通道切换；前端以 `frontend/src/`（useAiAssistant / AiAssistant 组件）承载，不画 OO 类图（对齐 REDESIGN-C-003 裁决：前端用 frontend-interaction 承载）。
+
+```mermaid
+classDiagram
+  direction LR
+  class RagSource {
+    +doc_title
+    +excerpt
+  }
+  class RagAnswer {
+    +answer
+    +sources
+  }
+  class RepositoryProtocol {
+    <<interface>>
+    +find_candidate_chunks(user_id, space_id, question) list
+    +list_visible_terms(space_id) list
+  }
+  class RagService {
+    +answer_question(repository, user_id, current_space_id, question, history, use_knowledge_base) RagAnswer
+    -_find_candidate_chunks(...) list
+    -_find_term_sources(...) list
+    -_build_answer(...) RagAnswer
+  }
+  class LlmAdapter {
+    <<adapter>>
+    +chat(prompt, history) str
+    +多通道切换（GLM / DeepSeek / Mock）
+  }
+  class UseAiAssistant {
+    <<frontend hook>>
+    +history 管理（路径 A：前端持有）
+    +use_knowledge_base 开关
+  }
+
+  RagService --> RepositoryProtocol : 候选 chunk + 术语（权限过滤）
+  RagService ..> LlmAdapter : prompt + history（多轮）
+  RagService ..> RagAnswer : 带来源回答（库外=未找到）
+  UseAiAssistant ..> RagService : REST API-010
+```
 
 ## 1. 职责与边界
 
