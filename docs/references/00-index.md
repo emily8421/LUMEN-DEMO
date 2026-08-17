@@ -8,8 +8,9 @@
 | 文件 | 类型 | 用途 | 状态 / 风险 |
 |---|---|---|---|
 | `ref-obsidian-overview.md` | 外部产品与技术调研 | 为 `docs/research/2026-07-20-obsidian-design-reference-suggestions.md` 提供 Obsidian 背景依据 | Reference；非 LUMEN 规格 |
-| `软件系统面向对象开发方法的过程要点及关系.md` | 外部软件工程方法论参考 | 作为 OOA/OOD 阶段产物与 LUMEN PLM 链路的对照参考 | 外部参考；正式引用前需人工校对原图 / 原始资料 |
+| `软件系统面向对象开发方法的过程要点及关系.md` | 外部软件工程方法论参考 | 作为 OOA/OOD 阶段产物与 LUMEN PLM 链路的对照参考；2026-08-17 起作为五阶段产物矩阵（阶段 × 核心图 × 核心文档）覆盖度评估与补全的指导依据（方案见 `docs/research/2026-08-17-oo-coverage-evaluation-and-diagram-mirror-plan.md`） | 外部参考；正式引用前需人工校对原图 / 原始资料 |
 | `软件系统面向过程开发方法的过程要点及关系.md` | 外部软件工程方法论参考 | 作为结构化分析设计阶段产物与 LUMEN PLM 链路的对照参考 | 外部参考；正式引用前需人工校对原图 / 原始资料 |
+| `Doc_ref-md/`（15 份） | 外部历史规范模板（`Doc_ref/` Word 原件的脱敏 md 转换件） | LUMEN 文档大纲对齐的参考依据（02/04 概述章骨架、设计说明 / 系统测试说明书 / 编码规范对照）；目录清单与使用注意见 `Doc_ref-md/README.md` | 外部参考；引用结构内容以 `Doc_ref/` 原件为准（原件 gitignored 不入库） |
 
 ## 2. 使用边界
 
