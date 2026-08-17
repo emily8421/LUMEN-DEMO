@@ -75,3 +75,9 @@ jobs:
       - name: Check frontend CSS token discipline
         working-directory: frontend
         run: node ../scripts/check-frontend-css.mjs
+
+      # 2026-08-17 图表生成式镜像同步校验：docs/diagrams/ + docs/tables/ 是
+      # scripts/extract-diagrams.mjs 从文档正文抽取的产物；文档改图 / 改表后
+      # 未重跑脚本即镜像过期，此步拦下。runner 自带 node，零依赖。
+      - name: Check docs diagrams/tables mirror sync
+        run: node scripts/extract-diagrams.mjs --check
