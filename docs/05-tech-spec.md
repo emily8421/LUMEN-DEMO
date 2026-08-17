@@ -11,7 +11,7 @@
 | 输入来源 | `docs/03-prd.md`、`docs/04-architecture.md`、`docs/env/local-env.md`、`ai/project-rules.md`、`docs/research/2026-07-15-overall-design-04-05-audit.md` |
 | 覆盖架构组件 | FastAPI 后端、React 前端、PostgreSQL + pgvector、Embedding / LLM 适配、导入解析、导出备份、PDF 候选 |
 | 当前状态 | 目标基线已定（Phase1 技术选型已钉死），各阶段技术事实已实现并随代码反向同步（逐项状态见 §1「当前实现状态」列、RG 见 §5.1）；仍候选 / 降级：真实 Word/PDF 解析、OCR、zhparser。历史实现细节见 `docs/09-verification.md` 与 CHANGELOG |
-| 最后更新 | 2026-08-17（模板对齐调整：§0 当前状态精简、§4.2 代码治理基线收敛归 research 治理报告；无技术决策变更）；前次 2026-08-04（Sprint-18 PDF 闭环） |
+| 最后更新 | 2026-08-17（§4.2 头部补「类代码规格说明书等价物」定位声明，OO 覆盖度补全 Batch A1；同日早前：模板对齐调整 §0 精简、§4.2 治理基线收敛归 research；无技术决策变更）；前次 2026-08-04（Sprint-18 PDF 闭环） |
 
 ## 1. 技术栈与版本
 
@@ -128,6 +128,7 @@ flowchart TB
 
 ### 4.2 代码层一致性基线
 
+> **定位声明（2026-08-17）**：参考 OO 方法论实现阶段的「类代码规格说明书」（遵循的编码规范 / 变量名称规范 / 语句结构 / 注释规范，对照 `docs/references/Doc_ref-md/编码规范.md`）在 LUMEN 无独立专文（裁决 G7：内容分散但覆盖更全，不新增文档），其**等价物** = 本节编码基线（后端分层 / 错误契约 / 命名）+ `ai/project-rules.md` §5（编码约定与禁区 + CSS 纪律）+ `docs/design/frontend-design-system.md`（前端规范）+ `docs/05-tech-spec.md` §2.5（运行时版本锁定）；映射登记见 `docs/README.md`「OO 方法五阶段产物映射」表。
 > 代码层一致性基线（错误契约 / 分层 / 类型 / CI 门 / 命名）的**完整治理状态与技术债登记**权威在 `docs/research/2026-08-10-code-constraint-framework.md`、`docs/research/2026-08-10-code-governance-rollout-plan.md` 与 `ai/project-rules.md` §5；本节只保留**当前有效基线概要**（新代码必须对齐），详细【已落地】执行记录 /【待对齐】技术债明细见上述权威源与 CHANGELOG。
 
 | 基线类 | 当前有效基线 |
