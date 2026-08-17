@@ -87,6 +87,7 @@
 
 - **默认 `mermaid`**：GitHub 原生渲染、无需额外工具，优先用于架构图 / ER 图 / 流程图 / 状态机 / 交互·时序图等多数场景。
 - **`plantuml` 备选**：复杂部署拓扑或时序图等 mermaid 表达力不足时可用；预览需本机或 CI 安装 plantuml，故仅作备选、不设为默认。
+- **用例图用 `plantuml`**：mermaid 无原生用例图语法，规范 UML 用例图（水平椭圆用例 / 火柴人 actor / 系统边界矩形 / `<<include>>` `<<extend>>`）只能用 plantuml `usecase` 表达（2026-08-17 实例：`docs/00-scenario.md` §3.4 DIAG-UC-01）；预览需本机 plantuml，GitHub 不原生渲染。
 - 性质为「建议 + 默认」，图表服务于表达，不要求每类文档凑齐所有图（见 §13）。
 
 ## 2.3 UI 原型策略

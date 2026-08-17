@@ -14,6 +14,69 @@
 | 当前状态 | P1 表结构**已落地 PostgreSQL**（Sprint-8 / task-008 T1–T5：8 张 `lumen_*` 表由 `migrations/001-005` 建，后端切 `PgRepository`；`lumen_chunks.embedding vector(512)` + hnsw + ts_vector 由 T4/T6 启用；migration 006 为 search 增加可选 zhparser / `simple` 回退配置）。内存 `demo_repository` 保留为单测 fake。Phase1.5A 的 REQ-037/038 已复用既有表完成、不新增迁移；Phase1.5B PDF 导出已落地 `lumen_doc_exports`（migration 013 + DocExport entity/ORM + Demo/Pg repository）；Phase2A 的标签、反链与快速录入表已落地；真实 Word/PDF 文本提取与 OCR 仍降级（RG-007 / RG-003）。2026-07-21 按 ADR-010 补“DB 权威运行态 + 衍生数据可重建”原则；**Phase2D 账号体系基础已落地（Sprint-26 / task-038，REQ-040/041/042）：migration 014 为 `lumen_users` 扩列（email / password_hash / status / last_login_at / failed_login_count / locked_until）+ 新建 `lumen_sessions`（不透明 token session，token 只存 SHA-256 摘要，TTL 8h 滑动续期 / 撤销 / 多设备）**；**Phase2D Sprint-28 已实现（2026-08-07，task-040，REQ-045/046/047）：migration 016 为 `lumen_users` 增加全局角色 `role`（admin / member，默认 member + CHECK）+ 为 `lumen_space_members` 补 `created_at`（支撑 API-046 `joined_at`），TC-P2-ACC-002 通过** |
 | 最后更新 | 2026-08-07（Sprint-28 编码完成：migration 016 落地 `lumen_users.role` + `lumen_space_members.created_at`，TC-P2-ACC-002 通过 / v3.1.0） |
 
+## 0.5 概念模型（领域模型 · DIAG-DOM-01）
+
+> 需求分析层的概念模型（对照 `docs/references/软件系统面向对象开发方法的过程要点及关系.md` 需求分析阶段「分析类图」）：表达 LUMEN 核心实体（概念类）及其关联，**只示意关键属性，不含字段级约束**——物理表 / 字段 / 索引权威见 §1/§2，本图是物理表的「概念上游」；实体与 REQ 的映射见 §6 追溯矩阵。
+> 覆盖边界：仅表达权威运行态实体（DB 权威，ADR-010）；chunks / 反链索引 / 计数等派生数据按 ADR-010 可从权威内容重建，不在此单独成概念类。本图不新增任何实体或字段，仅将既有表结构提升为概念视图。
+
+```mermaid
+classDiagram
+  direction LR
+  class User {
+    +name
+    +email
+    +role
+  }
+  class Space
+  class SpaceMember {
+    +role
+  }
+  class Session
+  class Document {
+    +title
+    +permission
+    +owner
+    +type
+  }
+  class DocumentVersion
+  class Chunk
+  class Folder
+  class Tag
+  class TagLink
+  class DocLink {
+    +linkType
+  }
+  class QuickEntry
+  class ImportJob
+  class Term
+  class TermCategory
+  class DocExport
+  class AiDraft
+  class VaultMount
+
+  User "1" --> "0..*" SpaceMember : 属于
+  Space "1" --> "0..*" SpaceMember : 成员
+  User "1" --> "0..*" Session : 建立
+  User "1" --> "0..*" Document : 拥有（owner / 私有）
+  Space "1" --> "0..*" Document : 承载
+  Document "1" --> "0..*" DocumentVersion : 版本
+  Document "1" --> "0..*" Chunk : 切块
+  Folder "1" --> "0..*" Folder : 嵌套
+  Folder "1" --> "0..*" Document : 归入
+  Tag "1" --> "0..*" TagLink : 标注
+  Document "1" --> "0..*" TagLink : 被打标
+  Document "1" --> "0..*" DocLink : 出链
+  Document "1" <-- "0..*" DocLink : 反链
+  User "1" --> "0..*" QuickEntry : 录入
+  Space "1" --> "0..*" ImportJob : 发起导入
+  Space "1" --> "0..*" Term : 定义
+  TermCategory "1" --> "0..*" Term : 归类
+  Space "1" --> "0..*" TermCategory : 领域
+  Document "1" --> "0..*" DocExport : 导出
+  Document "1" --> "0..*" AiDraft : 生成
+  User "1" --> "0..*" VaultMount : 挂载
+```
+
 ## 1. 表清单（完整）
 
 | 表 | 用途 | 阶段 | 设计状态 | 当前实现状态 | 追溯 |

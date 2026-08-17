@@ -92,6 +92,128 @@ LUMEN 是面向中小企业（典型：帮客户做 AI Agent 落地的初创公�
 | SC-008 | U-13 / U-31 / U-32 | REQ-012 / REQ-025 / REQ-026 | MOD-006 个人知识组织；`docs/07-api-spec.md` API-014/017/018/027/031/032 | TC-P2-TAG-001 / TC-P2-QUICK-001 / TC-P2-LINK-001 | Phase2A Task A/B 完成包 | Phase2A 已完成：标签、快速录入、内链 / 反链 |
 | SC-009 | U-44 | REQ-039 / REQ-037 | MOD-006 个人知识组织（folder-tree）；`docs/07-api-spec.md` API-034..037 + API-029 改造 | TC-P2-FOLDER-001 / TC-P1-015 扩展 | Sprint-22（候选） | 文档目录树组织 + 导入保留结构 |
 
+## 3.4 用例全景图（DIAG-UC-01）
+
+> 需求分析层用例视图（对照 `docs/references/软件系统面向对象开发方法的过程要点及关系.md` 需求分析阶段「用例图」）：以 UML 用例图标准符号（参与者火柴人、水平椭圆用例、系统边界矩形、`<<include>>` 关系）表达 LUMEN 全量用户能力的可交互边界，挂 REQ 追溯（权威映射见 §3.3 与 `01` §6）。用例按域聚合，阶段标签 `[P1]` / `[P2]` / `[愿景]` 与 `03 §3` 一致；愿景域用例需 `05` 技术验证通过后才可进入某 Phase。
+> 覆盖异常 / 权限路径：库外问答明确「未找到」不编造（REQ-008）；无权限访问返回空结果 / 403（REQ-001/003/043/044）；真实 Word/PDF 解析与图片 OCR 按降级口径（REQ-009/010）。本图为全景导航，不替代 `01` 逐 U-ID / REQ 的验收口径。
+> **渲染**：mermaid 无原生用例图语法，故本图用 plantuml 标准用例图；GitHub 不原生渲染 plantuml，需本机 plantuml（VS Code PlantUML 插件 / jar / 在线服务）预览，格式偏好见 `ai/project-rules.md` §2.2（plantuml 备选）。
+
+```plantuml
+@startuml
+left to right direction
+title LUMEN 用例全景图（DIAG-UC-01）
+
+actor "部署方 / 管理员（R-001）" as R1
+actor "客户团队成员（R-002）" as R2
+actor "新成员（R-003）" as R3
+
+rectangle "账户与权限域" {
+  usecase "登录 / 注册 / 登出会话\nREQ-040/041/042/051 [P2]" as A1
+  usecase "空间隔离与切换\nREQ-001/002 [P1]" as A2
+  usecase "文档权限分级 + owner 过滤\nREQ-003/043/044 [P1][P2]" as A3
+  usecase "角色分层 + 用户管理\nREQ-045/046/050 [P2]" as A4
+  usecase "团队空间加入\nREQ-047 [P2]" as A5
+}
+
+rectangle "文档管理域" {
+  usecase "文档 CRUD + 行内编辑 + 版本\nREQ-004/005/006 [P1]" as D1
+  usecase "文档目录树\nREQ-039 [P2]" as D2
+}
+
+rectangle "检索问答域" {
+  usecase "全文 / 语义搜索\nREQ-007 [P1]" as RQ1
+  usecase "RAG 问答（带来源）\nREQ-008 [P1]" as RQ2
+}
+
+rectangle "内容导入 / 导出域" {
+  usecase "多格式导入（降级口径）\nREQ-009/010/037 [P1]" as I1
+  usecase "导出 .md / ZIP / PDF\nREQ-027/038 [P1]" as I2
+}
+
+rectangle "术语管理域" {
+  usecase "空间术语维护\nREQ-036 [P1]" as T1
+  usecase "术语领域树\nREQ-048 [P1]" as T2
+}
+
+rectangle "个人知识组织域" {
+  usecase "标签视图\nREQ-012 [P2]" as O1
+  usecase "快速录入\nREQ-025 [P2]" as O2
+  usecase "内链 / 反链\nREQ-026 [P2]" as O3
+}
+
+rectangle "本地知识源域" {
+  usecase "Vault 挂载 / 本地编辑\nREQ-018/049 [P2]" as V1
+}
+
+rectangle "写作与团队增强域" {
+  usecase "AI 润色 + 写作引用\nREQ-014 [P2]" as W1
+  usecase "主题时间线 / 密度热条\nREQ-013a/024 [P2]" as W2
+}
+
+rectangle "愿景能力（技术验证后）" {
+  usecase "多人协作 / 跨空间推送 / 移动端\nREQ-015/016/017 [愿景]" as VN1
+  usecase "情报分析 / 情报交付\nREQ-019..023 / 028..035 [愿景]" as VN2
+}
+
+' 参与者关联（完整 actor → 用例映射见 01 §6 / §3.3；愿景域未实现，不连 actor）
+R1 --> A1
+R1 --> A2
+R1 --> A3
+R1 --> A4
+R1 --> A5
+R1 --> D1
+R1 --> D2
+R1 --> RQ1
+R1 --> RQ2
+R1 --> I1
+R1 --> I2
+R1 --> T1
+R1 --> T2
+R1 --> O1
+R1 --> O2
+R1 --> O3
+R1 --> V1
+R1 --> W1
+R1 --> W2
+
+R2 --> A1
+R2 --> A2
+R2 --> A3
+R2 --> D1
+R2 --> D2
+R2 --> RQ1
+R2 --> RQ2
+R2 --> I1
+R2 --> I2
+R2 --> T1
+R2 --> T2
+R2 --> O1
+R2 --> O2
+R2 --> O3
+R2 --> W1
+R2 --> W2
+
+R3 --> A1
+R3 --> A2
+R3 --> A3
+R3 --> D1
+R3 --> D2
+R3 --> RQ1
+R3 --> RQ2
+R3 --> T1
+R3 --> O1
+R3 --> O2
+R3 --> O3
+
+' 关系（<<include>> 语义）
+RQ2 ..> RQ1 : <<include>>
+A5 ..> A1 : <<include>>
+I2 ..> D1 : <<include>>
+W2 ..> RQ1 : <<include>>
+A3 ..> A1 : <<include>>
+@enduml
+```
+
 ## 4. 关联文档
 
 - 产品愿景叙事（愿景，**不直接驱动开发**）：docs/vision/product-vision.md
