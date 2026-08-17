@@ -30,7 +30,7 @@
 | API-031 / API-032 | tag.list_document_tags / add_document_tag / remove_document_tag / list_documents_by_tag | lumen_tag_links, lumen_tags, lumen_documents | 文档可写 + 标签同空间；document_count / 筛选按文档可见性 | 4001/4003/4004/4090/4220 | TC-P2-TAG-001 | Phase2A-已实现 |
 | API-017 | quick_entry.capture_quick_entry / discard_quick_entry | lumen_quick_entries, lumen_documents, lumen_tag_links | owner 私有 + 转文档后继承权限 | 4001/4003/4004/4220 | TC-P2-QUICK-001 | Phase2A-已实现 |
 | API-018 | doc_links.list_links / upsert_link | lumen_doc_links, lumen_documents | source / target 双向权限过滤 | 4001/4003/4004/4220 | TC-P2-LINK-001 | Phase2A-已实现 |
-| API-028 | writing.polish_document | lumen_ai_drafts, lumen_chunks, lumen_documents | 文档可写 + 来源 chunk 可见 | 4001/4003/4004/4220/5030 | TC-P2-AI-001 | Phase2B-契约草案 |
+| API-028 | writing.polish_document | lumen_ai_drafts, lumen_chunks, lumen_documents | 文档可写 + 来源 chunk 可见 | 4001/4003/4004/4220/5030 | TC-P2-AI-001 | Phase2B-已实现（RG-008 Go，Sprint-19） |
 | API-034 | folder.list_folders | lumen_folders | 空间成员；folder 不独立设权限，文档可见性按 permission | 4001/4003 | TC-P2-FOLDER-001 | Phase2B-第三 slice·已实现 |
 | API-035 | folder.create_folder | lumen_folders | 空间成员；同 parent 重名→4090 | 4001/4003/4090/4220 | TC-P2-FOLDER-001 | Phase2B-第三 slice·已实现 |
 | API-036 | folder.move_folder / rename_folder / delete_folder | lumen_folders | 空间成员；防环 / 跨空间→4220；删非空→4090 | 4001/4003/4004/4090/4220 | TC-P2-FOLDER-001 | Phase2B-第三 slice·已实现 |

@@ -273,8 +273,8 @@ for (const t of TABLES) {
   const body = extractTablesUnderHeading(t.rel, t.anchor);
   outputs.set(`docs/tables/${t.id}.md`, tablePage(t, body));
 }
-outputs.set('docs/diagrams/INDEX.md', buildDiagramIndex());
-outputs.set('docs/tables/INDEX.md', buildTableIndex());
+outputs.set('docs/diagrams/00-index.md', buildDiagramIndex());
+outputs.set('docs/tables/00-index.md', buildTableIndex());
 
 let mismatch = 0;
 let written = 0;
@@ -304,5 +304,5 @@ if (CHECK) {
   if (mismatch) { console.error(`docs-mirror check FAILED: ${mismatch} mismatch(es)`); process.exit(1); }
   console.log(`docs-mirror check PASS: ${outputs.size} files in sync`);
 } else {
-  console.log(`\nDone: ${written} files written (${DIAGRAMS.length} diagrams + ${TABLES.length} tables + 2 INDEX).`);
+  console.log(`\nDone: ${written} files written (${DIAGRAMS.length} diagrams + ${TABLES.length} tables + 2 00-index).`);
 }
