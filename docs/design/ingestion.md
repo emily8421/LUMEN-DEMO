@@ -18,6 +18,72 @@
 | 最后更新 | 2026-08-04（REQ-018 Vault 兼容方向确认：导入数据库 / 仅本地挂载双模式；仅本地挂载内容默认个人 / 当前设备可见，不写入团队知识库） |
 | 下游影响 | 08 Sprint-3、Sprint-16；09 TC-P1-009/010/015；07 API-011 / API-029 |
 
+### 0.5 详细类图（DIAG-CLS-INGEST-01）
+
+> 图纸驱动编码：内容导入子系统的类级视图（实体 + `RepositoryProtocol` 契约 + 服务层函数）。类图挂 REQ-009/010/037/018/049；方法签名以 `backend/service/imports.py`、`chunking.py`、`embedding.py` 与 `backend/repository/protocol.py` 为准。
+
+```mermaid
+classDiagram
+  direction LR
+  class ImportJob {
+    +id
+    +space_id
+    +source_filename
+    +status
+    +parsed_doc_id
+    +chunk_count
+    +error
+  }
+  class Document {
+    +id
+    +space_id
+    +title
+    +content_md
+    +owner_id
+    +permission
+    +folder_id
+  }
+  class DocumentChunk {
+    +id
+    +document_id
+    +ordinal
+    +text
+    +embedding
+  }
+  class RepositoryProtocol {
+    <<interface>>
+    +create_import_job(space_id, source_filename, created_by) ImportJob
+    +complete_import_job(import_id, parsed_doc_id, chunk_count) ImportJob
+    +fail_import_job(import_id, error) ImportJob
+    +require_import_job(import_id) ImportJob
+    +create_document(space_id, title, content_md, owner_id, permission, folder_id) Document
+    +replace_document_chunks(document_id, chunk_texts) list
+    +require_document(document_id) Document
+    +find_document_id_by_title(space_id, title) int
+  }
+  class ImportService {
+    +import_extracted_text(repository, user_id, current_space_id, request) ImportResult
+    +import_batch(repository, user_id, current_space_id, request) BatchImportResult
+  }
+  class ChunkingService {
+    +split_text_into_chunks(text, max_chars, overlap_chars) list
+    +clean_text(source_text) str
+  }
+  class EmbeddingService {
+    +embed_texts(texts, batch_size) list
+  }
+
+  ImportService --> RepositoryProtocol : 依赖
+  ImportService --> ChunkingService : 切块
+  ImportService --> EmbeddingService : 向量化
+  ChunkingService --> EmbeddingService : 结果向量化
+  ImportService ..> ImportJob : 创建 / 更新
+  ImportService ..> Document : 生成
+  ImportService ..> DocumentChunk : 落块
+  RepositoryProtocol ..> ImportJob : 契约
+  RepositoryProtocol ..> Document : 契约
+```
+
 ## 1. 职责
 
 `.md` / `.txt` 文本文件 → 清洗 → 切块 → Embedding → 入库，供检索问答；Phase1.5A 扩展为多文件 / 文件夹批量导入。真实 Word/PDF 文本提取属于 Phase1.5B 候选（RG-007），OCR 属后续（RG-003）。

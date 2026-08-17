@@ -15,6 +15,104 @@
 | 下游影响 | `docs/05-tech-spec.md` readiness gate（RG 待补）+ 认证技术栈、`docs/06-db-design.md` `lumen_users` 扩列 + `lumen_sessions` + migration 014、`docs/07-api-spec.md` auth API、`docs/08-dev-plan.md` Sprint-26、`docs/09-verification.md` TC-P2-AUTH-001 |
 | 范围外（留 Sprint-27/28） | 权限多人化实质改造（owner_id 跨用户过滤回归）、全局角色分层、用户管理后台 UI、REQ-016 多人实时协作 |
 
+### 0.5 详细类图（DIAG-CLS-AUTH-01）
+
+> 图纸驱动编码：账户与认证子系统的类级视图（实体 + `RepositoryProtocol` 契约 + 服务层函数）。类图挂 REQ-040/041/042/045/046/047/050/051；方法签名以 `backend/service/*.py` 与 `backend/repository/protocol.py` 为准；编码时按本图落 service 函数与 repository 方法，验收按 §14/§17/§18/§19 追溯。
+
+```mermaid
+classDiagram
+  direction LR
+  class User {
+    +id
+    +external_id
+    +email
+    +password_hash
+    +status
+    +role
+  }
+  class Session {
+    +id
+    +user_id
+    +current_space_id
+    +token_hash
+    +expires_at
+    +revoked_at
+  }
+  class Space
+  class SpaceMember {
+    +user_id
+    +space_id
+    +role
+  }
+  class SpaceMemberDetail {
+    +user_id
+    +name
+    +email
+    +role
+    +joined_at
+  }
+  class RepositoryProtocol {
+    <<interface>>
+    +find_user_by_email(email) User
+    +create_user_with_personal_space(email, external_id, name, password_hash) User
+    +create_session(user_id, current_space_id, token_hash, expires_at) Session
+    +find_session_by_token_hash(token_hash) Session
+    +list_sessions(user_id) list
+    +revoke_session(session_id, user_id) bool
+    +update_session_space(session_id, space_id) Session
+    +list_users(q, role, status) list
+    +list_space_members(space_id) list
+    +add_space_member(space_id, user_id, role) SpaceMemberDetail
+    +update_space_member_role(space_id, user_id, role) SpaceMemberDetail
+    +remove_space_member(space_id, user_id) bool
+    +set_reset_token(user_id, token_hash, expires_at)
+    +find_user_by_reset_token_hash(token_hash) User
+    +update_password(user_id, password_hash)
+    +revoke_all_sessions(user_id) int
+  }
+  class AuthService {
+    +register(repository, email, name, password) User
+    +authenticate(repository, login_id, password) Session
+    +resolve_session(repository, token) Session
+    +refresh_session(repository, token) tuple
+    +revoke_session(repository, session_id, user_id) bool
+    +update_session_space(repository, session_id, space_id) Session
+    +hash_password(password) str
+    +verify_password(password, password_hash) bool
+    +create_session_token() str
+  }
+  class AdminService {
+    +list_users(repository, actor, q, role, status) list
+    +update_user_role(repository, actor, user_id, role) User
+    +set_user_status(repository, actor, user_id, status) User
+    +list_user_spaces_for_admin(repository, actor, user_id) dict
+  }
+  class SpaceMemberService {
+    +list_space_members(repository, actor, space_id) list
+    +add_member_by_email(repository, actor, space_id, email, role) SpaceMemberDetail
+    +require_space_admin_or_global(user, space_id, memberships)
+  }
+  class AuthContext {
+    +get_current_user(authorization) TokenContext
+    +get_current_user_optional(authorization) TokenContext
+    +require_space_member(space_id)
+    +require_global_admin(user)
+  }
+
+  AuthService --> RepositoryProtocol : 依赖
+  AdminService --> RepositoryProtocol : 依赖
+  SpaceMemberService --> RepositoryProtocol : 依赖
+  AuthContext --> AuthService : 调用
+  AuthService ..> User : 操作
+  AuthService ..> Session : 操作
+  SpaceMemberService ..> SpaceMemberDetail : 返回
+  RepositoryProtocol ..> User : 契约
+  RepositoryProtocol ..> Session : 契约
+  User "1" --> "0..*" Session : 建立
+  User "1" --> "0..*" SpaceMember : 属于
+  Space "1" --> "0..*" SpaceMember : 成员
+```
+
 ## 1. 背景与目标
 
 **现状（盘点已确认，详见 §1.1）**：项目已有完整的「空间 + 文档三级权限」过滤底座（DB 字段 + service 谓词 + SQL/检索层过滤），但**账号侧是 Demo 占位**——`lumen_users` 只有 `id / external_id / name`、登录只传 `external_id` 不要密码（`backend/api/auth.py:30`）、token 是手撸 HMAC 非 JWT（`backend/service/auth.py:25`）、3 用户 seed 硬编码 alice=1 / kira=2 / brightlite-member=3、前端默认填 alice 直接进。**无密码 / 无注册 / 无登出 / 无用户管理 / 无全局角色 / 零 auth 库依赖**。
