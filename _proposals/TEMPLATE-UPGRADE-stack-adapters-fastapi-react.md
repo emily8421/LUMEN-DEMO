@@ -1,8 +1,9 @@
 > 来源：LUMEN_demo_T2.1（emily8421/LUMEN-DEMO）派生项目回流
+> 状态：**已提交模板维护者**——issue [#334](https://github.com/emily8421/ai-project-template/issues/334)（2026-08-12 开，OPEN，等维护者 triage）；本文件留作审计底稿，**勿重复提交**（2026-08-17 提案审查校准）
 
 # TEMPLATE-UPGRADE：Stack Adapter（R5）—— FastAPI / Python + React / TypeScript
 
-> 本提案是原混合提案 `TEMPLATE-UPGRADE-web-fullstack-code-consistency-baseline.md` 按 governance R1/R3/R5 分层拆分后的 **R5 技术栈 Adapter 部分**。跨项目通用条目见 `TEMPLATE-UPGRADE-universal-code-consistency-supplement.md`（R1/R2），Web 形态契约见 `TEMPLATE-UPGRADE-web-profile-code-consistency.md`（R3）。拆分依据 `docs/research/2026-08-10-rule-consolidation-map.md`；governance §8.3 要求「FastAPI / React / PostgreSQL 示例放进 Adapter」。
+> 本提案是原混合提案 `TEMPLATE-UPGRADE-web-fullstack-code-consistency-baseline.md` 按 governance R1/R3/R5 分层拆分后的 **R5 技术栈 Adapter 部分**。跨项目通用条目见 `TEMPLATE-UPGRADE-universal-code-consistency-supplement.md`（R1/R2，**已落地 v1.61.4 / PR #341，本地归档于 `_archive/proposals/`**），Web 形态契约见 `TEMPLATE-UPGRADE-web-profile-code-consistency.md`（R3，**已落地 v1.61.2 / PR #338，本地归档于 `_archive/proposals/`**）。拆分依据 `docs/research/2026-08-10-rule-consolidation-map.md`；governance §8.3 要求「FastAPI / React / PostgreSQL 示例放进 Adapter」。
 
 ## 1. 动机（去项目化）
 
@@ -21,8 +22,8 @@ governance §9.1 给出 R5 目标载体 `template-docs/stack-adapters/`（**新�
 
 ## 1.1 与既有规则的关系（去重）
 
-- **Web Profile 提案**（`TEMPLATE-UPGRADE-web-profile-code-consistency.md`，R3）：定 Web 形态契约（如「前端抛结构化错误含 code」「单源类型」）。**本提案给该契约的具体栈实现**（如 `ApiError` class 写法、codegen 工具）。形态契约 vs 栈实现，互补不重复。
-- **通用补充提案**（`TEMPLATE-UPGRADE-universal-code-consistency-supplement.md`，R1/R2）：定跨形态原则（如「多实现须显式契约」「关键 secret 启动校验」「CI 必跑 type+lint」）。**本提案给该原则的 FastAPI/React 实现写法**（`typing.Protocol`、Pydantic Settings、ruff/mypy/eslint 命令）。原则 vs 栈实现，互补不重复。
+- **Web Profile 提案**（`TEMPLATE-UPGRADE-web-profile-code-consistency.md`，R3；已落地 v1.61.2 / PR #338，本地归档 `_archive/proposals/`）：定 Web 形态契约（如「前端抛结构化错误含 code」「单源类型」）。**本提案给该契约的具体栈实现**（如 `ApiError` class 写法、codegen 工具）。形态契约 vs 栈实现，互补不重复。
+- **通用补充提案**（`TEMPLATE-UPGRADE-universal-code-consistency-supplement.md`，R1/R2；已落地 v1.61.4 / PR #341，本地归档 `_archive/proposals/`）：定跨形态原则（如「多实现须显式契约」「关键 secret 启动校验」「CI 必跑 type+lint」）。**本提案给该原则的 FastAPI/React 实现写法**（`typing.Protocol`、Pydantic Settings、ruff/mypy/eslint 命令）。原则 vs 栈实现，互补不重复。
 - **L0 通用代码原则**（`global-rules §2.1`，已采纳）：跨形态通用项。本提案不重复 L0；其中 L0-10「import 卫生」的**具体执行口径**（顶部收敛、禁文件中部追加）在本 FastAPI Adapter 体现。
 - **assessment TQG**（`docs/research/.../2026-08-10-code-quality-maintainability-assessment.md` §7）：TQG-007（多实现共享 Protocol + contract suite）→ **合并入**本提案 FastAPI Adapter（`typing.Protocol` 实现；原则层在通用补充提案）；TQG-003（CI 必跑质量命令）的 FastAPI/React 具体命令（ruff/mypy/eslint/tsc）→ 本 Adapter 体现，元规则在通用补充。
 
