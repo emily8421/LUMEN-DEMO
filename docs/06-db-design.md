@@ -457,6 +457,9 @@ erDiagram
 | REQ-014 | `lumen_ai_drafts`、`lumen_documents`、`lumen_chunks` | TC-P2-AI-001 | Phase2B 首批核心（Sprint-19，RG-008 升 Go） | AI 润色草稿、写作引用和来源 chunk 追溯；**已实现（migration 010 已落地，后端已实现，TC-P2-AI-001 通过）** |
 | REQ-013a / 024 | `lumen_documents`(created_at/updated_at/owner_id) + `lumen_tag_links`(created_at/created_by) + `lumen_doc_links`(created_at) + `lumen_chunks.ts_vector`（关键词命中）实时聚合（**候选 A 已定，不建表**，见 `docs/design/timeline.md` TL-C-001） | TC-P2-TL-001 | Phase2B 首批·第二 slice（task-030 本地实现完成） | **主题时间线** / 密度热条，关键词/标签驱动 + actor + 密度 ratio；migration 012 已落地 `lumen_documents(space_id, created_at/updated_at)` 时间索引；运行态 API smoke / Edge headless 浏览器 smoke / 真实 PG 大数据性能 smoke 已通过 |
 | REQ-039 | `lumen_folders`、`lumen_documents`（folder_id） | TC-P2-FOLDER-001 | Phase2B 第三 slice（Sprint-22） | 文档目录树：嵌套文件夹 CRUD / 移动 / 排序 + 单文档移动 + 导入保留结构（扩展 REQ-037 / API-029）；migration 011 已落地，后端/API + 导入归属 + 前端文件管理器基础能力已实现，浏览器自动化 smoke 已补 |
+| REQ-048 | `lumen_term_categories`、`lumen_terms`（扩 category_id / category / source，migration 017） | TC-P2-TERM-001 | 维护态增强（Sprint-29，v3.6.0） | 术语领域树 CRUD / 移动 / 排序 / 删非空拒绝 + 术语挂领域；API-051..053；领域树不独立设权限（复用 folder 口径） |
+| REQ-050 | 无新表（复用 `lumen_users` / `lumen_space_members` 查询；admin 域只读） | TC-P2-ACC-003 | 维护态批5·Sprint-30（v3.7.0，PR#120） | 成员空间可见性配置：API-054 + `GET /api/spaces` admin 分支；仅全局 admin（4030） |
+| REQ-051 | `lumen_users`（reset_token_hash / reset_expires_at / reset_used_at，migration 018） | TC-P2-AUTH-002 | 维护态批5·Sprint-30（v3.7.0） | 忘记密码自助重置：API-055/056；无 SMTP → token 写日志人工下发降级；重置成功吊销全部活跃 session |
 | REQ-015 / 016 / 017 | 后续 Phase 骨架 | — | — | 推送 / 协作 / 移动端不进 Phase2B 首批 |
 | REQ-018 | `lumen_vault_mounts`（Phase2C·字段已定义，migration 015 待编码——014 已被 Sprint-26 账户体系占用） | `id / user_id / device_id / mount_name / source_type / auth_status / last_synced_at / created_at / updated_at` | `user_id` / `device_id` 索引 | 仅元数据，不存句柄/路径/正文 |
 | REQ-019..023 / 028..035 | 愿景表骨架 | — | — | 技术验证通过后细化字段与索引 |
