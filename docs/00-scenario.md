@@ -12,7 +12,7 @@
 | 入口模式 | Vision-first |
 | 文档剖面 | Full |
 | 当前状态 | 已确认（Phase1 Demo、Phase1.5A 个人可用 Alpha、Phase1.5B PDF 导出、Phase2A 个人知识组织均已完成；Phase1.5B 其余候选 / Phase2B / 愿景按阶段增量演进） |
-| 最后更新 | 2026-08-04（Sprint-18 单文档 PDF 导出闭环：API-019 + TC-P1-017 通过） |
+| 最后更新 | 2026-08-17（§3.4 补 E-E 表方法论偏差登记，OO 覆盖度补全 Batch A1）；前次 2026-08-04（Sprint-18 单文档 PDF 导出闭环：API-019 + TC-P1-017 通过） |
 
 ## 1. 背景与问题
 
@@ -97,6 +97,7 @@ LUMEN 是面向中小企业（典型：帮客户做 AI Agent 落地的初创公�
 > 需求分析层用例视图（对照 `docs/references/软件系统面向对象开发方法的过程要点及关系.md` 需求分析阶段「用例图」）：以 UML 用例图标准符号（参与者火柴人、水平椭圆用例、系统边界矩形、`<<include>>` 关系）表达 LUMEN 全量用户能力的可交互边界，挂 REQ 追溯（权威映射见 §3.3 与 `01` §6）。**为可读性精简为「域入口视图」**：每域取代表用例，完整 REQ 映射见 `01` §6，阶段标签见 `03 §3`（图内不重复标注）；愿景域用例需 `05` 技术验证通过后才可进入某 Phase。
 > 覆盖异常 / 权限路径：库外问答明确「未找到」不编造（REQ-008）；无权限访问返回空结果 / 403（REQ-001/003/043/044）；真实 Word/PDF 解析与图片 OCR 按降级口径（REQ-009/010）。本图为全景导航，不替代 `01` 逐 U-ID / REQ 的验收口径。
 > **渲染**：mermaid 无原生用例图语法，故本图用 plantuml 标准用例图；GitHub 不原生渲染 plantuml，需本机 plantuml（VS Code PlantUML 插件 / jar / 在线服务）预览，格式偏好见 `ai/project-rules.md` §2.2（plantuml 备选）。
+> **方法论偏差登记（2026-08-17）**：参考方法论需求获取阶段另产出「事物-事件表（E-E 表）」与需求级 ERD。LUMEN 不回补 E-E 表——需求已定稿并进入维护态（裁决记录：`docs/research/2026-08-17-docs-evaluation-oo-methodology-03-04.md` AUD-C-004 / `2026-08-17-oo-coverage-evaluation-and-diagram-mirror-plan.md` C-105），其「事物 / 事件 / 属性抽取」职责由本文件 SC-ID 场景叙事 + `01` U-ID 需求链承接；概念 ERD 职责由 `06 §0.5 DIAG-DOM-01` 承接。日后新需求获取时按 E-E 方法执行。
 
 ```plantuml
 @startuml

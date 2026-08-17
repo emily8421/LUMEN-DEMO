@@ -37,13 +37,27 @@
 
 | 核心节点 | 承载文档 | 一句话定位 | 对应标准模板 |
 |---|---|---|---|
-| 需求规格说明 | `02-srs.md` | 系统必须实现什么（逐条 REQ + 可验证口径） | 需求规格说明书（`docs/references/Doc_ref/`） |
-| 概要设计说明 | `04-architecture.md` | 系统如何组织（总体设计 / 接口 / 数据结构 / 出错处理 / 安全 / 维护概述） | 概要设计说明书（`docs/references/Doc_ref/`） |
-| 详细设计说明 | `06-db-design.md` + `07-api-spec.md` + `docs/design/*` | 数据契约 / 接口契约 / 子系统内部逻辑（文档清单见 `docs/design/00-index.md`） | 设计说明模板（`docs/references/Doc_ref/`） |
+| 需求规格说明 | `02-srs.md` | 系统必须实现什么（逐条 REQ + 可验证口径） | 需求规格说明书（`docs/references/Doc_ref-md/需求规格说明书模板.md`） |
+| 概要设计说明 | `04-architecture.md` | 系统如何组织（总体设计 / 接口 / 数据结构 / 出错处理 / 安全 / 维护概述） | 概要设计说明书（`docs/references/Doc_ref-md/概要设计说明书模板.md`） |
+| 详细设计说明 | `06-db-design.md` + `07-api-spec.md` + `docs/design/*` | 数据契约 / 接口契约 / 子系统内部逻辑（文档清单见 `docs/design/00-index.md`） | 设计说明模板（`docs/references/Doc_ref-md/设计说明模版.md`） |
 
 `01`（用户需求）为需求上游输入；`03-prd.md` 为产品决策层（功能范围 / 优先级 / 阶段路线图），衔接 02 与 08，非三核心节点本体。
 
 每个文档的完整生成关系（上游输入 / 输出职责 / 禁止项 / 下游影响）见 `ai/document-lifecycle-rules.md` §5 生成矩阵。
+
+### OO 方法五阶段产物映射（对照《软件系统面向对象开发方法的过程要点及关系》）
+
+> 2026-08-17 登记（方案见 `docs/research/2026-08-17-oo-coverage-evaluation-and-diagram-mirror-plan.md`）。参考方法论各阶段核心文档在 LUMEN 文档体系的显式承载；核心图 / 模型映射：用例图 = `00 §3.4 DIAG-UC-01`，分析类图 / 概念 ERD = `06 §0.5 DIAG-DOM-01`，物理 ERD = `06 §4 DIAG-DB-ER-01`，概设类图 = `04 §1.2.2`，概设交互图 = `04 §5.6`，详细类图 / 流程 / 状态图 = `docs/design/*`。
+
+| 方法论阶段产物 | LUMEN 承载 | 说明 |
+|---|---|---|
+| 项目策划说明书 | `docs/vision/product-vision.md`（立项叙事）+ `docs/research/*`（可行性：tech-env-evaluation 等）+ `docs/08-dev-plan.md`（项目开发计划） | 无独立专文，按「立项 / 可行性 / 计划」三职能分散承载，此表为显式映射 |
+| 用户需求说明书 | `01-user-requirements.md` + `00-scenario.md`（调研式 / 叙事式输入见 `docs/inputs/`、`docs/vision/`） | ✅ 直接对应 |
+| 软件需求规格说明书 | `02-srs.md` | ✅ 直接对应（大纲对齐 Doc_ref-md 模板） |
+| 概要设计规格说明书 | `04-architecture.md` + `05-tech-spec.md`（技术选型补充） | ✅ 直接对应（大纲对齐） |
+| 详细设计规格说明书 | `06-db-design.md` + `07-api-spec.md` + `docs/design/*` | ✅ 直接对应（含数据词典 = 06 §2 字段级契约） |
+| 类代码规格说明书 | `05-tech-spec.md §4.2` 编码基线 + `ai/project-rules.md §5` + `docs/design/frontend-design-system.md` | 无独立专文（裁决 G7 / A6 不新增），等价物映射声明见 `05 §4.2` 头部 |
+| 事物-事件表（E-E 表） | 不回补（偏差登记见 `00 §3.4`） | 职责由 SC-ID + U-ID 链承接 |
 
 ## 3. 规范约束（写 docs/ 时必须遵守）
 

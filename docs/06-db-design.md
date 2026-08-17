@@ -12,11 +12,12 @@
 | 决策来源 | `ai/project-rules.md` §3（项目有 PostgreSQL + pgvector 持久化存储） |
 | 覆盖 REQ / 模块 | Phase1：空间 / 权限、文档、版本、导入、检索向量、术语管理；Phase1.5A：批量导入与 `.md` / ZIP 导出备份（REQ-037/038）；Phase1.5B：PDF 导出任务契约（REQ-027）；Phase2A：标签、内链 / 反链、快速录入（REQ-012/025/026）；Phase2B：AI 润色草稿（REQ-014）、**主题时间线（REQ-013a/024）**、文档目录树（REQ-039，第三 slice 候选）；愿景保留骨架 |
 | 当前状态 | P1 表结构已落地 PostgreSQL（Sprint-8 起 PgRepository 接入）；Phase1.5A/B、Phase2A、Phase2D 各阶段表契约均已实现并随代码反向同步（逐表状态见 §1「当前实现状态」列、REQ 追溯见 §6）；仍降级：真实 Word/PDF 解析与 OCR 未接入（RG-007 / RG-003）。历史实现细节见 `docs/09-verification.md` 与 CHANGELOG |
-| 最后更新 | 2026-08-17（模板对齐调整：§0 当前状态精简为「一句话 + 历史指针」；无表契约 / 字段变更）；前次 2026-08-07（Sprint-28 编码完成） |
+| 最后更新 | 2026-08-17（§0.5 补概念 ERD 映射行 + §4 物理ERD 挂图 ID DIAG-DB-ER-01，OO 覆盖度补全 Batch A1；同日早前：模板对齐调整 §0 精简；无表契约 / 字段变更）；前次 2026-08-07（Sprint-28 编码完成） |
 
 ## 0.5 概念模型（领域模型 · DIAG-DOM-01）
 
 > 需求分析层的概念模型（对照 `docs/references/软件系统面向对象开发方法的过程要点及关系.md` 需求分析阶段「分析类图」）：表达 LUMEN 核心实体（概念类）及其关联，**只示意关键属性，不含字段级约束**——物理表 / 字段 / 索引权威见 §1/§2，本图是物理表的「概念上游」；实体与 REQ 的映射见 §6 追溯矩阵。
+> **概念 ERD 映射**：参考方法论需求获取阶段的「ERD（实体-联系图）」职责由本图承载（方法论转换②：用户需求 → 实体联系抽取；此处为概念级，非物理表级）——物理 ERD 见 §4 `DIAG-DB-ER-01`。
 > 覆盖边界：仅表达权威运行态实体（DB 权威，ADR-010）；chunks / 反链索引 / 计数等派生数据按 ADR-010 可从权威内容重建，不在此单独成概念类。本图不新增任何实体或字段，仅将既有表结构提升为概念视图。
 
 ```mermaid
@@ -376,6 +377,10 @@ LUMEN 采用 `docs/decisions/ADR-010-db-authority-derived-data-rebuildability.md
 - REQ-037 / REQ-038 默认不新增索引；批量导入沿用 `lumen_imports(space_id, created_by, created_at)` / `lumen_documents(space_id, title)` 查询路径；ZIP 导出沿用文档可见性查询。
 
 ## 4. 表间关系
+
+### DIAG-DB-ER-01 · 物理 ERD
+
+> 详细设计层物理实体-联系图（物理表级，概念上游见 §0.5 `DIAG-DOM-01`）；REQ → 表追溯见 §6。图 ID 规范对照 `document-lifecycle-rules §13`。
 
 ```mermaid
 erDiagram
