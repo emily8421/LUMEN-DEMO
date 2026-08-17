@@ -16,8 +16,55 @@
 | 交付物形态 | MVP |
 | 当前状态 | **Phase2B·已实现（MVP 级）**（Sprint-19 后端 + 前端 vertical slice 均闭环：PR#89–95 / v1.1.0；RG-008 升 Go 2026-07-30；前端 UI smoke 2026-07-31 live 通过）；数据外发风险已人工接受（2026-07-30） |
 | 流程 ID | Flow-D-POLISH-01（润色）/ Flow-D-POLISH-02（写作引用），见 §3 |
-| 最后更新 | 2026-07-31（回写前端 vertical slice 闭环） |
+| 最后更新 | 2026-08-17（新增 §0.5 详细类图 DIAG-CLS-POLISH-01 + 既有状态机挂图 ID DIAG-STATE-DRAFT-01，OO 覆盖度补全 Batch A2）；前次 2026-07-31（回写前端 vertical slice 闭环） |
 | 下游影响 | `08` Sprint-19、`09` TC-P2-AI-001、`backend/service/ai_polish`、`lumen_ai_drafts` migration 010 |
+
+### 0.5 详细类图（DIAG-CLS-POLISH-01）
+
+> 图纸驱动编码：AI 润色 / 写作引用子系统的类级视图（数据类 + 服务层函数 + LLM adapter 边界）。类图挂 REQ-014 / NFR-004；方法签名以 `backend/service/ai_polish.py` 为准；LLM 调用统一经 `service/llm_adapter.py`（OpenAI 兼容，可 Mock 降级）。草稿状态机（generated / applied / discarded / failed）见 §3 `DIAG-STATE-DRAFT-01`。
+
+```mermaid
+classDiagram
+  direction LR
+  class PolishRequest {
+    +document_id
+    +mode
+    +selection
+    +instruction
+  }
+  class PolishSource {
+    +doc_title
+    +excerpt
+  }
+  class PolishView {
+    +draft_text
+    +prompt_summary
+    +input_excerpt_hash
+  }
+  class RepositoryProtocol {
+    <<interface>>
+    +find_candidate_chunks(user_id, space_id, query) list
+    +list_visible_terms(space_id) list
+    +create_ai_draft(...) AiDraft
+  }
+  class PolishService {
+    +polish_selection(repository, user_id, space_id, request, chat_fn) PolishView
+    -_retrieve_citation_sources(repository, user_id, space_id, ...) list
+    -_collect_term_context(repository, space_id, ...) list
+    -_build_prompt(request, selection, sources, terms) tuple
+    -_hash_excerpt(selection) str
+  }
+  class LlmAdapter {
+    <<adapter>>
+    +chat(prompt) str
+  }
+
+  PolishService --> RepositoryProtocol : 来源检索（权限过滤）+ 术语上下文 + 草稿落库
+  PolishService ..> LlmAdapter : chat_fn 注入（5030 降级）
+  PolishService ..> PolishView : 返回草稿（不存完整敏感原文）
+  PolishRequest ..> PolishService : mode=polish / citation
+  PolishSource ..> PolishService : 引用来源（REQ-014）
+```
 
 ## 1. 职责与边界
 
@@ -85,6 +132,10 @@
 | applied | 已写回文档 | 用户确认应用 → 追加 / 替换片段，触发文档版本（REQ-006） | — | 正文已更新 | 是 |
 | discarded | 用户丢弃 | 用户放弃草稿 | — | 草稿移除 | 是 |
 | failed | 生成失败 | LLM 不可用且未降级 / 异常 | — | 错误提示 | 是 |
+
+#### DIAG-STATE-DRAFT-01 · 草稿生命周期状态图
+
+> 图纸 ID 补挂（2026-08-17，OO 覆盖度补全 Batch A2；对照 OO 方法论转换⑧：交互图 → 活动 / 状态图）。状态语义见上表，挂 REQ-014；异常路径：LLM 不可用且未降级 → `failed`（5030 降级口径见 §5）。
 
 ```mermaid
 stateDiagram-v2

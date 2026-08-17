@@ -10,7 +10,7 @@
 | 覆盖 REQ | REQ-040 账户注册 / REQ-041 凭证登录 / REQ-042 登出·会话管理（§1~§16）；REQ-043/044 权限多人化（§17 增量）；REQ-045/046/047 角色分层 + 用户管理 + 团队空间加入（§18 增量） |
 | 覆盖 U-ID | U-45 / U-46 / U-47 |
 | 验收 | TC-P2-AUTH-001（AC-P2-AUTH-001 / 002 / 003） |
-| 状态 | 设计定稿 · Sprint-26 编码完成（2026-08-07）；TC-P2-AUTH-001 自动化通过；偏差见 §15 |
+| 状态 | 设计定稿 · Sprint-26 编码完成（2026-08-07）；TC-P2-AUTH-001 自动化通过；偏差见 §15。2026-08-17 新增 §3.5 会话生命周期状态机 DIAG-STATE-SESSION-01（OO 覆盖度补全 Batch A2） |
 | 上游依据 | `docs/03-prd.md` §3 Phase2D 子节、`docs/02-srs.md` REQ-040..042、`ai/project-rules.md` §1 |
 | 下游影响 | `docs/05-tech-spec.md` readiness gate（RG 待补）+ 认证技术栈、`docs/06-db-design.md` `lumen_users` 扩列 + `lumen_sessions` + migration 014、`docs/07-api-spec.md` auth API、`docs/08-dev-plan.md` Sprint-26、`docs/09-verification.md` TC-P2-AUTH-001 |
 | 范围外（留 Sprint-27/28） | 权限多人化实质改造（owner_id 跨用户过滤回归）、全局角色分层、用户管理后台 UI、REQ-016 多人实时协作 |
@@ -181,6 +181,22 @@ flowchart TD
 ### 3.4 续期轮换
 1. token 将过期时（或显式 `POST /api/auth/refresh`）：校验当前 session 有效 → 发新 token（新 `lumen_sessions` 行或轮换 token_hash）→ 旧 token 失效。
 2. **轮换（rotation）**：每次续期发新 token，旧 token 立即失效；**重用检测（reuse detection）留 P3**（被撤销 token 再用 → 全家族撤销，Sprint-26 不做）。
+
+### 3.5 会话生命周期状态机（DIAG-STATE-SESSION-01）
+
+> 详细设计层对象状态图（对照 OO 方法论转换⑧：交互图 → 活动 / 状态图）。`lumen_sessions` 有效期语义（TTL 8h 滑动 + `revoked_at` / `expires_at`），挂 REQ-041 / REQ-042；异常路径：过期 / 撤销 token 再用 → 401，不区分「过期 / 撤销 / 不存在」（防枚举）。
+
+```mermaid
+stateDiagram-v2
+  [*] --> active : 凭证登录成功（写 token_hash 摘要）
+  active --> active : 请求通过（有效 + 未过期 + 未撤销）
+  active --> rotated : 续期轮换（新 token，旧立即失效）
+  active --> revoked : 登出 / 多设备撤销 / 管理员禁用
+  active --> expired : TTL 8h 到期（滑动窗口）
+  rotated --> active
+  revoked --> [*]
+  expired --> [*]
+```
 
 ## 4. 密码哈希
 

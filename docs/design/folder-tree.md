@@ -16,9 +16,54 @@
 | 交付物形态 | Demo / 个人可用 |
 | 当前状态 | **Phase2B·第三 slice·基础能力已实现并补齐浏览器自动化 smoke**：FT-C-001..013 已确认；后端核心（API-034..037 + migration 011）已实现并合入 main（task-027 / PR #103）；导入保留结构（API-029 `preserve_structure`）已实现（task-028）；前端文件管理器基础树 / 受控右键菜单 / inline 新建重命名 / 单文档移动（API-038）已实现并通过 build、运行态 API smoke、用户浏览器 smoke（2026-08-03）与浏览器自动化 smoke（2026-08-04） |
 | 流程 ID | Flow-D-010..013（建文件夹 / 移动 / 导入保留结构 / 排序） |
-| 最后更新 | 2026-08-03 |
+| 最后更新 | 2026-08-17（新增 §0.5 详细类图 DIAG-CLS-FOLDER-01，OO 覆盖度补全 Batch A2）；前次 2026-08-03 |
 | 下游影响 | 08 Sprint（候选）、09 TC（候选 TC-P2-FOLDER-001）、06 lumen_folders + folder_id、07 文件夹 API + API-029 改造、ingestion Flow-006、frontend 文件管理器 |
 | 视觉参考 | `docs/research/prototypes/2026-07-31-obsidian-inspired-classic-tree.html` / `doc-tree-open.html` |
+
+### 0.5 详细类图（DIAG-CLS-FOLDER-01）
+
+> 图纸驱动编码：文档目录树子系统的类级视图（实体 + `RepositoryProtocol` 契约 + 服务层函数）。类图挂 REQ-039 / REQ-037（`preserve_structure`）/ REQ-004；方法签名以 `backend/service/folder.py` 与 `backend/repository/protocol.py` 为准。目录树与 `ingestion` 子系统的协作（导入建夹）见 `docs/design/ingestion.md` Flow-006。
+
+```mermaid
+classDiagram
+  direction LR
+  class Folder {
+    +id
+    +space_id
+    +parent_id
+    +name
+    +order_idx
+  }
+  class Document {
+    +id
+    +space_id
+    +folder_id
+  }
+  class RepositoryProtocol {
+    <<interface>>
+    +list_folders(space_id, parent_id) list
+    +create_folder(...) Folder
+    +update_folder(...) Folder
+    +delete_folder(folder_id)
+    +reorder_folders(space_id, ordered_ids)
+    +move_document(document_id, folder_id)
+    +find_or_create_folder_by_path(space_id, relative_path) Folder
+  }
+  class FolderService {
+    +list_folders(repository, user_id, space_id, parent_id) list
+    +create_folder(repository, user_id, space_id, request) Folder
+    +update_folder(repository, user_id, space_id, folder_id, request) Folder
+    +delete_folder(repository, user_id, space_id, folder_id)
+    +reorder_folders(repository, user_id, space_id, ordered_ids)
+    -_ensure_no_name_clash(...)
+    -_visible_document_count(repository, user_id, space_id, folder_id) int
+  }
+
+  FolderService --> RepositoryProtocol : 建夹 / 改名 / 移动 / 防环 / 删非空
+  Folder "1" --> "0..*" Folder : 嵌套（parent_id 自引用）
+  Folder "1" --> "0..*" Document : 归入（folder_id）
+  FolderService ..> Folder : 重名 / 防环 / 删非空（4090）判定
+```
 
 ## 1. 职责与边界
 

@@ -15,8 +15,71 @@
 | 交付物形态 | Demo |
 | 当前状态 | P1-已实现（Sprint-5 降级实现，Sprint-7/8 后术语存储切 PostgreSQL 且问答口径注入真实 LLM；见 §6）；**REQ-048 领域树已实现（2026-08-07，migration 017 + API-051..053，TC-P2-TERM-001 通过）** |
 | 流程 ID | Flow-D-005（术语维护）/ Flow-D-006（文档术语识别）/ Flow-D-007（问答口径对齐），见 §2 |
-| 最后更新 | 2026-08-07（REQ-048 领域树增强回写） |
+| 最后更新 | 2026-08-17（新增 §0.5 详细类图 DIAG-CLS-TERM-01，OO 覆盖度补全 Batch A2）；前次 2026-08-07（REQ-048 领域树增强回写） |
 | 下游影响 | 08 Sprint-5 / Sprint-29、09 TC-P1-012 / TC-P2-TERM-001 |
+
+### 0.5 详细类图（DIAG-CLS-TERM-01）
+
+> 图纸驱动编码：术语管理子系统的类级视图（实体 + `RepositoryProtocol` 契约 + 服务层函数）。类图挂 REQ-036 / REQ-048；方法签名以 `backend/service/term.py`、`term_category.py` 与 `backend/repository/protocol.py` 为准。`TermStatus`（active / archived）见 `backend/model/entities.py`。
+
+```mermaid
+classDiagram
+  direction LR
+  class Term {
+    +id
+    +space_id
+    +name
+    +definition
+    +aliases
+    +category_id
+    +category
+    +source
+    +status
+  }
+  class TermCategory {
+    +id
+    +space_id
+    +parent_id
+    +name
+    +order_idx
+  }
+  class RepositoryProtocol {
+    <<interface>>
+    +list_visible_terms(space_id) list
+    +create_term(...) Term
+    +update_term(...) Term
+    +delete_term(term_id)
+    +list_term_categories(space_id, parent_id) list
+    +create_term_category(...) TermCategory
+    +update_term_category(...) TermCategory
+    +delete_term_category(category_id)
+    +reorder_term_categories(space_id, ordered_ids)
+  }
+  class TermService {
+    +list_visible_terms(repository, user_id, current_space_id) list
+    +create_term(repository, user_id, current_space_id, request) Term
+    +get_visible_term(repository, user_id, current_space_id, term_id) Term
+    +update_term(repository, user_id, current_space_id, term_id, request) Term
+    +delete_term(repository, user_id, current_space_id, term_id)
+    +find_matching_terms(repository, current_space_id, text) list
+    -_dedupe_space_priority(terms, current_space_id) list
+  }
+  class TermCategoryService {
+    +list_term_categories(repository, user_id, space_id, parent_id) list
+    +create_term_category(repository, user_id, space_id, request) TermCategory
+    +update_term_category(repository, user_id, space_id, category_id, request) TermCategory
+    +delete_term_category(repository, user_id, space_id, category_id)
+    +reorder_term_categories(repository, user_id, space_id, ordered_ids)
+    -_ensure_no_name_clash(...)
+  }
+
+  TermService --> RepositoryProtocol : 术语 CRUD + 匹配
+  TermCategoryService --> RepositoryProtocol : 领域树 CRUD + 排序
+  TermCategory "1" --> "0..*" Term : 归类
+  TermCategory "1" --> "0..*" TermCategory : 嵌套（parent_id）
+  TermService ..> Term : 返回 / 过滤（空间优先去重）
+  TermCategoryService ..> TermCategory : 防环 / 重名兜底 / 删非空 4090
+```
 
 ## 0.1 领域树增强（REQ-048，2026-08-07）
 
