@@ -10,8 +10,8 @@
 |---|---|
 | 输入来源 | `docs/00-scenario.md`、`docs/01-user-requirements.md`、`docs/02-srs.md`、`docs/03-prd.md`、`docs/env/local-env.md`、`ai/project-rules.md`、`docs/research/2026-07-15-overall-design-04-05-audit.md`、`docs/decisions/ADR-010-db-authority-derived-data-rebuildability.md` |
 | 覆盖功能 / REQ | Phase1：REQ-001..REQ-011、REQ-036；Phase1.5A：REQ-037/038；Phase1.5B：REQ-027；Phase2A：REQ-012/025/026；Phase2B / 后续 / 愿景保留架构骨架 |
-| 当前状态 | 目标架构基线已定；Sprint-7/8 后运行时已接入 PostgreSQL+pgvector、`PgRepository`、本机 Embedding 与 GLM LLM。Phase1.5A 批量 / 文件夹导入与 `.md` / ZIP 导出备份已完成；Phase1.5B 单文档 PDF 导出已完成 API-019 + `lumen_doc_exports` + 前端入口并通过 TC-P1-017；Phase2A 个人知识组织（标签、内链 / 反链、快速录入）已完成。仍降级 / 候选：真实 Word/PDF 解析、OCR、Phase2B 后续团队能力。Web App Structure Profile / WSG 自 P1.5A 起生效；2026-07-21 新增 ADR-010 固化 DB 权威运行态 + 衍生数据可重建原则。2026-08-08 起生产部署拓扑（方案 A 全容器化）已落盘并回填本文 §4（v3.5.0）；2026-08-07 Phase2D 账户与多人权限收口，MOD-011 与 §6 矩阵回填（本文 2026-08-17 修订） |
-| 最后更新 | 2026-08-17（架构文档反向同步：分层视图补齐 + 运行形态 / 部署拓扑回填 + Phase2D / 维护态 REQ 矩阵回填 + 后端四层修正）；前次 2026-08-04（Sprint-18 PDF 导出产品闭环） |
+| 当前状态 | 目标架构基线已定，Phase1→Phase2D 各阶段架构事实均已实现并随代码反向同步（逐模块实现状态见 §2、验证见 `docs/09-verification.md`）；仍降级 / 候选：真实 Word/PDF 解析、OCR 与愿景能力；生产部署拓扑（⑪ 方案 A）已落盘（v3.5.0，见 §4） |
+| 最后更新 | 2026-08-17（模板对齐调整：§0 当前状态精简、新增 §0.2 需求概述 + §5.7-5.10 接口 / 数据结构 / 安全 / 维护设计概述；同日完成 OO 方法论收敛 §5.1/§5.4/§1.3/§1.2.1/ADR-006 + 新增 §5.5/§5.6；无架构决策变更）；前次 2026-08-04（Sprint-18 PDF 导出产品闭环） |
 
 ### 0.1 架构目标与约束
 
@@ -24,6 +24,20 @@
 | 禁止项 | 独立向量库、闭源 LLM SDK 绑定、移动端、实时协作、跨文档因果推理等；权威源 `ai/project-rules.md` §1 / §2、`docs/05-tech-spec.md` §3 |
 | 权威源 | 阶段边界 = `ai/project-rules.md` §1；技术禁令 = §2 / `05 §3`；运行环境 = `docs/env/local-env.md` |
 | 下游影响 | `05` 技术栈 / readiness gate；`06/07` 数据 / 接口边界；`docs/design/*` 模块详细设计；`08/09` Sprint / 验收路径 |
+
+### 0.2 需求概述
+
+> 罗列系统向用户提供的主要功能（层次化组织，对照概要设计说明书模板「任务概述·需求概述」）。功能全量用例视图见 `docs/00-scenario.md` §3.4（DIAG-UC-01）；功能范围 / 阶段路线图见 `docs/03-prd.md` §3；系统需求逐条见 `docs/02-srs.md` §1。
+
+- **账户与权限域**：登录 / 注册 / 登出会话、空间隔离与切换、文档权限分级 + owner 过滤、角色分层 + 用户管理、团队空间加入。
+- **文档管理域**：文档 CRUD + 行内编辑 + 版本、文档目录树。
+- **检索问答域**：全文 / 语义搜索、RAG 问答（带来源）。
+- **内容导入 / 导出域**：多格式导入（降级口径）、导出 `.md` / ZIP / PDF。
+- **术语管理域**：空间术语维护、术语领域树。
+- **个人知识组织域**：标签视图、快速录入、内链 / 反链。
+- **本地知识源域**：Vault 挂载 / 本地编辑（仅本地挂载）。
+- **写作与团队增强域**：AI 润色 + 写作引用、主题时间线 / 密度热条。
+- **愿景能力**（技术验证后）：多人协作 / 跨空间推送 / 移动端、情报分析 / 情报交付。
 
 ## 1. 整体架构图（DIAG-ARCH-01）
 
@@ -100,8 +114,8 @@ flowchart TB
   end
   subgraph BE[COMP-002 FastAPI 后端 · backend/]
     direction TB
-    beApi[api/ 路由层<br/>19 域 router<br/>HTTPException 转换 · 请求校验]
-    beSvc[service/ 业务层<br/>25 service<br/>领域异常 · 不 import fastapi]
+    beApi[api/ 路由层<br/>多域 router<br/>HTTPException 转换 · 请求校验]
+    beSvc[service/ 业务层<br/>多 service<br/>领域异常 · 不 import fastapi]
     beRepo[repository/ 持久化层<br/>PgRepository / DemoRepository<br/>RepositoryProtocol 契约]
     beModel[model/ ORM 与数据模型]
   end
@@ -129,7 +143,7 @@ flowchart TB
 
 ### 1.3 Web App Structure Profile / Walking Skeleton Gate（Batch A 回填）
 
-> 对照 `template-docs/web-fullstack-profile.md`。本项目同时启用 `frontend/` 与 `backend/`，存在前端调用后端 API，且交付物需要浏览器点击演示；因此采用轻量 WSG 矩阵。**显性豁免声明（2026-07-15 校准）**：Phase1 业务 Sprint（1~10）在 WSG 落地前已完成，既有 `App.tsx`（1026 行）/ `styles.css`（886 行）/ 仓储单例 hack 作为 Demo 框架豁免 Sprint 0；经框架评估（见 `docs/research/2026-07-15-system-completion-audit.md` §四 / §五），决定插入 `docs/08-dev-plan.md` **Sprint-0′ 框架补课**（P1.5 前置）主动对齐 WSG-002 / WSG-004，P1.5 / Phase2 起强制遵守目录边界与文件阈值。WSG 矩阵不再仅作 Phase2 门禁。
+> 对照 `template-docs/web-fullstack-profile.md`。本项目同时启用 `frontend/` 与 `backend/`，存在前端调用后端 API，且交付物需要浏览器点击演示；因此采用轻量 WSG 矩阵。**显性豁免声明（2026-07-15 校准）**：Phase1 业务 Sprint（1~10）在 WSG 落地前已完成，既有 `App.tsx` / `styles.css` 单文件膨胀与仓储单例 hack 作为 Demo 框架豁免 Sprint 0；经框架评估（见 `docs/research/2026-07-15-system-completion-audit.md` §四 / §五），决定插入 `docs/08-dev-plan.md` **Sprint-0′ 框架补课**（P1.5 前置）主动对齐 WSG-002 / WSG-004，P1.5 / Phase2 起强制遵守目录边界与文件阈值。WSG 矩阵不再仅作 Phase2 门禁。
 
 | WSG-ID | Gate | 当前架构事实 | 证据 / 锚点 | P1.5A / Phase2A/B 实现前要求 |
 |---|---|---|---|---|
@@ -154,7 +168,7 @@ flowchart TB
 | MOD-008 | 存量接入 | Vault 兼容（导入数据库 / 仅本地挂载）、录音转写、飞书同步 | 本地文件夹 / 外部源 → LUMEN 文档或个人本地来源 | 不把仅本地挂载内容默认写入团队知识库；不绕过文档权限进入共享 RAG | COMP-001 / 002 / 003 / 004 | [P2]（Vault REQ-018 模式 B）/ [愿景]（录音/飞书） | Vault 模式 B Phase2C·已设计（RG-009 Go）；录音转写 / 飞书同步仍愿景 | DB 为正式知识库权威；本地挂载为个人连接器 | docs/design/ingestion.md（Flow-D-014）+ docs/design/frontend-interaction.md §9.3（CMP-P2-TREE） |
 | MOD-009 | 情报分析（i2 精神） | 关联图↔时间轴联动、路径推理、人物网络、矛盾检测、证据地图、信号追踪 | — | — | — | [愿景] | 骨架 | — | docs/design/intelligence-analysis.md |
 | MOD-010 | 情报交付 | 对外只读简报、管理层摘要、分析包 A Kit | — | — | — | [愿景] | 骨架 | — | 待技术验证 |
-| MOD-011 | 账户与认证（多人权限） | 真实多用户账号（注册 / 凭证登录 bcrypt / 登出会话 `lumen_sessions`）、owner 过滤与跨用户隔离、全局角色 admin/member、admin 用户管理、space 域成员 CRUD、忘记密码自助重置（token 写日志降级） | 注册 / 凭证 / 会话 → 认证上下文 + 用户 / 成员治理能力 | 不负责 REQ-016 多人实时协作、邀请码 / 移除用户（候选）；不负责空间内文档权限规则本体（属 MOD-001） | COMP-001 / 002 / 003 | [P2] | Phase2D·已实现（2026-08-07 三 slice 收口） | 13 router 统一 `get_current_user`；demo 模式 env 开关 + 物理隔离护栏（PG 仓储强制真实认证） | docs/design/accounts-auth.md |
+| MOD-011 | 账户与认证（多人权限） | 真实多用户账号（注册 / 凭证登录 / 登出会话）、owner 过滤与跨用户隔离、全局角色 admin/member、admin 用户管理、space 域成员 CRUD、忘记密码自助重置（token 写日志降级） | 注册 / 凭证 / 会话 → 认证上下文 + 用户 / 成员治理能力 | 不负责 REQ-016 多人实时协作、邀请码 / 移除用户（候选）；不负责空间内文档权限规则本体（属 MOD-001） | COMP-001 / 002 / 003 | [P2] | Phase2D·已实现（2026-08-07 三 slice 收口） | 统一鉴权；demo 模式 env 开关 + 物理隔离护栏（PG 仓储强制真实认证） | docs/design/accounts-auth.md |
 
 ## 3. 架构决策与取舍（ADR）
 
@@ -176,7 +190,7 @@ flowchart TB
 | ADR-003 | 导入流水线收敛异构格式为文本→切块→Embedding | 已确认（目标；当前仅 `.md`/`.txt`） | Phase1+ | 检索侧只面对一种数据形态，解析复杂度集中于导入 | 各格式独立检索路径 | 检索侧统一数据形态；解析复杂度集中于导入 | TC-P1-009 / 010（09 §2） |
 | ADR-004 | 权限下沉到 SQL / 检索层（查询时过滤） | 已确认（当前内存等价实现） | Phase1+ | 空间隔离 + 文档权限在查询时过滤，不依赖应用层记忆，防漏过滤 | 应用层记忆当前空间 | 防漏过滤、安全边界强；强依赖查询层正确性 | TC-P1-001 / 003（09 §2） |
 | ADR-005 | RAG / 导入 / 权限独立成 docs/design/ | 已确认 | Phase1+ | 三者非平凡且可独立演进，单列详细设计便于维护 | 全部并入 04 | 子系统可独立演进；多份详细设计需维护 | `docs/design/*` 已存在 |
-| ADR-006 | Phase1.5B PDF 导出方案 | 已采用 / 已实现（ReportLab 首版 + 下载闭环） | Phase1.5B | 单文档需可排版导出 PDF（REQ-027），但不得阻塞个人可用 Alpha | WeasyPrint / 浏览器打印 | ReportLab 在 Windows + Python 3.14 下依赖链轻；Sprint-18 已实现权限校验、版本绑定、失败态 5030 与本地 artifact 路径，v1.7.0 已补受控 artifact 下载端点 | RG-006 Go + TC-P1-017 通过（2026-08-04） |
+| ADR-006 | Phase1.5B PDF 导出方案 | 已采用 / 已实现 | Phase1.5B | 单文档需可排版导出 PDF（REQ-027），但不得阻塞个人可用 Alpha | WeasyPrint / 浏览器打印 | ReportLab 在 Windows + Python 3.14 下依赖链轻；已实现权限校验、版本绑定、失败态 5030 与受控 artifact 下载闭环 | RG-006 Go + TC-P1-017 通过（2026-08-04） |
 | ADR-007 | 标签 + 反向链接索引用 PG 关系表 + `[[wikilink]]` 解析 | 已采用 / 已实现 | Phase2A | 复用现有 PG，少引图数据库（REQ-012 / 026） | 图数据库 / 全文索引 | 关系表 JOIN 成本；解析规则已按 Phase2A 最小版收敛 | TC-P2-TAG-001 / TC-P2-LINK-001 通过 |
 | ADR-008 | Phase1.5A `.md` / ZIP 导出备份走标准文件流 | 已实现 | Phase1.5A | 个人可用 Alpha 需要可迁出、可备份；标准库 ZIP 风险低、不引重依赖（REQ-038 / U-43） | 直接做 PDF / 数据库整库导出 | 快速落地且权限边界简单；不保留富格式排版 | TC-P1-016 通过 |
 | ADR-009 | Phase1.5A 批量 / 文件夹导入以标题相对路径保留目录感 | 已实现 | Phase1.5A | 用户要快速放入一批资料；不建真实目录表可避免 DB 迁移与范围扩张（REQ-037 / SC-007） | 新增 folder 表与真实目录树 | 低风险、快落地；后续若做真实目录需迁移 | TC-P1-015 通过 |
@@ -233,22 +247,22 @@ flowchart TB
 
 ### 5.1 登录与空间切换（Flow-001）
 
-> **Flow-001 登录与空间切换**：成功（签发 token + 切换签新 token）｜异常（账号无效 → 4001）｜权限拒绝（非空间成员切换 → 4003）｜降级（内存 Demo 账号，无真实账号系统）｜关联 API-001/002/003、TC-P1-001/002。
+> **Flow-001 登录与空间切换**：成功（签发 token + 切换签新 token）｜异常（凭证无效 → 4001）｜权限拒绝（非空间成员切换 → 4003）｜降级（demo 模式无密码快速登录，env 开关 + 物理隔离护栏）｜关联 API-001/002/003（endpoint 契约见 07 §2）、TC-P1-001/002。
 
 ```mermaid
 sequenceDiagram
   participant Browser as React 前端
   participant API as FastAPI API
-  participant Auth as 权限 service
+  participant Auth as 鉴权 service
   participant DB as PostgreSQL
 
-  Browser->>API: POST /api/auth/login
-  API->>Auth: 校验 Demo 用户
+  Browser->>API: 提交登录凭证
+  API->>Auth: 校验凭证
   Auth->>DB: 读取用户可访问 spaces
   DB-->>Auth: user_id + 默认 current_space_id
   Auth-->>API: 签发 Bearer token(user_id,current_space_id,exp)
   API-->>Browser: token + 当前空间
-  Browser->>API: POST /api/spaces/switch(space_id)
+  Browser->>API: 请求切换空间
   API->>Auth: 校验用户是否为空间成员
   Auth->>DB: 查询 space_members
   DB-->>Auth: 成员关系有效
@@ -299,11 +313,113 @@ flowchart TB
 - **Flow-003 标签浏览与内部链接跳转**（REQ-012 / 026，Phase2A）：按标签聚合 → 点击 `[[文件名]]` 跳转 / 反向链接面板；权限沿用 Flow-002 过滤。
 - **Flow-004 快速录入索引条目**（REQ-025，Phase2A）：轻量条目（标题 / 来源 / 摘要）→ draft / 新文档 / 追加文档 → 索引入库参与检索；走 Flow-002 过滤。
 - **Flow-005 AI 润色与写作引用**（REQ-014，Phase2B）：选中文本 → LLM 润色建议 / 检索引用块插入；复用 ADR-002 LLM adapter，候选 chunk 按权限过滤。
-- **Flow-006 批量 / 文件夹导入**（REQ-037，Phase1.5A；REQ-039 扩展）：多文件 / 文件夹选择 → 逐文件读取 `.md` / `.txt` → 成功项入库并切块 → 逐条返回成功 / 失败 / 同名跳过结果；Phase1.5A 兼容标题保留相对路径前缀，Phase2B `preserve_structure=true` 建 / 复用真实 folder 并回填 `folder_id`。
-- **Flow-010 Vault 兼容来源**（REQ-018，Phase2C·已设计）：用户选择本地 vault / 文件夹 → 二选一：A 导入数据库（复用 API-029 分批入库 + `lumen_folders` 保留目录结构，获得完整 LUMEN 权限 / 搜索 / RAG 能力，**模式 A 已随 Phase2B 交付**）；B 仅本地挂载（**模式 B Phase2C MVP·浏览器 File System Access 句柄 + IndexedDB 持久化 + 本地索引搜索 + 左侧分区**，内容留在本机，只在当前用户 / 当前设备左侧“本地挂载”分区可见，刷新后句柄自动恢复 granted，不默认进入团队空间、后端 RAG 或共享权限链；按需单篇/子树导入走 API-029）。
-- **Flow-007 `.md` / ZIP 导出备份**（REQ-038，Phase1.5A）：单文档详情 → 下载当前版本 `.md`；空间工具栏 → 查询当前用户可见文档 → 标准 ZIP 打包 `.md` → 下载；不可见文档不进入 ZIP。
-- **Flow-008 单文档导出 PDF**（REQ-027，Phase1.5B）：文档版本 → 创建导出任务 → ReportLab 渲染 Markdown 子集 → 写入本地 artifact → 返回 `{export_id,status,artifact_path}`；导出前受文档权限约束，导出库 / 字体不可用时返回 5030，不生成坏文件。
-- **Flow-009 主题时间线 / 密度热条**（REQ-013a / REQ-024，Phase2B）：文档时间字段 / 标签 / 链接 / chunk 命中 → 实时聚合时间线与密度提示；关联图 REQ-013b 仅保留骨架，留后续。
+- **Flow-006 批量 / 文件夹导入**（REQ-037，Phase1.5A；REQ-039 扩展）：多文件 / 文件夹选择 → 逐文件读取 `.md` / `.txt` → 成功项入库并切块 → 逐条返回成功 / 失败 / 同名跳过结果；Phase1.5A 兼容标题保留相对路径前缀，Phase2B 导入保留真实目录结构（实现细节见 `docs/design/ingestion.md`）。
+- **Flow-010 Vault 兼容来源**（REQ-018，Phase2C·已实现）：用户选择本地 vault / 文件夹 → 二选一：A 导入数据库（获得完整 LUMEN 权限 / 搜索 / RAG 能力，**模式 A 已随 Phase2B 交付**）；B 仅本地挂载（**模式 B Phase2C MVP·仅本地挂载**，内容留在本机，只在当前用户 / 当前设备左侧“本地挂载”分区可见，不默认进入团队空间、后端 RAG 或共享权限链）。实现细节见 `docs/design/ingestion.md` Flow-D-014 + `req-implementation-index`。
+- **Flow-007 `.md` / ZIP 导出备份**（REQ-038，Phase1.5A）：单文档详情 → 下载当前版本 `.md`；空间工具栏 → 查询当前用户可见文档 → 打包 `.md` → 下载；不可见文档不进入 ZIP。
+- **Flow-008 单文档导出 PDF**（REQ-027，Phase1.5B）：文档版本 → 创建导出任务 → 生成 PDF → 返回导出任务结果；导出前受文档权限约束，导出依赖不可用时返回 5030，不生成坏文件。实现细节见 `docs/design/export-delivery.md`。
+- **Flow-009 主题时间线 / 密度热条**（REQ-013a / REQ-024，Phase2B）：文档时间字段 / 标签 / 链接 / 关键词命中 → 实时聚合时间线与密度提示；关联图 REQ-013b 仅保留骨架，留后续。实现细节见 `docs/design/timeline.md`。
+
+### 5.5 出错处理与权限拒绝设计
+
+> 概要层错误处理原则（对照 `docs/references/软件系统面向对象开发方法的过程要点及关系.md` 概要设计「出错处理设计」）。细颗粒错误码 / 请求响应契约权威在 `docs/07-api-spec.md` §3.4 / §3.5，本节只固化跨系统错误处理的总原则。
+
+| 维度 | 原则 | 权威源 |
+|---|---|---|
+| 错误码分层 | service 抛领域异常（带业务码），api 层统一转 HTTP（`code` 业务码、`status_code` HTTP 码、`msg` 固定用户文案），禁 `str(exc)` 直传泄露内部细节 | `05 §4.2.1`、`07 §3.4` |
+| 错误码族 | 4001 认证失败 / 4003 权限拒绝 / 4030 管理权限不足 / 4090 冲突 / 5030 依赖不可用；错误码单一含义，不与 HTTP 码混用 | `07 §1` / `05 §4.2` |
+| 权限拒绝语义 | 无权限访问返回 403 / 空结果，且不泄露标题、摘要与问答引用（私有文档对他人搜索 / RAG 零命中） | Flow-002、`02` EX-001 |
+| 外部不可用 / 降级 | LLM / 导出依赖不可用时返回 5030 或明确 Mock 降级，不编造、不生成坏文件；库外问答明确「未找到」 | REQ-008、RG-003/004/006 |
+| 鉴权强制 | 权限必须由后端 API / service / DB 查询过滤执行；前端隐藏 / 禁用 / 路由守卫不是权限边界 | `document-lifecycle-rules §5.2` |
+
+### 5.6 概要级交互图（DIAG-ARCH-SEQ-01 / 02）
+
+> 概要设计层交互图：以「角色 / 子系统 → 子系统」消息级表达核心用例的交互（不写具体 endpoint 路径，接口契约见 07）。图 ID 规范：`DIAG-ARCH-SEQ-NN`（对照 `document-lifecycle-rules §13`）。
+
+**DIAG-ARCH-SEQ-01 · Flow-002 文档访问 / 搜索 / RAG 统一过滤**
+
+```mermaid
+sequenceDiagram
+  participant Browser as React 前端
+  participant API as FastAPI API
+  participant Service as 业务 service
+  participant DB as PostgreSQL
+
+  Browser->>API: 文档 / 搜索 / 问答请求（Bearer token）
+  API->>Service: 解析鉴权上下文（user + current_space）
+  Service->>DB: 空间成员校验 + 权限过滤查询
+  DB-->>Service: 仅当前空间可见数据
+  Service->>DB: RAG 候选 chunk 检索
+  Service->>Service: 构造 Prompt 前再次权限过滤
+  Service-->>API: 带权限过滤结果（搜索 / 问答带来源）
+  API-->>Browser: 结果
+```
+
+**DIAG-ARCH-SEQ-02 · Phase2D 认证升级（注册 / 凭证登录 / 登出）**
+
+```mermaid
+sequenceDiagram
+  participant Browser as React 前端
+  participant API as FastAPI API
+  participant Auth as 鉴权 service
+  participant DB as PostgreSQL
+
+  Browser->>API: 注册请求（登录标识 + 密码）
+  API->>Auth: 校验并创建用户
+  Auth->>DB: 写入用户 + 默认个人空间
+  DB-->>Auth: 用户已创建
+  Auth-->>API: 注册成功
+  Browser->>API: 凭证登录
+  API->>Auth: 校验凭证（哈希）
+  Auth->>DB: 建会话（不透明 token）
+  DB-->>Auth: 会话已建
+  Auth-->>API: 签发 token
+  API-->>Browser: token + 用户上下文
+  Browser->>API: 登出请求
+  API->>Auth: 撤销会话
+  Auth-->>API: 已撤销
+  API-->>Browser: 登出成功
+```
+
+### 5.7 接口设计概述
+
+> 概要级接口边界（对照概要设计说明书模板「接口设计」）。详细契约权威在 `docs/07-api-spec.md`（接口清单 / endpoint contract / 错误码 / 权限），本节只给外部 / 内部接口的域划分与职责。
+
+| 接口域 | 职责 | 权威 |
+|---|---|---|
+| auth / users / admin / space_members | 账户认证、用户管理、成员治理 | `07` auth / admin / space 域 |
+| documents / versions / folders | 文档 CRUD、版本、目录树 | `07` 文档域 |
+| search / chat | 检索、RAG 问答 | `07` 检索域 |
+| import / export / pdf | 导入、导出 | `07` 导入导出域 |
+| terms | 术语管理 | `07` 术语域 |
+| tags / links / quick-entries / timeline | 个人知识组织 | `07` 组织域 |
+| vault | 本地挂载 | `07` vault 域 |
+
+- **外部接口**：REST / JSON + Bearer token（浏览器 ↔ FastAPI）；外部 LLM 中转（OpenAI 兼容，`05 §2.1`）；无硬件外设接口。
+- **内部接口**：前端 `api/` + `client.ts` 单出口 → 后端 api 层 → service → repository → DB（分层约束见 §1.2.1）。
+
+### 5.8 系统数据结构设计概述
+
+> 概要级数据结构（对照概要设计说明书模板「系统数据结构设计」）。概念模型 / 类图见 `docs/06-db-design.md` §0.5（DIAG-DOM-01），物理表 / 字段 / 索引权威在 `docs/06-db-design.md` §1/§2，REQ → 表追溯见 `docs/06-db-design.md` §6。
+
+- **逻辑结构**：核心实体 = 用户 / 空间 / 成员 / 文档 / 版本 / 切块 / 标签 / 链接 / 术语 / 快速录入 / 会话 / 文件夹 / 导出任务 / AI 草稿 / 挂载（详见 `06 §0.5` 概念模型）。
+- **物理结构**：PostgreSQL + pgvector，表前缀 `lumen_`；检索双路（全文 + 向量）；数据安全与留存见 `06 §5`。
+
+### 5.9 安全保密设计
+
+> 概要级安全边界（对照概要设计说明书模板「安全保密设计」）。信任边界见 §1.1（DIAG-ARCH-01a）；细颗粒安全 / 隐私 / 合规见 `docs/05-tech-spec.md` §5.2；数据安全与留存见 `docs/06-db-design.md` §5。
+
+- **信任边界**：浏览器 ↔ LUMEN 受信域 ↔ 外部 LLM 中转（唯一数据外发点，可配 Mock 降级）。
+- **权限执行**：空间隔离 + 文档权限在 SQL / 检索层过滤，RAG 构造 Prompt 前二次过滤；前端隐藏 / 禁用不是权限边界（§5.3）。
+- **凭证安全**：密码哈希存储、token 可撤销、登录失败锁定、管理接口仅 admin（细颗粒见 `05 §5.2`）。
+- **数据外发**：RAG / 术语注入 / AI 润色可能发往内网 LLM；Phase2B 润色数据外发风险已人工接受（RG-008，护栏见 `05 §5.2`）。
+
+### 5.10 维护设计
+
+> 概要级可维护性（对照概要设计说明书模板「维护设计」）。运行 / 部署 / 备份遗留见 `docs/env/deploy-guide.md` §7；DB 权威 + 衍生数据可重建见 `docs/decisions/ADR-010-db-authority-derived-data-rebuildability.md`。
+
+- **可维护性**：DB 权威运行态 + 衍生数据可重建（ADR-010）；代码分层与编码基线见 `05 §4`。
+- **部署与备份**：生产部署（⑪ 方案 A）见 §4.2；自动备份 job / 多节点 / 公网 HTTPS 为遗留（`docs/env/deploy-guide.md` §7）。
+- **版本演进**：文档按「完整骨架 + 阶段增量」只增不删（global-rules §8）。
 
 ## 6. REQ / 功能 → 模块 / Flow 追溯矩阵
 

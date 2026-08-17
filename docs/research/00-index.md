@@ -7,6 +7,8 @@
 
 | 文件 | 类型 | 状态 | 采纳 / 后续 |
 |---|---|---|---|
+| `2026-08-17-docs-evaluation-template-alignment-02-04.md` | 文档体系模板对齐评估（02/04/03 对照 Doc_ref NRDC1101 模板） | 已落盘；**评估已确认，调整执行中（02→04→03→README，每文件汇报）** | 三核心节点（需求规格=02 / 概要=04 / 详细=06/07/design）均有承载；02/04 补引用式概述章、02 剥离 REQ 实现方案、03 维持 + 精简重复、README 补节点映射 |
+| `2026-08-17-docs-evaluation-oo-methodology-03-04.md` | 03/04 对照 OO 方法论文档审计（缺图纸 + 阶段错置） | 已落盘；**只读评估 · 待人工确认 AUD-C-001..006 后执行修改实例** | 结论 Conditional Go；Batch 1（用例图 + 领域模型）/ Batch 2（03/04 收敛 + 出错处理节 + 概要级交互图）待执行；§8 去项目化判定已形成 TEMPLATE-UPGRADE 提案方向（回流模板前置证据） |
 | `2026-08-10-ai-code-governance-framework.md` | AI 基于文档体系编码的分层治理框架 | 已落盘；**AI 建议 · 待人工确认与模板化** | 建议采用 R1-R7 七层路由 + 自动化执行平面；现有 Web 全栈提案作为 Profile 实证输入，回流前需做全局 / Profile / Adapter 去重分类 |
 | `2026-08-10-code-constraint-framework.md` | 代码规范 L0-L3 内容稳定性分层与模板载体映射 | 已落盘；**方法论草案 · 已形成两份待回流提案** | 与七层治理文档互补：L0-L3 判断规则内容放哪，R1-R7 判断任务执行时加载什么；关联 L0 通用原则与 Web 全栈一致性提案 |
 | `2026-08-10-code-governance-rollout-plan.md` | 代码治理体系落地实施计划（三轨道并行 + P0 先行 + ratchet） | 已落盘；**活文档 · P0 方案已联合裁决定稿（A1/B1）· 待立项编码** | 前置 PR #123 已 merge；§3 P0-1/P0-2 已按评估修订定稿（4 PG 面 / guard 落 pg_test_support.py / CI advisory→required / eslint 暂缓 P1 / 拟定 NFR-005/006 + v3.8.0）；§8 进度表跨会话续接 |
