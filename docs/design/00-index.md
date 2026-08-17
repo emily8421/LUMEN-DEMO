@@ -1,36 +1,48 @@
 # docs/design 详细设计索引
 
-> 定位：本文是 `docs/design/` 的目录索引，帮助从 `docs/04-architecture.md` 快速定位详细设计。它不新增需求、接口、数据表或验收目标。
-> 首版建立于 2026-07-21（P1 文档治理），状态来自各详细设计文档头部元信息；后续修改详细设计时同步维护本索引。
+> 定位：本文是**详细设计节点**的入口清单，帮助从「子系统 → 详细设计文档」一眼定位。它不新增需求、接口、数据表或验收目标。
+> **详细设计节点总清单** = `docs/06-db-design.md`（数据契约）+ `docs/07-api-spec.md`（接口契约）+ 本文所列 `docs/design/*`（逐子系统 / 前端详细设计）。
+> 子系统 ↔ 设计文档的权威映射见 `docs/04-architecture.md` §2 MOD 表「详细设计」列；本文按子系统分组复核。
+> 首版建立于 2026-07-21；2026-08-17 重建为「按子系统分组」清单（区分文档类型）。
 
-## 1. 索引表
+## 1. 子系统详细设计（对应 04 §2 MOD）
 
-| 设计文件 | 设计对象 | 覆盖范围 | 当前状态 | 备注 |
+| 文档 | 对应 MOD · 子系统 | 承接 REQ | 状态 | 图 |
 |---|---|---|---|---|
-| `permissions.md` | 空间与权限子系统（MOD-001） | REQ-001 / 002 / 003 | P1-已实现 | 权限逻辑与 PostgreSQL 查询过滤已接入；`DemoRepository` 仅作单测 fake |
-| `ingestion.md` | 内容导入子系统（MOD-003） | REQ-009 / 010 / 037 | P1 已降级实现；Phase1.5A 批量 / 文件夹导入已实现；Phase2B `preserve_structure` 已实现 | 真实 Word/PDF/OCR 解析未实现 |
-| `rag-retrieval.md` | 检索问答子系统（MOD-004） | REQ-007 / 008 | P1-已实现 | RAG 走真实 LLM + pgvector；`zhparser` 不可用时回退 `simple` |
-| `term-management.md` | 术语管理子系统（MOD-005） | REQ-036 | P1-已实现 | 术语存储已切 PostgreSQL，问答口径注入真实 LLM |
-| `frontend-interaction.md` | 前端交互与桌面端界面（COMP-001） | P1、Phase1.5A/B、Phase2A/B UI Gate 草案 | P1/P1A/P1B、Phase1.5A/B、Phase2A 已完成；Phase2B 部分实现 | 页面职责、用户流、接口依赖仍以本文为主 |
-| `frontend-experience-brief.md` | 前端体验原则与信息架构方向 | P1 保持现状；P1.5A / P2 / 愿景候选方向 | 候选体验方向，待人工确认 / 正式交互设计细化 | 体验原则输入，不直接授权编码 |
-| `frontend-workspace-redesign.md` | LUMEN React 前端工作台系统化 UI / UX 重设计（COMP-001） | REQ-011；承载 REQ-001..010、REQ-036 页面能力 | P1B-已实现 | 视觉密度、组件拆分和工作台布局的已实现口径 |
-| `export-delivery.md` | 导出交付子系统（MOD-007） | REQ-038 / REQ-027 | Phase1.5A `.md` / ZIP 导出已实现；Phase1.5B PDF 导出已实现并通过 TC-P1-017 | Sprint-17/18 已实现设计 |
-| `intelligence-analysis.md` | 情报分析子系统（MOD-009，i2 精神） | REQ-029..034 | 愿景骨架，待技术验证 | P1/P2 不实现，升 Phase 前再评估 |
-| `help-onboarding.md` | 帮助与引导体系（COMP-002） | REQ-011（可用性收口）；不新增 REQ | **L0+L1 已实现（2026-08-06，Sprint-25）** | 分层帮助：L0 内容源 / L1 首次引导 / L2 帮助中心 / L3 上下文 / L4 速查 |
-| `ai-assistant.md` | AI 助手子系统（右下角悬浮窗 + 基于知识库开关 + 多轮） | REQ-008（AI 问答·RAG 扩展） | **已编码 + 验证通过 + 用户验收通过（2026-08-08，维护态批3，`59dd898`）** | 通用对话（开关关闭）/ 多轮 history 走路径 A（前端管理）；不新增表 / 独立接口 |
-| `batch-maintenance-2026-08-08.md` | 维护态使用反馈立项（REQ-049..051 + 部署建议） | REQ-049 本地挂载可编辑 / REQ-050 成员空间可见性 / REQ-051 忘记密码+登录交互 / ⑪ 部署方案 | **REQ-049 与部署已实现（v3.5.0）；REQ-050/051 已实现（v3.7.0，2026-08-09）** | 纯 bug（① ② ⑦ ⑨）与前端增强（④ ⑤ ⑥）已按批1/批2落地；REQ-050/051 的 02/07/09 回写已完成 |
-| `req-implementation-index.md` | REQ 实现证据单点索引（非详细设计） | REQ-001..051 关键实现证据（表 / API / migration / design / TC / Sprint / PR） | 建立于 2026-08-17 | 承接 `03 §3/§4` 收敛后的实现证据；权威仍分别在 06/07/09/design |
+| `permissions.md` | MOD-001 空间与权限 | REQ-001/002/003 | P1-已实现 | flowchart |
+| `ingestion.md` | MOD-003 内容导入 | REQ-009/010/037（+ Flow-D-014 REQ-018） | P1 降级 / Phase1.5A·2B 已实现 | flowchart ×3 |
+| `rag-retrieval.md` | MOD-004 检索问答 | REQ-007/008 | P1-已实现 | flowchart |
+| `ai-assistant.md` | MOD-004 扩展（AI 助手） | REQ-008 | 已实现（维护态批3） | — |
+| `term-management.md` | MOD-005 术语管理 | REQ-036 | P1-已实现 | flowchart |
+| `frontend-interaction.md` | MOD-006 个人知识组织（前端交互） | REQ-001..011、P1/P2 UI | P1-P2 已实现 | sequenceDiagram + flowchart |
+| `folder-tree.md` | MOD-006 文档目录树 | REQ-039 | Phase2B 已实现 | flowchart |
+| `timeline.md` | MOD-006 主题时间线 | REQ-013a/024 | Phase2B 已实现 | — |
+| `export-delivery.md` | MOD-007 导出交付 | REQ-038/027 | Phase1.5A/B 已实现 | flowchart |
+| `ai-polish.md` | MOD-007 写作增强（AI 润色 / 引用） | REQ-014 | Phase2B 已实现 | stateDiagram |
+| `intelligence-analysis.md` | MOD-009 情报分析 | REQ-029..034 | 愿景骨架 | flowchart |
+| `accounts-auth.md` | MOD-011 账户与认证（多人权限） | REQ-040..047/050/051 | Phase2D 已实现 | — |
 
-## 2. 原型与辅助材料
+> MOD-002（文档管理）逻辑简单，无独立 design，见 06/07；MOD-010（情报交付）待技术验证，骨架见 06 §1。
 
-| 文件 | 类型 | 关系 |
+## 2. 前端交互与设计层（COMP-001/002）
+
+| 文档 | 类型 | 承接范围 | 状态 |
+|---|---|---|---|
+| `frontend-workspace-redesign.md` | COMP-001 工作台 UI/UX 重设计 | REQ-011（P1B 落地） | P1B-已实现 |
+| `frontend-design-system.md` | COMP-001 前端设计系统规范（CSS 令牌） | 全站观感（v3.10.0） | 已成文 |
+| `frontend-experience-brief.md` | 前端体验原则与信息架构方向 | P1.5A / P2 / 愿景候选 | 候选待确认 |
+| `help-onboarding.md` | COMP-002 帮助与引导体系 | REQ-011 可用性收口 | 已实现（Sprint-25） |
+
+## 3. 索引 / 立项 / 原型（非详细设计，辅助材料）
+
+| 文档 | 类型 | 用途 |
 |---|---|---|
-| `frontend-workspace-redesign-prototype.html` | 已确认落地版 HTML 原型 | 配套 `frontend-workspace-redesign.md`，用于 P1B 工作台重设计 |
-| `../research/prototypes/2026-07-14-frontend-ui-reference-absorbed-prototype.html` | 探索期 HTML 原型 | 作为 `frontend-interaction.md` 的早期参考，不是 P1B 落地版 |
-| `../research/prototypes/2026-07-14-frontend-ui-confirmation-prototype.html` | 探索期 HTML 原型 | 用于 UI 方向确认留痕，不替代正式详细设计 |
+| `req-implementation-index.md` | REQ 实现证据索引 | REQ-001..051 → 表 / API / migration / TC 单点索引（承接 03/04 收敛） |
+| `batch-maintenance-2026-08-08.md` | 维护态使用反馈立项 | REQ-049..051 + 部署方案（已实现） |
+| `frontend-workspace-redesign-prototype.html` | 已确认落地版 HTML 原型 | 配套 `frontend-workspace-redesign.md`（P1B 证据） |
 
-## 3. 维护规则
+## 4. 维护规则
 
-- 新增 `docs/design/*.md` 时，同步登记设计对象、覆盖 REQ、状态和是否授权编码。
-- 若某设计从候选推进到已实现，应同步更新本文、对应设计文档、`docs/08-dev-plan.md` 和 `docs/09-verification.md`。
+- 新增 `docs/design/*.md` 时：登记文档类型（子系统 / 前端交互 / 设计系统 / 体验原则 / 索引 / 立项）、对应 MOD·COMP、承接 REQ、状态、图 ID。
+- 子系统新增详细设计时，同步更新 `docs/04-architecture.md` §2 MOD 表「详细设计」列。
 - `docs/design/*` 可以承接已确认需求和架构，不得把 research 建议直接写成已确认事实。

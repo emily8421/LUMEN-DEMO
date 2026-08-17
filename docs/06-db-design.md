@@ -11,8 +11,8 @@
 | 保留 / 省略决策 | 保留 |
 | 决策来源 | `ai/project-rules.md` §3（项目有 PostgreSQL + pgvector 持久化存储） |
 | 覆盖 REQ / 模块 | Phase1：空间 / 权限、文档、版本、导入、检索向量、术语管理；Phase1.5A：批量导入与 `.md` / ZIP 导出备份（REQ-037/038）；Phase1.5B：PDF 导出任务契约（REQ-027）；Phase2A：标签、内链 / 反链、快速录入（REQ-012/025/026）；Phase2B：AI 润色草稿（REQ-014）、**主题时间线（REQ-013a/024）**、文档目录树（REQ-039，第三 slice 候选）；愿景保留骨架 |
-| 当前状态 | P1 表结构**已落地 PostgreSQL**（Sprint-8 / task-008 T1–T5：8 张 `lumen_*` 表由 `migrations/001-005` 建，后端切 `PgRepository`；`lumen_chunks.embedding vector(512)` + hnsw + ts_vector 由 T4/T6 启用；migration 006 为 search 增加可选 zhparser / `simple` 回退配置）。内存 `demo_repository` 保留为单测 fake。Phase1.5A 的 REQ-037/038 已复用既有表完成、不新增迁移；Phase1.5B PDF 导出已落地 `lumen_doc_exports`（migration 013 + DocExport entity/ORM + Demo/Pg repository）；Phase2A 的标签、反链与快速录入表已落地；真实 Word/PDF 文本提取与 OCR 仍降级（RG-007 / RG-003）。2026-07-21 按 ADR-010 补“DB 权威运行态 + 衍生数据可重建”原则；**Phase2D 账号体系基础已落地（Sprint-26 / task-038，REQ-040/041/042）：migration 014 为 `lumen_users` 扩列（email / password_hash / status / last_login_at / failed_login_count / locked_until）+ 新建 `lumen_sessions`（不透明 token session，token 只存 SHA-256 摘要，TTL 8h 滑动续期 / 撤销 / 多设备）**；**Phase2D Sprint-28 已实现（2026-08-07，task-040，REQ-045/046/047）：migration 016 为 `lumen_users` 增加全局角色 `role`（admin / member，默认 member + CHECK）+ 为 `lumen_space_members` 补 `created_at`（支撑 API-046 `joined_at`），TC-P2-ACC-002 通过** |
-| 最后更新 | 2026-08-07（Sprint-28 编码完成：migration 016 落地 `lumen_users.role` + `lumen_space_members.created_at`，TC-P2-ACC-002 通过 / v3.1.0） |
+| 当前状态 | P1 表结构已落地 PostgreSQL（Sprint-8 起 PgRepository 接入）；Phase1.5A/B、Phase2A、Phase2D 各阶段表契约均已实现并随代码反向同步（逐表状态见 §1「当前实现状态」列、REQ 追溯见 §6）；仍降级：真实 Word/PDF 解析与 OCR 未接入（RG-007 / RG-003）。历史实现细节见 `docs/09-verification.md` 与 CHANGELOG |
+| 最后更新 | 2026-08-17（模板对齐调整：§0 当前状态精简为「一句话 + 历史指针」；无表契约 / 字段变更）；前次 2026-08-07（Sprint-28 编码完成） |
 
 ## 0.5 概念模型（领域模型 · DIAG-DOM-01）
 

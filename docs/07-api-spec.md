@@ -10,8 +10,8 @@
 | 保留 / 省略决策 | 保留 |
 | 接口形态 | REST API |
 | 覆盖 REQ / 模块 | Phase1：REQ-001..REQ-011、REQ-036；Phase1.5A：REQ-037/038（API-029/030）；Phase1.5B：REQ-027（API-019）；Phase2A：REQ-012/025/026；Phase2B：REQ-014（API-028）、REQ-013/024（API-033）、REQ-039（API-034..038，第三 slice）；Phase2D：REQ-040/041/042（API-039..043，账号体系）+ REQ-045/046/047（API-044..050，角色分层 / 用户管理 / 团队空间加入）；**维护态增强：REQ-048（API-051..053，术语领域树）+ API-012/013 扩字段**；后续 / 愿景接口保留骨架 |
-| 当前状态 | P1 接口契约已用于 Phase1 Demo；Sprint-8 后 P1 主要接口已接 PostgreSQL 表，RAG 已接 pgvector 向量召回 + GLM LLM；task-009 后 API-009 search 已为 substring + ts_vector + pgvector 语义召回的 hybrid search（zhparser 可选）。API-029/030 已随 Phase1.5A 完成；API-019 已随 Sprint-18 完成并补齐 PDF artifact 下载端点；Phase2A 标签、快速录入、内链 / 反链接口已完成；Phase2B API-028、API-033、API-034..038 已进入实现态；**Phase2D 账号体系已实现（Sprint-26）：API-001 login 契约变更（凭证登录 + 不透明 token session）+ 新增 API-039..043（register / logout / refresh / sessions）**；**Sprint-28 已实现（2026-08-07，task-040）：API-044..050（admin 域用户管理 + space 域成员 CRUD + 用户搜索）+ 登录响应新增 `role`，TC-P2-ACC-002 通过**。仍降级：API-011 仅 `.md`/`.txt` 已提取文本；真实 Word/PDF 解析与 OCR 留后续 |
-| 最后更新 | 2026-08-07（Sprint-28 编码完成：API-044..050 已实现 + 登录响应 `role`，TC-P2-ACC-002 通过 / v3.1.0） |
+| 当前状态 | P1 接口契约已用于 Phase1 Demo，Sprint-8 起 P1 接口已接 PostgreSQL + pgvector + GLM LLM；API-029/030/019、Phase2A、Phase2B、Phase2D（API-039..050）、维护态（API-051..056 + 057/058）均已实现（逐接口状态见 §2「当前实现状态」列、追溯见 §4/§5）；仍降级：API-011 仅 `.md`/`.txt` 已提取文本、真实 Word/PDF/OCR 留后续。历史实现细节见 `docs/09-verification.md` 与 CHANGELOG |
+| 最后更新 | 2026-08-17（模板对齐调整：§0 当前状态精简为「一句话 + 历史指针」；无接口契约变更）；前次 2026-08-07（Sprint-28 编码完成） |
 
 ## 1. 统一约定
 
