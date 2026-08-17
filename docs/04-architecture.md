@@ -11,7 +11,7 @@
 | 输入来源 | `docs/00-scenario.md`、`docs/01-user-requirements.md`、`docs/02-srs.md`、`docs/03-prd.md`、`docs/env/local-env.md`、`ai/project-rules.md`、`docs/research/2026-07-15-overall-design-04-05-audit.md`、`docs/decisions/ADR-010-db-authority-derived-data-rebuildability.md` |
 | 覆盖功能 / REQ | Phase1：REQ-001..REQ-011、REQ-036；Phase1.5A：REQ-037/038；Phase1.5B：REQ-027；Phase2A：REQ-012/025/026；Phase2B / 后续 / 愿景保留架构骨架 |
 | 当前状态 | 目标架构基线已定，Phase1→Phase2D 各阶段架构事实均已实现并随代码反向同步（逐模块实现状态见 §2、验证见 `docs/09-verification.md`）；仍降级 / 候选：真实 Word/PDF 解析、OCR 与愿景能力；生产部署拓扑（⑪ 方案 A）已落盘（v3.5.0，见 §4） |
-| 最后更新 | 2026-08-17（模板对齐调整：§0 当前状态精简、新增 §0.2 需求概述 + §5.7-5.10 接口 / 数据结构 / 安全 / 维护设计概述；同日完成 OO 方法论收敛 §5.1/§5.4/§1.3/§1.2.1/ADR-006 + 新增 §5.5/§5.6；无架构决策变更）；前次 2026-08-04（Sprint-18 PDF 导出产品闭环） |
+| 最后更新 | 2026-08-17（模板对齐调整：§0 当前状态精简、新增 §0.2 需求概述 + §5.7-5.10 接口 / 数据结构 / 安全 / 维护设计概述 + §1.2.2 概设类图 DIAG-CLS-PRELIM-01；同日完成 OO 方法论收敛 §5.1/§5.4/§1.3/§1.2.1/ADR-006 + 新增 §5.5/§5.6 + MOD 表详细设计列补全；无架构决策变更）；前次 2026-08-04（Sprint-18 PDF 导出产品闭环） |
 
 ### 0.1 架构目标与约束
 
@@ -140,6 +140,93 @@ flowchart TB
 | 后端 `service/` | 业务逻辑 + 领域异常；读可直连 repository，写必经 service | 错误码业务语义（4001/4030/5030…） |
 | 后端 `repository/` | 持久化抽象；PG / Demo 双实现共享 RepositoryProtocol 契约 | 多实现机器可检契约（CQ-P1-002） |
 | 后端 `model/` | ORM 模型与迁移映射 | 表契约权威在 `docs/06-db-design.md` |
+
+### 1.2.2 概设类图（DIAG-CLS-PRELIM-01）
+
+> 概要设计层系统类图：后端四层（api 路由域 → service 业务域 → repository 契约 → model 实体）的关键类 / 接口与依赖。服务按业务域聚合，**详细签名见各子系统详细类图 `DIAG-CLS-*`**（`design/accounts-auth.md`、`ingestion.md`、`rag-retrieval.md`、`permissions.md` 等）；本图是「概设 → 详设」的类级衔接。驱动：编码时后端 service 层按服务域落函数、repository 层按 `RepositoryProtocol` 契约落方法。
+
+```mermaid
+classDiagram
+  direction LR
+  class Model {
+    <<实体域>>
+    +User
+    +Session
+    +Space
+    +SpaceMember
+    +Document
+    +DocumentVersion
+    +Folder
+    +DocumentChunk
+    +ImportJob
+    +Tag
+    +DocLink
+    +QuickEntry
+    +Term
+    +TermCategory
+    +AiDraft
+    +DocExport
+  }
+  class RepositoryProtocol {
+    <<interface>>
+    +用户/会话: create_user_with_personal_space · find_user_by_email · create_session · revoke_session
+    +空间/权限: add_space_member · list_visible_documents · list_memberships
+    +文档/内容: create_document · replace_document_chunks · complete_import_job
+    +组织/术语: create_tag · upsert_document_tag · create_term · create_term_category
+    +写作/导出: create_ai_draft · create_doc_export
+  }
+  class PgRepository
+  class DemoRepository
+  class AuthSvc {
+    注册 · 凭证登录 · 会话管理 · 忘记密码
+  }
+  class PermissionSvc {
+    空间成员 · 文档可见性 · 过滤
+  }
+  class DocumentSvc {
+    CRUD · 版本 · 目录树
+  }
+  class ImportSvc {
+    导入 · 切块 · Embedding
+  }
+  class RetrievalSvc {
+    RAG 问答 · 搜索
+  }
+  class TermSvc {
+    术语 · 领域树
+  }
+  class OrgSvc {
+    标签 · 内链 · 快速录入 · 时间线
+  }
+  class DeliverySvc {
+    导出 PDF/ZIP · AI 润色
+  }
+  class ApiLayer {
+    <<路由域>>
+    auth · admin · spaces · documents · import · search · query · terms · tags · folders · timeline · export · polish
+  }
+
+  ApiLayer --> AuthSvc : 调用
+  ApiLayer --> PermissionSvc
+  ApiLayer --> DocumentSvc
+  ApiLayer --> ImportSvc
+  ApiLayer --> RetrievalSvc
+  ApiLayer --> TermSvc
+  ApiLayer --> OrgSvc
+  ApiLayer --> DeliverySvc
+  AuthSvc --> RepositoryProtocol : 依赖
+  PermissionSvc --> RepositoryProtocol
+  DocumentSvc --> RepositoryProtocol
+  ImportSvc --> RepositoryProtocol
+  RetrievalSvc --> RepositoryProtocol
+  TermSvc --> RepositoryProtocol
+  OrgSvc --> RepositoryProtocol
+  DeliverySvc --> RepositoryProtocol
+  RepositoryProtocol <|-- PgRepository : 实现
+  RepositoryProtocol <|-- DemoRepository : 实现
+  AuthSvc --> Model : 操作实体
+  RepositoryProtocol --> Model : 契约
+```
 
 ### 1.3 Web App Structure Profile / Walking Skeleton Gate（Batch A 回填）
 
