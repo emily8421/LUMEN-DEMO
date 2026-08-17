@@ -33,6 +33,7 @@
 | OI-110 | 2026-08-16 | research/ui-visual-exploration C-RA-004 | local-mount 54 处硬编码清零（token 化） | 实现期动作，纳入首期 | 视觉探索报告 | — | 视觉一致性 | 实现期 | 不阻塞本次确认 | `docs/design/frontend-design-system.md` | 已裁决（实现期动作） | 探索报告 §5 |
 | OI-111 | 2026-08-17 | research/oo-methodology | OO 图纸可选增量（前端组件树 / 状态图；E-E 表不补） | 可选增强，不阻塞维护态 | REDESIGN-C-003/004 | 不做 | 增强 | 任意时点 | 不阻塞 | `docs/design/*` | 待确认（可选） | — |
 | OI-112 | 2026-07-14 | `docs/design/frontend-experience-brief.md` | 前端体验原则 / 信息架构方向（候选） | 维持候选，确认后入正式设计 | brief 明标候选待确认 | 不采纳 | UI 方向 | 设计前 | 不阻塞 | `docs/design/frontend-experience-brief.md` | 待确认（候选） | — |
+| OI-113 | 2026-08-17 | docs 目录整理（方案 B） | `docs/README.md`（模板同步）L96-97 镜像目录入口名由 `INDEX.md` 改为 `00-index.md` | 上游提案：向 ai-project-template 提 PR，README 镜像区入口名统一为 `00-index.md` | README 由模板同步维护，本地不可直接改 | 维持现状（本地已统一为 00-index，README 滞后） | 非阻塞 | 模板同步时 | 不阻塞 | 模板仓 `docs/README.md` | 待确认 | — |
 
 ## 4. 门禁结论
 
