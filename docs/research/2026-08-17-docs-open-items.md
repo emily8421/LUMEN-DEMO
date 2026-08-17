@@ -22,6 +22,7 @@
 | ID | 提出时间 | 来源 | 待确认事项 | AI 建议 | 建议依据 | 备选方案 | 取舍影响 | 需确认节点 | 阻塞关系 | 回填位置 | 当前状态 | 关闭依据 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | OI-101 | 2026-08-17 | E3 评审（P2-02） | P1 期 design（ingestion / rag-retrieval / term-management）旧版结构对齐 design-doc 标准 | 排后续维护批按标准补齐 | 结构统一便于审计 | 维持现状 | 非阻塞 | 后续维护批 | 不阻塞 | `docs/design/*` | 待确认 | — |
+| OI-101（已关闭 2026-08-18） | 2026-08-17 | E3 评审（P2-02） | P1 期 design（ingestion / rag-retrieval / term-management）旧版结构对齐 design-doc 标准 | 排后续维护批按标准补齐 | 结构统一便于审计 | 维持现状 | 非阻塞 | 后续维护批 | 不阻塞 | `docs/design/*` | 已关闭 | 三份 design 已按 design-doc 标准对齐 §0–§10（含追溯 / 契约 / readiness gate / 待确认章节），入库 PR #203（`d7a556c`） |
 | OI-102 | 2026-08-17 | E3 评审 | 06 §6 REQ-018 行字段/索引列与表头（TC-ID/Sprint）错位 | 最小格式修正 | 表头一致 | 不改 | 极低 | 任意时点 | 不阻塞 | `docs/06-db-design.md` §6 | 待确认 | — |
 | OI-102（已关闭 2026-08-17） | 2026-08-17 | E3 评审 | 06 §6 REQ-018 行字段/索引列与表头（TC-ID/Sprint）错位 | 最小格式修正 | 表头一致 | 不改 | 极低 | 任意时点 | 不阻塞 | `docs/06-db-design.md` §6 | 已关闭 | 行格式已对齐表头 + 镜像 `06-req-table-trace.md` 重新生成 |
 | OI-103 | 2026-08-08 | handoff / 08 | 部署执行（#176 遗留，笔记本侧人工） | 按部署手册人工执行 | 部署就绪 C-001 已落盘 | — | 人工操作 | 发布前 | 条件阻塞发布 | `docs/env/deploy-guide.md`、08 | 待确认 | — |
@@ -47,7 +48,7 @@
 - OI-102：`docs/06-db-design.md` §6 最小格式修正（`edit-single-doc`）。
 - OI-104：已关闭（2026-08-18）——阶段 D 已汇总入 `ai-records/token-hotspots/SUMMARY.md` 并随 PR #201 入库。
 - OI-106 / 107 / 108 / 109 / 112：维持候选 / 愿景 / 待技术验证状态，立项时回填对应 `02/05/06/08/09`。
-- OI-101 / 111：排后续维护批，执行时按 `ai/doc-standards/design-doc.md` 与 OO 图纸标准回填 `docs/design/*`。
+- OI-101：已关闭（2026-08-18）——三份 design（ingestion / rag-retrieval / term-management）已按 design-doc 标准对齐 §0–§10 并随 PR #203（`d7a556c`）入库。OI-111：仍为可选增强，排后续维护批，执行时按 `ai/doc-standards/design-doc.md` 与 OO 图纸标准回填 `docs/design/*`。
 
 ## 6. 落盘建议
 
@@ -55,4 +56,4 @@
 
 ## 7. 需要用户立即确认的问题
 
-- 无阻塞项需立即确认。可选：OI-101 是否排入下一维护批。
+- 无阻塞项需立即确认。
