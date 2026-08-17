@@ -74,18 +74,39 @@
 
 ## 项目结构
 
-```text
-LUMEN_demo_T2.1/
-├─ docs/        # 项目事实：需求、设计、计划、验证（00-09 + design-* + vision/）
-├─ ai/          # AI 行为规范（global-rules / project-rules / index）
-├─ tasks/       # 任务单（按需启用）
-├─ scripts/     # 模板脚本（sync-template.* / check-derived-sync.* / check-template.* / collect-env.ps1 / new-project.sh 等，含 PowerShell 入口）
-├─ backend/     # FastAPI 后端；已有 auth / spaces / documents / import / search / query / terms Demo API
-├─ frontend/    # React 前端；已有文档编辑、搜索 / 问答、术语管理 Demo UI
-├─ docker/ tests/                       # 本地依赖编排与后端测试
-├─ _proposals/                        # 模板优化提案起草区（回流模板仓库前临时存放）
-└─ AGENTS.md / CLAUDE.md / .cursor/    # 各 AI 工具入口，指向 ai/index.md
-```
+> 根目录按「**模板继承 / LUMEN 自身 / 本地临时**」三大区组织。模板继承部分路径由 `ai-project-template` 同步机制约定（**勿移动**，移动会破坏 `sync-template` 下行同步）；LUMEN 自身部分按类别归类。模板 vs 自身权威分界见 `template-sync.json`。
+
+### 分区一：模板继承（随模板同步，勿改路径）
+
+| 条目 | 定位 |
+|---|---|
+| `README.md` `AGENTS.md` `CLAUDE.md` `.cursor/` `.github/` | 项目入口 + AI 入口镜像（指向 `ai/index.md`） |
+| `VERSION` `CHANGELOG.md` `CHANGELOG-PLAIN.md` `TEMPLATE-BASE.md` | 版本与变更记录（CI 校验 `VERSION`/`CHANGELOG`） |
+| `CONTRIBUTING.md` `MAINTAINERS.md` `SOP.md` `INIT-PROMPT.md` `git-guide.md` | 模板方法论文档 |
+| `template-sync.json` `sync-records/` | 同步清单与同步留痕 |
+| `ai/` | AI 行为规范（规则路由 / 规则包 / commands / prompts / doc-standards；`ai/project-rules.md` 为项目专属实例） |
+| `template-docs/` `upstream/` | 模板方法论 / 剖面 / scaffold 参考（非项目事实） |
+| `_proposals/` `_archive/` | 模板优化提案起草区与归档（回流模板通道） |
+
+### 分区二：LUMEN 自身（按类别归类）
+
+| 类别 | 目录 | 说明 |
+|---|---|---|
+| **文档体系** | `docs/` | 00-09 主链（开发阶段过程文档：需求 → 设计 → 计划 → 验证）+ `docs/README.md` 三核心节点定位 |
+| **图纸体系** | `docs/design/` | 子系统详细设计 + `DIAG-*` 图（用例图 / 领域模型 / 架构 / 交互 / 类图）+ 前端交互；清单见 `docs/design/00-index.md` |
+| 辅助留痕 | `docs/research/` `docs/decisions/` `docs/vision/` `docs/inputs/` `docs/env/` `docs/meetings/` `docs/references/` | 调研 / 决策 / 愿景 / 输入 / 环境 / 会议 / 外部参考 |
+| **代码与工程** | `backend/` `frontend/` `docker/` `tests/` `scripts/` `openapi/` | 被 03-09 驱动；后端运行入口见 `backend/README.md` |
+| 任务 | `tasks/` | 任务单 |
+| 治理记录 | `ai-records/` | AI 协作观察记录（token-hotspot / pitfalls 阶段汇总，入库级） |
+| **知识沉淀（预留）** | `docs/knowledge/` | 可复用模块 / 模式 / 组件收集（待建，不占 00-09） |
+
+### 分区三：本地临时（gitignored，不提交）
+
+| 条目 | 说明 |
+|---|---|
+| `tmp/` `.tmp/` `.tmp-sprint28/` | 本地临时验证产物（待合并统一） |
+| `.ai/` | 会话续接点 / token-hotspot / pitfall 本地记录 |
+| `.venv/` `.*cache/` `.history/` `.env` | 环境 / 缓存 / 密钥 |
 
 ## 模板关系与同步
 
