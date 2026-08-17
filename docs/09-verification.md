@@ -86,6 +86,8 @@
 ### Phase2（功能范围 `[P2]` · Phase2A **个人知识组织** / Phase2B **团队 MVP**）
 
 > Phase2A 已完成 REQ-026 / REQ-012 / REQ-025 三个 vertical slice；**Phase2B 已完成并收口（2026-08-05）：REQ-014 首批核心（TC-P2-AI-001）、REQ-013a/024 第二 slice（TC-P2-TL-001）、REQ-039 第三 slice（TC-P2-FOLDER-001）全部验收通过；前端 half 已闭环（2026-07-31 live UI smoke）**。**Phase2D 账号体系基础已完成（Sprint-26，2026-08-07：TC-P2-AUTH-001 自动化通过，RG-011/012/013 Go）**。
+>
+> **收敛说明（2026-08-17）**：P2 TC 行内「证据要求」列只保留 test 文件入口与验收状态；完整命令 / PR / commit / 数字见 §5 验收记录与 CHANGELOG（避免与 §5 重复、压行密度）。
 
 | TC ID | 覆盖对象 | 前置条件 | 验证步骤 | 预期结果 | 证据要求 | 状态 |
 |---|---|---|---|---|---|---|
