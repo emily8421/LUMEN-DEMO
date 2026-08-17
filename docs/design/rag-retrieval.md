@@ -19,6 +19,54 @@
 | 最后更新 | 2026-07-10 |
 | 下游影响 | 08 Sprint-4、09 TC-P1-007/008 |
 
+### 0.5 详细类图（DIAG-CLS-RAG-01）
+
+> 图纸驱动编码：检索问答子系统的类级视图（实体 + `RepositoryProtocol` 契约 + 服务层函数）。类图挂 REQ-007/008；方法签名以 `backend/service/rag.py`、`search.py`、`llm_adapter.py` 与 `backend/repository/protocol.py` 为准。
+
+```mermaid
+classDiagram
+  direction LR
+  class Document {
+    +id
+    +space_id
+    +title
+    +permission
+    +owner_id
+  }
+  class DocumentChunk {
+    +id
+    +document_id
+    +ordinal
+    +text
+    +embedding
+  }
+  class RepositoryProtocol {
+    <<interface>>
+    +list_visible_documents(user_id, space_id) list
+    +recall_chunks(document_ids, query, limit, threshold) list
+    +search_chunks(document_ids, query, limit) list
+    +list_document_chunks(document_id) list
+  }
+  class RagService {
+    +answer_question(repository, user, space_id, question, history, use_knowledge_base, llm_provider) RagAnswer
+  }
+  class SearchService {
+    +search_documents(repository, user, current_space_id, query, limit) SearchResult
+  }
+  class LlmAdapter {
+    +load_config(name) LlmConfig
+    +resolve_chat_fn(llm_provider)
+  }
+
+  RagService --> RepositoryProtocol : 依赖
+  RagService --> LlmAdapter : 调用
+  RagService --> SearchService : 候选检索
+  SearchService --> RepositoryProtocol : 依赖
+  RagService ..> DocumentChunk : 召回
+  SearchService ..> DocumentChunk : 命中
+  RepositoryProtocol ..> DocumentChunk : 契约
+```
+
 ## 1. 职责与边界
 
 - **输入**：用户问题 / 关键词 + 当前空间 + 用户权限

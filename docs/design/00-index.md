@@ -9,9 +9,9 @@
 
 | 文档 | 对应 MOD · 子系统 | 承接 REQ | 状态 | 图 |
 |---|---|---|---|---|
-| `permissions.md` | MOD-001 空间与权限 | REQ-001/002/003 | P1-已实现 | flowchart |
-| `ingestion.md` | MOD-003 内容导入 | REQ-009/010/037（+ Flow-D-014 REQ-018） | P1 降级 / Phase1.5A·2B 已实现 | flowchart ×3 |
-| `rag-retrieval.md` | MOD-004 检索问答 | REQ-007/008 | P1-已实现 | flowchart |
+| `permissions.md` | MOD-001 空间与权限 | REQ-001/002/003 | P1-已实现 | flowchart + DIAG-CLS-PERM-01 |
+| `ingestion.md` | MOD-003 内容导入 | REQ-009/010/037（+ Flow-D-014 REQ-018） | P1 降级 / Phase1.5A·2B 已实现 | flowchart ×3 + DIAG-CLS-INGEST-01 |
+| `rag-retrieval.md` | MOD-004 检索问答 | REQ-007/008 | P1-已实现 | flowchart + DIAG-CLS-RAG-01 |
 | `ai-assistant.md` | MOD-004 扩展（AI 助手） | REQ-008 | 已实现（维护态批3） | — |
 | `term-management.md` | MOD-005 术语管理 | REQ-036 | P1-已实现 | flowchart |
 | `frontend-interaction.md` | MOD-006 个人知识组织（前端交互） | REQ-001..011、P1/P2 UI | P1-P2 已实现 | sequenceDiagram + flowchart |
@@ -20,7 +20,7 @@
 | `export-delivery.md` | MOD-007 导出交付 | REQ-038/027 | Phase1.5A/B 已实现 | flowchart |
 | `ai-polish.md` | MOD-007 写作增强（AI 润色 / 引用） | REQ-014 | Phase2B 已实现 | stateDiagram |
 | `intelligence-analysis.md` | MOD-009 情报分析 | REQ-029..034 | 愿景骨架 | flowchart |
-| `accounts-auth.md` | MOD-011 账户与认证（多人权限） | REQ-040..047/050/051 | Phase2D 已实现 | — |
+| `accounts-auth.md` | MOD-011 账户与认证（多人权限） | REQ-040..047/050/051 | Phase2D 已实现 | DIAG-CLS-AUTH-01 |
 
 > MOD-002（文档管理）逻辑简单，无独立 design，见 06/07；MOD-010（情报交付）待技术验证，骨架见 06 §1。
 
