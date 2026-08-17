@@ -12,3 +12,5 @@ TEMPLATE-UPGRADE-vX.Y.Z-patch.md  # 可选：具体 old→new 修改建议
 提案应保持去项目化，不写入本项目的具体业务需求、技术栈细节或私有信息。提案成熟后，回到模板仓库开 PR，把提案提交到模板仓库的 `_proposals/` 收件箱，由模板维护者汇总分析并落地。
 
 模板改动合并并下行同步后，应将本项目内已处理的提案移动到 `_archive/proposals/` 归档保留（作为历史记录，不删除），避免继续作为待办重复执行。
+
+待回流提案总览（整体意图 / 主题分组 / 优先级 / 边界）见 [`TEMPLATE-UPGRADE-INDEX.md`](./TEMPLATE-UPGRADE-INDEX.md)。
