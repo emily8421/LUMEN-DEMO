@@ -8,9 +8,9 @@
 | 项 | 内容 |
 |---|---|
 | 输入来源 | `docs/01-user-requirements.md`、`docs/02-srs.md`、`ai/project-rules.md` §1 |
-| 覆盖 REQ | REQ-001..REQ-042（按 Phase1 / Phase1.5A / Phase1.5B / Phase2A / Phase2B / Phase2C / Phase2D / 愿景分阶段；REQ-040..047 为 Phase2D 账户与多人权限（已完成 2026-08-07 收口）） |
+| 覆盖 REQ | REQ-001..REQ-051（按 Phase1 / Phase1.5A / Phase1.5B / Phase2A / Phase2B / Phase2C / Phase2D / 维护态 / 愿景分阶段；REQ-040..047 为 Phase2D 账户与多人权限（已完成 2026-08-07 收口）；REQ-049..051 为维护态使用反馈立项（已实现，见 §4 矩阵与 `docs/design/batch-maintenance-2026-08-08.md`）） |
 | 当前状态 | 已确认（§3 为阶段标签唯一来源；Phase1.5B 单文档 PDF 导出已完成；Phase2A 个人知识组织已完成；Phase2B 团队 MVP 已完成（2026-08-05 收口）；Phase2C 本地知识源接入已完成（2026-08-06，Sprint-23C TC-P2-VAULT-001 通过 / PR#108 v2.0.0）；**Phase2D 账户与多人权限已完成（2026-08-07 收口）：Sprint-26 账号体系基础（TC-P2-AUTH-001 / PR#112 v3.0.0）+ Sprint-27 权限多人化（TC-P2-ACC-001 / PR#114）+ Sprint-28 角色分层 + 用户管理 + 团队空间加入（TC-P2-ACC-002 / PR#117 v3.1.0）三 slice 全部验收通过、退出标准达成；**项目 demo 目标已达成（2026-08-07 评估收尾），进入维护态，下一阶段未定义；成果总结见 `docs/research/2026-08-07-project-closure-summary.md`**） |
-| 最后更新 | 2026-08-07（Phase2D 收口：Sprint-26/27/28 三 slice 全部验收通过，退出标准达成，不升 Phase；Sprint-27 P2 两项 + Sprint-28 偏差经用户确认全接受、留后续；下一阶段范围待用户定义）；前次 2026-08-07（Phase2D 立项 + Sprint-26/27/28 实现） |
+| 最后更新 | 2026-08-17（§4 覆盖矩阵补齐 REQ-043..047 / 049 / 050 / 051 行——状态自 §1/§3/§4.1 与 `docs/08-dev-plan.md` Sprint 表收敛为单点索引，无状态变更）；前次 2026-08-07（Phase2D 收口） |
 
 ## 1. 功能范围（完整，对齐 01 / 02）
 
@@ -191,6 +191,14 @@
 | REQ-040 | F-012 | 账户注册 | `[P2]` | 团队验证 | Phase2D·已完成（2026-08-07，Sprint-26，PR#112 v3.0.0，TC-P2-AUTH-001 通过）：bcrypt 哈希 + `lumen_users` 扩列 + 默认个人空间 |
 | REQ-041 | F-012 | 凭证登录 | `[P2]` | 团队验证 | Phase2D·已完成（Sprint-26）：bcrypt verify + 不透明 token + `lumen_sessions` + 失败锁定 |
 | REQ-042 | F-012 | 登出 / 会话管理 | `[P2]` | 团队验证 | Phase2D·已完成（Sprint-26）：会话撤销 + TTL + 续期轮换 + 多设备会话 |
+| REQ-043 | F-013 | 权限多人化：owner 过滤（REQ-001/002/003 扩展） | `[P2]` | 团队验证 | Phase2D·Sprint-27 已完成（2026-08-07，PR#114，TC-P2-ACC-001 通过）：owner_id 跨用户过滤全路径回归 |
+| REQ-044 | F-013 | 跨用户隔离（私有仅 owner / external 仅 owner 可写） | `[P2]` | 团队验证 | Phase2D·Sprint-27 已完成：私有按 owner 过滤 + external 仅 owner 可写 + 跨用户隔离回归 |
+| REQ-045 | F-014 | 全局角色分层（admin/member） | `[P2]` | 团队验证 | Phase2D·Sprint-28 已完成（2026-08-07，PR#117 v3.1.0，TC-P2-ACC-002 通过）：`lumen_users.role` + migration 016 |
+| REQ-046 | F-014 | admin 用户管理后台 | `[P2]` | 团队验证 | Phase2D·Sprint-28 已完成：用户列表 / 改角色 / 禁用启用；管理接口仅 admin（4030），不暴露 `password_hash` |
+| REQ-047 | F-015 | 团队空间加入（space 域成员 CRUD） | `[P2]` | 团队验证 | Phase2D·Sprint-28 已完成：按 email 搜索添加 / 改空间角色 / 移除 + 空间设置成员管理 UI |
+| REQ-049 | F-009a | 本地挂载可编辑（增删查改，REQ-018 模式 B 增强） | `[P2]` | 团队验证 | 维护态·已实现（2026-08-08，v3.5.0）：纯前端 FSA 写路径 + 挂载编辑态 + 批4 多挂载增强；立项见 `docs/design/batch-maintenance-2026-08-08.md` |
+| REQ-050 | F-012 | admin 成员空间可见性（用户详情抽屉跨空间授予 / 撤销） | `[P2]` | 团队验证 | 维护态批5·已实现（2026-08-09，Sprint-30，v3.7.0，PR#120，TC-P2-ACC-003）：API-054 admin 只读接口 + `GET /api/spaces` admin 全空间分支 |
+| REQ-051 | F-012 | 登录密码小眼睛 + 忘记密码自助重置 | `[P2]` | 团队验证 | 维护态批5·已实现（2026-08-09，Sprint-30，TC-P2-AUTH-002）：API-055/056 + migration 018 reset 3 字段；无 SMTP → reset token 降级写日志；重置吊销全部 session |
 
 ## 4.1 证据 / 验收引用
 
