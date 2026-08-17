@@ -39,7 +39,7 @@
 |---|---|---|---|
 | 需求规格说明 | `02-srs.md` | 系统必须实现什么（逐条 REQ + 可验证口径） | 需求规格说明书（`docs/references/Doc_ref/`） |
 | 概要设计说明 | `04-architecture.md` | 系统如何组织（总体设计 / 接口 / 数据结构 / 出错处理 / 安全 / 维护概述） | 概要设计说明书（`docs/references/Doc_ref/`） |
-| 详细设计说明 | `06-db-design.md` + `07-api-spec.md` + `docs/design/*` | 数据契约 / 接口契约 / 子系统内部逻辑 | 设计说明模板（`docs/references/Doc_ref/`） |
+| 详细设计说明 | `06-db-design.md` + `07-api-spec.md` + `docs/design/*` | 数据契约 / 接口契约 / 子系统内部逻辑（文档清单见 `docs/design/00-index.md`） | 设计说明模板（`docs/references/Doc_ref/`） |
 
 `01`（用户需求）为需求上游输入；`03-prd.md` 为产品决策层（功能范围 / 优先级 / 阶段路线图），衔接 02 与 08，非三核心节点本体。
 
