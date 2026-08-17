@@ -70,7 +70,7 @@ classDiagram
     +update_term_category(repository, user_id, space_id, category_id, request) TermCategory
     +delete_term_category(repository, user_id, space_id, category_id)
     +reorder_term_categories(repository, user_id, space_id, ordered_ids)
-    -_ensure_no_name_clash(...) 
+    -_ensure_no_name_clash(...)
   }
 
   TermService --> RepositoryProtocol : 术语 CRUD + 匹配
