@@ -145,6 +145,7 @@ DEFAULT_SYNC_FILES=(
   "template-docs/frontend-experience-brief-template.md"
   "template-docs/ui-brief-intake-template.md"
   "template-docs/frontend-ui-reference-analysis-template.md"
+  "template-docs/examples/extract-diagrams.mjs"
   "template-docs/ui-knowledge/README.md"
   "template-docs/ui-knowledge/source-registry.md"
   "template-docs/ui-knowledge/visual-patterns.md"

@@ -6,6 +6,14 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.12.0（2026-08-18）
+
+**Wave 3 收口：TC-P2-VAULT-003——本地挂载目录 FileSystemObserver 自动监听（REQ-018 模式 B 增强，RG-010 Go）。用户可感知能力（文件变更自动刷新 + 手动重扫按钮），bump MINOR。纯前端零新依赖零后端改动，隐私红线不变（仍仅本地，不上传）。**
+
+- **自动重扫**：`useVaultAutoRescan`——per-mount `FileSystemObserver`（Chromium 系，Edge 139+ 默认可用）观察挂载目录；变更事件只当信号，1.5s 防抖合并后复用既有 `reindex` 全量重扫（walk + 重建索引路径，1000+ 文件 PoC 已验证；不做增量 diff，demo 级 YAGNI）。needs-auth 挂载不观察；observe / 构造失败 console.warn 降级；卸载 / 会话退出 disconnect（RG-010-N2 观察期随会话，与单会话挂载模型一致）。
+- **手动重扫兜底（TC 要求保留）**：本地挂载 header 补「重扫」按钮——修复既有 `reindex` 函数无 UI 入口的缺口；title 按浏览器支持性提示（不支持自动监听时明示需手动）。
+- **验证**：eslint 0 + build 绿 + file-size + css token PASS + CDP 冒烟（observerSupported=true / 无挂载时重扫隐藏 / 无运行时错误）；真实 picker 句柄监听 + 文件变更自动刷新（RG-010-N1 复测）留用户人工 smoke（showDirectoryPicker 授权无法 headless，同 TC-P2-VAULT-001 分界）。05/08/09 + design/ingestion + req-implementation-index 回写。**Wave 3（跨设备元数据 + 自动监听）全部收口。**
+
 ## v3.11.0（2026-08-18）
 
 **Wave 3 / OI-109：REQ-018 模式 B 增强——跨设备 vault 挂载元数据（TC-P2-VAULT-004）。新增 API endpoint（API-059）+ migration 015 + 前端接线，bump MINOR。隐私天花板不变：仅同步挂载清单元数据，句柄/路径/正文仍只留各设备浏览器 IndexedDB，不进服务端 RAG。**

@@ -42,6 +42,7 @@ GitHub 账号：<如需远端仓库再填写；也可让脚本读取当前 gh �
 9. 输出下一步待办：
    - 准备 `docs/inputs/` 原始上游输入材料；已有成熟 `docs/vision/product-vision.md` 时也要复评来源和缺口
    - 填写 ai/project-rules.md 的 Phase 边界、技术栈、运行环境与资源约束、项目版本管理、项目形态裁剪
+   - 项目运营中积累出模板场景未覆盖的专属操作剧本时，在同步清单外建项目特有场景手册（见 scenario-guides §8），不写母模板 scenario-guides
    - 先用 `ai/prompts/docs/01-review-inputs.md` 评审输入材料和 Product Vision 就绪度，不足时按 `docs/inputs/input-review-report.md` 和最小补充清单补齐后复评
    - 复评通过后用 `ai/prompts/docs/00-generate-or-complete-docs.md` 生成 / 更新 `docs/vision/product-vision.md` 并补齐 docs 文档体系
    - 人工审核 03-09 后再进入 Sprint1

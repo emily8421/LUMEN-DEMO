@@ -20,6 +20,18 @@
 
 > 边界：`tasks/` 是执行任务单目录，不属于 `docs/` 项目事实链；若后续新增 Task 文件模板，应落位 `template-docs/task-template.md`，复制目标为 `tasks/task-00X-*.md`，不新增 `template-docs/docs-scaffold/tasks/`。
 
+## 三核心节点定位（评审与阅读入口）
+
+按「需求规格说明 → 概要设计说明 → 详细设计说明」三个核心节点读文档体系：
+
+| 核心节点 | 本体系承载 | 回答什么 |
+|---|---|---|
+| 需求规格说明 | `docs/02-srs.md`（背景见 `00/01`，范围与阶段见 `03`） | 系统必须实现什么（逐条 REQ + 可验证口径） |
+| 概要设计说明 | `docs/04-architecture.md` + `docs/05-tech-spec.md` | 系统如何组织（总体设计 / 接口 / 数据结构 / 安全 / 维护概述） |
+| 详细设计说明 | `docs/06-db-design.md` + `docs/07-api-spec.md` + `docs/design/*` | 数据契约 / 接口契约 / 子系统内部逻辑 |
+
+> 项目若需对照特定行业 / 企业文档模板谱系（如国标式软件文档编制规范），在项目自己的 `docs/README.md` 登记节点级映射与偏差；模板不预设特定外部模板为依赖。
+
 ## 使用方式
 
 - 新建或补齐项目文档时，优先让 AI 按 `ai/index.md`、`ai/document-lifecycle-rules.md` 与 `ai/doc-standards/` 执行；本目录只做结构参考。

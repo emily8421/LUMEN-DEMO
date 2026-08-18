@@ -125,6 +125,14 @@ docs/inputs/ 原始输入  ──→  docs/vision/product-vision.md  ──→  
 | `docs/08-dev-plan.md` | Sprint / task 拆分 + 验收 |
 | `docs/09-verification.md` | 验证矩阵 + 验收 |
 
+**根目录三层地图**（哪些能直接写、哪些会被同步覆盖；规则口径见 `ai/global-rules.md` §5，机器事实源是 `template-sync.json`）：
+
+| 层 | 典型目录 / 文件 | 同步时 | 你怎么用 |
+|---|---|---|---|
+| 模板方法论（继承） | `ai/`（除 `ai/project-rules.md`）、`template-docs/`、`scripts/`、`template-sync.json` | 覆盖 | 不直接改；想改通用规则 → `_proposals/` 起草提案回流模板 |
+| 模板治理（本地记录） | `sync-records/`、`ai-records/`、`_proposals/`、`.ai/` | 不覆盖 | 按各自 README 记录 |
+| 项目产出（自有） | `docs/`、代码目录、`ai/project-rules.md`、根 `README.md`、`VERSION`、`CHANGELOG*`、`tasks/` | 不覆盖 | 你自己的，直接写 |
+
 > 三个容易混淆的路径：`docs/inputs/*` / `docs/vision/*` / `docs/00-09` / `docs/design/*` / `docs/decisions/*` / `docs/research/*` 是你的项目事实；`template-docs/docs-scaffold/` 下的 `inputs/`、`vision/`、`00-09`、`design/`、`decisions/`、`research/` 是长期结构模板副本；`ai/doc-standards/` 是 AI 规则 / 审计基线。派生项目里：模板方法层是下行同步的只读件（改通用规则要回模板走 PR）；文档事实层和代码骨架层是你自己的。分区规则、裁剪、撰写规范见 `docs/README.md`。
 
 ## 6. 常见错误与常见问题

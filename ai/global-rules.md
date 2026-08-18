@@ -112,6 +112,16 @@ ProjectName/
 └─ .gitignore
 ```
 
+**根目录分类框架（三层区）**：派生项目根目录按「模板继承 / 项目治理记录 / 项目产出」三大区理解，避免条目增多后无法分辨哪些能直接写、哪些会被同步覆盖：
+
+| 区 | 典型目录 / 文件 | 同步时 | 派生项目怎么用 |
+|---|---|---|---|
+| 模板方法论（继承） | `ai/`（除 `project-rules.md` 实例）、`template-docs/`、`scripts/`（模板脚本）、`template-sync.json`、`SOP.md`、`git-guide.md` 等 | **覆盖** | 不直接改；通用改进走 `_proposals/` 回流模板 |
+| 模板治理（本地记录） | `sync-records/`、`ai-records/`、`_proposals/`、`.ai/` | 不覆盖 | 按各自 README 记录，不参与同步 |
+| 项目产出（自有） | `docs/`、代码目录（`frontend/` 等）、`ai/project-rules.md`、根 `README.md`、`VERSION`、`CHANGELOG*`、`tasks/`、`knowledge/` 等项目自建目录 | 不覆盖 | 项目自有，直接写 |
+
+机器事实源仍是 `template-sync.json`（本表是人读导航，不是第二权威源）；项目自建目录（如知识沉淀）建议放 `docs/` 子目录或项目自管目录并登记 `ai/project-rules.md` §4，避免根目录膨胀。人读版地图见 `template-docs/beginner-guide.md` §5。
+
 `docs/` 核心文档固定编号 `00-09`，编号本身不因项目而变；其中 `00-05`、`08`、`09` 对所有项目必备，
 `06-db-design`、`07-api-spec` 按项目形态决定（无持久化 / 无对外接口的项目可省略，
 并在 `ai/project-rules.md` §3 声明）。`docs/` 根目录只放 `README.md` 与 `00-09` 核心文档；

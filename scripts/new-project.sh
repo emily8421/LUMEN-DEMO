@@ -3,7 +3,7 @@
 # new-project.sh — 从 ai-project-template 派生新项目并初始化 git 远端
 #
 # 用法:
-#   bash scripts/new-project.sh <项目名> [--account <login>] [--visibility public|private] [--no-examples] [--local] [--no-remote]
+#   bash scripts/new-project.sh <项目名> [--account <login>] [--visibility public|private] [--no-examples] [--local] [--no-remote] [--shape <docs|cli|web>]
 #     <项目名>           新项目目录名（相对当前目录，或绝对路径），默认也是 GitHub 仓库名
 #     --account <login>  建仓库的 GitHub 账号（优先级高于 ACCOUNT 和当前 gh 登录账号）
 #     --visibility <v>   GitHub 仓库可见性：private 或 public（默认取 VISIBILITY，未设置则为 private）
@@ -11,6 +11,11 @@
 #     --local            走本地模板派生（默认 = 脚本所在仓库根，需自行确保 git pull 到最新）；
 #                        不加此参数则从 GitHub main 派生（推荐，事实来源）
 #     --no-remote        只创建本地项目与首提交，不创建 GitHub 仓库、不推送（用于烟测或离线起步）
+#     --shape <形态>     按项目形态裁剪代码目录与骨架文档（形态已知时的一步到位路径；缺省不裁剪）：
+#                        docs = 纯文档/知识库仓（删 frontend/ backend/ tests/ docker/ + docs/06 + docs/07）
+#                        cli  = CLI/本地脚本（删 frontend/ docker/，保留 docs/07 用于命令契约）
+#                        web  = 缺省，等价不裁剪（Web/全栈项目后续按 ai/project-rules.md §3 自行裁剪）
+#                        裁剪口径与 ai/doc-standards/project-rules.md §3 对齐；--shape docs ≡ 事后执行 §3 裁剪步骤
 #   环境变量:
 #     ACCOUNT            默认建库账号（可被 --account 覆盖）
 #     VISIBILITY         默认仓库可见性：private 或 public（可被 --visibility 覆盖）
@@ -40,6 +45,7 @@ VISIBILITY="${VISIBILITY:-private}"
 NO_EXAMPLES=0
 USE_LOCAL=0
 NO_REMOTE=0
+SHAPE="web"
 NAME=""
 TEMPLATE_REMOTE="${TEMPLATE_REMOTE:-https://github.com/emily8421/ai-project-template.git}"
 
@@ -50,13 +56,18 @@ while [[ $# -gt 0 ]]; do
     --no-examples) NO_EXAMPLES=1; shift;;
     --local) USE_LOCAL=1; shift;;
     --no-remote) NO_REMOTE=1; shift;;
-    -h|--help) echo "用法: bash scripts/new-project.sh <项目名> [--account <login>] [--visibility public|private] [--no-examples] [--local] [--no-remote]"; exit 0;;
+    --shape) SHAPE="${2:?--shape 需要值}"; shift 2;;
+    -h|--help) echo "用法: bash scripts/new-project.sh <项目名> [--account <login>] [--visibility public|private] [--no-examples] [--local] [--no-remote] [--shape <docs|cli|web>]"; exit 0;;
     -*) echo "未知选项: $1" >&2; exit 1;;
     *) if [[ -n "$NAME" ]]; then echo "多余的位置参数: $1" >&2; exit 1; fi; NAME="$1"; shift;;
   esac
 done
 
-[[ -n "$NAME" ]] || { echo "用法: bash scripts/new-project.sh <项目名> [--account <login>] [--visibility public|private] [--no-examples] [--local] [--no-remote]" >&2; exit 1; }
+[[ -n "$NAME" ]] || { echo "用法: bash scripts/new-project.sh <项目名> [--account <login>] [--visibility public|private] [--no-examples] [--local] [--no-remote] [--shape <docs|cli|web>]" >&2; exit 1; }
+case "$SHAPE" in
+  docs|cli|web) ;;
+  *) echo "--shape 仅支持 docs、cli 或 web: $SHAPE" >&2; exit 1;;
+esac
 case "$VISIBILITY" in
   private|public) ;;
   *) echo "--visibility 仅支持 private 或 public: $VISIBILITY" >&2; exit 1;;
@@ -214,6 +225,14 @@ cat > "$TARGET/README.md" <<EOF
 # $BASE
 
 > 本项目由 \`ai-project-template\` 派生。请在初始化阶段把本文件改写为项目说明，而不是保留模板仓库说明。
+EOF
+if [[ "$SHAPE" != "web" ]]; then
+  cat >> "$TARGET/README.md" <<EOF
+>
+> **形态裁剪说明**：本项目初始化时已按 \`--shape $SHAPE\` 裁剪（依据 \`ai/doc-standards/project-rules.md\` §3 形态推导），代码目录与骨架文档按下表裁剪；后续生成文档体系时不再纠结已裁剪项。
+EOF
+fi
+cat >> "$TARGET/README.md" <<EOF
 
 ## 项目简介
 
@@ -257,7 +276,7 @@ cat > "$TARGET/README.md" <<EOF
 - 本机 Demo 必须运行的部分、允许降级 / Mock 的部分、是否需要服务器。
 - 是否有持久化存储、是否有对外接口、演示形态。
 - \`docs/06-db-design.md\` 与 \`docs/07-api-spec.md\` 的保留 / 省略决策。
-- 需要保留的代码目录；不用的目录后续再删除，不要先删再补依据。
+- 需要保留的代码目录；不用的目录按 \`ai/doc-standards/project-rules.md\` §3 裁剪执行步骤处理（§3 决策确认后、生成 docs/03-09 前删除，并把执行事实回填 §3 / §4），不要先删再补依据；初始化时形态已知也可直接用 \`new-project.sh --shape\`。
 - 项目版本规则：默认从 \`v0.1.0\` 起步；确认 \`ai/project-rules.md\` 的项目版本管理规则是否适用。
 
 ## 文档入口
@@ -292,6 +311,14 @@ cat > "$TARGET/README.md" <<EOF
 
 ## 模板关系
 
+### 项目结构（三层区，详见 template-docs/beginner-guide.md §5）
+
+| 层 | 典型目录 | 同步时 | 怎么用 |
+|---|---|---|---|
+| 模板方法论（继承） | \`ai/\`（除 project-rules）、\`template-docs/\`、\`scripts/\` | 覆盖 | 不直接改；通用改进走 \`_proposals/\` 回流 |
+| 模板治理（本地记录） | \`sync-records/\`、\`ai-records/\`、\`_proposals/\`、\`.ai/\` | 不覆盖 | 按各自 README 记录 |
+| 项目产出（自有） | \`docs/\`、代码目录、\`ai/project-rules.md\`、本 README、\`VERSION\` | 不覆盖 | 项目自有，直接写 |
+
 - 通用方法论来自 \`ai-project-template\`。
 - 项目自身版本记录在 \`VERSION\`；继承 / 当前同步到的模板版本记录在 \`TEMPLATE-BASE.md\`。
 - 新建项目默认以 \`v0.1.0\` 作为项目自有版本起点，\`CHANGELOG.md\` / \`CHANGELOG-PLAIN.md\` 顶部项目版本应与 \`VERSION\` 保持一致。
@@ -305,6 +332,21 @@ EOF
 
 if [[ "$NO_EXAMPLES" -eq 1 ]]; then
   rm -rf "$TARGET/_archive" "$TARGET/_examples"
+fi
+
+# --shape 按项目形态裁剪（破坏性动作：明示删了什么；首提交含全量，误删可从 git 历史恢复）
+SHAPE_REMOVED=""
+if [[ "$SHAPE" == "docs" ]]; then
+  rm -rf "$TARGET/frontend" "$TARGET/backend" "$TARGET/tests" "$TARGET/docker"
+  rm -f "$TARGET/docs/06-db-design.md" "$TARGET/docs/07-api-spec.md"
+  SHAPE_REMOVED="frontend/ backend/ tests/ docker/ + docs/06-db-design.md + docs/07-api-spec.md"
+elif [[ "$SHAPE" == "cli" ]]; then
+  rm -rf "$TARGET/frontend" "$TARGET/docker"
+  SHAPE_REMOVED="frontend/ docker/（docs/07-api-spec.md 保留，用于命令 / 参数 / 输出契约）"
+fi
+if [[ -n "$SHAPE_REMOVED" ]]; then
+  echo "==> --shape $SHAPE 裁剪（口径对齐 ai/doc-standards/project-rules.md §3）：已删除 $SHAPE_REMOVED"
+  echo "    请在 ai/project-rules.md §3 补记裁剪事实（何时按什么形态删了什么），防止后续文档生成时再纠结 06/07。"
 fi
 
 cd "$TARGET"
