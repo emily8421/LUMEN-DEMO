@@ -3,7 +3,7 @@
 > 来源：LUMEN-DEMO（emily8421/LUMEN-DEMO）派生项目回流
 > 提案日期：2026-08-18
 > 目标文件：`ai/global-rules.md` §5（通用目录标准）与 `template-docs/web-fullstack-profile.md` §4（推荐目录边界）二选一或分工承载
-> 状态：**草稿（待派生项目用户审定后开跨仓 issue）**；与 [#357](https://github.com/emily8421/ai-project-template/issues/357)（根目录结构优化）互补不重叠——#357 管**根目录**怎么分类，本提案管**代码目录**为什么这么切
+> 状态：**已提交模板维护者**——issue [#370](https://github.com/emily8421/ai-project-template/issues/370)（2026-08-18 开，OPEN，等维护者 triage）；本文件留作审计底稿，**勿重复提交**；与 [#357](https://github.com/emily8421/ai-project-template/issues/357)（根目录结构优化）互补不重叠——#357 管**根目录**怎么分类，本提案管**代码目录**为什么这么切
 
 ## 1. 动机
 
