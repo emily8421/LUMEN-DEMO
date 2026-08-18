@@ -41,3 +41,9 @@
 | `TEMPLATE-UPGRADE-web-profile-code-consistency.md`（issue #333） | v1.61.2（PR #338），本项目已同步至 v1.61.4 | Web Profile 代码层一致性基线已落地 `template-docs/web-fullstack-profile.md §9`（#333 Batch A）。 |
 | `TEMPLATE-UPGRADE-ai-code-governance-routing-map.md`（issue #335） | v1.61.3（PR #339），本项目已同步至 v1.61.4 | 规则分层地图选 A 不引入；gap A/B 已落地「去重声明必填 + 自动检查归位」（v1.61.3）。 |
 | `TEMPLATE-UPGRADE-web-fullstack-code-consistency-baseline.md` | 已拆分 | 实证索引·已拆分：回流走 A/B/C（#332/#333/#334）；A/B 已落地，C（#334）暂缓保留。 |
+| `TEMPLATE-UPGRADE-doc-overview-skeleton-alignment.md`（issue #356） | v1.63.0（Batch A / PR A1 #362，squash `49c1f2b`），本项目已同步至 v1.64.0 | doc-standards 02/04 引用式概述章 + 元信息精简 + scaffold 三核心节点定位（维护者通用化措辞落地）。 |
+| `TEMPLATE-UPGRADE-back-sync-placement-audit.md`（issue #355） | v1.63.0（Batch A / PR A1 #362，squash `49c1f2b`），本项目已同步至 v1.64.0 | E6 反向同步落点约束 + 文档评估阶段归属审计维度。 |
+| `TEMPLATE-UPGRADE-doc-system-oo-diagrams.md`（issue #354） | v1.63.0（Batch A / PR A2 #363，squash `d028bc5`），本项目已同步至 v1.64.0 | doc-standards 可选 OO 建模 overlay（用例图 / 领域模型 / 类图族 / 状态图族 / 概设交互图；建议 + 可选力度）。 |
+| `TEMPLATE-UPGRADE-diagrams-tables-mirror.md`（issue #358） | v1.63.0（Batch A / PR A2 #363，squash `d028bc5`），本项目已同步至 v1.64.0 | `document-lifecycle-rules §13` 图表生成式镜像机制 + 样例脚本 + docs/README 可选子目录登记。 |
+| `TEMPLATE-UPGRADE-pitfall-legacy-code-trigger.md`（issue #350） | v1.64.0（Batch B+C / PR #364，squash `f51b39e`），本项目已同步至 v1.64.0 | `session-rules §4.3` pitfall 存量 AI 代码问题登记触发口径。 |
+| `TEMPLATE-UPGRADE-root-directory-organization.md`（issue #357） | **部分采纳** v1.64.0（Batch B+C / PR #364，squash `f51b39e`），本项目已同步至 v1.64.0 | 仅 §2.2 吸收（`global-rules §5` 根目录三层区框架，与 #351 §2.4 合并落一处）；§2.1 物理归拢另立评估不在本批。 |
