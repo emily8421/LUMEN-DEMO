@@ -17,7 +17,7 @@
 | 当前状态 | P1-已实现；P1A / P1B 前端体验收口已实现并通过构建与 Chrome / Edge 900px smoke；Phase1.5A 批量导入与 `.md` / ZIP 导出交互路径已实现并通过 TC-P1-015/016；Phase1.5B PDF 导出入口已实现并通过 TC-P1-017；P2 少容器清爽稿作为后续 Phase2B UI / WSG 门禁候选保留；Phase2A 已完成（REQ-026/012/025，TC-P2-LINK/TAG/QUICK-001 通过）；**Phase2B 首批 REQ-014 AI 润色/写作引用 vertical slice 已闭环（PR#89–95 / v1.1.0，TC-P2-AI-001 live UI smoke 2026-07-31 通过）**，主题时间线（REQ-013/024）第二 slice 已完成并通过 smoke |
 | 页面 / 流程 ID | Page-ID（§2.2）/ UF 用户流（§3） |
 | UI 原型策略 | P1 / P1.5A：代码原型 + smoke；P2A/B：静态 HTML 实现前确认稿 + 后续 Chrome / Edge smoke 草案（见 §8 / §9） |
-| 最后更新 | 2026-08-04（**timeline task-030 / v1.5.2：PG-P2-008 主题时间线视图已实现并通过运行态 API smoke、Edge headless 浏览器 smoke 与真实 PG 大数据性能 smoke；folder-tree 浏览器自动化 smoke 已补**）；前版回写 REQ-014 闭环 + §9.5 Doc-First 候选基线 |
+| 最后更新 | 2026-08-18（OI-111 可选增量：新增 §2.5 前端组件树 DIAG-FE-COMP-01 + §2.6 视图与栏布局状态机 DIAG-FE-STATE-01，按代码事实回画）；前次 2026-08-04（**timeline task-030 / v1.5.2：PG-P2-008 主题时间线视图已实现并通过运行态 API smoke、Edge headless 浏览器 smoke 与真实 PG 大数据性能 smoke；folder-tree 浏览器自动化 smoke 已补**）；前版回写 REQ-014 闭环 + §9.5 Doc-First 候选基线 |
 | 下游影响 | 08 Sprint-2/4/5/6/9/10/16/17/18；08 Sprint-11（P2-UI-Gate / WSG 候选）；09 TC-P1-001~017、TC-P2-WSG-001 与 TC-P2-UI-001~005 草案；Phase2B 编码仍需另行确认任务 |
 
 
@@ -119,6 +119,93 @@ P1A 验收以 `docs/09-verification.md` TC-P1-013 为准：视图切换保持当
 | 上下文面板 | 文档、搜索、问答、术语视图各自切换上下文，不常驻无关面板 | 解决 P1A 后仍可能出现的任务混杂与信息挤压 |
 | 视觉密度 | 使用 pane / toolbar / list-row / inspector 等分层样式，弱化大卡片堆叠 | Chrome / Edge 900px smoke 通过，无全局横向滚动 |
 | P0/P1 回归 | 文档 CRUD、版本恢复、Markdown 预览、搜索来源打开、问答、术语管理不回退 | `npm.cmd run build` + Chrome / Edge headless smoke 通过 |
+
+### 2.5 前端组件树（DIAG-FE-COMP-01）
+
+> 图纸 ID 新增（2026-08-18，OI-111 可选增量；对照后端 `DIAG-CLS-*` 的前端等价物——前端不画 OO 类图，用组件树承载结构视图，对应 REDESIGN-C-003「用 frontend-interaction 承载」裁决）。组件与装配关系以 `frontend/src/` 代码事实为准（App.tsx 只做装配；域 hook 编排在 `app/useAppState.ts`，UI/布局态在 `app/useAppShellState.ts`，CQ-P1-008 E4 拆分）；挂 REQ-011 / COMP-001。权限可见性：`members` 视图仅空间 admin / 全局 admin 可见（C-ROLE-007），`admin-users` 入口仅全局 admin——**前端可见性不替代后端权限边界**（§5）。
+
+```mermaid
+flowchart TB
+  App["App.tsx（装配根）"]
+  App --> TopBar["TopBar（空间切换 / 栏开关 / 搜索入口 / 用户菜单）"]
+  App --> AuthGate{"session 存在？"}
+  AuthGate -- "未登录" --> AuthShell["AuthShell（登录 + 忘记密码弹窗）"]
+  AuthGate -- "已登录" --> WS["WorkspaceShell（workspace-layout）"]
+  App --> Overlay["OverlayShell（仅登录后）"]
+  Overlay --> Palette["CommandPalette（命令面板）"]
+  Overlay --> AiAssistant["AiAssistant（AI 助手抽屉）"]
+  App --> StatusBar["StatusBar（通知 / 错误）"]
+
+  WS --> ViewNav["WorkspaceViewNav（九视图导航；members 按权限过滤）"]
+  WS --> ContextPane["ContextPane（左栏：目录树 / 术语树 / 本地挂载 / info-list）"]
+  ContextPane --> FolderTree["FolderTree + FolderTreeHeader"]
+  ContextPane --> TermsPane["TermsContextPane（术语领域树）"]
+  ContextPane --> LocalMount["LocalMountPane（REQ-049 本地挂载）"]
+  ContextPane --> InfoList["ContextInfoList（搜索 / 问答）"]
+  WS --> Resizer["pane-resizer（左栏宽度拖拽，收起时隐藏）"]
+  WS --> Main["WorkspaceMain（activeView 条件渲染）"]
+
+  Main --> Home["WelcomeFeature（home · 默认落地页）"]
+  Main --> Docs["WorkspaceMainDocuments（documents）"]
+  Docs --> DocsFeature["DocumentsFeature（toolbar + 编辑 / 预览 / 空态）"]
+  Docs --> LocalPreview["LocalDocPreview（本地挂载文档预览）"]
+  DocsFeature --> Editor["DocumentEditorForm / DocumentPreviewPane"]
+  DocsFeature --> Inspector["DocumentInspectorFeature（右栏：版本 / 标签 / 链接）"]
+  Main --> Search["SearchFeature"]
+  Main --> Query["QueryFeature"]
+  Main --> Terms["TermsFeature"]
+  Main --> Tags["TagsFeature"]
+  Main --> Timeline["TimelineFeature"]
+  Main --> Members["MembersFeature（members · 空间 admin 可见）"]
+  Main --> AdminUsers["AdminUsersFeature（admin-users · 全局 admin）"]
+
+  WS --> QuickEntry["QuickEntryFeature（快速录入 modal）"]
+  WS --> ImportModal["ImportFeature（导入 modal，§9.5.8）"]
+  WS --> Onboarding["OnboardingGuide（新手引导，未完成时）"]
+```
+
+- 组件树只描述结构与职责分层；各 Feature 的 props / 状态编排见 `app/useAppState.ts`（域 hook）与各 Feature 文件，不在图内展开。
+- 弹窗三件（QuickEntry / Import / Onboarding）挂在 WorkspaceShell 层级但由各自 open 状态控制显隐，不随 activeView 变化。
+- 「members / admin-users 可见性」为前端过滤；权限判定以后端 `get_current_user` / 角色返回为准（`docs/design/accounts-auth.md` §6）。
+
+### 2.6 工作台视图与栏布局状态机（DIAG-FE-STATE-01）
+
+> 图纸 ID 新增（2026-08-18，OI-111 可选增量；对照 OO 方法论转换⑧在 UI 层的等价物——后端对象状态用 `DIAG-STATE-*`，前端工作台是「视图 + 栏布局」组合状态）。状态语义以 `app/useWorkspace.ts`（activeView）、`app/usePaneLayout.ts`（栏显隐 + 快捷键 + localStorage 记忆）、`app/useAppShellState.ts`（leftPaneHasContent 派生过滤）、`features/documents/DocumentsFeature.tsx`（并排自动收右栏）代码事实为准；挂 REQ-011 / Doc-First §9.5。
+
+```mermaid
+stateDiagram-v2
+  state "activeView 视图态（九选一）" as View {
+    [*] --> home : 登录成功（Doc-First §9.5.2 默认落地页）
+    home --> documents : 导航 / 首页卡片
+    documents --> search : 导航切换
+    search --> query : 导航切换
+    query --> terms : 导航切换
+    terms --> tags : 导航切换
+    tags --> timeline : 导航切换
+    timeline --> home : 导航切换
+    documents --> members : 仅空间/全局 admin 可见（C-ROLE-007）
+    documents --> admin_users : 仅全局 admin（TopBar 用户管理入口）
+  }
+
+  state "leftPane 左目录栏" as Left {
+    [*] --> left_open : 默认展开（2026-08-14 修订）+ localStorage 记忆
+    left_open --> left_collapsed : Ctrl+B / 顶栏 / 边缘按钮（记忆偏好）
+    left_collapsed --> left_open : 再次触发（同左）
+    left_open --> left_hidden : activeView ∈ {home, tags, timeline}（无左栏内容恒不显示）
+    left_hidden --> left_open : 切回 documents / search / query / terms
+  }
+
+  state "rightPane 右栏（Inspector）" as Right {
+    [*] --> right_collapsed : 默认收起（选区 / AI 唤出）+ 记忆
+    right_collapsed --> right_open : Ctrl+R / 边缘按钮（input/textarea 聚焦时守卫不拦截，F-impl-1）
+    right_open --> right_collapsed : 再次触发 / 切入并排模式自动收起（不覆盖偏好）
+  }
+```
+
+- 三个子状态正交组合：任一 `activeView` 下左右栏各自独立显隐，视图切换只影响左栏「有无内容」的派生过滤（`leftPaneHasContent`），不直接改写用户偏好。
+- `isBusy`（全局忙碌）期间导航按钮 disabled，防中途切换丢上下文。
+- 空间切换（UF-001）后各域数据重载，`activeView` 保持不变——视图态不随空间重置。
+
 ## 3. P1 核心用户流（已实现）
 
 > 用户流稳定 ID（**UF = 前端用户流 User Flow**，与 04 系统级 Flow-ID 命名空间独立）：UF-001 登录与空间切换 / UF-002 文档与版本 / UF-003 导入 / UF-004 搜索 / UF-005 RAG 问答 / UF-006 术语管理，对应 §3.1~§3.6。

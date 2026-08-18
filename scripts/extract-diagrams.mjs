@@ -139,7 +139,9 @@ const DIAGRAMS = [
   { rel: 'docs/design/timeline.md', block: 1, id: 'DIAG-TL-FLOW-01', title: '主题时间线装配流程', phase: '详细设计', type: '流程图', render: 'GitHub 原生', trace: 'REQ-013a/024' },
   { rel: 'docs/design/ai-assistant.md', block: 2, id: 'DIAG-FLOW-ASSIST', title: 'AI 助手多轮对话交互流', phase: '详细设计', type: '流程图', render: 'GitHub 原生', trace: 'Flow-D-ASSIST-01' },
   { rel: 'docs/design/frontend-interaction.md', block: 1, id: 'DIAG-FLOW-FE-IA', title: 'P1 页面信息架构', phase: '详细设计', type: '流程图（前端）', render: 'GitHub 原生', trace: 'REQ-011 页面清单' },
-  { rel: 'docs/design/frontend-interaction.md', block: 2, id: 'DIAG-SEQ-FE-UF001', title: 'UF-001 登录与空间切换（前端时序）', phase: '详细设计', type: '顺序图（前端）', render: 'GitHub 原生', trace: 'UF-001' },
+  { rel: 'docs/design/frontend-interaction.md', block: 2, id: 'DIAG-FE-COMP-01', title: '前端组件树（App 装配 → Shell → Feature）', phase: '详细设计', type: '组件树（前端）', render: 'GitHub 原生', trace: 'REQ-011 / COMP-001 · CQ-P1-008' },
+  { rel: 'docs/design/frontend-interaction.md', block: 3, id: 'DIAG-FE-STATE-01', title: '工作台视图与栏布局状态机', phase: '详细设计', type: '状态图（前端）', render: 'GitHub 原生', trace: 'REQ-011 · Doc-First §9.5' },
+  { rel: 'docs/design/frontend-interaction.md', block: 4, id: 'DIAG-SEQ-FE-UF001', title: 'UF-001 登录与空间切换（前端时序）', phase: '详细设计', type: '顺序图（前端）', render: 'GitHub 原生', trace: 'UF-001' },
   { rel: 'docs/design/intelligence-analysis.md', block: 1, id: 'DIAG-FLOW-INTEL', title: '情报分析功能骨架（愿景）', phase: '详细设计（愿景）', type: '流程图', render: 'GitHub 原生', trace: 'REQ-029..034 骨架' },
   // —— 实现（技术栈）——
   { rel: 'docs/05-tech-spec.md', block: 1, id: 'DIAG-TECH-STACK-01', title: '技术栈分层图', phase: '实现', type: '分层图', render: 'GitHub 原生', trace: '05 §1 COMP' },

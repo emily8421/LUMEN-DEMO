@@ -3,7 +3,7 @@
 > 定位：本文是**详细设计节点**的入口清单，帮助从「子系统 → 详细设计文档」一眼定位。它不新增需求、接口、数据表或验收目标。
 > **详细设计节点总清单** = `docs/06-db-design.md`（数据契约）+ `docs/07-api-spec.md`（接口契约）+ 本文所列 `docs/design/*`（逐子系统 / 前端详细设计）。
 > 子系统 ↔ 设计文档的权威映射见 `docs/04-architecture.md` §2 MOD 表「详细设计」列；本文按子系统分组复核。
-> 子系统详细设计统一含「职责 → 流程 / 状态机 → 数据 / 接口契约 → **详细类图 `DIAG-CLS-*`** → 失败降级 → 验收追溯 → 实现偏差」结构（OO 图纸驱动编码）；已落地 `DIAG-CLS-AUTH/INGEST/RAG/PERM/TERM/FOLDER/EXPORT/POLISH/AI-01`（2026-08-17 Batch A2 补齐后 9/12；timeline / intelligence-analysis / frontend-interaction 按上表豁免或由前端交互设计承载），有状态对象另挂 `DIAG-STATE-*`（IMPORT / EXPORT / DRAFT / SESSION）。
+> 子系统详细设计统一含「职责 → 流程 / 状态机 → 数据 / 接口契约 → **详细类图 `DIAG-CLS-*`** → 失败降级 → 验收追溯 → 实现偏差」结构（OO 图纸驱动编码）；已落地 `DIAG-CLS-AUTH/INGEST/RAG/PERM/TERM/FOLDER/EXPORT/POLISH/AI-01`（2026-08-17 Batch A2 补齐后 9/12；timeline / intelligence-analysis / frontend-interaction 按上表豁免或由前端交互设计承载——frontend-interaction 不画 OO 类图，由组件树 / 状态机 `DIAG-FE-COMP-01` / `DIAG-FE-STATE-01` 承载，2026-08-18 OI-111），有状态对象另挂 `DIAG-STATE-*`（IMPORT / EXPORT / DRAFT / SESSION）。
 > 首版建立于 2026-07-21；2026-08-17 重建为「按子系统分组」清单（区分文档类型）。
 
 ## 1. 子系统详细设计（对应 04 §2 MOD）
@@ -15,7 +15,7 @@
 | `rag-retrieval.md` | MOD-004 检索问答 | REQ-007/008 | P1-已实现 | flowchart + DIAG-CLS-RAG-01 |
 | `ai-assistant.md` | MOD-004 扩展（AI 助手） | REQ-008 | 已实现（维护态批3） | DIAG-CLS-AI-01 |
 | `term-management.md` | MOD-005 术语管理 | REQ-036 | P1-已实现 | flowchart + DIAG-CLS-TERM-01 |
-| `frontend-interaction.md` | MOD-006 个人知识组织（前端交互） | REQ-001..011、P1/P2 UI | P1-P2 已实现 | sequenceDiagram + flowchart |
+| `frontend-interaction.md` | MOD-006 个人知识组织（前端交互） | REQ-001..011、P1/P2 UI | P1-P2 已实现 | sequenceDiagram + flowchart + DIAG-FE-COMP-01 + DIAG-FE-STATE-01（前端不画 OO 类图，组件树 / 状态机承载，REDESIGN-C-003） |
 | `folder-tree.md` | MOD-006 文档目录树 | REQ-039 | Phase2B 已实现 | flowchart + DIAG-CLS-FOLDER-01 |
 | `timeline.md` | MOD-006 主题时间线 | REQ-013a/024 | Phase2B 已实现 | —（详细类图豁免：时间切片与密度聚合为无状态查询逻辑，无服务对象状态机；流程见 04 §5 Flow-013） |
 | `export-delivery.md` | MOD-007 导出交付 | REQ-038/027 | Phase1.5A/B 已实现 | flowchart + DIAG-CLS-EXPORT-01 + DIAG-STATE-EXPORT-01 |
