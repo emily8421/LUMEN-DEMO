@@ -6,7 +6,17 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
-## v3.12.3（2026-08-18）
+## v3.12.4（2026-08-18）
+
+**代码目录逐目录评审报告落盘 + 软件工程依据扩展。纯文档，无代码改动，bump PATCH。**
+
+- **`docs/research/2026-08-18-code-directory-review.md` 新建**：逐目录评审报告（独立成文不进 05，避免规范膨胀——用户裁决）——backend 四层 / frontend 五区 / openapi·tests·docker·scripts 横切目录，各含判级（✅/⚠️）+ 实测数据（文件数 / 行数 / 结构分布）；整体结论**结构健康、无 ❌ 级问题**，核心短板 = 治理不对称（前端有 file-size ratchet、后端无，致 6 个 service 文件超 250 阈值无人拦截，max export.py 576 行）。
+- **改进建议 R1-R4 登记（AI 评审，待人工确认采纳范围）**：R1 后端补 file-size ratchet（高优先，小成本）；R2 repository 按域拆子 Protocol（protocol.py 101 方法 god object，中优先，docstring 已自带 Slice B 方案）；R3 local-vault-* 六模块从 app/ 迁 features/（低优先技术债）；R4 scripts/ 分子目录（文件翻倍时）。
+- **`docs/references/software-engineering-basics.md` 扩 §3「分层与接口设计依据」**：本轮评审涉及的学科出处 6 条（Fowler PoEAA 分层·Repository·UoW / SOLID ISP·LSP / God Object 反模式 Brown 1998 / 棘轮机制·童子军军规 CI 化 / Conway 定律按功能 vs 按技术组织）× 原始文献 × 大白话 × 评审落点；术语词典 +5 条（ISP / LSP / Repository / UoW / God Object / 棘轮 / 按功能组织）。
+- **05 §4.1.0 尾部仅加一行指针**（评审报告 + references §3），规范本体不膨胀。
+- 追溯：评审基准 = 05 §4.1.0（v3.12.2 引入）+ §4.1 阈值；数据快照 main `2bd82b3`。
+
+
 
 **提案收件箱收口 + v1.64.0 同步欠账补记（OI-105 关闭）。纯治理文档，无代码改动，bump PATCH。**
 

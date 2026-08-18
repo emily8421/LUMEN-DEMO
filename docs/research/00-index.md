@@ -7,6 +7,7 @@
 
 | 文件 | 类型 | 状态 | 采纳 / 后续 |
 |---|---|---|---|
+| `2026-08-18-code-directory-review.md` | 代码目录逐目录评审（对照 05 §4.1.0 五条依据 + §4.1 阈值实测；backend 四层 / frontend 五区 / 横切目录；改进建议 R1-R4） | 已落盘；**AI 评审 · 待人工确认采纳范围** | 整体判级健康，无 ❌ 级问题；核心短板 = 前端有 ratchet 后端无（R1 补齐）；R2 god object 拆域 Protocol / R3 local-vault 归属 / R4 scripts 分目录，均登记为债不强制回改；学科出处见 references/software-engineering-basics.md §3 |
 | `2026-08-17-oo-coverage-evaluation-and-diagram-mirror-plan.md` | OO 五阶段覆盖度评估 + 图表镜像方案（A1-A9 补全 + 生成式镜像目录） | 已落盘；**方案已确认，按 A1→A2→B→C 四批执行中** | 大框架已闭合；缺口 4 类（需求获取层显式映射 / 详细类图 4-of-12 / 状态图仅 1 处 / 类代码规格无专文）+ 06 ERD 无图 ID + Doc_ref-md 未入库；图表镜像=文档内唯一权威源 + 脚本抽取 `docs/diagrams/`+`docs/tables/` + CI 同步校验；Batch C 回流模板（第 7 份提案） |
 | `2026-08-17-docs-system-oo-methodology-redesign.md` | 文档体系适配 OO 开发方法方案（图纸驱动编码 + 00-09 组织 + 详细设计分类） | 已落盘；**方案一稿确认，实施分步（先补详细类图 DIAG-CLS → 概设类图 → 组织微调 → 回流模板）** | 图纸体系缺口=缺类图族（概设类图 + 详细类图），图纸驱动编码链：用例图→AC/TC、领域模型→06 表、详细类图→类代码、活动/状态图→流程代码；步骤①-④已完成，步骤⑤回流并入本目录新方案的 Batch C |
 | `2026-08-17-docs-evaluation-template-alignment-02-04.md` | 文档体系模板对齐评估（02/04/03 对照 Doc_ref NRDC1101 模板） | 已落盘；**评估已确认，调整执行中（02→04→03→README，每文件汇报）** | 三核心节点（需求规格=02 / 概要=04 / 详细=06/07/design）均有承载；02/04 补引用式概述章、02 剥离 REQ 实现方案、03 维持 + 精简重复、README 补节点映射 |
