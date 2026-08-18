@@ -18,8 +18,6 @@
 
 一句话：**人把原始材料放入 `docs/inputs/` → AI 评审是否足以生成 `product-vision` → AI 生成 `00-09` 与 `design/` → `00-09` 约束代码**。原始输入不直接驱动开发，必须先经评审（`ai/prompts/docs/01-review-inputs.md`）再进入 `docs/vision/product-vision.md` 或 `00-09`。
 
-> **图表镜像机制（2026-08-17）**：`docs/diagrams/` 与 `docs/tables/` 是 `scripts/extract-diagrams.mjs` 从文档正文抽取的**生成式镜像**，用于审核时单点查阅；文档内图表是**唯一权威源**，改图请改源文档后重跑脚本（`node scripts/extract-diagrams.mjs`），不手改镜像。CI `docs-mirror` job 以 `--check` 模式校验镜像未过期。方案与裁决见 `docs/research/2026-08-17-oo-coverage-evaluation-and-diagram-mirror-plan.md`。
-
 ## 2. 核心文档 00-09 各自干什么
 
 | 文档 | 阶段 | 一句话作用 | 何时省略 |
@@ -35,31 +33,17 @@
 | `08-dev-plan.md` | 实现计划 | Sprint / task 拆分、验收标准、禁止事项 | 必备 |
 | `09-verification.md` | 测试验证 | REQ → 用例追溯、资源验证、验收策略 | 必备 |
 
-### 三核心节点定位（评审 / 阅读入口）
-
-| 核心节点 | 承载文档 | 一句话定位 | 对应标准模板 |
-|---|---|---|---|
-| 需求规格说明 | `02-srs.md` | 系统必须实现什么（逐条 REQ + 可验证口径） | 需求规格说明书（`docs/references/Doc_ref-md/需求规格说明书模板.md`） |
-| 概要设计说明 | `04-architecture.md` | 系统如何组织（总体设计 / 接口 / 数据结构 / 出错处理 / 安全 / 维护概述） | 概要设计说明书（`docs/references/Doc_ref-md/概要设计说明书模板.md`） |
-| 详细设计说明 | `06-db-design.md` + `07-api-spec.md` + `docs/design/*` | 数据契约 / 接口契约 / 子系统内部逻辑（文档清单见 `docs/design/00-index.md`） | 设计说明模板（`docs/references/Doc_ref-md/设计说明模版.md`） |
-
-`01`（用户需求）为需求上游输入；`03-prd.md` 为产品决策层（功能范围 / 优先级 / 阶段路线图），衔接 02 与 08，非三核心节点本体。
-
 每个文档的完整生成关系（上游输入 / 输出职责 / 禁止项 / 下游影响）见 `ai/document-lifecycle-rules.md` §5 生成矩阵。
 
-### OO 方法五阶段产物映射（对照《软件系统面向对象开发方法的过程要点及关系》）
+### 方法论产物映射（可选）
 
-> 2026-08-17 登记（方案见 `docs/research/2026-08-17-oo-coverage-evaluation-and-diagram-mirror-plan.md`）。参考方法论各阶段核心文档在 LUMEN 文档体系的显式承载；核心图 / 模型映射：用例图 = `00 §3.4 DIAG-UC-01`，分析类图 / 概念 ERD = `06 §0.5 DIAG-DOM-01`，物理 ERD = `06 §4 DIAG-DB-ER-01`，概设类图 = `04 §1.2.2`，概设交互图 = `04 §5.6`，详细类图 / 流程 / 状态图 = `docs/design/*`。
+项目若遵循特定工程方法论（OO 分析设计五阶段、结构化分析设计、企业文档规范等），建议在本节登记「方法论期望产物 ↔ 本文档体系承载」映射与偏差，让方法论产物可点名、评审可对照；不设专文的产物显式登记分散承载方式。**下表为示例**（常见 OO 谱系），项目按自己实际遵循的方法论替换行内容：
 
-| 方法论阶段产物 | LUMEN 承载 | 说明 |
+| 方法论产物（示例） | 本体系承载 | 备注 |
 |---|---|---|
-| 项目策划说明书 | `docs/vision/product-vision.md`（立项叙事）+ `docs/research/*`（可行性：tech-env-evaluation 等）+ `docs/08-dev-plan.md`（项目开发计划） | 无独立专文，按「立项 / 可行性 / 计划」三职能分散承载，此表为显式映射 |
-| 用户需求说明书 | `01-user-requirements.md` + `00-scenario.md`（调研式 / 叙事式输入见 `docs/inputs/`、`docs/vision/`） | ✅ 直接对应 |
-| 软件需求规格说明书 | `02-srs.md` | ✅ 直接对应（大纲对齐 Doc_ref-md 模板） |
-| 概要设计规格说明书 | `04-architecture.md` + `05-tech-spec.md`（技术选型补充） | ✅ 直接对应（大纲对齐） |
-| 详细设计规格说明书 | `06-db-design.md` + `07-api-spec.md` + `docs/design/*` | ✅ 直接对应（含数据词典 = 06 §2 字段级契约） |
-| 类代码规格说明书 | `05-tech-spec.md §4.2` 编码基线 + `ai/project-rules.md §5` + `docs/design/frontend-design-system.md` | 无独立专文（裁决 G7 / A6 不新增），等价物映射声明见 `05 §4.2` 头部 |
-| 事物-事件表（E-E 表） | 不回补（偏差登记见 `00 §3.4`） | 职责由 SC-ID + U-ID 链承接 |
+| 项目策划 / 立项说明 | `docs/vision/*`（立项叙事）+ `docs/research/*`（可行性）+ `docs/08-dev-plan.md`（计划） | 分散承载，无专文 |
+| 类代码 / 编码规格说明 | `docs/05-tech-spec.md` 编码基线 + `ai/project-rules.md` §5 | 分散承载，无专文 |
+| 方法论要求但本体系不设的产物 | 登记偏差与承接方式（或裁决不回补的理由） | 避免评审时反复重新讨论 |
 
 ## 3. 规范约束（写 docs/ 时必须遵守）
 
@@ -92,9 +76,10 @@
 | `docs/research/` | 技术调研、竞品 / 参考分析、实验结论、技术环境评估报告、需求探索原型记录、视觉效果探索记录 | `topic-summary.md`、`YYYY-MM-DD-tech-env-evaluation-<scope>.md`、`YYYY-MM-DD-frontend-ui-reference-analysis.md`、`YYYY-MM-DD-ui-prototype-exploration.md`、`YYYY-MM-DD-ui-visual-exploration.md` |
 | `docs/env/` | 本机环境、资源约束、服务器预案、演示 SOP | `local-env.md`、`server-plan.md`、`local-demo-runbook.md` |
 | `docs/meetings/` | 会议纪要、访谈记录、评审记录 | `YYYY-MM-DD-topic.md` |
+| `docs/references/`（可选） | 外部参考资料库：外部产品调研、工程方法论参考、行业 / 企业文档模板等非本仓权威材料；**非权威规格区**——参考结论被采纳时须先经 `docs/research/` 评审或 `docs/decisions/` 裁决，再回填 `00-09` / `design/*`，不得直接以参考材料约束代码；建议建 `00-index.md` 登记（文件 / 类型 / 用途 / 状态风险）；含敏感信息的原件可 `.gitignore`，只入库脱敏副本并注明「以原件为准」 | `00-index.md`、`<topic>.md`、子目录按来源分组 |
+| `docs/diagrams/`（可选，生成式） | 图表镜像（`extract-diagrams` 类脚本从 `00-09` / `design/*` 正文抽取的 mermaid / plantuml 图块，每图一文件 + 索引）；**生成式产物、不手改、以源文档为唯一权威源**；启用前提 = CI 有同步校验（见 `ai/document-lifecycle-rules.md` §13） | `00-index.md`、`DIAG-*.md`（与源图 ID 同名） |
+| `docs/tables/`（可选，生成式） | 核心矩阵表镜像（REQ / MOD / API / TC 等稳定核心表抽取成单文件 + 索引）；增量日志型表（08 完成包 / 09 验收记录）只挂锚点链接不抽镜像；同样为生成式产物、不手改 | `00-index.md`、`<doc>-<matrix>.md` |
 | `docs/archive/` | 已废弃但需留痕的项目文档 | 保留原名或加日期前缀 |
-| `docs/diagrams/` | **图表镜像（生成式产物，不手改）**：从 `00-09` / `design/*` 正文抽取的全部 mermaid / plantuml 图块，每图一文件 + `INDEX.md`（按 OO 五阶段分组 + 按文档反查，审核主入口） | `DIAG-*.md`（与源图 ID 同名） |
-| `docs/tables/` | **核心表镜像（生成式产物，不手改）**：核心矩阵表（REQ / MOD / API / TC / RG 等）抽取镜像 + `INDEX.md`；增量日志型（08 完成包 / 09 验收记录）只挂锚点不抽镜像 | `<doc>-<matrix>.md` |
 | `template-docs/web-fullstack-profile.md` | 复杂 Web / 全栈交互项目的可选结构 Profile 与 Walking Skeleton Gate；**人读参考、非项目事实、不直接落入 docs/** | 触发后把 App Shell、目录边界、vertical slice、文件膨胀阈值和 smoke 验证回填到 `04/05/08/09` |
 | `template-docs/docs-scaffold/` | 模板 `docs/inputs/*`、`docs/vision/*`、`docs/00-09`、`docs/design/*`、`docs/decisions/*`、`docs/research/*` 长期结构副本，保留原始大纲、占位表格和 `【撰写提要：...】`；**人读参考、非项目事实、不自动覆盖 `docs/` 项目事实** | 随模板同步；旧项目可能残留 `docs/_scaffold/` |
 | `ai/doc-standards/` | 模板 `docs/00-09` 与详细设计的撰写规范 / 审计基线；**只读、非项目事实、不直接驱动开发**；改动须走 `_proposals/` 回流模板 | 由 `sync-template` 同步，勿手改 |

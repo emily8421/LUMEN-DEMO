@@ -12,7 +12,7 @@
 | 记录类型 | Pattern（交互） |
 | ID 前缀 | `PAT-INT-NNN` |
 | 数量 | 7（首批） |
-| 状态 | 全部 reviewed（2026-08-13 维护者逐条评审，PR #348） |
+| 状态 | 6 条 reviewed；`PAT-INT-006` candidate（唯一来源暂时不可用，2026-08-14） |
 | 证据等级分布 | A 级 2 / B 级 4 / C 级 1 |
 
 ## 1. 模式清单
@@ -93,7 +93,7 @@
 - **视觉信号**：AI 内容标记（图标 / 底色）；可编辑区域与只读区域区分；置信度暗示（不夸大）。
 - **来源**：`SRC-HAI-001`（Microsoft HAX Toolkit）
 - **证据等级**：B
-- **状态**：reviewed（2026-08-13）
+- **状态**：candidate（2026-08-14；唯一来源 `SRC-HAI-001` 暂时不可用，待链接恢复并复核）
 
 ### PAT-INT-007｜可访问性语义与读屏
 
@@ -113,4 +113,4 @@
 - 项目参考分析引用本文件模式时使用 `PAT-INT-NNN` ID；项目级采纳 / 调整 / 排除决定写入项目自己的 `docs/research/*frontend-ui-reference-analysis.md`，不回写本文件。
 - 每条模式的「不适用条件」是防机械套用的关键；选用时必须先核对项目是否落入不适用场景。
 - 行为契约字段可直接映射到 `docs/design/frontend-interaction.md` 的状态与交互描述，但项目实现仍须以正式交互设计为准。
-- 新增模式须填全 §4.2 字段（`README.md`），状态默认 candidate；证据等级不得高于其来源能支撑的上限（`source-registry.md`）。
+- 新增模式须填全 §4.2 字段（`README.md`），状态默认 candidate；证据等级不得高于其来源能支撑的上限（`source-registry.md`）。唯一来源暂时不可用的模式不得升为 reviewed / core。

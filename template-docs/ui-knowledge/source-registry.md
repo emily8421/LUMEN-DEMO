@@ -11,20 +11,21 @@
 |---|---|
 | 维护者 | 模板维护者 |
 | 来源数量 | 6（首批） |
-| 状态分布 | 全部 candidate（待逐条人工评审，见 `README.md` §9） |
-| 最后整体核验 | 2026-08-13（登记；外部链接有效性待联网复核） |
+| 生命周期状态 | 全部 candidate（待逐条人工评审，见 `README.md` §9） |
+| 链接核验状态 | 5 条已核验：可访问；`SRC-HAI-001` 暂时不可用 |
+| 最后整体核验 | 2026-08-14（链接、发布方和可见许可口径复核） |
 | 许可口径 | 默认只保存摘要 + 链接；保存代码须附资产级许可证据（见 `README.md` §7 §8） |
 
 ## 1. 来源清单
 
-| SRC-ID | 类型与维度 | 标题与发布方 | 来源 URL | 证据范围 | 许可与保存策略 | 最后核验 | 状态 |
-|---|---|---|---|---|---|---|---|
-| `SRC-A11Y-001` | 规范 / 可访问性、组件与表单 | WAI-ARIA Authoring Practices Guide (APG)，W3C | https://www.w3.org/WAI/ARIA/apg/ | A | 可保存摘要 + 链接 | 2026-08-13（登记） | candidate |
-| `SRC-A11Y-002` | 规范 / 可访问性、视觉与布局 | Web Content Accessibility Guidelines (WCAG) 2.2，W3C | https://www.w3.org/TR/WCAG22/ | A | 可保存摘要 + 链接 | 2026-08-13（登记） | candidate |
-| `SRC-DS-001` | 设计系统 / 交互流程、状态反馈、内容设计、可访问性 | GOV.UK Design System，英国政府数字服务 | https://design-system.service.gov.uk/ | B | 可保存摘要 + 链接；代码片段附 Open Government Licence v3.0 | 2026-08-13（登记） | candidate |
-| `SRC-DS-002` | 设计系统 / 组件与表单、可访问性、视觉与布局 | U.S. Web Design System (USWDS)，美国总务管理局 | https://designsystem.digital.gov/ | B | 可保存摘要 + 链接；组件代码附 USWDS 开源许可 | 2026-08-13（登记） | candidate |
-| `SRC-HAI-001` | 人机协作指南 / 信任数据与人机协作、状态反馈与恢复 | Human-AI eXperiences (HAX) Toolkit，Microsoft | https://www.microsoft.com/haxtoolkit/ | B | 可保存摘要 + 链接（许可待核验） | 2026-08-13（登记） | candidate |
-| `SRC-VIS-001` | 视觉案例集合 / 视觉与布局 | awesome-design-md，VoltAgent（GitHub） | https://github.com/VoltAgent/awesome-design-md | D | 只保存链接 + 自有摘要；不镜像第三方网站素材 | 2026-08-13（登记） | candidate |
+| SRC-ID | 类型与维度 | 标题与发布方 | 来源 URL | 证据范围 | 许可与保存策略 | 最后核验 | 生命周期状态 | 链接核验 |
+|---|---|---|---|---|---|---|---|---|
+| `SRC-A11Y-001` | 规范 / 可访问性、组件与表单 | WAI-ARIA Authoring Practices Guide (APG)，W3C | https://www.w3.org/WAI/ARIA/apg/ | A | 可保存摘要 + 链接；遵循 W3C WAI material permission 规则 | 2026-08-14（链接与发布方） | candidate | 已核验：可访问 |
+| `SRC-A11Y-002` | 规范 / 可访问性、视觉与布局 | Web Content Accessibility Guidelines (WCAG) 2.2，W3C | https://www.w3.org/TR/WCAG22/ | A | 可保存摘要 + 链接；遵循 W3C document use 规则 | 2026-08-14（链接、发布方与版本） | candidate | 已核验：可访问 |
+| `SRC-DS-001` | 设计系统 / 交互流程、状态反馈、内容设计、可访问性 | GOV.UK Design System，英国政府数字服务 | https://design-system.service.gov.uk/ | B | 可保存摘要 + 链接；页面内容采用 Open Government Licence v3.0，代码另按资产处理 | 2026-08-14（链接、发布方与许可） | candidate | 已核验：可访问 |
+| `SRC-DS-002` | 设计系统 / 组件与表单、可访问性、视觉与布局 | U.S. Web Design System (USWDS)，美国总务管理局 | https://designsystem.digital.gov/ | B | 只保存摘要 + 链接；USWDS 含 CC0、公版、Apache、OFL 和 MIT 等资产，不保存代码、字体或图标 | 2026-08-14（链接、发布方与许可） | candidate | 已核验：可访问 |
+| `SRC-HAI-001` | 人机协作指南 / 信任数据与人机协作、状态反馈与恢复 | Human-AI eXperiences (HAX) Toolkit，Microsoft | https://www.microsoft.com/haxtoolkit/ | B | 只保存链接；官方页面暂时不可用，许可待来源恢复后复核 | 2026-08-14（请求失败） | candidate | 暂时不可用 |
+| `SRC-VIS-001` | 视觉案例集合 / 视觉与布局 | awesome-design-md，VoltAgent（GitHub） | https://github.com/VoltAgent/awesome-design-md | D | 只保存链接 + 自有摘要；仓库为 MIT，但不镜像其引用站点的第三方素材 | 2026-08-14（链接、发布方与许可） | candidate | 已核验：可访问 |
 
 ## 2. 来源类型与证据范围
 
@@ -40,6 +41,7 @@
 
 - 模式记录引用来源时必须使用 `SRC-ID`，不得只写产品名。
 - `SRC-VIS-001`（awesome-design-md）的条目适合观察视觉语言、布局、色彩和品牌表达，**不适合**作为交互决策、用户研究或可用性证据；引用其观察的模式默认从 D 级开始。
-- 来源链接失效、版本变化或内容下架时，更新「最后核验」字段并按 `README.md` §8 降级或标 retired。
+- 来源链接失效、版本变化或内容下架时，更新「最后核验」和「链接核验」字段，并按 `README.md` §8 降级或标 retired。
+- 链接核验与生命周期状态分开记录：可访问不代表已人工评审；唯一依赖暂时不可用来源的模式不得维持 `reviewed`（见 `README.md` §4.3）。
 - 新增来源须先确认证据范围与许可策略，状态默认 candidate；升级到 core 需维护者评审（`README.md` §9）。
 - 本文件不记录具体维护者账号、token 或本机私有备忘。

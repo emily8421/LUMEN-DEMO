@@ -227,7 +227,7 @@ summary 最小结构（写入 `SUMMARY.md` 时参考）：
 
 ### 4.3 坑 / 问题观察日志（pitfall observation log）
 
-pitfall observation log 是可选的 AI 协作观察记录，与 §4.1 token-hotspot 平行：**token-hotspot 管 AI 开发的上下文 / 成本热点，pitfall 管 AI 引入或踩到的坑 / 问题 / 教训**（bug、流程执行坑、低效行为导致的返工或缺陷）。它是定期审视的原始材料，不是项目事实文档，不替代 `.ai/session-handoff.md`、`docs/08-dev-plan.md`、`docs/09-verification.md` 或 `_proposals/`。
+pitfall observation log 是可选的 AI 协作观察记录，与 §4.1 token-hotspot 平行：**token-hotspot 管 AI 开发的上下文 / 成本热点，pitfall 管 AI 引入或踩到的坑 / 问题 / 教训**（bug、流程执行坑、低效行为导致的返工或缺陷）。pitfall 记录既覆盖「当场踩的坑」，也覆盖「维护中发现的存量 AI 代码问题」——后者是检验与完善代码生成规范的主要输入。它是定期审视的原始材料，不是项目事实文档，不替代 `.ai/session-handoff.md`、`docs/08-dev-plan.md`、`docs/09-verification.md` 或 `_proposals/`。
 
 **路径分层（v1.61.1 起）**：
 
@@ -253,6 +253,7 @@ pitfall observation log 是可选的 AI 协作观察记录，与 §4.1 token-hot
 **触发与写入**：
 
 - 任务收尾自检（§4 触发点）顺带判断本次是否产生坑观察；有则写单条（1–3 行，不膨胀）。
+- **存量代码维护触发**：维护、治理、重构或引入新检查器（类型检查 / lint / 契约对齐 / 测试）时，发现既有 AI 生成代码的缺陷、「看似可行实靠巧合运行」的障眼法实现、或类型 / 接口与实际契约的失配——即使问题非本次会话产生，也应记录单条（根因分类标「AI 引入」，现象注明发现场景），作为生成规范迭代的验证材料。
 - **观察日志 ≠ 提案**：日志是原始材料，triage 后才转 `_proposals/TEMPLATE-UPGRADE-*.md`，避免提案收件箱噪音。
 - 定期审视复用既有触发点：`ai/global-rules.md` §9（模板优化反馈）的任务收尾审视；**C1（`ai/prompts/maintainers/11-template-proposal-summary.md`）只负责提案 triage，不承担坑日志计数**（与 token-hotspot 计数同源——计数在收尾自检，不在 C1）。
 - 记录不得包含 token、密钥、账号密码、客户敏感数据、完整对话正文或无法提交到仓库的隐私事实；只记录现象、根因分类、规避方式、可通用性与流转去向。

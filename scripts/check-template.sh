@@ -200,6 +200,59 @@ require_files() {
   done
 }
 
+check_ui_knowledge_structure() {
+  local registry="template-docs/ui-knowledge/source-registry.md"
+  local visual="template-docs/ui-knowledge/visual-patterns.md"
+  local interaction="template-docs/ui-knowledge/interaction-patterns.md"
+  local source_rows source_ids duplicate_source_ids link_status_rows
+  local pattern_ids duplicate_pattern_ids referenced_source_ids source_id
+
+  source_rows=$(grep -Ec '^\| `SRC-[A-Z0-9-]+` ' "$registry" || true)
+  source_ids=$(grep -E '^\| `SRC-[A-Z0-9-]+` ' "$registry" | sed -E 's/^\| `([^`]+)`.*/\1/' | sort)
+  duplicate_source_ids=$(printf '%s\n' "$source_ids" | uniq -d)
+  link_status_rows=$(grep -Ec '^\| `SRC-[A-Z0-9-]+` .*\| (已核验：可访问|暂时不可用) \|$' "$registry" || true)
+
+  if [[ "$source_rows" -gt 0 && -z "$duplicate_source_ids" ]]; then
+    pass "UI 知识来源编号唯一"
+  else
+    fail "UI 知识来源编号缺失或重复"
+  fi
+
+  if [[ "$link_status_rows" -eq "$source_rows" ]]; then
+    pass "UI 知识来源均有链接核验状态"
+  else
+    fail "UI 知识来源缺少链接核验状态"
+  fi
+
+  pattern_ids=$(grep -Eho '^### PAT-(VIS|INT)-[0-9]{3}' "$visual" "$interaction" | awk '{print $2}' | sort)
+  duplicate_pattern_ids=$(printf '%s\n' "$pattern_ids" | uniq -d)
+  if [[ -n "$pattern_ids" && -z "$duplicate_pattern_ids" ]]; then
+    pass "UI 知识模式编号唯一"
+  else
+    fail "UI 知识模式编号缺失或重复"
+  fi
+
+  referenced_source_ids=$(grep -Eho 'SRC-[A-Z0-9-]+' "$visual" "$interaction" | sort -u)
+  for source_id in $referenced_source_ids; do
+    if printf '%s\n' "$source_ids" | grep -Fxq "$source_id"; then
+      pass "UI 模式来源已登记: $source_id"
+    else
+      fail "UI 模式引用未登记来源: $source_id"
+    fi
+  done
+
+  require_contains "$visual" '适用条件' "视觉模式保留适用条件字段"
+  require_contains "$visual" '不适用条件' "视觉模式保留不适用条件字段"
+  require_contains "$visual" '来源' "视觉模式保留来源字段"
+  require_contains "$visual" '证据等级' "视觉模式保留证据等级字段"
+  require_contains "$visual" '状态' "视觉模式保留状态字段"
+  require_contains "$interaction" '适用条件' "交互模式保留适用条件字段"
+  require_contains "$interaction" '不适用条件' "交互模式保留不适用条件字段"
+  require_contains "$interaction" '来源' "交互模式保留来源字段"
+  require_contains "$interaction" '证据等级' "交互模式保留证据等级字段"
+  require_contains "$interaction" '状态' "交互模式保留状态字段"
+}
+
 extract_index_rules() {
   grep -Eo '`ai/[^`]+\.md`|^- ai/.+\.md$' ai/index.md | sed -E 's/^`//; s/`$//; s/^- //'
 }
@@ -673,6 +726,11 @@ check_project_bootstrap_scripts() {
   require_contains "scripts/new-project.sh" 'mkdir -p "\$TARGET/_proposals"' "new-project 创建派生提案起草区"
   require_contains "scripts/new-project.sh" 'cat > "\$TARGET/README.md"' "new-project 项目化 README"
   require_contains "scripts/new-project.sh" '--no-remote' "new-project 支持本地-only 烟测"
+  require_contains "scripts/new-project.sh" 'SHAPE="web"' "new-project --shape 缺省 web 不裁剪"
+  require_contains "scripts/new-project.sh" 'docs\|cli\|web' "new-project --shape 支持三形态"
+  require_contains "scripts/new-project.sh" '06-db-design\.md' "new-project --shape docs 裁剪 06 骨架"
+  require_contains "scripts/new-project.sh" '裁剪执行步骤' "new-project README 指向裁剪执行步骤"
+  require_contains "scripts/new-project.sh" '模板方法论（继承）' "new-project README 含三层区地图"
   require_contains "scripts/new-project.sh" '未获取到 GitHub 账号' "new-project 在远端模式下缺少账号时给出明确提示"
   require_contains "scripts/new-project.sh" 'collect-env\.ps1' "new-project README 提醒采集本机环境"
   require_contains "scripts/new-project.sh" 'template-docs/env-setup\.md' "new-project README 指向环境准备手册"
@@ -888,6 +946,13 @@ require_contains "template-sync.json" '"scripts/check-derived-sync\.ps1"' "templ
 require_contains "ai/global-rules.md" '全局规则版本：v[0-9]+\.[0-9]+' "global-rules 含全局规则版本号"
 require_file "README.md"
 require_file "template-docs/beginner-guide.md"
+require_contains "template-docs/beginner-guide.md" '根目录三层地图' "新手指南含根目录三层地图（#351/#357）"
+require_contains "ai/global-rules.md" '根目录分类框架' "global-rules §5 含根目录分类框架（#357 2.2）"
+require_contains "ai/session-rules.md" '存量代码维护触发' "session-rules §4.3 含存量维护触发口径（#350）"
+require_contains "ai/doc-standards/project-rules.md" '裁剪执行步骤' "project-rules 标准含裁剪执行步骤（#351）"
+require_contains "ai/prompts/maintainers/15-post-sync-cleanup.md" '§3 声明不启用 / 省略，但目录或骨架文档仍存在' "post-sync-cleanup 含裁剪一致性审计项（#351）"
+require_contains "template-docs/scenario-guides.md" '项目特有场景手册' "scenario-guides §8 含项目特有场景手册指引"
+require_contains "ai/prompts/setup/14-new-project.md" '项目特有场景手册' "new-project Prompt 步骤 9 含场景手册待办"
 require_file "template-docs/env-setup.md"
 require_file "template-docs/ai-cli-setup.md"
 require_file "template-docs/smoke-test.md"
@@ -1674,6 +1739,11 @@ require_contains "scripts/sync-template.sh" 'template-docs/web-app-scaffold-expe
 require_file "template-docs/frontend-ui-reference-analysis-template.md"
 require_contains "template-docs/frontend-ui-reference-analysis-template.md" '采纳 / 调整 / 排除矩阵' "前端参考分析模板包含采纳排除矩阵"
 require_contains "template-docs/frontend-ui-reference-analysis-template.md" 'UI-G-002' "前端参考分析模板引用 UI-G-002"
+require_file "template-docs/examples/extract-diagrams.mjs"
+require_contains "template-docs/examples/extract-diagrams.mjs" '唯一权威源' "图表镜像脚本声明唯一权威源"
+require_contains "template-docs/examples/extract-diagrams.mjs" 'ORPHAN' "图表镜像脚本含孤儿文件检测"
+require_contains "template-sync.json" 'template-docs/examples/extract-diagrams\.mjs' "同步清单包含图表镜像脚本样例"
+require_contains "scripts/sync-template.sh" 'template-docs/examples/extract-diagrams\.mjs' "sync-template fallback 包含图表镜像脚本样例"
 require_file "template-docs/ui-knowledge/README.md"
 require_contains "template-docs/ui-knowledge/README.md" '证据等级' "UI 知识 README 定义证据等级"
 require_contains "template-docs/ui-knowledge/README.md" '评审升级路径' "UI 知识 README 定义维护与评审升级路径"
@@ -1690,6 +1760,7 @@ require_contains "template-sync.json" 'template-docs/ui-knowledge/visual-pattern
 require_contains "template-sync.json" 'template-docs/ui-knowledge/interaction-patterns\.md' "同步清单包含交互模式"
 require_contains "scripts/sync-template.sh" 'template-docs/ui-knowledge/README\.md' "sync-template fallback 包含 UI 知识 README"
 require_contains "scripts/sync-template.sh" 'template-docs/frontend-ui-reference-analysis-template\.md' "sync-template fallback 包含前端参考分析模板"
+check_ui_knowledge_structure
 require_file "template-docs/frontend-experience-brief-template.md"
 require_contains "template-docs/frontend-experience-brief-template.md" '已确认体验原则' "前端体验 brief 模板包含已确认体验原则"
 require_file "template-docs/ui-brief-intake-template.md"
@@ -1810,6 +1881,14 @@ require_contains "ai/doc-standards/07-api-spec.md" '时序图' "07 审计基线�
 require_contains "ai/doc-standards/06-db-design.md" 'ER 图' "06 审计基线要求核心实体 ER 图（DR-1）"
 require_contains "ai/doc-standards/04-architecture.md" '图纸审核' "04 含图纸审核四维度（DR-1）"
 require_contains "ai/document-lifecycle-rules.md" 'DIAG-' "文档生命周期 §13 含图 ID 命名（DR-4）"
+require_contains "ai/document-lifecycle-rules.md" '用例图使用 `plantuml`' "文档生命周期 §13 含用例图 plantuml 指引（OO overlay）"
+require_contains "ai/document-lifecycle-rules.md" '图表生成式镜像' "文档生命周期 §13 含图表生成式镜像机制"
+require_contains "ai/doc-standards/00-scenario.md" 'DIAG-UC-NN' "00 场景标准含用例图 overlay（OO）"
+require_contains "ai/doc-standards/02-srs.md" 'DIAG-DOM-NN' "02 SRS 标准含领域模型 overlay（OO）"
+require_contains "ai/doc-standards/04-architecture.md" 'DIAG-CLS-PRELIM-NN' "04 架构标准含概设类图 overlay（OO）"
+require_contains "ai/doc-standards/design-doc.md" 'DIAG-STATE-NN' "design 标准含状态图族（OO）"
+require_contains "ai/doc-standards/06-db-design.md" '概念 ERD' "06 标准区分概念与物理 ERD 两层（OO）"
+require_contains "docs/README.md" 'docs/references/' "docs README 登记外部参考资料区"
 require_contains "README.md" '模板一览' "README 含模板一览可视化章节（RV-1）"
 require_contains "ai/prompts/docs/00-generate-or-complete-docs.md" '专题讨论优先' "文档生成 Prompt 要求专题讨论先确认"
 require_contains "ai/document-lifecycle-rules.md" '## 10\.3 专题方案讨论边界' "文档生命周期定义专题方案讨论边界"
