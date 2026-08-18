@@ -132,6 +132,8 @@ flowchart TB
 | 根级 `pytest.ini` / `mypy.ini` / `ruff.toml` | #2 / #5 | 质量门禁配置跟随所属工具链 |
 
 > 术语：**契约（contract）**= 双方对接口结构（路径 / 参数 / 返回字段 / 错误码）的书面约定，出处为 Design by Contract（Meyer, 1986）；本仓 API 契约权威 = `openapi/openapi.json` + `docs/07-api-spec.md`（人读版），「拓印」产物 = `generated.ts`，「违约探测」= CI schema-diff / codegen drift 检查。
+>
+> 目录现状的逐目录评审（2026-08-18，含改进建议 R1-R4 登记）见 `docs/research/2026-08-18-code-directory-review.md`——评审为时点快照，规范本体仍以本节为准；学科出处见 `docs/references/software-engineering-basics.md` §3。
 
 | 边界项 | 当前基线 | P1.5A / Phase2A/B 实现前要求 |
 |---|---|---|

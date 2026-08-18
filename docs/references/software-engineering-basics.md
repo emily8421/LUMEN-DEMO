@@ -84,19 +84,40 @@
 | SSOT（单一事实源） | 同一事实全系统只在一处定义，其他全是引用或派生，防止"两份记忆打架" | 信息工程通用原则 |
 | 部署单元 | 能独立构建、发布、运行的最小代码集合（一个镜像 / 一个进程） | 软件架构学 |
 | IaC（基础设施即代码） | 部署拓扑（compose 编排等）也当代码管理：进版本库、可 review、可重放 | DevOps 运动 |
+| ISP（接口隔离） | 不强迫调用方依赖它用不到的方法——大接口按使用方拆小接口 | SOLID，Martin 2000s |
+| LSP（里氏替换） | 子类型必须能无缝替换父类型使用，双实现（生产/测试 fake）行为一致靠它 | Liskov 1988；SOLID |
+| Repository 模式 | 在业务与存储之间放一层"集合样外观"，屏蔽 SQL/ORM 细节 | Fowler, PoEAA 2003 |
+| UoW（工作单元） | 一个事务边界内的一组操作，要么全成要么全不成 | Fowler, PoEAA 2003 |
+| God Object（上帝对象） | 什么都管、什么都知道的超大类/接口——改一处牵全身的反模式 | Brown et al.《AntiPatterns》1998 |
+| 棘轮机制（ratchet） | 质量指标"只进不退"：存量登记为基线，新代码必须更好，基线逐步收紧 | 技术债治理；童子军军规的 CI 化 |
+| 按功能 vs 按技术组织 | 团队/代码按业务功能纵切（一个功能全栈）还是按技术横切（前端队/后端队）的经典权衡 | Conway 定律推论；FSD / "team topologies" 讨论 |
 
-## 3. 与 LUMEN 权威文档的关系
+## 3. 分层与接口设计依据（目录评审补充，2026-08-18）
+
+> 配合 `docs/research/2026-08-18-code-directory-review.md`（逐目录评审报告）使用：评审中每条"注意项 / 改进建议"的学科出处都在本节。
+
+| 评审关注点 | 学科线 | 原始文献 | 核心论述 | 大白话 |
+|---|---|---|---|---|
+| 后端四层 `api→service→repository→model` | 分层架构 + 企业应用模式 | Fowler《Patterns of Enterprise Application Architecture》2003（Layer / Repository / UoW 等模式）；POS A Layers 模式 | 表现层不含业务、业务层不碰 SQL、持久化细节关在 repository 后面 | 前台只接待、干活的不搬货、仓库管理员专属货架 |
+| `protocol.py` 单接口 101 方法 | 接口隔离原则 ISP | Martin《Agile Software Development》2000s /《Clean Architecture》2017 的 SOLID；Liskov 1988 | 调用方不应依赖用不到的方法；胖接口按消费方拆域接口 | 餐厅不该让顾客看完整仓库钥匙串，按区域发钥匙 |
+| pg / demo 双实现共享契约 | LSP + 契约测试 | Liskov 1988；Pact 等契约测试框架；`test_repository_contract.py` 即机器化契约 | 双实现行为一致由显式 Protocol + contract test 守护，不靠人工对照 | 两台同型号机器出厂都过同一套质检流水线 |
+| service 超阈值文件（export 576 行等） | 单一职责 + 体量克制 | SRP（Martin）；DeMarco《Structured Analysis》关于模块规模的讨论 | 一个模块一个变更原因；超阈值是"多个变更原因已混居"的信号 | 一个抽屉塞了袜子领带充电线，找东西要全倒出来 |
+| 文件膨胀 ratchet（只进不退） | 技术债治理 | Martin《Clean Code》2008 童子军军规（Leave it cleaner than you found it）；CI 棘轮实践 | 存量超限登记基线不强制回改，但新代码不得更差、存量不得更糟 | 房间不要求一夜大扫除，但每天至少比昨天干净一点，且不许再扔新垃圾 |
+| local-vault-* 在 app/ 还是 features/ | 按功能 vs 按技术组织 | Conway 1967《How Do Committees Invent?》；FSD 分层讨论 | 结构跟随变更模式：同因变更的聚一起；跨视图共享不是放错层的充分理由 | 工具箱虽然全家都用，也该放工具房而不是客厅正中央 |
+
+## 4. 与 LUMEN 权威文档的关系
 
 ```text
 本文（references，外部知识梳理）
-  └─ 出处注脚 → docs/05-tech-spec.md §4.1.0（权威：五条依据 + 目录映射，约束代码）
-                  ├─ 术语「契约」注解亦在 05 §4.1.0 尾部
-                  └─ 模板回流提案 _proposals/TEMPLATE-UPGRADE-directory-partition-principles.md
+  ├─ §0-§2 出处注脚 → docs/05-tech-spec.md §4.1.0（权威：五条依据 + 目录映射，约束代码）
+  │                    ├─ 术语「契约」注解亦在 05 §4.1.0 尾部
+  │                    └─ 模板回流提案 _proposals/TEMPLATE-UPGRADE-directory-partition-principles.md
+  └─ §3 出处注脚 → docs/research/2026-08-18-code-directory-review.md（逐目录评审报告，非权威规格）
 ```
 
 按 `docs/references/00-index.md` §2 使用边界：本文可解释设计出处，但采纳任何新规则仍须先经 `docs/research/` 评审或 `docs/decisions/` 裁决，再回填 `00-09` / `design/*`。
 
-## 4. 风险与校对状态
+## 5. 风险与校对状态
 
 - 原始文献年份与论著名凭公开常识整理，**未逐篇复核原文页码**；正式论文级引用前需人工校对（同目录其他参考的口径一致）。
 - "大白话"列是助记类比，不是原文翻译；与原文有出入时以原始文献为准。
