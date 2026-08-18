@@ -2,7 +2,7 @@
 
 > **生成式镜像索引**（`scripts/extract-diagrams.mjs` 产物，不手改）。审核主入口：按 OO 方法五阶段分组；每图一文件（图块 + 源锚点 + 追溯）。
 > 文档内图是唯一权威源，本目录是抽取镜像——改图请改源文档后重跑脚本；CI（docs-mirror job）校验同步。
-> 共 44 张。方案：`docs/research/2026-08-17-oo-coverage-evaluation-and-diagram-mirror-plan.md`。
+> 共 46 张。方案：`docs/research/2026-08-17-oo-coverage-evaluation-and-diagram-mirror-plan.md`。
 
 ### 需求分析（2）
 
@@ -27,7 +27,7 @@
 | [DIAG-ARCH-SEQ-03](DIAG-ARCH-SEQ-03.md) | SEQ-03 AI 润色 / 写作引用 | 顺序图 | `docs/04-architecture.md` | Flow-005 / RG-008 | GitHub 原生 |
 | [DIAG-ARCH-SEQ-04](DIAG-ARCH-SEQ-04.md) | SEQ-04 批量 / 文件夹导入 | 顺序图 | `docs/04-architecture.md` | Flow-006 / EX-006 | GitHub 原生 |
 
-### 详细设计（29）
+### 详细设计（31）
 
 | 图 ID | 名称 | 类型 | 源 | 追溯 | 渲染 |
 |---|---|---|---|---|---|
@@ -58,6 +58,8 @@
 | [DIAG-TL-FLOW-01](DIAG-TL-FLOW-01.md) | 主题时间线装配流程 | 流程图 | `docs/design/timeline.md` | REQ-013a/024 | GitHub 原生 |
 | [DIAG-FLOW-ASSIST](DIAG-FLOW-ASSIST.md) | AI 助手多轮对话交互流 | 流程图 | `docs/design/ai-assistant.md` | Flow-D-ASSIST-01 | GitHub 原生 |
 | [DIAG-FLOW-FE-IA](DIAG-FLOW-FE-IA.md) | P1 页面信息架构 | 流程图（前端） | `docs/design/frontend-interaction.md` | REQ-011 页面清单 | GitHub 原生 |
+| [DIAG-FE-COMP-01](DIAG-FE-COMP-01.md) | 前端组件树（App 装配 → Shell → Feature） | 组件树（前端） | `docs/design/frontend-interaction.md` | REQ-011 / COMP-001 · CQ-P1-008 | GitHub 原生 |
+| [DIAG-FE-STATE-01](DIAG-FE-STATE-01.md) | 工作台视图与栏布局状态机 | 状态图（前端） | `docs/design/frontend-interaction.md` | REQ-011 · Doc-First §9.5 | GitHub 原生 |
 | [DIAG-SEQ-FE-UF001](DIAG-SEQ-FE-UF001.md) | UF-001 登录与空间切换（前端时序） | 顺序图（前端） | `docs/design/frontend-interaction.md` | UF-001 | GitHub 原生 |
 | [DIAG-API-SEQ-01](DIAG-API-SEQ-01.md) | P1 交互时序图（API 视角） | 顺序图 | `docs/07-api-spec.md` | 07 §3.8 API-ID | GitHub 原生 |
 
@@ -90,7 +92,7 @@
 | `docs/design/ai-polish.md` | [DIAG-CLS-POLISH-01](DIAG-CLS-POLISH-01.md) · [DIAG-STATE-DRAFT-01](DIAG-STATE-DRAFT-01.md) |
 | `docs/design/ai-assistant.md` | [DIAG-CLS-AI-01](DIAG-CLS-AI-01.md) · [DIAG-FLOW-ASSIST](DIAG-FLOW-ASSIST.md) |
 | `docs/design/timeline.md` | [DIAG-TL-FLOW-01](DIAG-TL-FLOW-01.md) |
-| `docs/design/frontend-interaction.md` | [DIAG-FLOW-FE-IA](DIAG-FLOW-FE-IA.md) · [DIAG-SEQ-FE-UF001](DIAG-SEQ-FE-UF001.md) |
+| `docs/design/frontend-interaction.md` | [DIAG-FLOW-FE-IA](DIAG-FLOW-FE-IA.md) · [DIAG-FE-COMP-01](DIAG-FE-COMP-01.md) · [DIAG-FE-STATE-01](DIAG-FE-STATE-01.md) · [DIAG-SEQ-FE-UF001](DIAG-SEQ-FE-UF001.md) |
 | `docs/design/intelligence-analysis.md` | [DIAG-FLOW-INTEL](DIAG-FLOW-INTEL.md) |
 | `docs/05-tech-spec.md` | [DIAG-TECH-STACK-01](DIAG-TECH-STACK-01.md) |
 | `docs/07-api-spec.md` | [DIAG-API-SEQ-01](DIAG-API-SEQ-01.md) |
