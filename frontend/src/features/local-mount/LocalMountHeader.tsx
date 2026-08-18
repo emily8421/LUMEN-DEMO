@@ -19,6 +19,10 @@ interface LocalMountHeaderProps {
   onMount: () => void;
   onReauth: (id: string) => void;
   onUnmount: (id: string) => void;
+  /** 手动重扫兜底（TC-P2-VAULT-003）：重扫全部挂载。 */
+  onRescan: () => void;
+  /** FileSystemObserver 自动监听是否可用（不可用时按钮 title 提示降级）。 */
+  autoRescanSupported: boolean;
 }
 
 export function LocalMountHeader({
@@ -35,6 +39,8 @@ export function LocalMountHeader({
   onMount,
   onReauth,
   onUnmount,
+  onRescan,
+  autoRescanSupported,
 }: LocalMountHeaderProps) {
   return (
     <>
@@ -54,7 +60,16 @@ export function LocalMountHeader({
             <button type="button" onClick={onReauthAll}>重新授权</button>
           ) : null}
           {hasMount ? (
-            <button type="button" onClick={onUnmountAll} title="卸载全部本地挂载">卸载全部</button>
+            <>
+              <button
+                type="button"
+                onClick={onRescan}
+                title={autoRescanSupported ? '手动重扫兜底（文件变更通常已自动反映）' : '重扫挂载目录（当前浏览器不支持自动监听，需手动刷新）'}
+              >
+                重扫
+              </button>
+              <button type="button" onClick={onUnmountAll} title="卸载全部本地挂载">卸载全部</button>
+            </>
           ) : null}
           <button type="button" onClick={onMount} disabled={anyMounting} title="添加本地挂载目录">挂载 vault</button>
         </div>

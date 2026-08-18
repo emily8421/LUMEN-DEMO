@@ -10,6 +10,7 @@ import {
 } from '../../app/useLocalVaultMount';
 import type { LocalVaultDoc } from '../../app/local-vault-index';
 import { useLocalMountImport } from './useLocalMountImport';
+import { useVaultAutoRescan } from './useVaultAutoRescan';
 import { useVaultMountSync } from './useVaultMountSync';
 import { LocalMountHeader } from './LocalMountHeader';
 import { LocalMountImportBar } from './LocalMountImportBar';
@@ -31,6 +32,8 @@ export function LocalMountPane({ token, onImported, onOpenLocalDoc, localVault }
   const importApi = useLocalMountImport(token, vm.docs, vm.selectedPath, hasMount, onImported);
   // Wave 3 / TC-P2-VAULT-004：跨设备挂载元数据同步（仅元数据；失败不阻塞本地）。
   const vaultSync = useVaultMountSync(token);
+  // Wave 3 / TC-P2-VAULT-003：FileSystemObserver 自动重扫（变更防抖合并 → reindex；手动重扫兜底保留）。
+  const autoRescan = useVaultAutoRescan(vm);
 
   // 挂载成功（状态到 mounted）→ 上报 granted；effect 驱动避免 mount() 闭包读到旧
   // mounts 列表；页面加载恢复（刷新后 granted 恢复）同样自愈上报 last_synced_at。
@@ -102,6 +105,13 @@ export function LocalMountPane({ token, onImported, onOpenLocalDoc, localVault }
           if (target) vaultSync.reportRevoked(target.name);
           void vm.unmount(id);
         }}
+        onRescan={() => {
+          // 手动重扫兜底（TC-P2-VAULT-003「手动重扫保留」的 UI 落地）：依次重扫全部挂载。
+          vm.mounts.forEach((m) => {
+            if (m.status === 'mounted') void vm.reindex(m.id);
+          });
+        }}
+        autoRescanSupported={autoRescan.supported}
       />
 
       {!collapsed ? (
