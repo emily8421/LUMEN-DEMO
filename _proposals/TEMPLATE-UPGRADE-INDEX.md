@@ -33,6 +33,7 @@
 |---|---|---|---|
 | `doc-overview-skeleton-alignment.md` | doc-standards `02`、`04`、`00-05` 增引用式概述章（引言 / 任务 / 数据 / 性能 / 运行 / 接口 / 数据结构 / 安全 / 维护）+ 元信息「当前状态」精简口径 + scaffold README 三核心节点定位 | 低（低风险先做） | **已提交 [#356](https://github.com/emily8421/ai-project-template/issues/356)（2026-08-17，OPEN）——勿重复提交** |
 | `root-directory-organization.md` | `global-rules §5` 补目录分类框架 + 来源标注；模板根目录方法论文档归 `methodology/`（2.1，MAJOR 单独评估）；派生项目 README 模板加「项目结构」三大区说明 | 低（2.2）/ 后（2.1） | **已提交 [#357](https://github.com/emily8421/ai-project-template/issues/357)（2026-08-17，OPEN）——勿重复提交** |
+| `directory-partition-principles.md` | `global-rules §5` 补「代码目录划分依据」五条通用原理（部署边界 / 架构分层 / 特性纵切 / 契约单源 / 生命周期）+ web-fullstack-profile §4 依据→推荐树映射；与 #357 正交（#357 管根目录，本份管代码目录内部分层维度） | 低 | **草稿（2026-08-18，待审定后提交）** |
 
 ### 主题 D · 图表审核动线（2026-08-17 新增）
 
