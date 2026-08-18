@@ -23,7 +23,7 @@
 | lumen_folders | 文档目录树（嵌套文件夹） | [P2] | Phase2B·第三 slice·已实现（后端/API + 导入归属 + 单文档移动） | migration 011 已落地 + 后端 service/API/tests 已实现（task-027，19 folder + 45 回归 tests OK）；API-029 `preserve_structure` 已实现建/复用 folder + 回填 `folder_id`（task-028）；API-038 单文档移动 + 前端文件管理器基础能力已实现（task-029，后端 38 tests + frontend build OK；v1.5.2 浏览器自动化 smoke 已补） | REQ-039 |
 | lumen_doc_exports | 单文档导出 PDF 任务 | [P1] | Phase1.5B-已实现 | migration 013 已落地；DocExport entity/ORM + Demo/Pg repository 已接入 | REQ-027 |
 | lumen_push_copies | 跨空间推送只读副本 | [P2] | 骨架 | — | REQ-015 |
-| lumen_vault_mounts | Vault 挂载配置 / 本地连接器元数据 | [P2] | Phase2C·已设计（字段待 migration） | 仅记录用户 / 设备 / 来源类型 / 授权状态等元数据（MVP 浏览器路线：句柄/路径/正文留客户端 IndexedDB，服务端不存）；不作为服务端 DB 权威内容 | REQ-018 |
+| lumen_vault_mounts | Vault 挂载配置 / 本地连接器元数据 | [P2] | Phase2C·已设计 → Wave3-已实现（migration 015，2026-08-18） | 仅记录用户 / 设备 / 来源类型 / 授权状态等元数据（MVP 浏览器路线：句柄/路径/正文留客户端 IndexedDB，服务端不存）；不作为服务端 DB 权威内容 | REQ-018 |
 | lumen_audio_records | 录音转写记录 | [愿景] | 骨架 | — | REQ-019 |
 | lumen_brief_links | 对外只读简报链接 | [愿景] | 骨架 | — | REQ-022 |
 | lumen_external_sync | 外部源同步配置（飞书等） | [愿景] | 骨架 | — | REQ-028 |

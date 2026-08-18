@@ -26,6 +26,7 @@
 | API-056 | POST | /api/auth/password-reset/confirm | 重置密码（token + 新密码 → 更新 password_hash + 吊销该用户全部活跃 session） | [P2] | 维护态批5·已实现（v3.7.0） | token 无效 / 过期 / 已用 4010；密码不合规 4220 | REQ-051 |
 | API-057 | GET | /api/health/live | 进程存活探针（liveness，不检查依赖） | [P2] | 维护态批17·已实现（v3.8.14） | 恒 200；`response_model=ApiEnvelope[HealthView]` | NFR-006 运维 |
 | API-058 | GET | /api/health/ready | 就绪探针（readiness，demo 200 / PG `db.ping()` 失败 503+5031） | [P2] | 维护态批17·已实现（v3.8.14） | demo 200；PG 失败 503 / 5031 DB_NOT_READY | NFR-006 运维 |
+| API-059 | GET/POST | /api/vault-mounts | 跨设备 vault 挂载元数据：GET 拉取本人全部设备挂载清单；POST 上报挂载事件（granted=挂载成功 / revoked=卸载软撤销） | [P2] | Wave 3·已实现（v3.11.0，2026-08-18） | 已实现（migration 015 `lumen_vault_mounts`；仅登录本人；参数非法 4220；仅元数据不存句柄/路径/正文） | REQ-018 |
 | API-002 | GET | /api/spaces | 列出我的空间 | [P1] | P1-已实现 | 已实现（PG 空间 / 成员） | REQ-001/002 |
 | API-003 | POST | /api/spaces/switch | 切换当前空间 | [P1] | P1-已实现 | 已实现（PG 成员校验） | REQ-002 |
 | API-004 | GET | /api/documents | 文档列表 | [P1] | P1-已实现 | 已实现（PG 文档 + 权限过滤） | REQ-004 |

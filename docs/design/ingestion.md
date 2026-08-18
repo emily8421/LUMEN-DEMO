@@ -15,7 +15,7 @@
 | 交付物形态 | Demo / 个人可用 Alpha |
 | 当前状态 | P1 已降级实现（`.md`/`.txt` + Embedding/pgvector 已落地；真实 Word/PDF/OCR 未实现）；Phase1.5A 批量 / 文件夹导入已完成并通过 TC-P1-015；Phase2B folder-tree 扩展 `preserve_structure=true` 已完成后端/API（task-028，真实 PG smoke 通过），前端文件管理器基础能力已由 task-029 补齐 |
 | 流程 ID | Flow-D-001（单文件导入主流水线）/ Flow-006（批量 / 文件夹导入，见 §3.2）/ Flow-D-012（导入保留目录结构，Phase2B 候选，见 `docs/design/folder-tree.md`）/ Flow-D-014（Vault 兼容双模式，见 §3.3） |
-| 最后更新 | 2026-08-18（对齐 design-doc 标准结构：补 §6 阶段增量与 readiness gate，章节按标准重排）；前次 2026-08-17（新增 §3.4 导入任务状态机 DIAG-STATE-IMPORT-01，OO 覆盖度补全 Batch A2）；前次 2026-08-04（REQ-018 Vault 兼容方向确认：导入数据库 / 仅本地挂载双模式；仅本地挂载内容默认个人 / 当前设备可见，不写入团队知识库） |
+| 最后更新 | 2026-08-18（Wave 3 / OI-109：跨设备挂载元数据落地——migration 015 + API-059 + 前端接线，§4/§6/§7 状态回写）；前次 2026-08-18（对齐 design-doc 标准结构）；前次 2026-08-17（§3.4 导入任务状态机）；前次 2026-08-04（REQ-018 双模式方向确认） |
 | 下游影响 | 08 Sprint-3、Sprint-16；09 TC-P1-009/010/015；07 API-011 / API-029 |
 
 ### 0.5 详细类图（DIAG-CLS-INGEST-01）
@@ -221,7 +221,8 @@ flowchart TB
 | 单文件导入 | `lumen_imports` / `lumen_documents` / `lumen_chunks` | API-011 `POST /api/import` | 空间成员 | 同名默认 skipped（不静默覆盖） | 已实现（降级：仅 `.md`/`.txt`） |
 | 批量 / 文件夹导入 | `lumen_imports` / `lumen_documents` / `lumen_chunks` / `lumen_folders` | API-029 `POST /api/import/batch` | 空间成员 | 逐文件 failed / skipped 隔离，不回滚 | 已实现（Sprint-16；`preserve_structure` task-028） |
 | Vault 导入数据库（模式 A） | 同批量导入 | API-029 | 空间成员 | 同 API-029 | 已实现（Phase2B） |
-| Vault 仅本地挂载（模式 B） | 浏览器 File System Access + IndexedDB 本地索引 | —（本地连接器） | 个人 / 当前设备 | 不进服务端 RAG / 权限链 | Phase2C 已设计（RG-009 Go） |
+| Vault 仅本地挂载（模式 B） | 浏览器 File System Access + IndexedDB 本地索引 | —（本地连接器） | 个人 / 当前设备 | 不进服务端 RAG / 权限链 | 已实现（Phase2C，Sprint-23C） |
+| 跨设备挂载元数据（Wave 3） | `lumen_vault_mounts`（migration 015）：挂载上报 granted / 卸载 revoked / 登录拉取跨设备清单 | API-059 `GET/POST /api/vault-mounts` | 仅登录本人（无空间维度） | 4220 参数非法；revoked 软撤销保留行；**仅元数据**（不存句柄/路径/正文） | 已实现（2026-08-18，TC-P2-VAULT-004 通过） |
 
 数据契约（权威以 06 为准）：
 - **`lumen_imports`**：`id / space_id / source_filename / status（processing / done / failed）/ parsed_doc_id / chunk_count / error`（migration 004）。
@@ -261,6 +262,7 @@ readiness gate：
 | 批量 / 文件夹导入 | 已实现（Phase1.5A） | — | TC-P1-015 | 逐文件失败隔离 | 否 |
 | 导入保留目录结构 | 已实现（Phase2B，task-028） | folder-tree 立项（REQ-039） | TC-P2-FOLDER-001 | `preserve_structure=false` 标题前缀 | 否 |
 | Vault 模式 B 本地挂载 | Phase2C 已设计（RG-009 PoC Go） | 浏览器 FSA + IndexedDB 路线 | TC-P2-VAULT-001 | 仅浏览 / 按需导入 | 否 |
+| 跨设备挂载元数据 | **已实现（Wave 3，2026-08-18）** | 账户体系（Sprint-26 已完成）+ migration 015 | TC-P2-VAULT-004 | 同步失败不阻塞本地挂载（console.warn 降级） | 否 |
 | 真实 Word/PDF 提取 | 后续（RG-007 待评估） | Phase1.5B 立项 | — | 维持 `.md` / `.txt` | 否 |
 | OCR（REQ-010） | 后续（RG-003 No-Go） | 立项 | — | 维持降级 | 否 |
 
@@ -274,6 +276,7 @@ readiness gate：
 | Flow-006 批量 / 文件夹导入 | REQ-037 | Sprint-16 | TC-P1-015 | 后端 tests + Chrome headless drop-zone smoke 已通过 | Phase1.5A-已实现 |
 | Flow-D-012 导入保留目录结构（folder-tree） | REQ-037/039 | Sprint-22 | TC-P2-FOLDER-001 + TC-P1-015 扩展 | `tests.backend.test_imports` / `test_import_api` + 临时 PG smoke：`preserve_structure` 建/复用 `lumen_folders` | Phase2B 第三 slice·后端/API 已实现；前端文件管理器待实现 |
 | Flow-D-014 Vault 兼容双模式 | REQ-018 | Phase2C | TC-P2-VAULT-001 | 浏览器 File System Access 授权 + IndexedDB 本地索引 + 1000+ 文件本地树 / 按需导入 smoke（RG-009 PoC Go 2026-08-05） | Phase2C·已完成（Sprint-23C TC-P2-VAULT-001 通过 / PR#108 v2.0.0） |
+| Flow-D-014 增强·跨设备挂载元数据 | REQ-018 | Wave 3 | TC-P2-VAULT-004 | `tests/backend/test_vault_mounts.py`（10 用例）+ 真实 PG migration 015 + API smoke + `scripts/smoke-vault-mounts-browser.mjs`（设备 B 侧可见 + revoked 过滤） | Wave 3·已完成（2026-08-18，v3.11.0，migration 015 + API-059；本机挂载即上报留用户人工可选验收） |
 
 ## 8. 与其他子系统交互
 

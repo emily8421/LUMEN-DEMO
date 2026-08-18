@@ -20,3 +20,4 @@ export * from './api/termCategories';
 export * from './api/timeline';
 export * from './api/admin';
 export * from './api/spaceMembers';
+export * from './api/vaultMounts';

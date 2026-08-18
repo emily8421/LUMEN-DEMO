@@ -29,6 +29,7 @@ from backend.model.entities import (
     TermCategory,
     TermStatus,
     User,
+    VaultMount,
 )
 from backend.repository.protocol import RepositoryProtocol
 from backend.service.permission import filter_visible_documents
@@ -113,6 +114,8 @@ class DemoRepository(RepositoryProtocol):
         self._next_term_category_id = 1
         self.sessions: list[Session] = []
         self._next_session_id = 1
+        self.vault_mounts: list[VaultMount] = []
+        self._next_vault_mount_id = 1
 
     def find_user_by_external_id(self, external_id: str) -> User | None:
         return next((user for user in self.users if user.external_id == external_id), None)
@@ -260,6 +263,49 @@ class DemoRepository(RepositoryProtocol):
 
     def list_sessions(self, user_id: int) -> list[Session]:
         return [s for s in self.sessions if s.user_id == user_id and s.revoked_at is None]
+
+    def list_vault_mounts(self, user_id: int) -> list[VaultMount]:
+        # 按 updated_at 倒序对齐 PgRepository（str isoformat 降序排序足够 demo 语义）
+        return sorted(
+            (m for m in self.vault_mounts if m.user_id == user_id),
+            key=lambda m: m.updated_at,
+            reverse=True,
+        )
+
+    def upsert_vault_mount(
+        self,
+        user_id: int,
+        device_id: str,
+        mount_name: str,
+        source_type: str,
+        auth_status: str = "granted",
+    ) -> VaultMount:
+        now = _now_iso()
+        for index, mount in enumerate(self.vault_mounts):
+            if mount.user_id == user_id and mount.device_id == device_id and mount.mount_name == mount_name:
+                updated = replace(
+                    mount,
+                    auth_status=auth_status,
+                    source_type=source_type,
+                    last_synced_at=now,
+                    updated_at=now,
+                )
+                self.vault_mounts[index] = updated
+                return updated
+        created = VaultMount(
+            id=self._next_vault_mount_id,
+            user_id=user_id,
+            device_id=device_id,
+            mount_name=mount_name,
+            source_type=source_type,
+            auth_status=auth_status,
+            last_synced_at=now,
+            created_at=now,
+            updated_at=now,
+        )
+        self._next_vault_mount_id += 1
+        self.vault_mounts.append(created)
+        return created
 
     def revoke_session(self, session_id: int, user_id: int) -> bool:
         for index, session in enumerate(self.sessions):

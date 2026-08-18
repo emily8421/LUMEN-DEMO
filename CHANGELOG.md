@@ -6,6 +6,16 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.11.0（2026-08-18）
+
+**Wave 3 / OI-109：REQ-018 模式 B 增强——跨设备 vault 挂载元数据（TC-P2-VAULT-004）。新增 API endpoint（API-059）+ migration 015 + 前端接线，bump MINOR。隐私天花板不变：仅同步挂载清单元数据，句柄/路径/正文仍只留各设备浏览器 IndexedDB，不进服务端 RAG。**
+
+- **数据库**（migration 015）：`lumen_vault_mounts` 新表——`user_id / device_id（客户端自生 device token）/ mount_name / source_type(obsidian|markdown_folder) / auth_status(granted|revoked) / last_synced_at`；`UNIQUE(user_id, device_id, mount_name)` 自然键 upsert（重复挂载刷新时间戳，不刷行）+ `(user_id)` 跨设备清单索引；revoked 软撤销保留审计行（仿 `lumen_sessions.revoked_at`）。
+- **后端 API**（API-059）：`GET /api/vault-mounts`（本人全部设备挂载清单，updated_at 倒序）+ `POST /api/vault-mounts`（挂载成功 granted / 卸载 revoked；参数非法 4220；revoked 无对应行幂等返回 null）；仅登录本人、无空间维度。repository 三件（protocol / pg / demo）+ `upsert_vault_mount` / `list_vault_mounts` 双实现（契约测试守护）。
+- **前端**：挂载成功自动上报 granted（effect 驱动，页面恢复亦自愈刷新）/ 卸载上报 revoked / 登录拉取清单；「本地挂载」分区新增**跨设备挂载只读列表**（标注本机/其他设备 + 来源类型 + 日期，revoked 默认隐藏）；同步失败 console.warn 降级不阻塞本地挂载（本地优先红线）。零改动 useAppState / useLocalVaultMount（file-size ratchet 无余量）。
+- **契约产物**：openapi.json + generated.ts 再生成（CI 双 drift 门同步）。
+- 验证：pytest 331 passed（+10 vault 用例）/ mypy 0 / lint+build 355 modules / file-size + css token 检查过 / 真实 PG migration 015 应用 + API smoke（登录→上报→upsert→清单→撤销→4220）/ `scripts/smoke-vault-mounts-browser.mjs`（设备 B 侧可见 + revoked 过滤）；本机挂载即上报留用户人工可选验收。REQ-018 / TC-P2-VAULT-004 / migration 015 / API-059 追溯见 09 §5。
+
 ## v3.10.0（2026-08-17）
 
 **前端设计系统规范工作流全 6 步（charter 立项 → 收口）：视觉语言审计 → 结构专项 RA → 令牌升级 → 去框化试点与全站铺开 → 规范成文 → CI 白名单。全站观感变化 + 首份完整设计规范文档，bump MINOR。目标「AI 依据规范与约束生成代码，而非各写各的」落地为三道闸：规范可查（design-system.md）→ 参数单点（tokens.css）→ 违规可拦（CI）。**

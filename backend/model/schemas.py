@@ -404,6 +404,22 @@ class PasswordResetMessageView(BaseModel):
     message: str
 
 
+# --- vault mounts（REQ-018 模式 B 增强 / Wave 3，API-059）---
+
+
+class VaultMountView(BaseModel):
+    """``/api/vault-mounts`` data 行：跨设备挂载元数据（仅元数据，无句柄/路径/正文）。"""
+
+    id: int
+    device_id: str
+    mount_name: str
+    source_type: str
+    auth_status: str
+    last_synced_at: str
+    created_at: str
+    updated_at: str
+
+
 # --- spaces ---
 
 

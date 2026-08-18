@@ -27,7 +27,7 @@
 | REQ-013a / 024 | [P2] | MOD-006 主题时间线 / 密度热条；`docs/design/timeline.md`；migration 012 时间索引（候选 A 实时聚合不建表）；API-033；TC-P2-TL-001；Phase2B 第二 slice |
 | REQ-014 | [P2] | MOD-007 AI 润色 / 写作引用；`docs/design/ai-polish.md`；`lumen_ai_drafts`（migration 010）；TC-P2-AI-001；Sprint-19 |
 | REQ-015 / 016 / 017 | [P2] | 骨架（不进 Phase2B 首批；REQ-016 多人协作留候选） |
-| REQ-018 | [P2] | MOD-008 本地知识源；`docs/design/ingestion.md` Flow-D-014 + `docs/design/frontend-interaction.md` §9.3；模式 A 随 Phase2B 交付、模式 B 浏览器路线（RG-009 Go）；`lumen_vault_mounts` 元数据（migration 015 待编码）；TC-P2-VAULT-001；Sprint-23C |
+| REQ-018 | [P2] | MOD-008 本地知识源；`docs/design/ingestion.md` Flow-D-014 + `docs/design/frontend-interaction.md` §9.3；模式 A 随 Phase2B 交付、模式 B 浏览器路线（RG-009 Go）；`lumen_vault_mounts` 跨设备元数据**已落地**（Wave 3，migration 015 + API-059 + TC-P2-VAULT-004 通过 2026-08-18，v3.11.0）；TC-P2-VAULT-001；Sprint-23C |
 | REQ-019..023 / 028..035 | [愿景] | 骨架（技术验证后细化；对应表骨架见 `06 §1`） |
 | REQ-040 / 041 / 042 | [P2] | MOD-011 账户与认证；`docs/design/accounts-auth.md`；`lumen_users` 扩列 + `lumen_sessions`（migration 014）；auth 域 API；TC-P2-AUTH-001；Sprint-26（PR#112 v3.0.0） |
 | REQ-043 / 044 | [P2] | MOD-011 权限多人化（owner 过滤 + 跨用户隔离）；`docs/design/accounts-auth.md` §17；TC-P2-ACC-001；Sprint-27（PR#114） |
