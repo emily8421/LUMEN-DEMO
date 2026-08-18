@@ -6,6 +6,16 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.12.1（2026-08-18）
+
+**OI-103 / C-001 部署前置修复：`backend/Dockerfile` 路径错误 + `.dockerignore` 已在位确认。bump PATCH（bug fix，不新增可演示能力）。**
+
+- **Dockerfile 路径修复**（`backend/Dockerfile` 第 24 行）：`COPY requirements.txt /app/requirements.txt` → `COPY backend/requirements.txt /app/requirements.txt`——文件实际在 `backend/requirements.txt`，原写法导致 `docker build` 第 4 步 `failed to calculate checksum "/requirements.txt": not found`，⑪ 方案 A 全容器化路径本就不能跑通。
+- **`.dockerignore` 已在位确认**（2026-08-15 readiness 评估时落盘，OI-103 C-001 实际提前完成）：`.env*` / `.venv` / `node_modules` / `docs` / `ai` / `tests` / `scripts` 等非运行时文件不进镜像层；构建实测确认 `.env` 未进入 `lumen-backend-test:latest`，`backend/` / `openapi/` / `requirements.txt` 保留。
+- **本机构建实测**：`docker build -f backend/Dockerfile -t lumen-backend-test .` 成功；`/app` 含 `backend/`（api / config.py / main.py / migrations / model / repository）+ `openapi/openapi.json` + `requirements.txt`，镜像 2.16GB（torch CPU + sentence-transformers 下限，符合预期）。
+- **未做**（保留为人工 / 后续）：笔记本实际部署、PR #171-175 收编、自动备份、迁移 018 是否被 init_db 自动执行（部署实测时核对）。
+- 追溯：OI-103 / C-001 / C-002 / docs/research/2026-08-15-deployment-readiness-laptop-plan.md §2 gap #1+#6。
+
 ## v3.12.0（2026-08-18）
 
 **Wave 3 收口：TC-P2-VAULT-003——本地挂载目录 FileSystemObserver 自动监听（REQ-018 模式 B 增强，RG-010 Go）。用户可感知能力（文件变更自动刷新 + 手动重扫按钮），bump MINOR。纯前端零新依赖零后端改动，隐私红线不变（仍仅本地，不上传）。**

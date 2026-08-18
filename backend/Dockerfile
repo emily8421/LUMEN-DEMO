@@ -21,7 +21,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # 先装 torch CPU 版（默认 pip 拉 CUDA 体积过大），再装其余依赖
-COPY requirements.txt /app/requirements.txt
+COPY backend/requirements.txt /app/requirements.txt
 RUN pip install torch==2.13.0+cpu --index-url https://download.pytorch.org/whl/cpu \
     && pip install -r /app/requirements.txt
 
