@@ -6,7 +6,17 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
-## v3.12.1（2026-08-18）
+## v3.12.2（2026-08-18）
+
+**代码目录划分依据成文：规范（05 §4.1.0 五条依据 + 目录映射）+ 学科出处参考（references）+ 模板回流提案草稿。纯文档 / 规范增强，无代码改动，bump PATCH。**
+
+- **`docs/05-tech-spec.md` 新增 §4.1.0 目录划分依据**：五条依据表（部署 / 运行时边界、架构分层、业务特性纵切、契约单源、开发生命周期；各含原理一句话 + 主流印证 + 判断口径）+ LUMEN 目录→依据映射表（backend / frontend / openapi / tests / docker / scripts / 根级配置）+「契约」术语注（DbC，Meyer 1986；openapi 单源 / generated.ts 拓印 / CI drift 违约探测）。既有 §4.1 边界表与阈值表不动——本节回答「凭什么这么切」，边界表回答「放哪」。
+- **`docs/references/software-engineering-basics.md` 新建**（外部参考，非权威规格）：五条依据的学科出处详表——四条知识线（模块化分解 Parnas 1972→CCP / 架构模式 Layers / 设计规约 DbC / 配置管理 IEEE 828）× 原始文献 × 大白话 × LUMEN 落点 + 术语小词典 10 条（契约 / 前后置条件 / 分层 / 纵切 / 内聚耦合 / 信息隐藏 / CCP / SSOT / 部署单元 / IaC）；`references/00-index.md` 登记。
+- **`ai/project-rules.md` §4 同步**：删过时「目录树待 04 落定后回填」残留；backend 三层改四层（补 repository，与 05 §4.2 基线对齐）；scripts / tests 描述对齐现状（浏览器冒烟在 `scripts/smoke-*`）；补指向 05 §4.1.0。
+- **`_proposals/TEMPLATE-UPGRADE-directory-partition-principles.md` 新建草稿**（未提交跨仓 issue，待审定）：模板侧建议方案 A 并采——`global-rules §5` 补精简五条（全形态可见）+ `web-fullstack-profile §4` 补依据→推荐树映射（Web 特化）；与 issue #357（根目录分类）正交；MINOR bump。INDEX 主题 C 登记。
+- 追溯：无 REQ / MOD 新增（编码约定范畴）；来源 = 用户提问「代码实现目录有哪些 / 划分依据是什么 / 参考主流还是方法论」两轮会话。
+
+
 
 **OI-103 / C-001 部署前置修复：`backend/Dockerfile` 路径错误 + `.dockerignore` 已在位确认。bump PATCH（bug fix，不新增可演示能力）。**
 

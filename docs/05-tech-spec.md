@@ -107,6 +107,32 @@ flowchart TB
 
 > 对照 `template-docs/web-fullstack-profile.md` WSG-002 / WSG-004。**2026-07-15 校准**：原「不改既有 P1 代码结构」的定位已调整为——通过 `docs/08-dev-plan.md` **Sprint-0′ 框架补课**（P1.5 前置）主动对齐：前端拆 `app / pages / features / components / api / state / styles`、后端 `repository/` 独立；P1.5 / Phase2 起本节目录边界与文件阈值强制生效。Sprint-0′ 仍不新增依赖。
 
+#### 4.1.0 目录划分依据（为什么这么切）
+
+> 下方边界表回答「放哪」，本节回答「凭什么」——新增目录 / 挪动代码时先对依据，再查边界表。依据取自软件工程稳定原理（关注点分离、单一职责、同原因变更聚合、契约式设计），主流框架布局（Django/Rails 分层、feature-sliced、Clean Architecture）仅作印证注脚，不作为本仓约束源。各依据的学科出处与原始文献见 `docs/references/software-engineering-basics.md`（外部参考，非权威规格）。
+
+| # | 依据 | 原理一句话 | 主流印证 | 判断口径 |
+|---|---|---|---|---|
+| 1 | **部署 / 运行时边界**（最外层） | 构建产物、技术栈、发布节奏不同的代码分属不同部署单元 | 前后端分离仓库 / monorepo 的 `apps/*` 划分 | 「这段代码跟着哪个镜像 / 构建走？」不同→顶层分开 |
+| 2 | **架构分层**（框架内） | 关注点分离：传输（HTTP 进出）、业务规则、数据访问、领域模型各自独立，依赖单向向下 | 后端 `api→service→repository→model` 四层（Django MTV、Clean Architecture 同理） | 「这行代码改了是因为 HTTP 变了、业务规则变了还是存储变了？」原因归哪层就放哪层 |
+| 3 | **业务特性纵切**（组件内） | 同一功能的改动聚合在一处，而非按技术角色横切散落 | 前端 `features/`（feature-sliced design） | 「改这个功能要动几个目录？」只动一个 feature 目录=纵切正确 |
+| 4 | **契约单源**（跨端共享） | 双运行时共同认可的结构定义（接口契约）独立成单一事实源，双端由它派生，防漂移 | OpenAPI contract-first；`openapi/` + codegen + schema-diff | 「两端会不会各自描述同一接口？」会→契约须独立目录 + 派生校验 |
+| 5 | **开发生命周期**（横切面） | 源码 / 测试 / 构建 / 工具的变更原因与受众不同（开发者 / CI / 运维），分开存放 | `src` vs `tests` vs `dist` vs `scripts` 通例 | 「它失效时谁受影响？」受众不同→独立目录 |
+
+**本项目目录 → 依据映射**：
+
+| 目录 | 主要依据 | 说明 |
+|---|---|---|
+| `backend/` | #1 部署单元（Python 镜像）+ #2 四层分层 | 内部 `api / service / repository / model` + `migrations/` |
+| `frontend/` | #1 部署单元（Node 构建 + nginx 镜像）+ #3 特性纵切 | `src/features/*` 按功能聚合，`src/api` 对齐契约，`src/app` 状态层 |
+| `openapi/` | #4 契约单源 | `openapi.json` 唯一手写源；`frontend/src/api/generated.ts` 由它生成（CI 校验 drift） |
+| `tests/` | #5 生命周期 | pytest 单元 / 集成；浏览器冒烟在 `scripts/smoke-*` |
+| `docker/` | #1 部署边界 | compose 编排（开发 / 生产），属 infrastructure as code |
+| `scripts/` | #5 生命周期 | 启动 / 契约导出 / 静态检查 / 冒烟，DevEx 工具链 |
+| 根级 `pytest.ini` / `mypy.ini` / `ruff.toml` | #2 / #5 | 质量门禁配置跟随所属工具链 |
+
+> 术语：**契约（contract）**= 双方对接口结构（路径 / 参数 / 返回字段 / 错误码）的书面约定，出处为 Design by Contract（Meyer, 1986）；本仓 API 契约权威 = `openapi/openapi.json` + `docs/07-api-spec.md`（人读版），「拓印」产物 = `generated.ts`，「违约探测」= CI schema-diff / codegen drift 检查。
+
 | 边界项 | 当前基线 | P1.5A / Phase2A/B 实现前要求 |
 |---|---|---|
 | App Shell / 视图入口 | P1B 已有 TopBar + Nav Rail + Context Pane + Workspace；P1.5A 默认沿用 | Sprint-16/17 只在导入区、文档详情和空间工具栏加入口；Phase2A/B 新视图先在 `frontend-interaction` 冻结 Page-ID / Flow-ID |

@@ -171,15 +171,13 @@
 
 ## 4. 目录规范的项目特例
 
-`docs/references/` 是本项目保留的目录特例：集中存放外部方法论与产品参考，每份文件须明确标注“外部参考、非项目事实或权威源”，不得替代 `docs/00-09`、`docs/design/` 或 `ai/project-rules.md` 的项目结论。其余目录遵循 `ai/global-rules.md` §5 通用目录标准。代码骨架与分层：
+`docs/references/` 是本项目保留的目录特例：集中存放外部方法论与产品参考，每份文件须明确标注“外部参考、非项目事实或权威源”，不得替代 `docs/00-09`、`docs/design/` 或 `ai/project-rules.md` 的项目结论。其余目录遵循 `ai/global-rules.md` §5 通用目录标准。代码目录的**划分依据**（部署边界 / 架构分层 / 特性纵切 / 契约单源 / 生命周期五条）与目录→依据映射见 `docs/05-tech-spec.md` §4.1.0；代码骨架与分层：
 
-- `backend/`：分 api / service / model 三层；对外接口只进 api 层（待 04-architecture 确认）
-- `frontend/`：React
-- `tests/`：单元 + 集成 + 验收（对应 docs/09-verification.md）
-- `scripts/`：导入 / 索引脚本
+- `backend/`：分 api / service / repository / model 四层；对外接口只进 api 层（边界表见 `docs/05-tech-spec.md` §4.1）
+- `frontend/`：React；`src/features/*` 特性纵切，`src/api` 对齐契约，`src/app` 状态层
+- `tests/`：单元 + 集成 + 验收（对应 docs/09-verification.md）；浏览器冒烟在 `scripts/smoke-*`
+- `scripts/`：运行 / 校验 / 冒烟脚本（导入 / 索引已并入 backend service）
 - `docker/`：本地起库与依赖编排
-
-具体目录树待 04-architecture 落定后回填。
 
 ## 5. 编码约定与禁区
 
