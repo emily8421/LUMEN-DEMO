@@ -3,7 +3,7 @@
 > 来源：LUMEN-DEMO（emily8421/LUMEN-DEMO）派生项目回流
 > 提案日期：2026-08-17
 > 目标文件：`ai/doc-standards/02-srs.md`、`ai/doc-standards/04-architecture.md`、`ai/doc-standards/00-scenario.md`（元信息口径）、`docs/README.md`（模板 scaffold）
-> 状态：**已提交模板维护者**——issue [#356](https://github.com/emily8421/ai-project-template/issues/356)（2026-08-17 开，OPEN，等维护者 triage）；本文件留作审计底稿，**勿重复提交**
+> 状态：**已落地关闭**——issue [#356](https://github.com/emily8421/ai-project-template/issues/356) 已由模板维护者采纳落地（Batch A / PR A1 #362，squash `49c1f2b`，v1.63.0，2026-08-18 关闭）；本文件已归档，勿重复提交
 
 ## 1. 动机
 
