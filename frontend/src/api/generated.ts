@@ -880,6 +880,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/vault-mounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Vault Mounts Endpoint */
+        get: operations["list_vault_mounts_endpoint_api_vault_mounts_get"];
+        put?: never;
+        /** Report Vault Mount Endpoint */
+        post: operations["report_vault_mount_endpoint_api_vault_mounts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1415,6 +1433,20 @@ export interface components {
             msg: string;
             data: components["schemas"]["TimelineView"];
         };
+        /** ApiEnvelope[Union[VaultMountView, NoneType]] */
+        ApiEnvelope_Union_VaultMountView__NoneType__: {
+            /**
+             * Code
+             * @default 0
+             */
+            code: number;
+            /**
+             * Msg
+             * @default ok
+             */
+            msg: string;
+            data: components["schemas"]["VaultMountView"] | null;
+        };
         /** ApiEnvelope[list[AdminUserView]] */
         ApiEnvelope_list_AdminUserView__: {
             /**
@@ -1549,6 +1581,21 @@ export interface components {
             msg: string;
             /** Data */
             data: components["schemas"]["UserSearchView"][];
+        };
+        /** ApiEnvelope[list[VaultMountView]] */
+        ApiEnvelope_list_VaultMountView__: {
+            /**
+             * Code
+             * @default 0
+             */
+            code: number;
+            /**
+             * Msg
+             * @default ok
+             */
+            msg: string;
+            /** Data */
+            data: components["schemas"]["VaultMountView"][];
         };
         /** BatchImportItemView */
         BatchImportItemView: {
@@ -2437,6 +2484,45 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /**
+         * VaultMountReportRequest
+         * @description 上报体：设备 A 挂载成功（auth_status 缺省 granted）或卸载（revoked）。
+         */
+        VaultMountReportRequest: {
+            /** Device Id */
+            device_id: string;
+            /** Mount Name */
+            mount_name: string;
+            /** Source Type */
+            source_type: string;
+            /**
+             * Auth Status
+             * @default granted
+             */
+            auth_status: string;
+        };
+        /**
+         * VaultMountView
+         * @description ``/api/vault-mounts`` data 行：跨设备挂载元数据（仅元数据，无句柄/路径/正文）。
+         */
+        VaultMountView: {
+            /** Id */
+            id: number;
+            /** Device Id */
+            device_id: string;
+            /** Mount Name */
+            mount_name: string;
+            /** Source Type */
+            source_type: string;
+            /** Auth Status */
+            auth_status: string;
+            /** Last Synced At */
+            last_synced_at: string;
+            /** Created At */
+            created_at: string;
+            /** Updated At */
+            updated_at: string;
         };
     };
     responses: never;
@@ -4700,6 +4786,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiEnvelope_list_UserSearchView__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_vault_mounts_endpoint_api_vault_mounts_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiEnvelope_list_VaultMountView__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    report_vault_mount_endpoint_api_vault_mounts_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VaultMountReportRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiEnvelope_Union_VaultMountView__NoneType__"];
                 };
             };
             /** @description Validation Error */

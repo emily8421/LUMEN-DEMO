@@ -47,6 +47,7 @@
 | API-056 | POST | /api/auth/password-reset/confirm | 重置密码（token + 新密码 → 更新 password_hash + 吊销该用户全部活跃 session） | [P2] | 维护态批5·已实现（v3.7.0） | token 无效 / 过期 / 已用 4010；密码不合规 4220 | REQ-051 |
 | API-057 | GET | /api/health/live | 进程存活探针（liveness，不检查依赖） | [P2] | 维护态批17·已实现（v3.8.14） | 恒 200；`response_model=ApiEnvelope[HealthView]` | NFR-006 运维 |
 | API-058 | GET | /api/health/ready | 就绪探针（readiness，demo 200 / PG `db.ping()` 失败 503+5031） | [P2] | 维护态批17·已实现（v3.8.14） | demo 200；PG 失败 503 / 5031 DB_NOT_READY | NFR-006 运维 |
+| API-059 | GET/POST | /api/vault-mounts | 跨设备 vault 挂载元数据：GET 拉取本人全部设备挂载清单；POST 上报挂载事件（granted=挂载成功 / revoked=卸载软撤销） | [P2] | Wave 3·已实现（v3.11.0，2026-08-18） | 已实现（migration 015 `lumen_vault_mounts`；仅登录本人；参数非法 4220；仅元数据不存句柄/路径/正文） | REQ-018 |
 | API-002 | GET | /api/spaces | 列出我的空间 | [P1] | P1-已实现 | 已实现（PG 空间 / 成员） | REQ-001/002 |
 | API-003 | POST | /api/spaces/switch | 切换当前空间 | [P1] | P1-已实现 | 已实现（PG 成员校验） | REQ-002 |
 | API-004 | GET | /api/documents | 文档列表 | [P1] | P1-已实现 | 已实现（PG 文档 + 权限过滤） | REQ-004 |
@@ -346,6 +347,7 @@ sequenceDiagram
 | API-056 `POST /api/auth/password-reset/confirm` | `token`、`new_password`（8-64） | `{code,msg,data:{message:"密码已重置，请用新密码登录"}}` | token 无效 / 过期 / 已用 → 4010；密码 <8 或 >64 → 4220；成功后吊销该用户全部活跃 session | `lumen_users`、`lumen_sessions` | **维护态批5·已实现**（REQ-051，Sprint-30，v3.7.0）；一次性 token（`reset_used_at` 防重放） |
 | API-057 `GET /api/health/live` | — | `{code,msg,data:{status:"ok"}}` | 无（恒 200） | — | **维护态批17·已实现**（CQ-P1-001，Sprint-42，v3.8.14）；进程存活探针，不检查依赖 |
 | API-058 `GET /api/health/ready` | — | `{code,msg,data:{status:"ready",db:"<pg version>"\|null}}`（demo `db:null`） | PG 模式 `db.ping()` 失败 → 503 / 5031 DB_NOT_READY | — | **维护态批17·已实现**（CQ-P1-001，Sprint-42，v3.8.14）；就绪探针，供容器编排 healthcheck |
+| API-059 `GET/POST /api/vault-mounts` | GET —；POST `{device_id, mount_name, source_type(obsidian\|markdown_folder), auth_status?(granted\|revoked，缺省 granted)}` | GET `{code,msg,data:[{id,device_id,mount_name,source_type,auth_status,last_synced_at,created_at,updated_at}]}`（updated_at 倒序，含 revoked 行，前端过滤展示）；POST 返回 upsert 后的行（revoked 无对应行时幂等 `data:null`） | 仅登录本人（4001，无空间维度——纯个人元数据）；参数非法 4220 | `lumen_vault_mounts`（migration 015） | **Wave 3·已实现**（REQ-018 模式 B 增强，TC-P2-VAULT-004，v3.11.0，2026-08-18）；按自然键 (user_id, device_id, mount_name) upsert；revoked 软撤销保留审计行（仿 sessions.revoked）；仅元数据，不存句柄/路径/正文（RG-009 天花板） |
 
 **Phase1.5 / Phase2 错误码补充**：
 
@@ -367,7 +369,7 @@ sequenceDiagram
 - `/api/documents/{id}/polish`（API-028）：Phase2B 首批核心，**数据外发风险已接受（RG-008 Go）**，vertical slice 已定（polish 同步 / citation 首版同步），后端 + 前端已实现，TC-P2-AI-001 live UI smoke 2026-07-31 通过。
 - `/api/spaces/{id}/timeline`（API-033）：**主题时间线（REQ-013a 重定位）**·Phase2B 第二 slice·已实现（候选 A 实时聚合不建表；关键词/标签驱动 `q`/`tag_ids` + 标题 ILIKE/chunk.ts_vector 命中 + actor + 密度 ratio；TL-C-001..011 已确认，见 `docs/design/timeline.md`；task-030 本地自动化、运行态 API smoke、Edge headless 浏览器 smoke、真实 PG 大数据性能 smoke 均已通过）。
 - `/api/folders`（API-034..037）+ `/api/documents/{document_id}/folder`（API-038）：Phase2B 第三 slice 已实现（folder-tree，REQ-039），文件夹树查询 / 新建 / 移动·改名·删除 / 排序 + 单文档移动；folder 不独立设权限（FT-C-003），删非空 folder→4090（FT-C-010）；导入保留结构扩展 API-029 `preserve_structure` 已实现。
-- REQ-018 Vault 兼容（Phase2C MVP）：模式 A 导入数据库复用 API-029（前端分批 50/批，避免 multipart 1000 files/fields 限制）；模式 B 仅本地挂载为**纯前端**（浏览器 File System Access + IndexedDB），**后端零新 API**、本地内容不上传服务端、不进入团队 RAG。仅当需跨设备同步挂载点元数据时新增 `GET/POST /api/vault-mounts`（读写 `lumen_vault_mounts`，视 MVP 后续需要再定）。
+- REQ-018 Vault 兼容（Phase2C MVP）：模式 A 导入数据库复用 API-029（前端分批 50/批，避免 multipart 1000 files/fields 限制）；模式 B 仅本地挂载为**纯前端**（浏览器 File System Access + IndexedDB），本地内容不上传服务端、不进入团队 RAG。跨设备挂载点元数据同步 `GET/POST /api/vault-mounts`（API-059，读写 `lumen_vault_mounts` 仅元数据）**已随 Wave 3 实现（v3.11.0，TC-P2-VAULT-004）**；句柄/路径/正文仍只留客户端。
 - `/api/spaces/push`：跨空间推送不进 Phase2B 首批，请求 / 响应待后续细化。
 - `/api/auth/register`（API-039）、`/api/auth/logout`（API-040）、`/api/auth/refresh`（API-041）、`/api/auth/sessions`（API-042/043）：**Phase2D 账号体系（Sprint-26，REQ-040/041/042）已实现**——注册建用户 + 默认个人空间（C-AUTH-001，role=admin）；凭证登录 bcrypt + 不透明 token session（TTL 8h / 撤销 / 滑动续期 / 多设备会话）；demo 内存仓储兼容无密码快捷登录，PG 仓储强制真实凭证。**Sprint-28（REQ-045）登录响应新增 `role` 字段（`{code,msg,data:{token,user_id,current_space_id,role}}`，additive 非破坏性，支撑前端管理入口显隐）；refresh 响应不含 `role`（偏差见 accounts-auth §18.9）**。契约见 §3.2/§3.3 与 §5。
 - `/api/briefs/{token}`：简报隔离与有效期待愿景验证（REQ-022）
@@ -402,7 +404,7 @@ sequenceDiagram
 | REQ-013 / 024 | `GET /api/spaces/{id}/timeline`（API-033） | Phase2B 首批·第二 slice 主题时间线 / 密度热条·已实现（候选 A + TL-C-001..011 已确认，契约见 §3.9；运行态 API smoke / Edge headless 浏览器 smoke / 真实 PG 大数据性能 smoke 已通过） |
 | REQ-039 | `GET/POST /api/folders`、`PATCH/DELETE /api/folders/{folder_id}`、`POST /api/folders/reorder`、`PATCH /api/documents/{document_id}/folder`（API-034..038） | Phase2B 第三 slice（folder-tree）文档目录树：嵌套文件夹 CRUD / 移动 / 排序 + 单文档移动 + 导入保留结构（扩展 REQ-037 / API-029）；后端/API + 前端文件管理器基础能力已实现，浏览器自动化 smoke 已补 |
 | REQ-015 / 016 / 017 | 后续 Phase 接口骨架 | 推送 / 协作 / 移动端不进 Phase2B 首批 |
-| REQ-018 | 模式 A：`POST /api/import/batch`（API-029）；模式 B（Phase2C MVP）：纯前端，无服务端 API | Vault 兼容：导入数据库走 API-029 并成为正式 LUMEN 文档；仅本地挂载（模式 B）为纯前端个人 / 当前设备连接器，默认不上传正文、不进入团队 RAG；元数据同步 API（`/api/vault-mounts`）待 MVP 后续 |
+| REQ-018 | 模式 A：`POST /api/import/batch`（API-029）；模式 B（Phase2C MVP）：纯前端挂载 + 跨设备元数据 API-059 `GET/POST /api/vault-mounts` | Vault 兼容：导入数据库走 API-029 并成为正式 LUMEN 文档；仅本地挂载（模式 B）为纯前端个人 / 当前设备连接器，默认不上传正文、不进入团队 RAG；跨设备元数据同步 API-059 **已实现**（Wave 3，v3.11.0，仅元数据） |
 | REQ-019..023 / 028..035 | 愿景接口骨架 | 技术验证通过后细化契约 |
 
 ## 5. API ↔ DB / Service / Test 交叉追溯

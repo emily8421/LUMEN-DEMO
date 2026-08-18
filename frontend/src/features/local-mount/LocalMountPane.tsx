@@ -3,15 +3,17 @@
 // 点文件 → onOpenLocalDoc(doc) 通知主区预览（左栏不再显示预览，避免遮挡目录）。
 // 自管理 useLocalVaultMount hook；token / onImported / onOpenLocalDoc 由 ContextPane 透传。
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   buildLocalMountTree,
   type UseLocalVaultMount,
 } from '../../app/useLocalVaultMount';
 import type { LocalVaultDoc } from '../../app/local-vault-index';
 import { useLocalMountImport } from './useLocalMountImport';
+import { useVaultMountSync } from './useVaultMountSync';
 import { LocalMountHeader } from './LocalMountHeader';
 import { LocalMountImportBar } from './LocalMountImportBar';
+import { LocalMountRemoteList } from './LocalMountRemoteList';
 import { LocalMountTreeView } from './LocalMountTreeView';
 
 type LocalMountPaneProps = {
@@ -27,6 +29,26 @@ export function LocalMountPane({ token, onImported, onOpenLocalDoc, localVault }
   const [collapsed, setCollapsed] = useState(false);
   const hasMount = vm.mounts.length > 0;
   const importApi = useLocalMountImport(token, vm.docs, vm.selectedPath, hasMount, onImported);
+  // Wave 3 / TC-P2-VAULT-004：跨设备挂载元数据同步（仅元数据；失败不阻塞本地）。
+  const vaultSync = useVaultMountSync(token);
+
+  // 挂载成功（状态到 mounted）→ 上报 granted；effect 驱动避免 mount() 闭包读到旧
+  // mounts 列表；页面加载恢复（刷新后 granted 恢复）同样自愈上报 last_synced_at。
+  const reportedRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    for (const mount of vm.mounts) {
+      if (mount.status === 'mounted' && !reportedRef.current.has(mount.name)) {
+        reportedRef.current.add(mount.name);
+        vaultSync.reportGranted(mount.name);
+      }
+    }
+    // 卸载的名字移出已上报集合：同目录再次挂载时能重新上报
+    const names = new Set(vm.mounts.map((m) => m.name));
+    for (const name of reportedRef.current) {
+      if (!names.has(name)) reportedRef.current.delete(name);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 仅响应 mounts 变化；vaultSync 回调按 token 记忆化，不列为依赖避免重放
+  }, [vm.mounts]);
 
   if (!vm.supported) {
     return (
@@ -69,11 +91,22 @@ export function LocalMountPane({ token, onImported, onOpenLocalDoc, localVault }
         needsAuthMounts={needsAuthMounts}
         onToggleCollapse={() => setCollapsed((c) => !c)}
         onReauthAll={() => vm.mounts.forEach((m) => { if (m.status === 'needs-auth') void vm.reauth(m.id); })}
-        onUnmountAll={() => void vm.unmountAll()}
+        onUnmountAll={() => {
+          vm.mounts.forEach((m) => vaultSync.reportRevoked(m.name));
+          void vm.unmountAll();
+        }}
         onMount={vm.mount}
         onReauth={(id) => void vm.reauth(id)}
-        onUnmount={(id) => void vm.unmount(id)}
+        onUnmount={(id) => {
+          const target = vm.mounts.find((m) => m.id === id);
+          if (target) vaultSync.reportRevoked(target.name);
+          void vm.unmount(id);
+        }}
       />
+
+      {!collapsed ? (
+        <LocalMountRemoteList remoteMounts={vaultSync.remoteMounts} deviceToken={vaultSync.deviceToken} />
+      ) : null}
 
       {!collapsed && hasMount ? (
         <>

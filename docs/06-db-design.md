@@ -100,7 +100,7 @@ classDiagram
 | lumen_folders | 文档目录树（嵌套文件夹） | [P2] | Phase2B·第三 slice·已实现（后端/API + 导入归属 + 单文档移动） | migration 011 已落地 + 后端 service/API/tests 已实现（task-027，19 folder + 45 回归 tests OK）；API-029 `preserve_structure` 已实现建/复用 folder + 回填 `folder_id`（task-028）；API-038 单文档移动 + 前端文件管理器基础能力已实现（task-029，后端 38 tests + frontend build OK；v1.5.2 浏览器自动化 smoke 已补） | REQ-039 |
 | lumen_doc_exports | 单文档导出 PDF 任务 | [P1] | Phase1.5B-已实现 | migration 013 已落地；DocExport entity/ORM + Demo/Pg repository 已接入 | REQ-027 |
 | lumen_push_copies | 跨空间推送只读副本 | [P2] | 骨架 | — | REQ-015 |
-| lumen_vault_mounts | Vault 挂载配置 / 本地连接器元数据 | [P2] | Phase2C·已设计（字段待 migration） | 仅记录用户 / 设备 / 来源类型 / 授权状态等元数据（MVP 浏览器路线：句柄/路径/正文留客户端 IndexedDB，服务端不存）；不作为服务端 DB 权威内容 | REQ-018 |
+| lumen_vault_mounts | Vault 挂载配置 / 本地连接器元数据 | [P2] | Phase2C·已设计 → Wave3-已实现（migration 015，2026-08-18） | 仅记录用户 / 设备 / 来源类型 / 授权状态等元数据（MVP 浏览器路线：句柄/路径/正文留客户端 IndexedDB，服务端不存）；不作为服务端 DB 权威内容 | REQ-018 |
 | lumen_audio_records | 录音转写记录 | [愿景] | 骨架 | — | REQ-019 |
 | lumen_brief_links | 对外只读简报链接 | [愿景] | 骨架 | — | REQ-022 |
 | lumen_external_sync | 外部源同步配置（飞书等） | [愿景] | 骨架 | — | REQ-028 |
@@ -154,6 +154,20 @@ LUMEN 采用 `docs/decisions/ADR-010-db-authority-derived-data-rebuildability.md
 | last_used_at | timestamptz | |
 | client_ua | text | 审计 / 多设备识别 |
 | client_ip | varchar | |
+
+### lumen_vault_mounts（Wave 3 · migration 015 · 已实现 2026-08-18）
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| id | bigint PK | |
+| user_id | bigint FK→users | ON DELETE CASCADE；仅登录本人可读写（无空间维度，纯个人元数据） |
+| device_id | varchar(128) | 客户端自生 device token（localStorage UUID；06 §2 两选项中取 token——浏览器 UA 同配置设备间会重复） |
+| mount_name | varchar(255) | 挂载名（UNIQUE(user_id, device_id, mount_name) 自然键，重复挂载 upsert 刷新） |
+| source_type | varchar(32) | obsidian / markdown_folder（CHECK） |
+| auth_status | varchar(20) | granted / revoked（CHECK）；软撤销保留行审计，仿 lumen_sessions.revoked_at 口径 |
+| last_synced_at | timestamptz | 最近一次上报（upsert 刷新） |
+| created_at / updated_at | timestamptz | |
+
+> 隐私天花板（RG-009）：不存 directory handle、绝对路径、文件正文（留客户端 IndexedDB）；挂载内容不进服务端 RAG。索引：`UNIQUE(user_id, device_id, mount_name)`（upsert 锚点，编码补充设计——06 骨架只列 user_id / device_id 查询索引）+ `(user_id)`。
 
 ### lumen_spaces
 | 字段 | 类型 | 说明 |
@@ -349,7 +363,7 @@ LUMEN 采用 `docs/decisions/ADR-010-db-authority-derived-data-rebuildability.md
 ### [P2 后续] / [愿景] 表（骨架·待该阶段细化）
 
 - `lumen_push_copies`：跨空间只读副本与权限同步待后续 Phase 细化（REQ-015，不进 Phase2B 首批）。
-- `lumen_vault_mounts`：Vault 兼容（REQ-018）Phase2C·RG-009 Go，字段已细化。设计方向“数据库权威 + 个人本地连接器”：导入数据库的内容写 `lumen_documents` / `lumen_chunks` / `lumen_folders`；仅本地挂载（模式 B 浏览器 MVP）的内容默认不落服务端正文，不进入团队权限链，**服务端只存挂载点元数据**：`id / user_id / device_id（浏览器 UA 或自生 device token）/ mount_name / source_type=obsidian|markdown_folder / auth_status=granted|revoked / last_synced_at / created_at / updated_at`；**不存** directory handle、绝对路径、文件正文（这些留客户端 IndexedDB）。migration 015 留编码 Wave 3（migration 014 已被 Sprint-26 账户体系占用）。
+- ~~`lumen_vault_mounts`：骨架~~ **已实现**（Wave 3 · migration 015 · 2026-08-18，见 §2 字段表）：仅元数据（用户/设备/挂载名/来源类型/授权状态），不存 directory handle、绝对路径、文件正文（留客户端 IndexedDB）；跨设备元数据同步 TC-P2-VAULT-004 已通过。
 - `lumen_audio_records`：录音转写记录待愿景验证（REQ-019）。
 - `lumen_brief_links`：对外简报（token、有效期、AI 可问不可看原文）待愿景验证（REQ-022）。
 - `lumen_external_sync`：外部源（飞书等）同步配置与摘要同步（愿景，REQ-028）。
@@ -374,6 +388,7 @@ LUMEN 采用 `docs/decisions/ADR-010-db-authority-derived-data-rebuildability.md
 - `lumen_documents.folder_id`：索引 `(folder_id)` 支撑按文件夹过滤文档（Phase2B·REQ-039）。
 - `lumen_users`：`idx_lumen_users_email`（email 唯一，WHERE email IS NOT NULL）——登录标识防重（Phase2D，migration 014）。
 - `lumen_sessions`：`token_hash` 唯一（token 查会话）+ `(user_id) WHERE revoked_at IS NULL` 部分索引（多设备会话列表 / 撤销）。
+- `lumen_vault_mounts`：`UNIQUE(user_id, device_id, mount_name)`（上报 upsert 锚点）+ `(user_id)`（跨设备清单查询）；Wave 3 · migration 015 · REQ-018。
 - REQ-037 / REQ-038 默认不新增索引；批量导入沿用 `lumen_imports(space_id, created_by, created_at)` / `lumen_documents(space_id, title)` 查询路径；ZIP 导出沿用文档可见性查询。
 
 ## 4. 表间关系
@@ -461,7 +476,7 @@ erDiagram
 | REQ-050 | 无新表（复用 `lumen_users` / `lumen_space_members` 查询；admin 域只读） | TC-P2-ACC-003 | 维护态批5·Sprint-30（v3.7.0，PR#120） | 成员空间可见性配置：API-054 + `GET /api/spaces` admin 分支；仅全局 admin（4030） |
 | REQ-051 | `lumen_users`（reset_token_hash / reset_expires_at / reset_used_at，migration 018） | TC-P2-AUTH-002 | 维护态批5·Sprint-30（v3.7.0） | 忘记密码自助重置：API-055/056；无 SMTP → token 写日志人工下发降级；重置成功吊销全部活跃 session |
 | REQ-015 / 016 / 017 | 后续 Phase 骨架 | — | — | 推送 / 协作 / 移动端不进 Phase2B 首批 |
-| REQ-018 | `lumen_vault_mounts` | TC-P2-VAULT-001 / 004 | Phase2C（Sprint-23C，v2.0.0 已收口） | Vault 兼容双模式：模式 A 导入数据库随 Phase2B；模式 B 仅本地挂载（RG-009 Go，TC-P2-VAULT-001）；字段已定义（id / user_id / device_id / mount_name / source_type / auth_status / last_synced_at / created_at / updated_at；索引 user_id / device_id）；仅元数据，不存句柄/路径/正文；跨设备元数据 TC-P2-VAULT-004（migration 015）待编码——014 已被 Sprint-26 账户体系占用 |
+| REQ-018 | `lumen_vault_mounts` | TC-P2-VAULT-001 / 004 | Phase2C（Sprint-23C，v2.0.0 收口）+ Wave 3（v3.11.0，2026-08-18） | Vault 兼容双模式：模式 A 导入数据库随 Phase2B；模式 B 仅本地挂载（RG-009 Go，TC-P2-VAULT-001）；**跨设备元数据已落地（Wave 3 migration 015，API-059，TC-P2-VAULT-004 通过 2026-08-18）**：仅元数据（id / user_id / device_id / mount_name / source_type / auth_status / last_synced_at / created_at / updated_at；UNIQUE(user_id, device_id, mount_name) + (user_id) 索引），不存句柄/路径/正文；软撤销 auth_status=revoked 保留审计行 |
 | REQ-019..023 / 028..035 | 愿景表骨架 | — | — | 技术验证通过后细化字段与索引 |
 
 ## 7. 待人工确认项

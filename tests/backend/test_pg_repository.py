@@ -254,6 +254,28 @@ class PgRepositoryTest(unittest.TestCase):
         with self.assertRaises(Exception):
             self.repo.create_term(self.space_ids[0], "dup", "d2", [], self.user_ids[0], TermStatus.CONFIRMED)
 
+    # --- vault mounts（migration 015，TC-P2-VAULT-004）---
+
+    def test_vault_mount_upsert_list_revoke(self) -> None:
+        alice = self.user_ids[0]
+        created = self.repo.upsert_vault_mount(alice, "device-a", "我的库", "obsidian")
+        self.assertEqual(created.auth_status, "granted")
+
+        # 同自然键重报 → upsert 刷新，不新增行
+        again = self.repo.upsert_vault_mount(alice, "device-a", "我的库", "obsidian")
+        self.assertEqual(again.id, created.id)
+        self.assertEqual(len(self.repo.list_vault_mounts(alice)), 1)
+
+        # 另一设备同名 → 独立行
+        self.repo.upsert_vault_mount(alice, "device-b", "我的库", "markdown_folder")
+        self.assertEqual(len(self.repo.list_vault_mounts(alice)), 2)
+
+        # revoked upsert → 软撤销（行保留）
+        revoked = self.repo.upsert_vault_mount(alice, "device-a", "我的库", "obsidian", auth_status="revoked")
+        self.assertEqual(revoked.auth_status, "revoked")
+        rows = self.repo.list_vault_mounts(alice)
+        self.assertEqual(len(rows), 2)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -3670,6 +3670,100 @@
           }
         }
       }
+    },
+    "/api/vault-mounts": {
+      "get": {
+        "tags": [
+          "vault-mounts"
+        ],
+        "summary": "List Vault Mounts Endpoint",
+        "operationId": "list_vault_mounts_endpoint_api_vault_mounts_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope_list_VaultMountView__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "vault-mounts"
+        ],
+        "summary": "Report Vault Mount Endpoint",
+        "operationId": "report_vault_mount_endpoint_api_vault_mounts_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VaultMountReportRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope_Union_VaultMountView__NoneType__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -4566,6 +4660,35 @@
         ],
         "title": "ApiEnvelope[TimelineView]"
       },
+      "ApiEnvelope_Union_VaultMountView__NoneType__": {
+        "properties": {
+          "code": {
+            "type": "integer",
+            "title": "Code",
+            "default": 0
+          },
+          "msg": {
+            "type": "string",
+            "title": "Msg",
+            "default": "ok"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VaultMountView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "ApiEnvelope[Union[VaultMountView, NoneType]]"
+      },
       "ApiEnvelope_list_AdminUserView__": {
         "properties": {
           "code": {
@@ -4799,6 +4922,32 @@
           "data"
         ],
         "title": "ApiEnvelope[list[UserSearchView]]"
+      },
+      "ApiEnvelope_list_VaultMountView__": {
+        "properties": {
+          "code": {
+            "type": "integer",
+            "title": "Code",
+            "default": 0
+          },
+          "msg": {
+            "type": "string",
+            "title": "Msg",
+            "default": "ok"
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/VaultMountView"
+            },
+            "type": "array",
+            "title": "Data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "ApiEnvelope[list[VaultMountView]]"
       },
       "BatchImportItemView": {
         "properties": {
@@ -7434,6 +7583,84 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "VaultMountReportRequest": {
+        "properties": {
+          "device_id": {
+            "type": "string",
+            "title": "Device Id"
+          },
+          "mount_name": {
+            "type": "string",
+            "title": "Mount Name"
+          },
+          "source_type": {
+            "type": "string",
+            "title": "Source Type"
+          },
+          "auth_status": {
+            "type": "string",
+            "title": "Auth Status",
+            "default": "granted"
+          }
+        },
+        "type": "object",
+        "required": [
+          "device_id",
+          "mount_name",
+          "source_type"
+        ],
+        "title": "VaultMountReportRequest",
+        "description": "上报体：设备 A 挂载成功（auth_status 缺省 granted）或卸载（revoked）。"
+      },
+      "VaultMountView": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "device_id": {
+            "type": "string",
+            "title": "Device Id"
+          },
+          "mount_name": {
+            "type": "string",
+            "title": "Mount Name"
+          },
+          "source_type": {
+            "type": "string",
+            "title": "Source Type"
+          },
+          "auth_status": {
+            "type": "string",
+            "title": "Auth Status"
+          },
+          "last_synced_at": {
+            "type": "string",
+            "title": "Last Synced At"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "device_id",
+          "mount_name",
+          "source_type",
+          "auth_status",
+          "last_synced_at",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "VaultMountView",
+        "description": "``/api/vault-mounts`` data 行：跨设备挂载元数据（仅元数据，无句柄/路径/正文）。"
       }
     }
   }

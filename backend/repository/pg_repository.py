@@ -41,6 +41,7 @@ from backend.model.entities import (
     Session,
     TermStatus,
     User,
+    VaultMount,
 )
 from backend.repository.protocol import RepositoryProtocol
 from backend.model.orm import (
@@ -61,6 +62,7 @@ from backend.model.orm import (
     TermCategoryORM,
     TermORM,
     UserORM,
+    VaultMountORM,
 )
 from backend.repository.uow import _session_scope
 
@@ -109,6 +111,20 @@ def _to_session(r: SessionORM) -> Session:
 
 def _to_space(r: SpaceORM) -> Space:
     return Space(id=r.id, code=r.code, name=r.name, created_at=_dt_iso(r.created_at))
+
+
+def _to_vault_mount(r: VaultMountORM) -> VaultMount:
+    return VaultMount(
+        id=r.id,
+        user_id=r.user_id,
+        device_id=r.device_id,
+        mount_name=r.mount_name,
+        source_type=r.source_type,
+        auth_status=r.auth_status,
+        last_synced_at=_dt_iso(r.last_synced_at),
+        created_at=_dt_iso(r.created_at),
+        updated_at=_dt_iso(r.updated_at),
+    )
 
 
 def _to_member(r: SpaceMemberORM) -> SpaceMember:
@@ -485,6 +501,15 @@ class PgRepository(RepositoryProtocol):
             ).all()
             return [_to_session(r) for r in rows]
 
+    def list_vault_mounts(self, user_id: int) -> list[VaultMount]:
+        with _session_scope() as session:
+            rows = session.scalars(
+                select(VaultMountORM)
+                .where(VaultMountORM.user_id == user_id)
+                .order_by(VaultMountORM.updated_at.desc())
+            ).all()
+            return [_to_vault_mount(r) for r in rows]
+
     def revoke_session(self, session_id: int, user_id: int) -> bool:
         with _session_scope() as session:
             row = session.get(SessionORM, session_id)
@@ -492,6 +517,36 @@ class PgRepository(RepositoryProtocol):
                 return False
             row.revoked_at = func.now()
             return True
+
+    def upsert_vault_mount(
+        self,
+        user_id: int,
+        device_id: str,
+        mount_name: str,
+        source_type: str,
+        auth_status: str = "granted",
+    ) -> VaultMount:
+        from sqlalchemy.dialects.postgresql import insert as pg_insert
+
+        with _session_scope() as session:
+            base = pg_insert(VaultMountORM).values(
+                user_id=user_id,
+                device_id=device_id,
+                mount_name=mount_name,
+                source_type=source_type,
+                auth_status=auth_status,
+            )
+            stmt = base.on_conflict_do_update(
+                # idx_lumen_vault_mounts_unique(user_id, device_id, mount_name)
+                index_elements=["user_id", "device_id", "mount_name"],
+                set_={
+                    "auth_status": base.excluded.auth_status,
+                    "last_synced_at": func.now(),
+                    "updated_at": func.now(),
+                },
+            ).returning(VaultMountORM)
+            row = session.execute(stmt).scalar_one()
+            return _to_vault_mount(row)
 
     def update_session_space(self, session_id: int, space_id: int) -> Session:
         with _session_scope() as session:

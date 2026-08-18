@@ -302,3 +302,32 @@ class DocExportORM(Base):
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
     finished_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
+
+
+class VaultMountORM(Base):
+    """REQ-018 模式 B 增强·跨设备挂载元数据（migration 015，TC-P2-VAULT-004）。
+
+    仅元数据（用户/设备/挂载名/来源类型/授权状态）；不存 handle / 路径 / 正文。
+    """
+
+    __tablename__ = "lumen_vault_mounts"
+    __table_args__ = (
+        CheckConstraint(
+            "source_type IN ('obsidian', 'markdown_folder')",
+            name="lumen_vault_mounts_source_type_check",
+        ),
+        CheckConstraint(
+            "auth_status IN ('granted', 'revoked')",
+            name="lumen_vault_mounts_auth_status_check",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("lumen_users.id", ondelete="CASCADE"))
+    device_id: Mapped[str] = mapped_column(String(128))
+    mount_name: Mapped[str] = mapped_column(String(255))
+    source_type: Mapped[str] = mapped_column(String(32))
+    auth_status: Mapped[str] = mapped_column(String(20), default="granted")
+    last_synced_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())

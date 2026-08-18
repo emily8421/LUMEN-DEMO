@@ -155,3 +155,59 @@
   width: calc(100% - 24px);
   box-sizing: border-box;
 }
+
+/* 跨设备挂载清单（Wave 3 / TC-P2-VAULT-004）：只读提示，无框列表行 + 细分隔线。 */
+.local-mount-remote {
+  margin: 0 12px 8px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.local-mount-remote-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  width: 100%;
+  padding: 6px 0 4px;
+  font: inherit;
+  font-size: var(--font-caption);
+  color: var(--muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.local-mount-remote-toggle:hover {
+  color: var(--text-2);
+}
+
+.local-mount-remote-list {
+  margin: 0;
+  padding: 0 0 6px;
+  list-style: none;
+}
+
+.local-mount-remote-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: var(--font-caption);
+  color: var(--text-2);
+}
+
+.local-mount-remote-list li:last-child {
+  border-bottom: none;
+}
+
+.local-mount-remote-list small {
+  color: var(--muted);
+  font-size: var(--font-micro);
+  white-space: nowrap;
+}
+
+.local-mount-remote-hint {
+  color: var(--muted);
+  font-size: var(--font-micro);
+}

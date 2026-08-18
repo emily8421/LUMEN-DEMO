@@ -300,6 +300,27 @@ class AiDraft:
 
 
 @dataclass(frozen=True)
+class VaultMount:
+    """REQ-018 模式 B 增强·跨设备挂载元数据（lumen_vault_mounts，migration 015）。
+
+    仅元数据：用户 / 设备 / 挂载名 / 来源类型 / 授权状态；**不含** directory
+    handle、绝对路径、文件正文（留客户端 IndexedDB，RG-009 隐私天花板）。
+    ``auth_status``：'granted'（挂载成功）/ 'revoked'（软撤销，行保留可审计，
+    仿 ``lumen_sessions.revoked_at`` 口径）。
+    """
+
+    id: int
+    user_id: int
+    device_id: str
+    mount_name: str
+    source_type: str  # 'obsidian' | 'markdown_folder'
+    auth_status: str = "granted"
+    last_synced_at: str = ""
+    created_at: str = ""
+    updated_at: str = ""
+
+
+@dataclass(frozen=True)
 class DocExport:
     """REQ-027 单文档 PDF 导出任务（lumen_doc_exports，migration 013）。"""
 

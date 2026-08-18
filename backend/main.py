@@ -73,6 +73,7 @@ def create_app():
     from backend.api.term_categories import router as term_categories_router
     from backend.api.terms import router as terms_router
     from backend.api.users import router as users_router
+    from backend.api.vault_mounts import router as vault_mounts_router
 
     app = FastAPI(title="LUMEN Knowledge Base API", lifespan=lifespan)
 
@@ -159,6 +160,8 @@ def create_app():
         app.include_router(terms_router)
     if users_router is not None:
         app.include_router(users_router)
+    if vault_mounts_router is not None:
+        app.include_router(vault_mounts_router)
     return app
 
 
