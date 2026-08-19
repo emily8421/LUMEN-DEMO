@@ -20,7 +20,28 @@ import inspect
 
 from backend.repository.demo_repository import DemoRepository
 from backend.repository.pg_repository import PgRepository
-from backend.repository.protocol import RepositoryProtocol
+from backend.repository.protocol import (
+    DocumentRepository,
+    FolderRepository,
+    OpsRepository,
+    RepositoryProtocol,
+    SearchRepository,
+    SpaceRepository,
+    TagRepository,
+    TermRepository,
+    UserRepository,
+)
+
+DOMAIN_PROTOCOLS = (
+    DocumentRepository,
+    UserRepository,
+    FolderRepository,
+    TermRepository,
+    TagRepository,
+    SpaceRepository,
+    OpsRepository,
+    SearchRepository,
+)
 
 
 def _public_method_names(obj: type) -> set[str]:
@@ -58,6 +79,34 @@ def test_protocol_mirrors_pg_public_methods():
     assert protocol == pg, (
         f"protocol/pg drift: protocol_only={sorted(protocol - pg)} pg_only={sorted(pg - protocol)}"
     )
+
+
+def test_domain_protocols_partition_parent_surface():
+    """R2 Slice B：8 个域子 Protocol 方法面互不重叠且并集 == 父契约方法面。
+
+    防「拆了域但漏方法」或「一个方法挂两个域」——新增方法必须归入恰一个子
+    Protocol，父聚合接口才与双实现保持零漂移。
+    """
+    union: set[str] = set()
+    seen: dict[str, str] = {}
+    for domain in DOMAIN_PROTOCOLS:
+        names = _public_method_names(domain)
+        for name in names:
+            if name in seen:
+                raise AssertionError(f"{name} 同时挂在 {seen[name]} 与 {domain.__name__}")
+            seen[name] = domain.__name__
+        union |= names
+    parent = _public_method_names(RepositoryProtocol)
+    assert union == parent, (
+        f"domain/parent drift: domain_only={sorted(union - parent)} parent_only={sorted(parent - union)}"
+    )
+
+
+def test_pg_satisfies_domain_protocols():
+    """PgRepository 实例满足每个域子 Protocol（runtime_checkable，供 Slice C 收窄注解）。"""
+    repo = PgRepository()
+    for domain in DOMAIN_PROTOCOLS:
+        assert isinstance(repo, domain), f"PgRepository 不满足 {domain.__name__}"
 
 
 def test_demo_list_visible_documents_scopes_by_space_and_permission():

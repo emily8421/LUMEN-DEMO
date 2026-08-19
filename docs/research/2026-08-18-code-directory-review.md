@@ -12,7 +12,7 @@
 | `backend/api/` | ✅ | 20 域一文件，路由层不含业务，平均 96 行/文件 |
 | `backend/service/` | ⚠️ | 6 文件超 250 阈值（最高 export.py 576 行），无 CI 拦截 |
 | `backend/model/` | ✅ | entities / orm / schemas / error_codes 四件职责清晰 |
-| `backend/repository/` | ⚠️ | 双实现契约守护正确；但 protocol.py 101 方法 god object（已登记 Slice B 未做） |
+| `backend/repository/` | ✅ | 双实现契约守护正确；101 方法 god object 已收敛（R2 Slice B 完成，2026-08-19：8 域子 Protocol + 聚合父契约） |
 | `backend/migrations/` | ✅ | 001-018 顺序编号一文件一主题 |
 | `frontend/src/features/` | ✅ | 12 域纵切纪律好，local-mount 域为典型样本（11 文件全在域内） |
 | `frontend/src/app/` | ⚠️ | hooks + store + local-vault-* 业务模块混居；local-vault 族归属存疑 |
@@ -46,7 +46,7 @@
 
 - **实测**：protocol.py 单 Protocol **101 方法**（`def` 计数，docstring 自述"99 公共方法机器提取"）；pg_repository.py 1681 行 / demo_repository.py 1308 行。
 - **做对了的**：双实现（生产 PG / 测试 fake）共享显式 `RepositoryProtocol`，一致性由 `test_repository_contract.py` 机器契约守护——这是 LSP + 契约测试的正确实践，取代了原 duck-typed 人工对照。
-- **债**：protocol.py docstring 自己写了「Slice B：按域拆子 Protocol（DocumentRepository / UserRepository 等）收敛 god object」——已登记未执行。101 方法的胖接口违反 ISP：service 层每个模块都被迫"看得见"全部 101 个方法。
+- **债**：~~protocol.py docstring 自己写了「Slice B：按域拆子 Protocol（DocumentRepository / UserRepository 等）收敛 god object」——已登记未执行。~~ **已于 Sprint-59（2026-08-19）完成**：101 方法按实际调用聚类拆 8 域子 Protocol（Document 15 / User 23 / Folder 12 / Term 17 / Tag 8 / Space 8 / Ops 14 / Search 4），RepositoryProtocol 改聚合签名，22 消费方零迁移；契约测试 +2（域并集==父面 / Pg 满足每子接口）。ISP 违规的注解收窄面（service 依赖最小化）留 Slice C 后续裁决。
 - **依据对齐**：#ISP / God Object 反模式；学科出处见 references §3。
 
 ### 1.5 migrations/ —— ✅ 健康
@@ -94,7 +94,7 @@
 | # | 建议 | 依据 | 成本 | 优先级 |
 |---|---|---|---|---|
 | R1 | **后端补 file-size ratchet**：仿 `.file-size-baseline.json` 做后端版（baseline 先登记 6 个超限 service 文件 + pg/demo repository），新文件超限即 CI 失败、存量不得膨胀——把 05 §4.1 后端阈值从文档提醒变机器门 | SRP + 棘轮（references §3） | 小（一个脚本 + baseline JSON + CI step） | **高**（治不对称，防继续劣化） |
-| R2 | **repository 按域拆子 Protocol**：protocol.py 已自带方案（Slice B）——拆 DocumentRepository / UserRepository / SearchRepository 等域接口，pg/demo 实现与 contract test 不动，service 侧逐模块迁移注解 | ISP / God Object | 中（接口拆分 + service 逐个迁移，可渐进） | 中（god object 已有契约守护兜底，非紧急） |
+| R2 | **repository 按域拆子 Protocol**：~~protocol.py 已自带方案（Slice B）~~ **已完成（Sprint-59，2026-08-19）**：101 方法按实际调用聚类拆 8 域子 Protocol + 聚合父契约（22 消费方零迁移）；service 注解收窄（Slice C）留后续 | ISP / God Object | 中（接口拆分 + service 逐个迁移，可渐进） | 中（god object 已有契约守护兜底，非紧急） |
 | R3 | **local-vault-* 六模块迁 features/local-vault/**（或至少 app/README 注明归属理由与迁移意向） | #3 纵切 / Conway | 小（纯移动 + 改 import，无逻辑变化） | 低（技术债不影响正确性） |
 | R4 | **scripts/ 分子目录**（check/ smoke/ run/）——文件数翻倍时执行 | #5 生命周期 | 极小 | 低（现在不动） |
 
