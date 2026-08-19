@@ -114,3 +114,8 @@
 .auth-link-button:hover {
   text-decoration: underline;
 }
+
+/* 登录 / 注册 tabpanel 同时挂载时，hidden 必须胜过 workspace-layout 的 form 布局。 */
+.login-panel form[hidden] {
+  display: none;
+}

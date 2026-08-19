@@ -3,6 +3,7 @@
 > **定位**：本文件把 `2026-08-19-frontend-code-evaluation.md` 的评估结论转为可审阅的候选工作包。它是 `docs/research/` 研究计划，**不是已批准的 `docs/08-dev-plan.md` Sprint，也不授权编码**。只有用户批准具体工作包后，才将范围、验收与状态回填到 `docs/08-dev-plan.md`、`docs/09-verification.md` 并建立任务单。
 > **修订记录**（2026-08-19 二次评审采纳）：FEP-01 验收补验证手段与方向键范围界定；FEP-02 依赖措辞澄清；FEP-03 补错误留痕要求；FEP-05 补「修改范围」与 FEP-04 协同触发；§8 债表补 FE-ERR-1（P8）。
 > **修订记录 2**（2026-08-19 外部 AI 评审反馈采纳）：FEP-01 补「双 panel 常驻 DOM + hidden 隐藏」实现口径与 `[hidden]` 样式覆盖坑——若只给 tab 挂 `aria-controls` 而表单仍条件渲染，未选中 tab 指向不存在的 panel，语义不完整。
+> **修订记录 3**（2026-08-19 复评采纳）：FEP-01 补错误优先、避免通知重复播报及具体键盘规则；FEP-02 将带遮罩的用户空间抽屉按模态 dialog 验收；FEP-03 明确临时故障注入验证；FEP-05 扩展为全部 token/空间触发异步读的清单与分层保护策略。
 
 ## 1. 依据与边界
 
@@ -15,7 +16,7 @@
 
 | ID | 工作包 | 状态 | 依赖 | 目标 |
 |---|---|---|---|---|
-| FEP-01 | 状态播报与登录 tabs 语义 | 建议优先 | 无 | 让异步成功/失败可被读屏软件播报，登录/注册切换满足 tab 模式语义 |
+| FEP-01 | 状态播报与登录 tabs 语义 | 编码 + 自动验证完成（Sprint-61 / Task-059）；读屏人工抽查延后 | 无 | 让异步成功/失败可被读屏软件播报，登录/注册切换满足 tab 模式语义 |
 | FEP-02 | 弹层焦点生命周期 | 建议优先 | 无硬依赖；建议在 FEP-01 之后实施（同批 a11y 语义，降低评审负担） | 统一 dialog 的初始焦点、焦点圈定、关闭与焦点归还 |
 | FEP-03 | 根 ErrorBoundary | 建议优先 | 无 | 为渲染期异常提供可恢复降级页 |
 | FEP-04 | 纯函数测试基础设施 | 待确认 | 新增 Vitest devDependency | 为高价值纯函数建立可重复的回归保护 |
@@ -26,15 +27,15 @@
 
 ### 修改范围
 
-- `frontend/src/components/StatusBar.tsx`：为 notice 与 error 使用恰当的 live region；错误与普通状态采用不同播报强度。
+- `frontend/src/components/StatusBar.tsx`：为 notice 与 error 使用恰当的 live region；错误与普通状态采用不同播报强度。**错误优先口径：**同一操作同时更新 error 和 notice 时，仅播报 error（assertive）；notice 保持视觉可见但不进入 live region，避免读屏连续播报通用失败提示和具体错误。
 - `frontend/src/features/auth/AuthShell.tsx`：把登录/注册按钮补全为 `role="tab"`、`aria-selected`、`aria-controls`，为对应表单提供关联 panel 标识。**实现口径：两个表单均常驻 DOM（`role="tabpanel"`），未选中者以 `hidden` 属性隐藏**——现实现为条件渲染（`authMode` 三目，AuthShell.tsx:33-78），任一时刻仅一个表单在 DOM；只给 tab 挂 `aria-controls` 会令未选中 tab 指向不存在的 panel（broken reference）。表单输入均为 `useSession` 受控状态，panel 常驻不卸载无副作用。
 - **配套 CSS**（`frontend/src/styles/workspace-layout.css` 或 auth 相关文件）：须补高特异性规则（如 `.login-panel form[hidden] { display: none }`）——现有 `.login-panel form { display: grid }`（workspace-layout.css:21）会覆盖 UA 对 `[hidden]` 的默认 `display: none`，不加此规则两个表单会同时显示；且项目 CSS 纪律禁 `!important`，不得用 `hidden { display: none !important }` 绕过。
 
 ### 验收标准
 
-- 登录、注册、保存、失败等状态变化在不移动焦点的情况下可被辅助技术播报。**验证手段**：① smoke / DOM 断言确认 `StatusBar` 挂 `role="status"`（错误用 `role="alert"`）且内容随状态更新；② 用读屏软件（NVDA 或 Windows 讲述人）人工抽查一次登录成功 / 失败的播报行为。
+- 登录、注册、保存、失败等状态变化在不移动焦点的情况下可被辅助技术播报。**验证手段**：① smoke / DOM 断言确认 `StatusBar` 挂 `role="status"`（错误用 `role="alert"`）且内容随状态更新；error 存在时 notice 不参与 live region；② 用读屏软件（NVDA 或 Windows 讲述人）人工抽查一次登录成功 / 失败的播报行为，失败只播报具体错误一次。
 - 键盘焦点位于登录/注册 tab 时，语义与当前选中状态一致；表单与 tab 的关联可由 DOM 属性确认（`role="tab"` / `aria-selected` / `aria-controls` 与面板 `role="tabpanel"` 对应）。**两个 tabpanel 常驻 DOM、未选中者处于 `hidden` 状态**可由 DOM 断言确认；未选中 panel 内无可聚焦元素（Tab 序不含隐藏表单）。
-- **方向键范围界定**：WAI-ARIA APG tabs 模式预期左右方向键切换 tab；本包按 APG 完整实现（含方向键）。若实施中发现登录页键盘结构不适配，缩小范围须回到本计划修订，不得静默砍半。
+- **方向键范围界定**：按 WAI-ARIA APG tabs 模式实现 roving tabindex；`ArrowLeft` / `ArrowRight` 循环切换并激活 tab，`Home` / `End` 跳至首个 / 最后一个 tab，切换后焦点停在新激活 tab。若实施中发现登录页键盘结构不适配，缩小范围须回到本计划修订，不得静默砍半。
 - `npm run lint`、`npm run build`、`npm run check:css` 通过；浏览器 smoke 覆盖登录/注册切换。
 
 ### 禁止事项
@@ -47,7 +48,7 @@
 ### 修改范围
 
 - 新增最小本地焦点管理 hook 或工具，复用于 `CommandPalette`、`PasswordResetModal`、`ImportFeature`、`QuickEntryFeature`、`OnboardingGuide`、`UserSpacesDrawer`。
-- 补齐适用 dialog 的 `aria-modal`、可访问名称和关闭行为；非模态抽屉须显式说明不使用 `aria-modal` 的理由。
+- 逐个判定六个对象的模态性并补齐相应语义、可访问名称和关闭行为。当前 `CommandPalette`、`PasswordResetModal`、`ImportFeature`、`QuickEntryFeature`、`OnboardingGuide`、`UserSpacesDrawer` 均有遮罩或阻断背景交互；其中 `UserSpacesDrawer` 虽为抽屉，但有遮罩和遮罩点击关闭，按模态 dialog 补 `aria-modal`、焦点圈定与焦点归还，不得仅因外形是抽屉而降为非模态。
 
 ### 验收标准
 
@@ -71,7 +72,7 @@
 ### 验收标准
 
 - 正常登录和工作区渲染不受影响。
-- 受控渲染异常能够展示恢复 UI，且控制台可查到对应错误记录；事件回调与异步请求错误仍由既有 `runAction` / 状态栏机制处理。
+- 受控渲染异常能够展示恢复 UI，且控制台可查到对应错误记录；验证时允许在本地临时向受边界包裹的子组件注入 `throw`，完成 UI 与 `console.error` 核验后立即回退该临时改动，不得把故障开关提交到产品代码。FEP-04 落地后应补同一场景的自动化测试。事件回调与异步请求错误仍由既有 `runAction` / 状态栏机制处理。
 - lint、build 与既有浏览器 smoke 通过。
 
 ### 禁止事项
@@ -105,7 +106,8 @@
 
 ### 修改范围（触及时展开）
 
-- 归属保护无法只收口在 `useAppState.refreshWorkspace()`：`setDocuments` / `setFolders` 等 state 提交发生在各域 hook 的 reload 内部。预期触及 **5 个域 hook 的 reload 路径**（useSession.reloadSpaces / useDocuments.reloadDocuments / useFolders.reloadLoadedFolders / useTerms.reloadTerms / useTermCategories.reloadRoot），具体以实施时调用链为准。
+- 先枚举全部由 token、currentSpaceId、selectedDocumentId 或显式刷新触发的异步读及其 state 提交点；不能只收口在 `useAppState.refreshWorkspace()` 的五条 reload 链。当前已核验：`useSession.reloadSpaces`、`useDocuments.reloadDocuments`、`useFolders.reloadLoadedFolders`、`useTerms.reloadTerms`、`useTermCategories.reloadRoot`、`useTags` 的空间标签 / 文档标签读取、`useSpaceMembers` 的成员读取、`useLocalVaultMount` 的本地挂载读取；`useAiAssistant` 的 token-only 配置读取已检查，因不随空间变化暂不纳入空间竞态改造。
+- 保护策略按调用类型选取，不强制套用同一种机制：effect 自发读取优先对齐既有 cleanup + `cancelled` 模式（`useSpaceMembers`、`useLocalVaultMount`）；显式并发刷新及可能重叠的手动读取使用 request generation 或提交前的 token/空间归属校验。`setDocuments` / `setFolders` 等 state 提交发生在各域 hook 内部，保护必须落在实际提交点。
 
 ### 技术方向
 
@@ -114,7 +116,7 @@
 
 ### 验收标准
 
-- 快速连续切换空间时，最终页面只显示最后一次选择的空间数据。
+- 快速连续切换空间时，文档、文件夹、术语、标签、成员等最终页面数据只来自最后一次选择的空间；已登记为低风险的 token-only 读取保持原行为并在验收记录中注明。
 - 取消请求不显示错误状态、不影响后续刷新；既有登录失效处理保留。
 
 ## 8. 延后债与升阶段触发

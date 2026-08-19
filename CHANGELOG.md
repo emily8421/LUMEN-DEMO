@@ -6,6 +6,16 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.13.4（2026-08-19）
+
+**Sprint-61 / Task-059（FEP-01）：前端无障碍语义——状态信息播报去重 + 登录/注册 tabs 完整语义。P2/P3 登记缺陷修复，无新能力 / 无 API / 无依赖变化，bump PATCH。**（依据：`docs/research/2026-08-19-frontend-code-evaluation.md` FE-A11Y-1 / FE-A11Y-2；`docs/research/2026-08-19-frontend-remediation-plan.md` FEP-01）
+
+- **`StatusBar` 状态播报分离（FE-A11Y-1）**：普通 notice 挂 `role="status"` + `aria-live="polite"`（`aria-atomic`）——礼貌播报不打断；error 挂 `role="alert"`——立即播报；error 存在时 notice 的 `aria-live` 切 `off`，同一失败只播报具体错误一次，不再连读通用 notice。
+- **`AuthShell` 登录 / 注册 tabs 完整语义（FE-A11Y-2）**：双 form 改为**常驻 DOM** 的 `role="tabpanel"`（`aria-labelledby` 关联 + 非选中 `hidden` 不进 Tab 序）；tablist 按钮补 `role="tab"` / `aria-selected` / `aria-controls` + roving tabindex（选中 0 / 未选 -1）；`ArrowLeft` / `ArrowRight` 循环切换并聚焦激活 tab、`Home` / `End` 跳首尾。`auth.css` 补 `.login-panel form[hidden]`（防 workspace 表单布局覆盖 UA 隐藏，未用 `!important`）。
+- **验证**：lint / build（443.49 kB）/ `check:css` / `check:file-size` 全绿；`scripts/smoke-auth-browser.mjs` 扩展 DOM + 键盘断言（live-region 去重、tab/tabpanel 属性关联、双 panel 常驻 + `hidden`、四键切换 + 焦点停留）连跑 2 次 PASS。**读屏人工抽查（NVDA / 讲述人）用户裁决延后**，09 §5.2 如实标注待补，不宣称完全验收。
+- **测试插曲（已修复，脚本侧）**：smoke 键盘断言初版同步连发合成事件读到期前状态，根因为 React setState 异步批处理——测试须逐键等渲染帧再采样；已注释说明，组件行为经独立 CDP 会话验证正确。
+- **文档回写**：08 Sprint-61（批36）+ 09 §5.2 TC-P2-GOV-024（含断言清单与插曲）+ research 双文档索引行 + `tasks/task-059`。后续工作包 FEP-02（弹层焦点）待用户裁决后另行立项。
+
 ## v3.13.3（2026-08-19）
 
 **R3：local-vault 六模块从 app/ 迁 features/local-mount/（目录归属修正）。纯移动零逻辑变化，bump PATCH。**（依据：`docs/research/2026-08-18-code-directory-review.md` §2.2 / §4 R3）
