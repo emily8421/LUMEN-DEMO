@@ -6,6 +6,14 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.13.1（2026-08-19）
+
+**文件治理第三步（FG-C4）：职责表模式回流模板提案——跨仓 issue #374。纯提案文档，无代码改动，bump PATCH。**
+
+- **`_proposals/TEMPLATE-UPGRADE-file-responsibility-table.md` 起草并提交**：文件治理三层体系（L1 职责表 + L2 结构检查 + L3 阈值定位修正）去项目化回流 `ai-project-template` → issue [#374](https://github.com/emily8421/ai-project-template/issues/374)（OPEN，等维护者 triage）；与 #370（目录划分依据）同口径不同粒度——#370 管「放哪个目录」、#374 管「放哪个文件」。
+- **INDEX 登记更新**：在途 3 份（#334 / #370 / #374）+ 边界去重节补「file-responsibility-table vs #370」粒度递进关系。
+- 提交前校验（submit-proposal 流程）：去项目化扫描（LUMEN 仅出现于来源标识与实证引用）/ 无重复 issue / 标签 `proposal` + `from:LUMEN_demo_T2.1` 齐备 / gh auth ADMIN。
+
 ## v3.13.0（2026-08-19）
 
 **文件治理三层体系第二步（FG-C2 + R1 扩容）：后端结构检查 + 后端 file-size ratchet + CI 接线。新增 CI 治理能力，bump MINOR。**（依据：`docs/research/2026-08-19-file-governance-mechanism-analysis.md` FG-C1~C4 全采纳；第一步 = v3.12.5）
