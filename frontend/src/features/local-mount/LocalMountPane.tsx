@@ -8,7 +8,7 @@ import {
   buildLocalMountTree,
   type UseLocalVaultMount,
 } from '../../app/useLocalVaultMount';
-import type { LocalVaultDoc } from '../../app/local-vault-index';
+import type { LocalVaultDoc } from './local-vault-index';
 import { useLocalMountImport } from './useLocalMountImport';
 import { useVaultAutoRescan } from './useVaultAutoRescan';
 import { useVaultMountSync } from './useVaultMountSync';

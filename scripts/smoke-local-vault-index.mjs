@@ -1,7 +1,7 @@
 // 本地 Vault 索引纯逻辑 smoke（零依赖；Node 22 type-strip 直接 import TS 纯函数）
 // 验证 tokenize / buildInvertedIndex / searchIndex 的算法契约，不依赖浏览器。
 // 跑：volta run --node 22.17.1 node --experimental-strip-types scripts/smoke-local-vault-index.mjs
-import { tokenize, buildInvertedIndex, searchIndex } from '../frontend/src/app/local-vault-index.ts';
+import { tokenize, buildInvertedIndex, searchIndex } from '../frontend/src/features/local-mount/local-vault-index.ts';
 
 const docs = [
   { path: 'a/量子计算.md', name: '量子计算.md', title: '量子计算基础', text: '利用叠加与纠缠进行高速并行计算' },

@@ -4,7 +4,7 @@ import { usePaneLayout } from './usePaneLayout';
 import { usePaneWidth } from './usePaneWidth';
 import { loadOnboardingState } from './onboarding-store';
 import type { OnboardingState } from './onboarding-store';
-import type { LocalVaultDoc } from './local-vault-index';
+import type { LocalVaultDoc } from '../features/local-mount/local-vault-index';
 
 /**
  * CQ-P1-008 E4 拆分溯源：App 减压第二刀——UI/布局派生 + 局部弹窗 / 引导 state。

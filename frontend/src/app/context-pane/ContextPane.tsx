@@ -10,7 +10,7 @@ import type { UseLocalVaultMount } from '../useLocalVaultMount';
 import { useLocalMountHeight } from '../useLocalMountHeight';
 import { usePaneSectionHeight } from '../usePaneSectionHeight';
 import { TERM_CATEGORIES_HEIGHT_STORAGE_KEY, DEFAULT_TERM_CATEGORIES_HEIGHT } from '../pane-section-height-store';
-import type { LocalVaultDoc } from '../local-vault-index';
+import type { LocalVaultDoc } from '../../features/local-mount/local-vault-index';
 import { FolderTreeHeader } from './FolderTreeHeader';
 import { TermsContextPane } from './TermsContextPane';
 import { ContextInfoList } from './ContextInfoList';

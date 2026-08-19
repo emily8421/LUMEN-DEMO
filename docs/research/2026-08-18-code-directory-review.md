@@ -15,7 +15,7 @@
 | `backend/repository/` | ✅ | 双实现契约守护正确；101 方法 god object 已收敛（R2 Slice B 完成，2026-08-19：8 域子 Protocol + 聚合父契约） |
 | `backend/migrations/` | ✅ | 001-018 顺序编号一文件一主题 |
 | `frontend/src/features/` | ✅ | 12 域纵切纪律好，local-mount 域为典型样本（11 文件全在域内） |
-| `frontend/src/app/` | ⚠️ | hooks + store + local-vault-* 业务模块混居；local-vault 族归属存疑 |
+| `frontend/src/app/` | ✅ | ~~hooks + store + local-vault-* 业务模块混居~~ local-vault 族已迁 features/local-mount（R3 完成，2026-08-19）；剩 hooks + store + UI 子目录职责清晰 |
 | `frontend/src/api/` | ✅ | client 单出口 + 域文件对齐后端 + 契约派生，教科书级 |
 | `frontend/src/styles/` | ✅ | 每视图一 CSS + tokens 单源 + CI 门 |
 | `frontend` 缺 `pages/` | ✅ | 合理偏离：无路由库，视图入口在 features/*Feature.tsx，文档已声明 |
@@ -64,7 +64,7 @@
 ### 2.2 app/ —— ⚠️ 三类职责混居
 
 - **实测**：28 个 use*.ts hooks + 7 个 *-store.ts（localStorage 序列化层）+ **6 个 local-vault-*.ts**（fs / idb / index / tree / types / walk——"本地库文件系统"领域模块）+ 3 个 UI 子目录（context-pane / folder-tree / topbar）。
-- **债**：local-vault 族是领域逻辑而非应用壳，按 #3 纵切应属 feature（如 features/local-vault/）；放 app/ 是历史原因（早于 features 分层）。跨视图共享不是放错层的充分理由（见 references §3 Conway 一行）。
+- **债**：~~local-vault 族是领域逻辑而非应用壳，按 #3 纵切应属 feature（如 features/local-vault/）；放 app/ 是历史原因（早于 features 分层）。~~ **已于 Sprint-60（2026-08-19）完成**：6 文件迁 `features/local-mount/`（REQ-018 同业务域，并入既有域不新开目录——"一个功能一个抽屉"），12 消费方改 import，纯移动零逻辑。
 - **缓解现状**：`useAppState.ts` 339 行 / `useDocuments.ts` 286 行已在 ratchet 基线（`.file-size-baseline.json`），棘轮只拦膨胀不强制回改——治理机制在工作，只是归属问题遗留。
 
 ### 2.3 api/ —— ✅ 教科书级
@@ -95,8 +95,8 @@
 |---|---|---|---|---|
 | R1 | **后端补 file-size ratchet**：仿 `.file-size-baseline.json` 做后端版（baseline 先登记 6 个超限 service 文件 + pg/demo repository），新文件超限即 CI 失败、存量不得膨胀——把 05 §4.1 后端阈值从文档提醒变机器门 | SRP + 棘轮（references §3） | 小（一个脚本 + baseline JSON + CI step） | **高**（治不对称，防继续劣化） |
 | R2 | **repository 按域拆子 Protocol**：~~protocol.py 已自带方案（Slice B）~~ **已完成（Sprint-59，2026-08-19）**：101 方法按实际调用聚类拆 8 域子 Protocol + 聚合父契约（22 消费方零迁移）；service 注解收窄（Slice C）留后续 | ISP / God Object | 中（接口拆分 + service 逐个迁移，可渐进） | 中（god object 已有契约守护兜底，非紧急） |
-| R3 | **local-vault-* 六模块迁 features/local-vault/**（或至少 app/README 注明归属理由与迁移意向） | #3 纵切 / Conway | 小（纯移动 + 改 import，无逻辑变化） | 低（技术债不影响正确性） |
-| R4 | **scripts/ 分子目录**（check/ smoke/ run/）——文件数翻倍时执行 | #5 生命周期 | 极小 | 低（现在不动） |
+| R3 | ~~local-vault-* 六模块迁 features/~~ **已完成（Sprint-60，2026-08-19）**：6 文件迁 `features/local-mount/`（REQ-018 同域，并入既有域），12 消费方改 import，纯移动零逻辑；tsc/eslint/build/棘轮/冒烟全过 | #3 纵切 / Conway | 小（纯移动 + 改 import，无逻辑变化） | ~~低~~ 已完成 |
+| R4 | **scripts/ 分子目录**（check/ smoke/ run/）——**触发线定死：文件数 ≥ 60 或出现实际查找摩擦时执行**（2026-08-19 登记；当前 43） | #5 生命周期 | 极小 | 低（现在不动） |
 
 ## 5. 结论
 

@@ -8,9 +8,9 @@ import {
   parentDirectoryForPath,
   renameVaultFile,
   writeVaultFile,
-} from './local-vault-fs';
-import type { LocalVaultDoc } from './local-vault-index';
-import type { VaultMount } from './local-vault-types';
+} from '../features/local-mount/local-vault-fs';
+import type { LocalVaultDoc } from '../features/local-mount/local-vault-index';
+import type { VaultMount } from '../features/local-mount/local-vault-types';
 
 type UseLocalVaultEditorArgs = {
   docs: LocalVaultDoc[];

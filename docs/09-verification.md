@@ -250,6 +250,7 @@
 | 2026-08-18 | Wave 3·FileSystemObserver 自动监听（TC-P2-VAULT-003；REQ-018 模式 B 增强；RG-010 Go） | 通过（前端全链 + CDP 冒烟；真实挂载变更→自动重扫留用户人工 smoke） | 纯前端 3 改 1 增：`useVaultAutoRescan.ts`（per-mount `FileSystemObserver` + observe(recursive) + 变更只当信号 1.5s 防抖合并 → 复用既有 `reindex` 全量重扫，不做增量 diff（YAGNI）；needs-auth 挂载不观察；observe/构造失败 console.warn 降级；卸载 disconnect；无 API 浏览器静默跳过）+ LocalMountPane 接线（零改动 useLocalVaultMount）+ LocalMountHeader 补「重扫」手动兜底按钮（修复既有 `reindex` 无 UI 入口缺口，title 按支持性提示降级文案）。**验证**：eslint 0 + build 绿（JS 442.54 kB）+ file-size OK + css token PASS + CDP 冒烟（observerSupported=true / 无挂载时重扫隐藏 / 无运行时错误）；真实 picker 句柄监听 + 文件变更自动刷新（RG-010-N1 复测）需用户人工 smoke（showDirectoryPicker 无法 headless，同 TC-P2-VAULT-001 分界）。bump v3.12.0。Wave 3 全收口。 |
 | 2026-08-19 | Sprint-58（维护态批33）文件治理 FG-C2+R1——后端结构检查 + 后端 file-size ratchet（TC-P2-GOV-021；工程治理 NFR-006 范畴） | 通过（本地：结构检查现状 PASS + 负向探针 ×3 全拦截；后端棘轮现状 PASS 54 文件 / 9 基线 + 负向探针膨胀拦截 + 还原无 diff；CI project-check +2 step 待 PR 验证） |
 | 2026-08-19 | Sprint-59（维护态批34）R2 Slice B repository 按域拆子 Protocol（TC-P2-GOV-022；god object 收敛，101 方法 → 8 域子接口 + 聚合父契约） | 通过（本地：契约测试 7/7 含 +2 新增〔域并集==父面 / Pg 满足每子接口〕；pytest 默认集 333 passed / 50 deselected；mypy 0 / ruff passed；结构检查 + 棘轮 PASS；CI 待 PR 验证） |
+| 2026-08-19 | Sprint-60（维护态批35）R3 local-vault 六模块迁 features/local-mount（TC-P2-GOV-023；目录归属修正，纯移动零逻辑） | 通过（本地：tsc 0 / eslint 0 / build 355 modules 绿 / file-size + css + backend 结构检查 PASS / smoke-local-vault-index PASS；CI 待 PR 验证） |
 
 ### 5.1 缺陷与回归记录
 

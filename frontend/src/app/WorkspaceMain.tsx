@@ -1,5 +1,5 @@
 import { WorkspaceMainDocuments } from './WorkspaceMainDocuments';
-import type { LocalVaultDoc } from './local-vault-index';
+import type { LocalVaultDoc } from '../features/local-mount/local-vault-index';
 import type { UseLocalVaultMount } from './useLocalVaultMount';
 import { SearchFeature } from '../features/SearchFeature';
 import { QueryFeature } from '../features/QueryFeature';

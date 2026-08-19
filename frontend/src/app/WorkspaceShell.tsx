@@ -26,7 +26,7 @@ import type { useQuickEntry } from './useQuickEntry';
 import type { useImport } from './useImport';
 import type { useLocalVaultMount } from './useLocalVaultMount';
 import type { OnboardingState, OnboardingStepId } from './onboarding-store';
-import type { LocalVaultDoc } from './local-vault-index';
+import type { LocalVaultDoc } from '../features/local-mount/local-vault-index';
 
 interface WorkspaceShellProps {
   workspace: ReturnType<typeof useWorkspace>;
