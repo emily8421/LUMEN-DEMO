@@ -185,9 +185,9 @@ flowchart TB
 | 错误与响应契约 | 统一 `{code,msg,data}` envelope；service 抛领域异常、api 转 HTTP；`code` 为业务码、HTTP 码只放 `status_code`；禁 `str(exc)` 直传 |
 | 分层与装配 | backend 四层 `api/service/repository/model`；service 不 import fastapi（唯一既存豁免：`service/auth_context.py`——fastapi `Depends` 鉴权依赖项，供 router 共用 `get_current_user`，登记于 `ai/project-rules.md` §5.2，新代码不得复制）；repository 双实现共享 `RepositoryProtocol`；读可直连 repository、写必经 service |
 | 类型与契约同步 | 后端 JSON 端点 `response_model=ApiEnvelope` + OpenAPI 快照 `schema-diff` 防漂移；前端零 `any`、HTTP 单出口 `client.ts`、codegen 混合接入 |
-| 工程化护栏 | CI：backend-test / frontend-build / backend-typecheck / frontend-lint required + backend-integration（PG）；ruff / mypy / eslint；文件膨胀 ratchet `check-frontend-file-size.mjs`；PG 测试三重 fail-closed guard |
+| 工程化护栏 | CI：backend-test / frontend-build / backend-typecheck / frontend-lint required + backend-integration（PG）；ruff / mypy / eslint；文件膨胀 ratchet `check-frontend-file-size.mjs` + `check-backend-file-size.mjs`（基线 `backend/.file-size-baseline.json`）；结构检查 `check-backend-structure.mjs`（R1 service 无 fastapi〔豁免 auth_context〕/ R2 api 无 ORM / R3 repository·model 无 fastapi）；PG 测试三重 fail-closed guard |
 | 命名语义 | 后端 snake_case、前端 camelCase、组件 PascalCase；`*-store.ts` = localStorage 序列化层（非响应式） |
-| 文件治理（2026-08-19 起） | 三层体系：§4.1.1 职责表（源头规范）→ 结构检查（过程约束，随 FG-C2 落地）→ §4.1.2 阈值棘轮（兜底信号，约定值）；机制依据见 `docs/research/2026-08-19-file-governance-mechanism-analysis.md` |
+| 文件治理（2026-08-19 起） | 三层体系：§4.1.1 职责表（源头规范）→ 结构检查（过程约束，`check-backend-structure.mjs` 已落地）→ §4.1.2 阈值棘轮（兜底信号，约定值，前后端双 ratchet 已落地）；机制依据见 `docs/research/2026-08-19-file-governance-mechanism-analysis.md` |
 
 
 ## 5. 运行环境与资源评估

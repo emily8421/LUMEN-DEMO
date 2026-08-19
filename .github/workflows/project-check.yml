@@ -70,6 +70,18 @@ jobs:
         working-directory: frontend
         run: node ../scripts/check-frontend-file-size.mjs
 
+      # FG-C2 后端结构检查（2026-08-19）：按内容拦分层违规，不看行数——
+      # R1 service 不 import fastapi（豁免清单登记 auth_context.py）/ R2 api 不 import ORM /
+      # R3 repository·model 不 import fastapi。依据 05 §4.1.1 职责表 + §4.2；runner 自带 node，零依赖。
+      - name: Check backend structure
+        run: node scripts/check-backend-structure.mjs
+
+      # R1 后端文件膨胀 ratchet（2026-08-19，FG-C2 扩容）：补齐前后端治理不对称。
+      # 基线 backend/.file-size-baseline.json 登记既有超限文件（service×6 + model×3）；
+      # repository/migrations 不设行数门（理由见脚本头注释）。与前端版同构，零依赖。
+      - name: Check backend file-size ratchet
+        run: node scripts/check-backend-file-size.mjs
+
       # 2026-08-16 主题试点 CSS 纪律：styles/ 除 tokens.css 外零字面色值（ai/project-rules.md §5.1）。
       # tokens.css 是唯一定义点；组件文件只准 var(--xxx)，防硬编码欠账回潮。
       - name: Check frontend CSS token discipline
