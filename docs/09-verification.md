@@ -284,13 +284,14 @@
 | `PgRepository.create_import_job` 返回 `ImportJob.id=None`（真实 PG 导入 `complete/fail_import_job` KeyError） | Slice C integration 测试（2026-08-12）发现 | 根因=`_to_import` 在 `_session_scope` commit 前读 `job.id`，SQLAlchemy autoflush 不因访问 pending 主键触发 → 主键未分配返回 None。修复：`create_import_job` `session.add` 后显式 `session.flush()` 分配 BIGSERIAL id。同类风险：`create_term` 等 `create_*` 可能同因（已登记 `docs/05 §4.2.4` 债） | `test_import_lifecycle`（PG）KeyError→PASSED；`test_uow_rollback` PASSED；默认 306 零回归 | **已修复（本轮，Slice C PR #143）** |
 | PgRepository 7 个存量 integration 失败（`create_*` pending-id + `func.now()` 列未 flush 的 datetime 序列化两类同根） | PG integration 首次全量跑（2026-08-12）暴露（此前被默认 `-m "not integration"` 跳过；登记 `docs/05 §4.2.4` 债） | 单文件 `backend/repository/pg_repository.py` 补 17 处缺失 `session.flush()`：① 8 处 create_*（create_session/create_tag/create_quick_entry/create_ai_draft/create_doc_export/create_term/create_folder/create_term_category）`_to_xxx` 读 `row.id` 前显式 flush 分配 BIGSERIAL id；② 9 处 `= func.now()` 后立即转换（update_session_space/update_document/restore_document_version/update_term/rename_folder/move_folder/rename_term_category/move_term_category/update_doc_export）flush 使 server-side 时间戳 reload 成真 datetime（实验证实）。`test_ai_polish` 原误判为「LLM 环境」，实为 `create_ai_draft` pending-id（LLM 已 patch mock） | integration 全量 41+7=**48 passed 零失败**；默认 **306 passed 零回归**；ruff **37 不增** | **已修复（本轮，维护态批10 / Sprint-35，v3.8.7）** |
 
-### 5.2 Sprint-61：前端无障碍语义（TC-P2-GOV-024，进行中）
+### 5.2 Sprint-61：前端无障碍语义（TC-P2-GOV-024 FEP-01 + TC-P2-GOV-025 FEP-02，已完成）
 
-- **关联**：REQ-011 既有桌面端体验；Sprint-61 / Task-059；FEP-01。无 API、后端、依赖或阶段范围变更。
-- **验收目标**：`StatusBar` 的普通状态可礼貌播报、错误可立即播报；同一失败只播报具体错误一次。登录 / 注册 tabs 具备 tab / tabpanel 关联、roving tabindex 与 `ArrowLeft` / `ArrowRight` / `Home` / `End` 键盘切换；两个 panel 常驻 DOM，非选中 panel 使用 `hidden` 且不进入 Tab 序。
-- **自动验证（2026-08-19 实测）**：ESLint 0/0；build 443.49 kB / 1.24s；`check:css` PASS；`check:file-size` PASS（无新增超限）；`scripts/smoke-auth-browser.mjs` 扩展断言（live-region 去重 `aria-live` 切换、tab/tabpanel 属性关联、双 panel 常驻 + `hidden`、`ArrowLeft`/`ArrowRight`/`Home`/`End` 键盘切换 + 焦点停留）**连跑 2 次 PASS**（含浏览器流 + API 子集）。
-- **实施插曲（已修复）**：smoke 键盘断言初版在同一次 evaluate 内同步连发合成 KeyboardEvent，React setState 异步批处理导致读到按键前旧 `aria-selected`（"End key mismatch"）——根因在测试脚本而非组件；已改为逐键 `await` 两帧后采样。组件实现（roving tabindex / focus 同步 / aria 属性）经独立 CDP 会话验证正确。
-- **人工验证（延后）**：NVDA / Windows 讲述人读屏抽查一次登录成功 / 失败、Chrome / Edge 手动切换——**用户裁决延后（2026-08-19）**，机器断言已覆盖 DOM 属性与键盘行为，读屏实际播报效果待后续补做并回填此处。
+- **关联**：REQ-011 既有桌面端体验；Sprint-61 / Task-059（FEP-01）+ Task-060（FEP-02）。无 API、后端、依赖或阶段范围变更。
+- **验收目标**：`StatusBar` 的普通状态可礼貌播报、错误可立即播报；同一失败只播报具体错误一次。登录 / 注册 tabs 具备 tab / tabpanel 关联、roving tabindex 与 `ArrowLeft` / `ArrowRight` / `Home` / `End` 键盘切换；两个 panel 常驻 DOM，非选中 panel 使用 `hidden` 且不进入 Tab 序。六个阻断背景交互的弹层具备焦点生命周期：打开后初始焦点入弹层、Tab / Shift+Tab 圈定不逸出、关闭后焦点归还触发元素；`PasswordResetModal` / `UserSpacesDrawer` 具备 `aria-modal="true"`。
+- **自动验证（2026-08-19 实测）**：ESLint 0/0；build（FEP-01 443.49 kB / FEP-02 445.38 kB）；`check:css` PASS；`check:file-size` PASS（无新增超限；FEP-02 拆分 `QuickEntryResult` 回 217 行）；`scripts/smoke-auth-browser.mjs` 扩展断言**连跑 2 次 PASS**（FEP-01）——live-region 去重、tab/tabpanel 属性关联、双 panel 常驻 + `hidden`、四键切换；FEP-02 六对象焦点生命周期断言（真实打开路径、初始焦点、Tab / Shift+Tab 圈定、关闭后焦点归还）**PASS**（含浏览器流 + API 子集）。
+- **实施插曲（已修复）**：① smoke 键盘断言初版同步连发合成 KeyboardEvent，React setState 异步批处理读到按键前旧 `aria-selected`——根因在测试脚本，已改为逐键 `await` 两帧后采样；② CommandPalette 关闭断言暴露组件级 Esc 缺口（原仅输入框 `onKeyDown` 处理）→ 补 `.cmdk-panel` 面板级 Esc；③ import 模态触发选择器 `.document-view-grid button.secondary` 实际命中空态「展开左目录」→ 改按按钮文本「导入」定位。②/③ 均为 FEP-02 扩展 smoke 首次实跑发现。
+- **TC-P2-GOV-025（FEP-02 弹层焦点生命周期，2026-08-19）**：六对象（`CommandPalette` / `PasswordResetModal` / `ImportFeature` / `QuickEntryFeature` / `OnboardingGuide` / `UserSpacesDrawer`）打开后焦点入弹层且首尾 Tab / Shift+Tab 圈定不逸出；关闭后焦点归还触发元素；PasswordResetModal / UserSpacesDrawer 带 `aria-modal="true"`。证据：`shared/useModalFocus` + 六组件接入 + `scripts/smoke-auth-browser.mjs` 扩展断言 PASS + 四道门禁全绿。**通过**。
+- **人工验证（延后）**：NVDA / Windows 讲述人读屏抽查一次登录成功 / 失败、Chrome / Edge 手动切换，以及弹层读屏实际播报——**用户裁决延后（2026-08-19）**，机器断言已覆盖 DOM 属性、键盘行为与焦点生命周期，读屏实际效果待后续补做并回填此处。
 
 ## 6. 风险与未验证项
 

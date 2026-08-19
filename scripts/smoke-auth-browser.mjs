@@ -196,6 +196,141 @@ function assert(condition, message) {
   }
 }
 
+async function nextRender(client) {
+  await evaluate(client, () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+}
+
+async function assertModalFocusLifecycle(client, { name, triggerSelector, triggerText, dialogSelector, closeSelector, closeWithEscape = false }) {
+  await evaluate(client, ({ selector, text }) => {
+    let trigger = null;
+    if (selector) {
+      trigger = document.querySelector(selector);
+    } else if (text) {
+      trigger = Array.from(document.querySelectorAll('button')).find((button) => (button.textContent || '').trim() === text) ?? null;
+    }
+    if (!(trigger instanceof HTMLElement)) {
+      throw new Error(`${selector || text} is not a focusable trigger`);
+    }
+    trigger.focus();
+    trigger.click();
+  }, { selector: triggerSelector ?? null, text: triggerText ?? null });
+  await waitForPage(client, `${name} dialog`, (selector) => Boolean(document.querySelector(selector)), [dialogSelector]);
+  await nextRender(client);
+
+  const initialFocus = await evaluate(client, (selector) => {
+    const dialog = document.querySelector(selector);
+    return dialog instanceof HTMLElement
+      ? { containsFocus: dialog.contains(document.activeElement), ariaModal: dialog.getAttribute('aria-modal') }
+      : null;
+  }, dialogSelector);
+  assert(initialFocus?.containsFocus, `${name} did not receive initial focus`);
+  assert(initialFocus?.ariaModal === 'true', `${name} is missing aria-modal`);
+
+  const focusCycle = await evaluate(client, async (selector) => {
+    const dialog = document.querySelector(selector);
+    if (!(dialog instanceof HTMLElement)) {
+      throw new Error(`Dialog not found: ${selector}`);
+    }
+    const focusable = Array.from(dialog.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'))
+      .filter((element) => element instanceof HTMLElement && element.getClientRects().length > 0);
+    if (focusable.length < 2) {
+      throw new Error(`Expected at least two focusable controls in ${selector}`);
+    }
+    const nextFrame = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    last.focus();
+    last.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
+    await nextFrame();
+    const tabWrapped = document.activeElement === first;
+    first.focus();
+    first.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true }));
+    await nextFrame();
+    return { tabWrapped, shiftTabWrapped: document.activeElement === last };
+  }, dialogSelector);
+  assert(focusCycle.tabWrapped, `${name} Tab escaped the dialog`);
+  assert(focusCycle.shiftTabWrapped, `${name} Shift+Tab escaped the dialog`);
+
+  if (closeWithEscape) {
+    await evaluate(client, (selector) => {
+      const dialog = document.querySelector(selector);
+      if (!(dialog instanceof HTMLElement)) {
+        throw new Error(`Dialog not found: ${selector}`);
+      }
+      const active = document.activeElement instanceof HTMLElement ? document.activeElement : dialog;
+      active.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    }, dialogSelector);
+  } else {
+    await evaluate(client, (selector) => {
+      const closeButton = document.querySelector(selector);
+      if (!(closeButton instanceof HTMLElement)) {
+        throw new Error(`Close control not found: ${selector}`);
+      }
+      closeButton.click();
+    }, closeSelector);
+  }
+  await waitForPage(client, `${name} closes`, (selector) => !document.querySelector(selector), [dialogSelector]);
+  const focusRestored = await evaluate(client, ({ selector, text }) => {
+    const trigger = selector
+      ? document.querySelector(selector)
+      : Array.from(document.querySelectorAll('button')).find((button) => (button.textContent || '').trim() === text) ?? null;
+    return document.activeElement === trigger;
+  }, { selector: triggerSelector ?? null, text: triggerText ?? null });
+  assert(focusRestored, `${name} did not restore focus to its trigger`);
+}
+
+async function dismissOnboardingIfPresent(client) {
+  const guideOpen = await evaluate(client, () => Boolean(document.querySelector('.onboarding-modal')));
+  if (!guideOpen) {
+    return;
+  }
+  await evaluate(client, () => {
+    const closeButton = document.querySelector('.onboarding-close');
+    if (!(closeButton instanceof HTMLElement)) {
+      throw new Error('Onboarding close control not found.');
+    }
+    closeButton.click();
+  });
+  await waitForPage(client, 'onboarding guide closes', () => !document.querySelector('.onboarding-modal'));
+}
+
+async function assertOnboardingFocusTrap(client) {
+  await evaluate(client, () => {
+    window.localStorage.removeItem('lumen-demo-onboarding');
+    window.location.reload();
+  });
+  await waitForPage(client, 'workspace after onboarding reload', () => Boolean(document.querySelector('.topbar')));
+  await waitForPage(client, 'onboarding dialog', () => Boolean(document.querySelector('.onboarding-modal')));
+  await nextRender(client);
+  const result = await evaluate(client, async () => {
+    const dialog = document.querySelector('.onboarding-modal');
+    if (!(dialog instanceof HTMLElement)) {
+      throw new Error('Onboarding dialog missing.');
+    }
+    const focusable = Array.from(dialog.querySelectorAll('button:not([disabled])'));
+    if (focusable.length < 2) {
+      throw new Error('Onboarding focusable controls missing.');
+    }
+    const nextFrame = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    last.focus();
+    last.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
+    await nextFrame();
+    const tabWrapped = document.activeElement === first;
+    first.focus();
+    first.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true }));
+    await nextFrame();
+    return {
+      containsFocus: dialog.contains(document.activeElement),
+      tabWrapped,
+      shiftTabWrapped: document.activeElement === last,
+    };
+  });
+  assert(result.containsFocus && result.tabWrapped && result.shiftTabWrapped, 'Onboarding guide focus trap failed');
+  await dismissOnboardingIfPresent(client);
+}
+
 async function setInputValue(client, selector, value) {
   await evaluate(client, (targetSelector, nextValue) => {
     const input = document.querySelector(targetSelector);
@@ -362,6 +497,13 @@ async function runBrowserFlow(client, email, password) {
   assert(keyboardResult.right.registerSelected === 'true' && keyboardResult.right.activeId === 'auth-tab-register', 'ArrowRight key mismatch');
   assert(keyboardResult.left.loginSelected === 'true' && keyboardResult.left.activeId === 'auth-tab-login', 'ArrowLeft key mismatch');
 
+  await assertModalFocusLifecycle(client, {
+    name: 'password reset modal',
+    triggerSelector: '.auth-link-button',
+    dialogSelector: '.password-reset-modal',
+    closeSelector: '.password-reset-modal button.secondary',
+  });
+
   // 2) 注册 tab → 注册新用户（自动登录）
   await clickTab(client, '注册');
   await waitForPage(client, 'register form', () => {
@@ -370,8 +512,23 @@ async function runBrowserFlow(client, email, password) {
   });
   await submitRegister(client, email, 'Smoke Tester', password);
   await waitForWorkspace(client);
+  await dismissOnboardingIfPresent(client);
   const registerNotice = await evaluate(client, () => (document.querySelector('.status-bar span')?.textContent || ''));
   assert(registerNotice.includes('注册成功'), `register success notice missing: ${registerNotice}`);
+
+  await assertModalFocusLifecycle(client, {
+    name: 'command palette',
+    triggerSelector: '.global-search-bar',
+    dialogSelector: '.cmdk-panel',
+    closeWithEscape: true,
+  });
+
+  await assertModalFocusLifecycle(client, {
+    name: 'quick entry drawer',
+    triggerSelector: '.quick-entry-trigger',
+    dialogSelector: '.quick-entry-drawer',
+    closeSelector: '.quick-entry-close',
+  });
 
   // 3) 顶栏登出 → 回到登录面板
   await logoutViaTopBar(client);
@@ -409,11 +566,36 @@ async function runBrowserFlow(client, email, password) {
     Boolean(document.querySelector('.document-view-grid')),
   );
 
+  await assertModalFocusLifecycle(client, {
+    name: 'import modal',
+    triggerText: '导入',
+    dialogSelector: '.import-modal',
+    closeSelector: '.import-modal-close',
+  });
+
   // 6) seed 快捷登录（demo 内存仓储：alice 无密码路径）→ 登出
   await logoutViaTopBar(client);
   await clickTab(client, '登录');
   await submitLogin(client, 'alice', 'demo-pass-1234');
   await waitForWorkspace(client);
+  await dismissOnboardingIfPresent(client);
+  await evaluate(client, () => {
+    const trigger = document.querySelector('.user-menu-trigger');
+    if (!(trigger instanceof HTMLElement)) {
+      throw new Error('User menu trigger not found.');
+    }
+    trigger.click();
+  });
+  await waitForPage(client, 'admin user management action', () => Boolean(document.querySelector('.user-menu-admin')));
+  await evaluate(client, () => document.querySelector('.user-menu-admin')?.dispatchEvent(new MouseEvent('click', { bubbles: true })));
+  await waitForPage(client, 'admin users panel', () => Boolean(document.querySelector('.admin-users-panel')));
+  await assertModalFocusLifecycle(client, {
+    name: 'user spaces drawer',
+    triggerSelector: '.admin-user-actions button',
+    dialogSelector: '.user-spaces-drawer',
+    closeSelector: '.user-spaces-drawer .drawer-header button',
+  });
+  await assertOnboardingFocusTrap(client);
   await logoutViaTopBar(client);
 
   return { registeredEmail: email, tabs, registerNotice, loginNotice };

@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { confirmPasswordReset, requestPasswordReset } from '../../api';
 import { PasswordInput } from './PasswordInput';
+import { useModalFocus } from '../shared/useModalFocus';
 
 type PasswordResetModalProps = {
   open: boolean;
@@ -23,6 +24,8 @@ export function PasswordResetModal({ open, onClose }: PasswordResetModalProps) {
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
+  const modalRef = useRef<HTMLDivElement>(null);
+  const { handleKeyDown: handleFocusKeyDown } = useModalFocus({ isOpen: open, containerRef: modalRef });
 
   if (!open) {
     return null;
@@ -77,9 +80,12 @@ export function PasswordResetModal({ open, onClose }: PasswordResetModalProps) {
     <div className="modal-overlay" onClick={handleClose} role="presentation">
       <div
         className="password-reset-modal"
+        ref={modalRef}
         onClick={(event) => event.stopPropagation()}
         role="dialog"
+        aria-modal="true"
         aria-label="重置密码"
+        onKeyDown={handleFocusKeyDown}
       >
         <div className="modal-header">
           <h2>重置密码</h2>

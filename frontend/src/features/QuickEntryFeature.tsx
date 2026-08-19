@@ -1,6 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import type { FormEvent } from 'react';
 import type { KnowledgeDocument, QuickEntryMode, QuickEntryView, TagView } from '../api';
+import { useModalFocus } from './shared/useModalFocus';
+import { QuickEntryResult } from './quick-entry/QuickEntryResult';
 
 const MODE_OPTIONS: Array<{ value: QuickEntryMode; label: string; hint: string }> = [
   { value: 'create_document', label: '转为新文档', hint: '新建私有文档并入列' },
@@ -61,12 +63,13 @@ export function QuickEntryFeature({
   onClose,
   onOpenDocument,
 }: QuickEntryFeatureProps) {
-  const resultRef = useRef<HTMLElement>(null);
-  // 录入后结果区可能落在抽屉视口下方，自动滚入视野，避免 draft 录入后看不到反馈。
-  // hooks 必须在 early return 之前调用（rules-of-hooks）；isOpen=false 时 ref.current=null，可选链不操作。
-  useEffect(() => {
-    resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }, [lastEntry]);
+  const drawerRef = useRef<HTMLElement>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
+  const { handleKeyDown: handleFocusKeyDown } = useModalFocus({
+    isOpen,
+    containerRef: drawerRef,
+    initialFocusRef: titleInputRef,
+  });
 
   if (!isOpen) {
     return null;
@@ -74,16 +77,16 @@ export function QuickEntryFeature({
 
   const submitDisabled =
     isBusy || title.trim().length === 0 || (mode === 'append_document' && targetDocumentId == null);
-  const targetDocumentTitle = (id: number | null) =>
-    documents.find((document) => document.id === id)?.title ?? (id == null ? '' : `文档 #${id}`);
 
   return (
     <div className="quick-entry-overlay" onClick={onClose}>
       <aside
+        ref={drawerRef}
         className="quick-entry-drawer"
         role="dialog"
         aria-modal="true"
         aria-label="快速录入"
+        onKeyDown={handleFocusKeyDown}
         onClick={(event) => event.stopPropagation()}
       >
         <header className="quick-entry-header">
@@ -99,10 +102,10 @@ export function QuickEntryFeature({
           <label className="quick-entry-field">
             <span>标题</span>
             <input
+              ref={titleInputRef}
               value={title}
               onChange={(event) => onTitleChange(event.target.value)}
               placeholder="一句话标题"
-              autoFocus
             />
           </label>
 
@@ -199,48 +202,13 @@ export function QuickEntryFeature({
         </form>
 
         {lastEntry ? (
-          <section ref={resultRef} className="quick-entry-result">
-            <div className="subsection-heading">
-              <strong>最近一次录入</strong>
-              <span>#{lastEntry.id} · {lastEntry.title}</span>
-            </div>
-            {lastEntry.status === 'draft' ? (
-              <div className="quick-entry-result-row">
-                <small>已保存为草稿（仅自己可见）。后端最小版无草稿列表，丢弃请在此操作。</small>
-                <button type="button" className="secondary" onClick={onDiscard} disabled={isBusy}>
-                  丢弃草稿
-                </button>
-              </div>
-            ) : null}
-            {lastEntry.status === 'converted' && lastEntry.created_document_id != null ? (
-              <div className="quick-entry-result-row">
-                <small>已转为新文档 #{lastEntry.created_document_id}。</small>
-                <button
-                  type="button"
-                  className="secondary"
-                  onClick={() => onOpenDocument(lastEntry.created_document_id as number, lastEntry.title)}
-                  disabled={isBusy}
-                >
-                  打开文档
-                </button>
-              </div>
-            ) : null}
-            {lastEntry.status === 'converted' && lastEntry.target_document_id != null ? (
-              <div className="quick-entry-result-row">
-                <small>已追加到文档 #{lastEntry.target_document_id}。</small>
-                <button
-                  type="button"
-                  className="secondary"
-                  onClick={() =>
-                    onOpenDocument(lastEntry.target_document_id as number, targetDocumentTitle(lastEntry.target_document_id))
-                  }
-                  disabled={isBusy}
-                >
-                  打开文档
-                </button>
-              </div>
-            ) : null}
-          </section>
+          <QuickEntryResult
+            lastEntry={lastEntry}
+            isBusy={isBusy}
+            documents={documents}
+            onDiscard={onDiscard}
+            onOpenDocument={onOpenDocument}
+          />
         ) : null}
       </aside>
     </div>

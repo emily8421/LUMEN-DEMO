@@ -6,6 +6,18 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.13.5（2026-08-19）
+
+**Sprint-61 / Task-060（FEP-02）：弹层焦点生命周期——六对象模态键盘圈定 + 焦点归还 + aria-modal。P2/P3 登记缺陷修复，无新能力 / 无 API / 无依赖变化，bump PATCH。**（依据：`docs/research/2026-08-19-frontend-code-evaluation.md` FE-A11Y-2；`docs/research/2026-08-19-frontend-remediation-plan.md` FEP-02）
+
+- **新增 `shared/useModalFocus`**：无依赖焦点生命周期 hook——打开后 `requestAnimationFrame` 聚焦初始元素，Tab / Shift+Tab 在首尾可聚焦元素间循环圈定不逸出，关闭后归还焦点到触发元素；`hidden` / 不可见元素过滤。
+- **接入六对象**：`CommandPalette`、`PasswordResetModal`、`ImportFeature`、`QuickEntryFeature`、`OnboardingGuide`、`UserSpacesDrawer`；`PasswordResetModal` / `UserSpacesDrawer` 补 `aria-modal="true"`。
+- **CommandPalette 补面板级 Esc**：`.cmdk-panel` 层 `Escape` 关闭（原仅输入框 `onKeyDown` 处理，Tab 移到命令条目后 Esc 无法关闭——补齐模态键盘语义，双路径关闭幂等）。
+- **`QuickEntryFeature` 拆分 `features/quick-entry/QuickEntryResult.tsx`**：把「最近一次录入」结果区抽成独立组件，主文件回 250 行棘轮内（258 → 217 行，DOM / 行为零变化）。
+- **验证**：lint / build（445.38 kB）/ `check:css` / `check:file-size` 全绿；`scripts/smoke-auth-browser.mjs` 扩展断言（六对象真实打开路径、初始焦点、Tab / Shift+Tab 圈定、关闭后焦点归还 + API 子集）**PASS**。
+- **测试插曲（已修复，脚本侧为主）**：① 命令面板关闭断言暴露组件级 Esc 缺口 → 组件补面板级 Esc；② import 模态触发选择器 `.document-view-grid button.secondary` 实际命中空态「展开左目录」（导入按钮在兄弟工具栏）→ 改按按钮文本「导入」定位。均为 FEP-02 扩展 smoke 首次实跑发现，非回归。
+- **文档回写**：08 Sprint-61（批36）+ 09 §5.2 TC-P2-GOV-025 + `tasks/task-060` 完成记录。
+
 ## v3.13.4（2026-08-19）
 
 **Sprint-61 / Task-059（FEP-01）：前端无障碍语义——状态信息播报去重 + 登录/注册 tabs 完整语义。P2/P3 登记缺陷修复，无新能力 / 无 API / 无依赖变化，bump PATCH。**（依据：`docs/research/2026-08-19-frontend-code-evaluation.md` FE-A11Y-1 / FE-A11Y-2；`docs/research/2026-08-19-frontend-remediation-plan.md` FEP-01）

@@ -1,5 +1,7 @@
+import { useRef } from 'react';
 import { ONBOARDING_STEPS } from '../app/onboarding-store';
 import type { OnboardingState, OnboardingStepId } from '../app/onboarding-store';
+import { useModalFocus } from './shared/useModalFocus';
 
 type OnboardingGuideProps = {
   isBusy: boolean;
@@ -19,6 +21,8 @@ type OnboardingGuideProps = {
  */
 export function OnboardingGuide({ isBusy, steps, onStep, onSkip, onDismiss }: OnboardingGuideProps) {
   const doneCount = ONBOARDING_STEPS.filter((step) => steps[step.id] === true).length;
+  const modalRef = useRef<HTMLDivElement>(null);
+  const { handleKeyDown: handleFocusKeyDown } = useModalFocus({ isOpen: true, containerRef: modalRef });
 
   const handleGo = (stepId: OnboardingStepId) => {
     onStep(stepId);
@@ -27,7 +31,7 @@ export function OnboardingGuide({ isBusy, steps, onStep, onSkip, onDismiss }: On
 
   return (
     <div className="onboarding-overlay" role="dialog" aria-modal="true" aria-label="首次使用引导">
-      <div className="onboarding-modal">
+      <div ref={modalRef} className="onboarding-modal" onKeyDown={handleFocusKeyDown}>
         <header className="onboarding-header">
           <h2>欢迎来到 LUMEN · 3 步上手</h2>
           <p>先完成第一篇「可被搜索」的文档，约 3 分钟。</p>
