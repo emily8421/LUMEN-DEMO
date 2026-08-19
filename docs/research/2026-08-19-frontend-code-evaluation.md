@@ -82,7 +82,7 @@
 |---|---|---|---|
 | P1 | **前端零单元测试**：`src` 下无任何 `.test.ts`；验证链 = build / lint / 浏览器 smoke（`scripts/smoke-*-browser.mjs` 14 个）。纯函数模块（`local-vault-index` 倒排索引、`folder-utils`、`markdown-toc`、`drafts`）完全可单测但无覆盖——回归只靠端到端 smoke，定位成本高 | `find src -name "*.test.*"` 为空；docs/05 无 vitest / jest 声明（后端 331 pytest 对照悬殊） | 中 |
 | P2 | **动态状态未向辅助技术播报**：全仓未见 `aria-live` / `role="status"` / `role="alert"`；`StatusBar` 只是普通文本 | `StatusBar.tsx` | 中 |
-| P3 | **登录/注册 tabs 与弹层焦点语义不完整**：`AuthShell` 的 `tablist` 缺 tab 语义；命令面板和密码重置弹窗未完整管理焦点生命周期 | `AuthShell.tsx` / `CommandPalette.tsx` / `PasswordResetModal.tsx` | 中 |
+| P3 | **登录/注册 tabs 与弹层焦点语义不完整**：`AuthShell` 的 `tablist` 缺 tab 语义；命令面板和密码重置弹窗未完整管理焦点生命周期。修复须注意：现实现为条件渲染（`authMode` 三目），补 tab 语义需改为双 panel 常驻 DOM + `hidden` 隐藏，且须补 `[hidden]` 高特异性样式（`.login-panel form` 的 `display: grid` 会覆盖 UA 默认隐藏）——详见修复计划 FEP-01 | `AuthShell.tsx` / `CommandPalette.tsx` / `PasswordResetModal.tsx` | 中 |
 | P4 | **无 ErrorBoundary**：组件树渲染或生命周期异常会令主界面无恢复 UI | `main.tsx` 直接 render；全仓无 `componentDidCatch` / `getDerivedStateFromError` | 中 |
 | P5 | **刷新结果无归属保护**：`refreshWorkspace()` 并行刷新五个域，调用链中没有 request generation、空间归属检查或 AbortController 使用；快速切空间时旧响应有覆盖新状态的风险 | `useAppState.ts:64-76`；全仓无 `AbortController` 使用 | 中（风险） |
 | P6 | **10 处 `window.confirm` 原生对话框**（8 文件）：无法主题化、阻塞式，文案风格各自为政 | 实测 10 处：useDocuments / useFolders / useTags / useTerms / useTermCategories / useAdminUsers / useSpaceMembers / LocalMountTreeView | 低（demo 取舍） |

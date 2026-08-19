@@ -2,6 +2,7 @@
 
 > **定位**：本文件把 `2026-08-19-frontend-code-evaluation.md` 的评估结论转为可审阅的候选工作包。它是 `docs/research/` 研究计划，**不是已批准的 `docs/08-dev-plan.md` Sprint，也不授权编码**。只有用户批准具体工作包后，才将范围、验收与状态回填到 `docs/08-dev-plan.md`、`docs/09-verification.md` 并建立任务单。
 > **修订记录**（2026-08-19 二次评审采纳）：FEP-01 验收补验证手段与方向键范围界定；FEP-02 依赖措辞澄清；FEP-03 补错误留痕要求；FEP-05 补「修改范围」与 FEP-04 协同触发；§8 债表补 FE-ERR-1（P8）。
+> **修订记录 2**（2026-08-19 外部 AI 评审反馈采纳）：FEP-01 补「双 panel 常驻 DOM + hidden 隐藏」实现口径与 `[hidden]` 样式覆盖坑——若只给 tab 挂 `aria-controls` 而表单仍条件渲染，未选中 tab 指向不存在的 panel，语义不完整。
 
 ## 1. 依据与边界
 
@@ -26,12 +27,13 @@
 ### 修改范围
 
 - `frontend/src/components/StatusBar.tsx`：为 notice 与 error 使用恰当的 live region；错误与普通状态采用不同播报强度。
-- `frontend/src/features/auth/AuthShell.tsx`：把登录/注册按钮补全为 `role="tab"`、`aria-selected`、`aria-controls`，为对应表单提供关联 panel 标识。
+- `frontend/src/features/auth/AuthShell.tsx`：把登录/注册按钮补全为 `role="tab"`、`aria-selected`、`aria-controls`，为对应表单提供关联 panel 标识。**实现口径：两个表单均常驻 DOM（`role="tabpanel"`），未选中者以 `hidden` 属性隐藏**——现实现为条件渲染（`authMode` 三目，AuthShell.tsx:33-78），任一时刻仅一个表单在 DOM；只给 tab 挂 `aria-controls` 会令未选中 tab 指向不存在的 panel（broken reference）。表单输入均为 `useSession` 受控状态，panel 常驻不卸载无副作用。
+- **配套 CSS**（`frontend/src/styles/workspace-layout.css` 或 auth 相关文件）：须补高特异性规则（如 `.login-panel form[hidden] { display: none }`）——现有 `.login-panel form { display: grid }`（workspace-layout.css:21）会覆盖 UA 对 `[hidden]` 的默认 `display: none`，不加此规则两个表单会同时显示；且项目 CSS 纪律禁 `!important`，不得用 `hidden { display: none !important }` 绕过。
 
 ### 验收标准
 
 - 登录、注册、保存、失败等状态变化在不移动焦点的情况下可被辅助技术播报。**验证手段**：① smoke / DOM 断言确认 `StatusBar` 挂 `role="status"`（错误用 `role="alert"`）且内容随状态更新；② 用读屏软件（NVDA 或 Windows 讲述人）人工抽查一次登录成功 / 失败的播报行为。
-- 键盘焦点位于登录/注册 tab 时，语义与当前选中状态一致；表单与 tab 的关联可由 DOM 属性确认（`role="tab"` / `aria-selected` / `aria-controls` 与面板 `role="tabpanel"` 对应）。
+- 键盘焦点位于登录/注册 tab 时，语义与当前选中状态一致；表单与 tab 的关联可由 DOM 属性确认（`role="tab"` / `aria-selected` / `aria-controls` 与面板 `role="tabpanel"` 对应）。**两个 tabpanel 常驻 DOM、未选中者处于 `hidden` 状态**可由 DOM 断言确认；未选中 panel 内无可聚焦元素（Tab 序不含隐藏表单）。
 - **方向键范围界定**：WAI-ARIA APG tabs 模式预期左右方向键切换 tab；本包按 APG 完整实现（含方向键）。若实施中发现登录页键盘结构不适配，缩小范围须回到本计划修订，不得静默砍半。
 - `npm run lint`、`npm run build`、`npm run check:css` 通过；浏览器 smoke 覆盖登录/注册切换。
 
