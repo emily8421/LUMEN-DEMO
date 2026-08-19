@@ -17,7 +17,7 @@
 | 当前状态 | P1-已实现；P1A / P1B 前端体验收口已实现并通过构建与 Chrome / Edge 900px smoke；Phase1.5A 批量导入与 `.md` / ZIP 导出交互路径已实现并通过 TC-P1-015/016；Phase1.5B PDF 导出入口已实现并通过 TC-P1-017；P2 少容器清爽稿作为后续 Phase2B UI / WSG 门禁候选保留；Phase2A 已完成（REQ-026/012/025，TC-P2-LINK/TAG/QUICK-001 通过）；**Phase2B 首批 REQ-014 AI 润色/写作引用 vertical slice 已闭环（PR#89–95 / v1.1.0，TC-P2-AI-001 live UI smoke 2026-07-31 通过）**，主题时间线（REQ-013/024）第二 slice 已完成并通过 smoke |
 | 页面 / 流程 ID | Page-ID（§2.2）/ UF 用户流（§3） |
 | UI 原型策略 | P1 / P1.5A：代码原型 + smoke；P2A/B：静态 HTML 实现前确认稿 + 后续 Chrome / Edge smoke 草案（见 §8 / §9） |
-| 最后更新 | 2026-08-18（OI-111 可选增量：新增 §2.5 前端组件树 DIAG-FE-COMP-01 + §2.6 视图与栏布局状态机 DIAG-FE-STATE-01，按代码事实回画）；前次 2026-08-04（**timeline task-030 / v1.5.2：PG-P2-008 主题时间线视图已实现并通过运行态 API smoke、Edge headless 浏览器 smoke 与真实 PG 大数据性能 smoke；folder-tree 浏览器自动化 smoke 已补**）；前版回写 REQ-014 闭环 + §9.5 Doc-First 候选基线 |
+| 最后更新 | 2026-08-19（docs-system-audit 回梳：§9.2.2 FL-P2-008 / §9.2.3 AI 润色侧边栏 TC 状态改为已通过——见 `docs/research/2026-08-19-docs-system-audit-04-07-design.md` B3）；前次 2026-08-18（OI-111 可选增量：新增 §2.5 前端组件树 DIAG-FE-COMP-01 + §2.6 视图与栏布局状态机 DIAG-FE-STATE-01，按代码事实回画）；前次 2026-08-04（**timeline task-030 / v1.5.2：PG-P2-008 主题时间线视图已实现并通过运行态 API smoke、Edge headless 浏览器 smoke 与真实 PG 大数据性能 smoke；folder-tree 浏览器自动化 smoke 已补**）；前版回写 REQ-014 闭环 + §9.5 Doc-First 候选基线 |
 | 下游影响 | 08 Sprint-2/4/5/6/9/10/16/17/18；08 Sprint-11（P2-UI-Gate / WSG 候选）；09 TC-P1-001~017、TC-P2-WSG-001 与 TC-P2-UI-001~005 草案；Phase2B 编码仍需另行确认任务 |
 
 
@@ -437,7 +437,7 @@ sequenceDiagram
 | FL-P2-005 | 使用推荐问题进行问答 | PG-P2-005 | 选择推荐问题 → 查看答案 → 打开来源 → 回到文档或术语 | 答案限定当前空间并带来源 | 库外问题显示未找到；AI / 向量不可用时显示降级 | P1 TC-P1-008 延续；TC-P2-UI-004（草案·未执行） |
 | FL-P2-006 | 管理并引用术语 | PG-P2-006 | 筛选术语 → 编辑 / 确认术语 → 在文档或问答中引用 | 术语状态、来源和使用位置清楚 | 待确认术语不阻断编辑；无权限编辑时只读 | P1 TC-P1-012 延续；TC-P2-UI-004（草案·未执行） |
 | FL-P2-007 | 在局部关系图中探索材料 | PG-P2-007 | 从项目 / 文件夹进入关系图 → 查看节点 → 打开文档 / 术语 / 待核实问题 | 只展示局部、可控规模节点，不替代经典列表 | 超阈值时回到筛选 / 聚类 / 列表；愿景能力未验证不进入实现 | TC-P2-UI-005（草案·未执行）；真实算法待技术验证 |
-| FL-P2-008 | AI 润色 / 写作引用（REQ-014，Phase2B 首批） | PG-P2-003（文档工作区） | 选中正文片段 → 打开 AI 润色侧边栏（CMP-P2-AI-POLISH）→ 选 mode=polish / citation + 可选 instruction → 触发 → 预览草稿 + sources → 应用（写回正文 + 版本）/ 丢弃 | 草稿生成（generated）；引用可追溯到 chunk / 文档；应用写回并留版本 | LLM 不可用 → 5030 / Mock 占位（不编造）；无可见来源 → sources=[] 提示未找到；越权 chunk 不进入 prompt / 不返回；文档只读 → 禁用润色 | TC-P2-AI-001（待 Sprint-19 实现） |
+| FL-P2-008 | AI 润色 / 写作引用（REQ-014，Phase2B 首批） | PG-P2-003（文档工作区） | 选中正文片段 → 打开 AI 润色侧边栏（CMP-P2-AI-POLISH）→ 选 mode=polish / citation + 可选 instruction → 触发 → 预览草稿 + sources → 应用（写回正文 + 版本）/ 丢弃 | 草稿生成（generated）；引用可追溯到 chunk / 文档；应用写回并留版本 | LLM 不可用 → 5030 / Mock 占位（不编造）；无可见来源 → sources=[] 提示未找到；越权 chunk 不进入 prompt / 不返回；文档只读 → 禁用润色 | TC-P2-AI-001（已通过，Sprint-19 闭环） |
 
 #### 9.2.3 状态 / 权限 / 接口 / 验收草案
 
@@ -451,7 +451,7 @@ sequenceDiagram
 | 问答工作区 | 推荐问题、回答中、无来源、库外问题、AI 降级 | “仅基于当前空间回答”“未在知识库找到” | `POST /api/query` | P1 TC-P1-008 延续；P2 UI 细化待新增 | 推荐问题出现位置、范围提示、来源卡片样式 |
 | 术语工作区 | 全部 / 已确认 / 待确认、编辑、只读 | “待确认术语不阻断编辑” | `/api/terms*` | P1 TC-P1-012 延续；P2 UI 细化待新增 | 术语筛选、文档内提示、问答引用样式 |
 | 局部关系图 | 小集合可探索、中集合聚类、大集合先筛选 | “当前集合过大，请先筛选” | 后续能力待技术验证；不得假设新 API | 愿景项，待技术验证后定 TC | 阈值、节点类型、权限过滤和待核实文案 |
-| AI 润色侧边栏（REQ-014） | generated / applied / discarded / failed；文档可写方可触发；sources 仅当前用户可见 chunk | “AI 润色”“引用来源”“未找到可引用来源”“AI 暂不可用，可重试” | API-028（mode=polish / citation）；草稿 `lumen_ai_drafts` | TC-P2-AI-001（待 Sprint-19）；UI smoke 待门禁重跑 | 应用 = 替换选区还是追加（D-C-002）；citation 异步与否（D-C-001） |
+| AI 润色侧边栏（REQ-014） | generated / applied / discarded / failed；文档可写方可触发；sources 仅当前用户可见 chunk | “AI 润色”“引用来源”“未找到可引用来源”“AI 暂不可用，可重试” | API-028（mode=polish / citation）；草稿 `lumen_ai_drafts` | TC-P2-AI-001（已通过，live UI smoke 2026-07-31 通过） | 应用 = 替换选区还是追加（D-C-002）；citation 异步与否（D-C-001） |
 
 ### 9.3 实现前 UI 确认稿 v0.2（少容器清爽稿暂定）
 

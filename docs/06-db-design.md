@@ -12,7 +12,7 @@
 | 决策来源 | `ai/project-rules.md` §3（项目有 PostgreSQL + pgvector 持久化存储） |
 | 覆盖 REQ / 模块 | Phase1：空间 / 权限、文档、版本、导入、检索向量、术语管理；Phase1.5A：批量导入与 `.md` / ZIP 导出备份（REQ-037/038）；Phase1.5B：PDF 导出任务契约（REQ-027）；Phase2A：标签、内链 / 反链、快速录入（REQ-012/025/026）；Phase2B：AI 润色草稿（REQ-014）、**主题时间线（REQ-013a/024）**、文档目录树（REQ-039，第三 slice 候选）；愿景保留骨架 |
 | 当前状态 | P1 表结构已落地 PostgreSQL（Sprint-8 起 PgRepository 接入）；Phase1.5A/B、Phase2A、Phase2D 各阶段表契约均已实现并随代码反向同步（逐表状态见 §1「当前实现状态」列、REQ 追溯见 §6）；仍降级：真实 Word/PDF 解析与 OCR 未接入（RG-007 / RG-003）。历史实现细节见 `docs/09-verification.md` 与 CHANGELOG |
-| 最后更新 | 2026-08-17（§0.5 补概念 ERD 映射行 + §4 物理ERD 挂图 ID DIAG-DB-ER-01，OO 覆盖度补全 Batch A1；同日早前：模板对齐调整 §0 精简；无表契约 / 字段变更）；前次 2026-08-07（Sprint-28 编码完成） |
+| 最后更新 | 2026-08-19（docs-system-audit 回梳：元信息刷新——见 `docs/research/2026-08-19-docs-system-audit-04-07-design.md` E1；无表契约 / 字段变更）；前次 2026-08-17（§0.5 补概念 ERD 映射行 + §4 物理ERD 挂图 ID DIAG-DB-ER-01，OO 覆盖度补全 Batch A1；同日早前：模板对齐调整 §0 精简；无表契约 / 字段变更）；前次 2026-08-07（Sprint-28 编码完成） |
 
 ## 0.5 概念模型（领域模型 · DIAG-DOM-01）
 

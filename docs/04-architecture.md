@@ -11,7 +11,7 @@
 | 输入来源 | `docs/00-scenario.md`、`docs/01-user-requirements.md`、`docs/02-srs.md`、`docs/03-prd.md`、`docs/env/local-env.md`、`ai/project-rules.md`、`docs/research/2026-07-15-overall-design-04-05-audit.md`、`docs/decisions/ADR-010-db-authority-derived-data-rebuildability.md` |
 | 覆盖功能 / REQ | Phase1：REQ-001..REQ-011、REQ-036；Phase1.5A：REQ-037/038；Phase1.5B：REQ-027；Phase2A：REQ-012/025/026；Phase2B / 后续 / 愿景保留架构骨架 |
 | 当前状态 | 目标架构基线已定，Phase1→Phase2D 各阶段架构事实均已实现并随代码反向同步（逐模块实现状态见 §2、验证见 `docs/09-verification.md`）；仍降级 / 候选：真实 Word/PDF 解析、OCR 与愿景能力；生产部署拓扑（⑪ 方案 A）已落盘（v3.5.0，见 §4） |
-| 最后更新 | 2026-08-17（§5.6 补概设交互图 DIAG-ARCH-SEQ-03/04（AI 润色 / 批量导入），OO 覆盖度补全 Batch A2；同日早前：模板对齐调整 §0 精简 / §0.2 / §5.7-5.10 / §1.2.2 概设类图 + OO 方法论收敛 §5.1/§5.4/§1.3/§1.2.1/ADR-006 + 新增 §5.5/§5.6 + MOD 表详细设计列补全；无架构决策变更）；前次 2026-08-04（Sprint-18 PDF 导出产品闭环） |
+| 最后更新 | 2026-08-19（docs-system-audit 回梳：§7 待确认项 Phase2B 口径改为已收口——见 `docs/research/2026-08-19-docs-system-audit-04-07-design.md` B6；无架构决策变更）；前次 2026-08-17（§5.6 补概设交互图 DIAG-ARCH-SEQ-03/04（AI 润色 / 批量导入），OO 覆盖度补全 Batch A2；同日早前：模板对齐调整 §0 精简 / §0.2 / §5.7-5.10 / §1.2.2 概设类图 + OO 方法论收敛 §5.1/§5.4/§1.3/§1.2.1/ADR-006 + 新增 §5.5/§5.6 + MOD 表详细设计列补全；无架构决策变更）；前次 2026-08-04（Sprint-18 PDF 导出产品闭环） |
 
 ### 0.1 架构目标与约束
 
@@ -600,4 +600,4 @@ sequenceDiagram
 - （2026-08-17 修订注记）本次为架构文档反向同步（分层视图 + 部署拓扑 + Phase2D / 维护态 REQ 回填），**未改变任何架构决策**；生产部署为已落盘事实（v3.5.0）回填，非新增候选。若后续部署形态演进（多节点 / 公网 HTTPS / 独立 Embedding 服务），须先修订本节 §4 与 `docs/env/deploy-guide.md`。
 - Phase1.5A Sprint-16/17 已完成；若后续扩展真实目录表、长期导出产物或新依赖，必须先同步修订 `05/06/07/08/09` 与对应 design。
 - Phase1.5B PDF 已通过 RG-006 并随 Sprint-18 完成 REQ-027 / API-019 / TC-P1-017；v1.7.0 已补 PDF 下载端点与前端下载闭环；后续若做异步导出、过期清理 job 或水印，须先同步修订 `05/06/07/08/09`。
-- Phase2B 团队 MVP 候选（AI 润色 / 写作引用、时间轴候选）需重新确认范围、进入 / 退出标准、详细设计与 UI / WSG 门禁；Phase2A 已完成能力如需扩展，先同步修订 `06/07/08/09`。
+- Phase2B（团队 MVP）已于 2026-08-05 收口（REQ-014 AI 润色 / 写作引用、REQ-013a/024 时间线、REQ-039 文档目录树，TC-P2-AI-001 / TC-P2-TL-001 / TC-P2-FOLDER-001 通过，见 `docs/09-verification.md`）；后续若扩展 Phase2A/B 已实现能力，先同步修订 `06/07/08/09`。

@@ -11,7 +11,7 @@
 | 输入来源 | `docs/03-prd.md`、`docs/04-architecture.md`、`docs/env/local-env.md`、`ai/project-rules.md`、`docs/research/2026-07-15-overall-design-04-05-audit.md` |
 | 覆盖架构组件 | FastAPI 后端、React 前端、PostgreSQL + pgvector、Embedding / LLM 适配、导入解析、导出备份、PDF 候选 |
 | 当前状态 | 目标基线已定（Phase1 技术选型已钉死），各阶段技术事实已实现并随代码反向同步（逐项状态见 §1「当前实现状态」列、RG 见 §5.1）；仍候选 / 降级：真实 Word/PDF 解析、OCR、zhparser。历史实现细节见 `docs/09-verification.md` 与 CHANGELOG |
-| 最后更新 | 2026-08-17（§4.2 头部补「类代码规格说明书等价物」定位声明，OO 覆盖度补全 Batch A1；同日早前：模板对齐调整 §0 精简、§4.2 治理基线收敛归 research；无技术决策变更）；前次 2026-08-04（Sprint-18 PDF 闭环） |
+| 最后更新 | 2026-08-19（docs-system-audit 回梳：§5.1 风险映射注释对齐 09 Risk-ID 列、元信息刷新——见 `docs/research/2026-08-19-docs-system-audit-04-07-design.md` E1/E2；无技术决策变更）；前次 2026-08-17（§4.2 头部补「类代码规格说明书等价物」定位声明，OO 覆盖度补全 Batch A1；同日早前：模板对齐调整 §0 精简、§4.2 治理基线收敛归 research；无技术决策变更）；前次 2026-08-04（Sprint-18 PDF 闭环） |
 
 ## 1. 技术栈与版本
 
@@ -222,7 +222,7 @@ flowchart TB
 | RG-011 | 密码哈希选型（`bcrypt` 库，Python 3.14） | **Go（2026-08-07 PoC）** | bcrypt 5.0.0 在 Python 3.14.3 安装 + hash/verify 通过；cost 12 ≈0.21s；错误 / 正确密码验证耗时一致（恒定时序）；>72B 密码抛 ValueError → 注册密码做 max 长度约束；不采用 passlib（弃维护） | — | RG-011 PoC 脚本输出（hash cost 12 0.21s / verify 0.204s / 72B 边界）；TC-P2-AUTH-001 | REQ-040/041 |
 | RG-012 | token session 安全（密钥 env 注入、TTL、撤销、续期轮换、恒定时序） | **Go（2026-08-07 单测覆盖）** | 设计见 `docs/design/accounts-auth.md` §5 / §10；实现：`secrets.token_urlsafe` + SHA-256 摘要入库、`LUMEN_DEMO_TOKEN_KEY` 兼容旧 demo HMAC | `tests/backend/test_auth.py` 覆盖撤销 / 过期 / 续期后旧 token 失效 / 枚举（20/20 通过） | TC-P2-AUTH-001 | REQ-042 |
 | RG-013 | 跨用户隔离回归 | **Go（2026-08-07）** | 复用既有 owner_id 过滤底座；新增「注册用户私有文档仅 owner 可见」验证（`tests/backend/test_auth.py` 注册用户 + 个人空间隔离断言） | 注册两个真实用户 + 私有文档可见性断言；全量 222 OK | TC-P2-AUTH-001 | REQ-040/041 |
-> 风险与验证映射：本表 RG-ID 与 `docs/09-verification.md §6` 风险项对齐（待 09 补 Risk-ID 列后双向链接）。
+> 风险与验证映射：本表 RG-ID 与 `docs/09-verification.md §6` 风险项对齐（09 §6 已有 Risk-ID 列 `RISK-P1-xxx` + `RG / Gate` 映射，05↔09 风险验证可双向核验）。
 
 ### 5.2 安全、隐私与合规
 

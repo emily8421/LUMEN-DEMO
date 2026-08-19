@@ -7,13 +7,13 @@
 | 项 | 值 |
 |---|---|
 | 阶段 | Phase2D（账户与多人权限 · 团队验证） |
-| 覆盖 REQ | REQ-040 账户注册 / REQ-041 凭证登录 / REQ-042 登出·会话管理（§1~§16）；REQ-043/044 权限多人化（§17 增量）；REQ-045/046/047 角色分层 + 用户管理 + 团队空间加入（§18 增量） |
+| 覆盖 REQ | REQ-040 账户注册 / REQ-041 凭证登录 / REQ-042 登出·会话管理（§1~§16）；REQ-043/044 权限多人化（§17 增量）；REQ-045/046/047 角色分层 + 用户管理 + 团队空间加入（§18 增量）；REQ-050/051 维护态批5（§19 增量，2026-08-08） |
 | 覆盖 U-ID | U-45 / U-46 / U-47 |
-| 验收 | TC-P2-AUTH-001（AC-P2-AUTH-001 / 002 / 003） |
-| 状态 | 设计定稿 · Sprint-26 编码完成（2026-08-07）；TC-P2-AUTH-001 自动化通过；偏差见 §15。2026-08-17 新增 §3.5 会话生命周期状态机 DIAG-STATE-SESSION-01（OO 覆盖度补全 Batch A2） |
+| 验收 | TC-P2-AUTH-001（§1~§16，AC-P2-AUTH-001 / 002 / 003）/ TC-P2-ACC-001（§17）/ TC-P2-ACC-002（§18）/ TC-P2-ACC-003 + TC-P2-AUTH-002（§19） |
+| 状态 | **已实现**（Phase2D 三 slice 收口 2026-08-07：Sprint-26 TC-P2-AUTH-001 / Sprint-27 TC-P2-ACC-001 / Sprint-28 TC-P2-ACC-002；维护态批5 Sprint-30 TC-P2-ACC-003 + TC-P2-AUTH-002，2026-08-08）；实现偏差见 §15 / §18.9 / §19.8。2026-08-17 新增 §3.5 会话生命周期状态机 DIAG-STATE-SESSION-01（OO 覆盖度补全 Batch A2）；2026-08-19 docs-system-audit 回梳 §0 元信息（见 `docs/research/2026-08-19-docs-system-audit-04-07-design.md` B7） |
 | 上游依据 | `docs/03-prd.md` §3 Phase2D 子节、`docs/02-srs.md` REQ-040..042、`ai/project-rules.md` §1 |
 | 下游影响 | `docs/05-tech-spec.md` readiness gate（RG 待补）+ 认证技术栈、`docs/06-db-design.md` `lumen_users` 扩列 + `lumen_sessions` + migration 014、`docs/07-api-spec.md` auth API、`docs/08-dev-plan.md` Sprint-26、`docs/09-verification.md` TC-P2-AUTH-001 |
-| 范围外（留 Sprint-27/28） | 权限多人化实质改造（owner_id 跨用户过滤回归）、全局角色分层、用户管理后台 UI、REQ-016 多人实时协作 |
+| 范围外 | REQ-016 多人实时协作（候选 / 不做）；权限多人化（owner_id 跨用户过滤）、全局角色分层、用户管理后台已随 Sprint-27/28 落地，不再列为范围外 |
 
 ### 0.5 详细类图（DIAG-CLS-AUTH-01）
 
