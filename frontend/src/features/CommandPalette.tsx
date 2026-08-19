@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useRef } from 'react';
 import type { PaletteItem } from '../app/useCommandPalette';
+import { useModalFocus } from './shared/useModalFocus';
 
 type CommandPaletteProps = {
   isOpen: boolean;
@@ -71,6 +72,12 @@ export function CommandPalette({
   onClose,
 }: CommandPaletteProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const { handleKeyDown: handleFocusKeyDown } = useModalFocus({
+    isOpen,
+    containerRef: panelRef,
+    initialFocusRef: inputRef,
+  });
 
   useEffect(() => {
     if (isOpen) {
@@ -85,8 +92,23 @@ export function CommandPalette({
   let lastGroup = '';
 
   return (
-    <div className="cmdk-overlay" role="dialog" aria-modal="true" aria-label="快速搜索" onMouseDown={onClose}>
-      <div className="cmdk-panel" onMouseDown={(event) => event.stopPropagation()}>
+    <div className="cmdk-overlay" onMouseDown={onClose}>
+      <div
+        ref={panelRef}
+        className="cmdk-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-label="快速搜索"
+        onKeyDown={(event) => {
+          if (event.key === 'Escape') {
+            event.preventDefault();
+            onClose();
+            return;
+          }
+          handleFocusKeyDown(event);
+        }}
+        onMouseDown={(event) => event.stopPropagation()}
+      >
         <div className="cmdk-input-row">
           <span className="cmdk-search-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

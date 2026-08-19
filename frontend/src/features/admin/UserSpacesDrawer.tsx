@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { AdminUserSpaceAvailable, AdminUserSpaceView, SpaceMemberRole } from '../../api';
+import { useModalFocus } from '../shared/useModalFocus';
 
 type UserSpacesDrawerProps = {
   open: boolean;
@@ -36,6 +37,8 @@ export function UserSpacesDrawer({
 }: UserSpacesDrawerProps) {
   const [addSpaceId, setAddSpaceId] = useState<number | null>(null);
   const [addRole, setAddRole] = useState<SpaceMemberRole>('member');
+  const drawerRef = useRef<HTMLElement>(null);
+  const { handleKeyDown: handleFocusKeyDown } = useModalFocus({ isOpen: open, containerRef: drawerRef });
 
   if (!open) {
     return null;
@@ -54,10 +57,13 @@ export function UserSpacesDrawer({
   return (
     <div className="drawer-overlay" onClick={onClose} role="presentation">
       <aside
+        ref={drawerRef}
         className="user-spaces-drawer"
         onClick={(event) => event.stopPropagation()}
         role="dialog"
+        aria-modal="true"
         aria-label={`${targetName} 可访问空间`}
+        onKeyDown={handleFocusKeyDown}
       >
         <div className="drawer-header workspace-toolbar">
           <div className="view-title">

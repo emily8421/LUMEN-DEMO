@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import type { FormEvent, MouseEvent } from 'react';
 import type { DocumentPermission, ImportBatchItem } from '../api';
 import type { ImportDraft, ImportFileSelection } from '../app/types';
@@ -6,6 +6,7 @@ import { permissionLabels } from '../app/constants';
 import { fileListToSelections } from './import-files';
 import { ImportDropZone } from './import/ImportDropZone';
 import { ImportResultsList } from './import/ImportResultsList';
+import { useModalFocus } from './shared/useModalFocus';
 
 type ImportFeatureProps = {
   isOpen: boolean;
@@ -39,6 +40,9 @@ export function ImportFeature({
   onImport,
   onClose,
 }: ImportFeatureProps) {
+  const modalRef = useRef<HTMLElement>(null);
+  const { handleKeyDown: handleFocusKeyDown } = useModalFocus({ isOpen, containerRef: modalRef });
+
   useEffect(() => {
     if (!isOpen) {
       return;
@@ -83,10 +87,12 @@ export function ImportFeature({
   return (
     <div className="import-modal-overlay" onClick={handleOverlayClick}>
       <section
+        ref={modalRef}
         className="import-modal"
         role="dialog"
         aria-modal="true"
         aria-labelledby="import-modal-title"
+        onKeyDown={handleFocusKeyDown}
         onClick={(event) => event.stopPropagation()}
       >
         <header className="import-modal-header">
