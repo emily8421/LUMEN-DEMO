@@ -5,26 +5,26 @@
 // E4 拆分溯源：类型在 local-vault-types.ts，树构建在 local-vault-tree.ts，REQ-049 写组在 useLocalVaultEditor.ts。
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { readVaultFile, verifyPermission } from './local-vault-fs';
+import { readVaultFile, verifyPermission } from '../features/local-mount/local-vault-fs';
 import {
   clearVaultHandle,
   removeVaultHandle,
   restoreVaultHandles,
   saveVaultHandle,
-} from './local-vault-idb';
-import { isFileSystemAccessSupported, pickDirectory, walkVault } from './local-vault-walk';
-import { buildInvertedIndex, searchIndex } from './local-vault-index';
-import type { LocalVaultDoc, LocalVaultIndex } from './local-vault-index';
-import type { WalkedFile } from './local-vault-walk';
-import type { UseLocalVaultMount, VaultMount } from './local-vault-types';
+} from '../features/local-mount/local-vault-idb';
+import { isFileSystemAccessSupported, pickDirectory, walkVault } from '../features/local-mount/local-vault-walk';
+import { buildInvertedIndex, searchIndex } from '../features/local-mount/local-vault-index';
+import type { LocalVaultDoc, LocalVaultIndex } from '../features/local-mount/local-vault-index';
+import type { WalkedFile } from '../features/local-mount/local-vault-walk';
+import type { UseLocalVaultMount, VaultMount } from '../features/local-mount/local-vault-types';
 import { useLocalVaultEditor } from './useLocalVaultEditor';
 
 /** 挂载 id 序号（跨挂载全局自增，保证 id 唯一；模块级，同文件内 reassign）。 */
 let mountSeq = 0;
 
-export type { LocalMountStatus, UseLocalVaultMount, VaultMount } from './local-vault-types';
-export { buildLocalMountTree } from './local-vault-tree';
-export type { LocalMountTreeNode } from './local-vault-tree';
+export type { LocalMountStatus, UseLocalVaultMount, VaultMount } from '../features/local-mount/local-vault-types';
+export { buildLocalMountTree } from '../features/local-mount/local-vault-tree';
+export type { LocalMountTreeNode } from '../features/local-mount/local-vault-tree';
 
 /**
  * 本地 Vault 挂载编排（REQ-018 模式 B / REQ-049 增强）。

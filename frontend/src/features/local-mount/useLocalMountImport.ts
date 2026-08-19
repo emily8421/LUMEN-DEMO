@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { importBatchDocuments } from '../../api';
 import type { DocumentPermission } from '../../api';
-import type { LocalVaultDoc } from '../../app/local-vault-index';
+import type { LocalVaultDoc } from './local-vault-index';
 
 // 本地挂载 → 导入为私有文档（个人知识，合理默认；用户可后续在文档详情改权限）。
 const IMPORT_PERMISSION: DocumentPermission = 'private';

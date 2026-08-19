@@ -10,7 +10,7 @@ import { useState } from 'react';
 import { DocumentPreviewPane } from './documents/DocumentPreviewPane';
 import { MarkdownEditorBody } from './shared/MarkdownEditorBody';
 import type { Draft } from '../app/types';
-import type { LocalVaultDoc } from '../app/local-vault-index';
+import type { LocalVaultDoc } from './local-mount/local-vault-index';
 
 type LocalEditMode = 'edit' | 'split';
 

@@ -1,6 +1,6 @@
 import { DocumentsFeature } from '../features/documents/DocumentsFeature';
 import { LocalDocPreview } from '../features/LocalDocPreview';
-import type { LocalVaultDoc } from './local-vault-index';
+import type { LocalVaultDoc } from '../features/local-mount/local-vault-index';
 import type { UseLocalVaultMount } from './useLocalVaultMount';
 import type { useDocuments } from './useDocuments';
 import type { useTags } from './useTags';

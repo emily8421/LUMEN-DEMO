@@ -6,6 +6,15 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.13.3（2026-08-19）
+
+**R3：local-vault 六模块从 app/ 迁 features/local-mount/（目录归属修正）。纯移动零逻辑变化，bump PATCH。**（依据：`docs/research/2026-08-18-code-directory-review.md` §2.2 / §4 R3）
+
+- **`git mv` 6 文件**：`local-vault-{fs,idb,index,tree,types,walk}.ts` 从 `frontend/src/app/` → `frontend/src/features/local-mount/`——REQ-018 同业务域，**并入既有 local-mount 域不新开目录**（"一个功能一个抽屉"）；搬后「改本地库功能只动一个目录」真正成立（原先要动 app/ + features/ 两处）。
+- **12 个消费文件改 import 路径**（app 层 7 + context-pane 1 + features 层 3 + 冒烟脚本 `smoke-local-vault-index.mjs` 1），机械替换无逻辑变化。
+- **时机依据**：职责表（05 §4.1.1）昨日刚立——立表当天保留 6 个已知违反项会折损表的可信度；且 build/lint 必然拦截漏改（机器门护航）。
+- **评审报告状态回写**：R1/R2/R3 均完成，仅剩 R4（触发线定死 ≥60 或实际查找摩擦，当前 43）；08 Sprint-60（批35）+ 09 TC-P2-GOV-023。
+
 ## v3.13.2（2026-08-19）
 
 **R2 Slice B：repository 101 方法 god object 按域拆 8 子 Protocol + 聚合父契约。纯内部结构重构，零 API/DB/运行时变化，22 消费方零迁移，bump PATCH。**（依据：`docs/research/2026-08-18-code-directory-review.md` §1.4 / §4 R2；2026-08-18 评审登记债，本轮收敛）

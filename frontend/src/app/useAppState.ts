@@ -21,7 +21,7 @@ import { isAuthTokenError } from './session-store';
 import { useAppShellState } from './useAppShellState';
 import { ONBOARDING_STEPS, isOnboardingDone, persistOnboardingState } from './onboarding-store';
 import type { OnboardingState, OnboardingStepId } from './onboarding-store';
-import type { LocalVaultDoc } from './local-vault-index';
+import type { LocalVaultDoc } from '../features/local-mount/local-vault-index';
 
 /**
  * CQ-P1-008 E4 拆分溯源：App 减压第三刀——域 hook 编排 + cross-cutting 回调 + effects。
