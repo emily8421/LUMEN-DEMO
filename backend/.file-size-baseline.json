@@ -1,0 +1,11 @@
+{
+  "service/export.py": 576,
+  "service/imports.py": 336,
+  "service/auth.py": 329,
+  "service/rag.py": 323,
+  "service/timeline.py": 313,
+  "service/document.py": 255,
+  "model/schemas.py": 490,
+  "model/entities.py": 337,
+  "model/orm.py": 333
+}

@@ -6,6 +6,16 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.13.0（2026-08-19）
+
+**文件治理三层体系第二步（FG-C2 + R1 扩容）：后端结构检查 + 后端 file-size ratchet + CI 接线。新增 CI 治理能力，bump MINOR。**（依据：`docs/research/2026-08-19-file-governance-mechanism-analysis.md` FG-C1~C4 全采纳；第一步 = v3.12.5）
+
+- **`scripts/check-backend-structure.mjs` 新增（FG-C2）**：按内容拦分层违规、不看行数——R1 `service/` 不 import fastapi（豁免清单唯一登记 `auth_context.py`，附豁免失效自动检测）/ R2 `api/` 不 import sqlalchemy·`backend.model.orm`（读路径直连 repository 合法〔05 §4.2〕故只查 ORM import）/ R3 `repository/`·`model/` 不 import fastapi。负向探针 ×3 全拦截验证。
+- **`scripts/check-backend-file-size.mjs` + `backend/.file-size-baseline.json` 新增（R1）**：后端行数棘轮（与前端版同构）——service/api/model 250 / main·config 300；repository·migrations 不设行数门（god object 拆分属 R2 债、迁移脚本一文件一主题）。基线登记 9 个既有超限文件（service×6，max export.py 576 + model×3），棘轮只进不退。补齐前后端治理不对称（2026-08-18 评审 R1）。
+- **CI project-check +2 step**：`Check backend structure` + `Check backend file-size ratchet`（轻量 workflow，runner 自带 node 零依赖，随任何改动校验）。
+- **文档回写**：05 §4.2 工程化护栏行 + 文件治理行（结构检查已落地）；08 Sprint-58（维护态批33）；09 TC-P2-GOV-021 验收行。
+- 追溯：FG-C2 ← research 2026-08-19 §3.2；R1 ← `docs/research/2026-08-18-code-directory-review.md` §4；职责表 = 05 §4.1.1（v3.12.5）。
+
 ## v3.12.5（2026-08-19）
 
 **文件治理机制升级第一步：05 §4.1 落「文件职责表」+ 阈值表措辞改「症状信号」。纯文档，无代码改动，bump PATCH。**（触发：用户对阈值机制根本性质疑——阈值怎么取的 / 为何治不了「AI 不知道往哪写」；分析报告 `docs/research/2026-08-19-file-governance-mechanism-analysis.md`，FG-C1~C4 全采纳）
