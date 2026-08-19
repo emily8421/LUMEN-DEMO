@@ -144,12 +144,33 @@ flowchart TB
 | 后端分层 | `backend/api` / `service` / `model` 已形成基本边界 | 新 API 只进 api 层；批量导入 / 导出逻辑进 service；字段 / DTO / ORM 进 model；持久化策略需与 06/07 对齐 |
 | 测试 / smoke | P1 已有后端 tests、前端 build、Chrome / Edge smoke | Sprint-16/17 必须补 TC-P1-015/016 的后端 tests + Chrome smoke；Phase2 首个 vertical slice 另补 smoke 证据 |
 
-| 文件类型 | 提醒阈值 | 超阈值处理 |
+#### 4.1.1 文件职责表（写之前先对表：什么内容可以进哪个文件）
+
+> 依据与背景见 `docs/research/2026-08-19-file-governance-mechanism-analysis.md`（三层治理：职责表管源头 → 结构检查管过程 → 阈值棘轮管兜底）。§4.1.0 五依据回答「放哪个**目录**」，本表回答「放哪个**文件**、文件里放什么」——两级粒度互补，判断口径一脉相承（「这行代码因为什么而变？」）。新增 / 修改代码前先对表；表里没有的职责就不进这个文件。
+
+| 文件类型 | 只准放 | 不准放 | 超出职责去哪 |
+|---|---|---|---|
+| `backend/api/*.py` | 路由声明、参数解析与校验、调 service、领域异常→HTTP 映射、`response_model` 装配、web 适配依赖（`Depends`） | 业务规则、SQL / ORM 调用、领域计算、绕过 service 直连 repository 读写 | 业务进 service；持久化进 repository |
+| `backend/service/*.py` | 业务规则、编排 repository、领域异常（带业务码）、跨模块协调 | `import fastapi`（豁免须登记 §4.2）、HTTP 语义（状态码 / Header）、SQL | 传输关注点进 api 层；既存豁免见 §4.2 |
+| `backend/repository/*.py` | `RepositoryProtocol` 及域接口、SQL / ORM 实现、持久化事务边界（UoW） | 业务规则、HTTP 语义、fastapi import | 业务判断回 service |
+| `backend/model/*.py` | dataclass 实体（entities）、ORM 映射（orm）、Pydantic schema（schemas）、错误码常量 | 任何 I/O、业务流程编排 | — |
+| `frontend/src/api/*.ts` | 类型定义、`client.ts` 单出口调用封装、契约派生产物（`generated.ts`，不手改） | UI 逻辑、状态管理、DOM 访问 | UI 进 features；跨组件状态进 app hooks |
+| `frontend/src/features/<域>/` | 该域全部 UI 组件、域 hooks、域内状态 | 跨域状态 setter、别域 UI 引用 | 跨域协调经回调（`onXxxChanged`）交 app 层编排 |
+| `frontend/src/app/use*.ts` | 单域状态与副作用、可复用 hook | 跨域 setter、UI 渲染逻辑 | 跨域编排回 `useAppState` / 主装配文件 |
+| `frontend/src/app/*-store.ts` | localStorage 读写与序列化（纯函数） | 响应式状态、业务规则（历史命名债见 §4.2） | 业务进域 hook |
+| CSS（每视图一文件） | 该视图布局与组件样式、`var(--xxx)` token 引用 | 字面色值 / 字阶 / 圆角（CI 门拦截，豁免以 design-system §1.4/1.7 为准） | 通用值进 `tokens.css` |
+| `tests/backend/test_<域>.py` / `scripts/smoke-*` | 按域命名的测试 / 冒烟、夹具 | 业务实现、重复夹具代码 | 公共夹具进共享支持件（如 `pg_test_support.py`） |
+
+#### 4.1.2 文件膨胀阈值（症状信号，非病因诊断）
+
+> **定位**：行数是「职责混居」的**间接代理指标**——超标≈一个文件混进了多个变更原因的可疑**症状**，不是病因本身（病因=职责混居，诊断入口=§4.1.1 职责表）。250 / 300 为**约定值而非推导值**（来源：模板 `web-fullstack-profile §5` 整数惯例，行业参照系差异大，如 SonarQube 默认 1000 / Google 风格不限文件行数只限函数行数）；本仓保留该约定作 CI 棘轮基线（§4.2），但**处置入口是对职责表拆分，不是机械砍行数**。
+
+| 文件类型 | 症状信号阈值（约定值） | 处置（先对照 §4.1.1 职责表） |
 |---|---:|---|
-| `frontend/src/App.*` / 主应用入口 | 300 行 | 先拆 App Shell、视图入口、providers 或 feature 容器，不继续堆 P2 功能 |
-| 前端页面 / 视图文件 | 250 行 | 拆 panel、form、list、state hook 或 feature 子组件 |
+| `frontend/src/App.*` / 主应用入口 | 300 行 | 对照职责表拆 App Shell、视图入口、providers 或 feature 容器 |
+| 前端页面 / 视图文件 | 250 行 | 对照职责表拆 panel、form、list、state hook 或 feature 子组件 |
 | 全局 CSS / 样式文件 | 300 行 | 拆 tokens、layout、components、page styles；保留少容器清爽稿的密度约束 |
-| 后端 service / controller | 250 行 | 拆 service、repository / gateway、schema、error handling |
+| 后端 service / controller | 250 行 | 对照职责表把业务规则 / 编排 / 领域异常按变更原因归位拆分 |
 | 单个测试 / smoke 文件 | 300 行 | 拆 contract、smoke、edge cases，避免单文件覆盖过多业务路径 |
 
 > 若确需引入 router、组件库、全局状态库、PDF 库、文档解析库或新图形库，必须先回到本文 §2 / §5.1、`06/07`、`08/09` 和 open items 记录依赖、风险与验证方式。Sprint-16/17 已按不引新依赖完成；ZIP 使用标准库 `zipfile`。
@@ -162,10 +183,11 @@ flowchart TB
 | 基线类 | 当前有效基线 |
 |---|---|
 | 错误与响应契约 | 统一 `{code,msg,data}` envelope；service 抛领域异常、api 转 HTTP；`code` 为业务码、HTTP 码只放 `status_code`；禁 `str(exc)` 直传 |
-| 分层与装配 | backend 四层 `api/service/repository/model`；service 不 import fastapi；repository 双实现共享 `RepositoryProtocol`；读可直连 repository、写必经 service |
+| 分层与装配 | backend 四层 `api/service/repository/model`；service 不 import fastapi（唯一既存豁免：`service/auth_context.py`——fastapi `Depends` 鉴权依赖项，供 router 共用 `get_current_user`，登记于 `ai/project-rules.md` §5.2，新代码不得复制）；repository 双实现共享 `RepositoryProtocol`；读可直连 repository、写必经 service |
 | 类型与契约同步 | 后端 JSON 端点 `response_model=ApiEnvelope` + OpenAPI 快照 `schema-diff` 防漂移；前端零 `any`、HTTP 单出口 `client.ts`、codegen 混合接入 |
 | 工程化护栏 | CI：backend-test / frontend-build / backend-typecheck / frontend-lint required + backend-integration（PG）；ruff / mypy / eslint；文件膨胀 ratchet `check-frontend-file-size.mjs`；PG 测试三重 fail-closed guard |
 | 命名语义 | 后端 snake_case、前端 camelCase、组件 PascalCase；`*-store.ts` = localStorage 序列化层（非响应式） |
+| 文件治理（2026-08-19 起） | 三层体系：§4.1.1 职责表（源头规范）→ 结构检查（过程约束，随 FG-C2 落地）→ §4.1.2 阈值棘轮（兜底信号，约定值）；机制依据见 `docs/research/2026-08-19-file-governance-mechanism-analysis.md` |
 
 
 ## 5. 运行环境与资源评估
