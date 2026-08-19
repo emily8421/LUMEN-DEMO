@@ -66,7 +66,7 @@
 | UI 探索到交付 | UI brief、参考分析、需求探索原型、视觉效果探索、experience brief、frontend-interaction、UI 原型策略、`08/09` 是否按状态晋级；未确认候选是否被阻断 | 列用户确认依据、未确认项、Gate 断点和回填缺口 |
 | 前端交互 | UI 型项目是否已补前端交互设计或写明豁免；是否越过 PRD / API / 验收边界；是否满足通用 design 标准；是否引用已确认 experience brief / research 依据 | 列缺口、越界和权限边界风险 |
 | UI 原型策略 | UI 型项目是否已选择原型策略或写明豁免；原型证据是否可访问、可复核；默认 UI 标准基线、UI / 后端 / 双轨顺序判断和 UI-G-004 / UI-G-006 / UI-G-007 是否明确；是否足以支持前端 Sprint 和 `09` 验收路径 | 列原型形式、位置、覆盖缺口、Gate 断点、越界和验收闭环风险 |
-| Web App Structure Profile | 复杂 Web / 全栈交互项目是否触发 `template-docs/web-fullstack-profile.md`；App Shell、目录边界、vertical slice、文件膨胀阈值、Sprint 0 / Walking Skeleton 和 API / browser smoke 是否闭合 | 列 WSG-001 到 WSG-006 断点、豁免理由和进入业务 Sprint 风险 |
+| Web App Structure Profile | 复杂 Web / 全栈交互项目是否触发 `template-docs/profiles/web-fullstack-profile.md`；App Shell、目录边界、vertical slice、文件膨胀阈值、Sprint 0 / Walking Skeleton 和 API / browser smoke 是否闭合 | 列 WSG-001 到 WSG-006 断点、豁免理由和进入业务 Sprint 风险 |
 | 阶段边界 | 当前阶段是否混入后续功能 | 标出越界内容 |
 | 阶段归属审计 | 需求 / 概要文档（00-05）是否混入详细设计 / 实现级内容——典型信号：表名、API-ID、migration 号、类名、实现算法、版本演进史出现在 00-05 正文或矩阵行；无权限访问、接口契约细节应指向 `07` 而非内联。对照 `ai/document-lifecycle-rules.md` §2「E6 反向同步落点约束」逐项判定「通过 / 需收敛」，收敛动作 = 归 `09` / `docs/design/*` / CHANGELOG，或另立实现索引文档后在原位留指针 | 列出每处错置内容、所在文档 / 章节、建议收敛落点；有同类错置但未逐项列出时不得判通过 |
 | 可验证性 | 需求和设计是否有可验收口径 | 标出不可测条目 |

@@ -53,13 +53,13 @@ AI 收到场景意图后，**第一步判断 cwd 状态再路由**——「已�
 |---|---|---|---|
 | L1 → 普通 L3 | 母模板创建 / 同步普通派生项目 | A2 / A13 / A15 | 普通派生项目直连母模板；不承担领域模板复杂度 |
 | L1 → L2 | 母模板创建 / 维护领域模板 | A20 / `/run domain-template-lab` / C1-C8 | 领域模板作为母模板下游，吸收通用方法论；不把领域 scaffold 写入母模板 |
-| L2 → 领域 L3 | 领域模板创建 / 同步 / 验收领域派生项目 | 领域模板自己的 L2→L3 场景剧本（L2-to-L3 playbook）；可从 `template-docs/domain-derived-scenarios-template.md` 复制后领域化 | 母模板只给三层边界与通用骨架；具体领域创建、同步、自检、回流由领域模板维护 |
+| L2 → 领域 L3 | 领域模板创建 / 同步 / 验收领域派生项目 | 领域模板自己的 L2→L3 场景剧本（L2-to-L3 playbook）；可从 `template-docs/maintainer/domain-derived-scenarios-template.md` 复制后领域化 | 母模板只给三层边界与通用骨架；具体领域创建、同步、自检、回流由领域模板维护 |
 
 路由原则：
 
 - 用户要创建普通项目：走 A2 / `new-project`。
 - 用户要创建领域模板：走 A20 / `/run domain-template-lab`。
-- 用户要创建领域派生项目：读取对应领域模板维护的 L2→L3 场景剧本；若领域模板尚未生成，可先复制 `template-docs/domain-derived-scenarios-template.md` 作为骨架；母模板不直接写具体领域项目剧本。
+- 用户要创建领域派生项目：读取对应领域模板维护的 L2→L3 场景剧本；若领域模板尚未生成，可先复制 `template-docs/maintainer/domain-derived-scenarios-template.md` 作为骨架；母模板不直接写具体领域项目剧本。
 - 用户要同步普通派生项目或领域模板的母模板方法论：走 A13；普通派生用 `--preserve-project-version`，领域模板用 `--domain-template`。
 - 用户要同步领域派生项目的领域 overlay：走领域模板提供的 L2→L3 同步剧本，不让领域 L3 直接跨层同步母模板。
 - 回流按相邻层处理：普通 L3 → L1；领域 L3 → L2；只有 L2 提炼出的跨领域通用结论才回流 L1。
@@ -340,14 +340,14 @@ AI 识别场景后，**先输出引导计划给用户看（用人话 + 为什么
 |---|---|---|---|
 | 1 | 区分需求探索原型与实现前原型 | 防止用原型绕过正式需求链 | 对照 `ai/doc-standards/ui-prototype-strategy.md` |
 | 2 | 判断是否触发 UI 原型策略 | 多页面、多状态、多角色、Demo 验收或 Mock / 降级口径都可能触发 | 读取 `project-rules` §2.3、`03/05`、`frontend-interaction` |
-| 3 | 选择原型形式、默认 UI 基线和权威位置 | Figma / Penpot / Storybook / 代码原型 / 截图标注适用场景不同；用户没给专业规范时 AI 先给行业基线 | 可参考 `template-docs/ui-prototype-strategy-template.md` |
+| 3 | 选择原型形式、默认 UI 基线和权威位置 | Figma / Penpot / Storybook / 代码原型 / 截图标注适用场景不同；用户没给专业规范时 AI 先给行业基线 | 可参考 `template-docs/templates/ui-prototype-strategy-template.md` |
 | 4 | 判断 UI 优先 / 后端优先 / 双轨并行 | UI 体验、真实依赖或二者都高风险时，实施顺序不同 | 记录顺序判断、风险、汇合点和豁免理由 |
 | 5 | 映射覆盖范围和未覆盖项 | 明确页面、主流程、状态、角色、设备、风险和豁免 | 输出策略记录 + 待确认项 |
 | 6 | 回填正式文档 | 原型策略必须进入 `project-rules`、`05` 或 `frontend-interaction`，不能只停留在对话 | 转 `edit-single-doc`，必要时更新 `08/09` |
 
 - **完成判据**：原型策略状态明确 · 原型形式、默认 UI 基线和权威位置明确 · UI / 后端 / 双轨顺序判断明确 · 覆盖范围 / 未覆盖项 / Mock 降级口径明确 · 与 `frontend-interaction` / `08` / `09` 有追溯
 - **下一步**：A8 / A10
-- **cmd 指针**：`ai/doc-standards/ui-prototype-strategy.md` + `template-docs/ui-prototype-strategy-template.md` + `ai/prompts/docs/04-edit-single-doc.md`
+- **cmd 指针**：`ai/doc-standards/ui-prototype-strategy.md` + `template-docs/templates/ui-prototype-strategy-template.md` + `ai/prompts/docs/04-edit-single-doc.md`
 
 #### A25 UI Brief Intake / 前端交互输入补齐
 - **说明**：在输入评审、需求探索原型、正式前端交互设计或前端实现前，主动补齐 UI / UX 输入，避免用户没有提供参考产品、信息架构、演示路径、页面密度或视觉禁区时直接进入原型或编码。
@@ -357,14 +357,14 @@ AI 识别场景后，**先输出引导计划给用户看（用人话 + 为什么
 | # | 做什么 | 为什么 | 机器执行 |
 |---|---|---|---|
 | 1 | 盘点 UI 相关输入 | 用户往往不会主动给专业 UI brief，AI 需先抽取线索 | 读取 `docs/inputs/*`、`docs/vision/product-vision.md`、`docs/00-03`（如存在） |
-| 2 | 输出 UI 输入缺口 | 先判断缺参考产品、演示主线、页面结构、信息密度、设备范围还是视觉禁区 | 对照 `template-docs/ui-brief-intake-template.md` |
+| 2 | 输出 UI 输入缺口 | 先判断缺参考产品、演示主线、页面结构、信息密度、设备范围还是视觉禁区 | 对照 `template-docs/templates/ui-brief-intake-template.md` |
 | 3 | 用低门槛问题引导确认 | 不把“你想要什么 UI 风格”这种专业问题从零抛给用户 | 给出 AI 默认建议、建议依据、备选方案和取舍影响 |
 | 4 | 形成 UI brief / extraction 记录 | 让交互输入可审计、可回填 | 用户确认后写入 `docs/inputs/ui-brief.md` 或 `docs/research/YYYY-MM-DD-ui-brief-intake.md` |
 | 5 | 回填后续链路 | UI brief 不是正式交互设计，需进入权威文档 | 建议回填 `docs/design/frontend-interaction.md`、UI 原型策略、`08`、`09` |
 
 - **完成判据**：UI 类型、参考与偏好、演示 / 首屏目标、信息架构、状态边界和待确认项清晰；已区分“已明确 / AI 推断 / 待确认 / 冲突 / 超范围”。
 - **下一步**：A26（需要串联 UI 探索到交付时）/ A22（需求仍需探索原型时）/ A23（已有需求链，需实现前原型策略时）/ A7（回填正式设计）/ A10（编码前门禁已满足时）
-- **cmd 指针**：`ai/prompts/docs/01-review-inputs.md` + `template-docs/ui-brief-intake-template.md`
+- **cmd 指针**：`ai/prompts/docs/01-review-inputs.md` + `template-docs/templates/ui-brief-intake-template.md`
 
 #### A26 UI Interaction Discovery / UI 探索到交付
 - **说明**：当用户给出参考产品、截图、视觉想法或希望“先确认交互 / 视觉效果再写正式设计”时，AI 主动引导输入、给出推荐方案、组织原型确认，并把确认结果回填到 experience brief、正式前端交互设计、UI 原型策略、`08` 和 `09`。
@@ -390,14 +390,14 @@ AI 识别场景后，**先输出引导计划给用户看（用人话 + 为什么
 
 | # | 做什么 | 为什么 | 机器执行 |
 |---|---|---|---|
-| 1 | 判断是否触发 Web App Structure Profile | 区分简单 UI 和复杂 Web / 全栈交互项目 | 参考 `template-docs/web-fullstack-profile.md` §1 |
+| 1 | 判断是否触发 Web App Structure Profile | 区分简单 UI 和复杂 Web / 全栈交互项目 | 参考 `template-docs/profiles/web-fullstack-profile.md` §1 |
 | 2 | 定义 App Shell 与目录边界 | 防止业务能力堆入单个主应用文件或全局样式 | 回填 `04/05` |
 | 3 | 规划 Sprint 0 / Walking Skeleton | 先跑通最小 vertical slice，再小步实现业务 | 回填 `08` |
 | 4 | 定义 API / browser smoke | 验证前端视图、API client、后端接口和权限 / 降级可见口径 | 回填 `09` |
 
 - **完成判据**：WSG-001 到 WSG-006 状态明确；已在 `04/05/08/09` 记录 App Shell、目录边界、vertical slice、文件膨胀阈值和 smoke 验证，或写明豁免理由。
 - **下一步**：A10 执行 Sprint 0 / 首个业务 Sprint；A8 文档评估；A17 open items。
-- **cmd 指针**：`template-docs/web-fullstack-profile.md` + `ai/prompts/dev/02-run-task.md`
+- **cmd 指针**：`template-docs/profiles/web-fullstack-profile.md` + `ai/prompts/dev/02-run-task.md`
 
 #### A28 System Skeleton Gate / 可运行系统框架先行
 - **说明**：non-trivial 项目（多模块 / 有对外接口 / 有运行依赖）在首个业务模块 Sprint 前，先实现并验收一套最小可运行系统框架（System Skeleton）：模块边界就位、关键接口连通、至少一条纵切可跑通、错误 / 空 / 加载入口存在，再做模块细化。quick-script / 纯计算库 / 单文件工具可豁免。复杂 Web / 全栈项目叠加 A27 Web 特化。
@@ -523,7 +523,7 @@ AI 识别场景后，**先输出引导计划给用户看（用人话 + 为什么
 | 4 | 同步后整理项目 | README、`project-rules`、docs 分区等项目事实不会被同步脚本自动迁移 | `post-sync-cleanup`(15)，先出迁移计划 |
 | 5 | 文档体系同步后审计 | 检查旧方法生成的 `docs/00-09` 是否需按新规范回梳 | `docs-system-audit`(16)，同步后审计模式 |
 | 6 | 做提案回流收口检查 | 派生提案可能已通过模板 issue / PR 被采纳，同步后应判断本地草稿和 issue 记录是否可归档 | 扫描 `_proposals/`、`.ai/session-handoff.md`、`sync-records/template-sync/`、issue 链接；必要时 `gh issue view` |
-| 7 | 给项目验证建议并形成同步报告 | 留下命令、结果、风险、未验证项、提案收口结论和后续任务 | `template-docs/derived-sync-report-template.md` → `sync-records/template-sync/` |
+| 7 | 给项目验证建议并形成同步报告 | 留下命令、结果、风险、未验证项、提案收口结论和后续任务 | `template-docs/templates/derived-sync-report-template.md` → `sync-records/template-sync/` |
 
 > **同步后续接模式**：若 Git 显示已存在最近的 `sync template vX.Y.Z from ai-project-template` 同步提交，或 `TEMPLATE-BASE.md` 已记录目标模板版本且用户明确说“已同步，只补后续”（旧项目可兼容 `VERSION` 已是目标版本），不要重新执行 dry-run / commit；先核对最新同步提交和工作区，再从第 3 步的边界验证开始补跑 workflow 检查、`post-sync-cleanup`、`docs-system-audit`、项目验证建议和同步运行记录。
 
@@ -638,21 +638,21 @@ AI 识别场景后，**先输出引导计划给用户看（用人话 + 为什么
 | 2 | 选择内置还是独立仓库 | 领域模板若需要独立生命周期，应优先独立仓库 | 对比母模板内置 scaffold vs 独立 `*-template` 仓库，列边界和维护成本 |
 | 3 | 做 Phase 0 预检 | 避免创建到错误目录、远端重名或工具不可用 | 只读检查 `new-project.*`、目标目录、远端仓库名、`git` / `gh` / Bash / 权限 |
 | 4 | 输出创建方案 | 创建新仓库前先明确命名、可见性、base version 和初始化范围 | 给出命令、预计修改文件、验证方式和是否需要人工确认 |
-| 5 | 规划 L2→L3 场景剧本入口（L2-to-L3 playbook） | 同步清单和自检脚本不能替代领域派生项目端到端使用剧本 | 从 `template-docs/domain-derived-scenarios-template.md` 复制为 `template-docs/<domain>/domain-derived-scenarios.md` 或等价入口，覆盖创建、同步、整理、自检、回流和发布后下游同步 |
+| 5 | 规划 L2→L3 场景剧本入口（L2-to-L3 playbook） | 同步清单和自检脚本不能替代领域派生项目端到端使用剧本 | 从 `template-docs/maintainer/domain-derived-scenarios-template.md` 复制为 `template-docs/<domain>/domain-derived-scenarios.md` 或等价入口，覆盖创建、同步、整理、自检、回流和发布后下游同步 |
 | 6 | 执行创建（需确认） | 新目录 / 新仓库是状态变更，必须确认后再执行 | 从母模板父目录运行 `new-project.sh --local` 或受控复制；创建后写领域版 `TEMPLATE-BASE.md`（`Lineage type: domain template` + `Domain standards scope`），后续从母模板 sync 用 `--domain-template` |
 
 - **完成判据**：已明确三层关系（母模板 → 领域模板 → 具体项目）· 已决定独立仓库或不执行 · 已给出可审计创建命令和初始化待办 · 已规划领域模板自己的 L2→L3 场景剧本入口 · 未向母模板新增领域 scaffold
 - **下一步**：执行领域模板创建 / 回 C1 记录模板提案 / 暂停等待人工确认
-- **cmd 指针**：`ai/commands/domain-template-lab.md`；方法论定位见 `template-docs/domain-templates.md`；参考 `scripts/new-project.sh`、`_proposals/TEMPLATE-UPGRADE-domain-template-inheritance.md` 和 `CONTRIBUTING.md` §4 版本影响判断
+- **cmd 指针**：`ai/commands/domain-template-lab.md`；方法论定位见 `template-docs/profiles/domain-templates.md`；参考 `scripts/new-project.sh`、`_proposals/TEMPLATE-UPGRADE-domain-template-inheritance.md` 和 `CONTRIBUTING.md` §4 版本影响判断
 
 #### A21 查看演示效果（查看 / 启动 Demo）
-- **说明**：项目有可运行交付物（Demo / MVP / 产品）时，把交付物跑起来并查看效果。执行边界与禁止项见 `ai/commands/show-demo.md`，演示 SOP 模板见 `template-docs/demo-runbook-template.md`，**不替代 `docs/09-verification.md` 验收**。
+- **说明**：项目有可运行交付物（Demo / MVP / 产品）时，把交付物跑起来并查看效果。执行边界与禁止项见 `ai/commands/show-demo.md`，演示 SOP 模板见 `template-docs/templates/demo-runbook-template.md`，**不替代 `docs/09-verification.md` 验收**。
 - **触发**：「查看演示效果」「启动 Demo」「给我二维码」「检查 Demo 是否起来」「怎么看当前项目效果」
 - **cwd·前置**：在派生项目 · 已有可运行交付物
 - **机器执行**：`/run show-demo`（路由到项目演示 SOP `docs/env/local-demo-runbook.md`；无则按模板生成草案待确认）
 - **完成判据**：演示入口与访问方式已输出 · 启动 / 生成产物等写入动作已确认 · 未把演示检查误称 09 验收通过
 - **下一步**：A12（验证与验收）/ A10（继续 Sprint）
-- **cmd 指针**：`ai/commands/show-demo.md`、`template-docs/demo-runbook-template.md`
+- **cmd 指针**：`ai/commands/show-demo.md`、`template-docs/templates/demo-runbook-template.md`
 
 ### C 维护者（C1–C8）
 
@@ -750,12 +750,12 @@ AI 识别场景后，**先输出引导计划给用户看（用人话 + 为什么
 |---|---|---|---|
 | 1 | 明确目标派生仓库和模板版本 | 避免在错误仓库验收 | 列出派生仓 cwd、`VERSION`、同步提交 |
 | 2 | 在派生项目跑边界检查 | 确认没误覆盖项目专属文件 | `scripts/check-derived-sync.ps1` / `.sh` |
-| 3 | 记录这次同步的命令/结果/问题 | 留痕才能追溯 | `template-docs/derived-sync-report-template.md` → `sync-records/template-sync/` |
+| 3 | 记录这次同步的命令/结果/问题 | 留痕才能追溯 | `template-docs/templates/derived-sync-report-template.md` → `sync-records/template-sync/` |
 | 4 | 把可通用优化点转提案回流 | 通用问题回流模板，惠及所有项目 | 转写 `_proposals/TEMPLATE-UPGRADE-*.md`（回 C1） |
 
 - **完成判据**：边界检查通过 · 同步报告留痕
 - **下一步**：C1
-- **cmd 指针**：`git-guide.md` §5.4 + `template-docs/derived-sync-report-template.md`
+- **cmd 指针**：`git-guide.md` §5.4 + `template-docs/templates/derived-sync-report-template.md`
 
 #### C7 模板能力设计流程
 - **说明**：给模板新增规则、文档骨架、command、prompt、脚本等能力（本提案即此场景产物）。
@@ -788,7 +788,7 @@ AI 识别场景后，**先输出引导计划给用户看（用人话 + 为什么
 | 4 | 看汇总：成功 / 跳过 / 失败 | 不干净或非派生会跳过，失败需人工 | 读汇总输出 |
 
 - **完成判据**：无失败项目；跳过项已确认（非派生 / 工作区不干净 / 模板本体）
-- **下一步**：失败或跳过项目逐个走 A13；每项目用 `template-docs/derived-sync-report-template.md` 留运行记录
+- **下一步**：失败或跳过项目逐个走 A13；每项目用 `template-docs/templates/derived-sync-report-template.md` 留运行记录
 - **cmd 指针**：`scripts/sync-all-derived.sh`
 - **注意**：`--commit` 在每个派生当前分支提交；要 PR-per-project 可审计流程改用 A13。
 

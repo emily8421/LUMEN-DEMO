@@ -19,7 +19,7 @@
 
 **预期产出**：同步分支、同步提交、派生同步边界检查结果、同步后整理计划、文档体系审计摘要、提案回流收口结论、项目验证建议、派生同步运行记录、派生项目已处理提案归档计划和 PR 链接。
 
-**使用后下一步**：评审并合并派生项目同步 PR；用 `template-docs/derived-sync-report-template.md` 生成或更新同步运行记录；若 `post-sync-cleanup`、`docs-system-audit` 或项目验证建议发现待办，按最小任务继续处理。若 `ai/project-rules.md` 需要人工迁移新骨架项、`_proposals/` 中仍有未处理提案，或运行记录中出现可通用模板优化点，单独开任务处理。
+**使用后下一步**：评审并合并派生项目同步 PR；用 `template-docs/templates/derived-sync-report-template.md` 生成或更新同步运行记录；若 `post-sync-cleanup`、`docs-system-audit` 或项目验证建议发现待办，按最小任务继续处理。若 `ai/project-rules.md` 需要人工迁移新骨架项、`_proposals/` 中仍有未处理提案，或运行记录中出现可通用模板优化点，单独开任务处理。
 
 > 事实来源：下行同步标准流程以 `git-guide.md` 与 `CONTRIBUTING.md` 为准；本节只是把该流程整理成可复制给 AI 执行的 Prompt。
 
@@ -122,7 +122,7 @@
    - 根据项目形态建议运行测试、lint、文档自检、脚本验证或人工验收。
    - 若无法运行或项目没有验证入口，记录为未验证项，不得写成已通过。
 20. 生成或更新派生同步运行记录：
-   - 读取 `template-docs/derived-sync-report-template.md`。
+   - 读取 `template-docs/templates/derived-sync-report-template.md`。
    - 推荐保存到 `sync-records/template-sync/YYYY-MM-DD-sync-template-vX.Y.Z.md`（长期记录，与项目文档分离，便于审计和回流扫描）；如果用户暂不想提交长期记录，先写入 `.ai/session-handoff.md`。
    - 记录同步前版本、目标版本、同步分支、dry-run / commit / check-derived-sync 命令、同步结果、是否新增 / 刷新 `ai/doc-standards/00-09`、是否残留旧 `docs/_scaffold/`、同步后整理摘要、文档体系审计摘要、提案回流收口结论、项目验证建议、遇到的问题和后续动作。
 21. 从运行记录归纳可优化点：

@@ -9,6 +9,52 @@
 
 模板版本采用三段式 `vMAJOR.MINOR.PATCH`，以根目录 `VERSION` 为单一审计入口。版本是发布边界，不是提案数量边界；提案收件箱增长不触发版本递增，只有合并到同步范围内并改变模板行为或下游同步判断的 PR 才判断 `PATCH / MINOR / MAJOR`。`ai/global-rules.md` 顶部仅记录全局规则自身版本。
 
+## v1.66.0（2026-08-19）
+
+template-docs 目录分组重组 + 手册文档同步边界（MINOR，两 PR 一版本）：落地 `_proposals/TEMPLATE-UPGRADE-template-docs-reorg.md`。主题：`template-docs/` 根目录从 28 个平铺 .md 收敛为「9 件手册 + 3 新子目录（profiles / templates / maintainer）+ 3 既有子目录」；文档按真实消费者划分同步边界（模板仓专用 3 件停止下行、领域专属 1 件转 `files_domain`），沿 v1.65.0 脚本边界同构模式。
+
+**Step 1（同步边界 + 导航）**：
+
+- **同步清单调整（4 出 1 转）**：`files_all` 移出 `e2e-regression-checklist.md` / `e2e-report-template.md` / `rd-data-chain.md`（3 件模板仓专用，头部改 `Template-only notice`）；`domain-derived-scenarios-template.md` 移入 `files_domain`（仅领域路线下行——领域模板 agent-system 的 domain-overlay 是真实消费者，普通派生项目零消费者；维护者拍板后的评估修正项）。`description` 补边界声明。
+- **兜底清单**：`sync-template.sh` `DEFAULT_SYNC_FILES` 同步调整；补注释说明 files_domain 项不在兜底范围（已知局限，不扩机制）。
+- **引用方标注**：`ai/session-rules.md` 两处 rd-data-chain 脚注、beginner-guide / template-methodology / capability-packages 导航行、`MAINTAINERS.md` §3/§4 标注「模板仓文档」；capability-packages §5 补记边界变化。
+- **初始裁剪与孤儿审计**：`new-project.sh` 追加删除 4 件文档；post-sync-cleanup 审计项扩为「模板仓 / 领域专用文档残留」（prompt + command 双登记）。
+- **`template-docs/README.md` 重写**为五组分组导航（手册 / Profile / 模板 / 结构库 / 模板仓专用）。
+- **防回流断言**：`check-template.sh` 边界分区新增 3 件文档不在清单 + domain 项在 `files_domain` 断言 + 烟测 4 项；`.ps1` 镜像断言更新。
+
+**Step 2（目录重组，同版本并入）**：
+
+- **三子目录归位（git mv 保留历史）**：`profiles/`（4 件：web-fullstack / web-app-scaffold / remote-ci-sop / domain-templates）、`templates/`（11 件：demo-runbook / user-guide / derived-sync-report / smoke-test-report / 3 个 UI 模板 / 2 个 frontend 模板 / 2 个 example）、`maintainer/`（4 件：e2e-regression-checklist / e2e-report-template / rd-data-chain / domain-derived-scenarios-template）。根目录保留 9 件手册（README / beginner-guide / glossary / template-methodology / scenario-guides / env-setup / ai-cli-setup / capability-packages / smoke-test）。
+- **全量引用迁移**：约 60 个文件（`ai/` 规则与命令与 Prompt、SOP、MAINTAINERS、CONTRIBUTING、README、template-docs 内部互引、`template-sync.json`、`sync-template.sh` 兜底清单、`check-template.sh` 约 105 处断言路径）全部改为新路径；grep 验证零旧路径残留。
+- **孤儿审计追加**：post-sync-cleanup 新增「旧路径残留」审计项（19 个旧路径副本不再被覆盖，与新路径重复，可安全删除；领域仓自建文档引用需其维护者自改）。
+
+本版为 MINOR：同步范围成员变化（4 出 1 转）+ 同步文件路径迁移（19 件）= 下游需感知的采用面变化（派生项目下次同步 dry-run 会显示停更与新增路径；旧路径残留需随 post-sync-cleanup 清理）。非 MAJOR：三级清单机制、覆盖式同步、文件内容均不变；派生侧无强制迁移（孤儿无害）。赶在下次 6 仓同步窗口前合并，派生一次同步携带全部变更；窗口目标版本改为 v1.66.0。
+
+## v1.65.1（2026-08-19）
+
+governance Batch 2：开发手册主干重构（PATCH）：落地 `_proposals/TEMPLATE-UPGRADE-governance-handbook-agent-tool-registry.md` §9 Batch 2（Batch 1 机制 / 工具登记已于 v1.61.6 落地）。主题：把 v1.61.6 建立的两份注册表（机制台账 + 工具台账）接入手册主干与各入口导航，让人能从一份主干理解模板层次、四条价值流和入口；不复制注册表字段，只加指针。
+
+- **`template-docs/template-methodology.md` 主干重构（主改）**：§2 当前权威源表补 3 行（`capability-packages.md` 机制注册表 / `scripts/README.md` 工具注册表 / `rd-data-chain.md` 研发数据链）；§1 补「读者路径」三类入口；新增 §5「四条价值流与工作分区」（文档 / 实现 / 验收 / 知识，各 2-3 行输入输出 + 权威源，指针指向 capability-packages §3）；新增 §7「机制与工具注册表」（MECH-* / TOOL-* ID 体系与字段级事实源声明）；原 §5-§6 顺延为 §6 / §8，内容不变。
+- **入口指针收敛**：`template-docs/README.md` 手册导航补登 `capability-packages.md` / `rd-data-chain.md` / `ui-knowledge/`；根 `README.md` 快速开始补一句注册表去向；`template-docs/beginner-guide.md` §7 导航表补「查治理机制 / 脚本工具台账」一行。
+- **过时缺口修正（顺手）**：`template-docs/capability-packages.md` §5「已知缺口：scripts/README.md 不在 template-sync.json」表述已过时（v1.65.0 已下行），修正为已落地记录。
+
+本版为 PATCH：只重组人读说明与导航，不改变默认行为、推荐流程、同步范围或自检断言（4+1 文件均在同步清单内，`template-sync.json` 不变）；无派生侧迁移动作。对照提案 §13.3 验收：主干可导航层次 / 价值流 / 入口，注册表可达，无第二权威源，路径与关键词断言兼容。PATCH 豁免 L3 e2e 回归。
+
+## v1.65.0（2026-08-18）
+
+脚本同步边界分层（MINOR）：落地 `_proposals/TEMPLATE-UPGRADE-scripts-sync-boundary.md`（吸收并关闭 C-016；C-017 / C-018 一并拍板——孤儿清理留下次同步窗口、LumiOne / gmbl 随下次同步一并到 v1.65.0）。主题：`scripts/` 按真实消费者分为「随模板下行 / 模板仓专用」两组，模板仓专用脚本不再无差别下发到派生项目；工具注册表 README 随下行组脚本一并下发，关掉「有工具没说明」缺口。
+
+- **同步清单调整（5 出 1 入）**：`template-sync.json` `files_all` 移出模板仓专用脚本 `check-template.sh` / `check-template.ps1` / `sync-all-derived.sh` / `e2e-sync-check.sh` / `new-project.sh`（仅模板维护者与模板仓 CI 使用；移出后停更不删除，派生项目残留随清理审计处置）；移入 `scripts/README.md`（工具注册表下行，C-016 关闭）。`description` 补边界声明。
+- **`scripts/README.md` 重写为下行视角**：§1 登记「下行 8 能力 / 10 文件」与「模板仓专用 4 能力 / 5 文件」两组；§2.1/2.2 分组表格；补 `Sync notice`；§5.2 落地记录 + 孤儿脚本清理指引（残留可安全删除、无需回填字段、恢复从模板仓复制）。
+- **`new-project.sh` 初始裁剪**：新增删除 5 个模板仓专用脚本步骤（含自删；`git archive` 全量复制后显式裁剪），新项目 `scripts/` 初始即只含下行集合 + README；收尾提示补「工具说明见 scripts/README.md」。
+- **头部标注**：5 个模板仓专用脚本 `Sync notice` 改为 `Template-only notice`（不再具备「同步时被覆盖」语义）；`sync-all-derived.sh` / `e2e-sync-check.sh` 头注释「在 template-sync.json」声明同步更正。
+- **自检防回流**：`check-template.sh` 新增「检查脚本同步边界」分区（16 项：5 脚本不在清单 + Template-only notice 头 + README 入清单）；烟测新增 6 项（产物含 README、不含 5 个专用脚本）；`check-template.ps1` 结构断言镜像（结构清单 + 边界断言）。
+- **兜底清单同步**：`sync-template.sh` `DEFAULT_SYNC_FILES` 与主清单同步调整（5 出 1 入），防 fallback 行为分叉。
+- **孤儿审计**：`ai/prompts/maintainers/15-post-sync-cleanup.md` 与 `ai/commands/post-sync-cleanup.md` 新增「模板仓专用脚本残留」审计项（与 v1.64.0 §3 裁剪审计同构；发现即列路径提示可安全删除）。
+- **措辞对齐**：`SOP.md`（C3/C8/烟测命令块）、`MAINTAINERS.md`（同步规则段 + 批量同步段）、`template-docs/env-setup.md`（new-project 运行位置声明）标注模板仓专用脚本「仅模板仓存在、不下行」。
+
+本版为 MINOR：同步范围成员变化（5 出 1 入）+ 新下行文件 = 下游采用面变化（`scripts/README.md` §4 治理规则要求）。非 MAJOR：同步机制与清单结构不变，派生侧无强制迁移（停更的孤儿脚本无害，不清理不破坏流程）。下次派生同步窗口：6 仓（含 LumiOne / gmbl，C-018）同步 v1.65.0 + post-sync-cleanup 顺带孤儿清理（C-017）+ registry 快照核对。
+
 ## v1.64.0（2026-08-18）
 
 形态裁剪执行落地 + 根目录地图 + pitfall 口径 + 场景手册指引（MINOR）：落地 `docs/research/2026-08-18-c1-proposal-triage-batch-plan.md` Batch B+C，吸收 #351 + #357 §2.2 + #350 与本地提案 `TEMPLATE-UPGRADE-project-scenario-handbook.md`（patch 聚合发布）。主题：让「按项目形态裁剪」从规则声明变成有执行点和审计项的动作，并给派生项目根目录一张「哪些能写、哪些会被覆盖」的三层地图。
@@ -33,7 +79,7 @@
 - **同步与自检**：`check-template.sh` 补断言（样例脚本存在性 + 唯一权威源 / 孤儿检测关键词 + 同步清单 / fallback 一致性；§13 plantuml 指引与镜像机制；doc-standards OO overlay 图 ID；docs README references 登记）。
 - **勘误**：`docs/research/2026-08-18-c1-proposal-triage-batch-plan.md` §4 补 references 锚定层遗漏与三条拍板口径。
 
-本版为 MINOR：doc-standards 新增概述章骨架要求与 OO overlay 可选能力层、新增样例脚本入同步清单、docs/README 新增三个可选子目录约定——构成新的下游采用面。全部 OO 图纸与镜像机制均为「建议 + 可选」，Lean 剖面可豁免并在 `ai/project-rules.md` §3 说明；不强制既有项目回补。合并后下行同步各派生项目（建议随 Batch B / v1.64.0 一并排期）。MINOR 发布前需跑 L3 端到端回归（`scripts/e2e-sync-check.sh` + `template-docs/e2e-regression-checklist.md`）。
+本版为 MINOR：doc-standards 新增概述章骨架要求与 OO overlay 可选能力层、新增样例脚本入同步清单、docs/README 新增三个可选子目录约定——构成新的下游采用面。全部 OO 图纸与镜像机制均为「建议 + 可选」，Lean 剖面可豁免并在 `ai/project-rules.md` §3 说明；不强制既有项目回补。合并后下行同步各派生项目（建议随 Batch B / v1.64.0 一并排期）。MINOR 发布前需跑 L3 端到端回归（`scripts/e2e-sync-check.sh` + `template-docs/maintainer/e2e-regression-checklist.md`）。
 
 ## v1.62.1（2026-08-15）
 
@@ -51,7 +97,7 @@ Web UI 知识质量基线（PATCH，Batch 2A）：落地 `_archive/proposals/TEM
 Web UI 设计知识核心层（MINOR）：落地 `_proposals/TEMPLATE-UPGRADE-web-ui-design-knowledge-base.md` Batch 1——给「UI 探索 → 交付」流水线（`ai/document-lifecycle-rules.md` §5.2.1）已有的「前端参考分析」阶段补上**项目级落盘模板 + 可查询的设计知识来源层**，让 AI 做参考分析时有标好来源与证据等级的依据可查，而非每次靠临场记忆或临时搜截图。Batch 0 已用 zhiyan + flowkit 双项目验证 schema 跨场景可产出可追溯、防机械套用的参考分析。
 
 - **新增 `template-docs/ui-knowledge/` 核心层（4 文件）**：`README.md`（知识模型 Source/Principle/Pattern/Case + A-D 证据等级 + 十维度 + 按 scope 选择流程 + 版权与许可状态机 + 评审升级路径；吸收 flowkit 评估更细结构——原型输入包契约 / Phase 分期）、`source-registry.md`（6 类来源：W3C WAI-ARIA / WCAG / GOV.UK / USWDS / MS HAX / awesome-design-md）、`visual-patterns.md`（6 条视觉模式）、`interaction-patterns.md`（7 条交互模式）。首批 13 条模式（12 条经维护者评审升 reviewed，`PAT-VIS-004` D 级维持 candidate）。
-- **新增 `template-docs/frontend-ui-reference-analysis-template.md`**：项目级参考分析落盘模板（八节结构，强制采纳 / 调整 / 排除矩阵 + UI-G-002 判断）。
+- **新增 `template-docs/templates/frontend-ui-reference-analysis-template.md`**：项目级参考分析落盘模板（八节结构，强制采纳 / 调整 / 排除矩阵 + UI-G-002 判断）。
 - **接入现有流程（5 文件）**：`ui-prototype-exploration` command / Prompt 补参考分析路由（按 scope 读 ui-knowledge，输出证据分级 + 采纳 / 排除矩阵，满足 UI-G-002）；`document-lifecycle-rules.md` §5.2.1 补知识来源指针；`ui-prototype-exploration-template.md` 加 `PAT-*` / `SRC-*` 引用位；`capability-packages.md` §7.3 登记 reference analysis 模板与 ui-knowledge 入口（不新增机制 ID）。
 - **同步与自检**：`template-sync.json` files_all + `sync-template.sh` fallback 各纳入 5 个新文件；`check-template.sh` 补断言（5 文件存在性 + 关键内容 + 同步清单 / fallback 一致性）。
 
@@ -69,11 +115,11 @@ Web UI 设计知识核心层（MINOR）：落地 `_proposals/TEMPLATE-UPGRADE-we
 
 ## v1.61.5（2026-08-13）
 
-本地预检对齐 CI check-markdown-clean（PATCH）：落地 `_proposals/TEMPLATE-UPGRADE-local-preflight-coverage.md`——`scripts/check-template.ps1`（本地落地预检入口）在 Bash 主路径与 PowerShell fallback 两条路径末尾都追加调用 `check-markdown-clean.ps1 _proposals ai-records`，使本地一键预检覆盖 CI `template-check` 的两个独立 step（`check-template` + `check-markdown-clean`），消除「本地全绿、CI fail」返工；`scripts/check-template.sh` 补防回归断言；`template-docs/remote-ci-sop-profile.md` §B 补一句说明。来源：模板维护者（pitfall 2026-08-11 + 2026-08-13 双实证，见 `ai-records/pitfalls/SUMMARY.md` §1 / §4）。
+本地预检对齐 CI check-markdown-clean（PATCH）：落地 `_proposals/TEMPLATE-UPGRADE-local-preflight-coverage.md`——`scripts/check-template.ps1`（本地落地预检入口）在 Bash 主路径与 PowerShell fallback 两条路径末尾都追加调用 `check-markdown-clean.ps1 _proposals ai-records`，使本地一键预检覆盖 CI `template-check` 的两个独立 step（`check-template` + `check-markdown-clean`），消除「本地全绿、CI fail」返工；`scripts/check-template.sh` 补防回归断言；`template-docs/profiles/remote-ci-sop-profile.md` §B 补一句说明。来源：模板维护者（pitfall 2026-08-11 + 2026-08-13 双实证，见 `ai-records/pitfalls/SUMMARY.md` §1 / §4）。
 
 - **`scripts/check-template.ps1`**：新增 `Invoke-MarkdownCleanPreflight` helper（以子进程运行 `check-markdown-clean.ps1 _proposals ai-records`，返回其退出码）；主路径与 fallback 路径均与模板检查退出码合并（任一失败即非零退出）。不扩大 fallback 断言范围。
 - **`scripts/check-template.sh`**：新增 `require_contains` 断言，校验 `check-template.ps1` 内含 `check-markdown-clean.ps1` + `_proposals ai-records` 调用（防回归）。
-- **`template-docs/remote-ci-sop-profile.md`**：§B「提交与推送」第 2 条补说明（模板仓跑 `check-template.ps1` 即覆盖 markdown clean 预检）。
+- **`template-docs/profiles/remote-ci-sop-profile.md`**：§B「提交与推送」第 2 条补说明（模板仓跑 `check-template.ps1` 即覆盖 markdown clean 预检）。
 - 归档 `local-preflight-coverage` 提案到 `_archive/proposals/`（本 PR 内）。
 
 本版是 patch 级自检脚本增强：不改 CI workflow、不改 `check-markdown-clean.ps1` 本身、不改 `template-sync.json` 结构、不新增必填入口；本地预检多跑一步（对齐 CI）。派生项目同步后，本地 `check-template.ps1` 同样覆盖 markdown clean 预检。patch 豁免 L3 端到端回归。
@@ -97,9 +143,9 @@ Web UI 设计知识核心层（MINOR）：落地 `_proposals/TEMPLATE-UPGRADE-we
 
 ## v1.61.2（2026-08-12）
 
-Web Profile 代码层一致性基线（PATCH）：给 `template-docs/web-fullstack-profile.md` 新增 §9 Web 代码契约精简版，兑现 `ai/global-rules.md §2.1` L0 引言与 L0-8 口径对 `web-fullstack-profile §9/§9.4` 的前向引用（原为悬空引用）。来源：LUMEN_demo_T2.1（emily8421/LUMEN-DEMO）派生项目回流 issue #333；评估与裁剪见 `docs/research/2026-08-12-c1-proposal-triage-reassessment.md` §15。
+Web Profile 代码层一致性基线（PATCH）：给 `template-docs/profiles/web-fullstack-profile.md` 新增 §9 Web 代码契约精简版，兑现 `ai/global-rules.md §2.1` L0 引言与 L0-8 口径对 `web-fullstack-profile §9/§9.4` 的前向引用（原为悬空引用）。来源：LUMEN_demo_T2.1（emily8421/LUMEN-DEMO）派生项目回流 issue #333；评估与裁剪见 `docs/research/2026-08-12-c1-proposal-triage-reassessment.md` §15。
 
-- **`template-docs/web-fullstack-profile.md` 新增 §9 代码层一致性基线（Web 形态）**：§9.1 错误与响应契约（机器可读错误标识、兜底异常 envelope 复用 L0-7、结构化客户端错误）；§9.2 传输边界（统一 API client / transport，禁裸 `fetch`）；§9.3 类型与契约同步（机器可校验契约源，禁手工双写漂移）；§9.4 工程化护栏（真实 HTTP 路径回归 + CI 必须跑测试复用 L0-8 + 质量门按形态裁剪指向 `implementation-lifecycle-rules §6`）。跨形态通用基本功指向 L0，具体栈写法留项目 `05-tech-spec` / `project-rules §5`；不引 R1-R7、不强制固定工具组合、不新增硬 Gate。部分采纳 #333——裁掉固定 envelope 结构 / 读写分层二选一 / barrel re-export / 端点后缀等项目特定或栈特定条目。
+- **`template-docs/profiles/web-fullstack-profile.md` 新增 §9 代码层一致性基线（Web 形态）**：§9.1 错误与响应契约（机器可读错误标识、兜底异常 envelope 复用 L0-7、结构化客户端错误）；§9.2 传输边界（统一 API client / transport，禁裸 `fetch`）；§9.3 类型与契约同步（机器可校验契约源，禁手工双写漂移）；§9.4 工程化护栏（真实 HTTP 路径回归 + CI 必须跑测试复用 L0-8 + 质量门按形态裁剪指向 `implementation-lifecycle-rules §6`）。跨形态通用基本功指向 L0，具体栈写法留项目 `05-tech-spec` / `project-rules §5`；不引 R1-R7、不强制固定工具组合、不新增硬 Gate。部分采纳 #333——裁掉固定 envelope 结构 / 读写分层二选一 / barrel re-export / 端点后缀等项目特定或栈特定条目。
 
 本版是 patch 级治理说明补强：在已有同步清单文件内新增一节可选代码契约，兑现已有规则的前向引用，不新增同步结构文件 / 目录、不新增必填入口、不新增强制 Gate 或 `check-template` 断言；默认行为与下游必做流程不变。派生项目同步后按需在 `project-rules §5` / `05-tech-spec` 落地具体口径。patch 豁免 L3 端到端回归。
 
@@ -108,7 +154,7 @@ Web Profile 代码层一致性基线（PATCH）：给 `template-docs/web-fullsta
 新增坑 / 问题观察日志（pitfall observation log）机制（PATCH）：与 `ai/session-rules.md` §4.1 token-hotspot 平行，提供 AI 引入或踩到的坑 / 问题 / 教训（bug、流程坑、低效行为导致返工或缺陷）的轻量记录载体，作为定期审视、归纳、转提案的原始材料。提案见 `_proposals/TEMPLATE-UPGRADE-pitfall-observation-log.md`。
 
 - **`ai/session-rules.md` 新增 §4.3**：与 §4.1 / §4.2 同构——载体分层（本地单条 `.ai/pitfalls/` gitignored + 可选入库 `ai-records/pitfalls/SUMMARY.md` 默认不建）、单条最小字段（建议非必填）、收尾自检触发与写入、rollup ≥3 提示、归档（`.ai/pitfalls-archive/`，归档不删除）、汇总状态字段、派生项目自行 `.gitignore` 提示；与 token-hotspot 边界划清（成本 / 上下文热点 → §4.1，问题 / 教训 → §4.3）；C1 只负责提案 triage，不承担坑日志计数。§4 触发点新增 pitfall 收尾自检条。
-- **`template-docs/rd-data-chain.md` 索引同步**：§2 辅助留痕表新增「AI 引入的问题 / 教训」类别行；§4「无门禁」枚举补 pitfalls，保持索引自洽。
+- **`template-docs/maintainer/rd-data-chain.md` 索引同步**：§2 辅助留痕表新增「AI 引入的问题 / 教训」类别行；§4「无门禁」枚举补 pitfalls，保持索引自洽。
 - **`.gitignore` 新增 `.ai/pitfalls/`**：本地单条记录纯本地、不询问、不上传。
 
 本版是 patch 级可选能力补强：新增一个与 token-hotspot 同构的本地观察载体 + 索引行 + 一条触发句，不改变同步结构、不加下游采用面、不新增 CI 门禁或 `check-template` 断言；派生项目按需采用。patch 豁免 L3 端到端回归。
@@ -131,7 +177,7 @@ Web Profile 代码层一致性基线（PATCH）：给 `template-docs/web-fullsta
 会话 worktree 登记与恢复可见性（P0）：把活跃 worktree 纳入会话恢复的只读检查 + 续接文件登记 + 建 / 删登记责任，解决跨会话 / 跨 CLI 接手时 worktree 及其未提交工作不可见的问题。提案见 `_proposals/TEMPLATE-UPGRADE-worktree-registration.md`。
 
 - **恢复流程加 `git worktree list`**：`ai/session-rules.md` §3 恢复流程第 3 步与 §3.1 快速续接只读检查清单、`ai/commands/resume.md` 执行节点均加 `git worktree list`；除主工作区外存在活跃 worktree 时，报告其路径 / 分支 / HEAD 是否落后主仓 / 是否含未提交改动。
-- **续接文件登记「活跃 worktree」段**：`ai/session-rules.md` §6 推荐结构与 `template-docs/session-handoff.example.md` 增加「活跃 worktree」段（路径 / 分支 / 主题 / 未提交改动摘要 / 处置状态）。
+- **续接文件登记「活跃 worktree」段**：`ai/session-rules.md` §6 推荐结构与 `template-docs/templates/session-handoff.example.md` 增加「活跃 worktree」段（路径 / 分支 / 主题 / 未提交改动摘要 / 处置状态）。
 - **建 / 删登记责任**：`ai/session-rules.md` §8 与 `git-guide.md` §4 补充——创建 worktree 后立即登记，合并进 main 或明确废弃后移除 worktree 并清除登记；`ai/session-rules.md` §1 裁决优先级补充 worktree 内被动中断以该 worktree 的 Git 事实为锚点。
 - **P1 advisory 未实施**：`check-template` advisory 自检（只查规则文件含机制说明）留候选池，本次不新增断言 / 脚本 / CI 门禁。
 
@@ -217,7 +263,7 @@ project-rules 种子章节编号规范化：修复 `ai/project-rules.md` 自创�
 
 ## v1.59.2（2026-08-02）
 
-Demo 启动脚本 Windows 注意事项：承接 issue #296，在 `template-docs/demo-runbook-template.md` 补一段 Windows 启动脚本指导，覆盖 PowerShell `Start-Process` 的三类常见坑。
+Demo 启动脚本 Windows 注意事项：承接 issue #296，在 `template-docs/templates/demo-runbook-template.md` 补一段 Windows 启动脚本指导，覆盖 PowerShell `Start-Process` 的三类常见坑。
 
 - **Path / PATH 归一化**：项目 demo 脚本用 `Start-Process` 前应归一化进程内重复的 `Path` / `PATH` 键，复用母模板 wrapper 的 `Repair-ProcessPathEnvironment` 套路。
 - **后台启动窗口**：后台拉服务用 `-WindowStyle Hidden` 避免弹控制台窗口；明确 `-WindowStyle Hidden` 与 `-NoNewWindow` 互斥，后者适用于同步等待、无窗口的子进程（母模板 wrapper 用 `-NoNewWindow -Wait`，无需 `-WindowStyle`）。
@@ -239,7 +285,7 @@ Windows PowerShell wrapper 兼容性修复：承接 issue #293，三个会通过
 
 ## v1.59.0（2026-07-29）
 
-领域派生项目 L2→L3 剧本模板：承接 issue #285，新增可下行同步的 `template-docs/domain-derived-scenarios-template.md`，为领域模板提供通用剧本骨架。
+领域派生项目 L2→L3 剧本模板：承接 issue #285，新增可下行同步的 `template-docs/maintainer/domain-derived-scenarios-template.md`，为领域模板提供通用剧本骨架。
 
 - **通用骨架**：覆盖适用性判断、创建领域派生项目、同步领域模板更新、初始化后整理与领域自检、日常开发、L3→L2 回流、领域模板发布后的下游同步。
 - **入口衔接**：`domain-templates`、`scenario-guides`、`domain-template-lab` 命令与 Prompt 指向该模板，作为 `template-docs/<domain>/domain-derived-scenarios.md` 的起点。
@@ -252,7 +298,7 @@ Windows PowerShell wrapper 兼容性修复：承接 issue #293，三个会通过
 领域模板三层路径路由澄清：承接 issue #276 的 Batch 1，先以 patch 级文档和命令路由方式落地 L1→普通 L3、L1→L2、L2→领域 L3 的路径矩阵；不新增 `domain-derived-scenarios-template.md`，不改同步脚本协议，不实现 `new-project --profile <domain>`。
 
 - **场景矩阵**：`template-docs/scenario-guides.md` 新增三层路径矩阵，并对 A2 / A13 / A15 / A20 / C1-C8 补路径分叉提示。
-- **领域模板职责**：`template-docs/domain-templates.md` 明确每个领域模板必须维护自己的 L2→L3 场景剧本入口，母模板只提供边界和剧本要求。
+- **领域模板职责**：`template-docs/profiles/domain-templates.md` 明确每个领域模板必须维护自己的 L2→L3 场景剧本入口，母模板只提供边界和剧本要求。
 - **命令路由**：`domain-template-lab` 命令与 Prompt 将 L2→L3 场景剧本列为领域模板实验线必备规划项；`new-project`、`sync-methodology`、`submit-proposal`、`submit-feedback` 补相邻层边界。
 - **防漂移断言**：`check-template.*` 增加少量稳定关键词断言，锁住三层路径矩阵、L2→L3 剧本入口和命令路由口径。
 
@@ -264,7 +310,7 @@ token hotspot 本地化边界澄清：承接 issue #275，但按 v1.57.2 后的�
 
 - **路径口径防漂移**：`scripts/check-template.sh` / `.ps1` 增加断言，锁住 `.gitignore` 必须忽略 `.ai/token-hotspots/`，且 `session-rules` 必须同时声明单条本地路径与入库 summary 路径。
 - **维护者 checklist 澄清**：`MAINTAINERS.md` 将 `_proposals/` 与 `ai-records/` 的 markdown clean 口径收窄为“准备提交的正式记录”，明确 `.ai/token-hotspots/` 不作为提交内容。
-- **研发数据链澄清**：`template-docs/rd-data-chain.md` 明确单条 `.ai/token-hotspots/` 是 local-only meta，只有提炼后的 `ai-records/token-hotspots/` summary 可入库；自检门禁只守路径边界，不校验单条记录内容。
+- **研发数据链澄清**：`template-docs/maintainer/rd-data-chain.md` 明确单条 `.ai/token-hotspots/` 是 local-only meta，只有提炼后的 `ai-records/token-hotspots/` summary 可入库；自检门禁只守路径边界，不校验单条记录内容。
 - **CI 稳定性**：`check-template.sh` 取 changelog 顶部版本时不再使用 `grep | head` 管道，避免 Ubuntu CI 在 `pipefail` 下因 Broken pipe 误失败。
 
 不采纳 issue #275 原文中“忽略 `ai-records/token-hotspots/*.md`”的旧路径建议，避免误伤已入库的 summary 机制；不改同步协议、不要求派生项目迁移。
@@ -285,7 +331,7 @@ Windows Git Bash 入口调用健壮性：维护者在 Windows 从 PowerShell 调
 
 - **upstream 映射生成**：`scripts/sync-template.sh` / `.ps1` 在 `--preserve-project-version` 与 `--domain-template` 模式下，从母模板根 changelog 对生成带定位说明的 `upstream/` 只读继承参考；`template-sync.json` schema 保持扁平同名清单，不扩 `{src,dest}`。
 - **派生边界校验**：`scripts/check-derived-sync.sh` / `.ps1` 仅放行 `upstream/CHANGELOG.md` 与 `upstream/CHANGELOG-PLAIN.md` 两个映射文件，并校验定位说明与正式 / 大白话标题，避免把整个 `upstream/` 变成宽泛白名单。
-- **说明与自检**：`TEMPLATE-BASE.md` 生成内容、同步完成提示、`template-docs/beginner-guide.md`、`template-docs/template-methodology.md`、`template-docs/domain-templates.md` 与 `check-template.*` 均补充 upstream 继承参考约定；模板仓自身仍不维护 `upstream/` 物理副本。
+- **说明与自检**：`TEMPLATE-BASE.md` 生成内容、同步完成提示、`template-docs/beginner-guide.md`、`template-docs/template-methodology.md`、`template-docs/profiles/domain-templates.md` 与 `check-template.*` 均补充 upstream 继承参考约定；模板仓自身仍不维护 `upstream/` 物理副本。
 
 ## v1.57.4（2026-07-27）
 
@@ -314,7 +360,7 @@ token hotspot 观察记录本地化与生命周期治理：单条记录默认走
 - **单条本地化（P2 激活）**：`ai/session-rules.md` §4.1 引入路径分层——单条 `.ai/token-hotspots/`（gitignore，纯本地、不询问、不上传）vs 汇总 `ai-records/token-hotspots/`（入库走 PR）；`.gitignore` 加 `.ai/token-hotspots/`。
 - **写入后处置协议（P0）**：去掉“每次三选一”，改默认本地直接写入；保留“不提交≠删除”兜底硬规则；三选一仅用于入库决策。
 - **汇总循环（P1 保留）**：§4.2 改为“本地攒若干条 → 提炼 SUMMARY 入库 → 本地可清”；汇总状态字段从可选改新记录必填（状态集扩展 + 可选处置状态）；SUMMARY 最小结构加 `## 0. 覆盖清单`；已汇总/已转提案不重复计数；明确“字段必填≠自检门禁”。
-- **数据链同步**：`template-docs/rd-data-chain.md` §2 token-hotspots 生命周期细化为“本地观察 / 提炼汇总入库 / 转提案 / 归档”；§4 措辞协调（字段级必填属写入自觉，不构成自检门禁）。
+- **数据链同步**：`template-docs/maintainer/rd-data-chain.md` §2 token-hotspots 生命周期细化为“本地观察 / 提炼汇总入库 / 转提案 / 归档”；§4 措辞协调（字段级必填属写入自觉，不构成自检门禁）。
 - **历史记录迁移**：`ai-records/token-hotspots/` 下 20 条单条记录移至本地 `.ai/token-hotspots/`（从当前快照移出，git 历史保留）；`SUMMARY.md` + `summaries/`（4 份）+ `project-registry` + `e2e-reports` 保留入库；SUMMARY 顶部加单条去向自洽说明。
 - 承接 `_proposals/TEMPLATE-UPGRADE-ai-record-lifecycle.md`；Release impact patch（治理说明补强 + 可选观察材料路径调整，不改默认行为、不要求派生迁移）。
 
@@ -323,9 +369,9 @@ token hotspot 观察记录本地化与生命周期治理：单条记录默认走
 P1/P2 文档增强聚合（4 提案，全 patch）：图纸审核准则、演示手册扩展 + 用户手册、README 可视化导航、研发数据链 Profile。不改默认行为、不要求派生项目迁移。
 
 - **图纸审核（P1 engineering-diagram-review）**：图纸从「有没有」升级为「可审 / 可追溯 / 可验收」四维度（可渲染 / 有图 ID `DIAG-<DOC>-<TYPE>-<NN>` / 可追溯 / 覆盖关键路径）；doc-standards 07 补关键接口时序图字段、06 ER 图对齐 §13「应含」、04 加架构图审核维度；design-doc 鼓励 mermaid；docs-system-audit + docs-checklist 加图纸审核；scaffold/04 补 mermaid 示例；§13 补图 ID 命名 + 四维度（不改柔性）。
-- **演示 + 用户手册（P1 demo-and-user-manual）**：demo-runbook §7 阶段演示要点 + 新增 §9 回滚与清理；新增 `template-docs/user-guide-template.md`（how-to 任务→权威入口导航表）；beginner-guide 导航。剔除「场景质量」无效项（scenario-guides 现状已满足）。
+- **演示 + 用户手册（P1 demo-and-user-manual）**：demo-runbook §7 阶段演示要点 + 新增 §9 回滚与清理；新增 `template-docs/templates/user-guide-template.md`（how-to 任务→权威入口导航表）；beginner-guide 导航。剔除「场景质量」无效项（scenario-guides 现状已满足）。
 - **README 可视化（P2 readme-visual-navigation）**：根 README 加「模板一览」3 mermaid（分层架构 / 文档驱动设计流程 / 使用维护双向闭环）；可同步图源并入 template-methodology（不新增 template-architecture.md）。
-- **研发数据链（P2 rd-data-chain-profile）**：新增 `template-docs/rd-data-chain.md`（数据类别→载体→主链关系→生命周期索引 + 流转规则 + 门禁现状 + 边界）；beginner-guide + MAINTAINERS §7 导航。
+- **研发数据链（P2 rd-data-chain-profile）**：新增 `template-docs/maintainer/rd-data-chain.md`（数据类别→载体→主链关系→生命周期索引 + 流转规则 + 门禁现状 + 边界）；beginner-guide + MAINTAINERS §7 导航。
 - **防漂移断言**：check-template.sh 加 user-guide / rd-data-chain / 图纸维度 / README mermaid 断言（13 条）。
 - **非目标**：不为 ADR / research / meetings 加强制门禁（RC-2）；todo-api 是文档闭环示例不实例化 demo runbook；不改 00-09 编号、不改默认行为、不改同步协议。
 - 承接 `_proposals/TEMPLATE-UPGRADE-2026-07-24-batch-overview.md` P1/P2（engineering-diagram-review / demo-and-user-manual / readme-visual-navigation / rd-data-chain-profile）；Release impact patch（文档 / 审计基线 / 自检补强，兼容）。
@@ -338,7 +384,7 @@ P1/P2 文档增强聚合（4 提案，全 patch）：图纸审核准则、演示
 - **通用 Gate（SS-1）**：`ai/implementation-lifecycle-rules.md` §2 层级模型加 System Skeleton 层、§3 新增通用 Gate 定义（触发 / 豁免）、§6 测试分层补系统框架 smoke；`ai/project-rules.md` §3 加三态写法。
 - **验收层次化（SS-4）**：`docs/09-verification.md` 新增 §1.2 验收大纲层次（需求验收 → 系统框架 → 集成 → 单元，与测试等级矩阵正交，只增不删）；四层同步 09。
 - **Sprint 0 通用化**：四层同步 08，Sprint 0 / Walking Skeleton 从 Web 专用通用化为 System Skeleton + Web 特化。
-- **web-fullstack 合并（SS-3 方案 A）**：`template-docs/web-fullstack-profile.md` 改定位为通用 Gate 的 Web 特化扩展（WSG-001~006 保留为 Web 特化条款）；`global-rules` §5 / `docs/README` / `review/19` / `dev/02` 对齐。
+- **web-fullstack 合并（SS-3 方案 A）**：`template-docs/profiles/web-fullstack-profile.md` 改定位为通用 Gate 的 Web 特化扩展（WSG-001~006 保留为 Web 特化条款）；`global-rules` §5 / `docs/README` / `review/19` / `dev/02` 对齐。
 - **命令与场景**：`commands/docs-evaluation` + `docs-checklist` 加 System Skeleton Gate 检查项；`scenario-guides` 新增 A28 通用场景 + A27 标注 Web 特化互引。
 - **防漂移断言**：`scripts/check-template.sh` 增加 System Skeleton 关键字断言（四层 + A28 场景）。
 - **drift 修复**：补齐 `docs/08`、`docs/09` 实例层与 scaffold 的既有 Walking Skeleton 脱节。
@@ -416,9 +462,9 @@ Windows 本地 `check-template` fallback 判断链补强：把 C-002 并入 `tem
 
 PR / CI 闭环速查 Profile 转正：把既有 Remote / CI SOP Profile 从实验文档升级为同步范围内的最小必读入口，减少 push / PR / checks / merge / 分支清理时重复全文读取长治理文档。
 
-- **`template-docs/remote-ci-sop-profile.md` 转正**：移除实验阶段口径，新增 `PR / CI 闭环 Checklist`，覆盖动作前预检、提交与推送、创建 PR、checks / CI、merge / close / delete 和收尾复查。
+- **`template-docs/profiles/remote-ci-sop-profile.md` 转正**：移除实验阶段口径，新增 `PR / CI 闭环 Checklist`，覆盖动作前预检、提交与推送、创建 PR、checks / CI、merge / close / delete 和收尾复查。
 - **任务路由可发现**：`ai/index.md` 的 PR / CI / Git 收尾任务路由加入该 Profile；`ai/commands/README.md` 增加自然语言触发与最小必读分诊提示。
-- **同步与自检**：`template-sync.json` 和 `scripts/sync-template.sh` fallback 纳入 `template-docs/remote-ci-sop-profile.md`；`scripts/check-template.sh` 增加 profile、路由、同步清单和 fallback 防漂移断言。
+- **同步与自检**：`template-sync.json` 和 `scripts/sync-template.sh` fallback 纳入 `template-docs/profiles/remote-ci-sop-profile.md`；`scripts/check-template.sh` 增加 profile、路由、同步清单和 fallback 防漂移断言。
 - **边界保持**：不改变 push / merge / close issue / delete branch / release 的单步确认要求；CI pending 仍只汇报 pending，不长时间等待；失败日志仍最小摘取。
 - 提案 `_proposals/TEMPLATE-UPGRADE-pr-ci-closure-profile.md`（PATCH），承接 `_proposals/TEMPLATE-UPGRADE-ai-coding-context-budget.md` 的 PR 闭环 checklist 候选。
 
@@ -445,7 +491,7 @@ Windows 大同步输出降噪与超时策略（文档 / prompt，吸收 windows-
 
 Web App Structure Profile 补充主应用文件职责边界与业务下沉约束（吸收 issue #232）。
 
-- **`template-docs/web-fullstack-profile.md` §5.1**：新增「主应用文件职责边界与业务下沉」——主文件只做组合 / 跨域 orchestration / cross-cutting / render，业务状态 / handler / 副作用下沉域 hook；state / handler ~10–15 软上限；业务 hook 不持有跨域 setter（经回调交回主文件，防循环依赖 / 闭包过期）。与 §5 阈值一致的软性治理提醒。
+- **`template-docs/profiles/web-fullstack-profile.md` §5.1**：新增「主应用文件职责边界与业务下沉」——主文件只做组合 / 跨域 orchestration / cross-cutting / render，业务状态 / handler / 副作用下沉域 hook；state / handler ~10–15 软上限；业务 hook 不持有跨域 setter（经回调交回主文件，防循环依赖 / 闭包过期）。与 §5 阈值一致的软性治理提醒。
 - **triage 修正**：#232 §1 描述「模板未给膨胀阈值数值」已过时——阈值已于 capability batches（Web App Profile）落地于 §5；本版只补职责边界增量。
 - **非目标**：不加脚本自检（`check-template` 跑在模板仓，无法检查派生 `App.tsx`，保持 AI / 人工软性）；不改 global-rules §5（已引用）；不规定框架 / 状态库。
 - **B3 记录回写**（随本 PR）：C1 triage batch plan / template-check-maintainability / token-hotspot-records 三份记录更新（PR #244 = B3 P1 落地，v1.56.2）。
@@ -565,7 +611,7 @@ Capability Package 治理分批落地：主线 A 防跑飞（读后不晕）+ �
 - **Batch 1.5 防跑飞传递加固**（#210）：`AGENTS.md` / `ai/commands/README.md` 入口前置 Checkpoint 节拍；`ai/rules-core.md` §2 大上下文 / 长任务自动触发、§4 搜索回锚点 + 每层最小必读。瘦身版，不改 PR #206 高风险确认规则。
 - **Batch 2.5 分诊强化**（#210）：`ai/rules-core.md` §4「先查 `ai/index.md` 路由定位、禁止未定位全局 grep」。
 - **Batch 2 自检减负（方案 A）**（#212）：`scripts/check-template.ps1` fallback 删 ~508 行内容断言，只留结构检查；新增断言只改 `.sh`，消除双镜像联动（CAP-008）。
-- **Batch 3 分诊用例**（#211）：新增 `template-docs/remote-ci-sop-profile.md`（实验阶段不进同步），验证分诊是否真省 token。
+- **Batch 3 分诊用例**（#211）：新增 `template-docs/profiles/remote-ci-sop-profile.md`（实验阶段不进同步），验证分诊是否真省 token。
 - **提案重新聚焦**（#209）：主线 B 聚焦为「AI 上下文定位效率」+ 状态同步。
 
 注：Batch 1 索引正式化已在 v1.52.3。
@@ -601,16 +647,16 @@ Codex Checkpoint Mode 与远端操作防卡死 SOP：为模板维护、规则改
 
 Web App scaffold experiment protocol：为 Batch 6 增加可复用实验协议，用真实项目或独立实验仓验证候选 Web App scaffold，而不是直接把真实脚手架塞进母模板。
 
-- **实验协议**：新增 `template-docs/web-app-scaffold-experiment.md`，定义适用范围、非目标、输入条件、实验步骤、记录模板、Promotion decision matrix 和母模板回流要求。
-- **Profile 衔接**：`template-docs/web-fullstack-profile.md` 明确 Profile 只定义结构基线和 Gate；是否推进 `template-docs/web-app/`、`new-project --profile web-app` 或领域模板，先走实验协议。
-- **领域模板边界**：`template-docs/domain-templates.md` 说明 Web App scaffold 不自动等于领域模板，只有多个同类 Web 项目共享领域标准件、独立版本和自检需求时才进入领域模板评估。
+- **实验协议**：新增 `template-docs/profiles/web-app-scaffold-experiment.md`，定义适用范围、非目标、输入条件、实验步骤、记录模板、Promotion decision matrix 和母模板回流要求。
+- **Profile 衔接**：`template-docs/profiles/web-fullstack-profile.md` 明确 Profile 只定义结构基线和 Gate；是否推进 `template-docs/web-app/`、`new-project --profile web-app` 或领域模板，先走实验协议。
+- **领域模板边界**：`template-docs/profiles/domain-templates.md` 说明 Web App scaffold 不自动等于领域模板，只有多个同类 Web 项目共享领域标准件、独立版本和自检需求时才进入领域模板评估。
 - **同步与自检**：`template-sync.json`、`scripts/sync-template.sh` 纳入实验协议；`scripts/check-template.*` 增加实验协议、Promotion matrix 和母模板禁写真实 scaffold 的防漂移断言。
 
 ## v1.51.0（2026-07-14）
 
 Web App Structure Profile + Walking Skeleton Gate：为复杂 Web / 全栈交互项目新增轻量结构 Profile 和 Sprint 0 / Walking Skeleton 门禁，避免首个业务 Sprint 把 App Shell、目录边界、API client、全局样式和 controller / service 持续堆进少数文件。
 
-- **新增 Profile**：新增 `template-docs/web-fullstack-profile.md`，定义触发条件、非目标、WSG-001 到 WSG-006 Gate、推荐前后端目录边界、文件膨胀阈值和 Sprint 0 / Walking Skeleton 建议。
+- **新增 Profile**：新增 `template-docs/profiles/web-fullstack-profile.md`，定义触发条件、非目标、WSG-001 到 WSG-006 Gate、推荐前后端目录边界、文件膨胀阈值和 Sprint 0 / Walking Skeleton 建议。
 - **文档链路**：`ai/global-rules.md`、`ai/implementation-lifecycle-rules.md`、`ai/doc-standards/04-architecture.md`、`05-tech-spec.md`、`08-dev-plan.md`、`09-verification.md` 以及 docs scaffold 增加 App Shell、目录边界、vertical slice、文件阈值和 API / browser smoke 回填口径；全局规则版本递增到 v1.10。
 - **入口与评审**：`template-docs/scenario-guides.md` 新增 A27 Web App Structure Profile / Walking Skeleton Gate；文档生成、编码执行、docs checklist、系统审计和 docs evaluation Prompt 增加复杂 Web / 全栈交互项目门禁检查。
 - **同步与自检**：`docs/README.md` 说明 profile 与 `docs/` 项目事实的边界；`template-sync.json` 与 `scripts/sync-template.sh` 纳入 profile；`scripts/check-template.*` 增加 A27、WSG、同步清单和 README 防漂移断言。
@@ -632,7 +678,7 @@ Web App Structure Profile + Walking Skeleton Gate：为复杂 Web / 全栈交互
 UI Exploration Pipeline + Prototype Gate：把 UI brief、参考分析、需求探索原型、视觉效果探索、experience brief、正式前端交互设计、实现前 UI 原型和 `08/09` 回填串成可审计链路，避免 UI 型项目把探索稿、视觉候选或实现前原型直接当作需求、设计或验收事实。
 
 - **生命周期规则**：`ai/document-lifecycle-rules.md` 新增 UI Exploration to Delivery Pipeline、UI-G-001 到 UI-G-007 晋级 Gate、默认行业 UI 标准、UI / 后端 / 双轨顺序判断和大规模 IA / 图谱降级规则。
-- **标准与模板**：`ai/doc-standards/frontend-interaction.md`、`ai/doc-standards/ui-prototype-strategy.md`、`template-docs/ui-prototype-exploration-template.md`、`template-docs/ui-prototype-strategy-template.md` 和 docs scaffold 增加用户确认依据、默认 UI 标准基线、视觉候选、experience brief、Gate 与 `08/09` 回填字段；新增 `template-docs/frontend-experience-brief-template.md` 和 scaffold。
+- **标准与模板**：`ai/doc-standards/frontend-interaction.md`、`ai/doc-standards/ui-prototype-strategy.md`、`template-docs/templates/ui-prototype-exploration-template.md`、`template-docs/templates/ui-prototype-strategy-template.md` 和 docs scaffold 增加用户确认依据、默认 UI 标准基线、视觉候选、experience brief、Gate 与 `08/09` 回填字段；新增 `template-docs/templates/frontend-experience-brief-template.md` 和 scaffold。
 - **场景与 Prompt**：`template-docs/scenario-guides.md` 新增 A26 UI Interaction Discovery，并强化 A22 / A23；`ui-prototype-exploration` 命令、22 号 Prompt、文档生成 / 单文档修订 / 编码前执行 / checklist / audit / evaluation 均增加探索链路、视觉候选和实现前 UI Gate 检查。
 - **同步与自检**：`template-sync.json`、`scripts/sync-template.sh` 纳入 experience brief 模板和 scaffold；`scripts/check-template.sh` 与 `scripts/check-template.ps1` 增加 A26、experience brief、UI-G-004 / UI-G-006 和前端体验链路防回归断言。
 - 回流自 GitHub issue #191（UI Exploration to Delivery Pipeline）与 #182（UI Prototype Gate / 默认行业 UI 标准 / UI 与后端实施顺序）。
@@ -641,7 +687,7 @@ UI Exploration Pipeline + Prototype Gate：把 UI brief、参考分析、需求�
 
 UI Brief Intake / 前端交互输入补齐：新增 UI brief 模板和 A25 场景，让 AI 在输入评审、需求探索原型或前端实现前主动补齐参考产品、演示主线、页面结构、信息密度、设备范围和视觉禁区，避免直接进入原型或编码后才发现界面方向不足。
 
-- **新增模板**：`template-docs/ui-brief-intake-template.md`，支持 `docs/inputs/ui-brief.md`（用户原始输入补充）和 `docs/research/YYYY-MM-DD-ui-brief-intake.md`（AI 与用户共同探索记录）两类落点，包含交互体验抽取表、参考偏好、演示首屏、信息架构、状态边界和回填建议。
+- **新增模板**：`template-docs/templates/ui-brief-intake-template.md`，支持 `docs/inputs/ui-brief.md`（用户原始输入补充）和 `docs/research/YYYY-MM-DD-ui-brief-intake.md`（AI 与用户共同探索记录）两类落点，包含交互体验抽取表、参考偏好、演示首屏、信息架构、状态边界和回填建议。
 - **新增场景**：`template-docs/scenario-guides.md` 增加 A25 UI Brief Intake / 前端交互输入补齐，并在 A5 输入评审、A22 需求探索原型、A23 UI 原型策略和 A10 编码前形成衔接。
 - **规则与 Prompt**：`ai/document-lifecycle-rules.md`、`ai/prompts/docs/01-review-inputs.md`、`ai/prompts/docs/22-ui-prototype-exploration.md`、`ai/prompts/dev/02-run-task.md` 与 `ai/commands/README.md` 增加 UI 输入抽取和缺 UI brief 时先补齐的门禁。
 - **同步与自检**：`template-sync.json`、`scripts/sync-template.sh` 纳入新模板；`scripts/check-template.sh` 与 `scripts/check-template.ps1` 增加 UI brief 模板、A25、输入评审、原型探索和编码前门禁断言。
@@ -660,7 +706,7 @@ Scenario Guide 编号治理：重梳使用者场景编号规则，停止新增 `
 
 Demo 页面身份与端口漂移检查补强：把派生项目回流的 Demo 可靠性问题落入 `show-demo` 命令和 demo runbook 模板，避免只凭 HTTP 200 把其他本地项目页面误判为当前 Demo ready。
 
-- **Demo runbook**：`template-docs/demo-runbook-template.md` 补充端口占用预检、strict port / 等价机制、后端代理地址注入、默认端口 vs 本次实际入口、页面 `identity marker`、`.ai/local-demo-runtime.json` 和二维码 / 临时日志忽略口径。
+- **Demo runbook**：`template-docs/templates/demo-runbook-template.md` 补充端口占用预检、strict port / 等价机制、后端代理地址注入、默认端口 vs 本次实际入口、页面 `identity marker`、`.ai/local-demo-runtime.json` 和二维码 / 临时日志忽略口径。
 - **show-demo 边界**：`ai/commands/show-demo.md` 明确“检查 Demo”必须校验页面身份和关键只读 `/api` 代理链路；identity marker 不匹配、代理失败或实际端口未知时不得输出 `Demo ready`。
 - **自检防回归**：`scripts/check-template.sh` 与 `scripts/check-template.ps1` 增加页面身份、前端代理、strict port、运行状态文件和默认端口示例口径断言。
 - 回流自 GitHub issue #184（Demo 端口占用与页面身份校验）。
@@ -689,7 +735,7 @@ Markdown 提案 / 记录清洁预检：新增 `scripts/check-markdown-clean.ps1`
 - **角色判定**：新增 `detect_lineage_role` / `Get-LineageRole`，按 `TEMPLATE-BASE.md` 的 `Lineage type` 字段判定普通版 / 领域版（兼容 v1.46.0 旧普通版 header 嗅探）；普通派生 `--preserve-project-version` 行为不变。
 - **边界验证**：`scripts/check-derived-sync.*` 按 `Lineage type` 识别角色，领域版额外校验 `Domain standards scope` 字段，仍跳过 README ↔ `VERSION` 一致性检查。
 - **自检防漂移**：`scripts/check-template.sh` 与 `scripts/check-template.ps1` 把旧的 `TEMPLATE-BASE.md` 自动检测断言更新为 `detect_lineage_role` / `Get-LineageRole`，并新增 `--domain-template`、`write_domain_template_base` / `Write-DomainTemplateBase` 与领域版字段断言。
-- **文档与提案**：`template-docs/domain-templates.md` §0 / §4 / §5 / §7 更新 C-004 落地状态；`_proposals/TEMPLATE-UPGRADE-domain-template-inheritance.md` C-004 标 ✅、Batch 3 标部分落地；`ai/prompts/maintainers/12-sync-template.md`、`ai/commands/sync-methodology.md`、`git-guide.md` §5.5、`template-docs/scenario-guides.md` A13 / A20 与 `template-docs/derived-sync-report-template.md` 均补充领域模板角色口径。
+- **文档与提案**：`template-docs/profiles/domain-templates.md` §0 / §4 / §5 / §7 更新 C-004 落地状态；`_proposals/TEMPLATE-UPGRADE-domain-template-inheritance.md` C-004 标 ✅、Batch 3 标部分落地；`ai/prompts/maintainers/12-sync-template.md`、`ai/commands/sync-methodology.md`、`git-guide.md` §5.5、`template-docs/scenario-guides.md` A13 / A20 与 `template-docs/templates/derived-sync-report-template.md` 均补充领域模板角色口径。
 - 回流自 `_proposals/TEMPLATE-UPGRADE-domain-template-inheritance.md` Batch 3 / C-004；多级同步自动化（领域模板作为领域派生项目上游）仍待后续。
 
 ## v1.46.0（2026-07-11）
@@ -700,7 +746,7 @@ Markdown 提案 / 记录清洁预检：新增 `scripts/check-markdown-clean.ps1`
 - **新项目默认**：`scripts/new-project.sh` 为普通派生项目生成精简版 `TEMPLATE-BASE.md`，README 模板关系改为“`VERSION` = 项目自身版本，`TEMPLATE-BASE.md` = 继承模板版本”。
 - **边界验证**：`scripts/check-derived-sync.*` 允许同步提交修改 `TEMPLATE-BASE.md`，并在双版本模式下跳过 README ↔ `VERSION` 的模板版本一致性检查，改查 `TEMPLATE-BASE.md` 的当前同步模板版本。
 - **A13 同步流程**：`ai/prompts/maintainers/12-sync-template.md`、`ai/commands/sync-methodology.md`、`git-guide.md`、`template-docs/scenario-guides.md` 与同步报告模板均补充 `--preserve-project-version`、`VERSION` / `TEMPLATE-BASE.md` 双字段和同步后续接判定。
-- **边界说明**：`template-docs/domain-templates.md` 明确普通派生项目的精简 `TEMPLATE-BASE.md` 不等同于领域模板线的 `TEMPLATE-BASE.md`；领域模板版本治理仍走 inheritance / domain-template-lab 独立线。
+- **边界说明**：`template-docs/profiles/domain-templates.md` 明确普通派生项目的精简 `TEMPLATE-BASE.md` 不等同于领域模板线的 `TEMPLATE-BASE.md`；领域模板版本治理仍走 inheritance / domain-template-lab 独立线。
 - 回流自 `_proposals/TEMPLATE-UPGRADE-derived-project-version-governance.md`（DV-001 / DV-003 / DV-004 部分落地，试点反馈后再决定归档）。
 
 ## v1.45.7（2026-07-11）
@@ -719,7 +765,7 @@ Token 热点候选规则小落地：把首批 token hotspot 记录反复出现�
 
 - **新增命令**：`ai/commands/domain-template-lab.md`，用于“初始化领域模板实验线 / 创建派生领域模板 / 创建 agent-system-template / 试跑领域模板同步”等场景。
 - **新增 Prompt**：`ai/prompts/maintainers/23-domain-template-lab.md`，定义仓库角色判定、只相邻同步、不跨层操作、两级回流和实验资产计划。
-- **独立边界**：`template-docs/domain-templates.md` 明确该入口不接入 `git-guide.md` §5 主同步路径，不修改母模板 `sync-template` 语义，不让领域派生项目直接同步母模板。
+- **独立边界**：`template-docs/profiles/domain-templates.md` 明确该入口不接入 `git-guide.md` §5 主同步路径，不修改母模板 `sync-template` 语义，不让领域派生项目直接同步母模板。
 - **提案状态**：`_proposals/TEMPLATE-UPGRADE-domain-template-inheritance.md` 标记 Batch 3 的母模板侧 AI 实验入口部分落地；领域 scaffold、领域同步清单和领域自检仍待独立仓库试验。
 - **同步与自检**：`template-sync.json` 纳入新命令 / Prompt；`scripts/check-template.sh` 与 `scripts/check-template.ps1` 加入口断言。
 
@@ -773,16 +819,16 @@ SOP 去三写（减负）：使用原则 / 文档入口表 / 常见选择三段�
 项目演示 SOP 与 AI 触发规则：新增 `show-demo` 命令和 `demo-runbook-template`，约定项目级演示 SOP 默认路径 `docs/env/local-demo-runbook.md`，让「查看演示效果 / 启动 Demo / 二维码 / 检查 Demo」成为一等入口。
 
 - **新增命令**：`ai/commands/show-demo.md`——路由到项目演示 SOP，含 AI 执行边界表（只读说明 vs 启动脚本 vs 健康检查 vs 二维码 vs 安装依赖 / 外部服务）和禁止项。
-- **新增模板**：`template-docs/demo-runbook-template.md`——八节演示 SOP 结构（适用范围 / AI 场景 / 启动前提 / 启动方式 / 访问入口 / 检查验证 / 推荐演示路径 / 安全与边界），明确不替代 `docs/09-verification.md`。
+- **新增模板**：`template-docs/templates/demo-runbook-template.md`——八节演示 SOP 结构（适用范围 / AI 场景 / 启动前提 / 启动方式 / 访问入口 / 检查验证 / 推荐演示路径 / 安全与边界），明确不替代 `docs/09-verification.md`。
 - **入口与定位**：`ai/commands/README.md` 命令表 + 触发词；`docs/README.md` §5 `docs/env/` 加 `local-demo-runbook.md` 命名。
 - **同步与自检**：`template-sync.json` 纳入两新文件；`scripts/check-template.sh` 加 8 条断言。
 - 回流自 GitHub issue #160（zhiyan-digital-cs-platform）。
 
 ## v1.44.3（2026-07-10）
 
-领域模板可选中间层方法论独立文档：新增 `template-docs/domain-templates.md` 作为「领域模板（domain template）可选中间层」的单一权威源，主线文件零内容改动、仅加引用指针，明确「两层为默认主路径、三层为可选增强」，消除现有使用者的理解歧义。
+领域模板可选中间层方法论独立文档：新增 `template-docs/profiles/domain-templates.md` 作为「领域模板（domain template）可选中间层」的单一权威源，主线文件零内容改动、仅加引用指针，明确「两层为默认主路径、三层为可选增强」，消除现有使用者的理解歧义。
 
-- **新增方法论文件**：`template-docs/domain-templates.md` 固化三层模型、何时该用领域模板、三层职责边界（引用 inheritance 提案结论）、同步 / 继承关系、`TEMPLATE-BASE.md` 约定（标注未落地）和演进状态；纳入下行同步清单。
+- **新增方法论文件**：`template-docs/profiles/domain-templates.md` 固化三层模型、何时该用领域模板、三层职责边界（引用 inheritance 提案结论）、同步 / 继承关系、`TEMPLATE-BASE.md` 约定（标注未落地）和演进状态；纳入下行同步清单。
 - **主线仅加引用指针**：`template-methodology.md` §5、`glossary.md` §7（新增「领域模板」术语条目）、`scenario-guides.md` A20（反向引用）、`README.md` 目录速览各加一处指针，不重写两层叙述。
 - **演进中定位**：文档顶部明确领域模板层尚候选 / 演进中（inheritance 提案 Batch 2-4 未落地）、主线治理仍两层、现有派生项目无需迁移、非强制。
 - **自检防回归**：`scripts/check-template.sh` 增加 `domain-templates.md` 存在、可选中间层定位、三层继承模型、主线仍两层与术语表条目断言。
@@ -831,7 +877,7 @@ PowerShell fallback 同步参数修复：修正 `scripts/sync-template.ps1 --com
 A13 同步闭环门禁增强：补齐派生项目模板同步的完成判据矩阵、同步报告真实性记录和提案回流收口矩阵，避免把轻量抽查误写成完整闭环。
 
 - **A13 收尾门禁**：`ai/commands/sync-methodology.md` 与 `ai/prompts/maintainers/12-sync-template.md` 要求最终输出 A13 完成判据矩阵；若存在轻量执行 / 未执行 / 失败项，不得称“A13 完整闭环完成”。
-- **同步报告真实性**：`template-docs/derived-sync-report-template.md` 增加命令真实性记录、A13 完成判据矩阵和提案回流收口矩阵。
+- **同步报告真实性**：`template-docs/templates/derived-sync-report-template.md` 增加命令真实性记录、A13 完成判据矩阵和提案回流收口矩阵。
 - **提案收口规则**：同步报告模板明确仅有 issue `closed` 不得自动归档，必须结合 VERSION / CHANGELOG / PR / issue 说明判断“归档 / 保留 / follow-up / 等待”。
 - **自检防回归**：`scripts/check-template.sh` / `.ps1` 增加 A13 收尾门禁和报告真实性关键断言。
 - 回流自 GitHub issue #148；本批不包含 `sync-template.ps1 --commit` fallback 修复和 dry-run 轻量预览模式。
@@ -873,7 +919,7 @@ Docs scaffold P1 后续模板补强：补齐输入评审、产品愿景、待确
 模板易用性文档补强：将前端交互设计、UI 原型策略 / 实现前原型从分散规则提升为独立细粒度标准，补充实现前原型场景，并新增长期结构模板库与人读术语表。
 
 - **细粒度标准**：新增 `ai/doc-standards/frontend-interaction.md` 与 `ai/doc-standards/ui-prototype-strategy.md`，分别规范前端交互设计和 UI 原型策略 / 实现前原型。
-- **记录模板**：新增 `template-docs/ui-prototype-strategy-template.md`，用于记录原型形式、权威位置、覆盖范围、未覆盖项、Mock / 降级口径和验收映射。
+- **记录模板**：新增 `template-docs/templates/ui-prototype-strategy-template.md`，用于记录原型形式、权威位置、覆盖范围、未覆盖项、Mock / 降级口径和验收映射。
 - **场景路由**：`template-docs/scenario-guides.md` 新增 A7.5 UI 原型策略 / 实现前原型场景，区分 `00-03` 前的需求探索原型与前端实现前的可视化门禁。
 - **规则联动**：更新 `ai/doc-standards/README.md`、`ai/document-lifecycle-rules.md`、`docs/README.md`、`ai/prompts/docs/00-generate-or-complete-docs.md`、`ai/prompts/docs/04-edit-single-doc.md` 和命令索引，统一引用新标准。
 - **结构模板**：新增并扩展 `template-docs/docs-scaffold/`，长期保留 `docs/00-09`、`docs/design/*` 与 `docs/research/*` 的结构模板副本，区分项目事实、结构模板和 `ai/doc-standards/` 规则 / 审计基线。
@@ -900,7 +946,7 @@ Docs scaffold P1 后续模板补强：补齐输入评审、产品愿景、待确
 - **快速恢复**：`ai/session-rules.md` 新增快速续接模式，默认只读 `git status`、最近提交、stash、`VERSION` 和 `.ai/session-handoff.md` 摘要；不联网、不查 GitHub issue / PR、不继续执行任务。
 - **过期裁决**：当 handoff 的分支、HEAD、版本或进度与 Git 客观事实不一致时，立即标记 `handoff stale`，以 Git 与当前用户输入为准，停止深挖旧记录。
 - **命令路由**：新增 `ai/commands/resume.md`，并在 `ai/commands/README.md` 注册 `resume`，统一承接“读取续接点 / 继续上次”。
-- **样例增强**：`template-docs/session-handoff.example.md` 增加 `Updated at`、`Status`、`Branch`、`HEAD`、`VERSION` 和 `Remote snapshot` 元数据头。
+- **样例增强**：`template-docs/templates/session-handoff.example.md` 增加 `Updated at`、`Status`、`Branch`、`HEAD`、`VERSION` 和 `Remote snapshot` 元数据头。
 - **同步与自检**：`template-sync.json`、`scripts/check-template.sh` / `.ps1` 增加 `resume` 命令和快速续接关键断言。
 - 回流自 `_proposals/TEMPLATE-UPGRADE-fast-session-resume.md`。
 
@@ -910,7 +956,7 @@ Docs scaffold P1 后续模板补强：补齐输入评审、产品愿景、待确
 
 - **早期场景**：`template-docs/scenario-guides.md` 新增 A5.5 需求探索原型 / Demo 前原型确认场景，触发说法包括“先看原型”“先做页面原型确认需求”“先别定技术栈，先画界面流程”。
 - **边界规则**：`ai/document-lifecycle-rules.md` 新增 §10.2，明确需求探索原型不是正式需求、架构、技术栈、接口、数据库、任务或验收事实；确认后必须回填 `00-03`。
-- **模板与路由**：新增 `template-docs/ui-prototype-exploration-template.md`、`ai/prompts/docs/22-ui-prototype-exploration.md` 和 `ai/commands/ui-prototype-exploration.md`，默认建议落盘到 `docs/research/YYYY-MM-DD-ui-prototype-exploration.md`。
+- **模板与路由**：新增 `template-docs/templates/ui-prototype-exploration-template.md`、`ai/prompts/docs/22-ui-prototype-exploration.md` 和 `ai/commands/ui-prototype-exploration.md`，默认建议落盘到 `docs/research/YYYY-MM-DD-ui-prototype-exploration.md`。
 - **索引与同步**：更新 `ai/commands/README.md`、`ai/prompts/README.md`、`docs/README.md` 和 `template-sync.json`，让派生项目同步获得该场景能力。
 - **自检防回归**：`scripts/check-template.sh` / `.ps1` 增加 A5.5、探索模板、命令、Prompt、同步清单和 docs 分区关键断言。
 - 回流自 `_archive/proposals/TEMPLATE-UPGRADE-ui-prototype-exploration.md`。
@@ -1012,7 +1058,7 @@ Batch 2 需求链规范落地：强化 `00-03` 需求入口、健康度矩阵、
 Batch 7 文档体系生成引导落地：补全文档体系生成场景、open items 总览命令、专题方案讨论和定稿门禁。
 
 - **场景引导**：`template-docs/scenario-guides.md` 扩展 A17-A19，覆盖待确认事项总览、专题方案讨论和文档定稿门禁；A6 生成文档骨架增加 open items 更新和生成后收口路径。
-- **open items 入口**：新增 `ai/commands/docs-open-items.md`、`ai/prompts/docs/21-docs-open-items.md` 和 `template-docs/docs-open-items.example.md`，并加入 `template-sync.json`，统一待确认项字段、门禁结论和默认落盘路径。
+- **open items 入口**：新增 `ai/commands/docs-open-items.md`、`ai/prompts/docs/21-docs-open-items.md` 和 `template-docs/templates/docs-open-items.example.md`，并加入 `template-sync.json`，统一待确认项字段、门禁结论和默认落盘路径。
 - **生成 / 评估 / 审计门禁**：`generate-docs`、`00-generate-or-complete-docs`、`docs-evaluation`、`docs-system-audit`、`phase-upgrade` 和 `docs-checklist` 均增加 open items 检查；阻塞项未关闭或未风险接受时不得无条件进入编码或 Phase 升级。
 - **专题讨论边界**：需求层人机交互、总体设计 / 技术选型、交互设计方案先输出多方案、依据、AI 推荐、待确认项和回填位置；人工确认前不得写成正式项目事实。
 - **自检防回归**：`scripts/check-template.sh` / `.ps1` 增加 Batch 7 关键断言，防止新增命令、Prompt、同步清单、场景和门禁规则被误删。
@@ -1163,7 +1209,7 @@ PowerShell 同步 fallback UTF-8 兼容性修复：加固 Windows Git Bash / MSY
 
 - **`sync-methodology`**：明确同步后默认串联 `check-derived-sync`、`post-sync-cleanup`、`docs-system-audit`、项目验证建议与 `sync-records/template-sync/` 同步报告。
 - **同步后整理 / 审计**：`post-sync-cleanup` 优先读取 `sync-records/template-sync/`，兼容旧路径；`docs-system-audit` 增加同步后审计模式，区分规范基线缺口、兼容差异和项目事实问题。
-- **同步报告模板**：`template-docs/derived-sync-report-template.md` 增加同步后整理摘要、文档体系审计摘要和项目验证建议。
+- **同步报告模板**：`template-docs/templates/derived-sync-report-template.md` 增加同步后整理摘要、文档体系审计摘要和项目验证建议。
 - **场景与 SOP**：A13 场景和 `git-guide.md` 明确“同步 → 验证 → 整理 → 审计 → 报告”的标准闭环与报告路径。
 - **自检**：`scripts/check-template.sh` 增加同步闭环、同步报告和同步后审计关键断言。
 - 回流自 `_archive/proposals/TEMPLATE-UPGRADE-sync-methodology-standard-workflow.md`。
@@ -1248,7 +1294,7 @@ scripts 说明与模板自检可维护性：补齐 scripts README 说明，明�
 派生同步运行记录路径分离（sync-records-location）：将模板同步运行记录与项目开发文档分离，降低理解成本。
 
 - **路径变更**：同步运行记录推荐路径从 `docs/archive/template-sync/` 改为 `sync-records/template-sync/`，与 `docs/` 项目事实层分离。
-- **`template-docs/derived-sync-report-template.md`**：推荐路径更新 + 补充临时续接说明（`.ai/session-handoff.md` 不替代长期同步运行记录）。
+- **`template-docs/templates/derived-sync-report-template.md`**：推荐路径更新 + 补充临时续接说明（`.ai/session-handoff.md` 不替代长期同步运行记录）。
 - **`ai/prompts/maintainers/12-sync-template.md`**：同步 Prompt 路径更新，区分长期记录（`sync-records/`）与临时续接（`.ai/session-handoff.md`）。
 - **`ai/commands/sync-methodology.md`**：命令文档路径更新 + 说明长期记录与临时续接区别。
 - **`ai/prompts/maintainers/15-post-sync-cleanup.md`**：同步后整理 Prompt 兼容新旧两个路径扫描。
@@ -1332,13 +1378,13 @@ global-rules §8.1 加「双维度总览表」撰写推荐（回流自派生项�
 v1.24 infrastructure release 收官。**PR-7 测试基础设施（#9）**。
 
 - **L3 端到端回归机制**：
-  - `template-docs/e2e-regression-checklist.md`（随模板同步）：6 项回归（R1 同步链路 / R2 check-derived-sync / R3 sync-all-derived 批量 / R4 场景引导路由 / R5 文档生成 / R6 PowerShell fallback），可自动化 + 人工 + 通过标准。
+  - `template-docs/maintainer/e2e-regression-checklist.md`（随模板同步）：6 项回归（R1 同步链路 / R2 check-derived-sync / R3 sync-all-derived 批量 / R4 场景引导路由 / R5 文档生成 / R6 PowerShell fallback），可自动化 + 人工 + 通过标准。
   - `scripts/e2e-sync-check.sh`（随模板同步）：L3 发布门，聚合 `check-template`（含 doc-standards 镜像 + 新项目烟测）+ `sync-all-derived` 批量烟测，人工项指向 checklist。运行通过。
-  - `template-docs/e2e-report-template.md`（随模板同步）：回归报告模板。
+  - `template-docs/maintainer/e2e-report-template.md`（随模板同步）：回归报告模板。
   - `MAINTAINERS` 发布 Checklist 补：MINOR / MAJOR 发布前跑 L3 + 报告确认（PATCH 可豁免）。
 - 专用测试派生项目 `ai-project-template-e2e` 是**外部 repo**（维护者 `gh repo create` + `new-project` 派生），模板仓内只给文档 + 命令。
 - check-template 加 5 断言（3 `require_file` + MAINTAINERS L3 + 回归清单 R6）。
-- **同步归属修订（含 PR-6）**：`scripts/sync-all-derived.sh` + `scripts/e2e-sync-check.sh` + `template-docs/e2e-regression-checklist.md` + `template-docs/e2e-report-template.md` 改为**随模板下行同步**（加入 `template-sync.json` + `sync-template.sh` 兜底清单 + Sync notice），消除 synced 文档（MAINTAINERS / scenario-guides / SOP / git-guide）对 template-local 文件的悬空引用；去掉 template-local 表述。
+- **同步归属修订（含 PR-6）**：`scripts/sync-all-derived.sh` + `scripts/e2e-sync-check.sh` + `template-docs/maintainer/e2e-regression-checklist.md` + `template-docs/maintainer/e2e-report-template.md` 改为**随模板下行同步**（加入 `template-sync.json` + `sync-template.sh` 兜底清单 + Sync notice），消除 synced 文档（MAINTAINERS / scenario-guides / SOP / git-guide）对 template-local 文件的悬空引用；去掉 template-local 表述。
 - 覆盖用户诉求 **#9**（最小测试清单 + 回归机制 + 专用测试派生项目 + 报告）。
 - 提案：`_proposals/TEMPLATE-UPGRADE-test-infra-pr7-v1.24.1.md`。
 - **#1–#16 + #9 全部完成；v1.23 文档重构 + v1.24 infrastructure release 收官。**
@@ -1506,7 +1552,7 @@ v1.24 infrastructure release 启动。**PR-6 批量同步派生项目（#15）**
 
 ## v1.21.0（2026-06-29）
 
-- 新增 `template-docs/derived-sync-report-template.md`，用于派生项目真实同步模板方法论后记录同步前后版本、执行命令、边界检查结果、问题和可回流优化点。
+- 新增 `template-docs/templates/derived-sync-report-template.md`，用于派生项目真实同步模板方法论后记录同步前后版本、执行命令、边界检查结果、问题和可回流优化点。
 - `/run sync-methodology` 与 `ai/prompts/maintainers/12-sync-template.md` 在 `check-derived-sync` 后增加同步运行记录步骤，并提示将可通用问题转写为去项目化 `_proposals/TEMPLATE-UPGRADE-*.md`。
 - `/run post-sync-cleanup` 与 `ai/prompts/maintainers/15-post-sync-cleanup.md` 支持读取最近同步运行记录，提炼待确认项和模板优化回流建议。
 - `README.md`、`SOP.md`、`MAINTAINERS.md`、`CONTRIBUTING.md`、`template-sync.json`、`scripts/sync-template.sh` 与 `scripts/check-template.sh` 同步纳入运行记录模板和防入口滞后断言。
@@ -1525,7 +1571,7 @@ v1.24 infrastructure release 启动。**PR-6 批量同步派生项目（#15）**
 
 - 新增 AI CLI 快捷命令路由：`ai/commands/` 提供 `/run ...` 与自然语言意图到权威 Prompt / SOP / 脚本说明的映射，降低用户手工查找、复制、粘贴 prompt 的成本。
 - 新增会话续接与断点恢复规则：`ai/session-rules.md` 定义新窗口恢复流程、自动更新触发点和写入确认边界；默认本地续接文件为 `.ai/session-handoff.md`，兼容 `NEXT-STEPS.md`，并通过 `.gitignore` 排除。
-- 新增 `template-docs/session-handoff.example.md` 作为续接文件样例；`README.md`、`SOP.md`、`INIT-PROMPT.md`、`ai/prompts/README.md` 和常用 Prompt 改为命令路由优先、详细 Prompt 作为权威执行模板。
+- 新增 `template-docs/templates/session-handoff.example.md` 作为续接文件样例；`README.md`、`SOP.md`、`INIT-PROMPT.md`、`ai/prompts/README.md` 和常用 Prompt 改为命令路由优先、详细 Prompt 作为权威执行模板。
 - `template-sync.json`、`scripts/sync-template.sh` 兜底清单与 `scripts/check-template.sh` 纳入新规则 / 命令文件 / 样例文件，并增加防入口滞后断言。
 - 归档已落地提案：`TEMPLATE-UPGRADE-ai-command-router.md` 与 `TEMPLATE-UPGRADE-session-handoff.md`；`TEMPLATE-UPGRADE-doc-standards-location.md` 暂留 `_proposals/`，待后续阶段迁移 `docs/_scaffold` 路径。
 

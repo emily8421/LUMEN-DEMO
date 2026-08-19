@@ -94,6 +94,9 @@
      - 仅主信号在（project-check.yml 有校验但 project-rules 缺规则）：建议补 §2.4。
      - 双信号都缺（存量项目未启用版本机制）：建议补 §2.4 + project-check.yml 版本校验，并从 `VERSION` 当前值起按项目自有版本递增；`VERSION` / `CHANGELOG` 顶部项目版本 / `TEMPLATE-BASE.md` 的 `Project version at sync time` 三者保持一致。
    - `scripts/check-derived-sync.*` 在版本一致性段后会非阻断检测版本机制启用状态，可作为本步审计的自动化参考。
+   - **审计 `scripts/` 模板仓专用脚本残留（v1.65.0 起）**：检查 `scripts/` 中是否存在已移出同步清单的模板仓专用脚本——`check-template.sh` / `check-template.ps1` / `sync-all-derived.sh` / `e2e-sync-check.sh` / `new-project.sh`（历史版本曾下行，v1.65.0 起不再下发、也不再被同步覆盖）。发现即逐项列出路径并提示可安全删除：它们是模板仓维护者 / CI 专用工具，不是项目资产，删除无需回填任何字段（§3 / §4 均不用改）；如需恢复可从模板仓复制。v1.65.0 之后经 `new-project.sh` 创建的项目初始即不含这批脚本，本审计项应为空。
+   - **审计 `template-docs/` 模板仓 / 领域专用文档残留（v1.66.0 起）**：检查 `template-docs/` 中是否存在已移出 `files_all` 的文档——`e2e-regression-checklist.md` / `e2e-report-template.md` / `rd-data-chain.md`（模板仓专用）与 `domain-derived-scenarios-template.md`（普通项目不接收，仅领域路线下行）。发现即逐项列出路径并提示可安全删除：同脚本残留口径，不是项目资产、删除无需回填任何字段；如需恢复可从模板仓复制。v1.66.0 之后经 `new-project.sh` 创建的项目初始即不含这批文档，本审计项应为空。
+   - **审计 `template-docs/` 旧路径残留（v1.66.0 目录重组）**：v1.66.0 起 `template-docs/` 重组为 `profiles/`（专项说明）、`templates/`（使用时复制的模板）、`maintainer/`（模板仓 / 领域专用）三个子目录，约 19 个文件迁移了路径（根目录现仅保留 9 件手册）。同步是覆盖式、不删除，派生项目 `template-docs/` 根目录可能残留旧路径文件（如根目录的 `web-fullstack-profile.md`、`demo-runbook-template.md` 等）——它们不再被同步覆盖，与新路径文件内容重复。发现即列出旧路径并提示可安全删除（新路径文件已是权威版本，删除旧路径无需回填字段）；领域模板仓自建文档中对旧路径的引用需其维护者自行改为新路径。
    - 启用项目自有版本机制 checklist（当上述审计判定需要启用时，按以下步骤；版本号必须人工确认）：
      - 前置判断：确认项目类型（普通派生 / 领域模板 / 领域派生）；读取 `VERSION`、`CHANGELOG.md` 顶部、`TEMPLATE-BASE.md`、`ai/project-rules.md`、`.github/workflows/`。
      - 普通派生项目启用步骤：

@@ -20,7 +20,7 @@
 | API Spec | `docs/07-api-spec.md`，描述接口、命令、SDK、事件或集成契约。 | `ai/doc-standards/07-api-spec.md` | 只把 REST API 算作接口，忽略 CLI / SDK 契约。 |
 | Dev Plan | `docs/08-dev-plan.md`，把 Phase 拆成 Sprint / Task 和验证包。 | `ai/doc-standards/08-dev-plan.md` | 用 handoff 替代正式进度摘要。 |
 | Verification | `docs/09-verification.md`，记录测试用例、资源验证和验收结果。 | `ai/doc-standards/09-verification.md` | 未运行验证就写“已通过”。 |
-| 演示 SOP / Demo runbook | `docs/env/local-demo-runbook.md`，当前项目演示 SOP（启动 / 检查 / 查看效果），不替代正式验收。 | `ai/commands/show-demo.md`、`template-docs/demo-runbook-template.md` | 把演示查看当成 `09` 验收通过。 |
+| 演示 SOP / Demo runbook | `docs/env/local-demo-runbook.md`，当前项目演示 SOP（启动 / 检查 / 查看效果），不替代正式验收。 | `ai/commands/show-demo.md`、`template-docs/templates/demo-runbook-template.md` | 把演示查看当成 `09` 验收通过。 |
 
 ## 2. ID / 追溯
 
@@ -72,7 +72,7 @@
 |---|---|---|---|
 | 需求探索原型 | `00-03` 正式定稿前的可视化澄清材料。 | `ai/document-lifecycle-rules.md` §10.2 | 把探索原型当正式需求或实现依据。 |
 | UI 原型策略 | 进入前端实现前选择是否需要可视化原型、形式、覆盖范围和证据位置。 | `ai/doc-standards/ui-prototype-strategy.md` | 误以为所有 UI 项目都必须 Figma 高保真。 |
-| 实现前原型 | 已有需求链和基本设计后，用于辅助实现和验收映射的 UI 原型。 | `template-docs/ui-prototype-strategy-template.md` | 借原型新增未授权接口或权限规则。 |
+| 实现前原型 | 已有需求链和基本设计后，用于辅助实现和验收映射的 UI 原型。 | `template-docs/templates/ui-prototype-strategy-template.md` | 借原型新增未授权接口或权限规则。 |
 | 前端交互设计 | `docs/design/*interaction*.md`，细化页面、用户流、状态、文案、接口依赖和验收路径。 | `ai/doc-standards/frontend-interaction.md` | 用前端隐藏 / 禁用替代后端权限边界。 |
 | 可视化证据 | 截图、Storybook、代码原型、设计链接或标注图等可供评审的界面证据。 | `ai/doc-standards/ui-prototype-strategy.md` | 把可视化证据当作 `09` 验收通过记录。 |
 
@@ -99,4 +99,4 @@
 | 下行同步 | 模板方法论文件从模板仓同步到派生项目。 | `template-docs/template-methodology.md` | 误以为会同步派生项目代码或业务文档。 |
 | 回流 | 派生项目的通用经验经提案回到模板仓。 | `CONTRIBUTING.md`、`_proposals/README.md` | 带入客户 / 账号 / 路径等项目敏感细节。 |
 | 归档 | 已处理提案移动到 `_archive/proposals/` 留痕。 | `_proposals/README.md` | 处理完成后仍留在 `_proposals/` 造成重复分析。 |
-| 领域模板（domain template） | 母模板与具体项目之间的**可选中间层**，继承母模板通用方法论并叠加某类系统专用标准件；主线治理仍为两层，非强制。 | `template-docs/domain-templates.md` | 把领域模板当成必经路径，或误以为两层模型被推翻。 |
+| 领域模板（domain template） | 母模板与具体项目之间的**可选中间层**，继承母模板通用方法论并叠加某类系统专用标准件；主线治理仍为两层，非强制。 | `template-docs/profiles/domain-templates.md` | 把领域模板当成必经路径，或误以为两层模型被推翻。 |

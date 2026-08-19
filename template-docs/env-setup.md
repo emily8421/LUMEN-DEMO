@@ -23,7 +23,7 @@ powershell -ExecutionPolicy Bypass -File scripts/check-prereqs.ps1
 
 | 你看到的情况 | 说明 | 该做什么 |
 |---|---|---|
-| `check-prereqs.ps1` 提示 `OK: all required items are present` | 模板脚本必备项已具备 | 可以运行 `bash scripts/new-project.sh ...` 新建项目 |
+| `check-prereqs.ps1` 提示 `OK: all required items are present` | 模板脚本必备项已具备 | 可以在模板仓运行 `bash scripts/new-project.sh ...` 新建项目（该脚本为模板仓专用，仅存在于模板仓） |
 | 缺 `winget` | 一键安装脚本暂不可用 | 先安装 Microsoft App Installer，或手工安装缺失工具 |
 | 缺 Git / Git Bash | `new-project.sh`、同步脚本和 Bash 自检无法运行 | 运行 `scripts/bootstrap-dev-env.ps1`，或手工安装 Git for Windows |
 | Git Bash 已安装，但 PowerShell 找不到 `bash` | PATH 没暴露 `bash` 命令 | 用完整路径运行 Bash 脚本，或修复 PATH 后重开终端 |
@@ -73,7 +73,7 @@ powershell -ExecutionPolicy Bypass -File scripts/check-prereqs.ps1
 | 工具 | 类别 | 一句话 |
 |---|---|---|
 | Git for Windows | 必备 | Windows 上的 Git，新建 / 同步 / 提交都依赖它 |
-| Git Bash | 必备 | 跑 `.sh` 脚本（new-project / sync-template / check-template） |
+| Git Bash | 必备 | 跑 `.sh` 脚本（模板仓的 new-project / check-template；派生项目的 sync-template） |
 | PowerShell | 必备 | 跑 `.ps1` 脚本（检测 / 采集 / 一键安装） |
 | Claude CLI / Codex CLI | AI CLI（至少一种） | 把文档 / Prompt / 任务交给 AI 执行 |
 | GitHub CLI（`gh`） | 条件必需 | 远端建仓 / 推送 / PR |
@@ -83,7 +83,7 @@ powershell -ExecutionPolicy Bypass -File scripts/check-prereqs.ps1
 | Docker Desktop | 可选 | 容器 / 外部服务 |
 | Java | 可选 | 仅当依赖工具 / 中间件需要 |
 
-这些是核心依赖的原因：`new-project.sh`、`sync-template.sh`、`check-template.sh` 依赖 Bash（Windows 上用 Git Bash）；Git 用于派生 / 同步 / 提交，`gh` 用于远端建仓 / 推送 / PR；PowerShell 跑 `collect-env.ps1`、检测和一键安装；Node.js、Python 是多数 AI 编程项目常见运行时，`collect-env.ps1` 也检测它们；Docker、Java 非模板必需，但很多派生项目会用到。
+这些是核心依赖的原因：`new-project.sh`、`check-template.sh`（模板仓专用）与 `sync-template.sh`（派生项目用）依赖 Bash（Windows 上用 Git Bash）；Git 用于派生 / 同步 / 提交，`gh` 用于远端建仓 / 推送 / PR；PowerShell 跑 `collect-env.ps1`、检测和一键安装；Node.js、Python 是多数 AI 编程项目常见运行时，`collect-env.ps1` 也检测它们；Docker、Java 非模板必需，但很多派生项目会用到。
 
 ### Git for Windows
 

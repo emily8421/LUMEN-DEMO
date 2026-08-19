@@ -23,7 +23,7 @@
 | Phase / Sprint / Task 定义 | Phase、Sprint、Task、完成包的定义和输出位置 |
 | Sprint 总览 | Sprint-ID、目标、覆盖 REQ / NFR、输入设计 / 契约、修改范围、验证包、状态、任务单 |
 | Sprint 详情 | 目标、输入文档、修改范围、验证包、验收标准、禁止事项、完成包 |
-| System Skeleton / Sprint 0 | non-trivial 项目首个业务 Sprint 前的可运行系统框架（System Skeleton）计划或豁免；Web 特化见 `template-docs/web-fullstack-profile.md` |
+| System Skeleton / Sprint 0 | non-trivial 项目首个业务 Sprint 前的可运行系统框架（System Skeleton）计划或豁免；Web 特化见 `template-docs/profiles/web-fullstack-profile.md` |
 | 依赖关系与里程碑 | 项、前置依赖、阻塞风险、是否可并行、处理方式、里程碑 |
 | 任务拆分规则 | 复杂度阈值、拆分触发条件、Task 文件命名、worktree / 分支建议 |
 | 当前进度记录 | 日期、Sprint / Task、进度、验证结果、关联提交 / PR、下一步、是否已回填 09 |
@@ -31,7 +31,7 @@
 
 ## 3. Sprint 验证包
 
-每个 Sprint 必须引用或定义最小验证包。non-trivial 项目（多模块 / 有对外接口 / 有运行依赖）应在首个业务功能 Sprint 前安排或显式豁免 Sprint 0 / System Skeleton，修改范围限于模块边界、关键接口连通、至少一条纵切、错误 / 空 / 加载入口（不含完整业务逻辑）；复杂 Web / 全栈项目叠加 `template-docs/web-fullstack-profile.md` 的 App Shell、目录边界、文件膨胀阈值等 Web 特化，不得顺手实现完整业务。
+每个 Sprint 必须引用或定义最小验证包。non-trivial 项目（多模块 / 有对外接口 / 有运行依赖）应在首个业务功能 Sprint 前安排或显式豁免 Sprint 0 / System Skeleton，修改范围限于模块边界、关键接口连通、至少一条纵切、错误 / 空 / 加载入口（不含完整业务逻辑）；复杂 Web / 全栈项目叠加 `template-docs/profiles/web-fullstack-profile.md` 的 App Shell、目录边界、文件膨胀阈值等 Web 特化，不得顺手实现完整业务。
 
 | 字段 | 要求 |
 |---|---|

@@ -31,6 +31,9 @@
 2. 检查工作区状态和最近同步提交。
 3. 如存在同步运行记录，优先读取 `sync-records/template-sync/`，兼容读取旧路径 `docs/archive/template-sync/`，提取问题、待确认项和可回流优化点。
 4. 审计项包含「§3 裁剪决策 vs 目录结构一致性」：`ai/project-rules.md` §3 声明不启用 / 省略的目录或骨架文档（`frontend/`、`backend/`、`tests/`、`docker/`、`docs/06`、`docs/07`）仍以占位形态存在时，提示按 `ai/doc-standards/project-rules.md` §3 裁剪执行步骤补执行；该审计不限同步后，普通项目自查同样适用。
+4a. 审计项包含「模板仓专用脚本残留」（v1.65.0 起）：`scripts/` 中存在 `check-template.*` / `sync-all-derived.sh` / `e2e-sync-check.sh` / `new-project.sh` 时提示可安全删除（已移出同步清单的模板仓专用工具，删除无需回填字段）；细则见 `ai/prompts/maintainers/15-post-sync-cleanup.md`。
+4b. 审计项包含「模板仓 / 领域专用文档残留」（v1.66.0 起）：`template-docs/` 中存在 `e2e-regression-checklist.md` / `e2e-report-template.md` / `rd-data-chain.md` / `domain-derived-scenarios-template.md` 时提示可安全删除（同脚本残留口径）；细则见 `ai/prompts/maintainers/15-post-sync-cleanup.md`。
+4c. 审计项包含「template-docs 旧路径残留」（v1.66.0 目录重组）：19 个文件迁入 `profiles/` / `templates/` / `maintainer/` 子目录后，派生项目根目录的旧路径副本不再被覆盖、与新路径重复，提示可安全删除；细则见 `ai/prompts/maintainers/15-post-sync-cleanup.md`。
 5. 使用 `15-post-sync-cleanup` 先输出审计结果与迁移计划，并标注哪些问题应回写同步报告。
 6. 用户确认后再执行移动、修改或补齐。
 7. 输出变更清单、待复核链接、验证建议、同步报告更新建议和是否需要生成模板优化提案。

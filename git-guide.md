@@ -208,7 +208,7 @@ git show --name-only --stat HEAD
 powershell -ExecutionPolicy Bypass -File scripts/check-derived-sync.ps1
 ```
 
-随后继续执行 `/run post-sync-cleanup`、`/run docs-system-audit` 的同步后审计模式，并按 `template-docs/derived-sync-report-template.md` 生成或更新 `sync-records/template-sync/YYYY-MM-DD-sync-template-vX.Y.Z.md`。若项目当前 AI 入口仍是旧版本，先直接打开新同步到的 `ai/prompts/maintainers/12-sync-template.md` 作为后续步骤清单。
+随后继续执行 `/run post-sync-cleanup`、`/run docs-system-audit` 的同步后审计模式，并按 `template-docs/templates/derived-sync-report-template.md` 生成或更新 `sync-records/template-sync/YYYY-MM-DD-sync-template-vX.Y.Z.md`。若项目当前 AI 入口仍是旧版本，先直接打开新同步到的 `ai/prompts/maintainers/12-sync-template.md` 作为后续步骤清单。
 
 ### 5.3 v1.6.8+ 后续同步
 

@@ -77,7 +77,7 @@
    - 从 `docs/inputs/*`、`docs/vision/product-vision.md`、场景文档、客户 brief 或会议纪要中抽取交互体验线索
    - 抽取维度至少包括：参考产品、演示主线、页面 / 视图暗示、信息密度、首屏目标、设备范围、协作方式、权限可见性、反馈 / 错误提示、视觉禁区和风格词
    - 将每条线索标为：已明确 / AI 推断 / 待确认 / 冲突 / 超范围，并给出建议落点（UI brief / `frontend-interaction` / UI 原型策略 / `08` / `09` / open items）
-   - 若 UI 输入不足，建议转 A25 UI Brief Intake；用户确认后可写入 `docs/inputs/ui-brief.md` 或 `docs/research/YYYY-MM-DD-ui-brief-intake.md`，模板见 `template-docs/ui-brief-intake-template.md`
+   - 若 UI 输入不足，建议转 A25 UI Brief Intake；用户确认后可写入 `docs/inputs/ui-brief.md` 或 `docs/research/YYYY-MM-DD-ui-brief-intake.md`，模板见 `template-docs/templates/ui-brief-intake-template.md`
    - 未经用户确认的 AI 推断不得直接写入 `docs/design/frontend-interaction.md`、Sprint 验收标准或实现任务
 
 5. 最小补充清单

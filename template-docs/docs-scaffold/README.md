@@ -73,8 +73,8 @@
 | `research/ui-prototype-exploration.md` | `docs/research/YYYY-MM-DD-ui-prototype-exploration.md` | `ai/document-lifecycle-rules.md` §10.2 |
 | `research/tech-env-evaluation.md` | `docs/research/YYYY-MM-DD-tech-env-evaluation-<scope>.md` | `ai/prompts/review/20-tech-env-evaluation.md` |
 
-> 兼容入口：`template-docs/ui-prototype-strategy-template.md` 与 `template-docs/ui-prototype-exploration-template.md` 暂时保留，内容定位与本目录对应模板一致，避免破坏既有链接。
-> `template-docs/docs-open-items.example.md` 暂时保留为填充示例；正式结构模板见 `template-docs/docs-scaffold/research/docs-open-items.md`。
+> 兼容入口：`template-docs/templates/ui-prototype-strategy-template.md` 与 `template-docs/templates/ui-prototype-exploration-template.md` 暂时保留，内容定位与本目录对应模板一致，避免破坏既有链接。
+> `template-docs/templates/docs-open-items.example.md` 暂时保留为填充示例；正式结构模板见 `template-docs/docs-scaffold/research/docs-open-items.md`。
 
 ## 维护要求
 
