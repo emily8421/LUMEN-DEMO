@@ -4,6 +4,7 @@
 > **性质声明**：本文是 **AI 评审结论，待人工确认采纳范围**；问题项多为「登记为债、不强制当前维护态回改」口径（同 `docs/05-tech-spec.md` §4.2 处理方式），修复建议均未执行。
 > **评估方法**：初评为静态走读（170 文件：TS/TSX 约 19.4k 行含生成物、CSS 约 5k 行）+ 实跑四道本地质量门（ESLint / tsc / build / file-size 棘轮 + css token 检查）。复核补充静态检查了请求取消能力、刷新竞态、动态状态播报、tab 语义与弹层焦点；复核未重复运行会生成构建产物的命令。
 > **修订记录**（2026-08-19 二次评审采纳）：新增 P8（`request()` 非 JSON 错误体回退缺口）并在 §0 / §1.6 同步措辞；R5 计数修正 5→7；P5 行号校正 64-75→64-76。修复建议仍均未执行。
+> **修订记录 2**（2026-08-19 复评采纳）：P5 补域 hook 自发异步读的竞态证据与现有保护清单；P2 / P3 补状态双播报、模态抽屉边界与实施约束；对应实施细节见修复计划修订记录 3。
 > **触发**：用户要求「评估 lumen 的前端代码」；上一轮目录级评审见 `2026-08-18-code-directory-review.md`（本文为其前端深化，聚焦代码质量而非目录结构）。
 
 ## 0. 总览
@@ -81,10 +82,10 @@
 | # | 问题 | 证据 | 严重度 |
 |---|---|---|---|
 | P1 | **前端零单元测试**：`src` 下无任何 `.test.ts`；验证链 = build / lint / 浏览器 smoke（`scripts/smoke-*-browser.mjs` 14 个）。纯函数模块（`local-vault-index` 倒排索引、`folder-utils`、`markdown-toc`、`drafts`）完全可单测但无覆盖——回归只靠端到端 smoke，定位成本高 | `find src -name "*.test.*"` 为空；docs/05 无 vitest / jest 声明（后端 331 pytest 对照悬殊） | 中 |
-| P2 | **动态状态未向辅助技术播报**：全仓未见 `aria-live` / `role="status"` / `role="alert"`；`StatusBar` 只是普通文本 | `StatusBar.tsx` | 中 |
+| P2 | **动态状态未向辅助技术播报**：全仓未见 `aria-live` / `role="status"` / `role="alert"`；`StatusBar` 只是普通文本。修复时还须避免 `runAction` 失败路径同时设置的 error 与 notice 被分别播报，导致同一失败被连续朗读两遍 | `StatusBar.tsx` / `useAppState.ts` | 中 |
 | P3 | **登录/注册 tabs 与弹层焦点语义不完整**：`AuthShell` 的 `tablist` 缺 tab 语义；命令面板和密码重置弹窗未完整管理焦点生命周期。修复须注意：现实现为条件渲染（`authMode` 三目），补 tab 语义需改为双 panel 常驻 DOM + `hidden` 隐藏，且须补 `[hidden]` 高特异性样式（`.login-panel form` 的 `display: grid` 会覆盖 UA 默认隐藏）——详见修复计划 FEP-01 | `AuthShell.tsx` / `CommandPalette.tsx` / `PasswordResetModal.tsx` | 中 |
 | P4 | **无 ErrorBoundary**：组件树渲染或生命周期异常会令主界面无恢复 UI | `main.tsx` 直接 render；全仓无 `componentDidCatch` / `getDerivedStateFromError` | 中 |
-| P5 | **刷新结果无归属保护**：`refreshWorkspace()` 并行刷新五个域，调用链中没有 request generation、空间归属检查或 AbortController 使用；快速切空间时旧响应有覆盖新状态的风险 | `useAppState.ts:64-76`；全仓无 `AbortController` 使用 | 中（风险） |
+| P5 | **刷新结果无归属保护**：`refreshWorkspace()` 并行刷新五个域，调用链中没有 request generation、空间归属检查或 AbortController 使用；`useTags` 也会因 token / 空间变化自行 `listTags(token).then(setTags)`，未作取消或归属校验。快速切空间时旧响应有覆盖新状态的风险 | `useAppState.ts:64-76` / `useTags.ts:53-65`；全仓无 `AbortController` 使用 | 中（风险） |
 | P6 | **10 处 `window.confirm` 原生对话框**（8 文件）：无法主题化、阻塞式，文案风格各自为政 | 实测 10 处：useDocuments / useFolders / useTags / useTerms / useTermCategories / useAdminUsers / useSpaceMembers / LocalMountTreeView | 低（demo 取舍） |
 | P7 | **`RunAction` 类型在 16 个 app 模块逐字重复声明**——违反 L0-5 DRY，改签名时需多点同步 | `useDocuments.ts` 等 16 个 app 模块 | 低 |
 | P8 | **`request()` 对非 JSON 错误体无回退**：先 `await response.json()` 再判 `response.ok`，后端不可用 / 网关返回 HTML 错误页时抛原生 `SyntaxError`（「Unexpected token…」类解析错误直达 UI），绕过 `ApiError` 业务码与固定用户文案，触碰 L0-7 对外信息最小化；同文件 `downloadBlob` 经 `buildApiError` 已有非 JSON 回退，`request()` 未对齐 | `client.ts:59`（对照 `buildApiError` client.ts:86-97） | 低 |
@@ -113,6 +114,13 @@
 | **FE-MAINT-1 `RunAction` 类型收敛** | P7 | 随下一轮 hooks 改动合并 | 建议定义 `app/action-types.ts`，避免 `run-action.ts` 暗示存在运行时实现；16 文件纯类型改动不值得单独制造噪声。 |
 | **FE-ERR-1 `request()` 非 JSON 回退** | P8 | 随下次触及 `client.ts` 的改动合并 | 为 `response.json()` 解析失败路径补非 JSON 回退（对齐 `buildApiError` 口径：code=0 + HTTP 状态描述文案）；几行改动，不单独立项。 |
 | **Demo→MVP 债** | P6 / R1 / R2 / R3 / R5 | 分项登记 | confirm、路由、token 存储、props 膨胀、effect 豁免的触发条件不同，不能笼统称为「纯化妆」。 |
+
+### 4.1 P5 复评补充：异步读保护现状
+
+- 已有保护：`useSpaceMembers` 与 `useLocalVaultMount` 的 effect 使用 cleanup + `cancelled` 标志，异步结果仅在当前 effect 仍有效时提交 state；后续同类 effect 应优先对齐该既有模式。
+- 无保护：`useTags` 的空间标签读取、文档标签读取均可在旧请求晚到后提交 state；前者是空间切换竞态，后者是文档切换竞态。`refreshWorkspace()` 的五条显式 reload 链同样没有代次或归属保护。
+- 已检查但暂不纳入空间竞态：`useAiAssistant` 的 LLM 配置读取只依赖 token、不随空间切换，当前风险较低；保留为后续 token 会话切换审查项。
+- 处置原则：不以单一机制覆盖所有调用。effect 自发读取使用 cleanup + `cancelled`；显式并发刷新或手动读取使用 request generation 或提交前的 token / 空间归属校验。具体清单与验收见 FEP-05。
 
 ## 5. 与既有评审的关系
 

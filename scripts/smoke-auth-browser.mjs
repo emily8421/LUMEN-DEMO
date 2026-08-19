@@ -223,7 +223,7 @@ async function clickTab(client, tabLabel) {
 
 async function submitLogin(client, loginId, password) {
   await evaluate(client, (userId, userPassword) => {
-    const form = document.querySelector('.login-panel form');
+    const form = document.querySelector('#auth-panel-login');
     if (!form) {
       throw new Error('Login form not found.');
     }
@@ -244,7 +244,7 @@ async function submitLogin(client, loginId, password) {
 
 async function submitRegister(client, email, name, password) {
   await evaluate(client, (userEmail, userName, userPassword) => {
-    const form = document.querySelector('.login-panel form');
+    const form = document.querySelector('#auth-panel-register');
     if (!form) {
       throw new Error('Register form not found.');
     }
@@ -300,10 +300,72 @@ async function runBrowserFlow(client, email, password) {
   );
   assert(tabs.includes('登录') && tabs.includes('注册'), `auth tabs mismatch: ${JSON.stringify(tabs)}`);
 
+  const tabSemantics = await evaluate(client, () => {
+    const loginTab = document.querySelector('#auth-tab-login');
+    const registerTab = document.querySelector('#auth-tab-register');
+    const loginPanel = document.querySelector('#auth-panel-login');
+    const registerPanel = document.querySelector('#auth-panel-register');
+    return {
+      loginRole: loginTab?.getAttribute('role'),
+      loginSelected: loginTab?.getAttribute('aria-selected'),
+      loginControls: loginTab?.getAttribute('aria-controls'),
+      registerRole: registerTab?.getAttribute('role'),
+      registerSelected: registerTab?.getAttribute('aria-selected'),
+      registerControls: registerTab?.getAttribute('aria-controls'),
+      loginPanelRole: loginPanel?.getAttribute('role'),
+      loginLabelledBy: loginPanel?.getAttribute('aria-labelledby'),
+      registerPanelRole: registerPanel?.getAttribute('role'),
+      registerLabelledBy: registerPanel?.getAttribute('aria-labelledby'),
+      loginHidden: loginPanel?.hasAttribute('hidden'),
+      registerHidden: registerPanel?.hasAttribute('hidden'),
+    };
+  });
+  assert(tabSemantics.loginRole === 'tab' && tabSemantics.registerRole === 'tab', 'auth tabs missing tab roles');
+  assert(tabSemantics.loginSelected === 'true' && tabSemantics.registerSelected === 'false', 'initial tab selection mismatch');
+  assert(tabSemantics.loginControls === 'auth-panel-login' && tabSemantics.registerControls === 'auth-panel-register', 'tab controls mismatch');
+  assert(tabSemantics.loginPanelRole === 'tabpanel' && tabSemantics.registerPanelRole === 'tabpanel', 'tabpanel roles missing');
+  assert(tabSemantics.loginLabelledBy === 'auth-tab-login' && tabSemantics.registerLabelledBy === 'auth-tab-register', 'tabpanel labels mismatch');
+  assert(tabSemantics.loginHidden === false && tabSemantics.registerHidden === true, 'initial hidden panel mismatch');
+
+  // 键盘序列必须逐键等待 React 提交渲染后再采样：setState 异步批处理，
+  // 同步连发 dispatchEvent 会读到按键前的旧 aria-selected（焦点因 .focus() 同步执行而看似正确）。
+  const keyboardResult = await evaluate(client, async () => {
+    const loginTab = document.querySelector('#auth-tab-login');
+    const registerTab = document.querySelector('#auth-tab-register');
+    if (!(loginTab instanceof HTMLButtonElement) || !(registerTab instanceof HTMLButtonElement)) {
+      throw new Error('Auth tabs missing');
+    }
+    const nextFrame = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    const press = async (target, key) => {
+      target.focus();
+      target.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
+      await nextFrame();
+      return {
+        loginSelected: loginTab.getAttribute('aria-selected'),
+        registerSelected: registerTab.getAttribute('aria-selected'),
+        activeId: document.activeElement?.id,
+      };
+    };
+    return {
+      end: await press(loginTab, 'End'),
+      home: await press(registerTab, 'Home'),
+      right: await press(loginTab, 'ArrowRight'),
+      left: await press(registerTab, 'ArrowLeft'),
+    };
+  });
+  for (const state of Object.values(keyboardResult)) {
+    assert(state.loginSelected === 'true' || state.loginSelected === 'false', 'keyboard selection missing');
+    assert(state.activeId === 'auth-tab-login' || state.activeId === 'auth-tab-register', 'keyboard focus did not stay on tab');
+  }
+  assert(keyboardResult.end.registerSelected === 'true' && keyboardResult.end.activeId === 'auth-tab-register', 'End key mismatch');
+  assert(keyboardResult.home.loginSelected === 'true' && keyboardResult.home.activeId === 'auth-tab-login', 'Home key mismatch');
+  assert(keyboardResult.right.registerSelected === 'true' && keyboardResult.right.activeId === 'auth-tab-register', 'ArrowRight key mismatch');
+  assert(keyboardResult.left.loginSelected === 'true' && keyboardResult.left.activeId === 'auth-tab-login', 'ArrowLeft key mismatch');
+
   // 2) 注册 tab → 注册新用户（自动登录）
   await clickTab(client, '注册');
   await waitForPage(client, 'register form', () => {
-    const form = document.querySelector('.login-panel form');
+    const form = document.querySelector('#auth-panel-register:not([hidden])');
     return Boolean(form && form.querySelectorAll('input').length >= 3);
   });
   await submitRegister(client, email, 'Smoke Tester', password);
@@ -316,6 +378,18 @@ async function runBrowserFlow(client, email, password) {
 
   // 4) 凭证登录（新用户 email + 密码）
   await clickTab(client, '登录');
+  await submitLogin(client, email, 'wrong-password-1');
+  await waitForPage(client, 'login error announcement', () => Boolean(document.querySelector('.status-bar strong[role="alert"]')));
+  const failureAnnouncement = await evaluate(client, () => {
+    const notice = document.querySelector('.status-bar span[role="status"]');
+    const error = document.querySelector('.status-bar strong[role="alert"]');
+    return {
+      noticeLive: notice?.getAttribute('aria-live'),
+      errorText: error?.textContent || '',
+    };
+  });
+  assert(failureAnnouncement.noticeLive === 'off', 'notice remains live while error is present');
+  assert(failureAnnouncement.errorText.length > 0, 'error announcement missing text');
   await submitLogin(client, email, password);
   await waitForWorkspace(client);
   // 登录态确认：顶栏用户菜单存在即视为已登录（status-bar notice 可能已被后续加载覆盖）
