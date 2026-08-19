@@ -3,7 +3,7 @@
 > Sync notice: This file is maintained by `ai-project-template` and may be overwritten when a derived project syncs template methodology.
 > Do not edit it directly in derived projects; propose reusable changes in `_proposals/` and upstream them to the template repository.
 
-本文件定义 UI 原型策略 / 实现前原型的记录标准。它适用于已有 `00-03` 需求链、体验原则和基本设计后，进入前端实现前的可视化门禁；不同于 `template-docs/ui-prototype-exploration-template.md` 所描述的“需求探索原型”。若仍在 UI brief、参考分析、需求探索原型或视觉效果探索阶段，应先按 `ai/document-lifecycle-rules.md` §5.2.1 推进，不得把探索稿写成实现前原型已确认。
+本文件定义 UI 原型策略 / 实现前原型的记录标准。它适用于已有 `00-03` 需求链、体验原则和基本设计后，进入前端实现前的可视化门禁；不同于 `template-docs/templates/ui-prototype-exploration-template.md` 所描述的“需求探索原型”。若仍在 UI brief、参考分析、需求探索原型或视觉效果探索阶段，应先按 `ai/document-lifecycle-rules.md` §5.2.1 推进，不得把探索稿写成实现前原型已确认。
 
 ## 1. 适用范围与触发条件
 
@@ -31,8 +31,8 @@
 
 - 简单项目：记录在 `ai/project-rules.md` §2.3。
 - 技术方案相关：记录在 `docs/05-tech-spec.md` 的 UI 原型策略 / 前端约束段落。
-- UI 型项目：记录在 `docs/design/frontend-interaction.md`，并引用 `template-docs/ui-prototype-strategy-template.md`。
-- 探索阶段：使用 `template-docs/ui-prototype-exploration-template.md`、`docs/research/*ui-visual-exploration.md` 或 `template-docs/frontend-experience-brief-template.md`，不要写成 UI 原型策略已确认。
+- UI 型项目：记录在 `docs/design/frontend-interaction.md`，并引用 `template-docs/templates/ui-prototype-strategy-template.md`。
+- 探索阶段：使用 `template-docs/templates/ui-prototype-exploration-template.md`、`docs/research/*ui-visual-exploration.md` 或 `template-docs/templates/frontend-experience-brief-template.md`，不要写成 UI 原型策略已确认。
 
 ## 4. 必填字段
 

@@ -24,7 +24,7 @@
 - `ai/index.md`
 - `git-guide.md` §5
 - `ai/prompts/maintainers/12-sync-template.md`
-- `template-docs/derived-sync-report-template.md`
+- `template-docs/templates/derived-sync-report-template.md`
 - `scripts/sync-template.ps1`
 - `scripts/check-derived-sync.ps1`
 - `ai-records/project-registry/README.md` 与 `ai-records/project-registry/registry.md`（仅当从模板仓发起“同步至派生项目 / 同步 N 个派生”时读取）

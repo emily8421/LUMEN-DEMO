@@ -112,7 +112,7 @@ AI 做参考分析时**不加载全部知识**，按 scope 选取：
 1. 从 UI brief / 输入材料确定：产品类型、用户任务、页面类型、设备范围、关键状态。
 2. 按 scope 命中相关维度（§3）和模式文件（visual / interaction）。
 3. 只读取命中记录，每条核对适用 / 不适用条件。
-4. 输出证据分级 + 采纳 / 调整 / 排除矩阵（见 `template-docs/frontend-ui-reference-analysis-template.md`）。
+4. 输出证据分级 + 采纳 / 调整 / 排除矩阵（见 `template-docs/templates/frontend-ui-reference-analysis-template.md`）。
 5. 视觉案例（D 级）只作发散，不得推导为成熟交互结论。
 
 简单页面或无参考输入时，可在参考分析或上游文档中写明豁免理由，不做长分析。

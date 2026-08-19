@@ -42,7 +42,7 @@
 - 基础工具：Git for Windows、Git Bash、PowerShell。先跑 `scripts/check-prereqs.ps1` 看缺什么，缺了用 `scripts/bootstrap-dev-env.ps1` 一键补齐（详见 `template-docs/env-setup.md`）。
 - AI CLI：至少装一种——按官方文档安装并登录 `Claude CLI` 或 `Codex CLI`（见 `template-docs/ai-cli-setup.md`）。
 - 公司中转站 / LeMesh / CC-Switch：见内网手册（`lemesh_ai_model`），它处理代理接入，不替代 CLI 官方安装。
--（可选）验证新手链路：`template-docs/smoke-test.md` + `template-docs/smoke-test-report-template.md`。
+-（可选）验证新手链路：`template-docs/smoke-test.md` + `template-docs/templates/smoke-test-report-template.md`。
 
 > Keyword for template checks: newbie AI CLI onboarding path.
 
@@ -165,11 +165,12 @@ docs/inputs/ 原始输入  ──→  docs/vision/product-vision.md  ──→  
 | 装 AI CLI | `template-docs/ai-cli-setup.md` |
 | 具体场景怎么操作 | `template-docs/scenario-guides.md`（A0–A28 / C1–C8 / 元场景） |
 | 找命令速查 | `SOP.md`、`ai/commands/README.md` |
-| 查 how-to 任务操作入口 | `template-docs/user-guide-template.md`（任务→权威入口导航表） |
-| 查研发数据沉淀路径 | `template-docs/rd-data-chain.md`（数据类别→载体→主链关系） |
+| 查 how-to 任务操作入口 | `template-docs/templates/user-guide-template.md`（任务→权威入口导航表） |
+| 查研发数据沉淀路径 | `template-docs/maintainer/rd-data-chain.md`（数据类别→载体→主链关系；模板仓文档，v1.66.0 起不下行，模板仓 GitHub 查看） |
 | 理解模板为什么这么设计 | `template-docs/template-methodology.md` |
+| 查治理机制 / 脚本工具台账 | `template-docs/capability-packages.md`（机制注册表）、`scripts/README.md`（工具注册表） |
 | 查术语是什么意思 | `template-docs/glossary.md` |
-| 查看领域模板（可选中间层） | `template-docs/domain-templates.md` |
-| 演示 SOP 怎么写 | `template-docs/demo-runbook-template.md`、`ai/commands/show-demo.md` |
+| 查看领域模板（可选中间层） | `template-docs/profiles/domain-templates.md` |
+| 演示 SOP 怎么写 | `template-docs/templates/demo-runbook-template.md`、`ai/commands/show-demo.md` |
 | docs/ 文档怎么放 / 怎么裁剪 | `docs/README.md` |
 | 查看 `docs/inputs/*` / `docs/vision/*` / `docs/00-09` / `docs/design/*` / `docs/decisions/*` / `docs/research/*` 原始结构模板 | `template-docs/docs-scaffold/` |

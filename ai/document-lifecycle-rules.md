@@ -167,7 +167,7 @@ AI 生成、精修、审计或评估项目事实文档时，必须区分三层�
 
 UI Brief Intake 用于在输入评审、需求探索原型、正式前端交互设计或前端实现前补齐 UI / UX 输入，不是正式设计或验收文档。若项目涉及 Web、移动端、小程序、桌面端、可点击 Demo 或复杂页面，但输入材料缺少参考产品、演示主线、页面结构、信息密度、首屏目标、设备范围、视觉禁区、状态反馈或权限可见性，应先补 UI brief，再进入需求探索原型、前端交互设计、UI 原型策略或编码。
 
-UI brief 推荐两类路径：用户原始输入补充放 `docs/inputs/ui-brief.md`；AI 与用户共同探索形成的研究记录放 `docs/research/YYYY-MM-DD-ui-brief-intake.md`。模板见 `template-docs/ui-brief-intake-template.md`。UI brief 中的 AI 推断必须标注为待确认，用户确认后才可回填到 `docs/design/frontend-interaction.md`、UI 原型策略、`docs/08-dev-plan.md` 和 `docs/09-verification.md`；未经确认不得直接写成已确认需求、接口、权限、Sprint 必过项或验收目标。
+UI brief 推荐两类路径：用户原始输入补充放 `docs/inputs/ui-brief.md`；AI 与用户共同探索形成的研究记录放 `docs/research/YYYY-MM-DD-ui-brief-intake.md`。模板见 `template-docs/templates/ui-brief-intake-template.md`。UI brief 中的 AI 推断必须标注为待确认，用户确认后才可回填到 `docs/design/frontend-interaction.md`、UI 原型策略、`docs/08-dev-plan.md` 和 `docs/09-verification.md`；未经确认不得直接写成已确认需求、接口、权限、Sprint 必过项或验收目标。
 
 ### 5.2.1 UI Exploration to Delivery Pipeline / UI 探索到交付路径
 
@@ -201,7 +201,7 @@ docs/inputs/*
 | 实现前 UI 原型 | 代码原型 / HTML / Storybook / Figma / 截图证据 | 实现前确认 | 验证正式设计的视觉、点击路径、组件密度和覆盖状态 | 用户确认 + `08/09` 就绪 | 不替代 `09`，不新增需求 |
 | 实现与验证 | `frontend/*`、`tests`、`08`、`09` | 实现 / 已验证 | 按任务实现并留存验证证据 | `09` 记录 TC / smoke / 截图 / 人工验收结论 | 不实现 research 未确认内容 |
 
-> 知识来源与选择规则见 `template-docs/ui-knowledge/README.md`（视觉 / 交互模式与来源索引，按 scope 读取）；项目级参考分析落盘模板见 `template-docs/frontend-ui-reference-analysis-template.md`。
+> 知识来源与选择规则见 `template-docs/ui-knowledge/README.md`（视觉 / 交互模式与来源索引，按 scope 读取）；项目级参考分析落盘模板见 `template-docs/templates/frontend-ui-reference-analysis-template.md`。
 
 晋级 Gate 至少包含：
 
@@ -242,7 +242,7 @@ UI 原型策略是 UI 型项目进入前端实现前的可视化门禁，解决�
 - 存在多角色、多空间、多租户、权限可见性或数据隔离。
 - Mock / Demo / 降级能力需要在界面上明确用户可见口径，避免被误读为真实生产能力。
 
-UI 原型策略至少记录：是否需要开发前可视化原型、原型形式（Figma / Penpot / Balsamiq / Axure / Storybook / 代码原型 / 截图标注 / 其他）、原型权威位置、覆盖页面 / 主流程 / 状态 / 设备或浏览器范围、与 `docs/design/frontend-interaction.md` / `08` / `09` 的追溯、未覆盖项和豁免理由。生成、精修、审计或评估该策略时必须对照 `ai/doc-standards/ui-prototype-strategy.md`；需要独立记录时可使用 `template-docs/ui-prototype-strategy-template.md`。工程驱动且已有前端框架的项目可优先采用“代码原型 + Mock 数据 + 截图 / smoke 证据”；需要跨角色协作或沉淀设计系统的项目可优先 Figma / Penpot；早期只需确认布局与流程时可使用低保真草图或截图标注；组件库可组合 Storybook 与设计稿。
+UI 原型策略至少记录：是否需要开发前可视化原型、原型形式（Figma / Penpot / Balsamiq / Axure / Storybook / 代码原型 / 截图标注 / 其他）、原型权威位置、覆盖页面 / 主流程 / 状态 / 设备或浏览器范围、与 `docs/design/frontend-interaction.md` / `08` / `09` 的追溯、未覆盖项和豁免理由。生成、精修、审计或评估该策略时必须对照 `ai/doc-standards/ui-prototype-strategy.md`；需要独立记录时可使用 `template-docs/templates/ui-prototype-strategy-template.md`。工程驱动且已有前端框架的项目可优先采用“代码原型 + Mock 数据 + 截图 / smoke 证据”；需要跨角色协作或沉淀设计系统的项目可优先 Figma / Penpot；早期只需确认布局与流程时可使用低保真草图或截图标注；组件库可组合 Storybook 与设计稿。
 
 若用户未给专业 UI 风格、字号、密度、导航模式或设计系统，AI 应先基于成熟产品惯例给出推荐基线，并说明理由和风险，不应把专业判断从零抛给用户。常见默认基线包括：管理后台 / 表单系统可参考 Ant Design、Fluent、Atlassian 类后台；知识库 / 文档工作台可参考 Notion、Obsidian、Linear、飞书文档类生产力工具；数据密集表格可参考 data grid、BI、issue tracker；聊天 / 问答界面可参考 ChatGPT、Slack、Copilot 类问答；营销落地页才使用大字号、大留白和强品牌视觉。若采用非默认风格，必须说明原因。
 
@@ -484,7 +484,7 @@ AI 生成或修改任何项目事实文档前，先输出简短声明：
 
 需求探索原型用于在正式 `00-03` 定稿、架构和技术路线选择前，用可视化方式帮助用户确认系统边界、页面结构、主流程、信息密度、文案方向和关键状态。它适合触发于“我想先看原型 / 先做页面原型确认需求 / 先别定技术栈，先把界面流程画出来 / Demo 前先确认交互”等场景。
 
-需求探索原型默认输出为探索报告或原型记录，推荐路径为 `docs/research/YYYY-MM-DD-ui-prototype-exploration.md`，结构可参考 `template-docs/ui-prototype-exploration-template.md`。它不是 `docs/00-09` 的替代品，也不是 `docs/design/frontend-interaction.md` 或 UI 原型策略的替代品；确认前不得写成已确认需求、架构、接口、数据表、技术栈、任务或验收通过证据。
+需求探索原型默认输出为探索报告或原型记录，推荐路径为 `docs/research/YYYY-MM-DD-ui-prototype-exploration.md`，结构可参考 `template-docs/templates/ui-prototype-exploration-template.md`。它不是 `docs/00-09` 的替代品，也不是 `docs/design/frontend-interaction.md` 或 UI 原型策略的替代品；确认前不得写成已确认需求、架构、接口、数据表、技术栈、任务或验收通过证据。
 
 约束：
 

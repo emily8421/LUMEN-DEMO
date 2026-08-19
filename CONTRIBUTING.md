@@ -25,7 +25,7 @@
 
 - **上行·改进**：派生项目发现可通用优化 → 在本项目 `_proposals/` 起草 `TEMPLATE-UPGRADE-*.md` → 通过 `submit-proposal` / `submit-feedback` 提交到模板仓 GitHub issue，或回到模板仓库提交到 `_proposals/` 文件收件箱 → 模板维护者在 C1 中统一 triage → 模板 PR 合并 → issue 关闭 / 提案归档 → 模板演进。
 - **下行·对齐**：派生项目执行 `scripts/sync-template.sh` → 拉取模板最新方法论覆盖本地同步清单 → 按项目提交记录审计版本。
-- **观察·回流**（闭环已内建在同步流程里）：派生项目同步时，`/run sync-methodology` 按 `template-docs/derived-sync-report-template.md` 生成**同步运行记录**（记问题 + 「可优化点归纳表」），`/run post-sync-cleanup` 再从运行记录归纳**可回流模板的建议**；只有可通用于多个项目的问题，才去项目化转写为 `_proposals/TEMPLATE-UPGRADE-*.md`。运行记录可含派生项目事实，但回流提案必须去项目化。
+- **观察·回流**（闭环已内建在同步流程里）：派生项目同步时，`/run sync-methodology` 按 `template-docs/templates/derived-sync-report-template.md` 生成**同步运行记录**（记问题 + 「可优化点归纳表」），`/run post-sync-cleanup` 再从运行记录归纳**可回流模板的建议**；只有可通用于多个项目的问题，才去项目化转写为 `_proposals/TEMPLATE-UPGRADE-*.md`。运行记录可含派生项目事实，但回流提案必须去项目化。
 
 只有上行没有下行，模板改了但派生项目拿不到；只有下行没有上行，模板不会吸收派生项目经验。两者缺一不可。
 

@@ -223,7 +223,7 @@ summary 最小结构（写入 `SUMMARY.md` 时参考）：
 - 处置状态（可选）：本地未提交 / 已提交 PR #<n> / 已合并 <commit> / 已删除（用户确认）
 ```
 
-> 上述“必填”为写入时的字段完整性要求（AI 自觉），**不引入 `scripts/check-template.sh` 自检断言或 CI 门禁**，与 `template-docs/rd-data-chain.md` §4「无自检门禁、避免过度治理」一致。
+> 上述“必填”为写入时的字段完整性要求（AI 自觉），**不引入 `scripts/check-template.sh` 自检断言或 CI 门禁**，与模板仓 `template-docs/maintainer/rd-data-chain.md` §4「无自检门禁、避免过度治理」一致（该文件为模板仓文档，v1.66.0 起不下行）。
 
 ### 4.3 坑 / 问题观察日志（pitfall observation log）
 
@@ -273,7 +273,7 @@ pitfall observation log 是可选的 AI 协作观察记录，与 §4.1 token-hot
 - 汇总状态：未汇总 / 已纳入 SUMMARY.md（<日期或范围>） / 已转提案 <path-or-url> / 本地保留不提交 / 已归档 <path>
 ```
 
-> 上述字段为写入时的完整性建议（AI 自觉），**不引入 `scripts/check-template.*` 自检断言或 CI 门禁**，与 `template-docs/rd-data-chain.md` §4「无自检门禁、避免过度治理」一致；模板自检不守 `.ai/pitfalls/` 内容，路径忽略由 `.gitignore` + 规则自觉保证。
+> 上述字段为写入时的完整性建议（AI 自觉），**不引入 `scripts/check-template.*` 自检断言或 CI 门禁**，与模板仓 `template-docs/maintainer/rd-data-chain.md` §4「无自检门禁、避免过度治理」一致（该文件为模板仓文档，v1.66.0 起不下行）；模板自检不守 `.ai/pitfalls/` 内容，路径忽略由 `.gitignore` + 规则自觉保证。
 
 ## 5. 写入确认边界
 
@@ -329,7 +329,7 @@ pitfall observation log 是可选的 AI 协作观察记录，与 §4.1 token-hot
 ## 恢复命令
 ```
 
-样例见 `template-docs/session-handoff.example.md`。
+样例见 `template-docs/templates/session-handoff.example.md`。
 
 ### 6.1 Latest checkpoint rollup
 

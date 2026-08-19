@@ -11,6 +11,12 @@
 - 回答“为什么要这么分层、为什么文件放这里、为什么流程这样约束”。
 - 不重复抄写规则条款；避免和 `ai/` 里的活规则形成双份维护。
 
+**读者路径**（按你的角色选入口）：
+
+- 使用者（做派生项目）：`README.md` → `template-docs/beginner-guide.md`，本文件只作背景理解。
+- 模板维护者（维护本仓库）：`MAINTAINERS.md` 为主，本文件解释设计取舍的 why。
+- 想看机制 / 工具全貌：`template-docs/capability-packages.md`（14 类治理机制）+ `scripts/README.md`（12 类工具能力），本文件 §7 提供总览指针。
+
 ## 2. 当前权威源
 
 当前模板的方法论边界，以以下活文件为准：
@@ -20,8 +26,11 @@
 | `README.md` | 5 分钟最小路径与总导航 |
 | `template-docs/beginner-guide.md` | 面向第一次使用者的操作手册 |
 | `template-docs/glossary.md` | 人读术语索引，不替代规则权威源 |
+| `template-docs/capability-packages.md` | 治理机制注册表（14 类机制 MECH-* 登记：负责人 / 触发时机 / 权威依据 / 完成判断）+ 工作分区表 |
+| `scripts/README.md` | 工具注册表（12 类工具能力 TOOL-* 登记：运行契约 / 权威实现 / 生命周期；v1.65.0 起随模板下行） |
+| `template-docs/maintainer/rd-data-chain.md` | 研发数据沉淀路径（数据类别 → 载体 → 主链关系；模板仓文档，不下行） |
 | `template-docs/docs-scaffold/` | `docs/inputs` / `docs/vision` / `docs/00-09` / `docs/design` / `docs/decisions` / `docs/research` 结构模板副本，不替代项目事实文档 |
-| `template-docs/domain-templates.md` | 领域模板可选中间层方法论（演进中） |
+| `template-docs/profiles/domain-templates.md` | 领域模板可选中间层方法论（演进中） |
 | `SOP.md` | 场景索引与流程入口 |
 | `ai/index.md` | AI 规则入口 |
 | `ai/global-rules.md` | 跨项目通用规则 |
@@ -76,7 +85,20 @@
 - 横切事实集中治理：资源约束、技术禁令、合规结论不能散落。
 - 模板与派生项目边界清晰：模板管方法论，派生项目管自身事实。
 
-## 5. 各子系统的设计 why
+## 5. 四条价值流与工作分区
+
+模板的工作按四条价值流组织（完整工作分区表、各分区负责人与主要依据见 `template-docs/capability-packages.md` §3，此处只给导航）：
+
+| 价值流 | 输入 → 输出 | 权威源 |
+|---|---|---|
+| 文档 | 输入材料 → `docs/00-09` + `docs/design/*` | `ai/document-lifecycle-rules.md`、`ai/doc-standards/*` |
+| 实现 | 已确认设计 → Sprint / Task / 代码 | `ai/implementation-lifecycle-rules.md`、`docs/08` |
+| 验收 | 实现完成包 → 测试证据与验收结论 | `docs/09`、`tests/*` |
+| 知识 | 决策 / 调研 / 经验 → 可追溯记录与长期回写 | `template-docs/maintainer/rd-data-chain.md`、`docs/decisions/*`、`ai-records/*` |
+
+四条流在单会话中由同一个 AI 按阶段串行承担（任务协调 / 路由见 `ai/index.md`），不是四个并发 Agent；角色化与并发试点的评估见 `_proposals/TEMPLATE-UPGRADE-governance-handbook-agent-tool-registry.md` Batch 3-5（未授权）。
+
+## 6. 各子系统的设计 why
 
 ### 信息架构与文件职责
 
@@ -196,9 +218,18 @@ Prompt Library 设计：
 - 模板改动必须走提案、版本、PR、归档流程，避免派生项目各自演化成不同流派。
 - 版本是发布边界，不是提案数量边界；提案收件箱增长不触发版本递增，只有合并到同步范围内并改变模板行为或下游同步判断的 PR 才判断 `PATCH / MINOR / MAJOR`。
 
-> 领域模板可选中间层：若需在母模板与具体项目之间插入面向某类系统的「领域模板」（如 agent 系统领域模板），见 `template-docs/domain-templates.md`。该层为可选增强、尚在演进中，主线治理仍为母模板 ↔ 派生项目两层，现有派生项目无需迁移。
+> 领域模板可选中间层：若需在母模板与具体项目之间插入面向某类系统的「领域模板」（如 agent 系统领域模板），见 `template-docs/profiles/domain-templates.md`。该层为可选增强、尚在演进中，主线治理仍为母模板 ↔ 派生项目两层，现有派生项目无需迁移。
 
-## 6. 演进策略 + 历史来源
+## 7. 机制与工具注册表
+
+模板的治理机制和脚本工具各有一份登记台账，供检索「已有什么、谁负责、怎么用」：
+
+- **机制注册表**：`template-docs/capability-packages.md` §4——14 类机制按 `MECH-CORE/DOC/IMPL/VER/KNOW/GOV/PROFILE/REMOTE-*` 编号登记负责人、触发时机、权威依据、产出边界与完成判断。
+- **工具注册表**：`scripts/README.md` §2——12 类工具能力按 `TOOL-SYNC/CHECK/REMOTE/ENV/SETUP/RELEASE/PROJECT-*` 编号登记运行位置、Owner、运行契约（输入 / 输出 / 风险边界）与权威实现（`.sh` 主实现 + `.ps1` wrapper / fallback）。
+
+两份注册表是字段级事实源；本文件与各手册只引用其 ID 与入口，不复制字段，避免双份维护。新增机制或脚本时先查注册表去重，再按其登记口径补行。
+
+## 8. 演进策略 + 历史来源
 
 ### 演进策略
 

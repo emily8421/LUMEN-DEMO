@@ -67,7 +67,7 @@
 
 UI 型项目的前端交互设计属于条件性 `docs/design/*` 详细设计，推荐路径为 `docs/design/frontend-interaction.md`。其职责是承接 `03/04/05/07/08/09`，细化页面信息架构、路由清单、核心用户流、组件职责、状态 / 空态 / 错误态、表单校验、文案、接口依赖、响应式与可访问性、UI 原型与可视化证据、验收路径和阶段增量。该文档必须满足 `ai/doc-standards/design-doc.md` 与 `ai/doc-standards/frontend-interaction.md` 的元信息、追溯、验收、readiness gate、实现偏差和待确认项要求；不得新增未授权需求、接口或验收目标；前端隐藏入口、按钮禁用或路由守卫只能作为可见性控制，不能替代后端接口和服务层权限边界。
 
-UI 原型策略是前端交互设计的前置 / 配套可视化门禁：UI 型项目应在 `ai/project-rules.md` §2.3、`docs/05-tech-spec.md` 或 `docs/design/frontend-interaction.md` 记录是否需要开发前可视化原型、原型形式、权威位置、覆盖页面 / 主流程 / 状态 / 设备范围、未覆盖项和豁免理由。生成、精修、审计或评估该策略时必须对照 `ai/doc-standards/ui-prototype-strategy.md`；需要独立记录时可使用 `template-docs/ui-prototype-strategy-template.md`。原型形式可为 Figma、Penpot、Balsamiq、Axure、Storybook、代码原型、截图标注或其他工具；模板不强制绑定 Figma，也不要求所有 UI 项目做高保真视觉设计。原型只表达已授权需求的界面与交互，不替代 `00-09`、不替代前端交互设计、不替代 `09` 验收；原型发现的新需求、接口、权限或验收目标必须回到正式文档链路修订。
+UI 原型策略是前端交互设计的前置 / 配套可视化门禁：UI 型项目应在 `ai/project-rules.md` §2.3、`docs/05-tech-spec.md` 或 `docs/design/frontend-interaction.md` 记录是否需要开发前可视化原型、原型形式、权威位置、覆盖页面 / 主流程 / 状态 / 设备范围、未覆盖项和豁免理由。生成、精修、审计或评估该策略时必须对照 `ai/doc-standards/ui-prototype-strategy.md`；需要独立记录时可使用 `template-docs/templates/ui-prototype-strategy-template.md`。原型形式可为 Figma、Penpot、Balsamiq、Axure、Storybook、代码原型、截图标注或其他工具；模板不强制绑定 Figma，也不要求所有 UI 项目做高保真视觉设计。原型只表达已授权需求的界面与交互，不替代 `00-09`、不替代前端交互设计、不替代 `09` 验收；原型发现的新需求、接口、权限或验收目标必须回到正式文档链路修订。
 
 ## 04-05 总体设计基线
 

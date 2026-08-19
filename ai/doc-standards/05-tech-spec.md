@@ -63,7 +63,7 @@
 | Gate | 适用对象 | 进入标准 | 必需证据 | 状态 | 阻塞项 / 下一步 |
 |---|---|---|---|---|---|
 | RG-001 | 外部 API / 数据库 / LLM / Docker / 部署 |  | `docs/research/*tech-env-evaluation*.md` / 命令输出 / TC | Go / Conditional Go / No-Go / 待评估 |  |
-| WSG-001 | Web App Structure Profile + Walking Skeleton Gate | App Shell、目录边界、vertical slice、文件膨胀阈值、API / browser smoke 已定义 | `template-docs/web-fullstack-profile.md`、04/05/08/09、smoke 命令或人工步骤 | Go / Conditional Go / No-Go / 豁免 |  |
+| WSG-001 | Web App Structure Profile + Walking Skeleton Gate | App Shell、目录边界、vertical slice、文件膨胀阈值、API / browser smoke 已定义 | `template-docs/profiles/web-fullstack-profile.md`、04/05/08/09、smoke 命令或人工步骤 | Go / Conditional Go / No-Go / 豁免 |  |
 
 触发条件：
 

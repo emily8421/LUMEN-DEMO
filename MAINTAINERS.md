@@ -36,7 +36,7 @@
 
 ## 3. 发布 Checklist
 
-> **MINOR / MAJOR 发布前额外跑 L3 端到端回归**：`bash scripts/e2e-sync-check.sh` + 按 `template-docs/e2e-regression-checklist.md` 跑人工项（R4–R6）+ 用 `template-docs/e2e-report-template.md` 出报告确认。PATCH（含兼容性脚本参数 / 默认关闭能力 / 文档与治理小修）可豁免。
+> **MINOR / MAJOR 发布前额外跑 L3 端到端回归**：`bash scripts/e2e-sync-check.sh` + 按 `template-docs/maintainer/e2e-regression-checklist.md` 跑人工项（R4–R6）+ 用 `template-docs/maintainer/e2e-report-template.md` 出报告确认（两件均为模板仓专用文档，v1.66.0 起不下行）。PATCH（含兼容性脚本参数 / 默认关闭能力 / 文档与治理小修）可豁免。
 
 每次发版前逐条过：
 
@@ -61,15 +61,17 @@
 - **同步清单分三组（v1.60.0）**：`files_all`（全部路线都同步，原扁平 `files` 已迁移并向后兼容）、`files_ordinary`（普通派生补充，当前为空）、`files_domain`（领域模板专属，如 `ai/doc-standards/domain-rules.md`）。路线 = 领域 `files_all ∪ files_domain`，普通 `files_all ∪ files_ordinary`；`files_domain` 与其他组互斥（`check-template` 断言）。`ai/domain-rules.md` 种子不入清单、不同步、受 `check-derived-sync` 保护。
 - **不放具体维护者账号**、个人邮箱、个人 Token 类型或本机私有备忘；这类内容只能留在本地忽略文件中。
 - 同步的可注释方法论文件（`.md` / `.mdc` / `.sh` / `.ps1`）必须在顶部包含 `Sync notice`，说明派生项目同步时会被覆盖、不应直接修改；不可内嵌注释的 `template-sync.json` 用 `description` 字段承载同等声明；`VERSION`（纯版本号）豁免，其“会被覆盖”语义由 `template-sync.json` 的 description 间接覆盖。`check-template.sh` / `.ps1` 的 `require_sync_notice` 强制覆盖上述后缀范围（防清单演进遗漏）。
-- 派生项目根 `README.md` 是项目专属文档，不参与模板下行同步；由 `scripts/new-project.sh` 初始化生成，项目自行维护。
-- 新增方法论入口、脚本、规则文件时，必须同时更新 `template-sync.json` 和自检断言。
+- **脚本同步边界（v1.65.0 起）**：`scripts/` 按「随模板下行 / 模板仓专用」两组管理（划分见 `scripts/README.md` §1）。模板仓专用脚本（`check-template.sh/.ps1`、`sync-all-derived.sh`、`e2e-sync-check.sh`、`new-project.sh`）不进 `template-sync.json`，头部用 `Template-only notice` 标注；`check-template.*` 的 `check_scripts_sync_boundary` 断言防回流。派生项目中的这批脚本属历史下行残留，随 post-sync-cleanup 审计清理。
+- **template-docs 文档同步边界（v1.66.0 起）**：`template-docs/` 文档同样按消费者划分（提案 `_proposals/TEMPLATE-UPGRADE-template-docs-reorg.md`）。模板仓专用文档（`e2e-regression-checklist.md`、`e2e-report-template.md`、`rd-data-chain.md`）不进 `template-sync.json`，头部 `Template-only notice`；`domain-derived-scenarios-template.md` 走 `files_domain` 仅领域路线下行。派生项目中的旧版残留同随 post-sync-cleanup 孤儿审计清理。
+- 派生项目根 `README.md` 是项目专属文档，不参与模板下行同步；由 `scripts/new-project.sh`（模板仓专用）初始化生成，项目自行维护。
+- 新增方法论入口、脚本、规则文件时，先判断下行 / 模板仓专用归属，再同步更新 `template-sync.json`、`scripts/sync-template.sh` 兜底清单和自检断言。
 - `template-sync.json` 是完整清单权威；人读文档只维护分组摘要和维护规则，避免复制一份容易漂移的完整文件列表。
 - 新增新手环境准备脚本或安装说明时，必须同时检查 `README.md`、`template-docs/` 下对应文档与 `SOP.md` 的入口是否一致。
 - 删除同步文件时，必须确认派生项目旧版本同步脚本不会因此失败。
-- `scripts/check-template.sh` / `.ps1` 只用于模板仓库完整性自检；派生项目同步验收用 `scripts/check-derived-sync.sh` / `.ps1`。
-- `NEXT-STEPS.md` / `.ai/session-handoff.md` 是本地续接便签，不属于模板方法论文档；保持本地临时性，通过 `.gitignore` 排除，不进同步清单和正式提交。模板只同步 `ai/session-rules.md` 与 `template-docs/session-handoff.example.md`。
-- 真实派生项目同步后的问题优先沉淀到 `template-docs/derived-sync-report-template.md` 运行记录；只有可通用于多个项目的问题，才去项目化转写为 `_proposals/TEMPLATE-UPGRADE-*.md` 回流。
-- **批量同步**：维护者发新版后，从模板仓目录发起“同步至派生项目 / 同步 N 个派生”时，优先读取维护者侧 `ai-records/project-registry/registry.md`，用 Project / Aliases / Local path / Path status / Sync mode 解析目标；路径缺失或 stale-risk 先停下确认。`scripts/sync-all-derived.sh <父目录> --dry-run|--commit` 仅作为同父目录项目的 fallback 扫描工具；默认 dry-run，工作区不干净 / 非派生 / 模板本体自动跳过。要 PR-per-project 可审计流程仍走 A13。
+- `scripts/check-template.sh` / `.ps1` 只用于模板仓库完整性自检（模板仓专用，不下行）；派生项目同步验收用 `scripts/check-derived-sync.sh` / `.ps1`（随模板下行）。
+- `NEXT-STEPS.md` / `.ai/session-handoff.md` 是本地续接便签，不属于模板方法论文档；保持本地临时性，通过 `.gitignore` 排除，不进同步清单和正式提交。模板只同步 `ai/session-rules.md` 与 `template-docs/templates/session-handoff.example.md`。
+- 真实派生项目同步后的问题优先沉淀到 `template-docs/templates/derived-sync-report-template.md` 运行记录；只有可通用于多个项目的问题，才去项目化转写为 `_proposals/TEMPLATE-UPGRADE-*.md` 回流。
+- **批量同步**：维护者发新版后，从模板仓目录发起“同步至派生项目 / 同步 N 个派生”时，优先读取维护者侧 `ai-records/project-registry/registry.md`，用 Project / Aliases / Local path / Path status / Sync mode 解析目标；路径缺失或 stale-risk 先停下确认。`scripts/sync-all-derived.sh <父目录> --dry-run|--commit`（模板仓专用脚本，从模板仓运行）仅作为同父目录项目的 fallback 扫描工具；默认 dry-run，工作区不干净 / 非派生 / 模板本体自动跳过。要 PR-per-project 可审计流程仍走 A13。
 
 ## 5. 自检与 CI
 
@@ -145,4 +147,4 @@ Windows 下从 PowerShell 调 Git Bash 跑 `.sh` 时若出现内嵌双引号丢�
 - 历史归档放 `docs/archive/`。
 - `ai/doc-standards/`（v1.20.0+）是模板 `00-09` 撰写规范的只读镜像，随模板同步刷新，不作为项目事实、不直接驱动开发；旧项目可能残留 `docs/_scaffold/`。
 - AI 需要新增文档时，必须先判断文档类型；不确定则先提议路径并等待人工确认。
-- 研发过程各类数据（决策 / 调研 / 会议 / 验证 / 版本 / AI 成本 / 续接）如何沉淀、流转和回写，见 `template-docs/rd-data-chain.md`（索引 / 分类，不替代 00-09）。其中单条 token hotspot 为 `.ai/token-hotspots/` 本地记录，入库只保留 `ai-records/token-hotspots/` 脱敏汇总。
+- 研发过程各类数据（决策 / 调研 / 会议 / 验证 / 版本 / AI 成本 / 续接）如何沉淀、流转和回写，见 `template-docs/maintainer/rd-data-chain.md`（索引 / 分类，不替代 00-09）。其中单条 token hotspot 为 `.ai/token-hotspots/` 本地记录，入库只保留 `ai-records/token-hotspots/` 脱敏汇总。

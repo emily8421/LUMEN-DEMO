@@ -21,13 +21,13 @@
 ## 必读文件
 
 - `ai/index.md`
-- 项目演示 SOP：`docs/env/local-demo-runbook.md`（若无，参考 `template-docs/demo-runbook-template.md` 生成草案）
+- 项目演示 SOP：`docs/env/local-demo-runbook.md`（若无，参考 `template-docs/templates/demo-runbook-template.md` 生成草案）
 - `ai/project-rules.md` §1（确认当前阶段是否已进入可演示）
 - `docs/05-tech-spec.md`（运行依赖、Mock / 降级边界）
 
 ## 执行流程
 
-1. 判断项目是否有演示 SOP（`docs/env/local-demo-runbook.md`）；无则按 `template-docs/demo-runbook-template.md` 引导生成草案，**等待用户确认后**再落盘。
+1. 判断项目是否有演示 SOP（`docs/env/local-demo-runbook.md`）；无则按 `template-docs/templates/demo-runbook-template.md` 引导生成草案，**等待用户确认后**再落盘。
 2. 按用户意图对照下方「AI 执行边界」表，明确只读 / 启动 / 检查 / 生成的边界。
 3. 启动服务、生成运行产物（如二维码）或安装依赖等写入动作前，必须说明影响并等待确认。
 4. 检查 Demo 时不得只看 HTTP 200；必须按 SOP 校验页面 identity marker，并在适用时检查前端 `/api` 代理链路。
@@ -61,7 +61,7 @@
 
 ## 写入风险
 
-启动服务、生成运行产物或安装依赖会改变本机或仓库状态；执行前必须说明并确认。运行产物（二维码、临时日志等）应由项目加入 `.gitignore`。Windows 下用 PowerShell 启动 demo 服务时，注意 `Path` / `PATH` 重复键与后台进程生命周期（详见 `template-docs/demo-runbook-template.md` §4 Windows 启动脚本）。
+启动服务、生成运行产物或安装依赖会改变本机或仓库状态；执行前必须说明并确认。运行产物（二维码、临时日志等）应由项目加入 `.gitignore`。Windows 下用 PowerShell 启动 demo 服务时，注意 `Path` / `PATH` 重复键与后台进程生命周期（详见 `template-docs/templates/demo-runbook-template.md` §4 Windows 启动脚本）。
 
 ## 续接要求
 

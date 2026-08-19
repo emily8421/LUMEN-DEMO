@@ -33,7 +33,7 @@
 - docs/inputs/ui-brief.md 或 docs/research/*ui-brief-intake*.md（若本任务涉及 Web / UI / 可点击 Demo 且存在）
 - docs/design/frontend-experience-brief.md（若 UI 探索 / 视觉探索已确认并形成体验原则）
 - docs/design/frontend-interaction.md 与 UI 原型策略（若本任务涉及 Web / UI / 可点击 Demo）
-- template-docs/web-fullstack-profile.md 与 04/05/08/09 中的 Walking Skeleton 记录（若本任务涉及复杂 Web / 全栈交互）
+- template-docs/profiles/web-fullstack-profile.md 与 04/05/08/09 中的 Walking Skeleton 记录（若本任务涉及复杂 Web / 全栈交互）
 - docs/research/*tech-env-evaluation*.md（若本任务涉及 backend / frontend / docker / 数据库 / 本机模型 / 外部 API 等真实运行依赖）
 - docs/07-api-spec.md（若本项目有对外接口，阅读相关接口）
 - docs/06-db-design.md（若本任务涉及持久化，阅读相关表结构）

@@ -4,7 +4,7 @@
 > Do not edit it directly in derived projects; propose reusable changes in `_proposals/` and upstream them to the template repository.
 
 > 推荐落盘路径：`docs/design/frontend-experience-brief.md`
-> 对应模板：`template-docs/frontend-experience-brief-template.md`
+> 对应模板：`template-docs/templates/frontend-experience-brief-template.md`
 > 定位：承接已确认体验原则、视觉方向、信息架构和阶段边界；不是需求权威源，不替代前端交互设计、UI 原型策略、`08` 或 `09`。
 
 ## 0. 元信息

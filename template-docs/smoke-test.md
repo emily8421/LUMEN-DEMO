@@ -158,4 +158,4 @@ Remove-Item -Recurse -Force .\smoke-demo
 - 哪一步失败
 - 是否需要补 README / SOP / template-docs/env-setup.md / template-docs/beginner-guide.md
 
-若希望统一记录格式，直接使用 `template-docs/smoke-test-report-template.md`。
+若希望统一记录格式，直接使用 `template-docs/templates/smoke-test-report-template.md`。

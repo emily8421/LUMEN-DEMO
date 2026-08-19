@@ -36,7 +36,7 @@
 
 若项目为 non-trivial（多模块 / 有对外接口 / 有运行依赖），进入首个业务模块 Sprint 前必须先实现并验收一套可运行系统框架（System Skeleton）：基于 `docs/04-architecture.md` 架构与功能划分、`docs/07-api-spec.md` 接口规范和主业务流程，落地最小可运行框架——模块边界就位、关键接口连通、至少一条纵切可跑通、错误 / 空 / 加载入口存在，但不含完整业务逻辑；并在 `docs/08-dev-plan.md`（Sprint 0 / Framework Sprint）与 `docs/09-verification.md`（系统框架测试大纲）留框架验收证据。quick-script、纯计算库、单文件工具等可豁免，须在 `ai/project-rules.md` §3 写明豁免理由、风险和补做时点。未完成且无豁免时，不得直接堆入完整业务模块。
 
-复杂 Web / 全栈交互项目在通用 System Skeleton 基础上叠加 `template-docs/web-fullstack-profile.md` 的 Web 特化（触发条件见 `ai/global-rules.md` §5）：App Shell、前后端目录边界、API client ↔ API-ID 追溯、至少一个 vertical slice、文件膨胀阈值和最小浏览器 / API smoke。未完成且无豁免时，不得把多页面 / 多状态功能继续堆入单个主应用文件、全局样式或后端 controller / service。
+复杂 Web / 全栈交互项目在通用 System Skeleton 基础上叠加 `template-docs/profiles/web-fullstack-profile.md` 的 Web 特化（触发条件见 `ai/global-rules.md` §5）：App Shell、前后端目录边界、API client ↔ API-ID 追溯、至少一个 vertical slice、文件膨胀阈值和最小浏览器 / API smoke。未完成且无豁免时，不得把多页面 / 多状态功能继续堆入单个主应用文件、全局样式或后端 controller / service。
 
 1. 输入必须至少包括 `docs/03-prd.md`、`docs/04-architecture.md`、`docs/05-tech-spec.md`、`docs/08-dev-plan.md`、`docs/09-verification.md`。
 2. 若项目涉及持久化或对外接口，还必须读取 `docs/06-db-design.md`、`docs/07-api-spec.md` 的相关章节。

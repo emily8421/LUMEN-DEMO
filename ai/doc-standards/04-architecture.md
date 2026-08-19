@@ -42,7 +42,7 @@
 | ADR / 决策 | 关键技术 / 交付 / 安全决策 | 有状态、理由、备选、取舍影响和验证方式 | 补 ADR 字段 |
 | 概述章覆盖（如启用） | 需求 / 接口 / 数据结构 / 安全 / 维护五个概要域 | 每域 2-5 行 + 指针；读者不翻 `05-07` 即可建立系统全貌 | 补概要级概述章（原位补章，不重排既有编号） |
 | 无实现细节倒灌 | 组件 / 模块 / 流程章节不出现表名、API-ID、migration 号、类名、实现算法、版本演进史（§1 定位禁条的可审计化）；实现证据归 `09`、`docs/design/*`、CHANGELOG；接口字段级契约指向 `07`，不内联 | 流程图写死 endpoint 路径与 `07` 双源失同步；概设层退化为实现说明书 |
-| Web App Structure Profile | 复杂 Web / 全栈交互项目的 App Shell、页面 / feature 边界、前后端组件关系 | 说明是否触发 `template-docs/web-fullstack-profile.md`，以及 WSG-001 / WSG-003 如何由架构承接 | 补 App Shell / vertical slice 架构边界或写明豁免 |
+| Web App Structure Profile | 复杂 Web / 全栈交互项目的 App Shell、页面 / feature 边界、前后端组件关系 | 说明是否触发 `template-docs/profiles/web-fullstack-profile.md`，以及 WSG-001 / WSG-003 如何由架构承接 | 补 App Shell / vertical slice 架构边界或写明豁免 |
 
 架构图审核四维度（图纸审核准则，对齐 `document-lifecycle-rules.md` §13）：① 可渲染（mermaid 默认或 `ai/doc-standards/project-rules.md` §2.2 指定格式，CI / 文档预览不破）；② 有图 ID（架构图 `DIAG-ARCH-NN`，可被评审 / 验收指名引用）；③ 可追溯（架构图挂 `REQ → COMP-ID / MOD-ID / Flow-ID` 追溯链）；④ 覆盖关键路径（异常 / 降级 / 权限边界，非仅正常路径）。
 

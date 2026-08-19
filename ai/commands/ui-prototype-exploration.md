@@ -26,9 +26,9 @@
 - `ai/index.md`
 - `ai/document-lifecycle-rules.md` §5.2.1、§10.2
 - `docs/README.md`
-- `template-docs/ui-brief-intake-template.md`
-- `template-docs/ui-prototype-exploration-template.md`
-- `template-docs/frontend-ui-reference-analysis-template.md`
+- `template-docs/templates/ui-brief-intake-template.md`
+- `template-docs/templates/ui-prototype-exploration-template.md`
+- `template-docs/templates/frontend-ui-reference-analysis-template.md`
 - `template-docs/ui-knowledge/README.md`（按 scope 选读 `visual-patterns.md` / `interaction-patterns.md` / `source-registry.md`）
 - `ai/prompts/docs/22-ui-prototype-exploration.md`
 - `docs/inputs/*`、`docs/vision/product-vision.md`、`docs/00-03`（如存在）
@@ -36,7 +36,7 @@
 ## 执行流程
 
 1. 先声明本次是“需求探索原型”，不是正式需求、架构、技术栈、接口、数据库、任务或验收事实。
-2. 收敛最小输入：目标用户、核心场景、主任务、非目标、成功标准、参考产品 / 截图、信息密度、设备范围、视觉禁区和需通过原型确认的问题；缺 UI brief 时先转 A25。若已有或需生成参考分析（`frontend-ui-reference-analysis`），先按 scope 读取 `template-docs/ui-knowledge/` 的 `visual-patterns.md` / `interaction-patterns.md` / `source-registry.md`，把命中模式作为页面 / 流程 / 状态候选的依据；参考分析用 `template-docs/frontend-ui-reference-analysis-template.md` 落盘，须输出证据分级与采纳 / 排除矩阵（满足 UI-G-002）。
+2. 收敛最小输入：目标用户、核心场景、主任务、非目标、成功标准、参考产品 / 截图、信息密度、设备范围、视觉禁区和需通过原型确认的问题；缺 UI brief 时先转 A25。若已有或需生成参考分析（`frontend-ui-reference-analysis`），先按 scope 读取 `template-docs/ui-knowledge/` 的 `visual-patterns.md` / `interaction-patterns.md` / `source-registry.md`，把命中模式作为页面 / 流程 / 状态候选的依据；参考分析用 `template-docs/templates/frontend-ui-reference-analysis-template.md` 落盘，须输出证据分级与采纳 / 排除矩阵（满足 UI-G-002）。
 3. 判断原型主类型：需求探索原型 / 视觉效果探索 / 实现前 UI 原型。若是实现前 UI 原型，停止并转 UI 原型策略，不在本命令内继续。
 4. 给出原型形式选项与 AI 推荐，不强制 Figma，不提前锁技术栈；没有用户特殊要求时，先给出成熟产品 / 设计系统基线、信息密度和布局建议。
 5. 输出页面 / 视图清单、主流程、关键状态、文案 / 信息密度注意点、视觉候选和待确认假设；大规模 IA / 图谱 / 数据密集 UI 必须给分层、经典路径和降级规则。
