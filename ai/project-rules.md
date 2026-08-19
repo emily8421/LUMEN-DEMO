@@ -207,7 +207,7 @@
 - 不得擅改的文件 / 模块：ai/ 规则文件、docs/00–08 编号文档的编号与既有结构
 - 不得擅自引入的依赖：任何新依赖须先确认（见 §2）
 - **不得绕过 `frontend/src/api/client.ts` 直接 `fetch` 后端**（HTTP 单出口）；所有后端调用经域 API 模块 → `client.ts`
-- **不得在 `backend/service/` 层 import fastapi**（`HTTPException` / `Request` / `Response` 等 web 类型）；service 用领域异常，api 层转 HTTP。现有 `service/auth_context.py` 为历史破例，新代码不得复制该模式
+- **不得在 `backend/service/` 层 import fastapi**（`HTTPException` / `Request` / `Response` 等 web 类型）；service 用领域异常，api 层转 HTTP。现有 `service/auth_context.py` 为**唯一登记豁免**（fastapi `Depends` 鉴权依赖项，供 router 共用 `get_current_user`；文件职责表见 `docs/05-tech-spec.md` §4.1.1），新代码不得复制该模式
 - 不得自行实现的功能：见 §1 禁止清单；docs/vision/product-vision.md / docs/01 中的功能点不等于已批准实现；阶段归属以 docs/03-prd.md §3 路线图为准，编码以 §1 当前阶段为准
 
 ## 6. AI 修改确认规则
