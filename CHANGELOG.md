@@ -6,6 +6,16 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.13.2（2026-08-19）
+
+**R2 Slice B：repository 101 方法 god object 按域拆 8 子 Protocol + 聚合父契约。纯内部结构重构，零 API/DB/运行时变化，22 消费方零迁移，bump PATCH。**（依据：`docs/research/2026-08-18-code-directory-review.md` §1.4 / §4 R2；2026-08-18 评审登记债，本轮收敛）
+
+- **`backend/repository/protocol.py` 重排**：101 方法按**实际调用聚类**拆 8 个域子 Protocol——DocumentRepository（15）/ UserRepository（23）/ FolderRepository（12）/ TermRepository（17）/ TagRepository（8）/ SpaceRepository（8）/ OpsRepository（14）/ SearchRepository（4）；`RepositoryProtocol` 改聚合签名（8 子接口并集）。**拆分依据实测**：16/18 个 service 跨 2-5 域调用，纯拆会迫使 22 消费方改注入——聚合层保持对外零破坏；边界按主要消费方归组（如 `list_memberships`→Space）并注释可调。
+- **契约测试 +2**（`test_repository_contract.py` 5→7）：域子 Protocol 方法面互不重叠且并集 == 父契约（防"拆了域但漏方法/重挂"）+ PgRepository 满足每个子接口（为 Slice C service 注解收窄铺路）。
+- **pg_repository / demo_repository 零改动**：Python Protocol 结构化子类型，双实现不需显式继承。
+- **评审报告状态回写**：R2 置已完成；R1（v3.13.0）/ R2 均闭环，R3/R4 仍为登记债；08 Sprint-59（批34）+ 09 TC-P2-GOV-022。
+- **Slice C 留后续裁决**：service 函数注解从 `RepositoryProtocol` 收窄为实际使用的域子 Protocol（最小依赖面，需逐模块迁移）。
+
 ## v3.13.1（2026-08-19）
 
 **文件治理第三步（FG-C4）：职责表模式回流模板提案——跨仓 issue #374。纯提案文档，无代码改动，bump PATCH。**
