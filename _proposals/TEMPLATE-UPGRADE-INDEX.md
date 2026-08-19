@@ -15,12 +15,13 @@
 
 ## 2. 收件箱现状（2026-08-18 收口后）
 
-**在途 2 份**（等模板维护者 triage）：
+**在途 3 份**（等模板维护者 triage）：
 
 | 提案 | 主题 | 改模板的什么 | 状态 |
 |---|---|---|---|
 | `stack-adapters-fastapi-react.md` | Stack Adapter（R5）—— FastAPI / Python + React / TS | 新建 `template-docs/stack-adapters/` | **已提交 issue [#334](https://github.com/emily8421/ai-project-template/issues/334)（2026-08-12，OPEN，暂无维护者回应）——勿重复提交** |
-| `directory-partition-principles.md` | `global-rules §5` 补「代码目录划分依据」五条通用原理（部署边界 / 架构分层 / 特性纵切 / 契约单源 / 生命周期）+ web-fullstack-profile §4 依据→推荐树映射；与 #357 正交（#357 管根目录，本份管代码目录内部分层维度） | **已提交 issue [#370](https://github.com/emily8421/ai-project-template/issues/370)（2026-08-18，OPEN）——勿重复提交** |
+| `directory-partition-principles.md` | `global-rules §5` 补「代码目录划分依据」五条通用原理（部署边界 / 架构分层 / 特性纵切 / 契约单源 / 生命周期）+ web-fullstack-profile §4 依据→推荐树映射；与 #357 正交（#357 管根目录，本份管代码目录内部分层维度） | **已提交 issue [#370](https://github.com/emily8421/ai-project-template/issues/370)（2026-08-18，OPEN）——勿重复提交** | |
+| `file-responsibility-table.md` | 文件治理三层体系：L1 职责表（每类文件只准放/不准放/超出去哪，写之前对表）+ L2 结构检查（按内容拦分层违规，提交时机器门）+ L3 阈值表措辞改「症状信号/约定值」；#370 管「放哪个目录」本份管「放哪个文件」，两级互补 | `web-fullstack-profile §5/§5.1`（职责表节 + 阈值措辞）+ `global-rules` 可选指针 | **已提交 issue [#374](https://github.com/emily8421/ai-project-template/issues/374)（2026-08-19，OPEN）——勿重复提交** |
 
 **已归档 6 份**（模板 v1.63.0 / v1.64.0 落地，文件移至 `_archive/proposals/`，落地方式见归档 README 登记表）：
 
@@ -40,6 +41,7 @@
 - **B（落点审计）vs D（镜像）**：B 管「实现证据落哪个权威文档层」，D 的镜像是审核视图（非权威源、头部声明以源为准），不构成第二落点。
 - **C 内（根目录 vs 骨架对齐）**：根目录管「根层分类」，骨架对齐管「docs 内章节」，互补。
 - **#370（目录划分依据）vs #357（根目录）**：#357 管根目录分类框架，#370 管代码目录内部分层维度，正交互补。
+- **file-responsibility-table（文件职责表）vs #370（目录划分依据）**：#370 管「放哪个**目录**」（五条依据），本份管「放哪个**文件**、文件里放什么」（职责表 + 结构检查 + 阈值定位）；判断口径同源（「这行代码因为什么而变？」），粒度递进不重复。
 - 全部提案不新增需求 / 表 / 接口 / 验收目标，只改模板方法论 / 规范 / 目录结构。
 
 ## 4. 提交建议
@@ -53,3 +55,4 @@
 - **Batch C 跨仓提交（2026-08-17）**：5 份（A / B / C×2 / D）→ issue #354-#358。
 - **模板维护者落地（2026-08-18）**：Batch A 两 PR（#362 v1.63.0 = #356+#355；#363 v1.63.0 = #354+#358）+ Batch B+C（#364 v1.64.0 = #351+#357 §2.2+#350）；LUMEN 已随 PR #207 搭载同步 v1.64.0（运行记录 `sync-records/template-sync/2026-08-18-sync-template-v1.64.0.md`）。
 - **directory-partition-principles（2026-08-18）**：→ issue #370，在途。
+- **file-responsibility-table（2026-08-19）**：→ issue #374，在途；触发自 LUMEN 用户对阈值机制的根本性质疑（阈值怎么取 / 为何治不了「AI 不知道往哪写」），LUMEN 本仓已三步全量实证（v3.12.5 职责表 + v3.13.0 结构检查/棘轮）。
