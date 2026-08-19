@@ -15,12 +15,12 @@
 | 交付物形态 | Demo |
 | 当前状态 | P1-已实现（Sprint-5 降级实现，Sprint-7/8 后术语存储切 PostgreSQL 且问答口径注入真实 LLM；见 §9）；**REQ-048 领域树已实现（2026-08-07，migration 017 + API-051..053，TC-P2-TERM-001 通过）** |
 | 流程 ID | Flow-D-005（术语维护）/ Flow-D-006（文档术语识别）/ Flow-D-007（问答口径对齐），见 §3 |
-| 最后更新 | 2026-08-18（对齐 design-doc 标准结构：补 §6 阶段增量与 readiness gate，章节按标准重排）；前次 2026-08-17（新增 §0.5 详细类图 DIAG-CLS-TERM-01，OO 覆盖度补全 Batch A2）；前次 2026-08-07（REQ-048 领域树增强回写） |
+| 最后更新 | 2026-08-19（docs-system-audit 回梳：`lumen_terms.status` 枚举与 `owner_id` 字段名对齐 06/07/代码——见 `docs/research/2026-08-19-docs-system-audit-04-07-design.md` A1）；前次 2026-08-18（对齐 design-doc 标准结构：补 §6 阶段增量与 readiness gate，章节按标准重排）；前次 2026-08-17（新增 §0.5 详细类图 DIAG-CLS-TERM-01，OO 覆盖度补全 Batch A2）；前次 2026-08-07（REQ-048 领域树增强回写） |
 | 下游影响 | 08 Sprint-5 / Sprint-29、09 TC-P1-012 / TC-P2-TERM-001 |
 
 ### 0.5 详细类图（DIAG-CLS-TERM-01）
 
-> 图纸驱动编码：术语管理子系统的类级视图（实体 + `RepositoryProtocol` 契约 + 服务层函数）。类图挂 REQ-036 / REQ-048；方法签名以 `backend/service/term.py`、`term_category.py` 与 `backend/repository/protocol.py` 为准。`TermStatus`（active / archived）见 `backend/model/entities.py`。
+> 图纸驱动编码：术语管理子系统的类级视图（实体 + `RepositoryProtocol` 契约 + 服务层函数）。类图挂 REQ-036 / REQ-048；方法签名以 `backend/service/term.py`、`term_category.py` 与 `backend/repository/protocol.py` 为准。`TermStatus`（confirmed / pending）见 `backend/model/entities.py`。
 
 ```mermaid
 classDiagram
@@ -167,7 +167,7 @@ flowchart TB
 | RAG 术语注入 | `lumen_terms` → Prompt | API-010（query） | 空间成员 | — | 已实现（Sprint-7 LLM） |
 
 数据契约（权威以 06 为准）：
-- **`lumen_terms`**：`id / space_id（空=全局）/ name / definition / aliases / category_id / category（14 类候选自由输入非枚举）/ source / status（active / archived）/ created_by / created_at / updated_at`；`category_id` FK→`lumen_term_categories`（空=未分类）。
+- **`lumen_terms`**：`id / space_id（空=全局）/ name / definition / aliases / category_id / category（14 类候选自由输入非枚举）/ source / status（confirmed / pending）/ owner_id / created_at / updated_at`；`category_id` FK→`lumen_term_categories`（空=未分类）。
 - **`lumen_term_categories`**（migration 017）：`id / space_id / parent_id（self，空=根）/ name / order_idx / created_by / created_at / updated_at`；`UNIQUE(space_id, parent_id, name)`（根层重名 service 兜底）。
 - **领域树生命周期**：不独立设权限（复用 folder 口径）；删非空（有子领域或术语）→ 4090；无 `archived`（参照 FT-C-010 folder 口径）。
 

@@ -5,11 +5,9 @@
 
 ```mermaid
 stateDiagram-v2
-  [*] --> itemCheck : 逐文件校验
-  itemCheck --> itemDone : 合法且无同名冲突（复用 Flow-D-001）
-  itemCheck --> itemFailed : 扩展名不支持 / 解析失败
-  itemCheck --> itemSkipped : 同名冲突（默认跳过）
-  itemDone --> [*]
-  itemFailed --> [*]
-  itemSkipped --> [*]
+  [*] --> processing : 接收 .md / .txt（记 lumen_imports）
+  processing --> done : 清洗→切块→Embedding→入库成功（parsed_doc_id）
+  processing --> failed : 解析失败 / 编码不合法 / 异常（记原因）
+  done --> [*]
+  failed --> [*]
 ```

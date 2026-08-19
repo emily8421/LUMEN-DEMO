@@ -7,6 +7,7 @@
 
 | 文件 | 类型 | 状态 | 采纳 / 后续 |
 |---|---|---|---|
+| `2026-08-19-docs-system-audit-04-07-design.md` | 04-07 与详细设计语义交叉审计（docs-system-audit 同步后批次；三路并行代理 + 主会话交叉验证） | 已落盘；**C-001 + C-003 + C-005 全收 + SC-3 已执行（分支 docs/fix-audit-04-07-design-2026-08-19）；SC-1 单独确认中** | 已修 9 处权威源（term-management 契约错误 / ingestion·frontend-interaction·04·accounts-auth·batch-maintenance 状态陈旧 / 05·06·07 元信息 + 05 §5.1 Risk-ID 注释）；未授权登记后续：SC-1（permissions 重构）、C-002（llm-configs API-ID）、B5（05 §1 三层）、C2、D1-D4、E3-E7；报告含回梳建议（规范基线缺口 / 兼容差异 / 项目事实风险三类） |
 | `2026-08-19-frontend-code-evaluation.md` | 前端代码质量评估复核（170 文件走读 + 初评四道质量门记录 + 可访问性 / 刷新链静态复核；复评补 P5 的域 hook 异步读保护现状） | 已落盘；**AI 评审 · 待人工确认采纳范围** | 基线质量门记录全绿；复核新增 FE-A11Y-1/2（状态播报、tabs、弹层焦点）、FE-RES-1（ErrorBoundary）、FE-RACE-1（刷新结果归属）、FE-ERR-1（client 非 JSON 回退）与 FE-TEST-1（需确认 Vitest）。已区分 `cancelled` 既有保护、未保护的 tags 读取及低风险 token-only 读取；执行候选见 `2026-08-19-frontend-remediation-plan.md` |
 | `2026-08-19-frontend-remediation-plan.md` | 前端修复候选实施计划（评估结论到独立工作包的转译；复评后补状态播报去重、模态抽屉、故障注入验证与 FEP-05 全量异步读清单） | 已落盘；**FEP-01 编码 + 自动验证完成（Sprint-61 / Task-059，读屏抽查延后）；其余工作包仍候选 · 未授权编码** | 六个工作包按无障碍、交互韧性、测试基础设施、刷新竞态、维护债拆分；FEP-05 按 effect 的 `cancelled` 模式与显式刷新归属校验分层处理；FE-ERR-1 随下次触及 client.ts 合并；后续工作包仅在用户批准后回填 `08` / `09` 并建立任务单 |
 | `2026-08-19-file-governance-mechanism-analysis.md` | 文件治理机制根本性分析（阈值怎么取的 / 是否只有阈值 / 为何治不了「往哪写」；三层体系建议 L1 职责表 + L2 结构检查 + L3 棘轮） | 已落盘；**FG-C1~C4 已裁决全采纳（2026-08-19）** | FG-C1+C3 已落地（05 §4.1.1 职责表 + §4.1.2 阈值措辞 + §4.2 文件治理行）；FG-C2+R1 扩容实施中（后端结构检查 + 后端棘轮）；FG-C4 模板回流提案另行起草；触发自用户对阈值机制的根本性质疑 |

@@ -14,8 +14,8 @@
 | 所属 Phase | [P1] + Phase1.5A 已完成；Phase1.5B / 后续 / 愿景保留骨架 |
 | 交付物形态 | Demo / 个人可用 Alpha |
 | 当前状态 | P1 已降级实现（`.md`/`.txt` + Embedding/pgvector 已落地；真实 Word/PDF/OCR 未实现）；Phase1.5A 批量 / 文件夹导入已完成并通过 TC-P1-015；Phase2B folder-tree 扩展 `preserve_structure=true` 已完成后端/API（task-028，真实 PG smoke 通过），前端文件管理器基础能力已由 task-029 补齐 |
-| 流程 ID | Flow-D-001（单文件导入主流水线）/ Flow-006（批量 / 文件夹导入，见 §3.2）/ Flow-D-012（导入保留目录结构，Phase2B 候选，见 `docs/design/folder-tree.md`）/ Flow-D-014（Vault 兼容双模式，见 §3.3） |
-| 最后更新 | 2026-08-18（Wave 3 收口：FileSystemObserver 自动重扫落地（TC-P2-VAULT-003，v3.12.0）；前次同日跨设备挂载元数据（v3.11.0））；前次 2026-08-18（对齐 design-doc 标准结构）；前次 2026-08-17（§3.4 导入任务状态机）；前次 2026-08-04（REQ-018 双模式方向确认） |
+| 流程 ID | Flow-D-001（单文件导入主流水线）/ Flow-006（批量 / 文件夹导入，见 §3.2）/ Flow-D-012（导入保留目录结构，Phase2B 已实现，见 `docs/design/folder-tree.md`）/ Flow-D-014（Vault 兼容双模式，见 §3.3） |
+| 最后更新 | 2026-08-19（docs-system-audit 回梳：Flow-D-014 状态改 Phase2C·已实现、§3.3/§3.4 重排、Flow-D-012 状态改已实现——见 `docs/research/2026-08-19-docs-system-audit-04-07-design.md` B1/B2/SC-3）；前次 2026-08-18（Wave 3 收口：FileSystemObserver 自动重扫落地（TC-P2-VAULT-003，v3.12.0）；前次同日跨设备挂载元数据（v3.11.0））；前次 2026-08-18（对齐 design-doc 标准结构）；前次 2026-08-17（§3.4 导入任务状态机）；前次 2026-08-04（REQ-018 双模式方向确认） |
 | 下游影响 | 08 Sprint-3、Sprint-16；09 TC-P1-009/010/015；07 API-011 / API-029 |
 
 ### 0.5 详细类图（DIAG-CLS-INGEST-01）
@@ -154,9 +154,32 @@ flowchart TB
   done --> summary
 ```
 
-### 3.3 Flow-D-014：Vault 兼容双模式（[P2]，REQ-018，Phase2C·已设计）
+### 3.3 Flow-D-014：Vault 兼容双模式（[P2]，REQ-018，Phase2C·已实现）
 
-> 状态：Phase2C·已设计（RG-009 PoC Go 2026-08-05）；模式 B 浏览器 File System Access MVP 路线采纳；不代表当前已实现。
+> 状态：Phase2C·已实现（2026-08-06 收口：Sprint-23C TC-P2-VAULT-001 通过 / PR#108 v2.0.0；RG-009 PoC Go 2026-08-05）；模式 B 浏览器 File System Access MVP 路线采纳；Wave 1/3 增强已落地（跨设备挂载元数据 API-059 + 挂载目录自动重扫，见 §4 / §7）。
+
+1. 用户在 LUMEN 选择本地 Obsidian vault / Markdown 文件夹。
+2. 系统先做本地预检：文件数量、支持格式、总大小、目录层级、浏览器 / 桌面授权状态。
+3. 用户选择模式：
+   - **导入数据库**：复用 Flow-006 / API-029，按批次把 `.md` / `.txt` 写入 `lumen_documents`、`lumen_chunks`，并在 `preserve_structure=true` 时写入 `lumen_folders`。导入后获得完整 LUMEN 权限、搜索、RAG、标签、链接、版本与团队共享能力。
+   - **仅本地挂载**：文件正文仍留在本地文件夹；默认只对当前用户 / 当前设备可见；不写入团队空间、不进入服务端 RAG / LLM、不参与团队权限链。LUMEN 前端可在本地连接器中展示目录树、打开文件、做本地索引或按需导入单篇 / 子树。
+4. 左侧文件管理器视觉分区：上层“LUMEN 知识库”（数据库内容），下层“本地挂载”（个人本地来源）。两个区块用标题、图标 / 状态徽标、分隔线和不同空态文案区分；仅本地挂载条目不得伪装成团队文档。
+5. 挂载内容可升级为正式知识：用户可对单篇、文件夹或整 vault 执行“导入到 LUMEN”，此时转入数据库路径并接受权限选择。
+
+```mermaid
+flowchart TB
+  pick[选择本地 vault / 文件夹] --> preflight[本地预检: 数量 / 格式 / 授权]
+  preflight --> mode{用户选择}
+  mode -->|导入数据库| importdb[分批调用 API-029 + preserve_structure]
+  importdb --> dbdocs[lumen_documents + lumen_chunks + lumen_folders]
+  dbdocs --> full[完整权限 / 搜索 / RAG / 团队能力]
+  mode -->|仅本地挂载| local[本地连接器读取目录]
+  local --> personal[个人 / 当前设备可见]
+  personal --> promote[按需导入单篇 / 子树]
+  promote --> importdb
+```
+
+> 已知天花板：浏览器 File System Access 句柄只活在浏览器进程、后端读不到，仅本地挂载内容无法进服务端 RAG / 全文搜索；要进 RAG 必须 (a) 本地 agent / 桌面端增量索引 或 (b) 导入数据库（见 §3 关键决策 Vault 兼容策略）。
 
 ### 3.4 导入任务状态机（DIAG-STATE-IMPORT-01）
 
@@ -182,29 +205,6 @@ stateDiagram-v2
   itemDone --> [*]
   itemFailed --> [*]
   itemSkipped --> [*]
-```
->
-> 已知天花板：浏览器 File System Access 句柄只活在浏览器进程、后端读不到，仅本地挂载内容无法进服务端 RAG / 全文搜索；要进 RAG 必须 (a) 本地 agent / 桌面端增量索引 或 (b) 导入数据库（见 §3 关键决策 Vault 兼容策略）。
-
-1. 用户在 LUMEN 选择本地 Obsidian vault / Markdown 文件夹。
-2. 系统先做本地预检：文件数量、支持格式、总大小、目录层级、浏览器 / 桌面授权状态。
-3. 用户选择模式：
-   - **导入数据库**：复用 Flow-006 / API-029，按批次把 `.md` / `.txt` 写入 `lumen_documents`、`lumen_chunks`，并在 `preserve_structure=true` 时写入 `lumen_folders`。导入后获得完整 LUMEN 权限、搜索、RAG、标签、链接、版本与团队共享能力。
-   - **仅本地挂载**：文件正文仍留在本地文件夹；默认只对当前用户 / 当前设备可见；不写入团队空间、不进入服务端 RAG / LLM、不参与团队权限链。LUMEN 前端可在本地连接器中展示目录树、打开文件、做本地索引或按需导入单篇 / 子树。
-4. 左侧文件管理器视觉分区：上层“LUMEN 知识库”（数据库内容），下层“本地挂载”（个人本地来源）。两个区块用标题、图标 / 状态徽标、分隔线和不同空态文案区分；仅本地挂载条目不得伪装成团队文档。
-5. 挂载内容可升级为正式知识：用户可对单篇、文件夹或整 vault 执行“导入到 LUMEN”，此时转入数据库路径并接受权限选择。
-
-```mermaid
-flowchart TB
-  pick[选择本地 vault / 文件夹] --> preflight[本地预检: 数量 / 格式 / 授权]
-  preflight --> mode{用户选择}
-  mode -->|导入数据库| importdb[分批调用 API-029 + preserve_structure]
-  importdb --> dbdocs[lumen_documents + lumen_chunks + lumen_folders]
-  dbdocs --> full[完整权限 / 搜索 / RAG / 团队能力]
-  mode -->|仅本地挂载| local[本地连接器读取目录]
-  local --> personal[个人 / 当前设备可见]
-  personal --> promote[按需导入单篇 / 子树]
-  promote --> importdb
 ```
 
 ### 关键决策（[P1]）
@@ -262,7 +262,7 @@ readiness gate：
 | `.md` / `.txt` 文本导入 | 已实现（P1 降级基线） | — | TC-P1-009 | — | 否 |
 | 批量 / 文件夹导入 | 已实现（Phase1.5A） | — | TC-P1-015 | 逐文件失败隔离 | 否 |
 | 导入保留目录结构 | 已实现（Phase2B，task-028） | folder-tree 立项（REQ-039） | TC-P2-FOLDER-001 | `preserve_structure=false` 标题前缀 | 否 |
-| Vault 模式 B 本地挂载 | Phase2C 已设计（RG-009 PoC Go） | 浏览器 FSA + IndexedDB 路线 | TC-P2-VAULT-001 | 仅浏览 / 按需导入 | 否 |
+| Vault 模式 B 本地挂载 | Phase2C 已实现（Sprint-23C，TC-P2-VAULT-001 通过） | 浏览器 FSA + IndexedDB 路线 | TC-P2-VAULT-001 | 仅浏览 / 按需导入 | 否 |
 | 跨设备挂载元数据 | **已实现（Wave 3，2026-08-18）** | 账户体系（Sprint-26 已完成）+ migration 015 | TC-P2-VAULT-004 | 同步失败不阻塞本地挂载（console.warn 降级） | 否 |
 | 挂载目录自动重扫 | **已实现（Wave 3，2026-08-18）** | RG-010 Go（Edge 139 实测）；Chromium 系浏览器 | TC-P2-VAULT-003 | 无 FileSystemObserver / observe 失败 → 手动重扫兜底 | 否 |
 | 真实 Word/PDF 提取 | 后续（RG-007 待评估） | Phase1.5B 立项 | — | 维持 `.md` / `.txt` | 否 |
@@ -276,7 +276,7 @@ readiness gate：
 | 图片 OCR 导入 | REQ-010 | Sprint-3 | TC-P1-010 | — | 后续阶段（OCR 未实现） |
 | Flow-D-001 导入主流水线 | REQ-009/010 | Sprint-3 | TC-P1-009/010 | 见上 | 降级实现 |
 | Flow-006 批量 / 文件夹导入 | REQ-037 | Sprint-16 | TC-P1-015 | 后端 tests + Chrome headless drop-zone smoke 已通过 | Phase1.5A-已实现 |
-| Flow-D-012 导入保留目录结构（folder-tree） | REQ-037/039 | Sprint-22 | TC-P2-FOLDER-001 + TC-P1-015 扩展 | `tests.backend.test_imports` / `test_import_api` + 临时 PG smoke：`preserve_structure` 建/复用 `lumen_folders` | Phase2B 第三 slice·后端/API 已实现；前端文件管理器待实现 |
+| Flow-D-012 导入保留目录结构（folder-tree） | REQ-037/039 | Sprint-22 | TC-P2-FOLDER-001 + TC-P1-015 扩展 | `tests.backend.test_imports` / `test_import_api` + 临时 PG smoke：`preserve_structure` 建/复用 `lumen_folders` | Phase2B 第三 slice·已实现（后端/API + 前端文件管理器基础能力，task-029） |
 | Flow-D-014 Vault 兼容双模式 | REQ-018 | Phase2C | TC-P2-VAULT-001 | 浏览器 File System Access 授权 + IndexedDB 本地索引 + 1000+ 文件本地树 / 按需导入 smoke（RG-009 PoC Go 2026-08-05） | Phase2C·已完成（Sprint-23C TC-P2-VAULT-001 通过 / PR#108 v2.0.0） |
 | Flow-D-014 增强·跨设备挂载元数据 | REQ-018 | Wave 3 | TC-P2-VAULT-004 | `tests/backend/test_vault_mounts.py`（10 用例）+ 真实 PG migration 015 + API smoke + `scripts/smoke-vault-mounts-browser.mjs`（设备 B 侧可见 + revoked 过滤） | Wave 3·已完成（2026-08-18，v3.11.0，migration 015 + API-059；本机挂载即上报留用户人工可选验收） |
 | Flow-D-014 增强·挂载目录自动重扫 | REQ-018 | Wave 3 | TC-P2-VAULT-003 | lint/build/file-size/css + CDP 冒烟（observerSupported + 重扫按钮显隐 + 无运行时错误）；真实挂载变更→自动刷新留用户人工 smoke（RG-010-N1） | Wave 3·已完成（2026-08-18，v3.12.0，useVaultAutoRescan + 手动重扫按钮；Wave 3 收口） |
@@ -301,7 +301,7 @@ readiness gate：
 | DEV-002 | 未接入 PaddleOCR；无 OCR | 图片 → PaddleOCR 中文 OCR | 后续阶段 | REQ-010 移出 P1 / P1.5A 必过 | 05 RG-003、09 §6 | TC-P1-010 |
 | DEV-003 | ~~未接入 `bge-small-zh`；`lumen_chunks` 无向量落地~~ → **已实现（Sprint-8 T6）**：`pg_repository.replace_document_chunks` 写 `lumen_chunks.embedding`（bge-small-zh 512 维 float32） | 切块 → bge-small-zh 512 维 → embedding/ts_vector | 已实现 | 向量已落地 PG；ts_vector（zhparser 中文分词）留后续。DEV-001（真实 PDF/Word）/ DEV-002（OCR）仍降级 | 06 lumen_chunks、05 RG-001/002 | TC-P1-009 |
 | DEV-004 | API-029 / 批量导入已实现 | Flow-006 批量 / 文件夹导入 | 已完成 | Sprint-16 已按不新增真实目录表、不引新依赖完成 | 07 API-029、06 REQ-037 | TC-P1-015 通过 |
-| DEV-005 | **已实现（2026-08-03，task-028）**：folder-tree 接入后 API-029 `preserve_structure=true` 建/复用 `lumen_folders` 并回填 `lumen_documents.folder_id` | Flow-006 / API-029 原设计"不建真实目录表" | 已实现 | **推翻 ING-C-001**：Phase1.5A 结论维持（P1.5A 不建表），Phase2B 第三 slice（folder-tree）起允许建 `lumen_folders`；`preserve_structure=false` 保留标题前缀向后兼容 | 06 lumen_folders/folder_id、07 API-029/API-034..037、design/folder-tree Flow-D-012 | TC-P2-FOLDER-001（后端/API 通过；前端文件管理器待 slice 3） |
+| DEV-005 | **已实现（2026-08-03，task-028）**：folder-tree 接入后 API-029 `preserve_structure=true` 建/复用 `lumen_folders` 并回填 `lumen_documents.folder_id` | Flow-006 / API-029 原设计"不建真实目录表" | 已实现 | **推翻 ING-C-001**：Phase1.5A 结论维持（P1.5A 不建表），Phase2B 第三 slice（folder-tree）起允许建 `lumen_folders`；`preserve_structure=false` 保留标题前缀向后兼容 | 06 lumen_folders/folder_id、07 API-029/API-034..037、design/folder-tree Flow-D-012 | TC-P2-FOLDER-001（后端/API 通过；前端文件管理器基础能力已由 task-029 补齐） |
 
 ## 10. 待人工确认项
 | ID | 待确认项 | AI 建议 | 建议依据 | 备选方案 | 取舍影响 / 阻塞关系 |
