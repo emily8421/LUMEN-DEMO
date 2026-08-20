@@ -1,12 +1,10 @@
 import { useRef, useState } from 'react';
 import type { FormEvent } from 'react';
-import type { Session } from './types';
+import type { RunAction, Session } from './types';
 import type { Space } from '../api';
 import { listSpaces, login, logout, register, switchSpace } from '../api';
 import { clearStoredSession, loadStoredSession, persistSession } from './session-store';
 import { createResponseOwnership } from './response-ownership';
-
-type RunAction = (progressMessage: string, action: () => Promise<void>) => Promise<void>;
 
 type UseSessionArgs = {
   runAction: RunAction;

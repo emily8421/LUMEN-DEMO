@@ -15,8 +15,7 @@ import { emptyDraft, normalizeDraft } from './drafts';
 import { useDocumentSideData } from './useDocumentSideData';
 import { createDownloadActions } from './download-actions';
 import { useDocumentReload } from './useDocumentReload';
-
-type RunAction = (progressMessage: string, action: () => Promise<void>) => Promise<void>;
+import type { RunAction } from './types';
 
 type UseDocumentsArgs = {
   token: string | undefined;

@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { KnowledgeDocument, PolishMode, PolishView } from '../api';
 import { polishDocument } from '../api';
-
-type RunAction = (progressMessage: string, action: () => Promise<void>) => Promise<void>;
+import type { RunAction } from './types';
 
 export type AiPolishSelection = {
   text: string;

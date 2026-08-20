@@ -1,10 +1,8 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-import type { ImportDraft, ImportFileSelection } from './types';
+import type { ImportDraft, ImportFileSelection, RunAction } from './types';
 import type { DocumentPermission, ImportBatchItem } from '../api';
 import { importBatchDocuments } from '../api';
-
-type RunAction = (progressMessage: string, action: () => Promise<void>) => Promise<void>;
 
 type UseImportArgs = {
   token: string | undefined;

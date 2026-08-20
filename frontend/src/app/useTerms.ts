@@ -1,11 +1,9 @@
 import { useRef, useState } from 'react';
 import type { FormEvent } from 'react';
-import type { TermDraft, TermPaneMode } from './types';
+import type { RunAction, TermDraft, TermPaneMode } from './types';
 import type { Term, TermWritePayload } from '../api';
 import { createTerm, deleteTerm, listTerms, updateTerm } from '../api';
 import { createResponseOwnership } from './response-ownership';
-
-type RunAction = (progressMessage: string, action: () => Promise<void>) => Promise<void>;
 
 type UseTermsArgs = {
   token: string | undefined;

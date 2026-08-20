@@ -4,8 +4,7 @@ import {
   exportAndDownloadDocumentPdf,
   triggerBrowserDownload,
 } from '../api';
-
-type RunAction = (progressMessage: string, action: () => Promise<void>) => Promise<void>;
+import type { RunAction } from './types';
 
 type DownloadActionsArgs = {
   token: string | undefined;

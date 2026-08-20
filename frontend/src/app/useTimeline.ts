@@ -3,8 +3,7 @@ import type { FormEvent } from 'react';
 import type { TimelineResponse } from '../api';
 import { getTimeline } from '../api';
 import { createResponseOwnership } from './response-ownership';
-
-type RunAction = (progressMessage: string, action: () => Promise<void>) => Promise<void>;
+import type { RunAction } from './types';
 
 type UseTimelineArgs = {
   token: string | undefined;

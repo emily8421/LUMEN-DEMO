@@ -10,8 +10,7 @@ import { parentKey, buildMoveTargets, buildDocumentMoveTargets } from './folder-
 import type { FolderMoveTarget } from './folder-utils';
 import { useFolderInlineEdit } from './useFolderInlineEdit';
 import { createKeyedResponseOwnership } from './response-ownership';
-
-type RunAction = (progressMessage: string, action: () => Promise<void>) => Promise<void>;
+import type { RunAction } from './types';
 
 type UseFoldersArgs = {
   token: string | undefined;

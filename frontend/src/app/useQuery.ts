@@ -2,8 +2,7 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import type { QueryResponse } from '../api';
 import { queryKnowledgeBase } from '../api';
-
-type RunAction = (progressMessage: string, action: () => Promise<void>) => Promise<void>;
+import type { RunAction } from './types';
 
 type UseQueryArgs = {
   token: string | undefined;

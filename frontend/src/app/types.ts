@@ -40,3 +40,6 @@ export type TermDraft = {
 
 /** 主区术语面板交互模式：view=阅读态（点术语进入），edit=编辑态（点编辑/新建进入）。 */
 export type TermPaneMode = 'view' | 'edit';
+
+/** 带进度提示的操作包装类型（"正在保存文档…" 等）；运行时实现单一，在 useAppState.runAction。 */
+export type RunAction = (progressMessage: string, action: () => Promise<void>) => Promise<void>;
