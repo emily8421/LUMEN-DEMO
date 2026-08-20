@@ -6,7 +6,7 @@ import type { KnowledgeDocument } from '../api';
 import {
   createDocument,
   deleteDocument,
-  isDocumentDetail, listDocuments,
+  isDocumentDetail,
   moveDocument,
   restoreVersion,
   updateDocument,
@@ -14,11 +14,13 @@ import {
 import { emptyDraft, normalizeDraft } from './drafts';
 import { useDocumentSideData } from './useDocumentSideData';
 import { createDownloadActions } from './download-actions';
+import { useDocumentReload } from './useDocumentReload';
 
 type RunAction = (progressMessage: string, action: () => Promise<void>) => Promise<void>;
 
 type UseDocumentsArgs = {
   token: string | undefined;
+  currentSpaceId: number | undefined;
   runAction: RunAction;
   setNotice: (message: string) => void;
   setError: (message: string) => void;
@@ -39,6 +41,7 @@ type UseDocumentsArgs = {
  */
 export function useDocuments({
   token,
+  currentSpaceId,
   runAction,
   setNotice,
   setError,
@@ -61,6 +64,7 @@ export function useDocuments({
 
   const sideData = useDocumentSideData({
     token,
+    currentSpaceId,
     selectedDocument,
     isCreating,
     onAuthError,
@@ -100,23 +104,15 @@ export function useDocuments({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isCreating, creatingFolderId, selectedDocument?.id, selectedDocument && isDocumentDetail(selectedDocument), selectedDocument?.permission, selectedDocument?.title, token]);
 
-  // 拉取文档列表 + 仅保留有效 selectedId（不自动选首篇；无选中由引导卡引导，Doc-First §9.5.7 F-impl-10）。供 refreshWorkspace 调用。
-  async function reloadDocuments(loadToken: string) {
-    const documentResult = await listDocuments(loadToken);
-    setDocuments(documentResult);
-    setSelectedId((currentId) => {
-      if (currentId && documentResult.some((document) => document.id === currentId)) {
-        return currentId;
-      }
-      return null;
-    });
-    setIsCreating(false);
-    if (documentResult.length === 0) {
-      // 空间无文档：清空草稿/版本，由 DocumentEmptyState 引导新建（Doc-First §9.5.7 F-impl-10）。
-      setDraft(emptyDraft);
-      sideData.resetSideData();
-    }
-  }
+  const reloadDocuments = useDocumentReload({
+    token,
+    currentSpaceId,
+    setDocuments,
+    setSelectedId,
+    setIsCreating,
+    setDraft,
+    resetSideData: sideData.resetSideData,
+  });
 
   const handleSave = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();

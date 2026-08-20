@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import type { FolderView } from '../api';
 import {
   deleteFolder,
@@ -9,11 +9,13 @@ import {
 import { parentKey, buildMoveTargets, buildDocumentMoveTargets } from './folder-utils';
 import type { FolderMoveTarget } from './folder-utils';
 import { useFolderInlineEdit } from './useFolderInlineEdit';
+import { createKeyedResponseOwnership } from './response-ownership';
 
 type RunAction = (progressMessage: string, action: () => Promise<void>) => Promise<void>;
 
 type UseFoldersArgs = {
   token: string | undefined;
+  currentSpaceId: number | undefined;
   runAction: RunAction;
   setNotice: (message: string) => void;
 };
@@ -22,9 +24,12 @@ export { parentKey } from './folder-utils';
 
 export type { FolderInlineEdit } from './useFolderInlineEdit';
 
-export function useFolders({ token, runAction, setNotice }: UseFoldersArgs) {
+export function useFolders({ token, currentSpaceId, runAction, setNotice }: UseFoldersArgs) {
   const [foldersByParent, setFoldersByParent] = useState<Record<string, FolderView[]>>({});
   const [expandedFolderIds, setExpandedFolderIds] = useState<Set<number>>(new Set());
+  const responseOwnership = useRef(createKeyedResponseOwnership());
+  const scope = JSON.stringify([token ?? null, currentSpaceId ?? null]);
+  responseOwnership.current.setScope(scope);
 
   const knownFolders = useMemo(() => {
     const byId = new Map<number, FolderView>();
@@ -39,24 +44,54 @@ export function useFolders({ token, runAction, setNotice }: UseFoldersArgs) {
   }
 
   async function loadParent(loadToken: string, parentId: number | null) {
+    if (!responseOwnership.current.isCurrentScope(JSON.stringify([loadToken, currentSpaceId ?? null]))) {
+      return;
+    }
+    const ticket = responseOwnership.current.begin(parentKey(parentId));
     const items = await listFolders(loadToken, parentId);
-    setFoldersByParent((current) => ({ ...current, [parentKey(parentId)]: items }));
+    if (responseOwnership.current.owns(ticket)) {
+      setFoldersByParent((current) => ({ ...current, [parentKey(parentId)]: items }));
+    }
   }
 
   async function reloadParents(loadToken: string, parentIds: Array<number | null>) {
+    if (!responseOwnership.current.isCurrentScope(JSON.stringify([loadToken, currentSpaceId ?? null]))) {
+      return;
+    }
     const uniqueParentIds = Array.from(new Map(parentIds.map((id) => [parentKey(id), id])).values());
     const entries = await Promise.all(
-      uniqueParentIds.map(async (parentId) => [parentKey(parentId), await listFolders(loadToken, parentId)] as const),
+      uniqueParentIds.map(async (parentId) => {
+        const key = parentKey(parentId);
+        const ticket = responseOwnership.current.begin(key);
+        return { key, items: await listFolders(loadToken, parentId), ticket };
+      }),
     );
-    setFoldersByParent((current) => ({ ...current, ...Object.fromEntries(entries) }));
+    const currentEntries = entries
+      .filter(({ ticket }) => responseOwnership.current.owns(ticket))
+      .map(({ key, items }) => [key, items] as const);
+    if (currentEntries.length > 0) {
+      setFoldersByParent((current) => ({ ...current, ...Object.fromEntries(currentEntries) }));
+    }
   }
 
   async function reloadLoadedFolders(loadToken: string) {
+    if (!responseOwnership.current.isCurrentScope(JSON.stringify([loadToken, currentSpaceId ?? null]))) {
+      return;
+    }
     const parentIds: Array<number | null> = [null, ...Array.from(expandedFolderIds)];
     const entries = await Promise.all(
-      parentIds.map(async (parentId) => [parentKey(parentId), await listFolders(loadToken, parentId)] as const),
+      parentIds.map(async (parentId) => {
+        const key = parentKey(parentId);
+        const ticket = responseOwnership.current.begin(key);
+        return { key, items: await listFolders(loadToken, parentId), ticket };
+      }),
     );
-    setFoldersByParent(Object.fromEntries(entries));
+    const currentEntries = entries
+      .filter(({ ticket }) => responseOwnership.current.owns(ticket))
+      .map(({ key, items }) => [key, items] as const);
+    if (currentEntries.length > 0) {
+      setFoldersByParent(Object.fromEntries(currentEntries));
+    }
   }
 
   function resetFolders() {

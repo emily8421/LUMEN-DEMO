@@ -3,15 +3,16 @@ import type { TermCategoryView } from '../api';
 import {
   createTermCategory as createTermCategoryRequest,
   deleteTermCategory,
-  listTermCategories,
   reorderTermCategories,
   updateTermCategory as updateTermCategoryRequest,
 } from '../api';
+import { parentKey, useTermCategoryLoads } from './useTermCategoryLoads';
 
 type RunAction = (progressMessage: string, action: () => Promise<void>) => Promise<void>;
 
 type UseTermCategoriesArgs = {
   token: string | undefined;
+  currentSpaceId: number | undefined;
   runAction: RunAction;
   setNotice: (message: string) => void;
 };
@@ -26,9 +27,7 @@ export type TermCategoryInlineEdit =
       category: TermCategoryView;
     };
 
-export function parentKey(parentId: number | null): string {
-  return parentId === null ? 'root' : String(parentId);
-}
+export { parentKey } from './useTermCategoryLoads';
 
 /**
  * REQ-036 术语领域树 state + handler。
@@ -37,10 +36,11 @@ export function parentKey(parentId: number | null): string {
  * 展开状态 ``expandedCategoryIds`` + inline 新建/重命名。术语叶子不在本 hook 维护
  * （由 useTerms 的 terms + selectedTermId 承担）；本 hook 只维护领域树结构。
  */
-export function useTermCategories({ token, runAction, setNotice }: UseTermCategoriesArgs) {
+export function useTermCategories({ token, currentSpaceId, runAction, setNotice }: UseTermCategoriesArgs) {
   const [categoriesByParent, setCategoriesByParent] = useState<Record<string, TermCategoryView[]>>({});
   const [expandedCategoryIds, setExpandedCategoryIds] = useState<Set<number>>(new Set());
   const [inlineEdit, setInlineEdit] = useState<TermCategoryInlineEdit | null>(null);
+  const { loadParent, reloadParents, reloadRoot } = useTermCategoryLoads({ token, currentSpaceId, setCategoriesByParent });
 
   const knownCategories = useMemo(() => {
     const byId = new Map<number, TermCategoryView>();
@@ -52,23 +52,6 @@ export function useTermCategories({ token, runAction, setNotice }: UseTermCatego
 
   function getCategoriesForParent(parentId: number | null): TermCategoryView[] {
     return categoriesByParent[parentKey(parentId)] ?? [];
-  }
-
-  async function loadParent(loadToken: string, parentId: number | null) {
-    const items = await listTermCategories(loadToken, parentId);
-    setCategoriesByParent((current) => ({ ...current, [parentKey(parentId)]: items }));
-  }
-
-  async function reloadParents(loadToken: string, parentIds: Array<number | null>) {
-    const uniqueParentIds = Array.from(new Map(parentIds.map((id) => [parentKey(id), id])).values());
-    const entries = await Promise.all(
-      uniqueParentIds.map(async (parentId) => [parentKey(parentId), await listTermCategories(loadToken, parentId)] as const),
-    );
-    setCategoriesByParent((current) => ({ ...current, ...Object.fromEntries(entries) }));
-  }
-
-  async function reloadRoot(loadToken: string) {
-    await loadParent(loadToken, null);
   }
 
   function resetCategories() {

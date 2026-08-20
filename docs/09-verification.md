@@ -320,6 +320,19 @@
 - **边界**：不测试 File System Access 的真实目录授权、浏览器 UI、后端接口、localStorage、遗留测试数据或异步挂载行为；这些保持既有浏览器 smoke / 人工验收范围。
 - **验收记录（2026-08-20，通过）**：Vitest `node` 环境执行 `local-vault-index`、`folder-utils`、`markdown-toc`、`drafts` 四个纯函数模块，4 个测试文件 / 19 个用例全部通过。`npm run lint`、`npm run build`（360 modules，446.05 kB JS）、`npm run check:css`、`npm run check:file-size` 全部通过；`frontend-ci.yml` 新增 `Frontend unit tests` job，使用 Node 22.17.1、`npm ci` 与 `npm test`。Vitest 仅输出既有 `@vitejs/plugin-react` 的 esbuild 弃用兼容性警告，不影响测试或构建结果。
 
+### 5.5 Sprint-64：刷新响应归属保护（TC-P2-GOV-028 FEP-05，通过）
+
+- **关联**：REQ-011 既有桌面端体验；Sprint-64 / Task-064 至 Task-068。仅修改前端异步读响应的提交保护；无 API、后端、数据库、依赖或阶段范围变更。
+- **TC-P2-GOV-028（FEP-05 刷新响应归属保护）**：
+  1. 请求归属工具的 Vitest 用例覆盖：同一 scope 的后发请求可提交、先发请求晚到时被拒绝；token、空间或选中文档变化后，旧 scope 的响应不能提交。
+  2. 工作区集合（空间、文档、文件夹、术语、术语领域）在快速切换空间或登录状态时，只允许最后一个有效 scope 提交 state；既有登录失效处理不变。
+  3. 标签、成员、时间线和文档详情 / 版本 / 链接读取在空间或选中文档改变后，不得以旧响应恢复已清空或更新后的 state。
+  4. 取消或失效响应不显示错误状态、不阻塞后续刷新；本地挂载、跨设备挂载、管理员列表和 token-only LLM 配置保持既有独立语义，并在完成记录中说明审计结论。
+  5. `npm test`、`npm run lint`、`npm run build`、`npm run check:css`、`npm run check:file-size` 通过；在至少两个可切换空间的浏览器会话中完成快速连续切换回归。
+- **验收记录（2026-08-21，通过）**：请求归属 Vitest 5/5（同 scope 后发胜出、scope 切换失效、同 scope 不失效、独立资源 key 并发与空间切换逆序响应）；全量前端 Vitest 5 文件 / 24 用例通过；`npm run lint`、`npm run build`（364 modules）、`npm run check:css`、`npm run check:file-size` 全部通过。浏览器受控回归使用 `.tmp/fep05-space-switch-smoke.mjs`：同一 UI 会话先切 20、后切 10，并将 20 的响应延后到 10 完成后释放；两条 API 均 200，最终下拉框与 localStorage 均为 10，0 个错误。仅以该浏览器场景验证空间切换；其余读取范围由通用归属时序单测与质量门覆盖。
+- **状态**：已完成。Task-064 至 Task-068 已闭环；未修改 API client、认证 API、token 持久化、登录失效处理、后端、数据库或依赖。
+- **审计边界**：本地挂载恢复已有 effect cleanup，跨设备挂载与管理员列表已有 token-change cleanup；LLM 配置为 token-only 且不随空间切换，均未纳入空间归属改造。本轮未修改 API client、登录失效处理或取消请求语义。
+
 ## 6. 风险与未验证项
 
 | Risk-ID | RG / Gate | 风险 / 未验证项 | 影响范围 | 当前处理 | 关闭依据 |

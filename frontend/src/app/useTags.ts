@@ -1,16 +1,17 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
-import type { DocumentTagView, TaggedDocumentItem, TagView } from '../api';
+import type { TaggedDocumentItem, TagView } from '../api';
 import {
   addDocumentTag,
   archiveTag,
   createTag,
-  listDocumentTags,
   listDocumentsByTag,
   listTags,
   removeDocumentTag,
   updateTag,
 } from '../api';
+import { createResponseOwnership } from './response-ownership';
+import { useDocumentTags } from './useDocumentTags';
 
 type RunAction = (progressMessage: string, action: () => Promise<void>) => Promise<void>;
 
@@ -35,7 +36,6 @@ type UseTagsArgs = {
  */
 export function useTags({ token, currentSpaceId, selectedDocumentId, runAction, setNotice }: UseTagsArgs) {
   const [tags, setTags] = useState<TagView[]>([]);
-  const [documentTags, setDocumentTags] = useState<DocumentTagView[]>([]);
   const [selectedTagId, setSelectedTagId] = useState<number | null>(null);
   const [tagDocuments, setTagDocuments] = useState<TaggedDocumentItem[]>([]);
   const [newTagName, setNewTagName] = useState('');
@@ -48,6 +48,13 @@ export function useTags({ token, currentSpaceId, selectedDocumentId, runAction, 
     description: '',
     color: '',
   });
+  const tagsResponseOwnership = useRef(createResponseOwnership());
+  const tagDocumentsResponseOwnership = useRef(createResponseOwnership());
+  const scope = JSON.stringify([token ?? null, currentSpaceId ?? null]);
+  tagsResponseOwnership.current.setScope(scope);
+  tagDocumentsResponseOwnership.current.setScope(scope);
+
+  const { documentTags, reloadDocumentTags } = useDocumentTags({ token, currentSpaceId, selectedDocumentId });
 
   // 空间切换 / 登录 → 重载标签列表，清空已选标签与其文档
   useEffect(() => {
@@ -55,27 +62,22 @@ export function useTags({ token, currentSpaceId, selectedDocumentId, runAction, 
       setTags([]);
       return;
     }
+    if (!tagsResponseOwnership.current.isCurrentScope(scope)) {
+      return;
+    }
+    const ticket = tagsResponseOwnership.current.begin();
     void listTags(token)
-      .then((result) => setTags(result.items))
+      .then((result) => {
+        if (tagsResponseOwnership.current.owns(ticket)) {
+          setTags(result.items);
+        }
+      })
       .catch(() => {
         // 标签列表加载失败不阻塞主流程；登录失效由写操作路径处理
       });
     setSelectedTagId(null);
     setTagDocuments([]);
-  }, [token, currentSpaceId]);
-
-  // 选中文档变化 → 重载该文档标签
-  useEffect(() => {
-    if (!token || selectedDocumentId == null) {
-      setDocumentTags([]);
-      return;
-    }
-    void listDocumentTags(token, selectedDocumentId)
-      .then(setDocumentTags)
-      .catch(() => {
-        // 文档标签加载失败不阻塞编辑
-      });
-  }, [token, selectedDocumentId]);
+  }, [token, currentSpaceId, scope]);
 
   const loadTagDocuments = useCallback(
     async (tagId: number | null) => {
@@ -83,13 +85,22 @@ export function useTags({ token, currentSpaceId, selectedDocumentId, runAction, 
         setTagDocuments([]);
         return;
       }
+      if (!tagDocumentsResponseOwnership.current.isCurrentScope(scope)) {
+        return;
+      }
+      const ticket = tagDocumentsResponseOwnership.current.begin();
       try {
-        setTagDocuments(await listDocumentsByTag(token, tagId));
+        const rows = await listDocumentsByTag(token, tagId);
+        if (tagDocumentsResponseOwnership.current.owns(ticket)) {
+          setTagDocuments(rows);
+        }
       } catch {
-        setTagDocuments([]);
+        if (tagDocumentsResponseOwnership.current.owns(ticket)) {
+          setTagDocuments([]);
+        }
       }
     },
-    [token],
+    [token, scope],
   );
 
   const handleSelectTag = useCallback(
@@ -177,7 +188,7 @@ export function useTags({ token, currentSpaceId, selectedDocumentId, runAction, 
       const created = await createTag(token, { name: trimmedName });
       await addDocumentTag(token, selectedDocumentId, created.id);
       setTags((current) => [...current, created]);
-      setDocumentTags(await listDocumentTags(token, selectedDocumentId));
+      await reloadDocumentTags(token, selectedDocumentId);
       setNotice(`已新建标签并打给本文：${created.name}`);
     });
   };
@@ -188,7 +199,7 @@ export function useTags({ token, currentSpaceId, selectedDocumentId, runAction, 
     }
     void runAction('正在打标签...', async () => {
       await addDocumentTag(token, selectedDocumentId, tagId);
-      setDocumentTags(await listDocumentTags(token, selectedDocumentId));
+      await reloadDocumentTags(token, selectedDocumentId);
       setTags((current) =>
         current.map((tag) => (tag.id === tagId ? { ...tag, document_count: tag.document_count + 1 } : tag)),
       );
@@ -203,7 +214,7 @@ export function useTags({ token, currentSpaceId, selectedDocumentId, runAction, 
     }
     void runAction('正在移除标签...', async () => {
       await removeDocumentTag(token, selectedDocumentId, tagId);
-      setDocumentTags(await listDocumentTags(token, selectedDocumentId));
+      await reloadDocumentTags(token, selectedDocumentId);
       setTags((current) =>
         current.map((tag) =>
           tag.id === tagId ? { ...tag, document_count: Math.max(0, tag.document_count - 1) } : tag,

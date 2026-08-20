@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { Session } from './types';
 import type { Space } from '../api';
 import { listSpaces, login, logout, register, switchSpace } from '../api';
 import { clearStoredSession, loadStoredSession, persistSession } from './session-store';
+import { createResponseOwnership } from './response-ownership';
 
 type RunAction = (progressMessage: string, action: () => Promise<void>) => Promise<void>;
 
@@ -30,6 +31,11 @@ export function useSession({ runAction, setNotice, onSpaceChanged }: UseSessionA
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [session, setSession] = useState<Session | null>(() => loadStoredSession());
   const [spaces, setSpaces] = useState<Space[]>([]);
+  const spaceResponseOwnership = useRef(createResponseOwnership());
+  const spaceSwitchResponseOwnership = useRef(createResponseOwnership());
+  const sessionScope = session?.token ?? '';
+  spaceResponseOwnership.current.setScope(sessionScope);
+  spaceSwitchResponseOwnership.current.setScope(sessionScope);
 
   const handleAuthError = () => {
     clearStoredSession();
@@ -92,8 +98,15 @@ export function useSession({ runAction, setNotice, onSpaceChanged }: UseSessionA
     if (!session) {
       return;
     }
+    if (!spaceSwitchResponseOwnership.current.isCurrentScope(session.token)) {
+      return;
+    }
+    const ticket = spaceSwitchResponseOwnership.current.begin();
     void runAction('正在切换空间...', async () => {
       const result = await switchSpace(session.token, spaceId);
+      if (!spaceSwitchResponseOwnership.current.owns(ticket)) {
+        return;
+      }
       // Sprint-26 契约变更：switch 不再重发 token，session 承载 current_space_id
       const nextSession = { ...session, currentSpaceId: result.current_space_id };
       setSession(nextSession);
@@ -104,7 +117,14 @@ export function useSession({ runAction, setNotice, onSpaceChanged }: UseSessionA
   };
 
   const reloadSpaces = async (token: string) => {
-    setSpaces(await listSpaces(token));
+    if (!spaceResponseOwnership.current.isCurrentScope(token)) {
+      return;
+    }
+    const ticket = spaceResponseOwnership.current.begin();
+    const rows = await listSpaces(token);
+    if (spaceResponseOwnership.current.owns(ticket)) {
+      setSpaces(rows);
+    }
   };
 
   return {

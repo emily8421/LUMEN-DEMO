@@ -6,6 +6,17 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.15.0（2026-08-21）
+
+**Sprint-64 / Task-064 至 Task-068（FEP-05）：刷新响应归属保护——token、空间或文档选择切换后，旧异步读响应不再覆盖当前前端 state。稳健性交付，无新业务能力 / 无 API / 无后端 / 无依赖变化，bump MINOR（Sprint 验收交付）。**（依据：`docs/research/2026-08-19-frontend-remediation-plan.md` §7）
+
+- **新增 `app/response-ownership.ts`**：请求代次 / scope 归属工具——`createResponseOwnership`（单一资源）与 `createKeyedResponseOwnership`（多父节点树按 key 独立计票）；scope 变化作废旧票据，同 scope 后发请求取代先发请求。
+- **接入全部异步读通道**：session 空间列表与切换、文档列表 / 文件夹树、术语 / 术语领域树、标签 / 文档标签、空间成员、时间线、文档详情 / 版本 / 链接的异步读，在 `begin()` 前核对捕获 scope 仍为当前 scope（admission check），提交前校验票据（ownership）。
+- **两处复审修正**：① 文件夹树与术语领域树由全局票据改为按父节点 key 独立计票，展开不同分支不再互相作废；② 旧闭包在 scope 切换后不得重新取得有效票据，发起前即被挡下。
+- **验证（2026-08-21）**：请求归属 Vitest 5/5、全量前端 Vitest 5 files / 24 tests、lint、build（364 modules）、`check:css`、`check:file-size` 全绿；双空间快速切换受控浏览器回归通过（20 的迟到响应不能覆盖最终 10），页面与 localStorage 一致、0 错误。
+- **边界**：未修改 API client、认证 API、token 持久化、登录失效处理、后端、数据库或依赖；本地挂载 / 跨设备挂载 / 管理员列表保持既有 cleanup 语义（审计结论见 09 §5.5）。
+- **文档回写**：08 Sprint-64（批39）+ Backlog FEP-05 已完成 + 09 §5.5 TC-P2-GOV-028 + Task-064 至 Task-068 完成记录。
+
 ## v3.14.1（2026-08-20）
 
 **Sprint-63 / Task-062 / Task-063（FEP-04）：前端纯函数测试基础——为既有本地 Vault、文件夹移动、Markdown TOC 与草稿逻辑建立 Vitest 回归保护。质量保障 PATCH，无新用户可见能力 / 无 API / 无后端运行时行为变化。**（依据：`docs/research/2026-08-19-frontend-remediation-plan.md` §6）
