@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { initTheme } from './theme';
 import './styles/tokens.css';
 import './styles/base.css';
@@ -31,12 +32,15 @@ import './styles/admin-drawer.css';
 import './styles/command-palette.css';
 import './styles/ai-assistant.css';
 import './styles/auth.css';
+import './styles/error-boundary.css';
 
 // 主题初始化（与 index.html 内联预置脚本幂等）：React 接管前对齐 data-theme，防首帧闪烁
 initTheme();
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
-    <App />
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
   </React.StrictMode>,
 );

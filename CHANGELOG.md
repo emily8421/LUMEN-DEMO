@@ -6,6 +6,16 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.14.0（2026-08-20）
+
+**Sprint-62 / Task-061（FEP-03）：根 ErrorBoundary——子树渲染 / 生命周期异常的页面级恢复 UI + 控制台留痕。稳健性交付，无新业务能力 / 无 API / 无依赖变化，bump MINOR（Sprint 验收交付）。**（依据：`docs/research/2026-08-19-frontend-code-evaluation.md` FE-C2；`docs/research/2026-08-19-frontend-remediation-plan.md` §5 FEP-03）
+
+- **新增 `components/ErrorBoundary.tsx`**：无依赖 React 类组件，`getDerivedStateFromError` 进入恢复态，`componentDidCatch` 以 `console.error` 记录原始错误与 component stack（不渲染到 UI）；恢复 UI `role="alert"` + `aria-live="assertive"`，含「重新加载」按钮（`window.location.reload()`）。
+- **`main.tsx` 根入口接入**：在 `React.StrictMode` 内以 ErrorBoundary 包裹 `App`；新增 `styles/error-boundary.css`（全令牌化，复用 tokens.css，多主题经同一变量机制生效）。
+- **边界**：只覆盖子树渲染 / 生命周期异常；不覆盖事件处理、异步回调或 React 根节点初始化异常（不夸大防护范围）。
+- **验证（2026-08-20）**：受控异常浏览器验证（CDP 真实 Chrome，URL 参数门控临时 throw，验证后已还原）9/9 断言 PASS——恢复 UI 渲染 / 无堆栈泄露 / alert 语义 / console 留痕 / reload 真实导航 / 正常路径登录页渲染；既有认证 smoke PASS；lint / build（446.05 kB）/ `check:css` / `check:file-size` 全绿。详见 09 §5.3 TC-P2-GOV-026。
+- **文档回写**：08 Sprint-62（批37）+ Backlog FEP-03 已完成 + 09 §5.3 + `tasks/task-061` 完成记录。
+
 ## v3.13.5（2026-08-19）
 
 **Sprint-61 / Task-060（FEP-02）：弹层焦点生命周期——六对象模态键盘圈定 + 焦点归还 + aria-modal。P2/P3 登记缺陷修复，无新能力 / 无 API / 无依赖变化，bump PATCH。**（依据：`docs/research/2026-08-19-frontend-code-evaluation.md` FE-A11Y-2；`docs/research/2026-08-19-frontend-remediation-plan.md` FEP-02）
