@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { DocLinkView, DocumentVersion, KnowledgeDocument } from '../api';
 import { getDocument, isDocumentDetail, listDocLinks, listVersions } from '../api';
 import { isAuthTokenError } from './session-store';
+import { createResponseOwnership } from './response-ownership';
 
 type UseDocumentSideDataArgs = {
   token: string | undefined;
+  currentSpaceId: number | undefined;
   selectedDocument: KnowledgeDocument | null;
   isCreating: boolean;
   onAuthError: () => void;
@@ -26,6 +28,7 @@ type UseDocumentSideDataArgs = {
  */
 export function useDocumentSideData({
   token,
+  currentSpaceId,
   selectedDocument,
   isCreating,
   onAuthError,
@@ -36,22 +39,45 @@ export function useDocumentSideData({
   const [versions, setVersions] = useState<DocumentVersion[]>([]);
   const [outboundLinks, setOutboundLinks] = useState<DocLinkView[]>([]);
   const [backlinks, setBacklinks] = useState<DocLinkView[]>([]);
+  const versionsResponseOwnership = useRef(createResponseOwnership());
+  const linksResponseOwnership = useRef(createResponseOwnership());
+  const detailResponseOwnership = useRef(createResponseOwnership());
+  const currentDocumentId = selectedDocument?.id ?? null;
+  const scopeFor = (documentId: number | null) =>
+    JSON.stringify([token ?? null, currentSpaceId ?? null, documentId]);
+  const scope = scopeFor(currentDocumentId);
+  versionsResponseOwnership.current.setScope(scope);
+  linksResponseOwnership.current.setScope(scope);
+  detailResponseOwnership.current.setScope(scope);
 
   async function loadVersions(loadToken: string, documentId: number) {
-    setVersions(await listVersions(loadToken, documentId));
+    if (!versionsResponseOwnership.current.isCurrentScope(scopeFor(documentId))) {
+      return;
+    }
+    const ticket = versionsResponseOwnership.current.begin();
+    const rows = await listVersions(loadToken, documentId);
+    if (versionsResponseOwnership.current.owns(ticket)) {
+      setVersions(rows);
+    }
   }
 
   async function loadDocLinks(loadToken: string, documentId: number) {
+    if (!linksResponseOwnership.current.isCurrentScope(scopeFor(documentId))) {
+      return;
+    }
+    const ticket = linksResponseOwnership.current.begin();
     try {
       const [outbound, back] = await Promise.all([
         listDocLinks(loadToken, documentId, 'outbound'),
         listDocLinks(loadToken, documentId, 'backlink'),
       ]);
-      setOutboundLinks(outbound);
-      setBacklinks(back);
+      if (linksResponseOwnership.current.owns(ticket)) {
+        setOutboundLinks(outbound);
+        setBacklinks(back);
+      }
     } catch (caughtError) {
       // doc-links 加载失败不阻塞文档编辑；仅处理登录失效，其余静默以免覆盖主流程错误提示。
-      if (isAuthTokenError(caughtError)) {
+      if (linksResponseOwnership.current.owns(ticket) && isAuthTokenError(caughtError)) {
         onAuthError();
         setNotice('登录已失效，请重新登录。');
       }
@@ -59,12 +85,20 @@ export function useDocumentSideData({
   }
 
   async function loadDocumentDetail(loadToken: string, documentId: number) {
+    if (!detailResponseOwnership.current.isCurrentScope(scopeFor(documentId))) {
+      return;
+    }
+    const ticket = detailResponseOwnership.current.begin();
     try {
       const detail = await getDocument(loadToken, documentId);
-      onDetailLoaded(detail);
+      if (detailResponseOwnership.current.owns(ticket)) {
+        onDetailLoaded(detail);
+      }
     } catch (caughtError) {
-      const message = caughtError instanceof Error ? caughtError.message : '文档详情加载失败';
-      setError(message);
+      if (detailResponseOwnership.current.owns(ticket)) {
+        const message = caughtError instanceof Error ? caughtError.message : '文档详情加载失败';
+        setError(message);
+      }
     }
   }
 

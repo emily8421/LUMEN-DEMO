@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { SpaceMemberRole, SpaceMemberView, UserRole, UserSearchResult } from '../api';
 import {
@@ -8,6 +8,7 @@ import {
   searchUsers,
   updateSpaceMemberRole,
 } from '../api';
+import { createResponseOwnership } from './response-ownership';
 
 type RunAction = (progressMessage: string, action: () => Promise<void>) => Promise<void>;
 
@@ -38,6 +39,11 @@ export function useSpaceMembers({
   const [searchResults, setSearchResults] = useState<UserSearchResult[]>([]);
   const [addEmail, setAddEmail] = useState('');
   const [addRole, setAddRole] = useState<SpaceMemberRole>('member');
+  const membersResponseOwnership = useRef(createResponseOwnership());
+  const searchResponseOwnership = useRef(createResponseOwnership());
+  const scope = JSON.stringify([token ?? null, currentSpaceId ?? null]);
+  membersResponseOwnership.current.setScope(scope);
+  searchResponseOwnership.current.setScope(scope);
 
   const myRole = members.find((member) => member.user_id === currentUserId)?.role ?? null;
   const canManageMembers = globalRole === 'admin' || myRole === 'admin';
@@ -48,24 +54,35 @@ export function useSpaceMembers({
       return;
     }
     let cancelled = false;
+    if (!membersResponseOwnership.current.isCurrentScope(scope)) {
+      return undefined;
+    }
+    const ticket = membersResponseOwnership.current.begin();
     listSpaceMembers(token, currentSpaceId)
       .then((rows) => {
-        if (!cancelled) {
+        if (!cancelled && membersResponseOwnership.current.owns(ticket)) {
           setMembers(rows);
         }
       })
       .catch(() => {
-        if (!cancelled) {
+        if (!cancelled && membersResponseOwnership.current.owns(ticket)) {
           setMembers([]);
         }
       });
     return () => {
       cancelled = true;
     };
-  }, [token, currentSpaceId]);
+  }, [token, currentSpaceId, scope]);
 
   const reloadMembers = async (refreshToken: string, spaceId: number) => {
-    setMembers(await listSpaceMembers(refreshToken, spaceId));
+    if (!membersResponseOwnership.current.isCurrentScope(JSON.stringify([refreshToken, spaceId]))) {
+      return;
+    }
+    const ticket = membersResponseOwnership.current.begin();
+    const rows = await listSpaceMembers(refreshToken, spaceId);
+    if (membersResponseOwnership.current.owns(ticket)) {
+      setMembers(rows);
+    }
   };
 
   const handleSearchQueryChange = (value: string) => {
@@ -75,9 +92,21 @@ export function useSpaceMembers({
       setSearchResults([]);
       return;
     }
+    if (!searchResponseOwnership.current.isCurrentScope(scope)) {
+      return;
+    }
+    const ticket = searchResponseOwnership.current.begin();
     searchUsers(token, query)
-      .then(setSearchResults)
-      .catch(() => setSearchResults([]));
+      .then((rows) => {
+        if (searchResponseOwnership.current.owns(ticket)) {
+          setSearchResults(rows);
+        }
+      })
+      .catch(() => {
+        if (searchResponseOwnership.current.owns(ticket)) {
+          setSearchResults([]);
+        }
+      });
   };
 
   const handleAdd = (event: FormEvent<HTMLFormElement>) => {

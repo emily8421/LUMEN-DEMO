@@ -174,13 +174,9 @@ export function useAppState() {
   const session = useSession({ runAction, setNotice: workspace.setNotice, onSpaceChanged: handleSpaceChanged });
   const token = session.session?.token;
 
-  const folders = useFolders({
-    token,
-    runAction,
-    setNotice: workspace.setNotice,
-  });
+  const folders = useFolders({ token, currentSpaceId: session.session?.currentSpaceId, runAction, setNotice: workspace.setNotice });
   const documents = useDocuments({
-    token,
+    token, currentSpaceId: session.session?.currentSpaceId,
     runAction,
     setNotice: workspace.setNotice,
     setError: workspace.setError,
@@ -220,8 +216,8 @@ export function useAppState() {
   });
   const search = useSearch({ token, runAction, setNotice: workspace.setNotice });
   const query = useQuery({ token, runAction, setNotice: workspace.setNotice });
-  const terms = useTerms({ token, runAction, setNotice: workspace.setNotice });
-  const termCategories = useTermCategories({ token, runAction, setNotice: workspace.setNotice });
+  const terms = useTerms({ token, currentSpaceId: session.session?.currentSpaceId, runAction, setNotice: workspace.setNotice });
+  const termCategories = useTermCategories({ token, currentSpaceId: session.session?.currentSpaceId, runAction, setNotice: workspace.setNotice });
   const timeline = useTimeline({
     token,
     currentSpaceId: session.session?.currentSpaceId,
