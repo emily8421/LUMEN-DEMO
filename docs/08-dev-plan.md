@@ -11,8 +11,8 @@
 | 当前 Phase | **Phase2D（账户与多人权限）已完成（2026-08-07 收口）：Sprint-26 账号体系基础（TC-P2-AUTH-001 / PR#112 v3.0.0）+ Sprint-27 权限多人化（TC-P2-ACC-001 / PR#114）+ Sprint-28 角色分层 + 用户管理 + 团队空间加入（TC-P2-ACC-002 / PR#117 v3.1.0）三 slice 全部验收通过、退出标准达成；Sprint-27 P2 两项 + Sprint-28 偏差经用户确认全接受、留后续；不升 Phase，下一阶段范围待用户定义**；Phase2C（本地知识源接入）已完成（2026-08-06）；Phase2B（团队 MVP）已完成（2026-08-05 收口；2026-07-30 切指针；RG-008 升 Go；Sprint-19/20/21/22 均完成验收） |
 | 交付物形态 | Demo / 个人可用 Alpha / 个人知识组织 |
 | 输入基线 | `docs/03-prd.md` §3、`docs/04-architecture.md`、`docs/05-tech-spec.md`、`docs/09-verification.md` |
-| 当前状态 | **维护态**（2026-08-07 收口）。Phase2D（账户与多人权限）已完成，下一阶段范围待用户定义；无未完成执行任务。各 Sprint 状态见下方「Sprint 总览」，验收证据见 `docs/09-verification.md` §5。 |
-| 最后更新 | 2026-08-19（Sprint-61 / Task-059 + Task-060：前端无障碍语义 + 弹层焦点生命周期均完成——自动验证全绿，读屏人工抽查延后；此前 Wave 3 已收口） |
+| 当前状态 | **维护态**（2026-08-07 收口）。Phase2D（账户与多人权限）已完成，下一阶段范围待用户定义；Sprint-62 / Task-061 FEP-03 根 ErrorBoundary 已完成实现与全部本地验证（2026-08-20，TC-P2-GOV-026 通过），待用户确认提交方式。各 Sprint 状态见下方「Sprint 总览」，验收证据见 `docs/09-verification.md` §5。 |
+| 最后更新 | 2026-08-20（Sprint-62 / Task-061：FEP-03 根 ErrorBoundary 实现与验证完成——受控异常浏览器验证 9/9 断言 + 既有认证 smoke PASS + 四道质量门全绿；此前 Sprint-61 / Task-059 + Task-060 均完成，读屏人工抽查延后） |
 
 > **阶段完成线**（历史指针；各 Sprint 详情见「Sprint 总览」，不在此重复）：
 > - **Phase1 Demo**：已完成，全量验收 Conditional Go。
@@ -65,6 +65,25 @@
 | Wave 3（跨设备 vault 元数据·已完成） | REQ-018 模式 B 增强：`lumen_vault_mounts` 跨设备挂载元数据（挂载上报 granted / 卸载 revoked / 登录拉取清单，仅元数据） | 018 扩展（TC-P2-VAULT-004，OI-109） | 06 lumen_vault_mounts/migration 015、07 API-059、09 TC-P2-VAULT-004、design/ingestion Flow-D-014 | backend（migration 015 + entity/ORM + repository 三件 + service/vault_mounts + api/vault_mounts + tests）；frontend（api/vaultMounts + useVaultMountSync + LocalMountRemoteList + LocalMountPane 接线）；openapi/generated.ts 再生成 | TC-P2-VAULT-004（后端 tests + 真实 PG migration + API smoke + `scripts/smoke-vault-mounts-browser.mjs`） | **已完成（2026-08-18，v3.11.0）**：pytest 331 passed（+10）/ mypy 0 / lint+build 355 modules / 真实 PG 015 应用 + API smoke + 浏览器 smoke PASS；详见 09 §2 TC-P2-VAULT-004 + §5 | — |
 | Wave 3（FileSystemObserver 自动监听·已完成） | REQ-018 模式 B 增强：挂载目录文件变更自动重扫（变更防抖合并→复用 reindex 全量重扫；手动「重扫」兜底补 UI 入口） | 018 扩展（TC-P2-VAULT-003，RG-010 Go） | 05 RG-010、09 TC-P2-VAULT-003、design/ingestion Flow-D-014 | 纯前端 3 改 1 增（useVaultAutoRescan + LocalMountPane/Header 接线）；零新依赖 / 零后端改动 | TC-P2-VAULT-003（lint/build/file-size/css + CDP 冒烟；真实挂载变更留用户人工 smoke） | **已完成（2026-08-18，v3.12.0，Wave 3 全收口）**：observerSupported=true + 重扫按钮显隐 + 无运行时错误；picker 句柄真实监听（RG-010-N1）留人工 smoke；详见 09 §5 | — |
 | Sprint-61（维护态批36·前端无障碍语义·**已完成**） | FEP-01 状态播报去重 + 登录/注册 tabs 完整语义；FEP-02 六弹层焦点生命周期（初始焦点 / Tab 圈定 / 关闭焦点归还 + aria-modal） | 011（既有桌面端体验 / 可用性修复，不新增 REQ） | `docs/research/2026-08-19-frontend-remediation-plan.md` FEP-01 / FEP-02、design/frontend-interaction §2 / §3.1 / §6 | FEP-01：`StatusBar`、`AuthShell`、auth 样式、认证浏览器 smoke；FEP-02：新增 `shared/useModalFocus` + 接入 CommandPalette / PasswordResetModal / ImportFeature / QuickEntryFeature / OnboardingGuide / UserSpacesDrawer + `QuickEntryResult` 拆分 + smoke 扩展；零 API / 后端 / 依赖改动 | TC-P2-GOV-024 + TC-P2-GOV-025（lint / build / CSS / file-size / auth browser smoke + DOM / 键盘 / 焦点断言 + 读屏人工抽查） | **已完成（2026-08-19，v3.13.5）**：FEP-01（v3.13.4）lint/build/css/file-size 全绿 + auth smoke 扩展断言连跑 2 次 PASS；FEP-02（v3.13.5）六对象焦点生命周期 smoke PASS + 四道门禁全绿；读屏人工抽查用户裁决延后，09 §5.2 如实标注待补 | `tasks/task-059-frontend-a11y-semantics.md` + `tasks/task-060-modal-focus-lifecycle.md` |
+| Sprint-62（维护态批37·根 ErrorBoundary·**已完成**） | FEP-03：根 ErrorBoundary 捕获子树渲染 / 生命周期异常，提供通用恢复 UI 与浏览器控制台留痕 | 011（既有桌面端体验 / 稳健性修复，不新增 REQ） | `docs/research/2026-08-19-frontend-remediation-plan.md` §5、`docs/design/frontend-interaction.md` §4、Task-061 | 新增 `components/ErrorBoundary.tsx` 与令牌化样式，`main.tsx` 根入口接入；零 API / 后端 / 依赖 / 测试框架改动 | TC-P2-GOV-026（受控子树异常降级、刷新操作、控制台留痕、既有质量门与浏览器回归） | **已完成（2026-08-20）**：受控异常浏览器验证 9/9 断言 PASS（恢复 UI / 无泄露 / alert 语义 / console 留痕 / reload / 正常路径）+ 既有认证 smoke PASS + lint / build / check:css / check:file-size 全绿；临时 throw 已还原；不声称覆盖事件处理、异步回调或根节点初始化异常 | `tasks/task-061-root-error-boundary.md` |
+
+### 维护态优化 Backlog（2026-08-19 评估回填）
+
+> 本表是维护态候选和已选择下一项的执行入口，不等同于已启动 Sprint。开始编码前，须为已选择项建立 Sprint / Task、关联 TC 与验证包；新增依赖、CI 或 API / DB 契约改动仍须单独确认。
+
+| ID | 范围 / 目标 | 当前状态 | 输入与触发条件 | 编码前门槛 | 计划验证与边界 |
+|---|---|---|---|---|---|
+| FEP-03 | 前端根 ErrorBoundary：为渲染 / 生命周期异常提供恢复 UI 与 `console.error` 留痕 | **已完成（Sprint-62 / Task-061，2026-08-20，TC-P2-GOV-026 通过）** | 用户于 2026-08-19 选择；`docs/research/2026-08-19-frontend-remediation-plan.md` §5 | Sprint / Task / `TC-P2-GOV-026` 与文件清单已建立；不新增运行时依赖 | 已执行：正常登录 / 工作区回归；本地临时受控 `throw` 验证降级 UI 与错误留痕后还原；lint、build、既有浏览器 smoke 全部通过；不宣称捕获事件、异步或根初始化错误 |
+| FEP-04 | 前端纯函数测试：覆盖 local-vault-index、folder-utils、markdown-toc、drafts | 待人工确认 | 同上 §6；引入 Vitest 才能建立轻量单测层 | 单独确认 `vitest` devDependency、测试脚本与 CI step | 15-25 个风险驱动用例；不依赖浏览器目录授权、真实后端或遗留测试数据 |
+| FEP-05 | token / 空间切换后的刷新响应归属保护 | 条件立项 | 复现旧请求覆盖当前状态，或下一项工作触及 refresh / reload 链 | 先枚举各异步读与 state 提交点；选择代次 / 归属校验或可取消请求策略 | 连续切换空间后仅最后一次空间数据可提交；取消不显示错误；不改既有登录失效处理 |
+| FEP-06 | 收敛 16 处重复的 `RunAction` 类型 | 延后 | 下一轮 hooks 改动时合并 | 明确纯类型文件边界，不创建伪运行时模块 | tsc / lint / build；不单独制造跨文件大重构 |
+| FE-ERR-1 | `request()` 对非 JSON 错误体的稳定回退 | 延后 | 下一次触及 `frontend/src/api/client.ts`，或网关 HTML 错误直达 UI | 复用既有 `buildApiError` 口径 | 非 JSON 错误不会泄露原生解析异常；不改变成功响应或业务错误码语义 |
+| FE-SMOKE-1 | 浏览器 smoke 的共享 harness / runner 策略 | 待人工确认 | `2026-08-10` 代码质量评估发现多份 CDP helper 重复 | 先选择共享本地 CDP 工具或 Playwright PoC；如引依赖须单独确认 | 先迁移一个代表性 smoke 验证，不批量重写既有脚本 |
+| BE-MIG-1 | 迁移治理：Alembic 与自建 ledger 的唯一权威方案 | 待架构决策与现状复核 | `2026-08-10` 代码质量评估 CQ-P1-007；在下一次非幂等或数据迁移前优先处理 | 先复核当前迁移实现 / 直接依赖，再确认采用 Alembic 或 ledger，不允许双轨长期并存 | 版本记录、校验和、失败阻断与生产迁移边界均可验证；不与无关功能同 Sprint 改造 |
+| BE-TYPE-1 | 后端 mypy strict Slice C | 远期技术债 | `2026-08-12` mypy 评估；当前 `mypy backend` 已为 required 且 0 error | 先确定 strict 规则、存量基线与渐进 ratchet | 分批启用 `disallow_untyped_defs` 等规则；不得以大规模 ignore 掩盖债务 |
+| BE-PROTO-1 | service 注解收窄到领域子 Protocol | 待人工裁决 | Sprint-59 已完成 8 个子 Protocol；现有聚合父协议保持兼容 | 逐模块评估实际依赖域，避免为抽象而迁移 22 个消费方 | mypy、契约测试与受影响 service 回归；不改运行时 repository 实现 |
+| FE-TREE-1 / CODE-HYGIENE-1 | 树形领域低层 primitive 复用；过程性注释收敛到任务 / 验收 / Git | 低优先级，随触及模块处理 | `2026-08-10` 代码质量评估 CQ-P2-001 / CQ-P2-003 | 仅提取已稳定的展开、内联编辑、菜单壳；逐条判断注释是否仍解释稳定不变量 | 对应领域交互回归；不创建万能泛型树组件，不做全仓注释清洗 |
+| DEMO-MVP-1 | Demo 风险重评：原生 confirm、URL 路由、localStorage token、props 膨胀与 effect 豁免 | MVP 触发项 | 进入 MVP、出现 XSS 威胁模型、深链接 / 前进后退需求或实际 stale closure 证据 | 以具体产品需求和安全模型重新评估，不能因 Demo 债务直接扩需求 | 每项单独立项和验收；不作为当前维护态的隐式功能范围 |
 
 ### 已完成 Sprint 历史
 

@@ -293,6 +293,21 @@
 - **TC-P2-GOV-025（FEP-02 弹层焦点生命周期，2026-08-19）**：六对象（`CommandPalette` / `PasswordResetModal` / `ImportFeature` / `QuickEntryFeature` / `OnboardingGuide` / `UserSpacesDrawer`）打开后焦点入弹层且首尾 Tab / Shift+Tab 圈定不逸出；关闭后焦点归还触发元素；PasswordResetModal / UserSpacesDrawer 带 `aria-modal="true"`。证据：`shared/useModalFocus` + 六组件接入 + `scripts/smoke-auth-browser.mjs` 扩展断言 PASS + 四道门禁全绿。**通过**。
 - **人工验证（延后）**：NVDA / Windows 讲述人读屏抽查一次登录成功 / 失败、Chrome / Edge 手动切换，以及弹层读屏实际播报——**用户裁决延后（2026-08-19）**，机器断言已覆盖 DOM 属性、键盘行为与焦点生命周期，读屏实际效果待后续补做并回填此处。
 
+### 5.3 Sprint-62：根 ErrorBoundary（TC-P2-GOV-026 FEP-03，已完成）
+
+- **关联**：REQ-011 既有桌面端体验；Sprint-62 / Task-061。仅前端根入口、恢复 UI 与样式；无 API、后端、依赖、测试框架或阶段范围变更。
+- **TC-P2-GOV-026（FEP-03 根 ErrorBoundary）**：
+  1. 在本地以临时、受控的子树渲染 `throw` 触发异常后，根 ErrorBoundary 显示单一页面级恢复 UI；页面不白屏，UI 不展示异常消息、堆栈或其他内部信息。
+  2. 恢复 UI 包含可键盘聚焦的“重新加载”按钮，触发 `window.location.reload()`；保持现有主题的令牌、颜色、焦点和按钮约定。
+  3. `componentDidCatch` 以 `console.error` 保留原始异常和 component stack；生产 UI 不读取或渲染该信息。
+  4. 移除临时 `throw` 后，登录与工作区正常渲染；`lint`、`build`、`check:css`、`check:file-size` 及既有认证浏览器 smoke 均通过。
+  5. **边界**：本 TC 只验证子树渲染 / 生命周期异常；不声称捕获事件处理、异步回调或 React 根节点初始化异常。
+- **验收记录（2026-08-20，通过）**：本地起 `lumen-pg` + 后端 `:18000` + Vite `localhost:5173` 全链后执行——
+  - **受控异常浏览器验证（CDP 驱动真实 Chrome，9/9 断言 PASS）**：临时 `App.tsx` 受控 `throw`（URL 参数门控）触发后，恢复 UI 完整渲染（`role="alert"` / `aria-live="assertive"` / 标题「页面暂时无法显示」/ 按钮「重新加载」）；页面文本不含异常消息、堆栈或 component stack；`console.error` 同时记录 boundary 日志与原始错误；点击「重新加载」后页面真实导航（会话标记消失）；移除门控参数后登录页正常渲染且无恢复 UI。验证后临时 `throw` 已从源码还原（`git diff` 无文本差异）。
+  - **既有认证浏览器 smoke**：`scripts/smoke-auth-browser.mjs`（`--debug-port` 避开本机 9226 占用）连跑通过——`result: PASS`（注册自动登录 → 登出 → 凭证登录 → 受保护视图 → seed 快捷登录 + API 子集：refresh 轮换 / sessions 撤销幂等 / 重复 email 409 / 短密码 422 / 错误凭证 401）。
+  - **四道质量门**：`lint`（0 error / 0 warning）、`build`（446.05 kB JS）、`check:css`、`check:file-size` 全部通过。
+- **残留**：无未验证项；恢复 UI 的多主题视觉人工抽查未单独执行（样式全部走 `tokens.css` 令牌，主题切换由同一变量机制保证）。
+
 ## 6. 风险与未验证项
 
 | Risk-ID | RG / Gate | 风险 / 未验证项 | 影响范围 | 当前处理 | 关闭依据 |
