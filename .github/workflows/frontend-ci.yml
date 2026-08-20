@@ -56,6 +56,22 @@ jobs:
       - run: npm ci
       - run: npm run lint
 
+  frontend-test:
+    name: Frontend unit tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.17.1"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm test
+
   # --- CQ-P1-006 / codegen：前端 OpenAPI 生成类型 drift 防漂移 ---
   # 口径：assessment §4.9 + rollout §4 轨道3 + docs/05-tech-spec.md §4.2.3。
   # openapi-typescript 重生成 frontend/src/api/generated.ts 并与仓库固定版本比对；
