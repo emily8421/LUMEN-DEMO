@@ -6,6 +6,16 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.14.1（2026-08-20）
+
+**Sprint-63 / Task-062 / Task-063（FEP-04）：前端纯函数测试基础——为既有本地 Vault、文件夹移动、Markdown TOC 与草稿逻辑建立 Vitest 回归保护。质量保障 PATCH，无新用户可见能力 / 无 API / 无后端运行时行为变化。**（依据：`docs/research/2026-08-19-frontend-remediation-plan.md` §6）
+
+- **新增 Vitest 单测入口**：`npm test` 在 Node 环境执行，不依赖浏览器目录授权、真实后端、localStorage 或遗留测试数据。
+- **19 个风险驱动用例**：覆盖 `local-vault-index` 的 token / 搜索边界、`folder-utils` 的移动环路保护、`markdown-toc` 的标题锚点与层级、`drafts` 的提交前规范化。
+- **CI 守护**：Frontend CI 新增 `Frontend unit tests` job，在 Node 22.17.1 下执行 `npm ci` 与 `npm test`。
+- **验证**：Vitest 4 files / 19 tests PASS；lint、build（360 modules / 446.05 kB）、`check:css`、`check:file-size` 全绿。Vitest 输出 `@vitejs/plugin-react` 的 esbuild 弃用兼容性警告，非阻断。
+- **文档回写**：08 Sprint-63 + FEP-04、09 §5.4 TC-P2-GOV-027、Task-062 / Task-063 已完成。
+
 ## v3.14.0（2026-08-20）
 
 **Sprint-62 / Task-061（FEP-03）：根 ErrorBoundary——子树渲染 / 生命周期异常的页面级恢复 UI + 控制台留痕。稳健性交付，无新业务能力 / 无 API / 无依赖变化，bump MINOR（Sprint 验收交付）。**（依据：`docs/research/2026-08-19-frontend-code-evaluation.md` FE-C2；`docs/research/2026-08-19-frontend-remediation-plan.md` §5 FEP-03）

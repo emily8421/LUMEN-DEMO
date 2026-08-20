@@ -308,6 +308,18 @@
   - **四道质量门**：`lint`（0 error / 0 warning）、`build`（446.05 kB JS）、`check:css`、`check:file-size` 全部通过。
 - **残留**：无未验证项；恢复 UI 的多主题视觉人工抽查未单独执行（样式全部走 `tokens.css` 令牌，主题切换由同一变量机制保证）。
 
+### 5.4 Sprint-63：前端纯函数单测（TC-P2-GOV-027 FEP-04，已完成）
+
+- **关联**：REQ-011 既有桌面端体验；Sprint-63 / Task-062 / Task-063。仅为已存在的前端纯函数补充 Vitest 单测层和 CI 入口；无 API、后端、运行时功能、浏览器目录授权或测试数据变更。
+- **TC-P2-GOV-027（FEP-04 前端纯函数单测）**：
+  1. `local-vault-index` 覆盖中英文 token 化、短 token 过滤、文档内 token 去重、单字查询、相关度排序、上限与空查询。
+  2. `folder-utils` 覆盖根目录 key、文件夹移动时排除自身与后代、孤儿目录安全降级、文档移动目标完整性。
+  3. `markdown-toc` 覆盖 slug 规范化、空标题回退、ATX 标题识别、格式字符清理、重复标题唯一锚点与最浅目录层级。
+  4. `drafts` 覆盖初始草稿、标题去空白、正文和权限保留、`folder_id` 的显式保留与未定义省略。
+  5. `npm test` 通过，且 lint、build、CSS token、文件体量检查与 Frontend CI 的单测 job 均可执行。
+- **边界**：不测试 File System Access 的真实目录授权、浏览器 UI、后端接口、localStorage、遗留测试数据或异步挂载行为；这些保持既有浏览器 smoke / 人工验收范围。
+- **验收记录（2026-08-20，通过）**：Vitest `node` 环境执行 `local-vault-index`、`folder-utils`、`markdown-toc`、`drafts` 四个纯函数模块，4 个测试文件 / 19 个用例全部通过。`npm run lint`、`npm run build`（360 modules，446.05 kB JS）、`npm run check:css`、`npm run check:file-size` 全部通过；`frontend-ci.yml` 新增 `Frontend unit tests` job，使用 Node 22.17.1、`npm ci` 与 `npm test`。Vitest 仅输出既有 `@vitejs/plugin-react` 的 esbuild 弃用兼容性警告，不影响测试或构建结果。
+
 ## 6. 风险与未验证项
 
 | Risk-ID | RG / Gate | 风险 / 未验证项 | 影响范围 | 当前处理 | 关闭依据 |
