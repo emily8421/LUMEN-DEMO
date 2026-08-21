@@ -1,4 +1,4 @@
-# Pitfall 汇总：2026-08-13 ~ 2026-08-15（阶段一 AI 代码缺陷 + 阶段二工具/环境坑 + 阶段三环境/模板缺口坑）
+# Pitfall 汇总：2026-08-13 ~ 2026-08-21（阶段一 AI 代码缺陷 + 阶段二工具/环境坑 + 阶段三环境/模板缺口坑 + 阶段四命令编排/契约复用/环境运行时坑）
 
 > 记录类型：AI 协作观察材料的阶段性汇总；不属于项目事实文档，不替代 handoff / docs/08 / docs/09。
 > 隐私口径：不记录 token、密钥、账号密码、客户敏感数据或完整对话正文。
@@ -12,6 +12,7 @@
 - 未覆盖：无。
 - 下一次 rollup 起点：2026-08-14 起，只统计 `汇总状态：未汇总` 的本地记录。
   （2026-08-14 阶段二追加后更新：08-14 两份已纳入 §7，下一次 rollup 起点改为 2026-08-15。）
+  （2026-08-21 阶段四追加后更新：08-16 ~ 08-21 共 14 份已纳入 §9，下一次 rollup 起点改为 2026-08-22。）
 
 ## 1. 汇总范围
 
@@ -99,3 +100,46 @@ git info/exclude 与 .gitignore 优先级坑 / 代码复用前置检查 / smoke 
 
 - **回流 1 项（已定选项 A，时机 = 部署实证后约 2026-09）**：`TEMPLATE-UPGRADE-env-separation-deploy-readiness.md`——「开发/测试/生产环境分离」规范与引导 + 部署就绪检查清单（含 build context 卫生项）+ deploy-guide 模板；证据 = 本阶段 docker-build-context-secrets + LUMEN 部署全路径（`docs/research/2026-08-15-deployment-readiness-laptop-plan.md` C-006）。
 - **不回流**：ps51-no-bom 与 volta 镜像损坏——环境诊断经验，单条记录已含完整规避口径；与阶段二同策，若同类「注册信息 ≠ 实际可用」样本继续积累，合并起草工具链诊断提案。
+
+---
+
+## 9. 阶段四（2026-08-16 ~ 2026-08-21 · 命令编排 / 契约复用 / 环境运行时坑 14 份）
+
+### 0. 覆盖边界（阶段四）
+
+- 已覆盖（本地 `.ai/pitfalls/`，共 14 份，2026-08-16 ~ 2026-08-21）：`merge-blocked-ci-red` / `ps51-hashtable-comma` / `reuse-datasource-contract-mismatch` / `bash-node-backtick-escape` / `fep03-validation-command-orchestration` / `stale-vite-port-conflict` / `tc-row-anchor-pitfall` / `cdp-eval-result-unwrapping` / `codex-cli-fep04-command-orchestration` / `codex-cli-fep04-generated-fixture-contract` / `fep05-space-switch-smoke-readiness` / `fep05-browser-controller-node-version` / `fep05-stale-closure-scope-admission` / `git-push-proxy-tls-reset`
+- 未覆盖：无（本地 28 份全部纳入阶段一~四）。
+- 下一次 rollup 起点：2026-08-22 起，只统计 `汇总状态：未汇总` 的本地记录。
+
+### 1. 记录归纳（简表）
+
+| 记录 | 现象 | 根因 | 规避 / 修复 | 通用性 |
+|---|---|---|---|---|
+| `merge-blocked-ci-red` | PR project-check 真实失败未修，`gh pr merge` 直接放行 → main CI 红 | 流程坑：无分支保护（checks 非 required），merge 只信 mergeable | 每个 merge 前逐项核对 checks 全绿，批量按序 merge 更要逐个看 | 高（无分支保护 + 批量收 PR） |
+| `ps51-hashtable-comma` | `@{f=...; l=89}` 报 Missing expression——PS 5.1 无 `??`、哈希内联混合写法易踩 | 环境（PS 5.1 语法限制） | 元组数组 + 索引访问；避免 `??` 用 `if ($null -eq $x)` | 高（本机默认 shell PS 5.1） |
+| `reuse-datasource-contract-mismatch` | 复用 DocumentPreviewPane 后本地预览空白——新容器读 content_md（仅编辑态有值），阅读态恒空 | AI 引入：复用组件未对齐两侧数据源契约 | 复用前列两侧数据源契约差异（字段 + 何时有值）再替换容器 | 高（任何「替换为共享组件」重构） |
+| `bash-node-backtick-escape` | Bash 内嵌 node -e 正则反引号被 shell 当命令替换吃掉 → 匹配 0 | 环境 | 反引号字面量用 `\x60` | 高（Bash 内嵌 node/python 内联脚本） |
+| `fep03-validation-command-orchestration` | rg 零匹配 / Promise.all 失败域混淆 + Start-Process Path/PATH 双键 ArgumentException + 常驻服务被超时终止误判启动失败 | 流程坑 + 环境 | 预检独立 not-found 语义；不聚合失败域；cmd.exe /c 保留日志 + readiness + PID 回收；外层去重 Path/PATH | 高 |
+| `stale-vite-port-conflict` | run-smoke 端口冲突——上一会话遗留 vite 进程没停，日志句柄纠缠误导 | 环境 | smoke 前 netstat 确认端口；遗留 LISTEN 先 Stop-Process | 高 |
+| `tc-row-anchor-pitfall` | 裸 TC-ID 做 rfind 锚点，同一 ID 多处出现插错表，返工 2 轮 | AI 引入 | 锚点带行前缀 / 节标题上下文；先 grep -n 确认行号 | 高（大表格文档回写） |
+| `cdp-eval-result-unwrapping` | CDP Runtime.evaluate 信封两层 result 只解一层恒 undefined → 断言全 FAIL | AI 引入（验证脚本） | 封装后先用已知表达式冒烟验证解包；eval 错误与轮询未就绪分开 | 高（任何 CDP / WebSocket 两级信封） |
+| `codex-cli-fep04-command-orchestration` | npm cache EPERM + rg 失败域 + 文档补丁锚点错 + `git branch` 位置参数误建分支 | 流程坑 + 环境 | 依赖安装权限预检；rg 独立 not-found；行号定位补丁；`git branch --list` 查询 | 高 |
+| `codex-cli-fep04-generated-fixture-contract` | 测试夹具漏生成类型字段，npm test 过但 build tsc 失败 | AI 引入 | 夹具从完整类型定义构造；test + build 都要跑 | 高（测试生成类型对象） |
+| `fep05-space-switch-smoke-readiness` | 受控下拉框「节点存在 ≠ 数据就绪」，读到无效 0 → 403 | 脚本（AI 引入） | 就绪条件 = 可用 options + value 命中；空值显式处理 | 高（受控选择器 browser smoke） |
+| `fep05-browser-controller-node-version` | 控制器要求 Node≥22.22 但解析 22.17.1，反复 setx / 重启无果 | 环境（长驻进程环境固化 + 运行时混淆） | 分「项目锁定运行时」vs「控制器运行时」两事实；以控制器 import playwright 为唯一门禁 | 中高（浏览器驱动类验证） |
+| `fep05-stale-closure-scope-admission` | 归属保护只有提交时 owns()，缺发起前准入 + 树分支 key 隔离，验证全绿仍有旧数据回跳 | AI 引入（正确性根因，用户确认 + 代码佐证） | 显式拆三检查点：发起前 scope admission / 同 scope generation / key 并发隔离；审阅对照全量入口 | 高（异步归属 / 竞态设计） |
+| `git-push-proxy-tls-reset` | git push 连断（curl 56/35），读全通写全断——本地代理 7897 掐 push POST | 环境 | 绕代理直连 push（`HTTPS_PROXY= HTTP_PROXY= git -c http.proxy= -c https.proxy= push`）；可选按主机持久绕过 | 高（Clash 类代理 + git push） |
+
+### 2. 重复模式归纳
+
+- **模式 A：绕圈圈找不到根因（6 份）**：`fep05-stale-closure-scope-admission` / `fep05-space-switch-smoke-readiness` / `fep05-browser-controller-node-version` 显式标记「绕圈圈」；`cdp-eval-result-unwrapping`（`.catch` 吞 eval 错误）、`fep03-validation-command-orchestration`（伪失败反复中断）、`git-push-proxy-tls-reset`（误导性「Everything up-to-date」）同型。机理：**在错误层次打转**（DOM 存在 vs 数据就绪 / 仓库 node vs 控制器 node / 外层 result 信封），用错误探针反复自证失败。预防：先问「哪两个独立事实被混淆」，再选与该事实匹配的探针；失败先定位责任侧（页面事实 vs 脚本解包 vs 环境运行时）再决定重试。
+- **模式 B：失败域混淆 / 聚合掩盖（4 份）**：`merge-blocked-ci-red`（只信 mergeable）、`fep03-validation-command-orchestration`（Promise.all）、`codex-cli-fep04-command-orchestration`（rg 零匹配）、`cdp-eval-result-unwrapping`（catch 吞错）。「预期未找到 / pending」与「真实 fail」同一失败域。预防：每类检查独立输出、not-found/pending 与 fail 分开；用与缺陷维度匹配的机器探针。
+- **模式 C：宿主 / 工具链运行时坑（7 份）**：`ps51-hashtable-comma` / `bash-node-backtick-escape` / `stale-vite-port-conflict` / `fep03` Path/PATH / `fep05-browser-controller-node-version` / `git-push-proxy-tls-reset` / `codex` npm EPERM。延续阶段二/三「工具链诊断先查实际文件 / 会话环境，勿只看注册信息」主线；新增「宿主长驻进程环境固化」「代理写路径」两个维度。跨会话记忆已落地 `lumen-browser-controller-node-runtime.md`。
+- **模式 D：AI 引入的契约 / 复用失配（4 份）**：`reuse-datasource-contract-mismatch` / `codex-cli-fep04-generated-fixture-contract` / `fep05-stale-closure-scope-admission` / `tc-row-anchor-pitfall`。延续阶段一「类型 / 契约障眼法」——按直觉而非按契约 / 唯一性。预防：复用前列数据源契约、夹具源自完整类型定义、锚点带位置上下文、shared 工具契约显式化。
+
+### 3. 模板回流判断（阶段四）
+
+- **回流候选 1（模式 A，证据已足）**：「AI 验证失败先分域定位责任侧，勿在错误探针上绕圈」方法论条目——6 份样本（阶段四）+ `fep03-validation-command-orchestration`；待 triage 后起草 `_proposals/TEMPLATE-UPGRADE-*.md`。
+- **回流候选 2（工具链诊断合并，续攒）**：阶段二 volta PATH + 阶段三 volta 镜像 + 阶段四 Node 控制器运行时 / 代理写路径——合并「运行时 / 网络诊断先查实际会话环境与真实探针，勿看注册 / 入口信息」提案，待再攒 1-2 份同类样本。
+- **不回流**：PS 5.1 / bash 反引号 / 端口冲突等环境细节（单条记录已含完整规避口径）；契约失配类归 codegen / 类型门既有方向（阶段一已定性），不重复回流。
+- **阶段四记录均「待审视」未转提案**：`merge-blocked-ci-red` 的 merge checklist 强化（并入 remote-ci-sop-profile 提案池）、`reuse-datasource-contract-mismatch` 的复用前置检查（并入既有「复用前置检查」类）、`fep05-stale-closure-scope-admission` 的异步归属三检查点（跨会话记忆候选）。
