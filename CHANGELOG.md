@@ -6,6 +6,13 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.15.2（2026-08-21）
+
+**Sprint-67 / Task-071（BE-PROTO-1 R2 Slice C）：service 注解收窄——auth / auth_reset 的 repository 参数注解收窄为 `UserRepository`、vault_mounts 收窄为 `OpsRepository`。纯类型重构 PATCH，无用户可见能力 / 无 API / 无后端运行时 / 无依赖 / 无运行时行为变化。**（依据：`docs/research/2026-08-18-code-directory-review.md` §1.4 ISP；`backend/repository/protocol.py` docstring Slice C 注释）
+
+- **注解收窄**：`backend/service/auth.py`、`auth_reset.py` 的 `repository: RepositoryProtocol` → `UserRepository`；`backend/service/vault_mounts.py` → `OpsRepository`；`backend/repository/protocol.py` docstring 更新为「Slice C 部分完成」。
+- **跨域维持聚合**：document / folder / imports / ai_polish 等跨 2-5 域与跨 service 委托的消费方逐模块评估后维持 `RepositoryProtocol`（mypy 对 Union 属性取交集，跨域无法用子 Protocol 并集收窄）。
+
 ## v3.15.1（2026-08-21）
 
 **Sprint-65 / Task-069（FEP-06）：RunAction 类型收敛——消除 16 个 app 模块重复的 `RunAction` 操作包装类型声明，收敛为 `app/types.ts` 单一共享类型。纯类型重构 PATCH，无用户可见能力 / 无 API / 无后端 / 无依赖 / 无运行时行为变化。**（依据：`docs/research/2026-08-19-frontend-code-evaluation.md` FE-MAINT-1 P7；`docs/research/2026-08-19-frontend-remediation-plan.md` §2 FEP-06）
