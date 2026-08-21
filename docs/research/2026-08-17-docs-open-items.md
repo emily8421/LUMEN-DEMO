@@ -41,6 +41,7 @@
 | OI-112 | 2026-07-14 | `docs/design/frontend-experience-brief.md` | 前端体验原则 / 信息架构方向（候选） | 维持候选，确认后入正式设计 | brief 明标候选待确认 | 不采纳 | UI 方向 | 设计前 | 不阻塞 | `docs/design/frontend-experience-brief.md` | 待确认（候选） | — |
 | OI-113 | 2026-08-17 | docs 目录整理（方案 B） | `docs/README.md`（模板同步）L96-97 镜像目录入口名由 `INDEX.md` 改为 `00-index.md` | 上游提案：向 ai-project-template 提 PR，README 镜像区入口名统一为 `00-index.md` | README 由模板同步维护，本地不可直接改 | 维持现状（本地已统一为 00-index，README 滞后） | 非阻塞 | 模板同步时 | 不阻塞 | 模板仓 `docs/README.md` | 待确认 | — |
 | OI-113（已关闭 2026-08-21） | 2026-08-17 | docs 目录整理（方案 B） | `docs/README.md`（模板同步）L96-97 镜像目录入口名由 `INDEX.md` 改为 `00-index.md` | 上游提案：向 ai-project-template 提 PR，README 镜像区入口名统一为 `00-index.md` | README 由模板同步维护，本地不可直接改 | 维持现状（本地已统一为 00-index，README 滞后） | 非阻塞 | 模板同步时 | 不阻塞 | 模板仓 `docs/README.md` | 已关闭 | 模板仓 `docs/README.md` 镜像入口名已统一为 `00-index.md`（上游 v1.63.0 `d028bc5` PR #363 引入）；LUMEN 已随 v1.66.0 同步（PR #218 `7965d2e`）覆盖，模板仓与本地 docs/README.md 均无 `INDEX.md` 残留，无需派生侧 PR |
+| OI-114 | 2026-08-21 | 模板仓容器重构核查（2026-08-21 只读） | 模板仓 project-container 重构（`project/` + `_governance/` 容器）发布后，LUMEN 下个同步窗口是否跟随容器化迁移（代码目录→`project/`、治理目录→`_governance/`） | 届时跟随迁移（选项 A，与 new-project 派生仓同构）；或登记豁免 / 兼容口径 | 同步契约内文件（`ai/` 77 项 + `git-guide.md` + `scripts/check-derived-sync.*`）发布后引用 `project/` / `_governance/` 路径，与 LUMEN 存量根级结构错位，check-derived-sync 禁止路径可能误报 | 跟随迁移 / 登记豁免兼容口径 / 维持现状待窗口再定 | 跟随迁移=一次性结构迁移 + 引用适配；豁免=说明偏差、长期与模板口径分离 | 模板仓容器重构发布后的下个同步窗口 | 不阻塞 | `template-sync.json`、`check-derived-sync.*`、`ai/global-rules.md` §5、git-guide（同步后） | 待确认 | — |
 
 ## 4. 门禁结论
 
@@ -54,6 +55,7 @@
 - OI-106 / 107 / 108 / 109 / 112：维持候选 / 愿景 / 待技术验证状态，立项时回填对应 `02/05/06/08/09`。
 - OI-101：已关闭（2026-08-18）——三份 design（ingestion / rag-retrieval / term-management）已按 design-doc 标准对齐 §0–§10 并随 PR #203（`d7a556c`）入库。OI-111：已关闭（2026-08-18）——frontend-interaction 补 §2.5 组件树 `DIAG-FE-COMP-01` + §2.6 视图与栏布局状态机 `DIAG-FE-STATE-01`（镜像同步，图索引 44→46）；E-E 表维持不回补既有裁决。
 - OI-113：已关闭（2026-08-21）——模板仓 `docs/README.md` 镜像入口名上游 v1.63.0（`d028bc5` PR #363）已统一为 `00-index.md`，LUMEN 随 v1.66.0 同步（PR #218 `7965d2e`）覆盖，两端均无 `INDEX.md` 残留，无需派生侧 PR。
+- OI-114：待确认——模板仓 project-container 重构发布后，下个同步窗口决策「跟随容器化迁移」或「登记豁免 / 兼容口径」；届时回填 `template-sync.json` / `check-derived-sync.*` / 同步记录。
 
 ## 6. 落盘建议
 
