@@ -1,4 +1,4 @@
-# Token Hotspot Summary（2026-07-13 至 2026-08-17）
+# Token Hotspot Summary（2026-07-13 至 2026-08-21）
 
 > 记录类型：AI 协作观察材料的阶段性汇总；不属于项目事实文档，不替代 `.ai/session-handoff.md`、`docs/08-dev-plan.md` 或 `docs/09-verification.md`。
 > 隐私口径：不记录 token、密钥、账号密码、客户敏感数据或完整对话正文；仅汇总任务类型、文件路径类别、上下文热点、质量影响和优化建议。
@@ -8,9 +8,10 @@
 - **已覆盖（`ai-records/token-hotspots/` 入库）**：2026-07-13 ~ 07-19（5 份单条，阶段 A）
 - **已覆盖（`.ai/token-hotspots/` 本地，首次汇总纳入）**：2026-07-31 ~ 08-13（30 份单条 + 1 份会话级分析，阶段 B）
 - **已覆盖（历史追加）**：2026-08-13 codegen Slice B-2/B-3/B-4（3 份单条，阶段 C，见 §7）
-- **已覆盖（本次追加）**：2026-08-14 ~ 08-17（5 份单条，阶段 D，见 §8）
-- **未覆盖**：无（截至 2026-08-17 全部纳入）
-- **下一次 rollup 起点**：2026-08-18 起，只统计 `汇总状态：未汇总` 的本地 `.ai/token-hotspots/` 记录（已纳入本次 SUMMARY 的 5 份本地单条已补标 `已纳入 SUMMARY.md（2026-07-13~08-17，阶段 D）`）
+- **已覆盖（上次追加）**：2026-08-14 ~ 08-17（5 份单条，阶段 D，见 §8）
+- **已覆盖（本次追加）**：2026-08-18 ~ 08-21（11 份单条，阶段 E，见 §9）
+- **未覆盖**：无（截至 2026-08-21 全部纳入）
+- **下一次 rollup 起点**：2026-08-22 起，只统计 `汇总状态：未汇总` 的本地 `.ai/token-hotspots/` 记录（已纳入本次 SUMMARY 的 11 份本地单条已补标 `已纳入 SUMMARY.md（2026-08-18~08-21，阶段 E）`）
 
 ## 1. 阶段 A：2026-07-13 ~ 07-19（5 份，前端体验 / UI Gate / REQ vertical slice / 用户手册）
 
@@ -96,6 +97,9 @@
 - 2026-08-14：token 优化候选 A1（一键 smoke 编排器）/ A2（project-rules §5 纪律）/ B4 落地。
 - 2026-08-16：#171（A2 纪律）「CI 输出只留结论」执行实证；CI paths 过滤生效（#176 docs-only → 仅 project-check 7s；#177 单前端文件 → 仅 Frontend CI 3 job）。
 - 阶段 A（07-13~07-19）原 5 份单条已入库 `ai-records/token-hotspots/`；阶段 B（07-31~08-13）30 份单条留本地 `.ai/token-hotspots/`（gitignored），本 SUMMARY 为其阶段性提炼。
+- 2026-08-18~08-19：目录评审任务线（PR #208-#215，v3.12.2~v3.13.3）证明 §3.2 同会话规则复用跨多个 PR 收尾稳定生效；task 切换残留（OI-105→OI-111）首次实测信号见阶段 E §9。
+- 2026-08-19：文档审计批次（PR #220）证明主+代理并行审计模式可处理 ~6000 行 design 文档而不挤爆主会话（节省约 5-6× 上下文成本）；可作后续同类审计模板。
+- 2026-08-16~08-21（FEP-01/02/03/04/05/06 期间，状态核实）：CI paths 过滤延续有效；PR #216/#221/#222/#223/#224 全部以 5/5 checks 全绿收口。FEP-05 单独贡献 3 份 hotspot + 5 份 pitfall，是观察最密集的 sprint；FEP-06（PR #224，v3.15.1）纯类型收敛叠加 pitfall rollup 阶段四（PR #225），合并提交全部 5 项 checks 全绿。
 
 ## 7. 阶段 C：2026-08-13 深夜（codegen Slice B-2/B-3/B-4，3 份，前端 codegen 全量闭环）
 
@@ -128,3 +132,37 @@
 - **新热点（PR/CI 批量收口轮询）**：多 PR checks 全量反复拉取 + sleep 轮询占时 6-8 分钟；同批操作应 `gh pr checks --json` 汇总、rerun 后查一次终态（`gh run watch`）、失败日志用 `--log-failed` 直接命中失败 step。
 - **已落地**：A1 一键 smoke 编排器（下次验证类任务实测收益）；A2/B4 纪律 08-16 实证（CI 输出只留结论表格化 + paths 过滤生效）。
 - **待办建议**：project-rules §1 批次史压缩（P0，最高 ROI 固定成本）；docs/03 §4 矩阵补 REQ-043..051（P1）；mermaid 块坐标扫描脚本（P1，省 ~50%+ 往返）；提交前 `git diff --check`（P2，防 whitespace 返工）。
+
+## 9. 阶段 E：2026-08-18 ~ 08-21（11 份，目录评审任务线 + Wave 3 + OO 图纸 + 文档审计 + 文件治理 + 前端代码评估 + FEP 验证与收口）
+
+| 日期 | 记录 | 任务类型 | 主要热点 |
+|---|---|---|---|
+| 2026-08-18 | `directory-principles-review-line` | 文档生成 + 评审 + 跨仓 + PR 收尾（四连 PR #208-#210 + issue #370） | 多轮 `ls`+`wc` 重复枚举（应一次快照再读）；模板仓 issue 状态核实可批量 `gh issue list` + 定点 `view`；issue 号预写 #359 实际 #370 返工 1 次 |
+| 2026-08-18 | `oi109-vault-mounts` | 编码 Sprint（Wave 3 / migration 015 + API-059 + 前端接线） | 契约考古五处散落（06/07/09/auth/ingestion），8 次 grep；test 蓝本误选（PG 依赖 vs DemoRepository 注入）；Docker 冷启动 ~2min；自纠 2 处 |
+| 2026-08-18 | `oi111-frontend-diagrams` | 文档任务（OO 图纸，PR #205） | 规则包 ~9 份全读含 task 切换残留（OI-105→OI-111 中途改选，已读 11/17 prompt 未用）；WorkspaceMain 两段重叠（应先 grep 视图分支） |
+| 2026-08-19 | `docs-system-audit-04-07-design` | 文档审计 + 修复（PR #220） | 规则链 ~1850 行 + 04-07+design 6000+ 行；**主+代理并行审计模式首次完整生效**（主会话读权威基线 + 代理按文档扫引用 + 主会话复核高危项，省约 5-6× 上下文成本） |
+| 2026-08-19 | `file-governance-three-steps` | 编码 + 文档 + 跨仓四类混合（PR #211-#213 + 跨仓 #374） | 规则链 ~1300 行；09 验收表锚点 `rfind` 误命中风险表 2 轮返工（应带表头上下文而非裸 TC-ID）；CHANGELOG/08/09 回写用 Python 脚本正确 |
+| 2026-08-19 | `frontend-code-evaluation` | 只读代码评估（报告落盘 `docs/research/2026-08-19-frontend-code-evaluation.md`） | 170 文件清单 + 抽样 ~10 精读；规则路由对「只读评估」粒度不精确（implementation-lifecycle 全文冗余）；eslint 自定义规则试错 1 轮 |
+| 2026-08-19 | `r2-r3-governance-batch` | R2 域拆分（PR #214, v3.13.2）+ R3 搬家（PR #215, v3.13.3） | python 三轮重复 parse protocol.py（应合并为一轮产 JSON）；大 docstring Edit 前应先 Read 锚定（与 09 验收表锚点同族）；**smoke 引用扫描应覆盖全仓不只源码树**（scripts/ 内路径在 frontend 树外差点漏）；**纯移动零逻辑最强证据 = 消费端 `tsc --noEmit`**（比 build 更早暴露类型问题） |
+| 2026-08-20 | `fep03-validation-host-environment`（多行格式） | FEP-03 验证 + 宿主诊断 | **命令编排与 Checkpoint Mode 失败处理 > ErrorBoundary 本身实现成本**（倒挂）；Vite 前台/后台启动失败域澄清；**零匹配 / 可选文件 / 常驻服务应有独立结果语义**，不与真实失败聚合 |
+| 2026-08-20 | `fep05-response-ownership-debug` | FEP-05 空间切换归属（定位 + 修复） | 浏览器 smoke direct-API 预检污染首个 UI 切换（改为受控真实 UI 逆序响应）；DOM 选项与受控 value 须先验证同步；区分后端空间切换 / 浏览器认证状态 / 前端闭包与提交时序 |
+| 2026-08-21 | `fep05-scope-closure-audit` | FEP-05 旧闭包 scope 审阅（验收前） | **「响应已保护」≠「旧闭包已失效」（两类不同问题）**；多父节点树需资源 key 级并发（不适合单一 generation）；异步归属设计三分 = scope admission + request generation + resource key 隔离；新 hook 接入逐一审阅所有公开 reload 回调 |
+| 2026-08-21 | `fep06-runaction-rollup` | FEP-06 RunAction 类型收敛（PR #224）+ pitfall rollup 阶段四（PR #225） | **git push 读/写路径差**：代理放读、断写，先诊断再重试；绕代理直连 + 直连恢复后轮询推送；**14 份 pitfall 全量读占主要上下文**，下次可先 grep 抽「现象 / 根因 / 规避」字段再决定是否全文读 |
+
+### 9.1 阶段 E 结论
+
+- **重复热点强化**：规则入口固定成本持续（~1300-2000 行/任务），跨类型混合任务不可避免；§3.2 同会话规则复用稳定生效（PR #208-#215 多 PR 收尾、OO 批次、文档审计均未重读规则包）。
+- **新增模式**：
+  - **主+代理并行审计**（docs-system-audit-04-07-design 验证）：主会话读权威基线（04-07 全文 + design 00-index + 关键段）→ 代理按文档扫引用 → 主会话复核高危项；处理 6000+ 行 design 仅占主会话 ~1850 行上下文，省约 5-6×。同类多文档审计优先采纳。
+  - **task 切换残留**（OI-111 实测）：用户中途改选导致已读 prompt（11/17）实际未用，规则路由读取未释放。属可避免成本，规则自觉强化即可（不必改规则文本）。
+  - **分析类任务路由粒度**（frontend-code-evaluation 实测）：只读代码评估走了 implementation-lifecycle 全文（编码执行规则对本任务冗余）；`ai/index.md` 任务路由表缺「代码审查 / 评估」行。
+  - **命令编排 vs 实现成本倒挂**（FEP-03 验证实测）：宿主环境异常的失败域澄清占用 > ErrorBoundary 实现本身；零匹配 / 可选文件 / 常驻服务应有独立结果语义，不与真实失败聚合。**验证任务的时间分配应当警惕「为澄清失败域付出超过实现本身」的反常信号**。
+  - **纯移动零逻辑最强证据 = 消费端 `tsc --noEmit`**（R2/R3 验证）：比 build 更早暴露类型问题；迁移 / 重组类任务必跑。
+  - **smoke 引用扫描应覆盖全仓不只源码树**（R3 验证）：搬家类任务引用扫描时 smoke 脚本路径在 `scripts/` 不在 `frontend/`，差点漏掉。
+  - **异步归属设计三分**（FEP-05 scope closure 教训）：scope admission + request generation + resource key 隔离 = 三个独立检查点；多父节点树不能用单一 generation；新 hook 接入需逐一审阅所有公开 reload 回调。
+  - **浏览器 smoke direct-API 预检污染**（FEP-05 debug 教训）：预置 session 的额外业务 API 调用会污染首个 UI 切换；改为受控真实 UI 逆序响应。
+  - **git push 读/写路径差**（FEP-06 实测）：代理放行读、断写；先诊断读/写路径差异再重试，绕代理直连 + 直连恢复后轮询推送。
+  - **大批量观察材料 rollup 的字段定向读取**（FEP-06 pitfall rollup 教训）：14 份 pitfall 全量读占主要上下文，应先 grep 抽「现象 / 根因 / 规避」字段再决定是否全文读。
+- **既有模式维持**：批量编辑 Python 自校验脚本默认（08-18/08-19 多轮回写零返工）；grep/offset 定向替代全文；anchor 选择带表头上下文（09 验收表教训可推广）。
+- **CI / 工程**：FEP-01/02/03/04/05/06 期间 CI paths 过滤延续有效，全部以 5/5 checks 全绿收口；本阶段无 CI 失败往返（与阶段 D OO 批次 2 次 CI 失败比较）。
+- **FEP 期间 hotspot 维度**：2026-08-20~08-21（FEP-03/04/05/06 sprint 周期）实际产生 5 份 hotspot 单条（修正先前判断）；同期 pitfall 单条见 `ai-records/pitfalls/SUMMARY.md` §9（PR #225 已闭环，14 份归纳为 4 类）。FEP-05 单独贡献 3 份 hotspot + 5 份 pitfall，是观察最密集的 sprint。
