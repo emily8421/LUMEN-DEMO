@@ -40,6 +40,7 @@
 | OI-111（已关闭 2026-08-18） | 2026-08-17 | research/oo-methodology | OO 图纸可选增量（前端组件树 / 状态图；E-E 表不补） | 前端组件树 / 状态机按代码事实补齐；E-E 维持不补 | REDESIGN-C-003（frontend-interaction 承载）已执行；REDESIGN-C-004（E-E 不回补）维持既有双裁决 | 不做 | 增强 | 任意时点 | 不阻塞 | `docs/design/frontend-interaction.md` | 已关闭 | §2.5 `DIAG-FE-COMP-01`（组件树）+ §2.6 `DIAG-FE-STATE-01`（视图与栏布局状态机）已入库，镜像同步；E-E 表维持 AUD-C-004 / REDESIGN-C-004 不回补裁决 |
 | OI-112 | 2026-07-14 | `docs/design/frontend-experience-brief.md` | 前端体验原则 / 信息架构方向（候选） | 维持候选，确认后入正式设计 | brief 明标候选待确认 | 不采纳 | UI 方向 | 设计前 | 不阻塞 | `docs/design/frontend-experience-brief.md` | 待确认（候选） | — |
 | OI-113 | 2026-08-17 | docs 目录整理（方案 B） | `docs/README.md`（模板同步）L96-97 镜像目录入口名由 `INDEX.md` 改为 `00-index.md` | 上游提案：向 ai-project-template 提 PR，README 镜像区入口名统一为 `00-index.md` | README 由模板同步维护，本地不可直接改 | 维持现状（本地已统一为 00-index，README 滞后） | 非阻塞 | 模板同步时 | 不阻塞 | 模板仓 `docs/README.md` | 待确认 | — |
+| OI-113（已关闭 2026-08-21） | 2026-08-17 | docs 目录整理（方案 B） | `docs/README.md`（模板同步）L96-97 镜像目录入口名由 `INDEX.md` 改为 `00-index.md` | 上游提案：向 ai-project-template 提 PR，README 镜像区入口名统一为 `00-index.md` | README 由模板同步维护，本地不可直接改 | 维持现状（本地已统一为 00-index，README 滞后） | 非阻塞 | 模板同步时 | 不阻塞 | 模板仓 `docs/README.md` | 已关闭 | 模板仓 `docs/README.md` 镜像入口名已统一为 `00-index.md`（上游 v1.63.0 `d028bc5` PR #363 引入）；LUMEN 已随 v1.66.0 同步（PR #218 `7965d2e`）覆盖，模板仓与本地 docs/README.md 均无 `INDEX.md` 残留，无需派生侧 PR |
 
 ## 4. 门禁结论
 
@@ -52,6 +53,7 @@
 - OI-104：已关闭（2026-08-18）——阶段 D 已汇总入 `ai-records/token-hotspots/SUMMARY.md` 并随 PR #201 入库。
 - OI-106 / 107 / 108 / 109 / 112：维持候选 / 愿景 / 待技术验证状态，立项时回填对应 `02/05/06/08/09`。
 - OI-101：已关闭（2026-08-18）——三份 design（ingestion / rag-retrieval / term-management）已按 design-doc 标准对齐 §0–§10 并随 PR #203（`d7a556c`）入库。OI-111：已关闭（2026-08-18）——frontend-interaction 补 §2.5 组件树 `DIAG-FE-COMP-01` + §2.6 视图与栏布局状态机 `DIAG-FE-STATE-01`（镜像同步，图索引 44→46）；E-E 表维持不回补既有裁决。
+- OI-113：已关闭（2026-08-21）——模板仓 `docs/README.md` 镜像入口名上游 v1.63.0（`d028bc5` PR #363）已统一为 `00-index.md`，LUMEN 随 v1.66.0 同步（PR #218 `7965d2e`）覆盖，两端均无 `INDEX.md` 残留，无需派生侧 PR。
 
 ## 6. 落盘建议
 
