@@ -12,8 +12,7 @@ import {
 } from '../api';
 import { createResponseOwnership } from './response-ownership';
 import { useDocumentTags } from './useDocumentTags';
-
-type RunAction = (progressMessage: string, action: () => Promise<void>) => Promise<void>;
+import type { RunAction } from './types';
 
 type UseTagsArgs = {
   token: string | undefined;

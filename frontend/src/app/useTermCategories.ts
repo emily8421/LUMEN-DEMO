@@ -7,8 +7,7 @@ import {
   updateTermCategory as updateTermCategoryRequest,
 } from '../api';
 import { parentKey, useTermCategoryLoads } from './useTermCategoryLoads';
-
-type RunAction = (progressMessage: string, action: () => Promise<void>) => Promise<void>;
+import type { RunAction } from './types';
 
 type UseTermCategoriesArgs = {
   token: string | undefined;

@@ -3,8 +3,7 @@ import { useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { createFolder as createFolderRequest, updateFolder as updateFolderRequest } from '../api';
 import type { FolderView } from '../api';
-
-type RunAction = (progressMessage: string, action: () => Promise<void>) => Promise<void>;
+import type { RunAction } from './types';
 
 export type FolderInlineEdit =
   | {

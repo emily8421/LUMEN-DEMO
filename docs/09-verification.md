@@ -333,6 +333,17 @@
 - **状态**：已完成。Task-064 至 Task-068 已闭环；未修改 API client、认证 API、token 持久化、登录失效处理、后端、数据库或依赖。
 - **审计边界**：本地挂载恢复已有 effect cleanup，跨设备挂载与管理员列表已有 token-change cleanup；LLM 配置为 token-only 且不随空间切换，均未纳入空间归属改造。本轮未修改 API client、登录失效处理或取消请求语义。
 
+### 5.6 Sprint-65：RunAction 类型收敛（TC-P2-GOV-029 FEP-06，通过）
+
+- **关联**：REQ-011 既有桌面端体验维护；Sprint-65 / Task-069。仅收敛前端重复类型声明；无 API、后端、数据库、依赖、运行时或阶段范围变更。
+- **TC-P2-GOV-029（FEP-06 RunAction 类型收敛）**：
+  1. `frontend/src/app` 下不再存在本地重复的 `type RunAction = (progressMessage: string, action: () => Promise<void>) => Promise<void>;` 声明；唯一定义收敛于 `app/types.ts`。
+  2. 16 个消费模块（download-actions、useAdminUsers、useAiPolish、useDocuments、useFolderInlineEdit、useFolders、useImport、useQuery、useQuickEntry、useSession、useSearch、useTermCategories、useTags、useSpaceMembers、useTimeline、useTerms）均以 `import type { RunAction } from './types'` 引用；运行时行为零变化（`useAppState.runAction` 单一实现不变）。
+  3. `npm run lint`、`npm test`、`npm run build`（tsc + vite）、`npm run check:css`、`npm run check:file-size`、`git diff --check` 通过。
+- **验收记录（2026-08-21，通过）**：改动 17 文件 +19/-35，纯类型收敛零运行时变化。ESLint 0 error / 0 warning；全量前端 Vitest 5 文件 / 24 用例通过；`tsc -b && vite build` 成功（364 modules，450.80 kB JS，与 FEP-05 基线一致）；check:css PASS；check:file-size OK；`git diff --check` 仅 LF/CRLF 提示。
+- **状态**：已完成。Task-069 已闭环；未修改 API client、认证 API、后端、数据库或依赖。
+- **审计边界**：本任务为纯类型层面 DRY 收敛；未改变 `RunAction` 签名与任何 hook 的 `runAction` 语义，不新增运行时回归验证范围（由 tsc + build 强保证）。
+
 ## 6. 风险与未验证项
 
 | Risk-ID | RG / Gate | 风险 / 未验证项 | 影响范围 | 当前处理 | 关闭依据 |

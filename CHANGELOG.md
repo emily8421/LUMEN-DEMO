@@ -6,6 +6,15 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.15.1（2026-08-21）
+
+**Sprint-65 / Task-069（FEP-06）：RunAction 类型收敛——消除 16 个 app 模块重复的 `RunAction` 操作包装类型声明，收敛为 `app/types.ts` 单一共享类型。纯类型重构 PATCH，无用户可见能力 / 无 API / 无后端 / 无依赖 / 无运行时行为变化。**（依据：`docs/research/2026-08-19-frontend-code-evaluation.md` FE-MAINT-1 P7；`docs/research/2026-08-19-frontend-remediation-plan.md` §2 FEP-06）
+
+- **共享类型单点化**：`app/types.ts` 新增导出 `RunAction`；16 个消费模块（download-actions、useAdminUsers、useAiPolish、useDocuments、useFolderInlineEdit、useFolders、useImport、useQuery、useQuickEntry、useSession、useSearch、useTermCategories、useTags、useSpaceMembers、useTimeline、useTerms）删除本地重复声明，改为 `import type { RunAction } from './types'`。
+- **运行时零变化**：`useAppState.runAction` 单一实现与各 hook 的 runAction 透传语义不变；无新增依赖、无 API / 后端改动。
+- **验证（2026-08-21）**：改动 17 文件 +19/-35；ESLint 0、全量前端 Vitest 5 files / 24 tests、`tsc -b && vite build`（364 modules / 450.80 kB JS，与 v3.15.0 基线一致）、`check:css`、`check:file-size`、`git diff --check` 全绿。
+- **文档回写**：08 Sprint-65（批40）+ Backlog FEP-06 已完成 + 09 §5.6 TC-P2-GOV-029 + Task-069 完成记录。
+
 ## v3.15.0（2026-08-21）
 
 **Sprint-64 / Task-064 至 Task-068（FEP-05）：刷新响应归属保护——token、空间或文档选择切换后，旧异步读响应不再覆盖当前前端 state。稳健性交付，无新业务能力 / 无 API / 无后端 / 无依赖变化，bump MINOR（Sprint 验收交付）。**（依据：`docs/research/2026-08-19-frontend-remediation-plan.md` §7）

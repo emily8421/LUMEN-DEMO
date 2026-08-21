@@ -9,8 +9,7 @@ import {
   updateAdminUser,
   updateSpaceMemberRole,
 } from '../api';
-
-type RunAction = (progressMessage: string, action: () => Promise<void>) => Promise<void>;
+import type { RunAction } from './types';
 
 type UseAdminUsersArgs = {
   token: string | undefined;

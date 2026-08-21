@@ -2,8 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { QuickEntryMode, QuickEntryView } from '../api';
 import { captureQuickEntry, discardQuickEntry } from '../api';
-
-type RunAction = (progressMessage: string, action: () => Promise<void>) => Promise<void>;
+import type { RunAction } from './types';
 
 type UseQuickEntryArgs = {
   token: string | undefined;
