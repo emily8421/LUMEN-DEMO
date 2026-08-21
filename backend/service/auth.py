@@ -18,7 +18,7 @@ import bcrypt
 from backend.config import get_settings
 from backend.model.entities import Session, User
 from backend.model.error_codes import ApiError
-from backend.repository.protocol import RepositoryProtocol
+from backend.repository.protocol import UserRepository
 
 
 class TokenError(ValueError):
@@ -196,7 +196,7 @@ def audit_event(event: str, user_id: int | None, outcome: str, **extra) -> None:
 
 
 def authenticate(
-    repository: RepositoryProtocol,
+    repository: UserRepository,
     login_id: str,
     password: str,
     client_ua: str | None = None,
@@ -254,7 +254,7 @@ def authenticate(
     return token, session
 
 
-def register(repository: RepositoryProtocol, email: str, name: str, password: str) -> User:
+def register(repository: UserRepository, email: str, name: str, password: str) -> User:
     """注册（REQ-040）：建用户 + 默认个人空间（C-AUTH-001，归属 role=admin）。"""
     normalized = (email or "").strip().lower()
     if not normalized or "@" not in normalized or "." not in normalized.split("@")[-1]:
@@ -278,7 +278,7 @@ def register(repository: RepositoryProtocol, email: str, name: str, password: st
     return user
 
 
-def _derive_external_id(repository: RepositoryProtocol, email: str) -> str:
+def _derive_external_id(repository: UserRepository, email: str) -> str:
     base = email.split("@", 1)[0] or "user"
     candidate = base
     suffix = 1
@@ -288,7 +288,7 @@ def _derive_external_id(repository: RepositoryProtocol, email: str) -> str:
     return candidate
 
 
-def resolve_session(repository: RepositoryProtocol, token: str) -> Session | None:
+def resolve_session(repository: UserRepository, token: str) -> Session | None:
     """按 token 解析活跃 session；不存在 / 已撤销 / 过期返回 None。"""
     session = repository.find_session_by_token_hash(sha256_hex(token))
     if session is None or session.revoked_at is not None:
@@ -299,7 +299,7 @@ def resolve_session(repository: RepositoryProtocol, token: str) -> Session | Non
     return session
 
 
-def refresh_session(repository: RepositoryProtocol, token: str) -> tuple[str, Session]:
+def refresh_session(repository: UserRepository, token: str) -> tuple[str, Session]:
     """滑动续期（accounts-auth §3.4）：撤销旧 session，签发新 token + 新 session。"""
     session = resolve_session(repository, token)
     if session is None:
@@ -317,13 +317,13 @@ def refresh_session(repository: RepositoryProtocol, token: str) -> tuple[str, Se
     return new_token, new_session
 
 
-def list_active_sessions(repository: RepositoryProtocol, user_id: int) -> list[Session]:
+def list_active_sessions(repository: UserRepository, user_id: int) -> list[Session]:
     return repository.list_sessions(user_id)
 
 
-def revoke_session(repository: RepositoryProtocol, session_id: int, user_id: int) -> bool:
+def revoke_session(repository: UserRepository, session_id: int, user_id: int) -> bool:
     return repository.revoke_session(session_id, user_id)
 
 
-def update_session_space(repository: RepositoryProtocol, session_id: int, space_id: int) -> Session:
+def update_session_space(repository: UserRepository, session_id: int, space_id: int) -> Session:
     return repository.update_session_space(session_id, space_id)

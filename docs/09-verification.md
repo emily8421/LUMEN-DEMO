@@ -344,6 +344,17 @@
 - **状态**：已完成。Task-069 已闭环；未修改 API client、认证 API、后端、数据库或依赖。
 - **审计边界**：本任务为纯类型层面 DRY 收敛；未改变 `RunAction` 签名与任何 hook 的 `runAction` 语义，不新增运行时回归验证范围（由 tsc + build 强保证）。
 
+### 5.7 Sprint-67：service 注解收窄到域子 Protocol（TC-P2-GOV-031 BE-PROTO-1，通过）
+
+- **关联**：REQ-011 既有质量保障；Sprint-67 / Task-071。依据 `docs/research/2026-08-18-code-directory-review.md` §1.4（ISP / god object）与 `backend/repository/protocol.py` docstring 的 Slice C 注释。
+- **TC-P2-GOV-031（BE-PROTO-1 service 注解收窄）**：
+  1. `backend/service/auth.py`、`auth_reset.py` 的 `repository` 参数注解收窄为 `UserRepository`；`backend/service/vault_mounts.py` 收窄为 `OpsRepository`；对应 import 同步更新。
+  2. 跨 2-5 域与跨 service 委托的消费方（document / folder / imports / ai_polish 等）经逐模块评估维持聚合 `RepositoryProtocol`；不定义组合 Protocol。
+  3. `mypy backend` 0 错；`pytest tests/backend/test_repository_contract.py`（契约）通过；全量非集成 pytest 通过；ruff 通过。
+- **验收记录（2026-08-21，通过）**：改动 4 文件（3 个 service 注解 + `protocol.py` docstring），纯类型收窄零运行时变化。`mypy backend` Success（60 source files, no issues）；契约测试 7 passed；auth / vault / uow 定向 45 passed；全量非集成 `pytest -m "not integration"` 333 passed（50 deselected）；ruff all checks passed。
+- **状态**：已完成。Task-071 已闭环；未修改 API、运行时 repository 实现、数据库或依赖。
+- **审计边界**：仅 3 个单域 service 收窄；跨域 service 维持聚合（mypy 对 Union 属性取交集，跨域无法用子 Protocol 并集收窄）。
+
 ## 6. 风险与未验证项
 
 | Risk-ID | RG / Gate | 风险 / 未验证项 | 影响范围 | 当前处理 | 关闭依据 |

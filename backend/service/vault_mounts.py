@@ -15,7 +15,7 @@ import logging
 
 from backend.model.entities import VaultMount
 from backend.model.error_codes import ApiError, ErrorCode
-from backend.repository.protocol import RepositoryProtocol
+from backend.repository.protocol import OpsRepository
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ MAX_DEVICE_ID_LENGTH = 128
 
 
 def report_vault_mount(
-    repository: RepositoryProtocol,
+    repository: OpsRepository,
     user_id: int,
     device_id: str,
     mount_name: str,
@@ -94,7 +94,7 @@ def report_vault_mount(
     )
 
 
-def list_vault_mounts(repository: RepositoryProtocol, user_id: int) -> list[VaultMount]:
+def list_vault_mounts(repository: OpsRepository, user_id: int) -> list[VaultMount]:
     """拉取本人全部设备的挂载清单（API-059 GET）：含 revoked 行（软撤销保留审计，
     前端按 auth_status 过滤展示）。按 updated_at 倒序。"""
     return repository.list_vault_mounts(user_id)

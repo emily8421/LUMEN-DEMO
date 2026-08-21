@@ -16,8 +16,11 @@ Protocol（Document/User/Folder/Term/Tag/Space/Ops/Search），``RepositoryProto
 22 个既有消费方零迁移（聚合层兼容）。
 
 后续可选：
-- Slice C：service 函数的 ``repository`` 参数注解按实际使用收窄为域子 Protocol
-  （现统一为 ``RepositoryProtocol``），让静态检查 / IDE 识别最小依赖面。
+- Slice C（2026-08-21 部分完成）：单域 service 已收窄——auth / auth_reset →
+  ``UserRepository``、vault_mounts → ``OpsRepository``。跨 2-5 域与跨 service
+  委托的消费方（document / folder / imports / ai_polish 等）保持聚合
+  ``RepositoryProtocol``：mypy 对 Union 属性取交集，跨域无法用子 Protocol
+  并集收窄，逐模块评估后维持聚合更贴合实际依赖。
 
 ``@runtime_checkable`` 使 ``isinstance(repo, RepositoryProtocol)`` 可用（contract test
 + 运行时兜底校验）。Python ``Protocol`` 是结构化子类型，``PgRepository`` / ``DemoRepository``
