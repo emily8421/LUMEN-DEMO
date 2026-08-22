@@ -83,6 +83,16 @@ powershell -ExecutionPolicy Bypass -File scripts/check-runtime-openapi.ps1 -Back
 - 常见失败：端口范围耗尽、依赖未安装、浏览器未自动打开、端口被其他项目页面占用。端口占用时读取控制台输出或 `runtime.json` 的实际端点；不要反复重试同一端口，更不要用 `-StopExisting` 抢占。
 - AI 误停服务：如果 AI 用默认交互模式运行脚本，`Read-Host` 在非交互环境可能立即返回，导致服务刚启动就被 `finally` 清理；AI 必须改用 `-Detached`。
 
+### 6.1 Codex 执行边界与诊断顺序
+
+> 适用 Codex 桌面端对本机 Demo 的启动与 browser smoke 验证；这是执行环境经验，不改变产品、API 或验收口径。
+
+- **审批 / 沙箱失败不是应用结论**：提权审批被拒、sandbox 访问受限、WMI/CIM 无权启动进程，只说明当前执行器未获该动作权限；立即停止并报告，不得自动重试，更不得归因于应用代码或网络。
+- **进程上下文可能不同**：`-Detached` 通过 WMI/CIM 创建后台服务，Codex 的命令执行器、WMI 子进程与浏览器可能具有不同的端口可见性、权限或生命周期。`fetch failed`、空控制台输出或默认端口不可达都不是“网络隔离”的充分证据。
+- **以运行态记录为准**：启动后先读取 `%TEMP%\lumen-sprint16-demo\runtime.json` 的 `status`、实际前后端 URL 与 PID，再做 OpenAPI、浏览器或 Node smoke；不得假定 `18000` / `5173`，也不得只凭 launcher 的标准输出判断服务存活。
+- **最小诊断顺序**：先在同一执行器对 `runtime.json` 记录的后端和前端 URL 做无副作用请求；Node `fetch` 失败必须输出请求 URL、退出码和 `error.cause`。只有服务存活与错误原因均已确认后，才能运行会创建 fixture 的完整 smoke。
+- **清理边界**：自动化只能使用 `-Stop` 清理 `runtime.json` 记录且 PID / launcher 命令行仍匹配的本次服务。状态缺失时不得按默认端口、宽泛进程名或 `-StopExisting` 清理；先报告并由用户确认精确 PID 处理。
+
 ## 7. 推荐演示路径
 
 1. 启动脚本并打开页面。
