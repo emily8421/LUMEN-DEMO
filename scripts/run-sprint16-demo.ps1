@@ -3,6 +3,7 @@ param(
     [int]$FrontendPort = 5173,
     [switch]$NoBrowser,
     [switch]$StopExisting,
+    [switch]$StrictPorts,
     [switch]$Detached,
     [switch]$UsePostgres,
     [string[]]$RequiredBackendRoute = @(),
@@ -76,7 +77,51 @@ function Get-VoltaCommand() {
 function Assert-PortAvailable([int]$Port, [string]$Name) {
     $owners = Get-PortOwners $Port
     if ($owners.Count -gt 0) {
-        throw "$Name port $Port is already in use by PID(s): $($owners -join ', '). Rerun with -StopExisting or choose another port."
+        throw "$Name port $Port is already in use by PID(s): $($owners -join ', '). Rerun once without -StrictPorts to select a safe alternate port; do not use -StopExisting in automated sessions."
+    }
+    if (-not (Test-PortBindable $Port)) {
+        throw "$Name port $Port is reserved or blocked by Windows. Rerun once without -StrictPorts to select a safe alternate port."
+    }
+}
+
+function Test-PortBindable([int]$Port) {
+    $listener = $null
+    try {
+        $listener = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Loopback, $Port)
+        $listener.Start()
+        return $true
+    } catch {
+        return $false
+    } finally {
+        if ($listener) {
+            $listener.Stop()
+        }
+    }
+}
+
+function Find-AvailablePort([int]$PreferredPort, [string]$Name, [int]$MaxCandidates = 100) {
+    for ($candidate = $PreferredPort; $candidate -lt ($PreferredPort + $MaxCandidates); $candidate += 1) {
+        if ((Get-PortOwners $candidate).Count -eq 0 -and (Test-PortBindable $candidate)) {
+            if ($candidate -ne $PreferredPort) {
+                Write-Host "$Name port $PreferredPort is busy; using isolated port $candidate."
+            }
+            return $candidate
+        }
+    }
+
+    $listener = $null
+    try {
+        $listener = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Loopback, 0)
+        $listener.Start()
+        $dynamicPort = ([System.Net.IPEndPoint]$listener.LocalEndpoint).Port
+        Write-Host "$Name could not use ports $PreferredPort-$($PreferredPort + $MaxCandidates - 1); using Windows-assigned port $dynamicPort."
+        return $dynamicPort
+    } catch {
+        throw "$Name could not obtain a bindable port after checking $PreferredPort-$($PreferredPort + $MaxCandidates - 1): $($_.Exception.Message)"
+    } finally {
+        if ($listener) {
+            $listener.Stop()
+        }
     }
 }
 
@@ -144,32 +189,6 @@ function Test-HttpReachable([string]$Uri) {
     }
 }
 
-# 读取项目根 .env（KEY=VALUE，忽略 # 注释 / 空行；剥掉值两侧引号），返回 hashtable。
-# 用途：demo 后端进程注入 LLM 配置（LLM_PROVIDER / LLM_BASE_URL / LLM_MODEL / LLM_API_KEY），
-# 让通用对话 / RAG 走真实内网中转 GLM，而非默认 mock 降级。.env 已被 gitignore，密钥不进入仓库。
-function Read-EnvFile([string]$Path) {
-    $result = @{}
-    if (-not (Test-Path $Path)) {
-        return $result
-    }
-    Get-Content -Path $Path -Encoding UTF8 | ForEach-Object {
-        $line = $_.Trim()
-        if (-not $line -or $line.StartsWith("#") -or -not $line.Contains("=")) {
-            return
-        }
-        $separator = $line.IndexOf("=")
-        $key = $line.Substring(0, $separator).Trim()
-        $value = $line.Substring($separator + 1).Trim()
-        if ($value.Length -ge 2 -and $value.StartsWith('"') -and $value.EndsWith('"')) {
-            $value = $value.Substring(1, $value.Length - 2)
-        }
-        if ($key) {
-            $result[$key] = $value
-        }
-    }
-    return $result
-}
-
 function Start-DemoProcess([string]$Name, [string[]]$CommandParts, [string]$WorkingDirectory, [hashtable]$Environment = @{}) {
     $stdout = Join-Path $tempRoot "$Name.out.log"
     $stderr = Join-Path $tempRoot "$Name.err.log"
@@ -212,6 +231,34 @@ function Start-DemoProcess([string]$Name, [string[]]$CommandParts, [string]$Work
     }
 }
 
+function Stop-ManagedPortOwners([int]$Port, [int[]]$ExpectedOwnerIds, [string]$Name) {
+    $owners = @(Get-PortOwners $Port)
+    $unexpectedOwners = @($owners | Where-Object { $ExpectedOwnerIds -notcontains $_ })
+    if ($unexpectedOwners.Count -gt 0) {
+        throw "Refusing to stop $Name port $Port because it is now owned by unexpected PID(s): $($unexpectedOwners -join ', ')."
+    }
+    foreach ($processId in $owners) {
+        Stop-Process -Id $processId -Force -ErrorAction SilentlyContinue
+    }
+    return $owners.Count
+}
+
+function Stop-ManagedLauncher($Service) {
+    $launcherProcessId = [int]$Service.launcher_pid
+    $commandFile = [string]$Service.command_file
+    $launcher = Get-CimInstance -ClassName Win32_Process -Filter "ProcessId = $launcherProcessId" -ErrorAction SilentlyContinue
+    if (-not $launcher) {
+        return
+    }
+    if ([string]$launcher.CommandLine -notlike "*$commandFile*") {
+        throw "Refusing to stop launcher PID $launcherProcessId because its command line no longer matches $commandFile."
+    }
+    & taskkill.exe /PID $launcherProcessId /T /F | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+        throw "Failed to stop managed launcher PID $launcherProcessId."
+    }
+}
+
 function Find-Browser() {
     $candidates = @(
         (Join-Path $env:LOCALAPPDATA "Google\Chrome\Application\chrome.exe"),
@@ -233,17 +280,22 @@ try {
     New-Item -ItemType Directory -Force -Path $tempRoot | Out-Null
 
     if ($Stop) {
-        if (Test-Path $runtimeStatePath) {
-            $runtimeState = Get-Content -Raw -Encoding UTF8 $runtimeStatePath | ConvertFrom-Json
-            if (-not $PSBoundParameters.ContainsKey("BackendPort") -and $runtimeState.backend_port) {
-                $BackendPort = [int]$runtimeState.backend_port
-            }
-            if (-not $PSBoundParameters.ContainsKey("FrontendPort") -and $runtimeState.frontend_port) {
-                $FrontendPort = [int]$runtimeState.frontend_port
+        if (-not (Test-Path $runtimeStatePath)) {
+            throw "No managed demo runtime state exists at $runtimeStatePath. Refusing to stop ports that may belong to another project."
+        }
+        $runtimeState = Get-Content -Raw -Encoding UTF8 $runtimeStatePath | ConvertFrom-Json
+        $BackendPort = [int]$runtimeState.backend_port
+        $FrontendPort = [int]$runtimeState.frontend_port
+        $backendOwnerIds = @($runtimeState.backend_port_owners | ForEach-Object { [int]$_ })
+        $frontendOwnerIds = @($runtimeState.frontend_port_owners | ForEach-Object { [int]$_ })
+        if ($runtimeState.status -eq "ready" -and $backendOwnerIds.Count -gt 0 -and $frontendOwnerIds.Count -gt 0) {
+            [void](Stop-ManagedPortOwners $BackendPort $backendOwnerIds "Backend")
+            [void](Stop-ManagedPortOwners $FrontendPort $frontendOwnerIds "Frontend")
+        } else {
+            foreach ($service in @($runtimeState.services)) {
+                Stop-ManagedLauncher $service
             }
         }
-        [void](Stop-PortOwners $BackendPort)
-        [void](Stop-PortOwners $FrontendPort)
         Start-Sleep -Milliseconds 500
         $backendStillReachable = Test-HttpReachable "http://127.0.0.1:$BackendPort/docs"
         $frontendStillReachable = Test-HttpReachable "http://127.0.0.1:$FrontendPort"
@@ -260,9 +312,15 @@ try {
         [void](Stop-PortOwners $BackendPort)
         [void](Stop-PortOwners $FrontendPort)
         Start-Sleep -Milliseconds 500
-    } else {
+    } elseif ($StrictPorts) {
         Assert-PortAvailable $BackendPort "Backend"
         Assert-PortAvailable $FrontendPort "Frontend"
+    } else {
+        if ($BackendPort -eq $FrontendPort) {
+            throw "BackendPort and FrontendPort must differ when automatic port selection is enabled."
+        }
+        $BackendPort = Find-AvailablePort $BackendPort "Backend"
+        $FrontendPort = Find-AvailablePort $FrontendPort "Frontend"
     }
 
     $backendScript = Join-Path $tempRoot "sprint16_demo_backend.py"
@@ -328,20 +386,32 @@ if __name__ == "__main__":
     Write-Host "Using backend Python: $backendPython"
     Write-Host "Using Volta command: $voltaCommand"
 
-    $envVariables = Read-EnvFile (Join-Path $repoRoot ".env")
-    if ($envVariables.Count -gt 0) {
-        Write-Host "Loading $($envVariables.Count) env var(s) from .env into backend process (LLM: $($envVariables.LLM_PROVIDER)/$($envVariables.LLM_MODEL))."
-    }
-    Start-DemoProcess "backend" @($backendPython, $backendScript) $repoRoot $envVariables
-    Start-DemoProcess "frontend" @($voltaCommand, "run", "--node", "22.17.1", "npm", "exec", "vite", "--", "--host", "localhost", "--port", "$FrontendPort", "--strictPort") $frontendRoot @{
+    Start-DemoProcess "backend" @($backendPython, $backendScript) $repoRoot
+    Start-DemoProcess "frontend" @($voltaCommand, "run", "--node", "22.17.1", "npm", "exec", "vite", "--", "--host", "127.0.0.1", "--port", "$FrontendPort", "--strictPort") $frontendRoot @{
         VITE_API_BASE = ""
         DEMO_BACKEND_PROXY_URL = "http://127.0.0.1:$BackendPort"
     }
 
-    Wait-HttpOk "http://127.0.0.1:$BackendPort/docs" 30
-    Wait-HttpOk "http://localhost:$FrontendPort" 30
+    if ($Detached) {
+        $runtimeState = [pscustomobject]@{
+            status = "starting"
+            started_at = (Get-Date).ToString("s")
+            backend_port = $BackendPort
+            frontend_port = $FrontendPort
+            backend_url = "http://127.0.0.1:$BackendPort"
+            frontend_url = "http://127.0.0.1:$FrontendPort"
+            backend_port_owners = @()
+            frontend_port_owners = @()
+            required_backend_routes = $RequiredBackendRoute
+            services = $startedServices
+        }
+        $runtimeState | ConvertTo-Json -Depth 6 | Set-Content -Path $runtimeStatePath -Encoding UTF8
+    }
 
-    $frontendUrl = "http://localhost:$FrontendPort"
+    Wait-HttpOk "http://127.0.0.1:$BackendPort/docs" 30
+    Wait-HttpOk "http://127.0.0.1:$FrontendPort" 30
+
+    $frontendUrl = "http://127.0.0.1:$FrontendPort"
     Assert-FrontendIdentity $frontendUrl
     if ($RequiredBackendRoute.Count -gt 0) {
         $runtimeCheckScript = Join-Path $repoRoot "scripts\check-runtime-openapi.ps1"
@@ -372,17 +442,10 @@ if __name__ == "__main__":
 
     if ($Detached) {
         $leaveRunning = $true
-        $runtimeState = [pscustomobject]@{
-            started_at = (Get-Date).ToString("s")
-            backend_port = $BackendPort
-            frontend_port = $FrontendPort
-            backend_url = "http://127.0.0.1:$BackendPort"
-            frontend_url = $frontendUrl
-            backend_port_owners = @(Get-PortOwners $BackendPort)
-            frontend_port_owners = @(Get-PortOwners $FrontendPort)
-            required_backend_routes = $RequiredBackendRoute
-            services = $startedServices
-        }
+        $runtimeState.status = "ready"
+        $runtimeState.frontend_url = $frontendUrl
+        $runtimeState.backend_port_owners = @(Get-PortOwners $BackendPort)
+        $runtimeState.frontend_port_owners = @(Get-PortOwners $FrontendPort)
         $runtimeState | ConvertTo-Json -Depth 6 | Set-Content -Path $runtimeStatePath -Encoding UTF8
         Write-Host ""
         Write-Host "Demo services are running in background."
