@@ -1,8 +1,17 @@
 import { spawn } from 'node:child_process';
-import { existsSync } from 'node:fs';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import {
+  CdpSession,
+  createPageTarget,
+  evaluate,
+  findBrowser,
+  sleep,
+  waitForCondition as waitForNode,
+  waitForDebugEndpoint,
+  waitForPage,
+} from './lib/cdp-smoke.mjs';
 
 const DEFAULT_FRONTEND_URL = 'http://127.0.0.1:5173';
 const DEFAULT_BACKEND_URL = 'http://127.0.0.1:18000';
@@ -44,10 +53,6 @@ function requireNumber(value, fallback, label) {
   return parsed;
 }
 
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 function normalizeBaseUrl(url) {
   return String(url).replace(/\/+$/, '');
 }
@@ -67,153 +72,6 @@ async function requestJson(url, options = {}) {
     throw new Error(`HTTP ${response.status} from ${url}: ${text.slice(0, 300)}`);
   }
   return body;
-}
-
-async function waitForNode(label, predicate, timeoutMs = DEFAULT_TIMEOUT_MS) {
-  const deadline = Date.now() + timeoutMs;
-  let lastError = '';
-  while (Date.now() < deadline) {
-    try {
-      const value = await predicate();
-      if (value) {
-        return value;
-      }
-    } catch (error) {
-      lastError = error instanceof Error ? error.message : String(error);
-    }
-    await sleep(150);
-  }
-  throw new Error(`Timed out waiting for ${label}${lastError ? ` (${lastError})` : ''}.`);
-}
-
-function browserCandidates(explicitBrowser) {
-  const candidates = [
-    explicitBrowser,
-    process.env.LUMEN_BROWSER,
-    path.join(process.env.LOCALAPPDATA || '', 'Google\\Chrome\\Application\\chrome.exe'),
-    path.join(process.env.ProgramFiles || '', 'Google\\Chrome\\Application\\chrome.exe'),
-    path.join(process.env['ProgramFiles(x86)'] || '', 'Google\\Chrome\\Application\\chrome.exe'),
-    path.join(process.env.ProgramFiles || '', 'Microsoft\\Edge\\Application\\msedge.exe'),
-    path.join(process.env['ProgramFiles(x86)'] || '', 'Microsoft\\Edge\\Application\\msedge.exe'),
-    'chrome',
-    'msedge',
-  ].filter(Boolean);
-  return candidates;
-}
-
-function findBrowser(explicitBrowser) {
-  for (const candidate of browserCandidates(explicitBrowser)) {
-    if (candidate === 'chrome' || candidate === 'msedge' || existsSync(candidate)) {
-      return candidate;
-    }
-  }
-  throw new Error('Could not find Chrome or Edge. Pass --browser <path> or set LUMEN_BROWSER.');
-}
-
-async function waitForDebugEndpoint(debugPort) {
-  const versionUrl = `http://127.0.0.1:${debugPort}/json/version`;
-  return waitForNode('browser CDP endpoint', () => requestJson(versionUrl), 10000);
-}
-
-async function createPageTarget(debugPort, frontendUrl) {
-  const targetUrl = `http://127.0.0.1:${debugPort}/json/new?${encodeURIComponent(frontendUrl)}`;
-  let target = null;
-  try {
-    target = await requestJson(targetUrl, { method: 'PUT' });
-  } catch {
-    target = await requestJson(targetUrl);
-  }
-  if (!target?.webSocketDebuggerUrl) {
-    throw new Error('Browser target did not expose webSocketDebuggerUrl.');
-  }
-  return target.webSocketDebuggerUrl;
-}
-
-class CdpSession {
-  constructor(socket) {
-    this.socket = socket;
-    this.nextId = 1;
-    this.pending = new Map();
-    this.events = [];
-
-    socket.addEventListener('message', (event) => {
-      const message = JSON.parse(String(event.data));
-      if (message.id && this.pending.has(message.id)) {
-        const pending = this.pending.get(message.id);
-        this.pending.delete(message.id);
-        if (message.error) {
-          pending.reject(new Error(`${message.error.message || 'CDP error'} (${message.method || pending.method})`));
-        } else {
-          pending.resolve(message.result || {});
-        }
-        return;
-      }
-      if (message.method) {
-        this.events.push(message);
-      }
-    });
-  }
-
-  static async connect(url) {
-    const socket = new WebSocket(url);
-    await new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => reject(new Error('Timed out opening CDP websocket.')), 10000);
-      socket.addEventListener('open', () => {
-        clearTimeout(timeout);
-        resolve();
-      }, { once: true });
-      socket.addEventListener('error', () => {
-        clearTimeout(timeout);
-        reject(new Error('Failed to open CDP websocket.'));
-      }, { once: true });
-    });
-    return new CdpSession(socket);
-  }
-
-  send(method, params = {}) {
-    const id = this.nextId;
-    this.nextId += 1;
-    return new Promise((resolve, reject) => {
-      this.pending.set(id, { resolve, reject, method });
-      this.socket.send(JSON.stringify({ id, method, params }));
-    });
-  }
-
-  close() {
-    this.socket.close();
-  }
-}
-
-async function evaluate(client, fn, ...args) {
-  const expression = `(${fn.toString()})(${args.map((arg) => JSON.stringify(arg)).join(',')})`;
-  const result = await client.send('Runtime.evaluate', {
-    expression,
-    awaitPromise: true,
-    returnByValue: true,
-    userGesture: true,
-  });
-  if (result.exceptionDetails) {
-    const description = result.exceptionDetails.exception?.description || result.exceptionDetails.text;
-    throw new Error(`Browser evaluation failed: ${description}`);
-  }
-  return result.result?.value;
-}
-
-async function waitForPage(client, label, fn, args = [], timeoutMs = DEFAULT_TIMEOUT_MS) {
-  const deadline = Date.now() + timeoutMs;
-  let lastError = '';
-  while (Date.now() < deadline) {
-    try {
-      const value = await evaluate(client, fn, ...args);
-      if (value) {
-        return value;
-      }
-    } catch (error) {
-      lastError = error instanceof Error ? error.message : String(error);
-    }
-    await sleep(150);
-  }
-  throw new Error(`Timed out waiting for ${label}${lastError ? ` (${lastError})` : ''}.`);
 }
 
 async function api(backendUrl, pathName, { method = 'GET', token = '', body = undefined } = {}) {
@@ -507,6 +365,11 @@ async function main() {
       return document.folder_id === fixture.child.id ? document : null;
     }, timeoutMs);
 
+    await waitForPage(client, 'child folder label clickable after move', (childName) => {
+      const label = Array.from(document.querySelectorAll('.tree-folder-label'))
+        .find((element) => (element.textContent || '').trim() === childName);
+      return Boolean(label && !label.disabled);
+    }, [fixture.childName], timeoutMs);
     await evaluate(client, (childName) => {
       const childLabel = Array.from(document.querySelectorAll('.tree-folder-label'))
         .find((element) => (element.textContent || '').trim() === childName);
@@ -551,6 +414,8 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error(`FOLDER_TREE_BROWSER_SMOKE failed: ${error instanceof Error ? error.message : String(error)}`);
+  const detail = error instanceof Error ? error.message : String(error);
+  const cause = error instanceof Error && error.cause ? ` (cause: ${error.cause.code || error.cause.message || error.cause})` : '';
+  console.error(`FOLDER_TREE_BROWSER_SMOKE failed: ${detail}${cause}`);
   process.exitCode = 1;
 });
