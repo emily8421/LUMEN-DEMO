@@ -6,6 +6,16 @@
 - 模板继承版本入口：`TEMPLATE-BASE.md`
 - 模板同步运行记录：`sync-records/template-sync/`
 
+## v3.15.3（2026-08-22）
+
+**Sprint-66 / Task-070（FE-SMOKE-1）：浏览器 smoke 共享 CDP harness——抽取 `scripts/lib/cdp-smoke.mjs` 单一共享 helper，并迁移文件夹树 smoke 去除本地重复定义。测试基建重构 PATCH，无用户可见能力 / 无 API / 无后端 / 无依赖 / 无应用运行时行为变化。**（依据：`docs/research/2026-08-10-code-quality-maintainability-assessment.md` §4.12 / TQG-012）
+
+- **共享 helper 单一来源**：新增 `scripts/lib/cdp-smoke.mjs`（浏览器发现 / CDP endpoint / page target / session / 求值 / 等待，零依赖 Node 22 内置 fetch/WebSocket）；`scripts/smoke-folder-tree-browser.mjs` 删除 5 处本地重复定义（-162 行），只保留业务 fixture 与交互断言。
+- **smoke 可诊断性修补（2 处，均在 smoke 脚本自身）**：失败输出附加 `error.cause`（原 `fetch failed` 吞 cause 致 2026-08-21 失败定位困难，后裁决为 demo 服务已死而非网络问题）；文档移动后 click 子文件夹 label 前等待可点击（`runAction` busy 期间按钮 `disabled`，synthetic click 被丢弃曾致复跑超时）。
+- **验证基建配套**：`run-sprint16-demo.ps1` 端口 IPv4 bind probe（跳过 Windows TCP 保留范围）+ `runtime.json` 运行态记录（ready / 实际端点 / owner PID）+ `-Stop` 按记录 PID 安全清理（不触碰其他项目进程）；`docs/env/local-demo-runbook.md` 同步口径（AI 必须 `-Detached`、禁 `-StopExisting`）。
+- **验证（2026-08-22）**：隔离内存 Demo 上 smoke 连跑 3 次通过（`ok root=5/7/9 child=6/8/10 document=203/204/205`，fixture 与临时 profile 每次清理）；前端 Vitest 5 files / 24 tests、ESLint 0、`tsc -b && vite build`（364 modules / 450.80 kB JS）、`check:css`、`check:file-size` 全绿；demo 服务按记录 PID 清理、端口无残留。
+- **文档回写**：08 Sprint-66（批41）+ Backlog FE-SMOKE-1 已完成 + 09 TC-P2-GOV-030 + Task-070 完成记录。
+
 ## v3.15.2（2026-08-21）
 
 **Sprint-67 / Task-071（BE-PROTO-1 R2 Slice C）：service 注解收窄——auth / auth_reset 的 repository 参数注解收窄为 `UserRepository`、vault_mounts 收窄为 `OpsRepository`。纯类型重构 PATCH，无用户可见能力 / 无 API / 无后端运行时 / 无依赖 / 无运行时行为变化。**（依据：`docs/research/2026-08-18-code-directory-review.md` §1.4 ISP；`backend/repository/protocol.py` docstring Slice C 注释）
