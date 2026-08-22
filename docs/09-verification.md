@@ -344,7 +344,18 @@
 - **状态**：已完成。Task-069 已闭环；未修改 API client、认证 API、后端、数据库或依赖。
 - **审计边界**：本任务为纯类型层面 DRY 收敛；未改变 `RunAction` 签名与任何 hook 的 `runAction` 语义，不新增运行时回归验证范围（由 tsc + build 强保证）。
 
-### 5.7 Sprint-67：service 注解收窄到域子 Protocol（TC-P2-GOV-031 BE-PROTO-1，通过）
+### 5.7 Sprint-66：浏览器 smoke 共享 CDP harness（TC-P2-GOV-030 FE-SMOKE-1，通过）
+
+- **关联**：REQ-011 既有桌面端体验质量保障；Sprint-66 / Task-070。依据 `docs/research/2026-08-10-code-quality-maintainability-assessment.md` §4.12 / TQG-012，处理本地 CDP helper 在多份 smoke 中重复的问题。
+- **TC-P2-GOV-030（FE-SMOKE-1 共享 harness PoC）**：
+  1. `scripts/lib/cdp-smoke.mjs` 是浏览器发现、CDP endpoint / target、CDP session、页面求值与等待的单一来源；不新增测试依赖。
+  2. `scripts/smoke-folder-tree-browser.mjs` 只保留文件夹树业务 fixture 与交互断言，不再定义本地 `findBrowser`、`CdpSession`、`createPageTarget`、`evaluate` 或 `waitForPage`。
+  3. 迁移后的浏览器 smoke 在真实后端与 headless Chrome / Edge 下通过，并在 finally 中清理 fixture、浏览器进程与临时 profile；前端 test / lint / build / CSS token / file-size 通过。
+- **验收记录（2026-08-22，通过）**：共享 helper 148 行零依赖（Node 22 内置 fetch/WebSocket）；smoke 迁移 -162 行本地重复定义。隔离内存 Demo（backend 18000 / frontend 5241）上 `scripts/smoke-folder-tree-browser.mjs` 连跑 3 次通过（`ok root=5/7/9 child=6/8/10 document=203/204/205`，fixture 与临时 profile 每次清理）。质量门：Vitest 5 files / 24 tests、ESLint 0 error、`tsc -b && vite build`（364 modules / 450.80 kB JS）、check:css PASS、check:file-size OK。附带两处 smoke 可诊断性修补：① 失败输出附加 `error.cause`（2026-08-21 `fetch failed` 失败后裁决为 demo 服务已死而非网络问题，原输出吞 cause 致定位困难）；② 文档移动后 click 子文件夹 label 前等待可点击（`runAction` busy 期间按钮 `disabled`，synthetic click 被丢弃曾致复跑超时）。验证基建配套：`run-sprint16-demo.ps1` 端口 IPv4 bind probe + `runtime.json` 运行态记录 + `-Stop` 按记录 PID 安全清理，runbook 同步。
+- **状态**：已完成。Task-070 闭环；仅迁移一条代表性 smoke；未批量改写其他脚本，未引入 Playwright，未改应用、API、后端、数据库或 CI。
+- **审计边界**：harness 抽取与 smoke 迁移零应用代码变化；两处修补均在 smoke 脚本自身（不改产品交互）；启动器改动仅影响本地 Demo 启停（端口探测 / 运行态记录 / 清理边界），不影响其他项目进程。
+
+### 5.8 Sprint-67：service 注解收窄到域子 Protocol（TC-P2-GOV-031 BE-PROTO-1，通过）
 
 - **关联**：REQ-011 既有质量保障；Sprint-67 / Task-071。依据 `docs/research/2026-08-18-code-directory-review.md` §1.4（ISP / god object）与 `backend/repository/protocol.py` docstring 的 Slice C 注释。
 - **TC-P2-GOV-031（BE-PROTO-1 service 注解收窄）**：
@@ -354,6 +365,8 @@
 - **验收记录（2026-08-21，通过）**：改动 4 文件（3 个 service 注解 + `protocol.py` docstring），纯类型收窄零运行时变化。`mypy backend` Success（60 source files, no issues）；契约测试 7 passed；auth / vault / uow 定向 45 passed；全量非集成 `pytest -m "not integration"` 333 passed（50 deselected）；ruff all checks passed。
 - **状态**：已完成。Task-071 已闭环；未修改 API、运行时 repository 实现、数据库或依赖。
 - **审计边界**：仅 3 个单域 service 收窄；跨域 service 维持聚合（mypy 对 Union 属性取交集，跨域无法用子 Protocol 并集收窄）。
+
+> 编号说明：Sprint-67 记录原随 PR #228 先行合并为 §5.7；Sprint-66 合并时按「只增不删」改为 §5.8 排在其后，避免改动已发布锚点（Sprint-66 验收晚于 Sprint-67 合并，属并行收口）。
 
 ## 6. 风险与未验证项
 
